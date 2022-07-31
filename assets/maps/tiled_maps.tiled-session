@@ -1,0 +1,34 @@
+{
+    "activeFile": "unhaunter_test2b.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "/home/deavid/tiled/unhaunter_test2.tsx": {
+            "scaleInDock": 1
+        },
+        "unhaunter_spritesheet2.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "unhaunter_test2b.tmx": {
+            "scale": 3,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1688.8333333333333,
+                "y": 844.9999999999999
+            }
+        }
+    },
+    "last.externalTilesetPath": "/home/deavid/git/rust/unhaunter/assets/maps",
+    "openFiles": [
+        "unhaunter_test2b.tmx"
+    ],
+    "project": "tiled_maps.tiled-project",
+    "recentFiles": [
+        "unhaunter_test2b.tmx",
+        "unhaunter_spritesheet2.tsx"
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
+}
