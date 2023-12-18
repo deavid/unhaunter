@@ -1,5 +1,9 @@
 {
-    "activeFile": "unhaunter_test2b.tmx",
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "map_house1_3x.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -7,28 +11,79 @@
         "/home/deavid/tiled/unhaunter_test2.tsx": {
             "scaleInDock": 1
         },
+        "character1.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map_house1.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 2,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1710,
+                "y": 1245
+            }
+        },
+        "map_house1_3x.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 3,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1690.5,
+                "y": 555.6666666666666
+            }
+        },
+        "unhaunter_custom_tileset.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "unhaunter_spritesheet2.tsx": {
             "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
         "unhaunter_test2b.tmx": {
-            "scale": 3,
-            "selectedLayer": 0,
+            "scale": 0.33,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1688.8333333333333,
-                "y": 844.9999999999999
+                "x": 2301.5151515151515,
+                "y": 1151.5151515151515
             }
         }
     },
     "last.externalTilesetPath": "/home/deavid/git/rust/unhaunter/assets/maps",
+    "last.imagePath": "/home/deavid/git/rust/unhaunter/assets/img",
+    "last.worldFilePath": "/home/deavid/git/rust/unhaunter/assets/maps",
+    "loadedWorlds": [
+        "/home/deavid/git/rust/unhaunter/assets/maps/world1.world"
+    ],
+    "map.height": 64,
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": "2",
+    "map.tileHeight": 36,
+    "map.tileWidth": 72,
+    "map.width": 64,
     "openFiles": [
-        "unhaunter_test2b.tmx"
+        "unhaunter_test2b.tmx",
+        "unhaunter_spritesheet2.tsx",
+        "map_house1_3x.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "recentFiles": [
         "unhaunter_test2b.tmx",
-        "unhaunter_spritesheet2.tsx"
+        "unhaunter_spritesheet2.tsx",
+        "map_house1_3x.tmx",
+        "unhaunter_custom_tileset.tsx",
+        "map_house1.tmx",
+        "character1.tsx"
     ],
-    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.type": 0
 }
