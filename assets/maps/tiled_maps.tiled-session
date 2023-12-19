@@ -31,11 +31,11 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 3,
-            "selectedLayer": 0,
+            "scale": 5.5,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1690.5,
-                "y": 555.6666666666666
+                "x": 1711.7272727272727,
+                "y": 685.0909090909091
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -48,12 +48,20 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "unhaunter_spritesheetA_3x3x3.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "unhaunter_spritesheetA_6x6x10.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 2
+        },
         "unhaunter_test2b.tmx": {
             "scale": 0.33,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 2301.5151515151515,
-                "y": 1151.5151515151515
+                "x": 2299.9999999999995,
+                "y": 1148.4848484848485
             }
         }
     },
@@ -70,20 +78,25 @@
     "map.tileWidth": 72,
     "map.width": 64,
     "openFiles": [
-        "unhaunter_test2b.tmx",
-        "unhaunter_spritesheet2.tsx",
-        "map_house1_3x.tmx"
+        "map_house1_3x.tmx",
+        "unhaunter_spritesheetA_6x6x10.tsx"
     ],
     "project": "tiled_maps.tiled-project",
     "recentFiles": [
-        "unhaunter_test2b.tmx",
-        "unhaunter_spritesheet2.tsx",
+        "unhaunter_spritesheetA_6x6x10.tsx",
         "map_house1_3x.tmx",
+        "unhaunter_spritesheetA_3x3x3.tsx",
+        "unhaunter_spritesheet2.tsx",
+        "character1.tsx",
         "unhaunter_custom_tileset.tsx",
-        "map_house1.tmx",
-        "character1.tsx"
+        "unhaunter_test2b.tmx",
+        "map_house1.tmx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 64,
+        "width": 48
+    },
     "tileset.type": 0
 }
