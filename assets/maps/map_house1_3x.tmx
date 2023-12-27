@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="11" nextobjectid="11">
+<map version="1.10" tiledversion="1.10.2" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="12" nextobjectid="15">
  <tileset firstgid="1" source="unhaunter_spritesheet2.tsx"/>
  <tileset firstgid="145" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="146" source="character1.tsx"/>
@@ -798,7 +798,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
   </layer>
-  <layer id="8" name="Utils" width="128" height="128" opacity="0.5">
+  <layer id="8" name="Utils" width="128" height="128" visible="0">
    <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -930,8 +930,9 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
   </layer>
-  <objectgroup id="5" name="Text" opacity="0.4">
-   <object id="1" x="621.333" y="642.667" width="91.4375" height="18.6406">
+  <objectgroup id="11" name="custom" visible="0"/>
+  <objectgroup id="5" name="Text" visible="0" opacity="0.4">
+   <object id="1" x="612" y="564" width="60" height="18">
     <text fontfamily="Sans" pixelsize="8" wrap="1" color="#e01b24" bold="1">Foyer</text>
    </object>
    <object id="3" x="425.333" y="446.667" width="91.4375" height="18.6406">
@@ -949,7 +950,7 @@
    <object id="5" x="425.333" y="584" width="104" height="18.6406">
     <text fontfamily="Sans" pixelsize="8" wrap="1" color="#e01b24" bold="1">Laundry Room</text>
    </object>
-   <object id="6" x="566.667" y="640" width="104" height="18.6406">
+   <object id="6" x="552" y="648" width="104" height="18.6406">
     <text fontfamily="Sans" pixelsize="8" wrap="1" color="#e01b24" bold="1">Dining Room</text>
    </object>
    <object id="2" x="677.333" y="542.667" width="91.4375" height="18.6406">
