@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="12" nextobjectid="15">
+<map version="1.10" tiledversion="1.10.2" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="13" nextobjectid="15">
  <tileset firstgid="1" source="unhaunter_spritesheet2.tsx"/>
  <tileset firstgid="145" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="146" source="character1.tsx"/>
@@ -930,8 +930,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
   </layer>
-  <objectgroup id="11" name="custom" visible="0"/>
-  <objectgroup id="5" name="Text" visible="0" opacity="0.4">
+  <objectgroup id="11" name="custom"/>
+  <objectgroup id="5" name="Text" opacity="0.4">
    <object id="1" x="612" y="564" width="60" height="18">
     <text fontfamily="Sans" pixelsize="8" wrap="1" color="#e01b24" bold="1">Foyer</text>
    </object>
