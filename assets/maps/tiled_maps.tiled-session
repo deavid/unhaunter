@@ -67,6 +67,7 @@
             }
         }
     },
+    "frame.defaultDuration": 3620,
     "last.externalTilesetPath": "/home/deavid/git/rust/unhaunter/assets/maps",
     "last.imagePath": "/home/deavid/git/rust/unhaunter/assets/img",
     "last.worldFilePath": "/home/deavid/git/rust/unhaunter/assets/maps",
@@ -87,12 +88,12 @@
     "project": "tiled_maps.tiled-project",
     "property.type": "int",
     "recentFiles": [
+        "unhaunter_custom_tileset.tsx",
         "map_house1_3x.tmx",
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_spritesheet2.tsx",
         "character1.tsx",
-        "unhaunter_custom_tileset.tsx",
         "unhaunter_test2b.tmx",
         "map_house1.tmx"
     ],
