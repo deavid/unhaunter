@@ -1,13 +1,6 @@
-use std::{
-    collections::HashMap,
-    fmt::{Debug, Display},
-    slice::Iter,
-    sync::Arc,
-};
-
-use bevy::{ecs::system::adapter::dbg, sprite::Anchor};
-use serde::de;
-use tiled::{Loader, PropertyValue, TileLayer, Tileset};
+use bevy::sprite::Anchor;
+use std::{collections::HashMap, fmt::Debug, slice::Iter, sync::Arc};
+use tiled::{Loader, PropertyValue, Tileset};
 
 #[derive(Clone, Copy)]
 struct Pos<T: Clone + Copy + Debug> {
@@ -32,6 +25,7 @@ struct MapTile {
     pos: Pos<i32>,
     tileset: String,
     tileuid: u32,
+    flip_x: bool,
 }
 
 impl Debug for MapTile {
@@ -113,40 +107,6 @@ enum MapLayerType {
     Group(MapLayerGroup),
 }
 
-fn load_main() {
-    let mut loader = Loader::new();
-    let map = loader
-        .load_tmx_map("assets/maps/map_house1_3x.tmx")
-        .unwrap();
-    // println!("{:?}", map);
-    // println!("{:?}", map.tilesets()[0].get_tile(0).unwrap().probability);
-    // let tileset = loader
-    //     .load_tsx_tileset("assets/maps/unhaunter_spritesheet2.tsx")
-    //     .unwrap();
-    // assert_eq!(*map.tilesets()[0], tileset, "The tileset of the map should match with the expected tileset. If not this means that the map is loading the tileset from elsewhere");
-    dbg!(map.width, map.height);
-    dbg!(map.tile_width, map.tile_height);
-    dbg!(map.infinite());
-    assert!(!map.infinite(), "The tileset cannot be infinite!");
-    dbg!(map.orientation);
-    for (n, tileset) in map.tilesets().iter().enumerate() {
-        dbg!(n, &tileset.name);
-        dbg!(&tileset.image);
-        // for (id, tile) in tileset.tiles() {
-        //     dbg!(id);
-        //     if let Some(collision) = &tile.collision {
-        //         dbg!(collision.colour);
-        //         for cobj in collision.object_data() {
-        //             dbg!(cobj);
-        //         }
-        //     }
-        // }
-    }
-    let map_layers = load_tile_layer_iter(map.layers());
-    eprintln!("layers: {:?}", map_layers);
-    println!("LOAD OK");
-}
-
 fn load_tile_layer_iter<'a>(
     layer_iter: impl ExactSizeIterator<Item = tiled::Layer<'a>>,
 ) -> Vec<MapLayer> {
@@ -195,6 +155,7 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
                     pos: Pos::new(x, y),
                     tileset: tile.get_tileset().name.to_string(),
                     tileuid: tile.id(),
+                    flip_x: tile.flip_h,
                 };
                 ret.push(t);
             }
@@ -382,6 +343,7 @@ fn setup(
                 if let Some(tileset) = op_tileset {
                     let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
                     id.anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
+                    id.flip_x = tile.flip_x;
                     commands.spawn(SpriteSheetBundle {
                         texture_atlas: tileset.handle.clone(),
                         sprite: id,
