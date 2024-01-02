@@ -127,10 +127,10 @@ impl MapLayerGroup {
 
 // ----------- Load functions -------------------
 
-/// Entry point for loading tiled maps. 
-/// 
+/// Entry point for loading tiled maps.
+///
 /// Example:
-///     let mut loader = tiled::Loader::new(); 
+///     let mut loader = tiled::Loader::new();
 ///     let map = loader.load_tmx_map("assets/maps/map_house1_3x.tmx").unwrap();
 ///     let map_layers = load_tile_layer_iter(map.layers());
 pub fn load_tile_layer_iter<'a>(
@@ -188,4 +188,128 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
         }
     }
     MapTileList { v: ret }
+}
+
+// ------------ Bevy map loading utils --------------------
+
+use bevy::prelude::*;
+use std::sync::Arc;
+
+#[derive(Debug, Clone)]
+pub struct MapTileSet {
+    pub tileset: Arc<tiled::Tileset>,
+    pub handle: Handle<TextureAtlas>,
+    pub y_anchor: f32,
+}
+
+#[derive(Debug, Clone, Default, Resource)]
+pub struct MapTileSetDb {
+    pub db: HashMap<String, MapTileSet>,
+}
+
+pub fn bevy_load_map(
+    path: impl AsRef<std::path::Path>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut tilesetdb: ResMut<MapTileSetDb>,
+) -> Vec<impl Bundle> {
+    // Parse Tiled file:
+    let mut loader = tiled::Loader::new();
+    let map = loader.load_tmx_map(path).unwrap();
+
+    // Preload all tilesets referenced:
+    for tileset in map.tilesets().iter() {
+        // If an image is included, this is a tilemap. If no image is included this is a sprite collection.
+        // Sprite collections are not supported right now.
+        if let Some(image) = &tileset.image {
+            let img_src = image
+                .source
+                .canonicalize()
+                .expect("incorrect path on image source when loading TileSet")
+                .to_string_lossy()
+                .to_string();
+            // FIXME: When the images are loaded onto the GPU it seems that we need at least 1 pixel of empty space
+            // .. so that the GPU can sample surrounding pixels properly.
+            // .. This contrasts with how Tiled works, as it assumes a perfect packing if possible.
+            const MARGIN: f32 = 0.8;
+            // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and add a 2px margin. Recreating
+            // .. the texture on the fly.
+            let rows = tileset.tilecount / tileset.columns;
+            let atlas1 = TextureAtlas::from_grid(
+                asset_server.load(img_src),
+                Vec2::new(
+                    tileset.tile_width as f32 + tileset.spacing as f32 - MARGIN,
+                    tileset.tile_height as f32 + tileset.spacing as f32 - MARGIN,
+                ),
+                tileset.columns as usize,
+                rows as usize,
+                Some(Vec2::new(MARGIN, MARGIN)),
+                Some(Vec2::new(MARGIN / 4.0, MARGIN / 2.0)),
+            );
+            // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
+            let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
+                if let tiled::PropertyValue::IntValue(n) = x {
+                    Some(n)
+                } else {
+                    None
+                }
+            });
+
+            let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
+                // find the fraction from the total image:
+                let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
+                // from the center:
+                f - 0.5
+            } else {
+                -0.25
+            };
+
+            let atlas1_handle = texture_atlases.add(atlas1);
+            let mts = MapTileSet {
+                tileset: tileset.clone(),
+                handle: atlas1_handle.clone(),
+                y_anchor,
+            };
+            // Store the tileset in memory in case we need to do anything with it later on.
+            if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
+                eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
+                panic!();
+            }
+        }
+    }
+    use bevy::sprite::Anchor;
+
+    let map_layers = load_tile_layer_iter(map.layers());
+    let grp = MapLayerGroup { layers: map_layers };
+    let mut sprites = vec![];
+    for (n, layer) in grp
+        .iter()
+        .filter(|x| x.visible && x.opacity > 0.9)
+        .enumerate()
+    {
+        let z: f32 = n as f32 / 1000.0;
+        if let MapLayerType::Tiles(tiles) = &layer.data {
+            for tile in &tiles.v {
+                let x = map.tile_width as f32 * (tile.pos.x - tile.pos.y) as f32 / 2.0;
+                let y = map.tile_height as f32 * (-tile.pos.x - tile.pos.y) as f32 / 2.0;
+                let op_tileset = tilesetdb.db.get(&tile.tileset);
+                if let Some(tileset) = op_tileset {
+                    let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
+                    id.anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
+                    id.flip_x = tile.flip_x;
+                    // TODO: This already positions the sprite in projected space
+                    sprites.push(SpriteSheetBundle {
+                        texture_atlas: tileset.handle.clone(),
+                        sprite: id,
+                        transform: Transform {
+                            translation: Vec3::new(x, y, z),
+                            ..default()
+                        },
+                        ..default()
+                    });
+                }
+            }
+        }
+    }
+    sprites
 }
