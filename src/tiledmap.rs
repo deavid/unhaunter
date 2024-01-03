@@ -3,7 +3,7 @@
 //! Most of the classes here are almost a redefinition (for now) of the tiled library.
 //! Currently serve as an example on how to load/store data.
 
-use std::{collections::HashMap, fmt::Debug, slice::Iter};
+use std::{collections::HashMap, fmt::Debug, slice::Iter, thread::sleep, time::Duration};
 
 /// A simple 2D position with X and Y components that it is generic.
 ///
@@ -192,13 +192,20 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
 
 // ------------ Bevy map loading utils --------------------
 
-use bevy::prelude::*;
+use bevy::{asset::LoadState, prelude::*};
+use image::{GenericImage, RgbaImage};
 use std::sync::Arc;
+
+#[derive(Debug, Clone)]
+pub enum AtlasData {
+    Sheet(Handle<TextureAtlas>),
+    Tiles(Vec<Handle<Image>>),
+}
 
 #[derive(Debug, Clone)]
 pub struct MapTileSet {
     pub tileset: Arc<tiled::Tileset>,
-    pub handle: Handle<TextureAtlas>,
+    pub data: AtlasData,
     pub y_anchor: f32,
 }
 
@@ -207,12 +214,18 @@ pub struct MapTileSetDb {
     pub db: HashMap<String, MapTileSet>,
 }
 
+pub enum SpriteEnum {
+    One(SpriteBundle),
+    Sheet(SpriteSheetBundle),
+}
+
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: Res<AssetServer>,
+    textures: &mut ResMut<Assets<Image>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut tilesetdb: ResMut<MapTileSetDb>,
-) -> Vec<impl Bundle> {
+) -> Vec<SpriteEnum> {
     // Parse Tiled file:
     let mut loader = tiled::Loader::new();
     let map = loader.load_tmx_map(path).unwrap();
@@ -267,7 +280,51 @@ pub fn bevy_load_map(
             let atlas1_handle = texture_atlases.add(atlas1);
             let mts = MapTileSet {
                 tileset: tileset.clone(),
-                handle: atlas1_handle.clone(),
+                data: AtlasData::Sheet(atlas1_handle.clone()),
+                y_anchor,
+            };
+            // Store the tileset in memory in case we need to do anything with it later on.
+            if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
+                eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
+                panic!();
+            }
+        } else {
+            let mut images: Vec<Handle<Image>> = vec![];
+            for (_tileid, tile) in tileset.tiles() {
+                // tile.collision
+                if let Some(image) = &tile.image {
+                    let img_src = image
+                        .source
+                        .canonicalize()
+                        .expect("incorrect path on image source when loading TileSet")
+                        .to_string_lossy()
+                        .to_string();
+                    dbg!(&img_src);
+                    let img_handle: Handle<Image> = asset_server.load(img_src);
+                    images.push(img_handle);
+                }
+            }
+            // FIXME: This is the same code as above:
+            // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
+            let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
+                if let tiled::PropertyValue::IntValue(n) = x {
+                    Some(n)
+                } else {
+                    None
+                }
+            });
+            let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
+                // find the fraction from the total image:
+                let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
+                // from the center:
+                f - 0.5
+            } else {
+                -0.25
+            };
+
+            let mts = MapTileSet {
+                tileset: tileset.clone(),
+                data: AtlasData::Tiles(images),
                 y_anchor,
             };
             // Store the tileset in memory in case we need to do anything with it later on.
@@ -294,19 +351,39 @@ pub fn bevy_load_map(
                 let y = map.tile_height as f32 * (-tile.pos.x - tile.pos.y) as f32 / 2.0;
                 let op_tileset = tilesetdb.db.get(&tile.tileset);
                 if let Some(tileset) = op_tileset {
-                    let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
-                    id.anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
-                    id.flip_x = tile.flip_x;
-                    // TODO: This already positions the sprite in projected space
-                    sprites.push(SpriteSheetBundle {
-                        texture_atlas: tileset.handle.clone(),
-                        sprite: id,
-                        transform: Transform {
-                            translation: Vec3::new(x, y, z),
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
+                    match &tileset.data {
+                        AtlasData::Sheet(handle) => {
+                            let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
+                            id.anchor = anchor;
+                            id.flip_x = tile.flip_x;
+                            // TODO: This already positions the sprite in projected space
+                            sprites.push(SpriteEnum::Sheet(SpriteSheetBundle {
+                                texture_atlas: handle.clone(),
+                                sprite: id,
+                                transform: Transform {
+                                    translation: Vec3::new(x, y, z),
+                                    ..default()
+                                },
+                                ..default()
+                            }));
+                        }
+                        AtlasData::Tiles(v_img) => {
+                            sprites.push(SpriteEnum::One(SpriteBundle {
+                                texture: v_img[tile.tileuid as usize].clone(),
+                                sprite: Sprite {
+                                    flip_x: tile.flip_x,
+                                    anchor,
+                                    ..default()
+                                },
+                                transform: Transform {
+                                    translation: Vec3::new(x, y, z),
+                                    ..default()
+                                },
+                                ..default()
+                            }));
+                        }
+                    };
                 }
             }
         }
