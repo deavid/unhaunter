@@ -3,7 +3,7 @@
 //! Most of the classes here are almost a redefinition (for now) of the tiled library.
 //! Currently serve as an example on how to load/store data.
 
-use std::{collections::HashMap, fmt::Debug, slice::Iter, thread::sleep, time::Duration};
+use std::{collections::HashMap, fmt::Debug, slice::Iter};
 
 /// A simple 2D position with X and Y components that it is generic.
 ///
@@ -192,8 +192,7 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
 
 // ------------ Bevy map loading utils --------------------
 
-use bevy::{asset::LoadState, prelude::*};
-use image::{GenericImage, RgbaImage};
+use bevy::prelude::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -222,7 +221,6 @@ pub enum SpriteEnum {
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: Res<AssetServer>,
-    textures: &mut ResMut<Assets<Image>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut tilesetdb: ResMut<MapTileSetDb>,
 ) -> Vec<SpriteEnum> {
@@ -234,7 +232,7 @@ pub fn bevy_load_map(
     for tileset in map.tilesets().iter() {
         // If an image is included, this is a tilemap. If no image is included this is a sprite collection.
         // Sprite collections are not supported right now.
-        if let Some(image) = &tileset.image {
+        let data = if let Some(image) = &tileset.image {
             let img_src = image
                 .source
                 .canonicalize()
@@ -259,35 +257,8 @@ pub fn bevy_load_map(
                 Some(Vec2::new(MARGIN, MARGIN)),
                 Some(Vec2::new(MARGIN / 4.0, MARGIN / 2.0)),
             );
-            // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
-            let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
-                if let tiled::PropertyValue::IntValue(n) = x {
-                    Some(n)
-                } else {
-                    None
-                }
-            });
-
-            let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
-                // find the fraction from the total image:
-                let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
-                // from the center:
-                f - 0.5
-            } else {
-                -0.25
-            };
-
             let atlas1_handle = texture_atlases.add(atlas1);
-            let mts = MapTileSet {
-                tileset: tileset.clone(),
-                data: AtlasData::Sheet(atlas1_handle.clone()),
-                y_anchor,
-            };
-            // Store the tileset in memory in case we need to do anything with it later on.
-            if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
-                eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
-                panic!();
-            }
+            AtlasData::Sheet(atlas1_handle.clone())
         } else {
             let mut images: Vec<Handle<Image>> = vec![];
             for (_tileid, tile) in tileset.tiles() {
@@ -304,34 +275,35 @@ pub fn bevy_load_map(
                     images.push(img_handle);
                 }
             }
-            // FIXME: This is the same code as above:
-            // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
-            let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
-                if let tiled::PropertyValue::IntValue(n) = x {
-                    Some(n)
-                } else {
-                    None
-                }
-            });
-            let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
-                // find the fraction from the total image:
-                let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
-                // from the center:
-                f - 0.5
+            AtlasData::Tiles(images)
+        };
+        // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
+        let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
+            if let tiled::PropertyValue::IntValue(n) = x {
+                Some(n)
             } else {
-                -0.25
-            };
-
-            let mts = MapTileSet {
-                tileset: tileset.clone(),
-                data: AtlasData::Tiles(images),
-                y_anchor,
-            };
-            // Store the tileset in memory in case we need to do anything with it later on.
-            if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
-                eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
-                panic!();
+                None
             }
+        });
+
+        let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
+            // find the fraction from the total image:
+            let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
+            // from the center:
+            f - 0.5
+        } else {
+            -0.25
+        };
+
+        let mts = MapTileSet {
+            tileset: tileset.clone(),
+            data,
+            y_anchor,
+        };
+        // Store the tileset in memory in case we need to do anything with it later on.
+        if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
+            eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
+            panic!();
         }
     }
     use bevy::sprite::Anchor;

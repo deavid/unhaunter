@@ -21,7 +21,6 @@ fn main() {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut textures: ResMut<Assets<Image>>,
     texture_atlases: ResMut<Assets<TextureAtlas>>,
     tilesetdb: ResMut<tiledmap::MapTileSetDb>,
 ) {
@@ -30,7 +29,6 @@ fn setup(
     let sprites = tiledmap::bevy_load_map(
         "assets/maps/map_house1_3x.tmx",
         asset_server,
-        &mut textures,
         texture_atlases,
         tilesetdb,
     );
