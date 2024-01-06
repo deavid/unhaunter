@@ -1,12 +1,12 @@
 use crate::board::{Direction, Position, TileSprite};
-use crate::levelparse;
 use crate::materials::CustomMaterial1;
+use crate::tiledmap::SpriteEnum;
 use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
+use crate::{levelparse, tiledmap};
 use bevy::{prelude::*, render::camera::ScalingMode};
-use std::ops::RangeInclusive;
 use std::time::Duration;
 
 #[derive(Component)]
@@ -177,6 +177,7 @@ pub fn setup_ui(
         });
     info!("Game UI loaded");
     let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
+    // Spawn Player 1
     commands
         .spawn(SpriteSheetBundle {
             texture_atlas: handles.images.character1.clone(),
@@ -192,8 +193,10 @@ pub fn setup_ui(
         .insert(board::Direction::default())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
-            OldCharacterAnimation::Walking.animation_range(),
+            CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ));
+
+    // Spawn Player 2
     // commands
     //     .spawn(SpriteSheetBundle {
     //         texture_atlas: handles.images.character1.clone(),
@@ -211,7 +214,9 @@ pub fn setup_ui(
     //         Timer::from_seconds(0.20, TimerMode::Repeating),
     //         OldCharacterAnimation::Walking.animation_range(),
     //     ));
-    ev_load.send(LoadLevelEvent);
+    ev_load.send(LoadLevelEvent {
+        map_filepath: "default.json".to_string(),
+    });
 }
 
 pub fn keyboard(
@@ -352,32 +357,6 @@ pub fn keyboard_player(
         } else if dir_dist > DIR_MIN {
             dir.dx /= DIR_RED;
             dir.dy /= DIR_RED;
-        }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub enum OldCharacterAnimation {
-    Standing,
-    Walking,
-    Happy,
-    Jump,
-    Crouch,
-    Kick,
-    Hit,
-}
-
-impl OldCharacterAnimation {
-    pub fn animation_range(&self) -> RangeInclusive<usize> {
-        match self {
-            OldCharacterAnimation::Standing => 0..=0,
-            OldCharacterAnimation::Walking => 1..=2,
-            OldCharacterAnimation::Happy => 3..=3,
-            OldCharacterAnimation::Jump => 4..=5,
-            OldCharacterAnimation::Crouch => 6..=6,
-            OldCharacterAnimation::Kick => 7..=7,
-            OldCharacterAnimation::Hit => 8..=8,
         }
     }
 }
@@ -554,7 +533,9 @@ pub fn player_coloring(
 }
 
 #[derive(Debug, Clone, Event)]
-pub struct LoadLevelEvent;
+pub struct LoadLevelEvent {
+    map_filepath: String,
+}
 
 #[allow(clippy::too_many_arguments)]
 pub fn load_level(
@@ -566,45 +547,99 @@ pub fn load_level(
     qgs: Query<Entity, With<board::Tile>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
+    asset_server: Res<AssetServer>,
+    texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
 ) {
-    for _ in ev.read() {
-        commands.init_resource::<board::BoardData>();
+    let Some(load_event) = ev.read().next() else {
+        return;
+    };
 
-        info!("Load Level");
-        let json_u8 = std::fs::read("default_map.json").unwrap();
-        let json = std::str::from_utf8(&json_u8).unwrap();
-        let level = levelparse::Level::deserialize_json(json).unwrap();
-        // Despawn tiles before loading the level
-        for gs in qgs.iter() {
-            commands.entity(gs).despawn_recursive();
-        }
-        let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
-        let mut spawn_points: Vec<board::Position> = vec![];
-        for tile in level.tiles.iter() {
-            let pos: board::Position = tile.position.into();
-            if tile.sprite == board::TileSprite::Character {
-                spawn_points.push(pos);
-            }
-            let tile = board::Tile {
-                sprite: tile.sprite,
-                variant: tile.variant,
-            };
-            // TODO: The IDs spawned are lost and can't be tracked in x,y coordinates
-            // We need to store the entity ids into a hashmap.
-            let _id = tb.spawn_tile(&mut commands, tile, pos, GameSprite, false);
-        }
-        use rand::seq::SliceRandom;
-        use rand::thread_rng;
-        spawn_points.shuffle(&mut thread_rng());
+    dbg!(&load_event.map_filepath);
+    commands.init_resource::<board::BoardData>();
 
-        for mut pos in qp.iter_mut() {
-            if let Some(spawn) = spawn_points.pop() {
-                *pos = spawn;
-            }
-        }
-        ev_bdr.send(BoardDataToRebuild {
-            lighting: true,
-            collision: true,
-        });
+    info!("Load Level");
+
+    // ---------- NEW MAP LOAD ----------
+    let (map, layers) = tiledmap::bevy_load_map(
+        "assets/maps/map_house1_3x.tmx",
+        asset_server,
+        texture_atlases,
+        &mut tilesetdb,
+    );
+    let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
+    let sprites = tiledmap::bevy_load_layers(&layers, tile_size, &mut tilesetdb);
+
+    for (tile, bundle) in sprites {
+        /*
+        -  tile: Tile,
+        -        mut pos: Position,
+        -        bundle: impl Bundle, -> GameSprite
+        -        for_editor: bool,     -> false
+
+               let sprite = match for_editor {
+                   true => tile.sprite,
+                   false => tile.sprite.as_displayed(),
+               };
+               pos.global_z = sprite.global_z();
+               let bdl = self.custom_tile(sprite); // SpriteSheetBundle?
+               let mut new_tile = commands.spawn(bdl);
+               new_tile
+                   .insert(bundle)
+                   .insert(pos)
+                   .insert(TileColor {
+                       color: sprite.color(),
+                   })
+                   .insert(tile);
+               */
+        let pos = board::Position {
+            x: tile.pos.x as f32 / 3.0,
+            y: -tile.pos.y as f32 / 3.0,
+            z: 0.0,
+            global_z: 0.0,
+        };
+
+        let mut new_tile = match bundle {
+            SpriteEnum::One(b) => commands.spawn(b),
+            SpriteEnum::Sheet(b) => commands.spawn(b),
+        };
+        new_tile.insert(GameSprite).insert(pos);
     }
+
+    // --------- OLD LEVEL LOAD ------------
+    let json_u8 = std::fs::read("default_map.json").unwrap();
+    let json = std::str::from_utf8(&json_u8).unwrap();
+    let level = levelparse::Level::deserialize_json(json).unwrap();
+    // Despawn tiles before loading the level
+    for gs in qgs.iter() {
+        commands.entity(gs).despawn_recursive();
+    }
+    let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
+    let mut spawn_points: Vec<board::Position> = vec![];
+    for tile in level.tiles.iter() {
+        let pos: board::Position = tile.position.into();
+        if tile.sprite == board::TileSprite::Character {
+            spawn_points.push(pos);
+        }
+        let tile = board::Tile {
+            sprite: tile.sprite,
+            variant: tile.variant,
+        };
+        // TODO: The IDs spawned are lost and can't be tracked in x,y coordinates
+        // We need to store the entity ids into a hashmap.
+        let _id = tb.spawn_tile(&mut commands, tile, pos, GameSprite, false);
+    }
+    use rand::seq::SliceRandom;
+    use rand::thread_rng;
+    spawn_points.shuffle(&mut thread_rng());
+
+    for mut pos in qp.iter_mut() {
+        if let Some(spawn) = spawn_points.pop() {
+            *pos = spawn;
+        }
+    }
+    ev_bdr.send(BoardDataToRebuild {
+        lighting: true,
+        collision: true,
+    });
 }

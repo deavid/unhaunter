@@ -28,18 +28,21 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     texture_atlases: ResMut<Assets<TextureAtlas>>,
-    tilesetdb: ResMut<tiledmap::MapTileSetDb>,
+    mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let sprites = tiledmap::bevy_load_map(
+    let (map, layers) = tiledmap::bevy_load_map(
         "assets/maps/map_house1_3x.tmx",
         asset_server,
         texture_atlases,
-        tilesetdb,
+        &mut tilesetdb,
     );
 
-    for bundle in sprites {
+    let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
+    let sprites = tiledmap::bevy_load_layers(&layers, tile_size, &mut tilesetdb);
+
+    for (_tile, bundle) in sprites {
         match bundle {
             SpriteEnum::One(b) => commands.spawn(b),
             SpriteEnum::Sheet(b) => commands.spawn(b),

@@ -29,14 +29,14 @@
         },
         "map_house1_3x.tmx": {
             "expandedGroupLayers": [
-                13,
-                2
+                2,
+                13
             ],
             "scale": 3,
-            "selectedLayer": 4,
+            "selectedLayer": 7,
             "viewCenter": {
-                "x": 1599.6666666666665,
-                "y": 613.8333333333333
+                "x": 1325.3333333333333,
+                "y": 603.1666666666666
             }
         },
         "unhaunter_custom_tileset.tsx": {

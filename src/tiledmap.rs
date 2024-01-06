@@ -222,8 +222,8 @@ pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut tilesetdb: ResMut<MapTileSetDb>,
-) -> Vec<SpriteEnum> {
+    tilesetdb: &mut ResMut<MapTileSetDb>,
+) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
     let mut loader = tiled::Loader::new();
     let map = loader.load_tmx_map(path).unwrap();
@@ -303,62 +303,85 @@ pub fn bevy_load_map(
         // Store the tileset in memory in case we need to do anything with it later on.
         if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
             eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
-            panic!();
+            // panic!();
         }
     }
-    use bevy::sprite::Anchor;
 
     let map_layers = load_tile_layer_iter(map.layers());
     let grp = MapLayerGroup { layers: map_layers };
-    let mut sprites = vec![];
-    for (n, layer) in grp
+
+    let layers: Vec<(usize, MapLayer)> = grp
         .iter()
         .filter(|x| x.visible && x.opacity > 0.9)
         .enumerate()
-    {
-        let z: f32 = n as f32 / 1000.0;
+        .map(|(n, l)| (n, l.clone()))
+        .collect();
+
+    (map, layers)
+
+    // let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
+    // bevy_load_layers(&layers, tile_size, &mut tilesetdb)
+}
+
+pub fn bevy_load_layers(
+    layers: &[(usize, MapLayer)],
+    tile_size: (f32, f32),
+    tilesetdb: &mut ResMut<MapTileSetDb>,
+) -> Vec<(MapTile, SpriteEnum)> {
+    let mut sprites = vec![];
+    for (n, layer) in layers {
         if let MapLayerType::Tiles(tiles) = &layer.data {
             for tile in &tiles.v {
-                let x = map.tile_width as f32 * (tile.pos.x - tile.pos.y) as f32 / 2.0;
-                let y = map.tile_height as f32 * (-tile.pos.x - tile.pos.y) as f32 / 2.0;
+                // load tile
                 let op_tileset = tilesetdb.db.get(&tile.tileset);
                 if let Some(tileset) = op_tileset {
-                    let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
-                    match &tileset.data {
-                        AtlasData::Sheet(handle) => {
-                            let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
-                            id.anchor = anchor;
-                            id.flip_x = tile.flip_x;
-                            // TODO: This already positions the sprite in projected space
-                            sprites.push(SpriteEnum::Sheet(SpriteSheetBundle {
-                                texture_atlas: handle.clone(),
-                                sprite: id,
-                                transform: Transform {
-                                    translation: Vec3::new(x, y, z),
-                                    ..default()
-                                },
-                                ..default()
-                            }));
-                        }
-                        AtlasData::Tiles(v_img) => {
-                            sprites.push(SpriteEnum::One(SpriteBundle {
-                                texture: v_img[tile.tileuid as usize].clone(),
-                                sprite: Sprite {
-                                    flip_x: tile.flip_x,
-                                    anchor,
-                                    ..default()
-                                },
-                                transform: Transform {
-                                    translation: Vec3::new(x, y, z),
-                                    ..default()
-                                },
-                                ..default()
-                            }));
-                        }
-                    };
+                    sprites.push((tile.clone(), bevy_load_tile(tile, tile_size, tileset, *n)));
                 }
             }
         }
     }
     sprites
+}
+
+pub fn bevy_load_tile(
+    tile: &MapTile,
+    tile_size: (f32, f32),
+    tileset: &MapTileSet,
+    n: usize,
+) -> SpriteEnum {
+    use bevy::sprite::Anchor;
+    let x = tile_size.0 * (tile.pos.x - tile.pos.y) as f32 / 2.0;
+    let y = tile_size.1 * (-tile.pos.x - tile.pos.y) as f32 / 2.0;
+    let z: f32 = n as f32 / 1000.0;
+    let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
+    match &tileset.data {
+        AtlasData::Sheet(handle) => {
+            let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
+            id.anchor = anchor;
+            id.flip_x = tile.flip_x;
+            // TODO: This already positions the sprite in projected space
+            SpriteEnum::Sheet(SpriteSheetBundle {
+                texture_atlas: handle.clone(),
+                sprite: id,
+                transform: Transform {
+                    translation: Vec3::new(x, y, z),
+                    ..default()
+                },
+                ..default()
+            })
+        }
+        AtlasData::Tiles(v_img) => SpriteEnum::One(SpriteBundle {
+            texture: v_img[tile.tileuid as usize].clone(),
+            sprite: Sprite {
+                flip_x: tile.flip_x,
+                anchor,
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(x, y, z),
+                ..default()
+            },
+            ..default()
+        }),
+    }
 }

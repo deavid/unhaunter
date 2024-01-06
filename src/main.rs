@@ -6,6 +6,7 @@ mod mainmenu;
 mod materials;
 mod pause;
 mod root;
+mod tiledmap;
 
 use std::time::Duration;
 
@@ -20,7 +21,7 @@ fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins
-                // .set(ImagePlugin::default_nearest())
+                .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Unhaunter".to_string(),
@@ -34,6 +35,7 @@ fn main() {
         .add_plugins(bevy_framepace::FramepacePlugin)
         .add_systems(Startup, set_fps_limiter)
         .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
+        .init_resource::<tiledmap::MapTileSetDb>()
         .init_resource::<board::BoardData>()
         .init_resource::<game::GameConfig>()
         .add_event::<board::BoardDataToRebuild>()
