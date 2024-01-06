@@ -1,16 +1,22 @@
 mod tiledmap;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResolution};
 use tiledmap::SpriteEnum;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(
-            // This sets image filtering to nearest
-            // This is done to prevent textures with low resolution (e.g. pixel art) from being blurred
-            // by linear filtering.
-            ImagePlugin::default_nearest(),
-        ))
+        .add_plugins(
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Unhaunter".to_string(),
+                        resolution: WindowResolution::new(1500.0, 800.0),
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         .init_resource::<tiledmap::MapTileSetDb>()
         .add_systems(Startup, setup)
         //        .add_systems(Update, sprite_movement)
