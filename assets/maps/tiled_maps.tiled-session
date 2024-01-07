@@ -29,14 +29,14 @@
         },
         "map_house1_3x.tmx": {
             "expandedGroupLayers": [
-                2,
-                13
+                13,
+                2
             ],
             "scale": 3,
-            "selectedLayer": 7,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 1325.3333333333333,
-                "y": 603.1666666666666
+                "x": 1369.8333333333333,
+                "y": 683.1666666666666
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -51,7 +51,7 @@
         },
         "unhaunter_spritesheetA_3x3x3.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 1,
+            "scaleInDock": 2,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_6x6x10.tsx": {
@@ -84,15 +84,16 @@
     "openFiles": [
         "map_house1_3x.tmx",
         "unhaunter_custom_tileset.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx"
+        "unhaunter_spritesheetA_6x6x10.tsx",
+        "unhaunter_spritesheetA_3x3x3.tsx"
     ],
     "project": "tiled_maps.tiled-project",
-    "property.type": "int",
+    "property.type": "bool",
     "recentFiles": [
+        "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",
         "map_house1_3x.tmx",
-        "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheet2.tsx",
         "character1.tsx",
         "unhaunter_test2b.tmx",

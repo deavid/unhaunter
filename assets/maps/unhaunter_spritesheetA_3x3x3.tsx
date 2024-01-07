@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="2" tilecount="276" columns="12" objectalignment="bottom">
+<tileset version="1.10" tiledversion="1.10.2" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="2" tilecount="264" columns="12" objectalignment="bottom">
  <tileoffset x="-4" y="0"/>
  <grid orientation="isometric" width="28" height="14"/>
  <transformations hflip="1" vflip="0" rotate="0" preferuntransformed="0"/>
@@ -10,7 +10,8 @@
  <tile id="0" type="Floor"/>
  <tile id="1" type="Floor"/>
  <tile id="2" type="Floor"/>
- <tile id="4" type="Grass1:Floor:Std">
+ <tile id="3" type="Floor"/>
+ <tile id="4" type="Floor">
   <animation>
    <frame tileid="4" duration="1700"/>
    <frame tileid="6" duration="1740"/>
@@ -18,7 +19,7 @@
    <frame tileid="7" duration="1840"/>
   </animation>
  </tile>
- <tile id="5" type="Grass2:Floor:Std">
+ <tile id="5" type="Floor">
   <animation>
    <frame tileid="5" duration="2840"/>
    <frame tileid="6" duration="2980"/>
@@ -26,7 +27,7 @@
    <frame tileid="4" duration="3480"/>
   </animation>
  </tile>
- <tile id="6">
+ <tile id="6" type="Floor">
   <animation>
    <frame tileid="6" duration="4480"/>
    <frame tileid="4" duration="4380"/>
@@ -35,7 +36,7 @@
    <frame tileid="5" duration="4010"/>
   </animation>
  </tile>
- <tile id="7">
+ <tile id="7" type="Floor">
   <animation>
    <frame tileid="7" duration="3870"/>
    <frame tileid="5" duration="3760"/>
@@ -43,8 +44,24 @@
    <frame tileid="6" duration="3620"/>
   </animation>
  </tile>
+ <tile id="8" type="Floor"/>
+ <tile id="9" type="Floor"/>
+ <tile id="10" type="Floor"/>
+ <tile id="11" type="Floor"/>
+ <tile id="12" type="Floor"/>
+ <tile id="13" type="Floor"/>
+ <tile id="14" type="Floor"/>
+ <tile id="15" type="Floor"/>
+ <tile id="16" type="Floor"/>
+ <tile id="17" type="Floor"/>
+ <tile id="18" type="Floor"/>
+ <tile id="19" type="Floor"/>
+ <tile id="20" type="Floor"/>
+ <tile id="21" type="Floor"/>
+ <tile id="22" type="Floor"/>
+ <tile id="23" type="Floor"/>
  <tile id="24" type="RoomDef"/>
- <tile id="36">
+ <tile id="36" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -54,7 +71,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="37">
+ <tile id="37" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -64,7 +81,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="38">
+ <tile id="38" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -80,7 +97,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="39">
+ <tile id="39" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -90,7 +107,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="40">
+ <tile id="40" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -100,7 +117,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="41" type="WoodNW:Door:Closed">
+ <tile id="41" type="Door">
   <properties>
    <property name="isOpen" type="bool" value="false"/>
   </properties>
@@ -113,7 +130,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="42" type="WoodNE:Door:Closed">
+ <tile id="42" type="Door">
   <properties>
    <property name="is_open" type="bool" value="false"/>
    <property name="onactivate_transform_to_id" type="int" value="44"/>
@@ -127,7 +144,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="43" type="WoodNW:Door:Open">
+ <tile id="43" type="Door">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -137,7 +154,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="44" type="WoodNE:Door:Open">
+ <tile id="44" type="Door">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -152,7 +169,7 @@
    <object id="2" x="0" y="0" width="14" height="14"/>
   </objectgroup>
  </tile>
- <tile id="48">
+ <tile id="48" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="9.33333" height="9.33333">
     <properties>
@@ -162,7 +179,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="49">
+ <tile id="49" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="9.33333" height="9.33333">
     <properties>
@@ -172,7 +189,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="50">
+ <tile id="50" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66666">
     <properties>
@@ -182,7 +199,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="60">
+ <tile id="60" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="0" width="9.33333" height="14">
     <properties>
@@ -192,7 +209,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="61">
+ <tile id="61" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="9.33333" height="9.33333">
     <properties>
@@ -202,7 +219,15 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="72">
+ <tile id="62" type="Decor"/>
+ <tile id="63" type="Decor"/>
+ <tile id="64" type="Decor"/>
+ <tile id="65" type="Decor"/>
+ <tile id="66" type="Decor"/>
+ <tile id="67" type="Decor"/>
+ <tile id="68" type="Decor"/>
+ <tile id="69" type="Decor"/>
+ <tile id="72" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66666" height="4.66666">
     <properties>
@@ -212,7 +237,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="73">
+ <tile id="73" type="Furniture">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -222,7 +247,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="74">
+ <tile id="74" type="Furniture">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="3.33333e-06" y="0" width="14" height="14">
     <properties>
@@ -232,7 +257,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="75">
+ <tile id="75" type="Furniture">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="1.16573e-15" width="9.33333" height="9.33333">
     <properties>
@@ -242,7 +267,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="84">
+ <tile id="84" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -252,7 +277,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="85">
+ <tile id="85" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -262,7 +287,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="86">
+ <tile id="86" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -272,7 +297,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="87">
+ <tile id="87" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -282,7 +307,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="88">
+ <tile id="88" type="Decor">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -292,6 +317,13 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="96" type="Util123">
+  <properties>
+   <property name="is_player_spawn" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="97" type="Util"/>
+ <tile id="98" type="Util"/>
  <tile id="108" type="RoomDef">
   <properties>
    <property name="RoomDef::display_name" value="Foyer"/>

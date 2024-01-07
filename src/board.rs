@@ -8,7 +8,7 @@ use bevy::{
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-use crate::{levelparse, materials::CustomMaterial1, root};
+use crate::{board, levelparse, materials::CustomMaterial1, root};
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -265,7 +265,7 @@ impl std::ops::Sub for &Position {
         }
     }
 }
-#[derive(Component, Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Component, Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct BoardPosition {
     pub x: i64,
     pub y: i64,
@@ -770,9 +770,9 @@ pub struct LightFieldSector {
 // FIXME: This has exactly the same computation as HashMap, at least for the part that it matters.
 impl LightFieldSector {
     pub fn new(min_x: i64, min_y: i64, min_z: i64, max_x: i64, max_y: i64, max_z: i64) -> Self {
-        let sz_x = (max_x - min_x + 1) as usize;
-        let sz_y = (max_y - min_y + 1) as usize;
-        let sz_z = (max_z - min_z + 1) as usize;
+        let sz_x = (max_x - min_x + 1).max(0) as usize;
+        let sz_y = (max_y - min_y + 1).max(0) as usize;
+        let sz_z = (max_z - min_z + 1).max(0) as usize;
         let light_field: Vec<Vec<Vec<Option<Box<LightFieldData>>>>> =
             vec![vec![vec![None; sz_z]; sz_y]; sz_x];
         Self {
@@ -1015,12 +1015,18 @@ pub fn boardfield_update(
             info!("CBP time {:?}", build_start_time.elapsed());
             bf.exposure_lux = 1.0;
             bf.light_field.clear();
-            let mut min_x = i64::MAX;
-            let mut min_y = i64::MAX;
-            let mut min_z = i64::MAX;
-            let mut max_x = i64::MIN;
-            let mut max_y = i64::MIN;
-            let mut max_z = i64::MIN;
+            // Dividing by 4 so later we don't get an overflow if there's no map.
+            let first_p = qt
+                .iter()
+                .next()
+                .map(|(_t, p)| p.to_board_position())
+                .unwrap_or_default();
+            let mut min_x = first_p.x;
+            let mut min_y = first_p.y;
+            let mut min_z = first_p.z;
+            let mut max_x = first_p.x;
+            let mut max_y = first_p.y;
+            let mut max_z = first_p.z;
             for (tile, pos) in qt.iter() {
                 let pos = pos.to_board_position();
 

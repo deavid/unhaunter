@@ -385,3 +385,71 @@ pub fn bevy_load_tile(
         }),
     }
 }
+
+// ---- Tiled Custom Classes ------
+
+#[derive(Debug, Clone)]
+pub struct TiledCustomClass {
+    pub name: String,
+    pub global_z: f32,
+}
+
+impl TiledCustomClass {
+    pub fn build_hashmap() -> HashMap<String, Self> {
+        let mut hm = HashMap::<String, Self>::new();
+        let customtypes = vec![
+            TiledCustomClass {
+                name: "Floor".into(),
+                global_z: -0.00005,
+            },
+            TiledCustomClass {
+                name: "Wall".into(),
+                global_z: -0.00001,
+            },
+            TiledCustomClass {
+                name: "Door".into(),
+                global_z: 0.000015,
+            },
+            TiledCustomClass {
+                name: "Lamp".into(),
+                global_z: 0.000035,
+            },
+            TiledCustomClass {
+                name: "Switch".into(),
+                global_z: 0.000040,
+            },
+            TiledCustomClass {
+                name: "Breaker".into(),
+                global_z: 0.000040,
+            },
+            TiledCustomClass {
+                name: "WallObject".into(),
+                global_z: 0.000040,
+            },
+            TiledCustomClass {
+                name: "Furniture".into(),
+                global_z: 0.000050,
+            },
+            TiledCustomClass {
+                name: "Decor".into(),
+                global_z: 0.000065,
+            },
+            TiledCustomClass {
+                name: "Electrodomestic".into(),
+                global_z: 0.000070,
+            },
+            TiledCustomClass {
+                name: "Light".into(),
+                global_z: 0.000080,
+            },
+            TiledCustomClass {
+                name: "Util".into(),
+                global_z: -0.25,
+            },
+        ];
+        for custom in customtypes {
+            hm.insert(custom.name.clone(), custom);
+        }
+        hm
+    }
+}

@@ -290,11 +290,12 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 5.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
+    const ENABLE_COLLISION: bool = false;
     for (mut pos, mut transform, mut dir, player, mut anim) in players.iter_mut() {
         let bpos = pos.to_board_position();
         for npos in bpos.xy_neighbors(1) {
             let cf = bf.collision_field.get(&npos).copied().unwrap_or_default();
-            if !cf.free {
+            if !cf.free && ENABLE_COLLISION {
                 let dpos = npos.to_position().to_vec3() - pos.to_vec3();
                 const PILLAR_SZ: f32 = 0.3;
                 const PLAYER_SZ: f32 = 0.7;
@@ -555,6 +556,8 @@ pub fn load_level(
         return;
     };
 
+    let custom_classes = tiledmap::TiledCustomClass::build_hashmap();
+
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
 
@@ -569,35 +572,56 @@ pub fn load_level(
     );
     let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
     let sprites = tiledmap::bevy_load_layers(&layers, tile_size, &mut tilesetdb);
+    let mut spawn_points: Vec<board::Position> = vec![];
 
     for (tile, bundle) in sprites {
-        /*
-        -  tile: Tile,
-        -        mut pos: Position,
-        -        bundle: impl Bundle, -> GameSprite
-        -        for_editor: bool,     -> false
-
-               let sprite = match for_editor {
-                   true => tile.sprite,
-                   false => tile.sprite.as_displayed(),
-               };
-               pos.global_z = sprite.global_z();
-               let bdl = self.custom_tile(sprite); // SpriteSheetBundle?
-               let mut new_tile = commands.spawn(bdl);
-               new_tile
-                   .insert(bundle)
-                   .insert(pos)
-                   .insert(TileColor {
-                       color: sprite.color(),
-                   })
-                   .insert(tile);
-               */
-        let pos = board::Position {
+        let mut pos = board::Position {
             x: tile.pos.x as f32 / 3.0,
             y: -tile.pos.y as f32 / 3.0,
             z: 0.0,
             global_z: 0.0,
         };
+        // if tile.pos.x == 50 && tile.pos.y == 64 {
+        //     dbg!(tile.tileuid);
+        // }
+
+        let op_tileset = tilesetdb.db.get(&tile.tileset);
+        if let Some(tileset) = op_tileset {
+            let tiled_tileset = tileset.tileset.clone();
+            if let Some(tiled_tile) = tiled_tileset.get_tile(tile.tileuid) {
+                if let Some(user_type) = &tiled_tile.user_type {
+                    match custom_classes.get(user_type) {
+                        Some(c) => {
+                            pos.global_z = c.global_z;
+                        }
+                        None => warn!("Unknown user class {:?} (from Tiled map load)", user_type),
+                    }
+                }
+                if tile.tileuid == 96 {
+                    dbg!(&tiled_tile.user_type);
+                    dbg!(&tiled_tile.properties);
+                    dbg!(tile.tileuid);
+                    dbg!(&tile.tileset);
+                }
+                if let Some(player_spawn) = tiled_tile.properties.get("is_player_spawn") {
+                    dbg!(&player_spawn);
+                    let is_player_spawn = match player_spawn {
+                        tiled::PropertyValue::BoolValue(b) => *b,
+                        _ => false,
+                    };
+                    if is_player_spawn {
+                        spawn_points.push(Position {
+                            global_z: 0.00001,
+                            ..pos
+                        });
+                    }
+                }
+            } else {
+                warn!("Missing Tile UID {:?}->{:?}", tile.tileset, tile.tileuid);
+            }
+        } else {
+            warn!("Missing TileSet {:?}", tile.tileset);
+        }
 
         let mut new_tile = match bundle {
             SpriteEnum::One(b) => commands.spawn(b),
@@ -607,37 +631,40 @@ pub fn load_level(
     }
 
     // --------- OLD LEVEL LOAD ------------
-    let json_u8 = std::fs::read("default_map.json").unwrap();
-    let json = std::str::from_utf8(&json_u8).unwrap();
-    let level = levelparse::Level::deserialize_json(json).unwrap();
+    // let json_u8 = std::fs::read("default_map.json").unwrap();
+    // let json = std::str::from_utf8(&json_u8).unwrap();
+    // let level = levelparse::Level::deserialize_json(json).unwrap();
     // Despawn tiles before loading the level
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
-    let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
-    let mut spawn_points: Vec<board::Position> = vec![];
-    for tile in level.tiles.iter() {
-        let pos: board::Position = tile.position.into();
-        if tile.sprite == board::TileSprite::Character {
-            spawn_points.push(pos);
+    /*
+        let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
+
+        for tile in level.tiles.iter() {
+            let pos: board::Position = tile.position.into();
+            if tile.sprite == board::TileSprite::Character {
+                spawn_points.push(pos);
+            }
+            let tile = board::Tile {
+                sprite: tile.sprite,
+                variant: tile.variant,
+            };
+            // TODO: The IDs spawned are lost and can't be tracked in x,y coordinates
+            // We need to store the entity ids into a hashmap.
+            let _id = tb.spawn_tile(&mut commands, tile, pos, GameSprite, false);
         }
-        let tile = board::Tile {
-            sprite: tile.sprite,
-            variant: tile.variant,
-        };
-        // TODO: The IDs spawned are lost and can't be tracked in x,y coordinates
-        // We need to store the entity ids into a hashmap.
-        let _id = tb.spawn_tile(&mut commands, tile, pos, GameSprite, false);
-    }
+    */
     use rand::seq::SliceRandom;
     use rand::thread_rng;
     spawn_points.shuffle(&mut thread_rng());
-
+    dbg!(&spawn_points);
     for mut pos in qp.iter_mut() {
         if let Some(spawn) = spawn_points.pop() {
             *pos = spawn;
         }
     }
+
     ev_bdr.send(BoardDataToRebuild {
         lighting: true,
         collision: true,
