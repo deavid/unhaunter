@@ -97,7 +97,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="39" type="Wall">
+ <tile id="39" type="DoorFrame">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -107,7 +107,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="40" type="Wall">
+ <tile id="40" type="DoorFrame">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>

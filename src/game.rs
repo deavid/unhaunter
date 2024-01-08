@@ -1,4 +1,4 @@
-use crate::board::{Direction, Position, TileSprite};
+use crate::board::{Direction, Position, Tile, TileSprite};
 use crate::materials::CustomMaterial1;
 use crate::tiledmap::SpriteEnum;
 use crate::{
@@ -93,7 +93,7 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCamera>>) {
     }
     // 2D orthographic camera
     let mut cam = Camera2dBundle::default();
-    cam.projection.scaling_mode = ScalingMode::FixedVertical(400.0);
+    cam.projection.scaling_mode = ScalingMode::FixedVertical(200.0);
     commands.spawn(cam).insert(GCamera);
     info!("Game camera setup");
 }
@@ -238,16 +238,19 @@ pub fn keyboard(
             if player.id != gc.player_id {
                 continue;
             }
+            // Camera movement
             let mut ref_point = p_transform.translation;
-            ref_point.y += 20.0 + p_dir.dy;
-            ref_point.x += p_dir.dx;
+            let sc_dir = p_dir.to_screen_coord();
+            const CAMERA_AHEAD_FACTOR: f32 = 0.11;
+            ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
+            ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;
             ref_point.z = transform.translation.z;
-            let dist = transform.translation.distance(ref_point);
+            let dist = (transform.translation.distance(ref_point) - 1.0).max(0.00001);
             let mut delta = ref_point - transform.translation;
             delta.z = 0.0;
-            const RED: f32 = 20.0;
-            const F: f32 = 10.0;
-            let vector = delta / (0.1 + dist / F).sqrt();
+            const RED: f32 = 120.0;
+            const MEAN_DIST: f32 = 120.0;
+            let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED;
         }
         if keyboard_input.pressed(KeyCode::Right) {
@@ -287,10 +290,10 @@ pub fn keyboard_player(
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
     const DIR_MAX: f32 = 80.0;
-    const DIR_STEPS: f32 = 5.0;
+    const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
-    const ENABLE_COLLISION: bool = false;
+    const ENABLE_COLLISION: bool = true;
     for (mut pos, mut transform, mut dir, player, mut anim) in players.iter_mut() {
         let bpos = pos.to_board_position();
         for npos in bpos.xy_neighbors(1) {
@@ -576,15 +579,15 @@ pub fn load_level(
 
     for (tile, bundle) in sprites {
         let mut pos = board::Position {
-            x: tile.pos.x as f32 / 3.0,
-            y: -tile.pos.y as f32 / 3.0,
+            x: tile.pos.x as f32,
+            y: -tile.pos.y as f32,
             z: 0.0,
             global_z: 0.0,
         };
-        // if tile.pos.x == 50 && tile.pos.y == 64 {
-        //     dbg!(tile.tileuid);
-        // }
-
+        let mut tile_type = Tile {
+            sprite: TileSprite::FloorTile,
+            variant: board::TileVariant::Base,
+        };
         let op_tileset = tilesetdb.db.get(&tile.tileset);
         if let Some(tileset) = op_tileset {
             let tiled_tileset = tileset.tileset.clone();
@@ -596,12 +599,15 @@ pub fn load_level(
                         }
                         None => warn!("Unknown user class {:?} (from Tiled map load)", user_type),
                     }
-                }
-                if tile.tileuid == 96 {
-                    dbg!(&tiled_tile.user_type);
-                    dbg!(&tiled_tile.properties);
-                    dbg!(tile.tileuid);
-                    dbg!(&tile.tileset);
+                    if user_type == "Wall" {
+                        tile_type.sprite = TileSprite::Pillar;
+                    }
+                    if user_type == "Light" {
+                        tile_type.sprite = TileSprite::CeilingLight;
+                    }
+                    if user_type == "Lamp" {
+                        tile_type.sprite = TileSprite::CeilingLight;
+                    }
                 }
                 if let Some(player_spawn) = tiled_tile.properties.get("is_player_spawn") {
                     dbg!(&player_spawn);
@@ -611,7 +617,7 @@ pub fn load_level(
                     };
                     if is_player_spawn {
                         spawn_points.push(Position {
-                            global_z: 0.00001,
+                            global_z: 0.00003,
                             ..pos
                         });
                     }
@@ -627,7 +633,7 @@ pub fn load_level(
             SpriteEnum::One(b) => commands.spawn(b),
             SpriteEnum::Sheet(b) => commands.spawn(b),
         };
-        new_tile.insert(GameSprite).insert(pos);
+        new_tile.insert(GameSprite).insert(pos).insert(tile_type);
     }
 
     // --------- OLD LEVEL LOAD ------------

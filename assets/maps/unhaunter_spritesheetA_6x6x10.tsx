@@ -121,7 +121,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="10">
+ <tile id="10" type="Light">
   <objectgroup draworder="index" id="2">
    <object id="1" x="4" y="4" width="4" height="4">
     <properties>

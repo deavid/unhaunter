@@ -144,8 +144,15 @@ impl PartialEq for Position {
         z: Vec3(x:  0.0, y: +4.0, z: 0.001),
 
 */
-const PERSPECTIVE_X: [f32; 3] = [4.0 * 9.0, -2.0 * 9.0, 0.0001];
-const PERSPECTIVE_Y: [f32; 3] = [4.0 * 9.0, 2.0 * 9.0, -0.0001];
+
+// old perspective (9x20cm)
+// const PERSPECTIVE_X: [f32; 3] = [4.0 * 9.0, -2.0 * 9.0, 0.0001];
+// const PERSPECTIVE_Y: [f32; 3] = [4.0 * 9.0, 2.0 * 9.0, -0.0001];
+// const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
+
+// new perspective (3x20cm)
+const PERSPECTIVE_X: [f32; 3] = [4.0 * 3.0, -2.0 * 3.0, 0.0001];
+const PERSPECTIVE_Y: [f32; 3] = [4.0 * 3.0, 2.0 * 3.0, -0.0001];
 const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
 
 impl Position {
@@ -570,7 +577,7 @@ impl TileSprite {
             TileSprite::WallRight => 0.00001,
             TileSprite::FrameLeft => 0.00001,
             TileSprite::FrameRight => 0.00001,
-            _ => 1.0,
+            _ => 1.01,
         }
     }
     #[allow(clippy::match_like_matches_macro)]
@@ -750,6 +757,15 @@ impl FromWorld for BoardData {
 pub struct LightFieldData {
     pub lux: f32,
     pub transmissivity: f32,
+}
+
+impl Default for LightFieldData {
+    fn default() -> Self {
+        Self {
+            lux: 0.0,
+            transmissivity: 1.0,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Copy)]
@@ -1029,17 +1045,18 @@ pub fn boardfield_update(
             let mut max_z = first_p.z;
             for (tile, pos) in qt.iter() {
                 let pos = pos.to_board_position();
-
-                let lightdata = LightFieldData {
-                    lux: tile.emmisivity_lumens(),
-                    transmissivity: tile.light_transmissivity_factor(),
-                };
                 min_x = min_x.min(pos.x);
                 min_y = min_y.min(pos.y);
                 min_z = min_z.min(pos.z);
                 max_x = max_x.max(pos.x);
                 max_y = max_y.max(pos.y);
                 max_z = max_z.max(pos.z);
+                let src = bf.light_field.get(&pos).cloned().unwrap_or_default();
+                let lightdata = LightFieldData {
+                    lux: tile.emmisivity_lumens() + src.lux,
+                    transmissivity: tile.light_transmissivity_factor() * src.transmissivity
+                        + 0.0001,
+                };
                 bf.light_field.insert(pos, lightdata);
             }
             info!("Collecting time: {:?}", build_start_time.elapsed());
@@ -1047,7 +1064,7 @@ pub fn boardfield_update(
             for (k, v) in bf.light_field.iter() {
                 lfs.insert(k.x, k.y, k.z, v.clone());
             }
-            for step in 0..3 {
+            for step in 0..5 {
                 let step_time = Instant::now();
                 let src_lfs = lfs.clone();
                 let size = match step {

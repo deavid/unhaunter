@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "map_house1_3x.tmx",
+    "activeFile": "unhaunter_custom_tileset.tsx",
     "expandedProjectPaths": [
         "."
     ],
@@ -32,11 +32,11 @@
                 13,
                 2
             ],
-            "scale": 3,
-            "selectedLayer": 6,
+            "scale": 4,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1369.8333333333333,
-                "y": 683.1666666666666
+                "x": 1402.75,
+                "y": 660.5
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -90,10 +90,10 @@
     "project": "tiled_maps.tiled-project",
     "property.type": "bool",
     "recentFiles": [
+        "map_house1_3x.tmx",
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",
-        "map_house1_3x.tmx",
         "unhaunter_spritesheet2.tsx",
         "character1.tsx",
         "unhaunter_test2b.tmx",
