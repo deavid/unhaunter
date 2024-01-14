@@ -597,7 +597,7 @@ pub fn apply_lighting(
             &board::Tile,
             Option<&Children>,
         ),
-        Without<Sprite>,
+        // Without<Sprite>,
     >,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     // mut qm: Query<&Handle<CustomMaterial1>>,
@@ -701,12 +701,9 @@ pub fn apply_lighting(
         }
         dst_color.set_a(opacity.clamp(0.2, 1.0));
         sprite.color = dst_color;
-        dbg!(&sprite);
+        // dbg!(&sprite);
     }
 
-    // for mat in qm.iter_mut() {
-    //     dbg!(&mat);
-    // }
     for (tcolor, pos, mat, tile, children) in qt2.iter_mut() {
         // dbg!(&mat);
         let opacity = current_pos

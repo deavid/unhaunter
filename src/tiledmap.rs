@@ -192,13 +192,14 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
 
 // ------------ Bevy map loading utils --------------------
 
+use crate::materials::CustomMaterial1;
 use bevy::prelude::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum AtlasData {
-    Sheet(Handle<TextureAtlas>),
-    Tiles(Vec<Handle<Image>>),
+    Sheet((Handle<TextureAtlas>, CustomMaterial1)),
+    Tiles(Vec<(Handle<Image>, CustomMaterial1)>),
 }
 
 #[derive(Debug, Clone)]
@@ -221,7 +222,7 @@ pub enum SpriteEnum {
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
@@ -245,9 +246,10 @@ pub fn bevy_load_map(
             const MARGIN: f32 = 0.8;
             // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and add a 2px margin. Recreating
             // .. the texture on the fly.
+            let texture: Handle<Image> = asset_server.load(img_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlas::from_grid(
-                asset_server.load(img_src),
+                texture.clone(),
                 Vec2::new(
                     tileset.tile_width as f32 + tileset.spacing as f32 - MARGIN,
                     tileset.tile_height as f32 + tileset.spacing as f32 - MARGIN,
@@ -257,10 +259,15 @@ pub fn bevy_load_map(
                 Some(Vec2::new(MARGIN, MARGIN)),
                 Some(Vec2::new(MARGIN / 4.0, MARGIN / 2.0)),
             );
+            let mut cmat = CustomMaterial1::from_texture(texture);
+            cmat.data.sheet_rows = rows;
+            cmat.data.sheet_cols = tileset.columns;
+            cmat.data.sheet_idx = 0;
+
             let atlas1_handle = texture_atlases.add(atlas1);
-            AtlasData::Sheet(atlas1_handle.clone())
+            AtlasData::Sheet((atlas1_handle.clone(), cmat))
         } else {
-            let mut images: Vec<Handle<Image>> = vec![];
+            let mut images: Vec<(Handle<Image>, CustomMaterial1)> = vec![];
             for (_tileid, tile) in tileset.tiles() {
                 // tile.collision
                 if let Some(image) = &tile.image {
@@ -272,7 +279,9 @@ pub fn bevy_load_map(
                         .to_string();
                     dbg!(&img_src);
                     let img_handle: Handle<Image> = asset_server.load(img_src);
-                    images.push(img_handle);
+                    let cmat = CustomMaterial1::from_texture(img_handle.clone());
+
+                    images.push((img_handle, cmat));
                 }
             }
             AtlasData::Tiles(images)
@@ -355,11 +364,10 @@ pub fn bevy_load_tile(
     let z: f32 = n as f32 / 1000.0;
     let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
     match &tileset.data {
-        AtlasData::Sheet(handle) => {
+        AtlasData::Sheet((handle, _opt_mat)) => {
             let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
             id.anchor = anchor;
             id.flip_x = tile.flip_x;
-            // TODO: This already positions the sprite in projected space
             SpriteEnum::Sheet(SpriteSheetBundle {
                 texture_atlas: handle.clone(),
                 sprite: id,
@@ -371,7 +379,7 @@ pub fn bevy_load_tile(
             })
         }
         AtlasData::Tiles(v_img) => SpriteEnum::One(SpriteBundle {
-            texture: v_img[tile.tileuid as usize].clone(),
+            texture: v_img[tile.tileuid as usize].0.clone(),
             sprite: Sprite {
                 flip_x: tile.flip_x,
                 anchor,

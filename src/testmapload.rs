@@ -1,3 +1,4 @@
+mod materials;
 mod tiledmap;
 
 use bevy::{prelude::*, window::WindowResolution};
@@ -27,7 +28,7 @@ fn main() {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
 ) {
     commands.spawn(Camera2dBundle::default());
@@ -35,7 +36,7 @@ fn setup(
     let (map, layers) = tiledmap::bevy_load_map(
         "assets/maps/map_house1_3x.tmx",
         asset_server,
-        texture_atlases,
+        &mut texture_atlases,
         &mut tilesetdb,
     );
 

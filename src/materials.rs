@@ -44,6 +44,7 @@ fn setup(
                 gtl: 5.0,
                 gbr: 0.1,
                 gtr: 1.0,
+                ..Default::default()
             },
             color_texture: asset_server.load("img/light_x4.png"),
         }),
@@ -62,6 +63,7 @@ fn setup(
                 gtl: 5.0,
                 gbr: 0.1,
                 gtr: 1.0,
+                ..Default::default()
             },
             color_texture: asset_server.load("img/light_x4.png"),
         }),
@@ -81,6 +83,9 @@ pub struct CustomMaterial1Data {
     pub gtr: f32,
     pub gbl: f32,
     pub gbr: f32,
+    pub sheet_rows: u32,
+    pub sheet_cols: u32,
+    pub sheet_idx: u32,
 }
 
 impl Default for CustomMaterial1Data {
@@ -92,6 +97,9 @@ impl Default for CustomMaterial1Data {
             gtr: 1.0,
             gbl: 0.1,
             gbr: 5.0,
+            sheet_rows: 1,
+            sheet_cols: 1,
+            sheet_idx: 0,
         }
     }
 }

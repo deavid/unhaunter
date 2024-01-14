@@ -7,6 +7,9 @@ struct CustomMaterial {
     gtr: f32,
     gbl: f32,
     gbr: f32,
+    sheet_rows: u32,
+    sheet_cols: u32,
+    sheet_idx: u32,
 };
 
 @group(1) @binding(0)
@@ -36,8 +39,8 @@ fn fragment(
     var ptbl: vec2<f32> = cnt + dpx;
 
     var min_dst = 0.4 * 35.0/128.0;
-    var uv_y: f32 = (mesh.uv[1] - cnt[1]) * 2.0 + cnt[1];
-    var uv_w: vec2<f32> = vec2(mesh.uv[0], uv_y);
+    var uv1_y: f32 = (mesh.uv[1] - cnt[1]) * 2.0 + cnt[1];
+    var uv_w: vec2<f32> = vec2(mesh.uv[0], uv1_y);
 
     var wtl: f32 = 2.0 / (max(min_dst, distance(uv_w, pttl)-dz));
     var wtr: f32 = 2.0 / (max(min_dst, distance(uv_w, pttr)-dz));
@@ -71,7 +74,32 @@ fn fragment(
     var g4: vec4<f32> = vec4(g,g,g,1.0);
     var black: f32 = 0.0001 * g * g;
     var b4: vec4<f32> = vec4(black, black, black, 0.0);
-    var c: vec4<f32> = textureSample(base_color_texture, base_color_sampler, mesh.uv);
+
+
+    /// remap mesh.uv for spritesheets, cutting the spritesheet to get the sprite_idx
+    var sheet_idx = material.sheet_idx;  
+    var sheet_rows = material.sheet_rows;  
+    var sheet_cols = material.sheet_cols;
+
+    var row = f32(sheet_idx / sheet_cols);
+    var col = f32(sheet_idx % sheet_cols);
+
+    var cell_width = 1.0 / f32(sheet_cols); 
+    var cell_height = 1.0 / f32(sheet_rows);
+
+    var cell_min_x = col * cell_width;
+    // var cell_max_x = cell_min_x + cell_width;
+
+    var cell_min_y = row * cell_height;  
+    // var cell_max_y = cell_min_y + cell_height;
+
+    var uv_x = mesh.uv.x * cell_width + cell_min_x;
+    var uv_y = mesh.uv.y * cell_height +cell_min_y;
+
+    var sprite_uv = vec2(uv_x, uv_y);
+    //
+
+    var c: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uv);
 
     return (pow(c + b4, e4) * g + g4 * c) / (1.0 + g) * material.color;
 }
