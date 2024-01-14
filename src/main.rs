@@ -10,11 +10,18 @@ mod tiledmap;
 
 use std::time::Duration;
 
-use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    prelude::*,
+    sprite::Material2dPlugin,
+    window::WindowResolution,
+};
 use materials::CustomMaterial1;
 
 fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
     settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
+    // bevy_framepace::debug::DiagnosticsPlugin
+    //    bevy_framepace::FramePaceStats
 }
 
 fn main() {
@@ -31,6 +38,9 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
         .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(bevy_framepace::FramepacePlugin)
         .add_systems(Startup, set_fps_limiter)

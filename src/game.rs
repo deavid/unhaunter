@@ -8,6 +8,7 @@ use crate::{
 };
 use crate::{levelparse, tiledmap};
 use bevy::sprite::{Anchor, MaterialMesh2dBundle, Mesh2dHandle};
+use bevy::utils::hashbrown::HashMap;
 use bevy::{prelude::*, render::camera::ScalingMode};
 use std::time::Duration;
 
@@ -577,6 +578,7 @@ pub fn load_level(
         &mut tilesetdb,
     );
     let mut spawn_points: Vec<board::Position> = vec![];
+    let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     let mut c = 0.0;
     for (_n, layer) in layers {
         if let MapLayerType::Tiles(tiles) = &layer.data {
@@ -589,16 +591,23 @@ pub fn load_level(
                         AtlasData::Sheet((handle, cmat)) => {
                             let mut cmat = cmat.clone();
                             let tatlas = texture_atlases.get(handle).unwrap();
-                            let sprite_size = Vec2::new(
-                                tatlas.size.x / cmat.data.sheet_cols as f32,
-                                tatlas.size.y / cmat.data.sheet_rows as f32,
-                            );
-                            let sprite_anchor = Vec2::new(
-                                sprite_size.x / 2.0,
-                                sprite_size.y * (0.5 - tileset.y_anchor),
-                            );
-                            let base_quad = Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
-                            let mesh_handle = meshes.add(base_quad);
+                            let mesh_handle = mesh_tileset
+                                .entry(tile.tileset.clone())
+                                .or_insert_with(|| {
+                                    let sprite_size = Vec2::new(
+                                        tatlas.size.x / cmat.data.sheet_cols as f32,
+                                        tatlas.size.y / cmat.data.sheet_rows as f32,
+                                    );
+                                    let sprite_anchor = Vec2::new(
+                                        sprite_size.x / 2.0,
+                                        sprite_size.y * (0.5 - tileset.y_anchor),
+                                    );
+                                    let base_quad =
+                                        Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
+                                    meshes.add(base_quad)
+                                })
+                                .clone();
+
                             cmat.data.sheet_idx = tile.tileuid;
                             let mat = materials1.add(cmat);
                             let mut transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
