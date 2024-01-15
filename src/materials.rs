@@ -86,6 +86,30 @@ pub struct CustomMaterial1Data {
     pub sheet_rows: u32,
     pub sheet_cols: u32,
     pub sheet_idx: u32,
+    pub sprite_width: f32,
+    pub sprite_height: f32,
+}
+
+impl CustomMaterial1Data {
+    pub fn delta(&self, other: &Self) -> f32 {
+        let mut delta = 0.0;
+        delta += (self.color.as_rgba_f32()[0] - other.color.as_rgba_f32()[0]).abs();
+        delta += (self.color.as_rgba_f32()[1] - other.color.as_rgba_f32()[1]).abs();
+        delta += (self.color.as_rgba_f32()[2] - other.color.as_rgba_f32()[2]).abs();
+        delta += (self.color.as_rgba_f32()[3] - other.color.as_rgba_f32()[3]).abs();
+
+        delta += (self.gamma - other.gamma).abs();
+        delta += (self.gtl - other.gtl).abs();
+        delta += (self.gtr - other.gtr).abs();
+        delta += (self.gbl - other.gbl).abs();
+        delta += (self.gbr - other.gbr).abs();
+
+        delta += (self.sheet_rows as f32 - other.sheet_rows as f32).abs();
+        delta += (self.sheet_cols as f32 - other.sheet_cols as f32).abs();
+        delta += (self.sheet_idx as f32 - other.sheet_idx as f32).abs();
+
+        delta
+    }
 }
 
 impl Default for CustomMaterial1Data {
@@ -100,6 +124,8 @@ impl Default for CustomMaterial1Data {
             sheet_rows: 1,
             sheet_cols: 1,
             sheet_idx: 0,
+            sprite_width: 10000.0,
+            sprite_height: 10000.0,
         }
     }
 }
@@ -130,6 +156,19 @@ impl CustomMaterial1 {
 impl Material2d for CustomMaterial1 {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material1.wgsl".into()
+    }
+    fn specialize(
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayout,
+        _key: Material2dKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        if let Some(fragment) = &mut descriptor.fragment {
+            if let Some(target_state) = &mut fragment.targets[0] {
+                target_state.blend = Some(BlendState::ALPHA_BLENDING);
+            }
+        }
+
+        Ok(())
     }
 }
 

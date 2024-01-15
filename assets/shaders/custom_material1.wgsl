@@ -10,6 +10,8 @@ struct CustomMaterial {
     sheet_rows: u32,
     sheet_cols: u32,
     sheet_idx: u32,
+    sprite_width: f32,
+    sprite_height: f32,
 };
 
 @group(1) @binding(0)
@@ -92,9 +94,18 @@ fn fragment(
 
     var cell_min_y = row * cell_height;  
     // var cell_max_y = cell_min_y + cell_height;
-
-    var uv_x = mesh.uv.x * cell_width + cell_min_x;
-    var uv_y = mesh.uv.y * cell_height +cell_min_y;
+    var d = 0.5;
+    var muvx = (round(mesh.uv.x * material.sprite_width) + d) / material.sprite_width;
+    var muvy = (round(mesh.uv.y * material.sprite_height) + d) / material.sprite_height;
+    var duv = vec2<f32>(mesh.uv.x+ d / material.sprite_width - muvx, mesh.uv.y+ d / material.sprite_height - muvy);
+    var ddx = pow(abs(dpdx(mesh.uv.x)) * material.sprite_width, 3.0);
+    var duv2 = max(length(duv) - 0.002/ material.sprite_width / ddx, 0.0) * normalize(duv);
+    muvx += duv2.x / 1.0;
+    muvy += duv2.y / 1.0;
+    
+    
+    var uv_x = muvx * cell_width + cell_min_x;
+    var uv_y = muvy * cell_height + cell_min_y;
 
     var sprite_uv = vec2(uv_x, uv_y);
     //

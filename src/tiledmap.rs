@@ -263,6 +263,8 @@ pub fn bevy_load_map(
             cmat.data.sheet_rows = rows;
             cmat.data.sheet_cols = tileset.columns;
             cmat.data.sheet_idx = 0;
+            cmat.data.sprite_width = tileset.tile_width as f32 + tileset.spacing as f32;
+            cmat.data.sprite_height = tileset.tile_height as f32 + tileset.spacing as f32;
 
             let atlas1_handle = texture_atlases.add(atlas1);
             AtlasData::Sheet((atlas1_handle.clone(), cmat))

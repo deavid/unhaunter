@@ -694,7 +694,7 @@ pub fn load_level(
                                 };
                                 if is_player_spawn {
                                     spawn_points.push(Position {
-                                        global_z: 0.00003,
+                                        global_z: 0.0001,
                                         ..pos
                                     });
                                 }
@@ -706,7 +706,7 @@ pub fn load_level(
                         warn!("Missing TileSet {:?}", tile.tileset);
                     }
                     pos.global_z += c;
-                    c += 0.0000001;
+                    c += 0.000000001;
                     let tile_color = TileColor {
                         color: Color::Rgba {
                             red: 1.0,

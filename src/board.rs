@@ -146,13 +146,16 @@ impl PartialEq for Position {
 */
 
 // old perspective (9x20cm)
-// const PERSPECTIVE_X: [f32; 3] = [4.0 * 9.0, -2.0 * 9.0, 0.0001];
-// const PERSPECTIVE_Y: [f32; 3] = [4.0 * 9.0, 2.0 * 9.0, -0.0001];
-// const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
+// const SUBTL: f32 = 9.0;
 
 // new perspective (3x20cm)
-const PERSPECTIVE_X: [f32; 3] = [4.0 * 3.0, -2.0 * 3.0, 0.0001];
-const PERSPECTIVE_Y: [f32; 3] = [4.0 * 3.0, 2.0 * 3.0, -0.0001];
+const SUBTL: f32 = 3.0;
+
+// new perspective (3x20cm) - reduced
+// const SUBTL: f32 = 2.5;
+
+const PERSPECTIVE_X: [f32; 3] = [4.0 * SUBTL, -2.0 * SUBTL, 0.0001];
+const PERSPECTIVE_Y: [f32; 3] = [4.0 * SUBTL, 2.0 * SUBTL, -0.0001];
 const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
 
 impl Position {
@@ -193,8 +196,8 @@ impl Position {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         let dz = self.z - other.z;
-
-        (dx.powi(2) + dy.powi(2) + dz.powi(2)).sqrt()
+        // fastapprox::faster::pow
+        (dx * dx + dy * dy + dz * dz).sqrt()
     }
     pub fn to_board_position(self) -> BoardPosition {
         BoardPosition {

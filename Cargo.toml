@@ -20,10 +20,11 @@ image = "0.24.5"
 regex = "1.7.1"
 tiled = "0.11.2"
 clap = "4.4.8"
+fastapprox = "0.3.1"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]
-opt-level = 1
+opt-level = 2
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]

@@ -28,7 +28,7 @@ fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins
-                .set(ImagePlugin::default_nearest())
+                // .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Unhaunter".to_string(),
@@ -80,7 +80,7 @@ fn main() {
         .add_systems(Update, leveleditor::highlight_grid)
         .add_systems(Update, leveleditor::piece_selector_input)
         .add_systems(Update, leveleditor::selected_piece_display)
-        .add_systems(FixedUpdate, leveleditor::apply_lighting)
+        .add_systems(Update, leveleditor::apply_lighting)
         .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
             1.0 / 30.0,
         )))
