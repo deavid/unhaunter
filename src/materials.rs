@@ -93,10 +93,12 @@ pub struct CustomMaterial1Data {
 impl CustomMaterial1Data {
     pub fn delta(&self, other: &Self) -> f32 {
         let mut delta = 0.0;
-        delta += (self.color.as_rgba_f32()[0] - other.color.as_rgba_f32()[0]).abs();
-        delta += (self.color.as_rgba_f32()[1] - other.color.as_rgba_f32()[1]).abs();
-        delta += (self.color.as_rgba_f32()[2] - other.color.as_rgba_f32()[2]).abs();
-        delta += (self.color.as_rgba_f32()[3] - other.color.as_rgba_f32()[3]).abs();
+        let color1 = self.color.as_rgba_f32();
+        let color2 = other.color.as_rgba_f32();
+
+        delta += (color1[0] - color2[0]).abs();
+        delta += (color1[1] - color2[1]).abs();
+        delta += (color1[2] - color2[2]).abs();
 
         delta += (self.gamma - other.gamma).abs();
         delta += (self.gtl - other.gtl).abs();
@@ -108,6 +110,8 @@ impl CustomMaterial1Data {
         delta += (self.sheet_cols as f32 - other.sheet_cols as f32).abs();
         delta += (self.sheet_idx as f32 - other.sheet_idx as f32).abs();
 
+        delta *= color1[3] + color2[3] + 0.01;
+        delta += (color1[3] - color2[3]).abs() * 15.0;
         delta
     }
 }

@@ -1,12 +1,15 @@
-use std::time::{Duration, Instant};
+use std::{
+    collections::VecDeque,
+    time::{Duration, Instant},
+};
 
 use crate::{
-    board::{self, BoardDataToRebuild, BoardPosition, TileSprite, TileVariant},
+    board::{self, BoardDataToRebuild, BoardPosition, CollisionFieldData, TileSprite, TileVariant},
     game, levelparse,
     materials::CustomMaterial1,
     root,
 };
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{prelude::*, render::camera::ScalingMode, utils::HashMap};
 use rand::Rng as _;
 
 #[derive(Component, Debug)]
@@ -578,6 +581,48 @@ pub fn save_level(
     }
 }
 
+pub fn compute_visibility(
+    vf: &mut HashMap<BoardPosition, f32>,
+    cf: &HashMap<BoardPosition, CollisionFieldData>,
+    start: BoardPosition,
+) {
+    let mut queue = VecDeque::new();
+    queue.push_front(start.clone());
+
+    *vf.entry(start.clone()).or_default() = 1.0;
+
+    while let Some(pos) = queue.pop_back() {
+        let src_f = vf.get(&pos).cloned().unwrap_or_default();
+        if !cf.get(&pos).map(|c| c.free).unwrap_or_default() {
+            // If the current position analyzed is not free (a wall or out of bounds)
+            // then stop extending.
+            continue;
+        }
+        let pds = pos.distance(&start);
+        // let neighbors = [pos.left(), pos.top(), pos.bottom(), pos.right()];
+        let neighbors = pos.xy_neighbors(1);
+        for npos in neighbors {
+            if npos == pos {
+                continue;
+            }
+            if cf.contains_key(&npos) {
+                let npds = npos.distance(&start);
+                let npref = npos.distance(&pos);
+                let f = (((npds - pds) / npref - 0.3) / 0.99).clamp(0.0, 1.0);
+                let dst_f = src_f * f;
+                if dst_f < 0.00001 {
+                    continue;
+                }
+                if !vf.contains_key(&npos) {
+                    queue.push_front(npos.clone());
+                }
+                let entry = vf.entry(npos.clone()).or_default();
+                *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
+            }
+        }
+    }
+}
+
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
     mut qt: Query<
@@ -590,18 +635,13 @@ pub fn apply_lighting(
         ),
         Without<CustomMaterial1>,
     >,
-    mut qt2: Query<
-        (
-            &board::TileColor,
-            &board::Position,
-            &Handle<CustomMaterial1>,
-            &board::Tile,
-            Option<&Children>,
-        ),
-        // Without<Sprite>,
-    >,
-    mut materials1: ResMut<Assets<CustomMaterial1>>,
-    // mut qm: Query<&Handle<CustomMaterial1>>,
+    mut qt2: Query<(
+        &board::TileColor,
+        &board::Position,
+        &Handle<CustomMaterial1>,
+        &board::Tile,
+    )>,
+    materials1: ResMut<Assets<CustomMaterial1>>,
     mut qtc: Query<&mut Sprite, Without<board::Position>>,
     qc: Query<&board::Position, With<Cursor>>,
     qp: Query<(&board::Position, &game::PlayerSprite, &board::Direction), Without<Cursor>>,
@@ -623,7 +663,7 @@ pub fn apply_lighting(
             }
         }
     }
-    let mut is_player = false;
+    let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
     const FLASHLIGHT_ON: bool = true;
     const FLASHLIGHT_POWER: f32 = 3.0;
@@ -638,7 +678,6 @@ pub fn apply_lighting(
             continue;
         }
 
-        is_player = true;
         let cursor_pos = pos.to_board_position();
         for npos in cursor_pos.xy_neighbors(1) {
             if let Some(lf) = bf.light_field.get(&npos) {
@@ -646,6 +685,7 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / lf.lux + 0.001;
             }
         }
+        compute_visibility(&mut visibility_field, &bf.collision_field, cursor_pos);
     }
     let current_pos = qc.iter().next().or(qp.iter().find_map(|(pos, p, _d)| {
         if p.id == gc.player_id {
@@ -704,160 +744,140 @@ pub fn apply_lighting(
         sprite.color = dst_color;
         // dbg!(&sprite);
     }
-    const SMALL_PRIME: usize = 97;
+
     const VSMALL_PRIME: usize = 7;
-    const FAST: bool = true;
-    let shard = rand::thread_rng().gen_range(0..SMALL_PRIME);
+    const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
-    // dbg!(lf.len(), qt2.iter().count());
-    const BIG_PRIME: usize = 95629;
     let start = Instant::now();
     let materials1 = materials1.into_inner();
-    let mut total_delta = 0.0;
     let mut change_count = 0;
-    let q_count = qt2.iter().count() as f32 + 1.0;
-    for pass in 0..1 {
-        for (n, (tcolor, pos, mat, tile, children)) in qt2.iter_mut().enumerate() {
-            let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
-            // dbg!(&mat);
-            let opacity = current_pos
-                .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
-                .unwrap_or(1.0);
-            let bpos = pos.to_board_position();
-            let src_color = tcolor.color;
-            let bpos_tr = bpos.bottom();
-            let bpos_bl = bpos.top();
-            let bpos_br = bpos.right();
-            let bpos_tl = bpos.left();
+    for (n, (tcolor, pos, mat, tile)) in qt2.iter_mut().enumerate() {
+        let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
+        // dbg!(&mat);
+        let mut opacity = current_pos
+            .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
+            .unwrap_or(1.0);
+        let bpos = pos.to_board_position();
+        let src_color = tcolor.color;
+        let bpos_tr = bpos.bottom();
+        let bpos_bl = bpos.top();
+        let bpos_br = bpos.right();
+        let bpos_tl = bpos.left();
 
-            const FL_STRENGTH: f32 = 5.0 * FLASHLIGHT_POWER; // flashlight strength
-            const FL_MIN_DST: f32 = 7.0; // minimum distance for flashlight
+        const FL_STRENGTH: f32 = 5.0 * FLASHLIGHT_POWER; // flashlight strength
+        const FL_MIN_DST: f32 = 7.0; // minimum distance for flashlight
 
-            let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
-                let rpos = bpos.to_position();
-                let mut lux_fl = 0.0; // lux from flashlight
+        let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
+            let rpos = bpos.to_position();
+            let mut lux_fl = 0.0; // lux from flashlight
 
-                for (flpos, fldir) in flashlights.iter() {
-                    let pdist = flpos.distance(&rpos);
-                    let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                    let lpos = *flpos + *fldir / (100.0 / focus);
-                    let mut lpos = lpos.unrotate_by_dir(fldir);
-                    let mut rpos = rpos.unrotate_by_dir(fldir);
-                    rpos.x -= lpos.x;
-                    rpos.y -= lpos.y;
-                    lpos.x = 0.0;
-                    lpos.y = 0.0;
-                    if rpos.x > 0.0 {
-                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
-                        // rpos.x = rpos.x.powf(1.0 / focus.clamp(1.0, 10.0));
-                        rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                    }
-                    if rpos.x < 0.0 {
-                        rpos.x =
-                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
-                        // rpos.x = -(-rpos.x).powf((focus / 5.0 + 1.0).clamp(1.0, 3.0));
-                        rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                    }
-                    let dist = lpos.distance(&rpos);
-                    lux_fl += FL_STRENGTH / (dist * dist + FL_MIN_DST)
-                        * (pdist / 5.0 + 0.6).clamp(0.0, 1.0);
+            for (flpos, fldir) in flashlights.iter() {
+                let pdist = flpos.distance(&rpos);
+                let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
+                let lpos = *flpos + *fldir / (100.0 / focus);
+                let mut lpos = lpos.unrotate_by_dir(fldir);
+                let mut rpos = rpos.unrotate_by_dir(fldir);
+                rpos.x -= lpos.x;
+                rpos.y -= lpos.y;
+                lpos.x = 0.0;
+                lpos.y = 0.0;
+                if rpos.x > 0.0 {
+                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
+                    // rpos.x = rpos.x.powf(1.0 / focus.clamp(1.0, 10.0));
+                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
-
-                lf.get(bpos).map(|lf| (lf.lux + lux_fl) / exposure)
-            };
-
-            let lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
-            let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
-            let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
-            let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
-            let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
-
-            match tile.occlusion_type() {
-                board::OcclusionType::None => {}
-                board::OcclusionType::XAxis => {
-                    lux_tl = lux_c;
-                    lux_br = lux_c;
+                if rpos.x < 0.0 {
+                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
+                    // rpos.x = -(-rpos.x).powf((focus / 5.0 + 1.0).clamp(1.0, 3.0));
+                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
-                board::OcclusionType::YAxis => {
-                    lux_tr = lux_c;
-                    lux_bl = lux_c;
-                }
-                board::OcclusionType::Both => {
-                    lux_tl = lux_c;
-                    lux_br = lux_c;
-                    lux_tr = lux_c;
-                    lux_bl = lux_c;
-                }
+                let dist = lpos.distance(&rpos);
+                lux_fl +=
+                    FL_STRENGTH / (dist * dist + FL_MIN_DST) * (pdist / 5.0 + 0.6).clamp(0.0, 1.0);
             }
 
-            let mut dst_color = {
-                let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-                board::compute_color_exposure(lux_c, r, board::DARK_GAMMA, src_color)
-            };
-            dst_color.set_a(opacity.clamp(0.6, 1.0));
-            if let Some(children) = children {
-                for &child in children.iter() {
-                    let mut c_sprite = qtc.get_mut(child).unwrap();
-                    c_sprite.color = dst_color;
-                }
+            lf.get(bpos).map(|lf| (lf.lux + lux_fl) / exposure)
+        };
+
+        let lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
+        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
+        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
+        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
+        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
+
+        match tile.occlusion_type() {
+            board::OcclusionType::None => {}
+            board::OcclusionType::XAxis => {
+                lux_tl = lux_c;
+                lux_br = lux_c;
             }
-
-            let mut new_mat = materials1.get(mat).unwrap().clone();
-            let orig_mat = new_mat.clone();
-            let mut dst_color = src_color; // <- remove brightness calculation for main tile.
-            let src_a = new_mat.data.color.a();
-            const A_SOFT: f32 = 10.0;
-            dst_color.set_a((opacity.clamp(0.004, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
-            new_mat.data.color = dst_color;
-
-            const SMOOTH_F: f32 = 1.0;
-            let f_gamma = |lux: f32| {
-                (fastapprox::faster::pow(lux, board::LIGHT_GAMMA)
-                    + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
-                    / 2.0
-            };
-            new_mat.data.gamma =
-                (new_mat.data.gamma * SMOOTH_F + f_gamma(lux_c)) / (1.0 + SMOOTH_F);
-            new_mat.data.gtl = (new_mat.data.gtl * SMOOTH_F + f_gamma(lux_tl)) / (1.0 + SMOOTH_F);
-            new_mat.data.gtr = (new_mat.data.gtr * SMOOTH_F + f_gamma(lux_tr)) / (1.0 + SMOOTH_F);
-            new_mat.data.gbl = (new_mat.data.gbl * SMOOTH_F + f_gamma(lux_bl)) / (1.0 + SMOOTH_F);
-            new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
-            /*if !is_player {
-                // for editors, soften the effect to allow better editing
-                const GAMMA_W: f32 = 0.8;
-                const GAMMA_ADD: f32 = 1.5;
-                let gmm_r = (1.0 - GAMMA_W) * GAMMA_ADD;
-                new_mat.data.gamma = new_mat.data.gamma * GAMMA_W + gmm_r;
-                new_mat.data.gtl = new_mat.data.gtl * GAMMA_W + gmm_r;
-                new_mat.data.gtr = new_mat.data.gtr * GAMMA_W + gmm_r;
-                new_mat.data.gbl = new_mat.data.gbl * GAMMA_W + gmm_r;
-                new_mat.data.gbr = new_mat.data.gbr * GAMMA_W + gmm_r;
-            }*/
-            let mut delta = orig_mat.data.delta(&new_mat.data);
-
-            // if pass == 0 {
-            //     total_delta += delta;
-            // }
-            // if pass == 1 && (delta - 0.05) > (total_delta) / q_count {
-            //     let mat = materials1.get_mut(mat).unwrap();
-            //     mat.data = new_mat.data;
-            //     change_count += 1;
-            // }
-            if delta > 0.02 + min_threshold {
-                let mat = materials1.get_mut(mat).unwrap();
-                mat.data = new_mat.data;
-                change_count += 1;
+            board::OcclusionType::YAxis => {
+                lux_tr = lux_c;
+                lux_bl = lux_c;
+            }
+            board::OcclusionType::Both => {
+                lux_tl = lux_c;
+                lux_br = lux_c;
+                lux_tr = lux_c;
+                lux_bl = lux_c;
             }
         }
-        if pass == 0 && mask % 255 == 0 {
-            warn!(
-                "change_count: {}   total_delta: {}",
-                &change_count, &total_delta
-            );
+
+        let mut dst_color = {
+            let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
+            board::compute_color_exposure(lux_c, r, board::DARK_GAMMA, src_color)
+        };
+        dst_color.set_a(opacity.clamp(0.6, 1.0));
+
+        opacity = opacity
+            .min(visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
+            .min(1.0);
+        // if let Some(children) = children {
+        //     for &child in children.iter() {
+        //         let mut c_sprite = qtc.get_mut(child).unwrap();
+        //         c_sprite.color = dst_color;
+        //     }
+        // }
+
+        let mut new_mat = materials1.get(mat).unwrap().clone();
+        let orig_mat = new_mat.clone();
+        let mut dst_color = src_color; // <- remove brightness calculation for main tile.
+        let src_a = new_mat.data.color.a();
+        let opacity = opacity.clamp(0.000, 1.0);
+        const A_DELTA: f32 = 0.02;
+        let new_a = if (src_a - opacity).abs() < A_DELTA {
+            opacity
+        } else {
+            src_a - A_DELTA * (src_a - opacity).signum()
+        };
+        dst_color.set_a(new_a);
+        // const A_SOFT: f32 = 1.0;
+        // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
+        new_mat.data.color = dst_color;
+
+        const SMOOTH_F: f32 = 1.0;
+        let f_gamma = |lux: f32| {
+            (fastapprox::faster::pow(lux, board::LIGHT_GAMMA)
+                + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
+                / 2.0
+        };
+        new_mat.data.gamma = (new_mat.data.gamma * SMOOTH_F + f_gamma(lux_c)) / (1.0 + SMOOTH_F);
+        new_mat.data.gtl = (new_mat.data.gtl * SMOOTH_F + f_gamma(lux_tl)) / (1.0 + SMOOTH_F);
+        new_mat.data.gtr = (new_mat.data.gtr * SMOOTH_F + f_gamma(lux_tr)) / (1.0 + SMOOTH_F);
+        new_mat.data.gbl = (new_mat.data.gbl * SMOOTH_F + f_gamma(lux_bl)) / (1.0 + SMOOTH_F);
+        new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
+
+        let delta = orig_mat.data.delta(&new_mat.data);
+
+        if delta > 0.02 + min_threshold {
+            let mat = materials1.get_mut(mat).unwrap();
+            mat.data = new_mat.data;
+            change_count += 1;
         }
     }
     if mask % 255 == 0 {
+        warn!("change_count: {}", &change_count);
         warn!("apply_lighting elapsed: {:?}", start.elapsed());
     }
 }

@@ -27,7 +27,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="2" type="Light">
+ <tile id="2" type="Lamp">
   <properties>
    <property name="light_power" type="float" value="1e-05"/>
    <property name="onactivate_transform_to_id" type="int" value="3"/>
@@ -41,7 +41,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="3" type="Light">
+ <tile id="3" type="Lamp">
   <properties>
    <property name="light_power" type="float" value="100"/>
    <property name="onactivate_transform_to_id" type="int" value="2"/>

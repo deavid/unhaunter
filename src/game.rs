@@ -682,7 +682,10 @@ pub fn load_level(
                                     tile_type.sprite = TileSprite::CeilingLight;
                                 }
                                 if user_type == "Lamp" {
-                                    tile_type.sprite = TileSprite::CeilingLight;
+                                    tile_type.sprite = TileSprite::Lamp;
+                                }
+                                if user_type == "Util" {
+                                    tile_type.sprite = TileSprite::Util;
                                 }
                             }
                             if let Some(player_spawn) = tiled_tile.properties.get("is_player_spawn")
@@ -708,12 +711,7 @@ pub fn load_level(
                     pos.global_z += c;
                     c += 0.000000001;
                     let tile_color = TileColor {
-                        color: Color::Rgba {
-                            red: 1.0,
-                            green: 1.00,
-                            blue: 1.0,
-                            alpha: 1.0,
-                        },
+                        color: tile_type.sprite.color(),
                     };
                     entity
                         .insert(GameSprite)

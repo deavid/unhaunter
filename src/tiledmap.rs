@@ -450,7 +450,7 @@ impl TiledCustomClass {
             },
             TiledCustomClass {
                 name: "Light".into(),
-                global_z: 0.0080,
+                global_z: -1.0080,
             },
             TiledCustomClass {
                 name: "Van".into(),

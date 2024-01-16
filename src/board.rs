@@ -405,12 +405,14 @@ pub enum TileSprite {
     Grid,
     FloorTile,
     CeilingLight,
+    Lamp,
     Character,
     Pillar,
     WallLeft,
     WallRight,
     FrameLeft,
     FrameRight,
+    Util,
 }
 
 #[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -512,7 +514,6 @@ impl TileSprite {
     }
     pub fn texture(&self, b: &TileBuilder) -> Handle<Image> {
         match self {
-            TileSprite::Grid => b.handles.images.grid1x1.clone(),
             TileSprite::FloorTile => b.handles.images.tile1.clone(),
             TileSprite::Pillar => b.handles.images.pillar.clone(),
             TileSprite::CeilingLight => b.handles.images.ceiling_light.clone(),
@@ -521,6 +522,7 @@ impl TileSprite {
             TileSprite::WallRight => b.handles.images.wall_right.clone(),
             TileSprite::FrameLeft => b.handles.images.frame_left.clone(),
             TileSprite::FrameRight => b.handles.images.frame_right.clone(),
+            _ => b.handles.images.grid1x1.clone(),
         }
     }
     pub fn occlusion_texture(&self, b: &TileBuilder) -> Option<Handle<Image>> {
@@ -532,7 +534,7 @@ impl TileSprite {
     }
     pub fn name(&self) -> &'static str {
         match self {
-            TileSprite::Grid => "None",
+            TileSprite::Util => "Util",
             TileSprite::FloorTile => "Floor Tile",
             TileSprite::CeilingLight => "Ceiling Light",
             TileSprite::Character => "Spawn point",
@@ -541,6 +543,7 @@ impl TileSprite {
             TileSprite::WallRight => "Right Wall",
             TileSprite::FrameLeft => "Left Door Frame",
             TileSprite::FrameRight => "Right Door Frame",
+            _ => "None",
         }
     }
     pub fn occlusion_type(&self) -> OcclusionType {
@@ -569,6 +572,7 @@ impl TileSprite {
     pub fn emmisivity_lumens(&self) -> f32 {
         match self {
             TileSprite::CeilingLight => 1000.0,
+            TileSprite::Lamp => 1000.0,
             _ => 0.000000001,
             // _ => 0.01,
         }
@@ -605,9 +609,15 @@ impl TileSprite {
     pub fn color(&self) -> Color {
         match self {
             TileSprite::CeilingLight => Color::Rgba {
-                red: 0.7,
+                red: 0.0,
                 green: 0.7,
                 blue: 0.7,
+                alpha: 1.0,
+            },
+            TileSprite::Util => Color::Rgba {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0,
                 alpha: 1.0,
             },
             TileSprite::Character => Color::Rgba {

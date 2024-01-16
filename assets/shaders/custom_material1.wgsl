@@ -94,7 +94,8 @@ fn fragment(
 
     var cell_min_y = row * cell_height;  
     // var cell_max_y = cell_min_y + cell_height;
-    var d = 0.5;
+
+    var d = 0.5 * sign(dpdx(mesh.uv.x));
     var muvx = (round(mesh.uv.x * material.sprite_width) + d) / material.sprite_width;
     var muvy = (round(mesh.uv.y * material.sprite_height) + d) / material.sprite_height;
     var duv = vec2<f32>(mesh.uv.x+ d / material.sprite_width - muvx, mesh.uv.y+ d / material.sprite_height - muvy);

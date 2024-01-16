@@ -60,7 +60,7 @@
  <tile id="21" type="Floor"/>
  <tile id="22" type="Floor"/>
  <tile id="23" type="Floor"/>
- <tile id="24" type="RoomDef"/>
+ <tile id="24" type="Wall"/>
  <tile id="36" type="Wall">
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -317,7 +317,7 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="96" type="Util123">
+ <tile id="96" type="Util">
   <properties>
    <property name="is_player_spawn" type="bool" value="true"/>
   </properties>
