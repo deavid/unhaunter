@@ -8,7 +8,7 @@ use bevy::{
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-use crate::{board, levelparse, materials::CustomMaterial1, root};
+use crate::{levelparse, materials::CustomMaterial1, root};
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {

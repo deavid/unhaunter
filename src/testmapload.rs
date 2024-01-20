@@ -1,4 +1,7 @@
+#[allow(dead_code)]
 mod materials;
+
+#[allow(dead_code)]
 mod tiledmap;
 
 use bevy::{prelude::*, window::WindowResolution};

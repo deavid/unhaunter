@@ -214,11 +214,6 @@ pub struct MapTileSetDb {
     pub db: HashMap<String, MapTileSet>,
 }
 
-pub enum SpriteEnum {
-    One(SpriteBundle),
-    Sheet(SpriteSheetBundle),
-}
-
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: Res<AssetServer>,
@@ -334,6 +329,13 @@ pub fn bevy_load_map(
     // bevy_load_layers(&layers, tile_size, &mut tilesetdb)
 }
 
+#[allow(dead_code)]
+pub enum SpriteEnum {
+    One(SpriteBundle),
+    Sheet(SpriteSheetBundle),
+}
+
+#[allow(dead_code)]
 pub fn bevy_load_layers(
     layers: &[(usize, MapLayer)],
     tile_size: (f32, f32),
@@ -354,6 +356,7 @@ pub fn bevy_load_layers(
     sprites
 }
 
+#[allow(dead_code)]
 pub fn bevy_load_tile(
     tile: &MapTile,
     tile_size: (f32, f32),

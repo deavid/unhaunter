@@ -1,13 +1,13 @@
 use crate::board::{Direction, Position, Tile, TileColor, TileSprite};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
-use crate::tiledmap::{AtlasData, MapLayerType, SpriteEnum};
+use crate::tiledmap;
+use crate::tiledmap::{AtlasData, MapLayerType};
 use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
-use crate::{levelparse, tiledmap};
-use bevy::sprite::{Anchor, MaterialMesh2dBundle, Mesh2dHandle};
+use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
 use bevy::{prelude::*, render::camera::ScalingMode};
 use std::time::Duration;
@@ -548,8 +548,8 @@ pub struct LoadLevelEvent {
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
-    images: Res<Assets<Image>>,
-    handles: Res<root::GameAssets>,
+    // images: Res<Assets<Image>>,
+    // handles: Res<root::GameAssets>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<board::Tile>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
@@ -621,22 +621,6 @@ pub fn load_level(
                                 ..Default::default()
                             };
                             commands.spawn(bdl)
-
-                            /*
-                            let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
-                            // let mesh: Mesh2dHandle = handles.meshes.quad128.clone().into();
-                            id.anchor = anchor;
-                            id.flip_x = tile.flip_x;
-                            commands.spawn((
-                                SpriteSheetBundle {
-                                    texture_atlas: handle.clone(),
-                                    sprite: id,
-                                    transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
-                                    ..default()
-                                },
-                                mat.clone(),
-                                // mesh,
-                            ))*/
                         }
                         AtlasData::Tiles(v_img) => commands.spawn(SpriteBundle {
                             texture: v_img[tile.tileuid as usize].0.clone(),
@@ -724,6 +708,7 @@ pub fn load_level(
     }
 
     // --------- OLD LEVEL LOAD ------------
+    // use crate::levelparse;
     // let json_u8 = std::fs::read("default_map.json").unwrap();
     // let json = std::str::from_utf8(&json_u8).unwrap();
     // let level = levelparse::Level::deserialize_json(json).unwrap();
