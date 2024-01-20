@@ -595,8 +595,8 @@ pub fn load_level(
                                 .entry(tile.tileset.clone())
                                 .or_insert_with(|| {
                                     let sprite_size = Vec2::new(
-                                        tatlas.size.x / cmat.data.sheet_cols as f32,
-                                        tatlas.size.y / cmat.data.sheet_rows as f32,
+                                        tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
+                                        tatlas.size.y / cmat.data.sheet_rows as f32 * 1.005,
                                     );
                                     let sprite_anchor = Vec2::new(
                                         sprite_size.x / 2.0,

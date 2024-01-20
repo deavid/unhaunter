@@ -410,7 +410,7 @@ impl TiledCustomClass {
         let customtypes = vec![
             TiledCustomClass {
                 name: "Floor".into(),
-                global_z: -0.00015,
+                global_z: -0.00025,
             },
             TiledCustomClass {
                 name: "Wall".into(),

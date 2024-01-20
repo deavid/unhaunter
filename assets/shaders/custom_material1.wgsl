@@ -96,13 +96,22 @@ fn fragment(
     // var cell_max_y = cell_min_y + cell_height;
 
     var d = 0.5 * sign(dpdx(mesh.uv.x));
-    var muvx = (round(mesh.uv.x * material.sprite_width) + d) / material.sprite_width;
-    var muvy = (round(mesh.uv.y * material.sprite_height) + d) / material.sprite_height;
-    var duv = vec2<f32>(mesh.uv.x+ d / material.sprite_width - muvx, mesh.uv.y+ d / material.sprite_height - muvy);
+    var spx = round(mesh.uv.x * material.sprite_width - d);
+    var spy = round(mesh.uv.y * material.sprite_height - d);
+    var muvx = (spx + d) / material.sprite_width;
+    var muvy = (spy + d) / material.sprite_height;
+    var duv = vec2<f32>(mesh.uv.x- muvx, mesh.uv.y- muvy);
     var ddx = pow(abs(dpdx(mesh.uv.x)) * material.sprite_width, 3.0);
     var duv2 = max(length(duv) - 0.002/ material.sprite_width / ddx, 0.0) * normalize(duv);
     muvx += duv2.x / 1.0;
     muvy += duv2.y / 1.0;
+
+    // Margin protects the sprites from reading the neighboring sprite
+    var margin = 0.5;
+    var pdx = 1.0 / material.sprite_width ;
+    var pdy = 1.0 / material.sprite_height ;
+    muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
+    muvy = clamp(muvy, pdy* margin, 1.0);
     
     
     var uv_x = muvx * cell_width + cell_min_x;

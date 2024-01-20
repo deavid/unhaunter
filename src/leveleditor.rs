@@ -584,21 +584,22 @@ pub fn save_level(
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
-    start: BoardPosition,
+    pos_start: &board::Position,
 ) {
     let mut queue = VecDeque::new();
+    let start = pos_start.to_board_position();
     queue.push_front(start.clone());
 
     *vf.entry(start.clone()).or_default() = 1.0;
 
     while let Some(pos) = queue.pop_back() {
+        let pds = pos.to_position().distance(pos_start);
         let src_f = vf.get(&pos).cloned().unwrap_or_default();
         if !cf.get(&pos).map(|c| c.free).unwrap_or_default() {
             // If the current position analyzed is not free (a wall or out of bounds)
             // then stop extending.
             continue;
         }
-        let pds = pos.distance(&start);
         // let neighbors = [pos.left(), pos.top(), pos.bottom(), pos.right()];
         let neighbors = pos.xy_neighbors(1);
         for npos in neighbors {
@@ -606,17 +607,22 @@ pub fn compute_visibility(
                 continue;
             }
             if cf.contains_key(&npos) {
-                let npds = npos.distance(&start);
+                let npds = npos.to_position().distance(pos_start);
                 let npref = npos.distance(&pos);
-                let f = (((npds - pds) / npref - 0.3) / 0.99).clamp(0.0, 1.0);
-                let dst_f = src_f * f;
+                let f = if npds < 1.5 {
+                    1.0
+                } else {
+                    (((npds - pds) / npref - 0.25) / 0.99).clamp(0.0, 1.0)
+                };
+                let mut dst_f = src_f * f;
                 if dst_f < 0.00001 {
                     continue;
                 }
                 if !vf.contains_key(&npos) {
                     queue.push_front(npos.clone());
                 }
-                let entry = vf.entry(npos.clone()).or_default();
+                dst_f /= 1.0 + ((npds - 1.5) / 10.0).clamp(0.0, 4.0);
+                let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
                 *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
             }
         }
@@ -685,7 +691,7 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / lf.lux + 0.001;
             }
         }
-        compute_visibility(&mut visibility_field, &bf.collision_field, cursor_pos);
+        compute_visibility(&mut visibility_field, &bf.collision_field, pos);
     }
     let current_pos = qc.iter().next().or(qp.iter().find_map(|(pos, p, _d)| {
         if p.id == gc.player_id {
@@ -745,7 +751,7 @@ pub fn apply_lighting(
         // dbg!(&sprite);
     }
 
-    const VSMALL_PRIME: usize = 7;
+    const VSMALL_PRIME: usize = 13;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
@@ -755,11 +761,16 @@ pub fn apply_lighting(
     for (n, (tcolor, pos, mat, tile)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         // dbg!(&mat);
-        let mut opacity = current_pos
-            .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
-            .unwrap_or(1.0);
+        let mut opacity: f32 = 1.0;
+        // opacity = current_pos
+        //     .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
+        //     .unwrap_or(1.0)
+        //     .max(0.5);
         let bpos = pos.to_board_position();
         let src_color = tcolor.color;
+
+        opacity *= src_color.a();
+
         let bpos_tr = bpos.bottom();
         let bpos_bl = bpos.top();
         let bpos_br = bpos.right();
@@ -845,7 +856,7 @@ pub fn apply_lighting(
         let mut dst_color = src_color; // <- remove brightness calculation for main tile.
         let src_a = new_mat.data.color.a();
         let opacity = opacity.clamp(0.000, 1.0);
-        const A_DELTA: f32 = 0.02;
+        const A_DELTA: f32 = 0.2;
         let new_a = if (src_a - opacity).abs() < A_DELTA {
             opacity
         } else {

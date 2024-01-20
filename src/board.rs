@@ -612,13 +612,13 @@ impl TileSprite {
                 red: 0.0,
                 green: 0.7,
                 blue: 0.7,
-                alpha: 1.0,
+                alpha: 0.0,
             },
             TileSprite::Util => Color::Rgba {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
-                alpha: 1.0,
+                alpha: 0.0,
             },
             TileSprite::Character => Color::Rgba {
                 red: 0.65,
