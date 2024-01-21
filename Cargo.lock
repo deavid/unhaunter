@@ -230,6 +230,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.79"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "080e9890a082662b09c1ad45f567faeeb47f22b5fb23895fbe1e651e718e25ca"
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3688,6 +3694,7 @@ dependencies = [
 name = "unhaunter"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "bevy_framepace",
  "clap",

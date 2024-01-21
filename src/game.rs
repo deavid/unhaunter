@@ -1,8 +1,8 @@
-use crate::board::{Direction, Position, Tile, TileColor, TileSprite};
+use crate::board::{BoardPosition, Direction, Position, Tile, TileColor, TileSprite};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
-use crate::tiledmap;
 use crate::tiledmap::{AtlasData, MapLayerType};
+use crate::{behavior, tiledmap};
 use crate::{
     board::{self, BoardDataToRebuild},
     root,
@@ -577,7 +577,9 @@ pub fn load_level(
         &mut texture_atlases,
         &mut tilesetdb,
     );
-    let mut spawn_points: Vec<board::Position> = vec![];
+    let mut player_spawn_points: Vec<board::Position> = vec![];
+    let mut ghost_spawn_points: Vec<board::Position> = vec![];
+
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     let mut c = 0.0;
     for (_n, layer) in layers {
@@ -641,6 +643,7 @@ pub fn load_level(
                         z: 0.0,
                         global_z: 0.0,
                     };
+                    // Tile
                     let mut tile_type = Tile {
                         sprite: TileSprite::FloorTile,
                         variant: board::TileVariant::Base,
@@ -649,6 +652,30 @@ pub fn load_level(
                     if let Some(tileset) = op_tileset {
                         let tiled_tileset = tileset.tileset.clone();
                         if let Some(tiled_tile) = tiled_tileset.get_tile(tile.tileuid) {
+                            let parse = |x: &tiled::PropertyValue| -> String {
+                                match x {
+                                    tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                                    tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                                    tiled::PropertyValue::IntValue(x) => x.to_string(),
+                                    tiled::PropertyValue::ColorValue(x) => {
+                                        format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                                    }
+                                    tiled::PropertyValue::StringValue(x) => x.to_string(),
+                                    tiled::PropertyValue::FileValue(x) => x.to_string(),
+                                    tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+                                }
+                            };
+                            let get_property_str = |key: &str| -> Option<String> {
+                                tiled_tile.properties.get(key).map(parse)
+                            };
+                            let sprite_config = behavior::SpriteConfig::from_tiled(
+                                tiled_tile.user_type.as_deref(),
+                                get_property_str("sprite:variant").as_deref(),
+                                get_property_str("sprite:orientation").as_deref(),
+                                get_property_str("sprite:state").as_deref(),
+                                tile.tileset.clone(),
+                                tile.tileuid,
+                            );
                             if let Some(user_type) = &tiled_tile.user_type {
                                 match custom_classes.get(user_type) {
                                     Some(c) => {
@@ -680,7 +707,20 @@ pub fn load_level(
                                     _ => false,
                                 };
                                 if is_player_spawn {
-                                    spawn_points.push(Position {
+                                    player_spawn_points.push(Position {
+                                        global_z: 0.0001,
+                                        ..pos
+                                    });
+                                }
+                            }
+                            if let Some(ghost_spawn) = tiled_tile.properties.get("is_ghost_spawn") {
+                                dbg!(&ghost_spawn);
+                                let is_ghost_spawn = match ghost_spawn {
+                                    tiled::PropertyValue::BoolValue(b) => *b,
+                                    _ => false,
+                                };
+                                if is_ghost_spawn {
+                                    ghost_spawn_points.push(Position {
                                         global_z: 0.0001,
                                         ..pos
                                     });
@@ -697,11 +737,24 @@ pub fn load_level(
                     let tile_color = TileColor {
                         color: tile_type.sprite.color(),
                     };
+
+                    // let tile_behavior = TileBehavior::new(); // ??? <--- no idea how to load this
+                    // for component in tile_behavior.components() {
+                    //     entity.insert(component);
+                    // }
+                    // if tile_behavior.component_breaker_controller {
+                    //     entity.insert(BreakerController);
+                    // }
+                    // if tile_behavior.component_switch {
+                    //     entity.insert(SwitchController);
+                    // }
+
                     entity
+                        // .insert(tile_behavior)
                         .insert(GameSprite)
                         .insert(pos)
-                        .insert(tile_type)
-                        .insert(tile_color);
+                        .insert(tile_type) // <- this one has to go away
+                        .insert(tile_color); // base color of the sprite... not sure what will happen with this one.
                 }
             }
         }
@@ -735,13 +788,17 @@ pub fn load_level(
     */
     use rand::seq::SliceRandom;
     use rand::thread_rng;
-    spawn_points.shuffle(&mut thread_rng());
-    dbg!(&spawn_points);
+    player_spawn_points.shuffle(&mut thread_rng());
+    dbg!(&player_spawn_points);
     for mut pos in qp.iter_mut() {
-        if let Some(spawn) = spawn_points.pop() {
+        if let Some(spawn) = player_spawn_points.pop() {
             *pos = spawn;
         }
     }
+
+    ghost_spawn_points.shuffle(&mut thread_rng());
+    dbg!(&ghost_spawn_points);
+    // TODO: Spawn the ghost here / Set ghost initial position.
 
     ev_bdr.send(BoardDataToRebuild {
         lighting: true,

@@ -7,6 +7,7 @@ mod materials;
 mod pause;
 mod root;
 mod tiledmap;
+mod behavior;
 
 use std::time::Duration;
 

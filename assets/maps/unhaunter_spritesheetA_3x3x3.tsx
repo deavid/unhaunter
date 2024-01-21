@@ -62,6 +62,11 @@
  <tile id="23" type="Floor"/>
  <tile id="24" type="Wall"/>
  <tile id="36" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="Y"/>
+   <property name="sprite:state" value="semi"/>
+   <property name="sprite:variant" value="flat-blue"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -72,6 +77,11 @@
   </objectgroup>
  </tile>
  <tile id="37" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="X"/>
+   <property name="sprite:state" value="semi"/>
+   <property name="sprite:variant" value="flat-blue"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -82,6 +92,11 @@
   </objectgroup>
  </tile>
  <tile id="38" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="XY / S / Both / X+Y / SW+SE"/>
+   <property name="sprite:state" value="semi"/>
+   <property name="sprite:variant" value="flat-blue"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -119,7 +134,8 @@
  </tile>
  <tile id="41" type="Door">
   <properties>
-   <property name="isOpen" type="bool" value="false"/>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="wooden"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -134,6 +150,8 @@
   <properties>
    <property name="is_open" type="bool" value="false"/>
    <property name="onactivate_transform_to_id" type="int" value="44"/>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="wooden"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
@@ -145,6 +163,12 @@
   </objectgroup>
  </tile>
  <tile id="43" type="Door">
+  <properties>
+   <property name="door_open" type="bool" value="true"/>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="wooden"/>
+   <property name="subclass" value="wooden::open"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -155,6 +179,10 @@
   </objectgroup>
  </tile>
  <tile id="44" type="Door">
+  <properties>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="wooden"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -165,6 +193,10 @@
   </objectgroup>
  </tile>
  <tile id="47">
+  <properties>
+   <property name="door_open" type="bool" value="false"/>
+   <property name="door_open_sprite_id" value="41"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" x="0" y="0" width="14" height="14"/>
   </objectgroup>
@@ -198,6 +230,31 @@
     </properties>
    </object>
   </objectgroup>
+ </tile>
+ <tile id="53" type="Door">
+  <properties>
+   <property name="sprite:orientation" value="X-axis / x / right / SW ..."/>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="metal"/>
+  </properties>
+ </tile>
+ <tile id="54">
+  <properties>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="metal"/>
+  </properties>
+ </tile>
+ <tile id="55">
+  <properties>
+   <property name="sprite:state" value="open"/>
+   <property name="sprite:variant" value="metal"/>
+  </properties>
+ </tile>
+ <tile id="56">
+  <properties>
+   <property name="sprite:state" value="closed"/>
+   <property name="sprite:variant" value="metal"/>
+  </properties>
  </tile>
  <tile id="60" type="Decor">
   <objectgroup draworder="index" id="2">
@@ -323,7 +380,11 @@
   </properties>
  </tile>
  <tile id="97" type="Util"/>
- <tile id="98" type="Util"/>
+ <tile id="98" type="Util">
+  <properties>
+   <property name="is_ghost_spawn_point" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="108" type="RoomDef">
   <properties>
    <property name="RoomDef::display_name" value="Foyer"/>
