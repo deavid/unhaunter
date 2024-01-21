@@ -1,10 +1,7 @@
-Private Repository/Project - DO NOT SHARE
+Unhaunter
 ============================================
 
 Unhaunter is a sci-fi paranormal investigation game set in procedurally generated haunted locations with reality-distorting geometry.
-
-**NOTE: This is a personal project coded in private — not to be shared outside the
-explicitly allowed recipients.**
 
 Key points that define this game: (what makes Unhaunter special)
 * 2D isometric pixel art visuals.
@@ -23,3 +20,7 @@ Key points that define this game: (what makes Unhaunter special)
 
 (Most of these key points are not yet in the game - currently there's only a very basic demo)
 
+
+NOTE: I recently opened the repository as Apache 2. I'm still heavily working on this
+and there's a lot of changes to be made. Will update this README later on with more
+up to date information.
