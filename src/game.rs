@@ -1,4 +1,5 @@
-use crate::board::{Direction, Position, Tile, TileSprite};
+use crate::behavior::Behavior;
+use crate::board::{Direction, Position};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
@@ -546,7 +547,7 @@ pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
-    qgs: Query<Entity, With<board::Tile>>,
+    qgs: Query<Entity, With<Behavior>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     asset_server: Res<AssetServer>,
@@ -557,6 +558,10 @@ pub fn load_level(
     let Some(load_event) = ev.read().next() else {
         return;
     };
+
+    for gs in qgs.iter() {
+        commands.entity(gs).despawn_recursive();
+    }
 
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
@@ -659,15 +664,9 @@ pub fn load_level(
                 z: 0.0,
                 global_z: 0.0,
             };
-            // Tile
-            let mut tile_type = Tile {
-                sprite: TileSprite::FloorTile,
-                variant: board::TileVariant::Base,
-            };
 
             c += 0.000000001;
             pos.global_z = f32::from(behavior.p.display.global_z) + c;
-            tile_type.sprite = behavior.p.obsolete.sprite;
             match behavior.p.util {
                 behavior::Util::PlayerSpawn => {
                     player_spawn_points.push(Position {
@@ -684,16 +683,8 @@ pub fn load_level(
                 _ => {}
             }
 
-            entity
-                .insert(behavior)
-                .insert(GameSprite)
-                .insert(pos)
-                .insert(tile_type); // <- this one has to go away
+            entity.insert(behavior).insert(GameSprite).insert(pos);
         }
-    }
-
-    for gs in qgs.iter() {
-        commands.entity(gs).despawn_recursive();
     }
 
     use rand::seq::SliceRandom;

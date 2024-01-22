@@ -1,10 +1,9 @@
 use std::{f32::consts::PI, time::Instant};
 
-use bevy::{prelude::*, sprite::Anchor, utils::HashMap};
-use enum_iterator::Sequence;
+use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
-use crate::{behavior::Behavior, root::GameAssets};
+use crate::behavior::Behavior;
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -347,77 +346,6 @@ pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
     }
 }
 
-#[derive(Debug, Component, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Tile {
-    pub sprite: TileSprite,
-    pub variant: TileVariant,
-}
-
-impl core::ops::Deref for Tile {
-    type Target = TileSprite;
-
-    fn deref(&self) -> &Self::Target {
-        &self.sprite
-    }
-}
-
-impl core::ops::DerefMut for Tile {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.sprite
-    }
-}
-
-#[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum TileSprite {
-    Grid,
-    FloorTile,
-    CeilingLight,
-    Lamp,
-    Character,
-    Pillar,
-    WallLeft,
-    WallRight,
-    FrameLeft,
-    FrameRight,
-    Util,
-}
-
-#[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum TileVariant {
-    Base,
-    FloorTile(FloorTileVariant),
-    Switch,
-    Plant,
-    Portal,
-    Ghost,
-    CeilingLight,
-}
-
-#[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum FloorTileVariant {
-    Decoration,
-    Character,
-    Light,
-}
-
-#[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum PillarVariant {
-    Decoration,
-    Door,
-    Interactive,
-}
-
-impl Default for TileVariant {
-    fn default() -> Self {
-        Self::Base
-    }
-}
-
-#[derive(Clone, Debug, Component)]
-pub struct TileColor {
-    pub color: Color,
-}
-
 #[derive(Clone, Debug, Default, Event)]
 pub struct BoardDataToRebuild {
     pub lighting: bool,
@@ -426,7 +354,6 @@ pub struct BoardDataToRebuild {
 
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
-    pub tilemap: HashMap<BoardPosition, HashMap<Tile, Entity>>,
     pub light_field: HashMap<BoardPosition, LightFieldData>,
     pub collision_field: HashMap<BoardPosition, CollisionFieldData>,
     pub exposure_lux: f32,
@@ -438,7 +365,6 @@ impl FromWorld for BoardData {
     fn from_world(_world: &mut World) -> Self {
         // Using from_world to initialize is not needed but just in case we need it later.
         Self {
-            tilemap: HashMap::new(),
             collision_field: HashMap::new(),
             light_field: HashMap::new(),
             exposure_lux: 1.0,
@@ -681,7 +607,7 @@ pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
 
-    qt: Query<(&Tile, &Position, &Behavior)>,
+    qt: Query<(&Position, &Behavior)>,
 ) {
     // Here we will recreate the field (if needed? - not sure how to detect that)
     // ... maybe add a timer since last update.
@@ -689,12 +615,12 @@ pub fn boardfield_update(
         if bfr.collision {
             info!("Collision rebuild");
             bf.collision_field.clear();
-            for (_tile, pos, _behavior) in qt.iter().filter(|(_t, _p, b)| b.p.movement.walkable) {
+            for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
                 let pos = pos.to_board_position();
                 let colfd = CollisionFieldData { free: true };
                 bf.collision_field.insert(pos, colfd);
             }
-            for (_tile, pos, _behavior) in qt.iter().filter(|(_t, _p, b)| b.p.movement.collision) {
+            for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.collision) {
                 let pos = pos.to_board_position();
                 let colfd = CollisionFieldData { free: false };
                 bf.collision_field.insert(pos, colfd);
@@ -712,7 +638,7 @@ pub fn boardfield_update(
             let first_p = qt
                 .iter()
                 .next()
-                .map(|(_t, p, _b)| p.to_board_position())
+                .map(|(p, _b)| p.to_board_position())
                 .unwrap_or_default();
             let mut min_x = first_p.x;
             let mut min_y = first_p.y;
@@ -720,7 +646,7 @@ pub fn boardfield_update(
             let mut max_x = first_p.x;
             let mut max_y = first_p.y;
             let mut max_z = first_p.z;
-            for (_tile, pos, behavior) in qt.iter() {
+            for (pos, behavior) in qt.iter() {
                 let pos = pos.to_board_position();
                 min_x = min_x.min(pos.x);
                 min_y = min_y.min(pos.y);

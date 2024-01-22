@@ -17,7 +17,7 @@
 //! defines the behavior.
 //!
 
-use crate::{board::TileSprite, tiledmap::MapTile};
+use crate::tiledmap::MapTile;
 use anyhow::Context;
 use bevy::ecs::component::{Component, TableStorage};
 use ordered_float::NotNan;
@@ -54,20 +54,6 @@ pub struct Properties {
     pub light: Light,
     pub util: Util,
     pub display: Display,
-    pub obsolete: Obsolete,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Obsolete {
-    pub sprite: TileSprite,
-}
-
-impl Default for Obsolete {
-    fn default() -> Self {
-        Self {
-            sprite: TileSprite::FloorTile,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -205,7 +191,6 @@ impl Class {
             Class::Wall => {
                 p.movement.collision = true;
                 p.light.opaque = true;
-                p.obsolete.sprite = TileSprite::Pillar;
                 p.display.global_z = (-0.00005).try_into().unwrap();
             }
             Class::Door => {
@@ -235,39 +220,32 @@ impl Class {
             Class::PlayerSpawn => {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
-                p.obsolete.sprite = TileSprite::Util;
                 p.util = Util::PlayerSpawn;
             }
             Class::GhostSpawn => {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
-                p.obsolete.sprite = TileSprite::Util;
                 p.util = Util::GhostSpawn;
             }
             Class::VanEntry => {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
-                p.obsolete.sprite = TileSprite::Util;
                 p.util = Util::Van;
             }
             Class::RoomDef => {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
-                p.obsolete.sprite = TileSprite::Util;
             }
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
-                p.obsolete.sprite = TileSprite::Lamp;
                 p.light.emits_light = true;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.obsolete.sprite = TileSprite::Lamp;
                 p.light.emits_light = true;
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.obsolete.sprite = TileSprite::Lamp;
                 p.light.emits_light = true;
             }
             Class::WallDecor => {
@@ -276,7 +254,6 @@ impl Class {
             Class::CeilingLight => {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
-                p.obsolete.sprite = TileSprite::CeilingLight;
                 p.light.emits_light = true;
             }
             Class::Appliance => {

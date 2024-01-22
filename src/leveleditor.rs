@@ -105,7 +105,7 @@ pub fn apply_lighting(
     }
 
     assert!(cursor_exp.is_normal());
-    cursor_exp = cursor_exp.clamp(2.0, 4.0);
+    cursor_exp = cursor_exp / 2.0 + 1.0;
 
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
