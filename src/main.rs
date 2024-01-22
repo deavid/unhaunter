@@ -2,7 +2,6 @@ mod behavior;
 mod board;
 mod game;
 mod leveleditor;
-mod levelparse;
 mod mainmenu;
 mod materials;
 mod pause;

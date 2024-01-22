@@ -7,7 +7,6 @@ pub enum State {
     #[default]
     MainMenu,
     InGame,
-    Editor,
 }
 
 #[derive(Debug, Clone)]
@@ -26,19 +25,6 @@ pub struct FontAssets {
 #[derive(Debug, Clone)]
 pub struct ImageAssets {
     pub title: Handle<Image>,
-    pub tile1: Handle<Image>,
-    pub wall_left: Handle<Image>,
-    pub wall_right: Handle<Image>,
-    pub minwall_left: Handle<Image>,
-    pub minwall_right: Handle<Image>,
-    pub frame_left: Handle<Image>,
-    pub frame_right: Handle<Image>,
-    pub grid1x1: Handle<Image>,
-    pub grid1x1x4: Handle<Image>,
-    pub pillar: Handle<Image>,
-    pub ceiling_light: Handle<Image>,
-    pub character_position: Handle<Image>,
-    pub old_character: Handle<TextureAtlas>,
     pub character1: Handle<TextureAtlas>,
 }
 
@@ -136,43 +122,16 @@ pub struct GameAssets {
     pub images: ImageAssets,
     pub fonts: FontAssets,
     pub anchors: Anchors,
-    pub meshes: Meshes,
 }
 
 pub fn load_assets(
     mut commands: Commands,
     server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    // mut materials1: ResMut<Assets<CustomMaterial1>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    // Anchors::calc(63, 95, 128, 128),
-    let quad = QuadCC::new(Vec2::new(128.0, 128.0), Vec2::new(63.0, 95.0));
-    let base_quad = Mesh::from(quad);
-
     commands.insert_resource(GameAssets {
         images: ImageAssets {
             title: server.load("img/title.png"),
-            tile1: server.load("img/base-tiles/base/floor.png"),
-            wall_left: server.load("img/base-tiles/base/wall-left.png"),
-            wall_right: server.load("img/base-tiles/base/wall-right.png"),
-            minwall_left: server.load("img/base-tiles/base/minwall-left.png"),
-            minwall_right: server.load("img/base-tiles/base/minwall-right.png"),
-            frame_left: server.load("img/base-tiles/base/frame-left.png"),
-            frame_right: server.load("img/base-tiles/base/frame-right.png"),
-            grid1x1: server.load("img/grid1x1.png"),
-            grid1x1x4: server.load("img/grid1x1x4.png"),
-            pillar: server.load("img/base-tiles/base/block.png"),
-            ceiling_light: server.load("img/light_x4.png"),
-            character_position: server.load("img/character_position.png"),
-            old_character: texture_atlases.add(TextureAtlas::from_grid(
-                server.load("img/character.png"),
-                Vec2::new(26.0, 48.0),
-                9,
-                1,
-                Some(Vec2::new(0.0, 0.0)),
-                Some(Vec2::new(0.0, 0.0)),
-            )),
             character1: texture_atlases.add(TextureAtlas::from_grid(
                 server.load("img/characters-model1-demo.png"),
                 Vec2::new(32.0, 32.0),
@@ -196,11 +155,5 @@ pub fn load_assets(
             grid1x1x4: Anchors::calc(18, 85, 36, 98),
             character: Anchors::calc(13, 43, 26, 48),
         },
-        meshes: Meshes {
-            quad128: meshes.add(base_quad),
-        },
-        // materials: Materials {
-        //     custom1: ,
-        // },
     });
 }

@@ -9,7 +9,6 @@ const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
     NewGame,
-    LevelEditor,
     Options,
     Quit,
 }
@@ -23,12 +22,7 @@ pub struct Menu {
 }
 
 impl Menu {
-    const ITEMS: [MenuID; 4] = [
-        MenuID::NewGame,
-        MenuID::LevelEditor,
-        MenuID::Options,
-        MenuID::Quit,
-    ];
+    const ITEMS: [MenuID; 3] = [MenuID::NewGame, MenuID::Options, MenuID::Quit];
     pub fn item_idx(&self) -> i64 {
         for (n, item) in Menu::ITEMS.iter().enumerate() {
             if item == &self.selected {
@@ -212,16 +206,6 @@ pub fn setup_ui(
                         .insert(MenuItem::new(MenuID::NewGame));
                     parent
                         .spawn(TextBundle::from_section(
-                            "Level Editor",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: MENU_ITEM_COLOR_OFF,
-                            },
-                        ))
-                        .insert(MenuItem::new(MenuID::LevelEditor));
-                    parent
-                        .spawn(TextBundle::from_section(
                             "Options",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
@@ -294,7 +278,6 @@ pub fn menu_event(
     for event in ev_menu.read() {
         match event.0 {
             MenuID::NewGame => app_next_state.set(root::State::InGame),
-            MenuID::LevelEditor => app_next_state.set(root::State::Editor),
             MenuID::Options => {}
             MenuID::Quit => exit.send(AppExit),
         }

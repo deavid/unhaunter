@@ -35,8 +35,9 @@ impl Behavior {
         cfg.class.set_properties(&mut p);
         Self { cfg, p }
     }
-    pub fn default_components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
-        self.cfg.class.components()
+    pub fn _default_components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
+        // self.cfg.class.components()
+        todo!()
     }
 }
 
@@ -143,7 +144,7 @@ pub enum Class {
 impl AutoSerialize for Class {}
 
 impl Class {
-    pub fn components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
+    pub fn _components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
         match self {
             Class::Floor => vec![Box::new(component::Ground), Box::new(component::UVSurface)],
             Class::Wall => vec![
@@ -267,7 +268,7 @@ impl Class {
     }
 
     /// A class requires a set of states. Not only these are the only valid ones for the given class, also they need all to be included.
-    fn required_states(&self) -> Vec<State> {
+    fn _required_states(&self) -> Vec<State> {
         use State::*;
 
         match self {

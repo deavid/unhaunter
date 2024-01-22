@@ -4,7 +4,7 @@ use bevy::{prelude::*, sprite::Anchor, utils::HashMap};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-use crate::{levelparse, root::GameAssets};
+use crate::root::GameAssets;
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -104,17 +104,6 @@ impl Default for Direction {
     }
 }
 
-impl std::convert::From<levelparse::Position> for Position {
-    fn from(p: levelparse::Position) -> Self {
-        Self {
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            global_z: 0.0,
-        }
-    }
-}
-
 const EPSILON: f32 = 0.0001;
 
 impl PartialEq for Position {
@@ -122,24 +111,6 @@ impl PartialEq for Position {
         self.same_x(other) && self.same_y(other) && self.same_z(other)
     }
 }
-
-// const TILE_WIDTH: f32 = 18.0;
-// const TILE_HEIGHT: f32 = 18.0;
-// const TILE_DEPTH: f32 = 12.0;
-// const TILE_SHEAR: f32 = 4.0;
-
-// // Cabinet perspective axis (z-axis is used for occlusion)
-// const PERSPECTIVE_X: [f32; 3] = [TILE_WIDTH, 0.0, 0.00001];
-// const PERSPECTIVE_Y: [f32; 3] = [TILE_SHEAR, TILE_DEPTH, -0.001];
-// const PERSPECTIVE_Z: [f32; 3] = [0.0, TILE_HEIGHT, 0.01];
-
-// Isometric 2x2x2 (20cm) in a 9x9x11 tile grid
-/*
-        x: Vec3(x: +4.0, y: -2.0, z: 0.00001),
-        y: Vec3(x: 4.0, y: 2.0, z: 0.000001),
-        z: Vec3(x:  0.0, y: +4.0, z: 0.001),
-
-*/
 
 // old perspective (9x20cm)
 // const SUBTL: f32 = 9.0;
@@ -482,17 +453,6 @@ impl OcclusionType {
 
         (occ_base.max(0.0) + dst / DST_FACTOR).clamp(0.0, 1.0)
     }
-}
-
-impl TileVariant {
-    // fn parent(&self) -> Option<TileSprite> {
-    //     match self {
-    //         TileVariant::Base => None,
-    //         TileVariant::Switch => Some(TileSprite::Pillar),
-    //         TileVariant::Plant => Some(TileSprite::FloorTile),
-    //         TileVariant::Portal => Some(TileSprite::FloorTile),
-    //     }
-    // }
 }
 
 impl Default for TileVariant {
