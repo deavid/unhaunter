@@ -582,214 +582,130 @@ pub fn load_level(
 
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     let mut c = 0.0;
-    for (_n, layer) in layers {
+    for maptiles in layers.iter().filter_map(|(_, layer)| {
+        // filter only the tile layers and extract that directly
         if let MapLayerType::Tiles(tiles) = &layer.data {
-            for tile in &tiles.v {
-                // load tile
-                let op_tileset = tilesetdb.db.get(&tile.tileset);
-                if let Some(tileset) = op_tileset {
-                    let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
-                    let mut entity = match &tileset.data {
-                        AtlasData::Sheet((handle, cmat)) => {
-                            let mut cmat = cmat.clone();
-                            let tatlas = texture_atlases.get(handle).unwrap();
-                            let mesh_handle = mesh_tileset
-                                .entry(tile.tileset.clone())
-                                .or_insert_with(|| {
-                                    let sprite_size = Vec2::new(
-                                        tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
-                                        tatlas.size.y / cmat.data.sheet_rows as f32 * 1.005,
-                                    );
-                                    let sprite_anchor = Vec2::new(
-                                        sprite_size.x / 2.0,
-                                        sprite_size.y * (0.5 - tileset.y_anchor),
-                                    );
-                                    let base_quad =
-                                        Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
-                                    meshes.add(base_quad)
-                                })
-                                .clone();
+            Some(tiles)
+        } else {
+            None
+        }
+    }) {
+        for tile in &maptiles.v {
+            // load tile
+            let tileset = tilesetdb
+                .db
+                .get(&tile.tileset)
+                .expect("Tile referenced a non-existent tileset");
+            let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
 
-                            cmat.data.sheet_idx = tile.tileuid;
-                            let mat = materials1.add(cmat);
-                            let mut transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
-                            if tile.flip_x {
-                                transform.scale.x = -1.0;
-                            }
-                            let bdl = MaterialMesh2dBundle {
-                                mesh: mesh_handle.into(),
-                                material: mat.clone(),
-                                transform,
-                                ..Default::default()
-                            };
-                            commands.spawn(bdl)
-                        }
-                        AtlasData::Tiles(v_img) => commands.spawn(SpriteBundle {
-                            texture: v_img[tile.tileuid as usize].0.clone(),
-                            sprite: Sprite {
-                                flip_x: tile.flip_x,
-                                anchor,
-                                ..default()
-                            },
-                            transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
-                            ..default()
-                        }),
-                    };
-                    // ----
-
-                    let mut pos = board::Position {
-                        x: tile.pos.x as f32,
-                        y: -tile.pos.y as f32,
-                        z: 0.0,
-                        global_z: 0.0,
-                    };
-                    // Tile
-                    let mut tile_type = Tile {
-                        sprite: TileSprite::FloorTile,
-                        variant: board::TileVariant::Base,
-                    };
-                    let op_tileset = tilesetdb.db.get(&tile.tileset);
-                    if let Some(tileset) = op_tileset {
-                        let tiled_tileset = tileset.tileset.clone();
-                        if let Some(tiled_tile) = tiled_tileset.get_tile(tile.tileuid) {
-                            let parse = |x: &tiled::PropertyValue| -> String {
-                                match x {
-                                    tiled::PropertyValue::BoolValue(x) => x.to_string(),
-                                    tiled::PropertyValue::FloatValue(x) => x.to_string(),
-                                    tiled::PropertyValue::IntValue(x) => x.to_string(),
-                                    tiled::PropertyValue::ColorValue(x) => {
-                                        format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
-                                    }
-                                    tiled::PropertyValue::StringValue(x) => x.to_string(),
-                                    tiled::PropertyValue::FileValue(x) => x.to_string(),
-                                    tiled::PropertyValue::ObjectValue(x) => x.to_string(),
-                                }
-                            };
-                            let get_property_str = |key: &str| -> Option<String> {
-                                tiled_tile.properties.get(key).map(parse)
-                            };
-                            let sprite_config = behavior::SpriteConfig::from_tiled(
-                                tiled_tile.user_type.as_deref(),
-                                get_property_str("sprite:variant").as_deref(),
-                                get_property_str("sprite:orientation").as_deref(),
-                                get_property_str("sprite:state").as_deref(),
-                                tile.tileset.clone(),
-                                tile.tileuid,
+            // Spawn the base entity
+            let mut entity = match &tileset.data {
+                AtlasData::Sheet((handle, cmat)) => {
+                    let mut cmat = cmat.clone();
+                    let tatlas = texture_atlases.get(handle).unwrap();
+                    let mesh_handle = mesh_tileset
+                        .entry(tile.tileset.clone())
+                        .or_insert_with(|| {
+                            let sprite_size = Vec2::new(
+                                tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
+                                tatlas.size.y / cmat.data.sheet_rows as f32 * 1.005,
                             );
-                            if let Some(user_type) = &tiled_tile.user_type {
-                                match custom_classes.get(user_type) {
-                                    Some(c) => {
-                                        pos.global_z = c.global_z;
-                                    }
-                                    None => warn!(
-                                        "Unknown user class {:?} (from Tiled map load)",
-                                        user_type
-                                    ),
-                                }
-                                if user_type == "Wall" {
-                                    tile_type.sprite = TileSprite::Pillar;
-                                }
-                                if user_type == "Light" {
-                                    tile_type.sprite = TileSprite::CeilingLight;
-                                }
-                                if user_type == "Lamp" {
-                                    tile_type.sprite = TileSprite::Lamp;
-                                }
-                                if user_type == "Util" {
-                                    tile_type.sprite = TileSprite::Util;
-                                }
-                            }
-                            if let Some(player_spawn) = tiled_tile.properties.get("is_player_spawn")
-                            {
-                                dbg!(&player_spawn);
-                                let is_player_spawn = match player_spawn {
-                                    tiled::PropertyValue::BoolValue(b) => *b,
-                                    _ => false,
-                                };
-                                if is_player_spawn {
-                                    player_spawn_points.push(Position {
-                                        global_z: 0.0001,
-                                        ..pos
-                                    });
-                                }
-                            }
-                            if let Some(ghost_spawn) = tiled_tile.properties.get("is_ghost_spawn") {
-                                dbg!(&ghost_spawn);
-                                let is_ghost_spawn = match ghost_spawn {
-                                    tiled::PropertyValue::BoolValue(b) => *b,
-                                    _ => false,
-                                };
-                                if is_ghost_spawn {
-                                    ghost_spawn_points.push(Position {
-                                        global_z: 0.0001,
-                                        ..pos
-                                    });
-                                }
-                            }
-                        } else {
-                            warn!("Missing Tile UID {:?}->{:?}", tile.tileset, tile.tileuid);
-                        }
-                    } else {
-                        warn!("Missing TileSet {:?}", tile.tileset);
+                            let sprite_anchor = Vec2::new(
+                                sprite_size.x / 2.0,
+                                sprite_size.y * (0.5 - tileset.y_anchor),
+                            );
+                            let base_quad = Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
+                            meshes.add(base_quad)
+                        })
+                        .clone();
+
+                    cmat.data.sheet_idx = tile.tileuid;
+                    let mat = materials1.add(cmat);
+                    let mut transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
+                    if tile.flip_x {
+                        transform.scale.x = -1.0;
                     }
-                    pos.global_z += c;
-                    c += 0.000000001;
-                    let tile_color = TileColor {
-                        color: tile_type.sprite.color(),
+                    let bdl = MaterialMesh2dBundle {
+                        mesh: mesh_handle.into(),
+                        material: mat.clone(),
+                        transform,
+                        ..Default::default()
                     };
-
-                    // let tile_behavior = TileBehavior::new(); // ??? <--- no idea how to load this
-                    // for component in tile_behavior.components() {
-                    //     entity.insert(component);
-                    // }
-                    // if tile_behavior.component_breaker_controller {
-                    //     entity.insert(BreakerController);
-                    // }
-                    // if tile_behavior.component_switch {
-                    //     entity.insert(SwitchController);
-                    // }
-
-                    entity
-                        // .insert(tile_behavior)
-                        .insert(GameSprite)
-                        .insert(pos)
-                        .insert(tile_type) // <- this one has to go away
-                        .insert(tile_color); // base color of the sprite... not sure what will happen with this one.
+                    commands.spawn(bdl)
                 }
+                AtlasData::Tiles(v_img) => commands.spawn(SpriteBundle {
+                    texture: v_img[tile.tileuid as usize].0.clone(),
+                    sprite: Sprite {
+                        flip_x: tile.flip_x,
+                        anchor,
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
+                    ..default()
+                }),
+            };
+            // ----
+
+            let mut pos = board::Position {
+                x: tile.pos.x as f32,
+                y: -tile.pos.y as f32,
+                z: 0.0,
+                global_z: 0.0,
+            };
+            // Tile
+            let mut tile_type = Tile {
+                sprite: TileSprite::FloorTile,
+                variant: board::TileVariant::Base,
+            };
+
+            let tiled_tile = tileset
+                .tileset
+                .get_tile(tile.tileuid)
+                .expect("TileUID referenced in map not found in the tileset");
+
+            let sprite_config = behavior::SpriteConfig::from_tiled_auto(tile, &tiled_tile);
+            let behavior = behavior::Behavior::from_config(sprite_config);
+            pos.global_z = behavior.p.display.global_z.into();
+            tile_type.sprite = behavior.p.obsolete.sprite;
+
+            if behavior.p.util == behavior::Util::PlayerSpawn {
+                player_spawn_points.push(Position {
+                    global_z: 0.0001,
+                    ..pos
+                });
             }
+            if behavior.p.util == behavior::Util::GhostSpawn {
+                ghost_spawn_points.push(Position {
+                    global_z: 0.0001,
+                    ..pos
+                });
+            }
+
+            pos.global_z += c;
+            c += 0.000000001;
+            let tile_color = TileColor {
+                color: tile_type.sprite.color(),
+            };
+
+            entity
+                // .insert(tile_behavior)
+                .insert(GameSprite)
+                .insert(pos)
+                .insert(tile_type) // <- this one has to go away
+                .insert(tile_color); // base color of the sprite... not sure what will happen with this one.
         }
     }
 
-    // --------- OLD LEVEL LOAD ------------
-    // use crate::levelparse;
-    // let json_u8 = std::fs::read("default_map.json").unwrap();
-    // let json = std::str::from_utf8(&json_u8).unwrap();
-    // let level = levelparse::Level::deserialize_json(json).unwrap();
-    // Despawn tiles before loading the level
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
-    /*
-        let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
 
-        for tile in level.tiles.iter() {
-            let pos: board::Position = tile.position.into();
-            if tile.sprite == board::TileSprite::Character {
-                spawn_points.push(pos);
-            }
-            let tile = board::Tile {
-                sprite: tile.sprite,
-                variant: tile.variant,
-            };
-            // TODO: The IDs spawned are lost and can't be tracked in x,y coordinates
-            // We need to store the entity ids into a hashmap.
-            let _id = tb.spawn_tile(&mut commands, tile, pos, GameSprite, false);
-        }
-    */
     use rand::seq::SliceRandom;
     use rand::thread_rng;
     player_spawn_points.shuffle(&mut thread_rng());
-    dbg!(&player_spawn_points);
+    if player_spawn_points.is_empty() {
+        error!("No player spawn points found!! - that will probably not display the map because the player will be out of bounds");
+    }
     for mut pos in qp.iter_mut() {
         if let Some(spawn) = player_spawn_points.pop() {
             *pos = spawn;
@@ -797,7 +713,9 @@ pub fn load_level(
     }
 
     ghost_spawn_points.shuffle(&mut thread_rng());
-    dbg!(&ghost_spawn_points);
+    if ghost_spawn_points.is_empty() {
+        error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
+    }
     // TODO: Spawn the ghost here / Set ghost initial position.
 
     ev_bdr.send(BoardDataToRebuild {

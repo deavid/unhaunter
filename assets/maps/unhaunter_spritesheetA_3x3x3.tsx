@@ -7,11 +7,40 @@
   <property name="Anchor::bottom_px" type="int" value="7"/>
  </properties>
  <image source="../img/spritesheetA_3x3x3.png" width="384" height="704"/>
- <tile id="0" type="Floor"/>
- <tile id="1" type="Floor"/>
- <tile id="2" type="Floor"/>
- <tile id="3" type="Floor"/>
+ <tile id="0" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="StonePath"/>
+  </properties>
+ </tile>
+ <tile id="1" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="StonePath"/>
+  </properties>
+ </tile>
+ <tile id="2" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="StonePath"/>
+  </properties>
+ </tile>
+ <tile id="3" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="StonePath"/>
+  </properties>
+ </tile>
  <tile id="4" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Grass"/>
+  </properties>
   <animation>
    <frame tileid="4" duration="1700"/>
    <frame tileid="6" duration="1740"/>
@@ -20,6 +49,11 @@
   </animation>
  </tile>
  <tile id="5" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Grass"/>
+  </properties>
   <animation>
    <frame tileid="5" duration="2840"/>
    <frame tileid="6" duration="2980"/>
@@ -28,6 +62,11 @@
   </animation>
  </tile>
  <tile id="6" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Grass"/>
+  </properties>
   <animation>
    <frame tileid="6" duration="4480"/>
    <frame tileid="4" duration="4380"/>
@@ -37,6 +76,11 @@
   </animation>
  </tile>
  <tile id="7" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Grass"/>
+  </properties>
   <animation>
    <frame tileid="7" duration="3870"/>
    <frame tileid="5" duration="3760"/>
@@ -44,28 +88,124 @@
    <frame tileid="6" duration="3620"/>
   </animation>
  </tile>
- <tile id="8" type="Floor"/>
- <tile id="9" type="Floor"/>
- <tile id="10" type="Floor"/>
- <tile id="11" type="Floor"/>
- <tile id="12" type="Floor"/>
- <tile id="13" type="Floor"/>
- <tile id="14" type="Floor"/>
- <tile id="15" type="Floor"/>
- <tile id="16" type="Floor"/>
- <tile id="17" type="Floor"/>
- <tile id="18" type="Floor"/>
- <tile id="19" type="Floor"/>
- <tile id="20" type="Floor"/>
- <tile id="21" type="Floor"/>
- <tile id="22" type="Floor"/>
- <tile id="23" type="Floor"/>
+ <tile id="8" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Asphalt"/>
+  </properties>
+ </tile>
+ <tile id="9" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Asphalt"/>
+  </properties>
+ </tile>
+ <tile id="10" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Asphalt"/>
+  </properties>
+ </tile>
+ <tile id="11" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Asphalt"/>
+  </properties>
+ </tile>
+ <tile id="12" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="13" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="14" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="15" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="16" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreyTile"/>
+  </properties>
+ </tile>
+ <tile id="17" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreyTile"/>
+  </properties>
+ </tile>
+ <tile id="18" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreyTile"/>
+  </properties>
+ </tile>
+ <tile id="19" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreyTile"/>
+  </properties>
+ </tile>
+ <tile id="20" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WhiteTile"/>
+  </properties>
+ </tile>
+ <tile id="21" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WhiteTile"/>
+  </properties>
+ </tile>
+ <tile id="22" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WhiteTile"/>
+  </properties>
+ </tile>
+ <tile id="23" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WhiteTile"/>
+  </properties>
+ </tile>
  <tile id="24" type="Wall"/>
  <tile id="36" type="Wall">
   <properties>
-   <property name="sprite:orientation" value="Y"/>
-   <property name="sprite:state" value="semi"/>
-   <property name="sprite:variant" value="flat-blue"/>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="FlatBlue"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -78,9 +218,9 @@
  </tile>
  <tile id="37" type="Wall">
   <properties>
-   <property name="sprite:orientation" value="X"/>
-   <property name="sprite:state" value="semi"/>
-   <property name="sprite:variant" value="flat-blue"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="FlatBlue"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
@@ -93,9 +233,9 @@
  </tile>
  <tile id="38" type="Wall">
   <properties>
-   <property name="sprite:orientation" value="XY / S / Both / X+Y / SW+SE"/>
-   <property name="sprite:state" value="semi"/>
-   <property name="sprite:variant" value="flat-blue"/>
+   <property name="sprite:orientation" value="Both"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="FlatBlue"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -112,7 +252,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="39" type="DoorFrame">
+ <tile id="39" type="Doorway">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
     <properties>
@@ -122,7 +267,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="40" type="DoorFrame">
+ <tile id="40" type="Doorway">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
     <properties>
@@ -134,8 +284,9 @@
  </tile>
  <tile id="41" type="Door">
   <properties>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="wooden"/>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Closed"/>
+   <property name="sprite:variant" value="Wood"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -148,10 +299,9 @@
  </tile>
  <tile id="42" type="Door">
   <properties>
-   <property name="is_open" type="bool" value="false"/>
-   <property name="onactivate_transform_to_id" type="int" value="44"/>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="wooden"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Closed"/>
+   <property name="sprite:variant" value="Wood"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
@@ -164,10 +314,9 @@
  </tile>
  <tile id="43" type="Door">
   <properties>
-   <property name="door_open" type="bool" value="true"/>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="wooden"/>
-   <property name="subclass" value="wooden::open"/>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Open"/>
+   <property name="sprite:variant" value="Wood"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="9.33333" width="14" height="4.66667">
@@ -180,8 +329,9 @@
  </tile>
  <tile id="44" type="Door">
   <properties>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="wooden"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Open"/>
+   <property name="sprite:variant" value="Wood"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -193,15 +343,16 @@
   </objectgroup>
  </tile>
  <tile id="47">
-  <properties>
-   <property name="door_open" type="bool" value="false"/>
-   <property name="door_open_sprite_id" value="41"/>
-  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" x="0" y="0" width="14" height="14"/>
   </objectgroup>
  </tile>
  <tile id="48" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenChairFront"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="9.33333" height="9.33333">
     <properties>
@@ -212,6 +363,11 @@
   </objectgroup>
  </tile>
  <tile id="49" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenChairBack"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="9.33333" height="9.33333">
     <properties>
@@ -222,6 +378,11 @@
   </objectgroup>
  </tile>
  <tile id="50" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Speaker"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66666">
     <properties>
@@ -233,30 +394,38 @@
  </tile>
  <tile id="53" type="Door">
   <properties>
-   <property name="sprite:orientation" value="X-axis / x / right / SW ..."/>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="metal"/>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Closed"/>
+   <property name="sprite:variant" value="Metal"/>
   </properties>
  </tile>
- <tile id="54">
+ <tile id="54" type="Door">
   <properties>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="metal"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Closed"/>
+   <property name="sprite:variant" value="Metal"/>
   </properties>
  </tile>
- <tile id="55">
+ <tile id="55" type="Door">
   <properties>
-   <property name="sprite:state" value="open"/>
-   <property name="sprite:variant" value="metal"/>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Open"/>
+   <property name="sprite:variant" value="Metal"/>
   </properties>
  </tile>
- <tile id="56">
+ <tile id="56" type="Door">
   <properties>
-   <property name="sprite:state" value="closed"/>
-   <property name="sprite:variant" value="metal"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Open"/>
+   <property name="sprite:variant" value="Metal"/>
   </properties>
  </tile>
  <tile id="60" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="CedarChest"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="0" width="9.33333" height="14">
     <properties>
@@ -267,6 +436,11 @@
   </objectgroup>
  </tile>
  <tile id="61" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="TrashCan"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="9.33333" height="9.33333">
     <properties>
@@ -276,15 +450,68 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="62" type="Decor"/>
- <tile id="63" type="Decor"/>
- <tile id="64" type="Decor"/>
- <tile id="65" type="Decor"/>
- <tile id="66" type="Decor"/>
- <tile id="67" type="Decor"/>
- <tile id="68" type="Decor"/>
- <tile id="69" type="Decor"/>
- <tile id="72" type="Decor">
+ <tile id="62" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedBook"/>
+  </properties>
+ </tile>
+ <tile id="63" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BlueBook"/>
+  </properties>
+ </tile>
+ <tile id="64" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="OilLamp"/>
+  </properties>
+ </tile>
+ <tile id="65" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="OilLampCandle"/>
+  </properties>
+ </tile>
+ <tile id="66" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="CandleOff"/>
+  </properties>
+ </tile>
+ <tile id="67" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="CandleOn1"/>
+  </properties>
+ </tile>
+ <tile id="68" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="CandleOn2"/>
+  </properties>
+ </tile>
+ <tile id="69" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="CandleConsumed"/>
+  </properties>
+ </tile>
+ <tile id="72" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="TinyTrashCan"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66666" height="4.66666">
     <properties>
@@ -295,6 +522,11 @@
   </objectgroup>
  </tile>
  <tile id="73" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BathSink"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
     <properties>
@@ -305,6 +537,11 @@
   </objectgroup>
  </tile>
  <tile id="74" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Shower"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="3.33333e-06" y="0" width="14" height="14">
     <properties>
@@ -315,6 +552,11 @@
   </objectgroup>
  </tile>
  <tile id="75" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Toilet"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.66667" y="1.16573e-15" width="9.33333" height="9.33333">
     <properties>
@@ -324,65 +566,100 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="84" type="Decor">
-  <objectgroup draworder="index" id="2">
-   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
-    <properties>
-     <property name="collision" type="bool" value="true"/>
-     <property name="interactive" type="bool" value="false"/>
-    </properties>
-   </object>
-  </objectgroup>
- </tile>
- <tile id="85" type="Decor">
-  <objectgroup draworder="index" id="2">
-   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
-    <properties>
-     <property name="collision" type="bool" value="true"/>
-     <property name="interactive" type="bool" value="false"/>
-    </properties>
-   </object>
-  </objectgroup>
- </tile>
- <tile id="86" type="Decor">
-  <objectgroup draworder="index" id="2">
-   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
-    <properties>
-     <property name="collision" type="bool" value="true"/>
-     <property name="interactive" type="bool" value="false"/>
-    </properties>
-   </object>
-  </objectgroup>
- </tile>
- <tile id="87" type="Decor">
-  <objectgroup draworder="index" id="2">
-   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
-    <properties>
-     <property name="collision" type="bool" value="true"/>
-     <property name="interactive" type="bool" value="false"/>
-    </properties>
-   </object>
-  </objectgroup>
- </tile>
- <tile id="88" type="Decor">
-  <objectgroup draworder="index" id="2">
-   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
-    <properties>
-     <property name="collision" type="bool" value="true"/>
-     <property name="interactive" type="bool" value="false"/>
-    </properties>
-   </object>
-  </objectgroup>
- </tile>
- <tile id="96" type="Util">
+ <tile id="84" type="Item">
   <properties>
-   <property name="is_player_spawn" type="bool" value="true"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="FlowerPotRed"/>
+  </properties>
+  <objectgroup draworder="index" id="2">
+   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
+    <properties>
+     <property name="collision" type="bool" value="true"/>
+     <property name="interactive" type="bool" value="false"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="85" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="FlowerPotGreen"/>
+  </properties>
+  <objectgroup draworder="index" id="2">
+   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
+    <properties>
+     <property name="collision" type="bool" value="true"/>
+     <property name="interactive" type="bool" value="false"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="86" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Vase1"/>
+  </properties>
+  <objectgroup draworder="index" id="2">
+   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
+    <properties>
+     <property name="collision" type="bool" value="true"/>
+     <property name="interactive" type="bool" value="false"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="87" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Vase2"/>
+  </properties>
+  <objectgroup draworder="index" id="2">
+   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
+    <properties>
+     <property name="collision" type="bool" value="true"/>
+     <property name="interactive" type="bool" value="false"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="88" type="Item">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Vase3"/>
+  </properties>
+  <objectgroup draworder="index" id="2">
+   <object id="1" type="Shape" x="4.66667" y="4.66667" width="4.66667" height="4.66667">
+    <properties>
+     <property name="collision" type="bool" value="true"/>
+     <property name="interactive" type="bool" value="false"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="96" type="PlayerSpawn">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
   </properties>
  </tile>
- <tile id="97" type="Util"/>
- <tile id="98" type="Util">
+ <tile id="97" type="VanEntry">
   <properties>
-   <property name="is_ghost_spawn_point" type="bool" value="true"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
+ </tile>
+ <tile id="98" type="GhostSpawn">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
   </properties>
  </tile>
  <tile id="108" type="RoomDef">

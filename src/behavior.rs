@@ -17,28 +17,54 @@
 //! defines the behavior.
 //!
 
+use crate::{board::TileSprite, tiledmap::MapTile};
 use anyhow::Context;
-use bevy::ecs::component::Component;
+use bevy::ecs::component::{Component, TableStorage};
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
-struct Behavior {
+pub struct Behavior {
     cfg: SpriteConfig,
-    p: Properties,
+    pub p: Properties,
+}
+
+impl Behavior {
+    pub fn from_config(cfg: SpriteConfig) -> Self {
+        let mut p = Properties::default();
+        cfg.class.set_properties(&mut p);
+        Self { cfg, p }
+    }
+    pub fn default_components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
+        self.cfg.class.components()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
-struct Properties {
+pub struct Properties {
     // ---
-    movement: Movement,
-    light: Light,
-    util: Util,
-    /// If true marks that this is not a sprite, should never be drawn. Only for data.
-    data_only: bool,
+    pub movement: Movement,
+    pub light: Light,
+    pub util: Util,
+    pub display: Display,
+    pub obsolete: Obsolete,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Obsolete {
+    pub sprite: TileSprite,
+}
+
+impl Default for Obsolete {
+    fn default() -> Self {
+        Self {
+            sprite: TileSprite::FloorTile,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-enum Util {
+pub enum Util {
     PlayerSpawn,
     GhostSpawn,
     Van,
@@ -47,40 +73,69 @@ enum Util {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-struct Light {
-    is_opaque: bool,
-    emits_light: bool,
+pub struct Display {
+    pub disable: bool,
+    pub global_z: NotNan<f32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-struct Movement {
+pub struct Light {
+    pub opaque: bool,
+    pub emits_light: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Movement {
     /// true for floors only, where the player can stand on this spot
-    walkable: bool,
+    pub walkable: bool,
 
     /// true for walls and closed doors. It signals that the player cannot stand
     /// here. For detailed collision, there will be a map of collision.
-    collision: bool,
+    pub collision: bool,
     // 9x9 collision map on the sub-tile. This is using a subtile of 3x3, so it
     // means it can cover an area of 3x3 board tiles.
     // collision_map: [[bool; 9]; 9],
 }
 
-/// When several sprites go onto the same tile on the board, this represents
-/// the combined data for a single part of the board
-struct TileProperties {
-    /// true if the player can walk through this tile position.
-    /// In simplified form, false when there's a collision sprite on it.
-    /// In more detailed form, false only if there's no walkable floor sprite in here.
-    is_walkable: bool,
+pub mod component {
+    use bevy::ecs::component::Component;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Ground;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Collision;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Opaque;
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct UVSurface;
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-enum Class {
+pub enum Class {
     Floor,
     Wall,
     Door,
     Switch,
+    RoomSwitch,
     Breaker,
+    Doorway,
+    Decor,
+    Item,
+    Furniture,
+    PlayerSpawn,
+    GhostSpawn,
+    VanEntry,
+    RoomDef,
+    WallLamp,
+    FloorLamp,
+    TableLamp,
+    WallDecor,
+    CeilingLight,
+    Appliance,
+    Van,
+    Window,
     #[default]
     None,
 }
@@ -88,16 +143,126 @@ enum Class {
 impl AutoSerialize for Class {}
 
 impl Class {
-    fn properties(&self) -> Properties {
+    pub fn components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
         match self {
-            Class::Floor => Properties {
-                movement: Movement {
-                    walkable: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            _ => todo!(),
+            Class::Floor => vec![Box::new(component::Ground), Box::new(component::UVSurface)],
+            Class::Wall => vec![
+                Box::new(component::Collision),
+                Box::new(component::Opaque),
+                Box::new(component::UVSurface),
+            ],
+            Class::Door => vec![],
+            Class::Switch => vec![],
+            Class::RoomSwitch => vec![],
+            Class::Breaker => vec![],
+            Class::Doorway => vec![],
+            Class::Decor => vec![],
+            Class::Item => vec![],
+            Class::Furniture => vec![],
+            Class::PlayerSpawn => vec![],
+            Class::GhostSpawn => vec![],
+            Class::VanEntry => vec![],
+            Class::RoomDef => vec![],
+            Class::WallLamp => vec![],
+            Class::FloorLamp => vec![],
+            Class::TableLamp => vec![],
+            Class::WallDecor => vec![],
+            Class::CeilingLight => vec![],
+            Class::Appliance => vec![],
+            Class::Van => vec![],
+            Class::Window => vec![],
+            Class::None => vec![],
+        }
+    }
+    pub fn set_properties(&self, p: &mut Properties) {
+        match self {
+            Class::Floor => {
+                p.movement.walkable = true;
+                p.display.global_z = (-0.00025).try_into().unwrap();
+            }
+            Class::Wall => {
+                p.movement.collision = true;
+                p.light.opaque = true;
+                p.obsolete.sprite = TileSprite::Pillar;
+                p.display.global_z = (-0.00005).try_into().unwrap();
+            }
+            Class::Door => {
+                p.display.global_z = (0.000015).try_into().unwrap();
+            }
+            Class::Switch => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::RoomSwitch => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::Breaker => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::Doorway => {
+                p.display.global_z = (-0.00005).try_into().unwrap();
+            }
+            Class::Decor => {
+                p.display.global_z = (0.000065).try_into().unwrap();
+            }
+            Class::Item => {
+                p.display.global_z = (0.000065).try_into().unwrap();
+            }
+            Class::Furniture => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+            }
+            Class::PlayerSpawn => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.obsolete.sprite = TileSprite::Util;
+                p.util = Util::PlayerSpawn;
+            }
+            Class::GhostSpawn => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.obsolete.sprite = TileSprite::Util;
+                p.util = Util::GhostSpawn;
+            }
+            Class::VanEntry => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.obsolete.sprite = TileSprite::Util;
+                p.util = Util::Van;
+            }
+            Class::RoomDef => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.obsolete.sprite = TileSprite::Util;
+            }
+            Class::WallLamp => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+                p.obsolete.sprite = TileSprite::Lamp;
+            }
+            Class::FloorLamp => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+                p.obsolete.sprite = TileSprite::Lamp;
+            }
+            Class::TableLamp => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+                p.obsolete.sprite = TileSprite::Lamp;
+            }
+            Class::WallDecor => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::CeilingLight => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.obsolete.sprite = TileSprite::CeilingLight;
+            }
+            Class::Appliance => {
+                p.display.global_z = (0.000070).try_into().unwrap();
+            }
+            Class::Van => {
+                p.display.global_z = (0.000200).try_into().unwrap();
+            }
+            Class::Window => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::None => {}
         }
     }
 
@@ -110,14 +275,13 @@ impl Class {
             Class::Door => vec![Open, Closed],
             Class::Switch => vec![On, Off],
             Class::Breaker => vec![On, Off],
-            Class::Floor => vec![None],
-            Class::None => vec![None],
+            _ => vec![None],
         }
     }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-enum Orientation {
+pub enum Orientation {
     XAxis,
     YAxis,
     Both,
@@ -143,7 +307,7 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-enum State {
+pub enum State {
     // Switch states
     On,
     Off,
@@ -181,6 +345,32 @@ pub struct SpriteConfig {
 }
 
 impl SpriteConfig {
+    pub fn from_tiled_auto(tile: &MapTile, tiled_tile: &tiled::Tile) -> Self {
+        let parse = |x: &tiled::PropertyValue| -> String {
+            match x {
+                tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                tiled::PropertyValue::IntValue(x) => x.to_string(),
+                tiled::PropertyValue::ColorValue(x) => {
+                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                }
+                tiled::PropertyValue::StringValue(x) => x.to_string(),
+                tiled::PropertyValue::FileValue(x) => x.to_string(),
+                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+            }
+        };
+        let get_property_str =
+            |key: &str| -> Option<String> { tiled_tile.properties.get(key).map(parse) };
+        Self::from_tiled(
+            tiled_tile.user_type.as_deref(),
+            get_property_str("sprite:variant").as_deref(),
+            get_property_str("sprite:orientation").as_deref(),
+            get_property_str("sprite:state").as_deref(),
+            tile.tileset.clone(),
+            tile.tileuid,
+        )
+    }
+
     pub fn from_tiled(
         class: Option<&str>,
         variant: Option<&str>,

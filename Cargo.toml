@@ -22,6 +22,7 @@ tiled = "0.11.2"
 clap = "4.4.8"
 fastapprox = "0.3.1"
 anyhow = "1.0.79"
+ordered-float = "4.2.0"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]

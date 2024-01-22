@@ -11,7 +11,4 @@
    <object id="1" x="0" y="8" width="24" height="28"/>
   </objectgroup>
  </tile>
- <tile id="108" type="Util"/>
- <tile id="109" type="Util"/>
- <tile id="110" type="Util"/>
 </tileset>

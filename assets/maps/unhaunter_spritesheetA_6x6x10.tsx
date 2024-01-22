@@ -7,6 +7,11 @@
  </properties>
  <image source="../img/spritesheetA_6x6x10.png" width="384" height="512"/>
  <tile id="0" type="Switch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="3" x="35.5556" y="21.3333"/>
    <object id="4" type="Shape" x="0" y="0" width="4" height="12">
@@ -18,6 +23,11 @@
   </objectgroup>
  </tile>
  <tile id="1" type="Switch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="0" width="4" height="12">
     <properties>
@@ -27,10 +37,11 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="2" type="Lamp">
+ <tile id="2" type="WallLamp">
   <properties>
-   <property name="light_power" type="float" value="1e-05"/>
-   <property name="onactivate_transform_to_id" type="int" value="3"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
@@ -41,10 +52,11 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="3" type="Lamp">
+ <tile id="3" type="WallLamp">
   <properties>
-   <property name="light_power" type="float" value="100"/>
-   <property name="onactivate_transform_to_id" type="int" value="2"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
@@ -55,7 +67,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="4" type="Lamp">
+ <tile id="4" type="FloorLamp">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="3">
    <object id="5" x="42.6667" y="49.7778"/>
    <object id="9" x="0" y="42.6667"/>
@@ -71,7 +88,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="5" type="Lamp">
+ <tile id="5" type="FloorLamp">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="0" width="8" height="8">
     <properties>
@@ -81,7 +103,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="6" type="Lamp">
+ <tile id="6" type="TableLamp">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="-4" width="12" height="16">
     <properties>
@@ -91,7 +118,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="7" type="Lamp">
+ <tile id="7" type="TableLamp">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="-4" width="12" height="16">
     <properties>
@@ -101,7 +133,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="8" type="WallObject">
+ <tile id="8" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Mirror"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="4" width="4" height="12">
     <properties>
@@ -111,7 +148,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="9" type="WallObject">
+ <tile id="9" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Clock"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
     <properties>
@@ -121,7 +163,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="10" type="Light">
+ <tile id="10" type="CeilingLight">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" x="4" y="4" width="4" height="4">
     <properties>
@@ -131,7 +178,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="11" type="Switch">
+ <tile id="11" type="RoomSwitch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="3" x="42.6667" y="28.4444"/>
    <object id="4" type="Shape" x="0" y="0" width="4" height="12">
@@ -142,7 +194,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="12" type="Switch">
+ <tile id="12" type="RoomSwitch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
     <properties>
@@ -153,6 +210,11 @@
   </objectgroup>
  </tile>
  <tile id="13" type="Breaker">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="8" height="12">
     <properties>
@@ -163,6 +225,11 @@
   </objectgroup>
  </tile>
  <tile id="14" type="Breaker">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="-3.33333e-06" y="3.33333e-06" width="8" height="12">
     <properties>
@@ -173,6 +240,11 @@
   </objectgroup>
  </tile>
  <tile id="16" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenCouch"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="-4" width="16" height="28">
     <properties>
@@ -183,6 +255,11 @@
   </objectgroup>
  </tile>
  <tile id="17" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedSofa"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="16" height="24">
     <properties>
@@ -192,7 +269,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="18" type="Furniture">
+ <tile id="18" type="Appliance">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="TV"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" x="8" y="2.66667"/>
    <object id="3" type="Shape" x="0" y="0" width="12" height="24">
@@ -203,7 +285,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="19" type="WallObject">
+ <tile id="19" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Bookshelf"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="24">
     <properties>
@@ -214,6 +301,11 @@
   </objectgroup>
  </tile>
  <tile id="20" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Bed"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="-6.66134e-16" y="-5.33333" width="20" height="29.3333">
     <properties>
@@ -224,6 +316,11 @@
   </objectgroup>
  </tile>
  <tile id="21" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Bathtub"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="16" height="24">
     <properties>
@@ -233,7 +330,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="22" type="Electrodomestic">
+ <tile id="22" type="Appliance">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WashingMachine"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="16">
     <properties>
@@ -243,7 +345,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="23" type="Electrodomestic">
+ <tile id="23" type="Appliance">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Fridge"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4.44089e-16" y="-3.10862e-15" width="20" height="16">
     <properties>
@@ -254,6 +361,11 @@
   </objectgroup>
  </tile>
  <tile id="24" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenTable"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
     <properties>
@@ -264,6 +376,11 @@
   </objectgroup>
  </tile>
  <tile id="25" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="OakTable"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
     <properties>
@@ -274,6 +391,11 @@
   </objectgroup>
  </tile>
  <tile id="26" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodTable"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
     <properties>
@@ -284,6 +406,11 @@
   </objectgroup>
  </tile>
  <tile id="27" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Desk"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
     <properties>
@@ -293,7 +420,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="28" type="Electrodomestic">
+ <tile id="28" type="Appliance">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Stove"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="-8" width="12" height="32">
     <properties>
@@ -303,7 +435,12 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="29" type="Electrodomestic">
+ <tile id="29" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Sink"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="-8" width="12" height="32">
     <properties>
@@ -314,6 +451,11 @@
   </objectgroup>
  </tile>
  <tile id="32" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="EmptyBookshelf"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="20">
     <properties>
@@ -324,6 +466,11 @@
   </objectgroup>
  </tile>
  <tile id="33" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Bookshelf"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="20">
     <properties>
@@ -334,6 +481,11 @@
   </objectgroup>
  </tile>
  <tile id="40" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Drawer"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="24">
     <properties>
@@ -344,6 +496,11 @@
   </objectgroup>
  </tile>
  <tile id="41" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Wardrobe"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="24">
     <properties>
@@ -352,6 +509,48 @@
     </properties>
    </object>
   </objectgroup>
+ </tile>
+ <tile id="48" type="Window">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Window"/>
+  </properties>
+ </tile>
+ <tile id="49" type="Window">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedCurtainWindow"/>
+  </properties>
+ </tile>
+ <tile id="50" type="Window">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenCurtainWindow"/>
+  </properties>
+ </tile>
+ <tile id="56" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BlankPicture"/>
+  </properties>
+ </tile>
+ <tile id="57" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenPicture"/>
+  </properties>
+ </tile>
+ <tile id="58" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedPicture"/>
+  </properties>
  </tile>
  <tile id="63">
   <objectgroup draworder="index" id="2">
