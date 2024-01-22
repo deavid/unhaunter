@@ -1,3 +1,4 @@
+mod behavior;
 mod board;
 mod game;
 mod leveleditor;
@@ -7,7 +8,6 @@ mod materials;
 mod pause;
 mod root;
 mod tiledmap;
-mod behavior;
 
 use std::time::Duration;
 
@@ -52,8 +52,6 @@ fn main() {
         .add_event::<board::BoardDataToRebuild>()
         .add_state::<root::State>()
         .add_event::<mainmenu::MenuEvent>()
-        .add_event::<leveleditor::LoadLevelEvent>()
-        .add_event::<leveleditor::SaveLevelEvent>()
         .add_event::<game::LoadLevelEvent>()
         .add_systems(Startup, root::load_assets)
         .add_systems(OnEnter(root::State::MainMenu), mainmenu::setup)
@@ -72,15 +70,6 @@ fn main() {
         .add_systems(Update, game::animate_sprite)
         .add_systems(Update, game::player_coloring)
         .add_systems(Update, game::load_level)
-        .add_systems(OnEnter(root::State::Editor), leveleditor::setup)
-        .add_systems(OnEnter(root::State::Editor), leveleditor::setup_ui)
-        .add_systems(OnExit(root::State::Editor), leveleditor::cleanup)
-        .add_systems(Update, leveleditor::load_level)
-        .add_systems(Update, leveleditor::save_level)
-        .add_systems(Update, leveleditor::keyboard)
-        .add_systems(Update, leveleditor::highlight_grid)
-        .add_systems(Update, leveleditor::piece_selector_input)
-        .add_systems(Update, leveleditor::selected_piece_display)
         .add_systems(Update, leveleditor::apply_lighting)
         .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
             1.0 / 30.0,

@@ -1,14 +1,10 @@
-use std::{cell::RefCell, f32::consts::PI, time::Instant};
+use std::{f32::consts::PI, time::Instant};
 
-use bevy::{
-    prelude::*,
-    sprite::{Anchor, MaterialMesh2dBundle},
-    utils::HashMap,
-};
+use bevy::{prelude::*, sprite::Anchor, utils::HashMap};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-use crate::{levelparse, materials::CustomMaterial1, root};
+use crate::{levelparse, root::GameAssets};
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -506,44 +502,10 @@ impl Default for TileVariant {
 }
 
 impl TileSprite {
-    pub fn anchor(&self, b: &TileBuilder) -> Anchor {
+    pub fn anchor(&self, b: &Res<GameAssets>) -> Anchor {
         match self {
-            TileSprite::Character => Anchor::Custom(b.handles.anchors.grid1x1x4),
-            _ => Anchor::Custom(b.handles.anchors.base),
-        }
-    }
-    pub fn texture(&self, b: &TileBuilder) -> Handle<Image> {
-        match self {
-            TileSprite::FloorTile => b.handles.images.tile1.clone(),
-            TileSprite::Pillar => b.handles.images.pillar.clone(),
-            TileSprite::CeilingLight => b.handles.images.ceiling_light.clone(),
-            TileSprite::Character => b.handles.images.character_position.clone(),
-            TileSprite::WallLeft => b.handles.images.wall_left.clone(),
-            TileSprite::WallRight => b.handles.images.wall_right.clone(),
-            TileSprite::FrameLeft => b.handles.images.frame_left.clone(),
-            TileSprite::FrameRight => b.handles.images.frame_right.clone(),
-            _ => b.handles.images.grid1x1.clone(),
-        }
-    }
-    pub fn occlusion_texture(&self, b: &TileBuilder) -> Option<Handle<Image>> {
-        match self {
-            TileSprite::WallLeft => Some(b.handles.images.minwall_left.clone()),
-            TileSprite::WallRight => Some(b.handles.images.minwall_right.clone()),
-            _ => None,
-        }
-    }
-    pub fn name(&self) -> &'static str {
-        match self {
-            TileSprite::Util => "Util",
-            TileSprite::FloorTile => "Floor Tile",
-            TileSprite::CeilingLight => "Ceiling Light",
-            TileSprite::Character => "Spawn point",
-            TileSprite::Pillar => "Pillar",
-            TileSprite::WallLeft => "Left Wall",
-            TileSprite::WallRight => "Right Wall",
-            TileSprite::FrameLeft => "Left Door Frame",
-            TileSprite::FrameRight => "Right Door Frame",
-            _ => "None",
+            TileSprite::Character => Anchor::Custom(b.anchors.grid1x1x4),
+            _ => Anchor::Custom(b.anchors.base),
         }
     }
     pub fn occlusion_type(&self) -> OcclusionType {
@@ -554,19 +516,6 @@ impl TileSprite {
             TileSprite::FrameLeft => OcclusionType::YAxis,
             TileSprite::FrameRight => OcclusionType::XAxis,
             _ => OcclusionType::None,
-        }
-    }
-    pub fn as_displayed(&self) -> Self {
-        match self {
-            TileSprite::CeilingLight => TileSprite::FloorTile,
-            TileSprite::Character => TileSprite::FloorTile,
-            _ => *self,
-        }
-    }
-    pub fn global_z(&self) -> f32 {
-        match self {
-            TileSprite::FloorTile => -0.01,
-            _ => 0.0,
         }
     }
     pub fn emmisivity_lumens(&self) -> f32 {
@@ -600,135 +549,6 @@ impl TileSprite {
             _ => false,
         }
     }
-    pub fn next(&self) -> Self {
-        enum_iterator::next_cycle(self).unwrap()
-    }
-    pub fn prev(&self) -> Self {
-        enum_iterator::previous_cycle(self).unwrap()
-    }
-    pub fn color(&self) -> Color {
-        match self {
-            TileSprite::CeilingLight => Color::Rgba {
-                red: 0.0,
-                green: 0.7,
-                blue: 0.7,
-                alpha: 0.0,
-            },
-            TileSprite::Util => Color::Rgba {
-                red: 1.0,
-                green: 1.0,
-                blue: 1.0,
-                alpha: 0.0,
-            },
-            TileSprite::Character => Color::Rgba {
-                red: 0.65,
-                green: 0.55,
-                blue: 0.5,
-                alpha: 1.0,
-            },
-            _ => Color::Rgba {
-                red: 1.0,
-                green: 1.0,
-                blue: 1.0,
-                alpha: 1.0,
-            },
-        }
-    }
-}
-
-pub struct TileBuilder<'a, 'b, 'd, 'e> {
-    _images: &'a Res<'d, Assets<Image>>,
-    handles: &'a Res<'e, root::GameAssets>,
-    materials1: RefCell<&'a mut ResMut<'b, Assets<CustomMaterial1>>>,
-}
-
-impl<'a, 'b, 'd, 'e> TileBuilder<'a, 'b, 'd, 'e> {
-    pub fn new(
-        _images: &'a Res<'d, Assets<Image>>,
-        handles: &'a Res<'e, root::GameAssets>,
-        materials1: &'a mut ResMut<'b, Assets<CustomMaterial1>>,
-    ) -> Self {
-        Self {
-            _images,
-            handles,
-            materials1: RefCell::new(materials1),
-        }
-    }
-    pub fn custom_tile(&self, tsprite: TileSprite) -> MaterialMesh2dBundle<CustomMaterial1> {
-        let mut mat = self.materials1.borrow_mut();
-        MaterialMesh2dBundle {
-            mesh: self.handles.meshes.quad128.clone().into(),
-            material: mat.add(CustomMaterial1::from_texture(tsprite.texture(self))),
-            // FIXME: The sprite appears one frame in the wrong pos, then gets moved. (this next line is to prevent it)
-            transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
-            ..Default::default()
-        }
-    }
-    pub fn tile(&self, tsprite: TileSprite) -> SpriteBundle {
-        self.tile_color(tsprite, tsprite.color())
-    }
-    pub fn tile_color(&self, tsprite: TileSprite, color: Color) -> SpriteBundle {
-        SpriteBundle {
-            texture: tsprite.texture(self),
-            sprite: Sprite {
-                color,
-                anchor: tsprite.anchor(self),
-                ..Default::default()
-            },
-            // FIXME: The sprite appears one frame in the wrong pos, then gets moved. (this next line is to prevent it)
-            transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
-            ..Default::default()
-        }
-    }
-    pub fn tile_custom_into(&self, tsprite: TileSprite, mut tpl: SpriteBundle) -> SpriteBundle {
-        tpl.texture = tsprite.texture(self);
-        tpl.sprite.anchor = tsprite.anchor(self);
-        tpl
-    }
-    pub fn spawn_tile(
-        &self,
-        commands: &mut Commands,
-        tile: Tile,
-        mut pos: Position,
-        bundle: impl Bundle,
-        for_editor: bool,
-    ) -> Entity {
-        let sprite = match for_editor {
-            true => tile.sprite,
-            false => tile.sprite.as_displayed(),
-        };
-        pos.global_z = sprite.global_z();
-        // let mut new_tile = commands.spawn(self.tile(sprite));
-        let bdl = self.custom_tile(sprite);
-        // let mat = bdl.material.clone();
-        let mut new_tile = commands.spawn(bdl);
-        new_tile
-            // .insert(mat)
-            .insert(bundle)
-            .insert(pos)
-            .insert(TileColor {
-                color: sprite.color(),
-            })
-            .insert(tile);
-        if let Some(occ_texture) = tile.occlusion_texture(self) {
-            new_tile.with_children(|parent| {
-                parent.spawn(SpriteBundle {
-                    texture: occ_texture,
-                    sprite: Sprite {
-                        anchor: sprite.anchor(self),
-                        ..Default::default()
-                    },
-                    transform: Transform::from_xyz(0.0, 0.0, -0.000001),
-                    ..Default::default()
-                });
-            });
-        }
-        new_tile.id()
-    }
-    // pub fn tile_custom_mut(&mut self, tsprite: TileSprite, tpl: &mut SpriteBundle) {
-    //     tpl.texture = tsprite.texture(self);
-    //     tpl.sprite.anchor = tsprite.anchor(self);
-    // }
 }
 
 #[derive(Clone, Debug, Component)]

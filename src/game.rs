@@ -123,9 +123,7 @@ pub fn cleanup(
 
 pub fn setup_ui(
     mut commands: Commands,
-    images: Res<Assets<Image>>,
     handles: Res<root::GameAssets>,
-    mut materials1: ResMut<Assets<CustomMaterial1>>,
     mut ev_load: EventWriter<LoadLevelEvent>,
 ) {
     // Spawn game UI
@@ -179,13 +177,12 @@ pub fn setup_ui(
                 });
         });
     info!("Game UI loaded");
-    let tb = board::TileBuilder::new(&images, &handles, &mut materials1);
     // Spawn Player 1
     commands
         .spawn(SpriteSheetBundle {
             texture_atlas: handles.images.character1.clone(),
             sprite: TextureAtlasSprite {
-                anchor: TileSprite::Character.anchor(&tb),
+                anchor: TileSprite::Character.anchor(&handles),
                 ..Default::default()
             },
             ..default()
