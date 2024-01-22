@@ -39,6 +39,12 @@ impl Behavior {
         // self.cfg.class.components()
         todo!()
     }
+    pub fn obsolete_occlusion_type(&self) -> Orientation {
+        if !self.p.light.opaque {
+            return Orientation::None;
+        }
+        self.cfg.orientation.clone()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -83,6 +89,21 @@ pub struct Display {
 pub struct Light {
     pub opaque: bool,
     pub emits_light: bool,
+}
+
+impl Light {
+    pub fn emmisivity_lumens(&self) -> f32 {
+        match self.emits_light {
+            true => 2000.0,
+            false => 0.0,
+        }
+    }
+    pub fn transmissivity_factor(&self) -> f32 {
+        match self.opaque {
+            true => 0.00,
+            false => 1.01,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -237,14 +258,17 @@ impl Class {
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
                 p.obsolete.sprite = TileSprite::Lamp;
+                p.light.emits_light = true;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.obsolete.sprite = TileSprite::Lamp;
+                p.light.emits_light = true;
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.obsolete.sprite = TileSprite::Lamp;
+                p.light.emits_light = true;
             }
             Class::WallDecor => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
@@ -253,6 +277,7 @@ impl Class {
                 p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
                 p.obsolete.sprite = TileSprite::CeilingLight;
+                p.light.emits_light = true;
             }
             Class::Appliance => {
                 p.display.global_z = (0.000070).try_into().unwrap();

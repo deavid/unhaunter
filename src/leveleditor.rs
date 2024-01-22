@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, time::Instant};
 
 use crate::{
+    behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData},
     game,
     materials::CustomMaterial1,
@@ -58,23 +59,14 @@ pub fn compute_visibility(
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<
-        (
-            &board::Position,
-            &mut Sprite,
-            &board::Tile,
-            Option<&Children>,
-        ),
-        Without<CustomMaterial1>,
-    >,
-    mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &board::Tile)>,
+    mut qt: Query<(&board::Position, &mut Sprite)>,
+    mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &Behavior)>,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    mut qtc: Query<&mut Sprite, Without<board::Position>>,
     qp: Query<(&board::Position, &game::PlayerSprite, &board::Direction)>,
     mut bf: ResMut<board::BoardData>,
     gc: Res<game::GameConfig>,
 ) {
-    const GAMMA_EXP: f32 = 2.0;
+    const GAMMA_EXP: f32 = 1.5;
     const CENTER_EXP: f32 = 2.3;
     const CENTER_EXP_GAMMA: f32 = 1.9;
     const EYE_SPEED: f32 = 0.5;
@@ -83,7 +75,7 @@ pub fn apply_lighting(
     let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
     const FLASHLIGHT_ON: bool = true;
-    const FLASHLIGHT_POWER: f32 = 3.0;
+    const FLASHLIGHT_POWER: f32 = 1.0;
     // FIXME: This function should not be in level editor
     // FIXME: We need to track the current player of the client (might not be id=1)
     for (pos, player, direction) in qp.iter() {
@@ -99,18 +91,11 @@ pub fn apply_lighting(
         for npos in cursor_pos.xy_neighbors(1) {
             if let Some(lf) = bf.light_field.get(&npos) {
                 cursor_exp += lf.lux.powf(GAMMA_EXP);
-                exp_count += lf.lux.powf(GAMMA_EXP) / lf.lux + 0.001;
+                exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
             }
         }
         compute_visibility(&mut visibility_field, &bf.collision_field, pos);
     }
-    let current_pos = qp.iter().find_map(|(pos, p, _d)| {
-        if p.id == gc.player_id {
-            Some(pos)
-        } else {
-            None
-        }
-    });
 
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.01;
@@ -118,6 +103,9 @@ pub fn apply_lighting(
         // account for the eye seeing the flashlight on.
         cursor_exp += FLASHLIGHT_POWER.sqrt() / 8.0;
     }
+
+    assert!(cursor_exp.is_normal());
+    cursor_exp = cursor_exp.clamp(2.0, 4.0);
 
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
@@ -131,10 +119,9 @@ pub fn apply_lighting(
     bf.current_exposure_accel = bf.current_exposure_accel.powf(0.99);
     bf.current_exposure *= bf.current_exposure_accel;
     let exposure = bf.current_exposure;
-    for (pos, mut sprite, tile, children) in qt.iter_mut() {
-        let opacity = current_pos
-            .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
-            .unwrap_or(1.0);
+
+    for (pos, mut sprite) in qt.iter_mut() {
+        let opacity: f32 = 1.0;
         let bpos = pos.to_board_position();
         let src_color = Color::WHITE;
         let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
@@ -144,16 +131,8 @@ pub fn apply_lighting(
         } else {
             src_color
         };
-        dst_color.set_a(opacity.clamp(0.6, 1.0));
-        if let Some(children) = children {
-            for &child in children.iter() {
-                let mut c_sprite = qtc.get_mut(child).unwrap();
-                c_sprite.color = dst_color;
-            }
-        }
         dst_color.set_a(opacity.clamp(0.2, 1.0));
         sprite.color = dst_color;
-        // dbg!(&sprite);
     }
 
     const VSMALL_PRIME: usize = 13;
@@ -163,14 +142,9 @@ pub fn apply_lighting(
     let start = Instant::now();
     let materials1 = materials1.into_inner();
     let mut change_count = 0;
-    for (n, (pos, mat, tile)) in qt2.iter_mut().enumerate() {
+    for (n, (pos, mat, behavior)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
-        // dbg!(&mat);
         let mut opacity: f32 = 1.0;
-        // opacity = current_pos
-        //     .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
-        //     .unwrap_or(1.0)
-        //     .max(0.5);
         let bpos = pos.to_board_position();
         let src_color = Color::WHITE;
 
@@ -200,12 +174,10 @@ pub fn apply_lighting(
                 lpos.y = 0.0;
                 if rpos.x > 0.0 {
                     rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
-                    // rpos.x = rpos.x.powf(1.0 / focus.clamp(1.0, 10.0));
                     rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
                 if rpos.x < 0.0 {
                     rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
-                    // rpos.x = -(-rpos.x).powf((focus / 5.0 + 1.0).clamp(1.0, 3.0));
                     rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
                 let dist = lpos.distance(&rpos);
@@ -222,17 +194,17 @@ pub fn apply_lighting(
         let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
         let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
 
-        match tile.occlusion_type() {
-            board::OcclusionType::None => {}
-            board::OcclusionType::XAxis => {
+        match behavior.obsolete_occlusion_type() {
+            Orientation::None => {}
+            Orientation::XAxis => {
                 lux_tl = lux_c;
                 lux_br = lux_c;
             }
-            board::OcclusionType::YAxis => {
+            Orientation::YAxis => {
                 lux_tr = lux_c;
                 lux_bl = lux_c;
             }
-            board::OcclusionType::Both => {
+            Orientation::Both => {
                 lux_tl = lux_c;
                 lux_br = lux_c;
                 lux_tr = lux_c;
@@ -249,12 +221,6 @@ pub fn apply_lighting(
         opacity = opacity
             .min(visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
             .min(1.0);
-        // if let Some(children) = children {
-        //     for &child in children.iter() {
-        //         let mut c_sprite = qtc.get_mut(child).unwrap();
-        //         c_sprite.color = dst_color;
-        //     }
-        // }
 
         let mut new_mat = materials1.get(mat).unwrap().clone();
         let orig_mat = new_mat.clone();
@@ -285,14 +251,13 @@ pub fn apply_lighting(
         new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
 
         let delta = orig_mat.data.delta(&new_mat.data);
-
         if delta > 0.02 + min_threshold {
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
             change_count += 1;
         }
     }
-    if mask % 255 == 0 {
+    if mask % 55 == 0 {
         warn!("change_count: {}", &change_count);
         warn!("apply_lighting elapsed: {:?}", start.elapsed());
     }

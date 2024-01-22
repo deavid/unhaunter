@@ -182,7 +182,7 @@ pub fn setup_ui(
         .spawn(SpriteSheetBundle {
             texture_atlas: handles.images.character1.clone(),
             sprite: TextureAtlasSprite {
-                anchor: TileSprite::Character.anchor(&handles),
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
                 ..Default::default()
             },
             ..default()

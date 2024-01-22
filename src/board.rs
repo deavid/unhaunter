@@ -4,7 +4,7 @@ use bevy::{prelude::*, sprite::Anchor, utils::HashMap};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-use crate::root::GameAssets;
+use crate::{behavior::Behavior, root::GameAssets};
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -407,107 +407,9 @@ pub enum PillarVariant {
     Interactive,
 }
 
-#[derive(Debug, Clone, Copy, Sequence, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum OcclusionType {
-    None,
-    XAxis,
-    YAxis,
-    Both,
-}
-
-impl OcclusionType {
-    pub fn x_axis(&self) -> bool {
-        use OcclusionType::*;
-        match self {
-            XAxis | Both => true,
-            None | YAxis => false,
-        }
-    }
-    pub fn y_axis(&self) -> bool {
-        use OcclusionType::*;
-        match self {
-            YAxis | Both => true,
-            None | XAxis => false,
-        }
-    }
-    /// Returns the "opacity" expected for removing occlusion.
-    pub fn occludes(&self, ch_pos: Position, wall_pos: Position) -> f32 {
-        const DST_FACTOR: f32 = 4.0;
-        const DST_MIN: f32 = 2.0;
-        let dst = (ch_pos.distance(&wall_pos) - DST_MIN).max(0.0);
-        let dx = if self.x_axis() {
-            ch_pos.x - wall_pos.x
-        } else {
-            2.0
-        };
-        let dy = if self.y_axis() {
-            wall_pos.y - ch_pos.y
-        } else {
-            2.0
-        };
-        let occ_base = match self {
-            OcclusionType::Both => dx + dy,
-            OcclusionType::None => 1.0,
-            _ => dx.min(dy),
-        };
-
-        (occ_base.max(0.0) + dst / DST_FACTOR).clamp(0.0, 1.0)
-    }
-}
-
 impl Default for TileVariant {
     fn default() -> Self {
         Self::Base
-    }
-}
-
-impl TileSprite {
-    pub fn anchor(&self, b: &Res<GameAssets>) -> Anchor {
-        match self {
-            TileSprite::Character => Anchor::Custom(b.anchors.grid1x1x4),
-            _ => Anchor::Custom(b.anchors.base),
-        }
-    }
-    pub fn occlusion_type(&self) -> OcclusionType {
-        match self {
-            TileSprite::Pillar => OcclusionType::Both,
-            TileSprite::WallLeft => OcclusionType::YAxis,
-            TileSprite::WallRight => OcclusionType::XAxis,
-            TileSprite::FrameLeft => OcclusionType::YAxis,
-            TileSprite::FrameRight => OcclusionType::XAxis,
-            _ => OcclusionType::None,
-        }
-    }
-    pub fn emmisivity_lumens(&self) -> f32 {
-        match self {
-            TileSprite::CeilingLight => 1000.0,
-            TileSprite::Lamp => 1000.0,
-            _ => 0.000000001,
-            // _ => 0.01,
-        }
-    }
-    pub fn light_transmissivity_factor(&self) -> f32 {
-        match self {
-            TileSprite::Pillar => 0.00001,
-            TileSprite::WallLeft => 0.00001,
-            TileSprite::WallRight => 0.00001,
-            TileSprite::FrameLeft => 0.00001,
-            TileSprite::FrameRight => 0.00001,
-            _ => 1.01,
-        }
-    }
-    #[allow(clippy::match_like_matches_macro)]
-    pub fn is_wall(&self) -> bool {
-        match self {
-            TileSprite::Grid => true,
-            TileSprite::Pillar => true,
-            TileSprite::WallLeft => true,
-            TileSprite::WallRight => true,
-            // Frames set as false or they would get collision.
-            TileSprite::FrameLeft => false,
-            TileSprite::FrameRight => false,
-            _ => false,
-        }
     }
 }
 
@@ -758,16 +660,6 @@ impl CachedBoardPos {
             info!("{:?}", v);
         }
     }
-    // fn get_dist(&self, x: i64, y: i64) -> f32 {
-    //     let x: usize = (x + Self::CENTER) as usize;
-    //     let y: usize = (y + Self::CENTER) as usize;
-    //     self.dist[x][y]
-    // }
-    // fn get_angle(&self, x: i64, y: i64) -> i64 {
-    //     let x: usize = (x + Self::CENTER) as usize;
-    //     let y: usize = (y + Self::CENTER) as usize;
-    //     self.angle[x][y]
-    // }
     fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
@@ -789,7 +681,7 @@ pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
 
-    qt: Query<(&Tile, &Position)>,
+    qt: Query<(&Tile, &Position, &Behavior)>,
 ) {
     // Here we will recreate the field (if needed? - not sure how to detect that)
     // ... maybe add a timer since last update.
@@ -797,23 +689,15 @@ pub fn boardfield_update(
         if bfr.collision {
             info!("Collision rebuild");
             bf.collision_field.clear();
-            for (tile, pos) in qt.iter() {
+            for (_tile, pos, _behavior) in qt.iter().filter(|(_t, _p, b)| b.p.movement.walkable) {
                 let pos = pos.to_board_position();
-                if !tile.sprite.is_wall() {
-                    let colfd = CollisionFieldData {
-                        free: !tile.sprite.is_wall(),
-                    };
-                    bf.collision_field.insert(pos, colfd);
-                }
+                let colfd = CollisionFieldData { free: true };
+                bf.collision_field.insert(pos, colfd);
             }
-            for (tile, pos) in qt.iter() {
+            for (_tile, pos, _behavior) in qt.iter().filter(|(_t, _p, b)| b.p.movement.collision) {
                 let pos = pos.to_board_position();
-                if tile.sprite.is_wall() {
-                    let colfd = CollisionFieldData {
-                        free: !tile.sprite.is_wall(),
-                    };
-                    bf.collision_field.insert(pos, colfd);
-                }
+                let colfd = CollisionFieldData { free: false };
+                bf.collision_field.insert(pos, colfd);
             }
         }
         if bfr.lighting {
@@ -828,7 +712,7 @@ pub fn boardfield_update(
             let first_p = qt
                 .iter()
                 .next()
-                .map(|(_t, p)| p.to_board_position())
+                .map(|(_t, p, _b)| p.to_board_position())
                 .unwrap_or_default();
             let mut min_x = first_p.x;
             let mut min_y = first_p.y;
@@ -836,7 +720,7 @@ pub fn boardfield_update(
             let mut max_x = first_p.x;
             let mut max_y = first_p.y;
             let mut max_z = first_p.z;
-            for (tile, pos) in qt.iter() {
+            for (_tile, pos, behavior) in qt.iter() {
                 let pos = pos.to_board_position();
                 min_x = min_x.min(pos.x);
                 min_y = min_y.min(pos.y);
@@ -844,20 +728,27 @@ pub fn boardfield_update(
                 max_x = max_x.max(pos.x);
                 max_y = max_y.max(pos.y);
                 max_z = max_z.max(pos.z);
-                let src = bf.light_field.get(&pos).cloned().unwrap_or_default();
+                let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
+                    lux: 0.0,
+                    transmissivity: 1.0,
+                });
                 let lightdata = LightFieldData {
-                    lux: tile.emmisivity_lumens() + src.lux,
-                    transmissivity: tile.light_transmissivity_factor() * src.transmissivity
+                    lux: behavior.p.light.emmisivity_lumens() + src.lux,
+                    transmissivity: behavior.p.light.transmissivity_factor() * src.transmissivity
                         + 0.0001,
                 };
                 bf.light_field.insert(pos, lightdata);
             }
-            info!("Collecting time: {:?}", build_start_time.elapsed());
+            info!(
+                "Collecting time: {:?} - sz: {}",
+                build_start_time.elapsed(),
+                bf.light_field.len()
+            );
             let mut lfs = LightFieldSector::new(min_x, min_y, min_z, max_x, max_y, max_z);
             for (k, v) in bf.light_field.iter() {
                 lfs.insert(k.x, k.y, k.z, v.clone());
             }
-            for step in 0..5 {
+            for step in 0..6 {
                 let step_time = Instant::now();
                 let src_lfs = lfs.clone();
                 let size = match step {
@@ -872,7 +763,6 @@ pub fn boardfield_update(
                             }
                             let src = src_lfs.get(x, y, z).unwrap();
                             let mut src_lux = src.lux;
-                            let src_trans = src.transmissivity;
                             let min_lux = match step {
                                 0 => 0.1,
                                 1 => 0.01,
@@ -899,79 +789,21 @@ pub fn boardfield_update(
                             let root_pos = BoardPosition { x, y, z };
                             lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
                             let nbors = root_pos.xy_neighbors(size);
-                            let mut shadows: Vec<f32> = vec![1.0; nbors.len()];
                             let mut shadow_dist = [128.0f32; CachedBoardPos::TAU_I];
                             // Compute shadows
-                            if true {
-                                for pillar_pos in nbors.iter() {
-                                    if let Some(lf) = lfs.get_pos(pillar_pos) {
-                                        let min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
-                                        let consider_opaque = lf.transmissivity < 0.5;
-                                        if consider_opaque {
-                                            let angle = cbp.bpos_angle(&root_pos, pillar_pos);
-                                            // if min_dist < 2.0 {
-                                            //     info!(
-                                            //         "dst: {}, orig_dst: {}, rp: {:?}, pp: {:?}",
-                                            //         min_dist,
-                                            //         shadow_dist[angle],
-                                            //         &root_pos,
-                                            //         pillar_pos
-                                            //     );
-                                            // }
-                                            // if min_dist < shadow_dist[angle] {
-                                            //     shadow_dist[angle] = min_dist;
-                                            // }
-                                            let angle_range =
-                                                cbp.bpos_angle_range(&root_pos, pillar_pos);
-                                            for d in angle_range.0..=angle_range.1 {
-                                                let ang = (angle as i64 + d)
-                                                    .rem_euclid(CachedBoardPos::TAU_I as i64)
-                                                    as usize;
-                                                shadow_dist[ang] = shadow_dist[ang].min(min_dist);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            // Old shadow method
-                            if false {
-                                for pillar_pos in nbors.iter() {
-                                    if let Some(lf) = lfs.get_pos(pillar_pos) {
-                                        let mut min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
-                                        let mut consider_opaque = lf.transmissivity < 0.5;
-                                        if src_trans < 0.5 {
-                                            consider_opaque = !consider_opaque;
-                                            min_dist -= 0.1;
-                                        } else {
-                                            min_dist += 0.1;
-                                        }
-
-                                        if consider_opaque {
-                                            for (shadow, neighbor) in
-                                                shadows.iter_mut().zip(nbors.iter())
-                                            {
-                                                let dist = cbp.bpos_dist(neighbor, &root_pos);
-                                                if dist < min_dist {
-                                                    // Ignore those that are in front of the pillar.
-                                                    continue;
-                                                }
-                                                let mut d =
-                                                    root_pos.shadow_proximity(pillar_pos, neighbor);
-                                                if src_trans < 0.5 {
-                                                    d *= 3.0;
-                                                    d += 0.8;
-                                                }
-                                                if d > 1.0 {
-                                                    continue;
-                                                }
-                                                if d < 0.5 {
-                                                    *shadow = 0.0;
-                                                } else {
-                                                    let d = (d - 0.5) / 0.5;
-                                                    let factor = 1.0 - d;
-                                                    *shadow *= factor;
-                                                }
-                                            }
+                            for pillar_pos in nbors.iter() {
+                                if let Some(lf) = lfs.get_pos(pillar_pos) {
+                                    let min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
+                                    let consider_opaque = lf.transmissivity < 0.5;
+                                    if consider_opaque {
+                                        let angle = cbp.bpos_angle(&root_pos, pillar_pos);
+                                        let angle_range =
+                                            cbp.bpos_angle_range(&root_pos, pillar_pos);
+                                        for d in angle_range.0..=angle_range.1 {
+                                            let ang = (angle as i64 + d)
+                                                .rem_euclid(CachedBoardPos::TAU_I as i64)
+                                                as usize;
+                                            shadow_dist[ang] = shadow_dist[ang].min(min_dist);
                                         }
                                     }
                                 }
@@ -984,29 +816,17 @@ pub fn boardfield_update(
                                 total_lux += 1.0 / dist / dist;
                             }
                             // new shadow method
-                            if true {
-                                for neighbor in nbors.iter() {
-                                    if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                        let dist = cbp.bpos_dist(&root_pos, neighbor);
-                                        let dist2 = dist + light_height;
-                                        let angle = cbp.bpos_angle(&root_pos, neighbor);
-                                        let sd = shadow_dist[angle];
-                                        if dist <= sd {
-                                            lf.lux += src_lux / dist2 / dist2 / total_lux;
-                                        } else {
-                                            let f = (dist - sd + 1.0).powi(4);
-                                            lf.lux += src_lux / dist2 / dist2 / total_lux / f;
-                                        }
-                                    }
-                                }
-                            }
-                            // old shadow method
-                            if false {
-                                for (neighbor, shadow) in nbors.iter().zip(shadows.iter()) {
-                                    if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                        let dist =
-                                            cbp.bpos_dist(&root_pos, neighbor) + light_height;
-                                        lf.lux += src_lux / dist / dist / total_lux * shadow;
+                            for neighbor in nbors.iter() {
+                                if let Some(lf) = lfs.get_mut_pos(neighbor) {
+                                    let dist = cbp.bpos_dist(&root_pos, neighbor);
+                                    let dist2 = dist + light_height;
+                                    let angle = cbp.bpos_angle(&root_pos, neighbor);
+                                    let sd = shadow_dist[angle];
+                                    if dist <= sd {
+                                        lf.lux += src_lux / dist2 / dist2 / total_lux;
+                                    } else {
+                                        let f = (dist - sd + 1.0).powi(4);
+                                        lf.lux += src_lux / dist2 / dist2 / total_lux / f;
                                     }
                                 }
                             }
