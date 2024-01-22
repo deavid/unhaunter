@@ -633,7 +633,6 @@ pub fn compute_visibility(
 pub fn apply_lighting(
     mut qt: Query<
         (
-            &board::TileColor,
             &board::Position,
             &mut Sprite,
             &board::Tile,
@@ -641,12 +640,7 @@ pub fn apply_lighting(
         ),
         Without<CustomMaterial1>,
     >,
-    mut qt2: Query<(
-        &board::TileColor,
-        &board::Position,
-        &Handle<CustomMaterial1>,
-        &board::Tile,
-    )>,
+    mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &board::Tile)>,
     materials1: ResMut<Assets<CustomMaterial1>>,
     mut qtc: Query<&mut Sprite, Without<board::Position>>,
     qc: Query<&board::Position, With<Cursor>>,
@@ -726,12 +720,12 @@ pub fn apply_lighting(
     bf.current_exposure_accel = bf.current_exposure_accel.powf(0.99);
     bf.current_exposure *= bf.current_exposure_accel;
     let exposure = bf.current_exposure;
-    for (tcolor, pos, mut sprite, tile, children) in qt.iter_mut() {
+    for (pos, mut sprite, tile, children) in qt.iter_mut() {
         let opacity = current_pos
             .map(|&pp| tile.occlusion_type().occludes(pp, *pos))
             .unwrap_or(1.0);
         let bpos = pos.to_board_position();
-        let src_color = tcolor.color;
+        let src_color = Color::WHITE;
         let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             let rel_lux = lf.lux / exposure;
@@ -758,7 +752,7 @@ pub fn apply_lighting(
     let start = Instant::now();
     let materials1 = materials1.into_inner();
     let mut change_count = 0;
-    for (n, (tcolor, pos, mat, tile)) in qt2.iter_mut().enumerate() {
+    for (n, (pos, mat, tile)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         // dbg!(&mat);
         let mut opacity: f32 = 1.0;
@@ -767,7 +761,7 @@ pub fn apply_lighting(
         //     .unwrap_or(1.0)
         //     .max(0.5);
         let bpos = pos.to_board_position();
-        let src_color = tcolor.color;
+        let src_color = Color::WHITE;
 
         opacity *= src_color.a();
 

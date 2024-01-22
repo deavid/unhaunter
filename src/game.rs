@@ -1,4 +1,4 @@
-use crate::board::{BoardPosition, Direction, Position, Tile, TileColor, TileSprite};
+use crate::board::{Direction, Position, Tile, TileSprite};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
@@ -548,8 +548,6 @@ pub struct LoadLevelEvent {
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
-    // images: Res<Assets<Image>>,
-    // handles: Res<root::GameAssets>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<board::Tile>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
@@ -562,8 +560,6 @@ pub fn load_level(
     let Some(load_event) = ev.read().next() else {
         return;
     };
-
-    let custom_classes = tiledmap::TiledCustomClass::build_hashmap();
 
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
@@ -581,7 +577,7 @@ pub fn load_level(
     let mut ghost_spawn_points: Vec<board::Position> = vec![];
 
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
-    let mut c = 0.0;
+    let mut c: f32 = 0.0;
     for maptiles in layers.iter().filter_map(|(_, layer)| {
         // filter only the tile layers and extract that directly
         if let MapLayerType::Tiles(tiles) = &layer.data {
@@ -596,7 +592,19 @@ pub fn load_level(
                 .db
                 .get(&tile.tileset)
                 .expect("Tile referenced a non-existent tileset");
+            let tiled_tile = tileset
+                .tileset
+                .get_tile(tile.tileuid)
+                .expect("TileUID referenced in map not found in the tileset");
+
             let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
+            let sprite_config = behavior::SpriteConfig::from_tiled_auto(tile, &tiled_tile);
+            let behavior = behavior::Behavior::from_config(sprite_config);
+            let visibility = if behavior.p.display.disable {
+                Visibility::Hidden
+            } else {
+                Visibility::Inherited
+            };
 
             // Spawn the base entity
             let mut entity = match &tileset.data {
@@ -629,6 +637,7 @@ pub fn load_level(
                         mesh: mesh_handle.into(),
                         material: mat.clone(),
                         transform,
+                        visibility,
                         ..Default::default()
                     };
                     commands.spawn(bdl)
@@ -640,6 +649,7 @@ pub fn load_level(
                         anchor,
                         ..default()
                     },
+                    visibility,
                     transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
                     ..default()
                 }),
@@ -658,41 +668,30 @@ pub fn load_level(
                 variant: board::TileVariant::Base,
             };
 
-            let tiled_tile = tileset
-                .tileset
-                .get_tile(tile.tileuid)
-                .expect("TileUID referenced in map not found in the tileset");
-
-            let sprite_config = behavior::SpriteConfig::from_tiled_auto(tile, &tiled_tile);
-            let behavior = behavior::Behavior::from_config(sprite_config);
-            pos.global_z = behavior.p.display.global_z.into();
-            tile_type.sprite = behavior.p.obsolete.sprite;
-
-            if behavior.p.util == behavior::Util::PlayerSpawn {
-                player_spawn_points.push(Position {
-                    global_z: 0.0001,
-                    ..pos
-                });
-            }
-            if behavior.p.util == behavior::Util::GhostSpawn {
-                ghost_spawn_points.push(Position {
-                    global_z: 0.0001,
-                    ..pos
-                });
-            }
-
-            pos.global_z += c;
             c += 0.000000001;
-            let tile_color = TileColor {
-                color: tile_type.sprite.color(),
-            };
+            pos.global_z = f32::from(behavior.p.display.global_z) + c;
+            tile_type.sprite = behavior.p.obsolete.sprite;
+            match behavior.p.util {
+                behavior::Util::PlayerSpawn => {
+                    player_spawn_points.push(Position {
+                        global_z: 0.0001,
+                        ..pos
+                    });
+                }
+                behavior::Util::GhostSpawn => {
+                    ghost_spawn_points.push(Position {
+                        global_z: 0.0001,
+                        ..pos
+                    });
+                }
+                _ => {}
+            }
 
             entity
-                // .insert(tile_behavior)
+                .insert(behavior)
                 .insert(GameSprite)
                 .insert(pos)
-                .insert(tile_type) // <- this one has to go away
-                .insert(tile_color); // base color of the sprite... not sure what will happen with this one.
+                .insert(tile_type); // <- this one has to go away
         }
     }
 
