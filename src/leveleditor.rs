@@ -3,7 +3,7 @@ use std::{collections::VecDeque, time::Instant};
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData},
-    game,
+    game::{self, GameSound, SoundType},
     materials::CustomMaterial1,
 };
 use bevy::{prelude::*, utils::HashMap};
@@ -65,6 +65,7 @@ pub fn apply_lighting(
     qp: Query<(&board::Position, &game::PlayerSprite, &board::Direction)>,
     mut bf: ResMut<board::BoardData>,
     gc: Res<game::GameConfig>,
+    qas: Query<(&AudioSink, &GameSound)>,
 ) {
     const GAMMA_EXP: f32 = 1.5;
     const CENTER_EXP: f32 = 2.3;
@@ -96,7 +97,23 @@ pub fn apply_lighting(
         }
         compute_visibility(&mut visibility_field, &bf.collision_field, pos);
     }
+    // --- ambient sound processing ---
+    let total_vis: f32 = visibility_field.iter().map(|(_k, v)| v).sum();
+    let house_volume = (120.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999);
+    let street_volume = (total_vis / 250.0).powi(3).tanh().clamp(0.00001, 0.9999);
 
+    for (sink, gamesound) in qas.iter() {
+        const SMOOTH: f32 = 60.0;
+        if gamesound.class == SoundType::BackgroundHouse {
+            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+        if gamesound.class == SoundType::BackgroundStreet {
+            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+    }
+    // ---
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.01;
     if FLASHLIGHT_ON {

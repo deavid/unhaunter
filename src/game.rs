@@ -23,6 +23,16 @@ pub struct GameUI;
 pub struct GameSprite;
 
 #[derive(Component, Debug)]
+pub struct GameSound {
+    pub class: SoundType,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum SoundType {
+    BackgroundHouse,
+    BackgroundStreet,
+}
+#[derive(Component, Debug)]
 pub struct PlayerSprite {
     pub id: usize,
     pub controls: ControlKeys,
@@ -107,6 +117,7 @@ pub fn cleanup(
     qc: Query<Entity, With<GCamera>>,
     qg: Query<Entity, With<GameUI>>,
     qgs: Query<Entity, With<GameSprite>>,
+    qs: Query<Entity, With<GameSound>>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
@@ -118,6 +129,10 @@ pub fn cleanup(
     }
     // Despawn game sprites if not used
     for gs in qgs.iter() {
+        commands.entity(gs).despawn_recursive();
+    }
+    // Despawn game sound
+    for gs in qs.iter() {
         commands.entity(gs).despawn_recursive();
     }
 }
@@ -562,7 +577,34 @@ pub fn load_level(
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
-
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("sounds/background-noise-house-1.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.00001)),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+            },
+        })
+        .insert(GameSound {
+            class: SoundType::BackgroundHouse,
+        });
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("sounds/ambient-clean.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.00001)),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+            },
+        })
+        .insert(GameSound {
+            class: SoundType::BackgroundStreet,
+        });
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
 
