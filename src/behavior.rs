@@ -19,7 +19,7 @@
 
 use crate::tiledmap::MapTile;
 use anyhow::Context;
-use bevy::ecs::component::{Component, TableStorage};
+use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
@@ -35,9 +35,8 @@ impl Behavior {
         cfg.class.set_properties(&mut p);
         Self { cfg, p }
     }
-    pub fn _default_components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
-        // self.cfg.class.components()
-        todo!()
+    pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
+        self.cfg.class.components(entity)
     }
     pub fn obsolete_occlusion_type(&self) -> Orientation {
         if !self.p.light.opaque {
@@ -106,7 +105,7 @@ pub struct Movement {
 }
 
 pub mod component {
-    use bevy::ecs::component::Component;
+    use bevy::{audio::AudioBundle, ecs::component::Component};
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Ground;
@@ -116,8 +115,23 @@ pub mod component {
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Opaque;
+
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct UVSurface;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Interactive {
+        pub on_click_sound_file: String,
+    }
+
+    impl Interactive {
+        pub fn new(on_click_sound_file: &str) -> Self {
+            let on_click_sound_file = on_click_sound_file.to_string();
+            Self {
+                on_click_sound_file,
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -151,36 +165,43 @@ pub enum Class {
 impl AutoSerialize for Class {}
 
 impl Class {
-    pub fn _components(&self) -> Vec<Box<dyn Component<Storage = TableStorage>>> {
+    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
         match self {
-            Class::Floor => vec![Box::new(component::Ground), Box::new(component::UVSurface)],
-            Class::Wall => vec![
-                Box::new(component::Collision),
-                Box::new(component::Opaque),
-                Box::new(component::UVSurface),
-            ],
-            Class::Door => vec![],
-            Class::Switch => vec![],
-            Class::RoomSwitch => vec![],
-            Class::Breaker => vec![],
-            Class::Doorway => vec![],
-            Class::Decor => vec![],
-            Class::Item => vec![],
-            Class::Furniture => vec![],
-            Class::PlayerSpawn => vec![],
-            Class::GhostSpawn => vec![],
-            Class::VanEntry => vec![],
-            Class::RoomDef => vec![],
-            Class::WallLamp => vec![],
-            Class::FloorLamp => vec![],
-            Class::TableLamp => vec![],
-            Class::WallDecor => vec![],
-            Class::CeilingLight => vec![],
-            Class::Appliance => vec![],
-            Class::Van => vec![],
-            Class::Window => vec![],
-            Class::None => vec![],
-        }
+            Class::Floor => entity
+                .insert(component::Ground)
+                .insert(component::UVSurface),
+            Class::Wall => entity
+                .insert(component::Collision)
+                .insert(component::Opaque)
+                .insert(component::UVSurface),
+            Class::Door => entity.insert(component::Interactive::new("sounds/door-open.ogg")),
+            Class::Switch => entity.insert(component::Interactive::new("sounds/switch-on-1.ogg")),
+            Class::RoomSwitch => {
+                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
+            }
+            Class::Breaker => entity.insert(component::Interactive::new("sounds/switch-off-1.ogg")),
+            Class::Doorway => entity,
+            Class::Decor => entity,
+            Class::Item => entity,
+            Class::Furniture => entity,
+            Class::PlayerSpawn => entity,
+            Class::GhostSpawn => entity,
+            Class::VanEntry => entity,
+            Class::RoomDef => entity,
+            Class::WallLamp => entity,
+            Class::FloorLamp => {
+                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
+            }
+            Class::TableLamp => {
+                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
+            }
+            Class::WallDecor => entity,
+            Class::CeilingLight => entity,
+            Class::Appliance => entity,
+            Class::Van => entity,
+            Class::Window => entity,
+            Class::None => entity,
+        };
     }
     pub fn set_properties(&self, p: &mut Properties) {
         match self {

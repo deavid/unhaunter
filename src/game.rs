@@ -1,3 +1,4 @@
+use crate::behavior::component::Interactive;
 use crate::behavior::Behavior;
 use crate::board::{Direction, Position};
 use crate::materials::CustomMaterial1;
@@ -302,6 +303,9 @@ pub fn keyboard_player(
         &mut AnimationTimer,
     )>,
     bf: Res<board::BoardData>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    interactables: Query<(&board::Position, &Interactive), Without<PlayerSprite>>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -377,6 +381,40 @@ pub fn keyboard_player(
         } else if dir_dist > DIR_MIN {
             dir.dx /= DIR_RED;
             dir.dy /= DIR_RED;
+        }
+
+        // ----
+        if keyboard_input.just_pressed(player.controls.activate) {
+            let d = dir.normalized();
+            let mut max_dist = 0.5;
+            for (item_pos, _) in interactables.iter() {
+                let mut dref = pos.delta(*item_pos);
+                dref = dref + (&d * dref.distance().min(1.0));
+                let dist = dref.distance();
+                if dist < max_dist {
+                    max_dist = dist + 0.00001;
+                    dbg!(dist);
+                }
+            }
+            for (item_pos, interactive) in interactables.iter() {
+                let mut dref = pos.delta(*item_pos);
+                dref = dref + (&d * dref.distance().min(1.0));
+                let dist = dref.distance();
+                if dist < max_dist {
+                    commands.spawn(AudioBundle {
+                        source: asset_server.load(&interactive.on_click_sound_file),
+                        settings: PlaybackSettings {
+                            mode: bevy::audio::PlaybackMode::Once,
+                            volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(
+                                1.0,
+                            )),
+                            speed: 1.0,
+                            paused: false,
+                            spatial: false,
+                        },
+                    });
+                }
+            }
         }
     }
 }
@@ -561,11 +599,11 @@ pub struct LoadLevelEvent {
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<Behavior>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
-    asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
@@ -724,6 +762,7 @@ pub fn load_level(
                 }
                 _ => {}
             }
+            behavior.default_components(&mut entity);
 
             entity.insert(behavior).insert(GameSprite).insert(pos);
         }

@@ -57,6 +57,18 @@ impl Direction {
     }
 }
 
+impl std::ops::Mul<f32> for &Direction {
+    type Output = Direction;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Direction {
+            dx: self.dx * rhs,
+            dy: self.dy * rhs,
+            dz: self.dz * rhs,
+        }
+    }
+}
+
 impl std::ops::Div<f32> for &Direction {
     type Output = Direction;
 
