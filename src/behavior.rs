@@ -17,7 +17,6 @@
 //! defines the behavior.
 //!
 
-use crate::tiledmap::MapTile;
 use anyhow::Context;
 use bevy::ecs::component::Component;
 use ordered_float::NotNan;
@@ -105,7 +104,7 @@ pub struct Movement {
 }
 
 pub mod component {
-    use bevy::{audio::AudioBundle, ecs::component::Component};
+    use bevy::ecs::component::Component;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Ground;
@@ -369,7 +368,7 @@ pub struct SpriteConfig {
 }
 
 impl SpriteConfig {
-    pub fn from_tiled_auto(tile: &MapTile, tiled_tile: &tiled::Tile) -> Self {
+    pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
         let parse = |x: &tiled::PropertyValue| -> String {
             match x {
                 tiled::PropertyValue::BoolValue(x) => x.to_string(),
@@ -390,8 +389,8 @@ impl SpriteConfig {
             get_property_str("sprite:variant").as_deref(),
             get_property_str("sprite:orientation").as_deref(),
             get_property_str("sprite:state").as_deref(),
-            tile.tileset.clone(),
-            tile.tileuid,
+            tset_name,
+            tileuid,
         )
     }
 

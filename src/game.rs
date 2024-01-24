@@ -321,7 +321,7 @@ pub fn keyboard_player(
             if !cf.free && ENABLE_COLLISION {
                 let dpos = npos.to_position().to_vec3() - pos.to_vec3();
                 const PILLAR_SZ: f32 = 0.3;
-                const PLAYER_SZ: f32 = 0.7;
+                const PLAYER_SZ: f32 = 0.5;
                 let mut dapos = dpos.abs();
                 dapos.x -= PILLAR_SZ;
                 dapos.y -= PILLAR_SZ;
@@ -659,42 +659,34 @@ pub fn load_level(
     let mut ghost_spawn_points: Vec<board::Position> = vec![];
 
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
-    let mut c: f32 = 0.0;
-    for maptiles in layers.iter().filter_map(|(_, layer)| {
-        // filter only the tile layers and extract that directly
-        if let MapLayerType::Tiles(tiles) = &layer.data {
-            Some(tiles)
-        } else {
-            None
-        }
-    }) {
-        for tile in &maptiles.v {
-            // load tile
-            let tileset = tilesetdb
-                .db
-                .get(&tile.tileset)
-                .expect("Tile referenced a non-existent tileset");
-            let tiled_tile = tileset
-                .tileset
-                .get_tile(tile.tileuid)
-                .expect("TileUID referenced in map not found in the tileset");
 
+    enum Bdl {
+        Mmb(MaterialMesh2dBundle<CustomMaterial1>),
+        Sb(SpriteBundle),
+    }
+    struct MapTileComponents {
+        bundle: Bdl,
+        behavior: Behavior,
+    }
+    let mut map_tile = HashMap::<(String, u32), MapTileComponents>::new();
+    // Load the tileset sprites first:
+    for (tset_name, tileset) in tilesetdb.db.iter() {
+        for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
-            let sprite_config = behavior::SpriteConfig::from_tiled_auto(tile, &tiled_tile);
+            let sprite_config =
+                behavior::SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
             let behavior = behavior::Behavior::from_config(sprite_config);
             let visibility = if behavior.p.display.disable {
                 Visibility::Hidden
             } else {
                 Visibility::Inherited
             };
-
-            // Spawn the base entity
-            let mut entity = match &tileset.data {
+            let bundle = match &tileset.data {
                 AtlasData::Sheet((handle, cmat)) => {
                     let mut cmat = cmat.clone();
                     let tatlas = texture_atlases.get(handle).unwrap();
                     let mesh_handle = mesh_tileset
-                        .entry(tile.tileset.clone())
+                        .entry(tset_name.to_string())
                         .or_insert_with(|| {
                             let sprite_size = Vec2::new(
                                 tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
@@ -709,25 +701,20 @@ pub fn load_level(
                         })
                         .clone();
 
-                    cmat.data.sheet_idx = tile.tileuid;
+                    cmat.data.sheet_idx = tileuid;
                     let mat = materials1.add(cmat);
-                    let mut transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
-                    if tile.flip_x {
-                        transform.scale.x = -1.0;
-                    }
-                    let bdl = MaterialMesh2dBundle {
+                    let transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
+                    Bdl::Mmb(MaterialMesh2dBundle {
                         mesh: mesh_handle.into(),
                         material: mat.clone(),
                         transform,
                         visibility,
                         ..Default::default()
-                    };
-                    commands.spawn(bdl)
+                    })
                 }
-                AtlasData::Tiles(v_img) => commands.spawn(SpriteBundle {
-                    texture: v_img[tile.tileuid as usize].0.clone(),
+                AtlasData::Tiles(v_img) => Bdl::Sb(SpriteBundle {
+                    texture: v_img[tileuid as usize].0.clone(),
                     sprite: Sprite {
-                        flip_x: tile.flip_x,
                         anchor,
                         ..default()
                     },
@@ -736,7 +723,50 @@ pub fn load_level(
                     ..default()
                 }),
             };
-            // ----
+
+            let mt = MapTileComponents { bundle, behavior };
+            map_tile.insert((tset_name.to_string(), tileuid), mt);
+        }
+    }
+    // ----
+
+    // We will need a 2nd pass load to sync some data
+    // ----
+
+    let mut c: f32 = 0.0;
+    for maptiles in layers.iter().filter_map(|(_, layer)| {
+        // filter only the tile layers and extract that directly
+        if let MapLayerType::Tiles(tiles) = &layer.data {
+            Some(tiles)
+        } else {
+            None
+        }
+    }) {
+        for tile in &maptiles.v {
+            let mt = map_tile
+                .get(&(tile.tileset.clone(), tile.tileuid))
+                .expect("Map references non-existent tileset+tileuid");
+            // Spawn the base entity
+            let mut entity = match &mt.bundle {
+                Bdl::Mmb(b) => {
+                    let mut b = b.clone();
+                    if tile.flip_x {
+                        b.transform.scale.x = -1.0;
+                    }
+                    let mat = materials1.get(b.material).unwrap().clone();
+                    let mat = materials1.add(mat);
+
+                    b.material = mat;
+                    commands.spawn(b)
+                }
+                Bdl::Sb(b) => {
+                    let mut b = b.clone();
+                    if tile.flip_x {
+                        b.transform.scale.x = -1.0;
+                    }
+                    commands.spawn(b.clone())
+                }
+            };
 
             let mut pos = board::Position {
                 x: tile.pos.x as f32,
@@ -746,8 +776,8 @@ pub fn load_level(
             };
 
             c += 0.000000001;
-            pos.global_z = f32::from(behavior.p.display.global_z) + c;
-            match behavior.p.util {
+            pos.global_z = f32::from(mt.behavior.p.display.global_z) + c;
+            match mt.behavior.p.util {
                 behavior::Util::PlayerSpawn => {
                     player_spawn_points.push(Position {
                         global_z: 0.0001,
@@ -762,9 +792,12 @@ pub fn load_level(
                 }
                 _ => {}
             }
-            behavior.default_components(&mut entity);
+            mt.behavior.default_components(&mut entity);
 
-            entity.insert(behavior).insert(GameSprite).insert(pos);
+            entity
+                .insert(mt.behavior.clone())
+                .insert(GameSprite)
+                .insert(pos);
         }
     }
 
