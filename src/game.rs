@@ -9,6 +9,7 @@ use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
+use bevy::ecs::system::SystemParam;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
 use bevy::{prelude::*, render::camera::ScalingMode};
@@ -293,16 +294,60 @@ pub fn keyboard(
     }
 }
 
+#[derive(SystemParam)]
+pub struct CollisionHandler<'w> {
+    bf: Res<'w, board::BoardData>,
+}
+
+impl<'w> CollisionHandler<'w> {
+    const ENABLE_COLLISION: bool = true;
+    const PILLAR_SZ: f32 = 0.3;
+    const PLAYER_SZ: f32 = 0.5;
+
+    fn delta(&self, pos: &Position) -> Vec3 {
+        let bpos = pos.to_board_position();
+        let mut delta = Vec3::ZERO;
+        for npos in bpos.xy_neighbors(1) {
+            let cf = self
+                .bf
+                .collision_field
+                .get(&npos)
+                .copied()
+                .unwrap_or_default();
+            if !cf.free && Self::ENABLE_COLLISION {
+                let dpos = npos.to_position().to_vec3() - pos.to_vec3();
+                let mut dapos = dpos.abs();
+                dapos.x -= Self::PILLAR_SZ;
+                dapos.y -= Self::PILLAR_SZ;
+                dapos.x = dapos.x.max(0.0);
+                dapos.y = dapos.y.max(0.0);
+                let ddist = dapos.distance(Vec3::ZERO);
+                if ddist < Self::PLAYER_SZ {
+                    if dpos.x < 0.0 {
+                        dapos.x *= -1.0;
+                    }
+                    if dpos.y < 0.0 {
+                        dapos.y *= -1.0;
+                    }
+                    let fix_dist = (Self::PLAYER_SZ - ddist).powi(2);
+                    let dpos_fix = dapos / (ddist + 0.000001) * fix_dist;
+                    delta += dpos_fix;
+                }
+            }
+        }
+        delta
+    }
+}
+
 pub fn keyboard_player(
     keyboard_input: Res<Input<KeyCode>>,
     mut players: Query<(
         &mut board::Position,
-        &mut Transform,
         &mut board::Direction,
         &PlayerSprite,
         &mut AnimationTimer,
     )>,
-    bf: Res<board::BoardData>,
+    colhand: CollisionHandler,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     interactables: Query<(&board::Position, &Interactive), Without<PlayerSprite>>,
@@ -313,35 +358,11 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
-    const ENABLE_COLLISION: bool = true;
-    for (mut pos, mut transform, mut dir, player, mut anim) in players.iter_mut() {
-        let bpos = pos.to_board_position();
-        for npos in bpos.xy_neighbors(1) {
-            let cf = bf.collision_field.get(&npos).copied().unwrap_or_default();
-            if !cf.free && ENABLE_COLLISION {
-                let dpos = npos.to_position().to_vec3() - pos.to_vec3();
-                const PILLAR_SZ: f32 = 0.3;
-                const PLAYER_SZ: f32 = 0.5;
-                let mut dapos = dpos.abs();
-                dapos.x -= PILLAR_SZ;
-                dapos.y -= PILLAR_SZ;
-                dapos.x = dapos.x.max(0.0);
-                dapos.y = dapos.y.max(0.0);
-                let ddist = dapos.distance(Vec3::ZERO);
-                if ddist < PLAYER_SZ {
-                    if dpos.x < 0.0 {
-                        dapos.x *= -1.0;
-                    }
-                    if dpos.y < 0.0 {
-                        dapos.y *= -1.0;
-                    }
-                    let fix_dist = (PLAYER_SZ - ddist).powi(2);
-                    let dpos_fix = dapos / (ddist + 0.000001) * fix_dist;
-                    pos.x -= dpos_fix.x;
-                    pos.y -= dpos_fix.y;
-                }
-            }
-        }
+    for (mut pos, mut dir, player, mut anim) in players.iter_mut() {
+        let col_delta = colhand.delta(&pos);
+        pos.x -= col_delta.x;
+        pos.y -= col_delta.y;
+
         let mut d = Direction {
             dx: 0.0,
             dy: 0.0,
@@ -361,11 +382,14 @@ pub fn keyboard_player(
             d.dx += 1.0;
         }
         d = d.normalized();
+        let col_delta_n = (col_delta * 100.0).clamp_length_max(1.0);
+        let col_dotp = (d.dx * col_delta_n.x + d.dy * col_delta_n.y).clamp(0.0, 1.0);
+        d.dx -= col_delta_n.x * col_dotp;
+        d.dy -= col_delta_n.y * col_dotp;
 
         let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
         let dscreen = delta.to_screen_coord();
         anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
-        transform.rotation = Quat::default();
 
         // d.dx /= 1.5; // Compensate for the projection
 
