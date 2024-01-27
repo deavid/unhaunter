@@ -1,9 +1,12 @@
 use std::{f32::consts::PI, time::Instant};
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
-use crate::behavior::Behavior;
+use crate::{
+    behavior::{Behavior, SpriteCVOKey},
+    materials::CustomMaterial1,
+};
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
@@ -355,6 +358,30 @@ impl BoardPosition {
 pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
     for (pos, mut transform) in q.iter_mut() {
         transform.translation = pos.to_screen_coord();
+    }
+}
+
+#[derive(Clone)]
+pub enum Bdl {
+    Mmb(MaterialMesh2dBundle<CustomMaterial1>),
+    Sb(SpriteBundle),
+}
+#[derive(Clone)]
+pub struct MapTileComponents {
+    pub bundle: Bdl,
+    pub behavior: Behavior,
+}
+
+#[derive(Clone, Default, Resource)]
+pub struct SpriteDB {
+    pub map_tile: HashMap<(String, u32), MapTileComponents>,
+    pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
+}
+
+impl SpriteDB {
+    pub fn clear(&mut self) {
+        self.map_tile.clear();
+        self.cvo_idx.clear();
     }
 }
 

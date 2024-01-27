@@ -1,6 +1,6 @@
 use crate::behavior::component::Interactive;
 use crate::behavior::Behavior;
-use crate::board::{Direction, Position};
+use crate::board::{Bdl, Direction, MapTileComponents, Position, SpriteDB};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
@@ -348,9 +348,11 @@ pub fn keyboard_player(
         &mut AnimationTimer,
     )>,
     colhand: CollisionHandler,
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    interactables: Query<(&board::Position, &Interactive), Without<PlayerSprite>>,
+    interactables: Query<
+        (Entity, &board::Position, &Interactive, &Behavior),
+        Without<PlayerSprite>,
+    >,
+    mut interactive_stuff: InteractiveStuff,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -409,36 +411,91 @@ pub fn keyboard_player(
 
         // ----
         if keyboard_input.just_pressed(player.controls.activate) {
-            let d = dir.normalized();
-            let mut max_dist = 0.5;
-            for (item_pos, _) in interactables.iter() {
-                let mut dref = pos.delta(*item_pos);
-                dref = dref + (&d * dref.distance().min(1.0));
+            // let d = dir.normalized();
+            let mut max_dist = 1.1;
+            let mut selected_entity = None;
+            for (entity, item_pos, interactive, behavior) in interactables.iter() {
+                let cp_delta = interactive.control_point_delta(behavior);
+                let old_dist = pos.delta(*item_pos);
+                let item_pos = Position {
+                    x: item_pos.x + cp_delta.x,
+                    y: item_pos.y + cp_delta.y,
+                    z: item_pos.z + cp_delta.z,
+                    global_z: item_pos.global_z,
+                };
+                let new_dist = pos.delta(item_pos);
+                // let new_dist_norm = new_dist.normalized();
+                // let dot_p = (new_dist_norm.dx * -d.dx + new_dist_norm.dy * -d.dy).clamp(0.0, 1.0);
+                // let dref = new_dist + (&d * (new_dist.distance().min(1.0) * dot_p));
+                let dref = new_dist;
                 let dist = dref.distance();
+                if dist < 1.5 {
+                    dbg!(cp_delta, old_dist, new_dist, dref, dist);
+                }
                 if dist < max_dist {
                     max_dist = dist + 0.00001;
-                    dbg!(dist);
+                    selected_entity = Some(entity);
                 }
             }
-            for (item_pos, interactive) in interactables.iter() {
-                let mut dref = pos.delta(*item_pos);
-                dref = dref + (&d * dref.distance().min(1.0));
-                let dist = dref.distance();
-                if dist < max_dist {
-                    commands.spawn(AudioBundle {
-                        source: asset_server.load(&interactive.on_click_sound_file),
-                        settings: PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Once,
-                            volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(
-                                1.0,
-                            )),
-                            speed: 1.0,
-                            paused: false,
-                            spatial: false,
-                        },
-                    });
+            if let Some(entity) = selected_entity {
+                for (entity, _, interactive, behavior) in
+                    interactables.iter().filter(|(e, _, _, _)| *e == entity)
+                {
+                    interactive_stuff.execute_interaction(entity, interactive, behavior);
                 }
             }
+        }
+    }
+}
+
+#[derive(SystemParam)]
+pub struct InteractiveStuff<'w, 's> {
+    bf: Res<'w, board::SpriteDB>,
+    commands: Commands<'w, 's>,
+    materials1: ResMut<'w, Assets<CustomMaterial1>>,
+    asset_server: Res<'w, AssetServer>,
+}
+
+impl<'w, 's> InteractiveStuff<'w, 's> {
+    fn execute_interaction(
+        &mut self,
+        entity: Entity,
+        interactive: &Interactive,
+        behavior: &Behavior,
+    ) {
+        let tuid = behavior.key_tuid();
+        let cvo = behavior.key_cvo();
+        let mut e_commands = self.commands.get_entity(entity).unwrap();
+        for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
+            if *other_tuid == tuid {
+                continue;
+            }
+            let other = self.bf.map_tile.get(other_tuid).unwrap();
+            match other.bundle.clone() {
+                Bdl::Mmb(b) => {
+                    let mat = self.materials1.get(b.material).unwrap().clone();
+                    let mat = self.materials1.add(mat);
+
+                    e_commands.insert(mat);
+                }
+                Bdl::Sb(b) => {
+                    e_commands.insert(b);
+                }
+            };
+            let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
+            e_commands.insert(other.behavior.clone());
+            self.commands.spawn(AudioBundle {
+                source: self.asset_server.load(sound_file),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Once,
+                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                },
+            });
+
+            break;
         }
     }
 }
@@ -631,6 +688,7 @@ pub fn load_level(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
+    mut sdb: ResMut<SpriteDB>,
 ) {
     let Some(load_event) = ev.read().next() else {
         return;
@@ -683,16 +741,8 @@ pub fn load_level(
     let mut ghost_spawn_points: Vec<board::Position> = vec![];
 
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
+    sdb.clear();
 
-    enum Bdl {
-        Mmb(MaterialMesh2dBundle<CustomMaterial1>),
-        Sb(SpriteBundle),
-    }
-    struct MapTileComponents {
-        bundle: Bdl,
-        behavior: Behavior,
-    }
-    let mut map_tile = HashMap::<(String, u32), MapTileComponents>::new();
     // Load the tileset sprites first:
     for (tset_name, tileset) in tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
@@ -748,8 +798,14 @@ pub fn load_level(
                 }),
             };
 
+            let key_tuid = behavior.key_tuid();
+            sdb.cvo_idx
+                .entry(behavior.key_cvo())
+                .or_default()
+                .push(key_tuid.clone());
+
             let mt = MapTileComponents { bundle, behavior };
-            map_tile.insert((tset_name.to_string(), tileuid), mt);
+            sdb.map_tile.insert(key_tuid, mt);
         }
     }
     // ----
@@ -767,7 +823,8 @@ pub fn load_level(
         }
     }) {
         for tile in &maptiles.v {
-            let mt = map_tile
+            let mt = sdb
+                .map_tile
                 .get(&(tile.tileset.clone(), tile.tileuid))
                 .expect("Map references non-existent tileset+tileuid");
             // Spawn the base entity

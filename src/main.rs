@@ -47,6 +47,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
         .init_resource::<tiledmap::MapTileSetDb>()
         .init_resource::<board::BoardData>()
+        .init_resource::<board::SpriteDB>()
         .init_resource::<game::GameConfig>()
         .add_event::<board::BoardDataToRebuild>()
         .add_state::<root::State>()

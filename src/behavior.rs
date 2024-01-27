@@ -37,6 +37,12 @@ impl Behavior {
     pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
         self.cfg.class.components(entity)
     }
+    pub fn key_cvo(&self) -> SpriteCVOKey {
+        self.cfg.key_cvo()
+    }
+    pub fn key_tuid(&self) -> (String, u32) {
+        self.cfg.key_tuid()
+    }
     pub fn obsolete_occlusion_type(&self) -> Orientation {
         if !self.p.light.opaque {
             return Orientation::None;
@@ -104,7 +110,9 @@ pub struct Movement {
 }
 
 pub mod component {
-    use bevy::ecs::component::Component;
+    use bevy::{ecs::component::Component, math::Vec3};
+
+    use super::Behavior;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Ground;
@@ -120,14 +128,39 @@ pub mod component {
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Interactive {
-        pub on_click_sound_file: String,
+        pub on_activate_sound_file: String,
+        pub on_deactivate_sound_file: String,
     }
 
     impl Interactive {
-        pub fn new(on_click_sound_file: &str) -> Self {
-            let on_click_sound_file = on_click_sound_file.to_string();
+        pub fn new(activate: &str, deactivate: &str) -> Self {
+            let on_activate_sound_file = activate.to_string();
+            let on_deactivate_sound_file = deactivate.to_string();
             Self {
-                on_click_sound_file,
+                on_activate_sound_file,
+                on_deactivate_sound_file,
+            }
+        }
+        pub fn sound_for_moving_into_state(&self, behavior: &Behavior) -> String {
+            match behavior.cfg.state {
+                super::State::On => self.on_activate_sound_file.clone(),
+                super::State::Off => self.on_deactivate_sound_file.clone(),
+                super::State::Open => self.on_activate_sound_file.clone(),
+                super::State::Closed => self.on_deactivate_sound_file.clone(),
+                super::State::Full => self.on_activate_sound_file.clone(),
+                super::State::Partial => self.on_activate_sound_file.clone(),
+                super::State::Minimum => self.on_activate_sound_file.clone(),
+                super::State::None => self.on_deactivate_sound_file.clone(),
+            }
+        }
+        pub fn control_point_delta(&self, behavior: &Behavior) -> Vec3 {
+            match behavior.cfg.class {
+                super::Class::Door => match behavior.cfg.orientation {
+                    super::Orientation::XAxis => Vec3::new(0.0, -0.5, 0.0),
+                    super::Orientation::YAxis => Vec3::new(0.5, 0.0, 0.0),
+                    _ => Vec3::ZERO,
+                },
+                _ => Vec3::ZERO,
             }
         }
     }
@@ -173,12 +206,22 @@ impl Class {
                 .insert(component::Collision)
                 .insert(component::Opaque)
                 .insert(component::UVSurface),
-            Class::Door => entity.insert(component::Interactive::new("sounds/door-open.ogg")),
-            Class::Switch => entity.insert(component::Interactive::new("sounds/switch-on-1.ogg")),
-            Class::RoomSwitch => {
-                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
-            }
-            Class::Breaker => entity.insert(component::Interactive::new("sounds/switch-off-1.ogg")),
+            Class::Door => entity.insert(component::Interactive::new(
+                "sounds/door-open.ogg",
+                "sounds/door-close.ogg",
+            )),
+            Class::Switch => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::RoomSwitch => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::Breaker => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
             Class::Doorway => entity,
             Class::Decor => entity,
             Class::Item => entity,
@@ -188,12 +231,14 @@ impl Class {
             Class::VanEntry => entity,
             Class::RoomDef => entity,
             Class::WallLamp => entity,
-            Class::FloorLamp => {
-                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
-            }
-            Class::TableLamp => {
-                entity.insert(component::Interactive::new("sounds/switch-off-1.ogg"))
-            }
+            Class::FloorLamp => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::TableLamp => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
             Class::WallDecor => entity,
             Class::CeilingLight => entity,
             Class::Appliance => entity,
@@ -350,13 +395,20 @@ pub enum State {
 impl AutoSerialize for State {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpriteCVOKey {
+    pub class: Class,
+    pub variant: String,
+    pub orientation: Orientation,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SpriteConfig {
     /// Main behavior class
-    pub class: Class,
+    class: Class,
     /// Custom variant name - must be the same across all sprites that represent the same object
-    pub variant: String,
+    variant: String,
     /// Orientation of the sprite - if it's facing one axis or another.
-    pub orientation: Orientation,
+    orientation: Orientation,
     /// Current state of the sprite - or the initial state.
     pub state: State,
 
@@ -368,6 +420,16 @@ pub struct SpriteConfig {
 }
 
 impl SpriteConfig {
+    pub fn key_cvo(&self) -> SpriteCVOKey {
+        SpriteCVOKey {
+            class: self.class.clone(),
+            variant: self.variant.clone(),
+            orientation: self.orientation.clone(),
+        }
+    }
+    pub fn key_tuid(&self) -> (String, u32) {
+        (self.tileset.clone(), self.tileuid)
+    }
     pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
         let parse = |x: &tiled::PropertyValue| -> String {
             match x {

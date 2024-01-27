@@ -111,7 +111,7 @@ fn fragment(
     var pdx = 1.0 / material.sprite_width ;
     var pdy = 1.0 / material.sprite_height ;
     muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
-    muvy = clamp(muvy, pdy* margin, 1.0);
+    muvy = clamp(muvy, pdy* margin, 1.0- pdy* margin);
     
     
     var uv_x = muvx * cell_width + cell_min_x;
