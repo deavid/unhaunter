@@ -80,7 +80,7 @@ pub fn apply_lighting(
     // FIXME: This function should not be in level editor
     // FIXME: We need to track the current player of the client (might not be id=1)
     for (pos, player, direction) in qp.iter() {
-        if FLASHLIGHT_ON {
+        if FLASHLIGHT_ON && player.torch_enabled {
             flashlights.push((pos, direction));
         }
 
@@ -116,8 +116,9 @@ pub fn apply_lighting(
     // ---
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.01;
-    if FLASHLIGHT_ON {
+    if FLASHLIGHT_ON && !flashlights.is_empty() {
         // account for the eye seeing the flashlight on.
+        // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
         cursor_exp += FLASHLIGHT_POWER.sqrt() / 8.0;
     }
 

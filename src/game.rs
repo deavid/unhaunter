@@ -38,6 +38,7 @@ pub enum SoundType {
 pub struct PlayerSprite {
     pub id: usize,
     pub controls: ControlKeys,
+    pub torch_enabled: bool,
 }
 
 /// Resource to know basic stuff of the game.
@@ -58,6 +59,7 @@ impl PlayerSprite {
         Self {
             id,
             controls: Self::default_controls(id),
+            torch_enabled: true,
         }
     }
     pub fn default_controls(id: usize) -> ControlKeys {
@@ -76,6 +78,7 @@ pub struct ControlKeys {
     pub left: KeyCode,
     pub right: KeyCode,
     pub activate: KeyCode,
+    pub torch: KeyCode,
 }
 
 impl ControlKeys {
@@ -85,6 +88,7 @@ impl ControlKeys {
         left: KeyCode::A,
         right: KeyCode::D,
         activate: KeyCode::E,
+        torch: KeyCode::T,
     };
     const IJKL: Self = ControlKeys {
         up: KeyCode::I,
@@ -92,6 +96,7 @@ impl ControlKeys {
         left: KeyCode::J,
         right: KeyCode::L,
         activate: KeyCode::O,
+        torch: KeyCode::T,
     };
     const NONE: Self = ControlKeys {
         up: KeyCode::Unlabeled,
@@ -99,6 +104,7 @@ impl ControlKeys {
         left: KeyCode::Unlabeled,
         right: KeyCode::Unlabeled,
         activate: KeyCode::Unlabeled,
+        torch: KeyCode::Unlabeled,
     };
 }
 
@@ -344,9 +350,11 @@ pub fn keyboard_player(
     mut players: Query<(
         &mut board::Position,
         &mut board::Direction,
-        &PlayerSprite,
+        &mut PlayerSprite,
         &mut AnimationTimer,
     )>,
+    mut commands: Commands,
+    mut asset_server: Res<AssetServer>,
     colhand: CollisionHandler,
     interactables: Query<
         (Entity, &board::Position, &Interactive, &Behavior),
@@ -360,7 +368,7 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
-    for (mut pos, mut dir, player, mut anim) in players.iter_mut() {
+    for (mut pos, mut dir, mut player, mut anim) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
@@ -383,6 +391,24 @@ pub fn keyboard_player(
         if keyboard_input.pressed(player.controls.right) {
             d.dx += 1.0;
         }
+        if keyboard_input.just_pressed(player.controls.torch) {
+            player.torch_enabled = !player.torch_enabled;
+            let sound_file = match player.torch_enabled {
+                true => "sounds/switch-on-1.ogg",
+                false => "sounds/switch-off-1.ogg",
+            };
+            commands.spawn(AudioBundle {
+                source: asset_server.load(sound_file),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Once,
+                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                },
+            });
+        }
+
         d = d.normalized();
         let col_delta_n = (col_delta * 100.0).clamp_length_max(1.0);
         let col_dotp = (d.dx * col_delta_n.x + d.dy * col_delta_n.y).clamp(0.0, 1.0);
