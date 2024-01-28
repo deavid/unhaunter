@@ -454,6 +454,7 @@ pub struct InteractiveStuff<'w, 's> {
     commands: Commands<'w, 's>,
     materials1: ResMut<'w, Assets<CustomMaterial1>>,
     asset_server: Res<'w, AssetServer>,
+    ev_bdr: EventWriter<'w, BoardDataToRebuild>,
 }
 
 impl<'w, 's> InteractiveStuff<'w, 's> {
@@ -493,6 +494,10 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     paused: false,
                     spatial: false,
                 },
+            });
+            self.ev_bdr.send(BoardDataToRebuild {
+                lighting: true,
+                collision: true,
             });
 
             break;

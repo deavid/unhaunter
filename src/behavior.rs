@@ -31,11 +31,11 @@ pub struct Behavior {
 impl Behavior {
     pub fn from_config(cfg: SpriteConfig) -> Self {
         let mut p = Properties::default();
-        cfg.class.set_properties(&mut p);
+        cfg.set_properties(&mut p);
         Self { cfg, p }
     }
     pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
-        self.cfg.class.components(entity)
+        self.cfg.components(entity)
     }
     pub fn key_cvo(&self) -> SpriteCVOKey {
         self.cfg.key_cvo()
@@ -156,8 +156,8 @@ pub mod component {
         pub fn control_point_delta(&self, behavior: &Behavior) -> Vec3 {
             match behavior.cfg.class {
                 super::Class::Door => match behavior.cfg.orientation {
-                    super::Orientation::XAxis => Vec3::new(0.0, -0.5, 0.0),
-                    super::Orientation::YAxis => Vec3::new(0.5, 0.0, 0.0),
+                    super::Orientation::XAxis => Vec3::new(0.0, -0.25, 0.0),
+                    super::Orientation::YAxis => Vec3::new(0.25, 0.0, 0.0),
                     _ => Vec3::ZERO,
                 },
                 _ => Vec3::ZERO,
@@ -187,6 +187,7 @@ pub enum Class {
     TableLamp,
     WallDecor,
     CeilingLight,
+    StreetLight,
     Appliance,
     Van,
     Window,
@@ -195,158 +196,6 @@ pub enum Class {
 }
 
 impl AutoSerialize for Class {}
-
-impl Class {
-    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
-        match self {
-            Class::Floor => entity
-                .insert(component::Ground)
-                .insert(component::UVSurface),
-            Class::Wall => entity
-                .insert(component::Collision)
-                .insert(component::Opaque)
-                .insert(component::UVSurface),
-            Class::Door => entity.insert(component::Interactive::new(
-                "sounds/door-open.ogg",
-                "sounds/door-close.ogg",
-            )),
-            Class::Switch => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::RoomSwitch => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::Breaker => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::Doorway => entity,
-            Class::Decor => entity,
-            Class::Item => entity,
-            Class::Furniture => entity,
-            Class::PlayerSpawn => entity,
-            Class::GhostSpawn => entity,
-            Class::VanEntry => entity,
-            Class::RoomDef => entity,
-            Class::WallLamp => entity,
-            Class::FloorLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::TableLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::WallDecor => entity,
-            Class::CeilingLight => entity,
-            Class::Appliance => entity,
-            Class::Van => entity,
-            Class::Window => entity,
-            Class::None => entity,
-        };
-    }
-    pub fn set_properties(&self, p: &mut Properties) {
-        match self {
-            Class::Floor => {
-                p.movement.walkable = true;
-                p.display.global_z = (-0.00025).try_into().unwrap();
-            }
-            Class::Wall => {
-                p.movement.collision = true;
-                p.light.opaque = true;
-                p.display.global_z = (-0.00005).try_into().unwrap();
-            }
-            Class::Door => {
-                p.display.global_z = (0.000015).try_into().unwrap();
-            }
-            Class::Switch => {
-                p.display.global_z = (0.000040).try_into().unwrap();
-            }
-            Class::RoomSwitch => {
-                p.display.global_z = (0.000040).try_into().unwrap();
-            }
-            Class::Breaker => {
-                p.display.global_z = (0.000040).try_into().unwrap();
-            }
-            Class::Doorway => {
-                p.display.global_z = (-0.00005).try_into().unwrap();
-            }
-            Class::Decor => {
-                p.display.global_z = (0.000065).try_into().unwrap();
-            }
-            Class::Item => {
-                p.display.global_z = (0.000065).try_into().unwrap();
-            }
-            Class::Furniture => {
-                p.display.global_z = (0.000050).try_into().unwrap();
-            }
-            Class::PlayerSpawn => {
-                p.display.global_z = (-1.0).try_into().unwrap();
-                p.display.disable = true;
-                p.util = Util::PlayerSpawn;
-            }
-            Class::GhostSpawn => {
-                p.display.global_z = (-1.0).try_into().unwrap();
-                p.display.disable = true;
-                p.util = Util::GhostSpawn;
-            }
-            Class::VanEntry => {
-                p.display.global_z = (-1.0).try_into().unwrap();
-                p.display.disable = true;
-                p.util = Util::Van;
-            }
-            Class::RoomDef => {
-                p.display.global_z = (-1.0).try_into().unwrap();
-                p.display.disable = true;
-            }
-            Class::WallLamp => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
-                p.light.emits_light = true;
-            }
-            Class::FloorLamp => {
-                p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = true;
-            }
-            Class::TableLamp => {
-                p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = true;
-            }
-            Class::WallDecor => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
-            }
-            Class::CeilingLight => {
-                p.display.global_z = (-1.0).try_into().unwrap();
-                p.display.disable = true;
-                p.light.emits_light = true;
-            }
-            Class::Appliance => {
-                p.display.global_z = (0.000070).try_into().unwrap();
-            }
-            Class::Van => {
-                p.display.global_z = (0.000200).try_into().unwrap();
-            }
-            Class::Window => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
-            }
-            Class::None => {}
-        }
-    }
-
-    /// A class requires a set of states. Not only these are the only valid ones for the given class, also they need all to be included.
-    fn _required_states(&self) -> Vec<State> {
-        use State::*;
-
-        match self {
-            Class::Wall => vec![Full, Partial, Minimum],
-            Class::Door => vec![Open, Closed],
-            Class::Switch => vec![On, Off],
-            Class::Breaker => vec![On, Off],
-            _ => vec![None],
-        }
-    }
-}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub enum Orientation {
@@ -495,6 +344,161 @@ impl SpriteConfig {
             tileset,
             tileuid,
         })
+    }
+
+    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
+        match self.class {
+            Class::Floor => entity
+                .insert(component::Ground)
+                .insert(component::UVSurface),
+            Class::Wall => entity
+                .insert(component::Collision)
+                .insert(component::Opaque)
+                .insert(component::UVSurface),
+            Class::Door => entity.insert(component::Interactive::new(
+                "sounds/door-open.ogg",
+                "sounds/door-close.ogg",
+            )),
+            Class::Switch => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::RoomSwitch => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::Breaker => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::Doorway => entity,
+            Class::Decor => entity,
+            Class::Item => entity,
+            Class::Furniture => entity,
+            Class::PlayerSpawn => entity,
+            Class::GhostSpawn => entity,
+            Class::VanEntry => entity,
+            Class::RoomDef => entity,
+            Class::WallLamp => entity,
+            Class::FloorLamp => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::TableLamp => entity.insert(component::Interactive::new(
+                "sounds/switch-on-1.ogg",
+                "sounds/switch-off-1.ogg",
+            )),
+            Class::WallDecor => entity,
+            Class::CeilingLight => entity,
+            Class::StreetLight => entity,
+            Class::Appliance => entity,
+            Class::Van => entity,
+            Class::Window => entity,
+            Class::None => entity,
+        };
+    }
+    pub fn set_properties(&self, p: &mut Properties) {
+        match self.class {
+            Class::Floor => {
+                p.movement.walkable = true;
+                p.display.global_z = (-0.00025).try_into().unwrap();
+            }
+            Class::Wall => {
+                p.movement.collision = true;
+                p.light.opaque = true;
+                p.display.global_z = (-0.00005).try_into().unwrap();
+            }
+            Class::Door => {
+                p.display.global_z = (0.000015).try_into().unwrap();
+                p.movement.collision = self.state == State::Closed;
+            }
+            Class::Switch => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::RoomSwitch => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::Breaker => {
+                p.display.global_z = (0.000040).try_into().unwrap();
+            }
+            Class::Doorway => {
+                p.display.global_z = (-0.00005).try_into().unwrap();
+            }
+            Class::Decor => {
+                p.display.global_z = (0.000065).try_into().unwrap();
+            }
+            Class::Item => {
+                p.display.global_z = (0.000065).try_into().unwrap();
+            }
+            Class::Furniture => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+            }
+            Class::PlayerSpawn => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.util = Util::PlayerSpawn;
+            }
+            Class::GhostSpawn => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.util = Util::GhostSpawn;
+            }
+            Class::VanEntry => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+                p.util = Util::Van;
+            }
+            Class::RoomDef => {
+                p.display.global_z = (-1.0).try_into().unwrap();
+                p.display.disable = true;
+            }
+            Class::WallLamp => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+                p.light.emits_light = self.state == State::On;
+            }
+            Class::FloorLamp => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+                p.light.emits_light = self.state == State::On;
+            }
+            Class::TableLamp => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+                p.light.emits_light = self.state == State::On;
+            }
+            Class::WallDecor => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::CeilingLight => {
+                p.display.disable = true;
+                p.light.emits_light = self.state == State::On;
+            }
+            Class::StreetLight => {
+                p.display.disable = true;
+                p.light.emits_light = true;
+            }
+            Class::Appliance => {
+                p.display.global_z = (0.000070).try_into().unwrap();
+            }
+            Class::Van => {
+                p.display.global_z = (0.000200).try_into().unwrap();
+            }
+            Class::Window => {
+                p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::None => {}
+        }
+    }
+
+    /// A class requires a set of states. Not only these are the only valid ones for the given class, also they need all to be included.
+    fn _required_states(&self) -> Vec<State> {
+        use State::*;
+
+        match self.class {
+            Class::Wall => vec![Full, Partial, Minimum],
+            Class::Door => vec![Open, Closed],
+            Class::Switch => vec![On, Off],
+            Class::Breaker => vec![On, Off],
+            _ => vec![None],
+        }
     }
 }
 

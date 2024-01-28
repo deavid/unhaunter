@@ -67,7 +67,7 @@ pub fn apply_lighting(
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
 ) {
-    const GAMMA_EXP: f32 = 1.5;
+    const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
     const CENTER_EXP_GAMMA: f32 = 1.9;
     const EYE_SPEED: f32 = 0.5;
@@ -76,7 +76,7 @@ pub fn apply_lighting(
     let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
     const FLASHLIGHT_ON: bool = true;
-    const FLASHLIGHT_POWER: f32 = 1.0;
+    const FLASHLIGHT_POWER: f32 = 0.5;
     // FIXME: This function should not be in level editor
     // FIXME: We need to track the current player of the client (might not be id=1)
     for (pos, player, direction) in qp.iter() {
