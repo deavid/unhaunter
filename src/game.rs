@@ -412,7 +412,7 @@ pub fn keyboard_player(
         // ----
         if keyboard_input.just_pressed(player.controls.activate) {
             // let d = dir.normalized();
-            let mut max_dist = 1.1;
+            let mut max_dist = 1.4;
             let mut selected_entity = None;
             for (entity, item_pos, interactive, behavior) in interactables.iter() {
                 let cp_delta = interactive.control_point_delta(behavior);

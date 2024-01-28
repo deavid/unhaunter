@@ -16,11 +16,11 @@ pub fn compute_visibility(
 ) {
     let mut queue = VecDeque::new();
     let start = pos_start.to_board_position();
-    queue.push_front(start.clone());
+    queue.push_front((start.clone(), start.clone()));
 
     *vf.entry(start.clone()).or_default() = 1.0;
 
-    while let Some(pos) = queue.pop_back() {
+    while let Some((pos, pos2)) = queue.pop_back() {
         let pds = pos.to_position().distance(pos_start);
         let src_f = vf.get(&pos).cloned().unwrap_or_default();
         if !cf.get(&pos).map(|c| c.free).unwrap_or_default() {
@@ -36,20 +36,20 @@ pub fn compute_visibility(
             }
             if cf.contains_key(&npos) {
                 let npds = npos.to_position().distance(pos_start);
-                let npref = npos.distance(&pos);
+                let npref = npos.distance(&pos2) / 2.0;
                 let f = if npds < 1.5 {
                     1.0
                 } else {
-                    (((npds - pds) / npref - 0.25) / 0.99).clamp(0.0, 1.0)
+                    ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
                 };
                 let mut dst_f = src_f * f;
                 if dst_f < 0.00001 {
                     continue;
                 }
                 if !vf.contains_key(&npos) {
-                    queue.push_front(npos.clone());
+                    queue.push_front((npos.clone(), pos.clone()));
                 }
-                dst_f /= 1.0 + ((npds - 1.5) / 10.0).clamp(0.0, 4.0);
+                dst_f /= 1.0 + ((npds - 1.5) / 3.0).clamp(0.0, 6.0);
                 let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
                 *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
             }
