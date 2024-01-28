@@ -774,7 +774,7 @@ pub fn boardfield_update(
                                 }
                             }
 
-                            let light_height = 4.0;
+                            let light_height = 1.0;
                             let mut total_lux = 0.0000001;
                             for neighbor in nbors.iter() {
                                 let dist = cbp.bpos_dist(&root_pos, neighbor) + light_height;

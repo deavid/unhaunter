@@ -169,6 +169,7 @@ impl Material2d for CustomMaterial1 {
         if let Some(fragment) = &mut descriptor.fragment {
             if let Some(target_state) = &mut fragment.targets[0] {
                 target_state.blend = Some(BlendState::ALPHA_BLENDING);
+                // target_state.blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
             }
         }
 

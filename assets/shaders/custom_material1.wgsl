@@ -117,10 +117,29 @@ fn fragment(
     var uv_x = muvx * cell_width + cell_min_x;
     var uv_y = muvy * cell_height + cell_min_y;
 
-    var sprite_uv = vec2(uv_x, uv_y);
-    //
+    var pxx = pdx * cell_width;
+    var pxy = pdy * cell_height;
 
+    var sprite_uv = vec2(uv_x, uv_y);
+    var sprite_uvl = vec2(uv_x - pxx, uv_y);
+    var sprite_uvr = vec2(uv_x + pxx, uv_y);
+    var sprite_uvu = vec2(uv_x, uv_y - pxy);
+    var sprite_uvd = vec2(uv_x, uv_y + pxy);
     var c: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uv);
+    var cl: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvl);
+    var cr: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvr);
+    var cu: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvu);
+    var cd: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvd);
+
+    var m_alpha = 1.0001 - c[3];
+    var co = (cl * cl[3] + cr * cr[3] + cu * cu[3] + cd * cd[3]) * m_alpha;
+    var o_alpha = (cl[3] + cr[3] + cu[3] + cd[3]) * m_alpha;
+    var ff_corr = 5.0;
+    var f_corr = (ff_corr + 1.0) / (c[3] +  ff_corr);
+    c[0] = (c[0] * c[3] + co[0]) / (c[3] + o_alpha) * (f_corr);
+    c[1] = (c[1] * c[3] + co[1]) / (c[3] + o_alpha) * (f_corr);
+    c[2] = (c[2] * c[3] + co[2]) / (c[3] + o_alpha) * (f_corr);
+    c[3] = pow(c[3], 0.7);
 
     return (pow(c + b4, e4) * g + g4 * c) / (1.0 + g) * material.color;
 }
