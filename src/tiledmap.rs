@@ -318,7 +318,7 @@ pub fn bevy_load_map(
 
     let layers: Vec<(usize, MapLayer)> = grp
         .iter()
-        .filter(|x| x.visible && x.opacity > 0.9)
+        .filter(|x| x.visible)
         .enumerate()
         .map(|(n, l)| (n, l.clone()))
         .collect();

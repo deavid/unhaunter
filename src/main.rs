@@ -11,7 +11,7 @@ mod tiledmap;
 use std::time::Duration;
 
 use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    // diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     sprite::Material2dPlugin,
     window::WindowResolution,
@@ -38,9 +38,9 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugins(FrameTimeDiagnosticsPlugin)
-        .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
+        //        .add_plugins(FrameTimeDiagnosticsPlugin)
+        //        .add_plugins(LogDiagnosticsPlugin::default())
+        //        .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
         .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(bevy_framepace::FramepacePlugin)
         .add_systems(Startup, set_fps_limiter)
@@ -48,8 +48,10 @@ fn main() {
         .init_resource::<tiledmap::MapTileSetDb>()
         .init_resource::<board::BoardData>()
         .init_resource::<board::SpriteDB>()
+        .init_resource::<board::RoomDB>()
         .init_resource::<game::GameConfig>()
         .add_event::<board::BoardDataToRebuild>()
+        .add_event::<game::RoomChangedEvent>()
         .add_state::<root::State>()
         .add_event::<mainmenu::MenuEvent>()
         .add_event::<game::LoadLevelEvent>()
@@ -61,6 +63,7 @@ fn main() {
         .add_systems(Update, mainmenu::item_logic)
         .add_systems(Update, mainmenu::menu_event)
         .add_systems(Update, board::apply_perspective)
+        .add_systems(Update, game::roomchanged_event)
         .add_systems(PostUpdate, board::boardfield_update)
         .add_systems(OnEnter(root::State::InGame), game::setup)
         .add_systems(OnEnter(root::State::InGame), game::setup_ui)

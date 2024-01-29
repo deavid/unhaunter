@@ -664,182 +664,182 @@
  </tile>
  <tile id="108" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Foyer"/>
+   <property name="sprite:variant" value="Foyer"/>
   </properties>
  </tile>
  <tile id="109" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Living Room"/>
+   <property name="sprite:variant" value="Living Room"/>
   </properties>
  </tile>
  <tile id="110" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Dining Room"/>
+   <property name="sprite:variant" value="Dining Room"/>
   </properties>
  </tile>
  <tile id="111" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Kitchen"/>
+   <property name="sprite:variant" value="Kitchen"/>
   </properties>
  </tile>
  <tile id="112" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Pantry"/>
+   <property name="sprite:variant" value="Pantry"/>
   </properties>
  </tile>
  <tile id="113" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Mudroom"/>
+   <property name="sprite:variant" value="Mudroom"/>
   </properties>
  </tile>
  <tile id="114" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Family Room"/>
+   <property name="sprite:variant" value="Family Room"/>
   </properties>
  </tile>
  <tile id="115" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Study"/>
+   <property name="sprite:variant" value="Study"/>
   </properties>
  </tile>
  <tile id="116" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Library"/>
+   <property name="sprite:variant" value="Library"/>
   </properties>
  </tile>
  <tile id="117" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Office"/>
+   <property name="sprite:variant" value="Office"/>
   </properties>
  </tile>
  <tile id="118" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Home theater"/>
+   <property name="sprite:variant" value="Home theater"/>
   </properties>
  </tile>
  <tile id="119" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Bathroom"/>
+   <property name="sprite:variant" value="Bathroom"/>
   </properties>
  </tile>
  <tile id="120" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Powder Room"/>
+   <property name="sprite:variant" value="Powder Room"/>
   </properties>
  </tile>
  <tile id="121" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Master Bedroom"/>
+   <property name="sprite:variant" value="Master Bedroom"/>
   </properties>
  </tile>
  <tile id="122" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Guest Bedroom"/>
+   <property name="sprite:variant" value="Guest Bedroom"/>
   </properties>
  </tile>
  <tile id="123" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Children Bedroom"/>
+   <property name="sprite:variant" value="Children Bedroom"/>
   </properties>
  </tile>
  <tile id="124" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Laundry"/>
+   <property name="sprite:variant" value="Laundry"/>
   </properties>
  </tile>
  <tile id="125" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Workshop"/>
+   <property name="sprite:variant" value="Workshop"/>
   </properties>
  </tile>
  <tile id="126" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Garden"/>
+   <property name="sprite:variant" value="Garden"/>
   </properties>
  </tile>
  <tile id="127" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Basement"/>
+   <property name="sprite:variant" value="Basement"/>
   </properties>
  </tile>
  <tile id="128" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Attic"/>
+   <property name="sprite:variant" value="Attic"/>
   </properties>
  </tile>
  <tile id="129" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Utility Room"/>
+   <property name="sprite:variant" value="Utility Room"/>
   </properties>
  </tile>
  <tile id="130" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Storage Room"/>
+   <property name="sprite:variant" value="Storage Room"/>
   </properties>
  </tile>
  <tile id="131" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Closet"/>
+   <property name="sprite:variant" value="Closet"/>
   </properties>
  </tile>
  <tile id="132" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Mechanical Room"/>
+   <property name="sprite:variant" value="Mechanical Room"/>
   </properties>
  </tile>
  <tile id="133" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Hallway"/>
+   <property name="sprite:variant" value="Hallway"/>
   </properties>
  </tile>
  <tile id="134" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Garage"/>
+   <property name="sprite:variant" value="Garage"/>
   </properties>
  </tile>
  <tile id="135" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Nursery"/>
+   <property name="sprite:variant" value="Nursery"/>
   </properties>
  </tile>
  <tile id="136" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Teen Bedroom"/>
+   <property name="sprite:variant" value="Teen Bedroom"/>
   </properties>
  </tile>
  <tile id="137" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Servant Bedroom"/>
+   <property name="sprite:variant" value="Servant Bedroom"/>
   </properties>
  </tile>
  <tile id="138" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Half bath"/>
+   <property name="sprite:variant" value="Half bath"/>
   </properties>
  </tile>
  <tile id="139" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Corridor"/>
+   <property name="sprite:variant" value="Corridor"/>
   </properties>
  </tile>
  <tile id="140" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Water closet"/>
+   <property name="sprite:variant" value="Water closet"/>
   </properties>
  </tile>
  <tile id="141" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Spare room"/>
+   <property name="sprite:variant" value="Spare room"/>
   </properties>
  </tile>
  <tile id="142" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="Gallery"/>
+   <property name="sprite:variant" value="Gallery"/>
   </properties>
  </tile>
  <tile id="143" type="RoomDef">
   <properties>
-   <property name="RoomDef::display_name" value="En Suite"/>
+   <property name="sprite:variant" value="En Suite"/>
   </properties>
  </tile>
  <wangsets>

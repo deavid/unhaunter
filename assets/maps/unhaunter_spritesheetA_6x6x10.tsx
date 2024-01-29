@@ -166,7 +166,7 @@
  <tile id="10" type="CeilingLight">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="Off"/>
+   <property name="sprite:state" value="On"/>
    <property name="sprite:variant" value="Base"/>
   </properties>
   <objectgroup draworder="index" id="2">
@@ -557,6 +557,13 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="RedPicture"/>
+  </properties>
+ </tile>
+ <tile id="62" type="CeilingLight">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Base"/>
   </properties>
  </tile>
  <tile id="63">

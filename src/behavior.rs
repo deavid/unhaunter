@@ -34,6 +34,15 @@ impl Behavior {
         cfg.set_properties(&mut p);
         Self { cfg, p }
     }
+    pub fn flip(&mut self, f: bool) {
+        if f != self.p.flip {
+            self.cfg.orientation.flip();
+            self.p.flip = f;
+        }
+    }
+    pub fn state(&self) -> State {
+        self.cfg.state.clone()
+    }
     pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
         self.cfg.components(entity)
     }
@@ -58,10 +67,12 @@ pub struct Properties {
     pub light: Light,
     pub util: Util,
     pub display: Display,
+    pub flip: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum Util {
+    RoomDef(String),
     PlayerSpawn,
     GhostSpawn,
     Van,
@@ -112,6 +123,8 @@ pub struct Movement {
 pub mod component {
     use bevy::{ecs::component::Component, math::Vec3};
 
+    use crate::board::BoardPosition;
+
     use super::Behavior;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -125,6 +138,29 @@ pub mod component {
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct UVSurface;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct RoomState {
+        pub room_delta: BoardPosition,
+    }
+
+    impl RoomState {
+        pub fn new() -> Self {
+            Self {
+                room_delta: BoardPosition::default(),
+            }
+        }
+        pub fn new_for_room(orientation: &super::Orientation) -> Self {
+            Self {
+                room_delta: match orientation {
+                    super::Orientation::XAxis => BoardPosition { x: -1, y: 1, z: 0 },
+                    super::Orientation::YAxis => BoardPosition { x: -1, y: 1, z: 0 },
+                    super::Orientation::Both => BoardPosition::default(),
+                    super::Orientation::None => BoardPosition::default(),
+                },
+            }
+        }
+    }
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct Interactive {
@@ -206,6 +242,17 @@ pub enum Orientation {
     None,
 }
 
+impl Orientation {
+    fn flip(&mut self) {
+        match self {
+            Orientation::XAxis => *self = Orientation::YAxis,
+            Orientation::YAxis => *self = Orientation::XAxis,
+            Orientation::Both => {}
+            Orientation::None => {}
+        }
+    }
+}
+
 impl AutoSerialize for Orientation {}
 
 trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
@@ -258,6 +305,9 @@ pub struct SpriteConfig {
     variant: String,
     /// Orientation of the sprite - if it's facing one axis or another.
     orientation: Orientation,
+
+    // Backup of the original data for the key
+    cvo_key: SpriteCVOKey,
     /// Current state of the sprite - or the initial state.
     pub state: State,
 
@@ -270,11 +320,7 @@ pub struct SpriteConfig {
 
 impl SpriteConfig {
     pub fn key_cvo(&self) -> SpriteCVOKey {
-        SpriteCVOKey {
-            class: self.class.clone(),
-            variant: self.variant.clone(),
-            orientation: self.orientation.clone(),
-        }
+        self.cvo_key.clone()
     }
     pub fn key_tuid(&self) -> (String, u32) {
         (self.tileset.clone(), self.tileuid)
@@ -335,7 +381,11 @@ impl SpriteConfig {
         let variant = variant.unwrap_or(&tilesetuid_key).to_owned();
         let orientation = Orientation::from_text(orientation).context("parsing Orientation")?;
         let state = State::from_text(state).context("parsing State")?;
-
+        let cvo_key = SpriteCVOKey {
+            class: class.clone(),
+            variant: variant.clone(),
+            orientation: orientation.clone(),
+        };
         Ok(SpriteConfig {
             class,
             variant,
@@ -343,6 +393,7 @@ impl SpriteConfig {
             state,
             tileset,
             tileuid,
+            cvo_key,
         })
     }
 
@@ -359,14 +410,18 @@ impl SpriteConfig {
                 "sounds/door-open.ogg",
                 "sounds/door-close.ogg",
             )),
-            Class::Switch => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::RoomSwitch => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
+            Class::Switch => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::RoomState::new()),
+            Class::RoomSwitch => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::RoomState::new_for_room(&self.orientation)),
             Class::Breaker => entity.insert(component::Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
@@ -379,7 +434,7 @@ impl SpriteConfig {
             Class::GhostSpawn => entity,
             Class::VanEntry => entity,
             Class::RoomDef => entity,
-            Class::WallLamp => entity,
+            Class::WallLamp => entity.insert(component::RoomState::new()),
             Class::FloorLamp => entity.insert(component::Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
@@ -389,7 +444,7 @@ impl SpriteConfig {
                 "sounds/switch-off-1.ogg",
             )),
             Class::WallDecor => entity,
-            Class::CeilingLight => entity,
+            Class::CeilingLight => entity.insert(component::RoomState::new()),
             Class::StreetLight => entity,
             Class::Appliance => entity,
             Class::Van => entity,
@@ -434,23 +489,20 @@ impl SpriteConfig {
                 p.display.global_z = (0.000050).try_into().unwrap();
             }
             Class::PlayerSpawn => {
-                p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
                 p.util = Util::PlayerSpawn;
             }
             Class::GhostSpawn => {
-                p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
                 p.util = Util::GhostSpawn;
             }
             Class::VanEntry => {
-                p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
                 p.util = Util::Van;
             }
             Class::RoomDef => {
-                p.display.global_z = (-1.0).try_into().unwrap();
                 p.display.disable = true;
+                p.util = Util::RoomDef(self.variant.clone());
             }
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();

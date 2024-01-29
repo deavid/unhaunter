@@ -4,7 +4,7 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    behavior::{Behavior, SpriteCVOKey},
+    behavior::{self, Behavior, SpriteCVOKey},
     materials::CustomMaterial1,
 };
 
@@ -378,6 +378,12 @@ pub struct SpriteDB {
     pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
 }
 
+#[derive(Clone, Default, Resource)]
+pub struct RoomDB {
+    pub room_tiles: HashMap<BoardPosition, String>,
+    pub room_state: HashMap<String, behavior::State>,
+}
+
 impl SpriteDB {
     pub fn clear(&mut self) {
         self.map_tile.clear();
@@ -586,7 +592,6 @@ impl CachedBoardPos {
             for x in Self::CENTER - 3..=Self::CENTER + 3 {
                 v.push(self.angle[x as usize][y as usize]);
             }
-            info!("{:?}", v);
         }
 
         for (x, xv) in self.angle_range.iter_mut().enumerate() {
@@ -622,7 +627,6 @@ impl CachedBoardPos {
             for x in Self::CENTER - 3..=Self::CENTER + 3 {
                 v.push(self.angle_range[x as usize][y as usize]);
             }
-            info!("{:?}", v);
         }
     }
     fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
@@ -652,7 +656,7 @@ pub fn boardfield_update(
     // ... maybe add a timer since last update.
     for bfr in ev_bdr.read() {
         if bfr.collision {
-            info!("Collision rebuild");
+            // info!("Collision rebuild");
             bf.collision_field.clear();
             for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
                 let pos = pos.to_board_position();
@@ -667,10 +671,10 @@ pub fn boardfield_update(
         }
         if bfr.lighting {
             // Rebuild lighting field since it has changed
-            info!("Lighting rebuild");
+            // info!("Lighting rebuild");
             let build_start_time = Instant::now();
             let cbp = CachedBoardPos::new();
-            info!("CBP time {:?}", build_start_time.elapsed());
+            // info!("CBP time {:?}", build_start_time.elapsed());
             bf.exposure_lux = 1.0;
             bf.light_field.clear();
             // Dividing by 4 so later we don't get an overflow if there's no map.
@@ -704,17 +708,17 @@ pub fn boardfield_update(
                 };
                 bf.light_field.insert(pos, lightdata);
             }
-            info!(
-                "Collecting time: {:?} - sz: {}",
-                build_start_time.elapsed(),
-                bf.light_field.len()
-            );
+            // info!(
+            //     "Collecting time: {:?} - sz: {}",
+            //     build_start_time.elapsed(),
+            //     bf.light_field.len()
+            // );
             let mut lfs = LightFieldSector::new(min_x, min_y, min_z, max_x, max_y, max_z);
             for (k, v) in bf.light_field.iter() {
                 lfs.insert(k.x, k.y, k.z, v.clone());
             }
             for step in 0..6 {
-                let step_time = Instant::now();
+                // let step_time = Instant::now();
                 let src_lfs = lfs.clone();
                 let size = match step {
                     0 => 24,
@@ -798,12 +802,12 @@ pub fn boardfield_update(
                         }
                     }
                 }
-                info!(
-                    "Light step {}: {:?}; per size: {:?}",
-                    step,
-                    step_time.elapsed(),
-                    step_time.elapsed() / size
-                );
+                // info!(
+                //     "Light step {}: {:?}; per size: {:?}",
+                //     step,
+                //     step_time.elapsed(),
+                //     step_time.elapsed() / size
+                // );
             }
             for (k, v) in bf.light_field.iter_mut() {
                 v.lux = lfs.get_pos(k).unwrap().lux;

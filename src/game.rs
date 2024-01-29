@@ -1,6 +1,6 @@
-use crate::behavior::component::Interactive;
+use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
-use crate::board::{Bdl, Direction, MapTileComponents, Position, SpriteDB};
+use crate::board::{Bdl, BoardPosition, Direction, MapTileComponents, Position, SpriteDB};
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
@@ -41,6 +41,8 @@ pub struct PlayerSprite {
     pub torch_enabled: bool,
 }
 
+#[derive(Clone, Debug, Default, Event)]
+pub struct RoomChangedEvent;
 /// Resource to know basic stuff of the game.
 #[derive(Debug, Resource)]
 pub struct GameConfig {
@@ -345,6 +347,7 @@ impl<'w> CollisionHandler<'w> {
     }
 }
 
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn keyboard_player(
     keyboard_input: Res<Input<KeyCode>>,
     mut players: Query<(
@@ -357,10 +360,17 @@ pub fn keyboard_player(
     asset_server: Res<AssetServer>,
     colhand: CollisionHandler,
     interactables: Query<
-        (Entity, &board::Position, &Interactive, &Behavior),
+        (
+            Entity,
+            &board::Position,
+            &Interactive,
+            &Behavior,
+            Option<&RoomState>,
+        ),
         Without<PlayerSprite>,
     >,
     mut interactive_stuff: InteractiveStuff,
+    mut ev_room: EventWriter<RoomChangedEvent>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -440,9 +450,9 @@ pub fn keyboard_player(
             // let d = dir.normalized();
             let mut max_dist = 1.4;
             let mut selected_entity = None;
-            for (entity, item_pos, interactive, behavior) in interactables.iter() {
+            for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
                 let cp_delta = interactive.control_point_delta(behavior);
-                let old_dist = pos.delta(*item_pos);
+                // let old_dist = pos.delta(*item_pos);
                 let item_pos = Position {
                     x: item_pos.x + cp_delta.x,
                     y: item_pos.y + cp_delta.y,
@@ -455,19 +465,28 @@ pub fn keyboard_player(
                 // let dref = new_dist + (&d * (new_dist.distance().min(1.0) * dot_p));
                 let dref = new_dist;
                 let dist = dref.distance();
-                if dist < 1.5 {
-                    dbg!(cp_delta, old_dist, new_dist, dref, dist);
-                }
+                // if dist < 1.5 {
+                //     dbg!(cp_delta, old_dist, new_dist, dref, dist);
+                // }
                 if dist < max_dist {
                     max_dist = dist + 0.00001;
                     selected_entity = Some(entity);
                 }
             }
             if let Some(entity) = selected_entity {
-                for (entity, _, interactive, behavior) in
-                    interactables.iter().filter(|(e, _, _, _)| *e == entity)
+                for (entity, item_pos, interactive, behavior, rs) in
+                    interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
-                    interactive_stuff.execute_interaction(entity, interactive, behavior);
+                    if interactive_stuff.execute_interaction(
+                        entity,
+                        item_pos,
+                        Some(interactive),
+                        behavior,
+                        rs,
+                        InteractionExecutionType::ChangeState,
+                    ) {
+                        ev_room.send(RoomChangedEvent);
+                    }
                 }
             }
         }
@@ -480,16 +499,20 @@ pub struct InteractiveStuff<'w, 's> {
     commands: Commands<'w, 's>,
     materials1: ResMut<'w, Assets<CustomMaterial1>>,
     asset_server: Res<'w, AssetServer>,
-    ev_bdr: EventWriter<'w, BoardDataToRebuild>,
+    roomdb: ResMut<'w, board::RoomDB>,
 }
 
 impl<'w, 's> InteractiveStuff<'w, 's> {
     fn execute_interaction(
         &mut self,
         entity: Entity,
-        interactive: &Interactive,
+        item_pos: &Position,
+        interactive: Option<&Interactive>,
         behavior: &Behavior,
-    ) {
+        room_state: Option<&RoomState>,
+        ietype: InteractionExecutionType,
+    ) -> bool {
+        let item_bpos = item_pos.to_board_position();
         let tuid = behavior.key_tuid();
         let cvo = behavior.key_cvo();
         let mut e_commands = self.commands.get_entity(entity).unwrap();
@@ -498,6 +521,41 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                 continue;
             }
             let other = self.bf.map_tile.get(other_tuid).unwrap();
+
+            let mut beh = other.behavior.clone();
+            beh.flip(behavior.p.flip);
+
+            // In case it is connected to a room, we need to change room state.
+            if let Some(room_state) = room_state {
+                let item_roombpos = BoardPosition {
+                    x: item_bpos.x + room_state.room_delta.x,
+                    y: item_bpos.y + room_state.room_delta.y,
+                    z: item_bpos.z + room_state.room_delta.z,
+                };
+                let room_name = self
+                    .roomdb
+                    .room_tiles
+                    .get(&item_roombpos)
+                    .cloned()
+                    .unwrap_or_default();
+                dbg!(&room_state, &item_roombpos);
+                dbg!(&room_name);
+                match ietype {
+                    InteractionExecutionType::ChangeState => {
+                        if let Some(main_room_state) = self.roomdb.room_state.get_mut(&room_name) {
+                            *main_room_state = beh.state();
+                        }
+                    }
+                    InteractionExecutionType::ReadRoomState => {
+                        if let Some(main_room_state) = self.roomdb.room_state.get(&room_name) {
+                            if *main_room_state != beh.state() {
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+
             match other.bundle.clone() {
                 Bdl::Mmb(b) => {
                     let mat = self.materials1.get(b.material).unwrap().clone();
@@ -509,25 +567,29 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     e_commands.insert(b);
                 }
             };
-            let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
-            e_commands.insert(other.behavior.clone());
-            self.commands.spawn(AudioBundle {
-                source: self.asset_server.load(sound_file),
-                settings: PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Once,
-                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                },
-            });
-            self.ev_bdr.send(BoardDataToRebuild {
-                lighting: true,
-                collision: true,
-            });
 
-            break;
+            e_commands.insert(beh);
+            if ietype == InteractionExecutionType::ChangeState {
+                if let Some(interactive) = interactive {
+                    let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
+                    self.commands.spawn(AudioBundle {
+                        source: self.asset_server.load(sound_file),
+                        settings: PlaybackSettings {
+                            mode: bevy::audio::PlaybackMode::Once,
+                            volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(
+                                1.0,
+                            )),
+                            speed: 1.0,
+                            paused: false,
+                            spatial: false,
+                        },
+                    });
+                }
+            }
+
+            return true;
         }
+        false
     }
 }
 
@@ -715,11 +777,12 @@ pub fn load_level(
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<Behavior>>,
     mut qp: Query<&mut board::Position, With<PlayerSprite>>,
-    mut ev_bdr: EventWriter<BoardDataToRebuild>,
+    mut ev_room: EventWriter<RoomChangedEvent>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
+    mut roomdb: ResMut<board::RoomDB>,
 ) {
     let Some(load_event) = ev.read().next() else {
         return;
@@ -843,7 +906,6 @@ pub fn load_level(
 
     // We will need a 2nd pass load to sync some data
     // ----
-
     let mut c: f32 = 0.0;
     for maptiles in layers.iter().filter_map(|(_, layer)| {
         // filter only the tile layers and extract that directly
@@ -889,7 +951,7 @@ pub fn load_level(
 
             c += 0.000000001;
             pos.global_z = f32::from(mt.behavior.p.display.global_z) + c;
-            match mt.behavior.p.util {
+            match &mt.behavior.p.util {
                 behavior::Util::PlayerSpawn => {
                     player_spawn_points.push(Position {
                         global_z: 0.0001,
@@ -902,14 +964,20 @@ pub fn load_level(
                         ..pos
                     });
                 }
-                _ => {}
+                behavior::Util::RoomDef(name) => {
+                    roomdb
+                        .room_tiles
+                        .insert(pos.to_board_position(), name.to_owned());
+                    roomdb.room_state.insert(name.clone(), behavior::State::Off);
+                }
+                behavior::Util::Van => {}
+                behavior::Util::None => {}
             }
             mt.behavior.default_components(&mut entity);
+            let mut beh = mt.behavior.clone();
+            beh.flip(tile.flip_x);
 
-            entity
-                .insert(mt.behavior.clone())
-                .insert(GameSprite)
-                .insert(pos);
+            entity.insert(beh).insert(GameSprite).insert(pos);
         }
     }
 
@@ -930,9 +998,39 @@ pub fn load_level(
         error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
     }
     // TODO: Spawn the ghost here / Set ghost initial position.
+    ev_room.send(RoomChangedEvent);
+}
 
+pub fn roomchanged_event(
+    mut ev_bdr: EventWriter<BoardDataToRebuild>,
+    mut ev_room: EventReader<RoomChangedEvent>,
+    mut interactive_stuff: InteractiveStuff,
+    interactables: Query<(Entity, &board::Position, &Behavior, &RoomState), Without<PlayerSprite>>,
+) {
+    if ev_room.read().next().is_none() {
+        return;
+    }
+
+    for (entity, item_pos, behavior, room_state) in interactables.iter() {
+        if interactive_stuff.execute_interaction(
+            entity,
+            item_pos,
+            None,
+            behavior,
+            Some(room_state),
+            InteractionExecutionType::ReadRoomState,
+        ) {
+            dbg!(&behavior);
+        }
+    }
     ev_bdr.send(BoardDataToRebuild {
         lighting: true,
         collision: true,
     });
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+enum InteractionExecutionType {
+    ChangeState,
+    ReadRoomState,
 }

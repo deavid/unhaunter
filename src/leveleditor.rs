@@ -1,4 +1,5 @@
-use std::{collections::VecDeque, time::Instant};
+use std::collections::VecDeque;
+// use std::time::Instant;
 
 use crate::{
     behavior::{Behavior, Orientation},
@@ -157,9 +158,9 @@ pub fn apply_lighting(
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
-    let start = Instant::now();
+    // let start = Instant::now();
     let materials1 = materials1.into_inner();
-    let mut change_count = 0;
+    // let mut change_count = 0;
     for (n, (pos, mat, behavior)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         let mut opacity: f32 = 1.0;
@@ -272,11 +273,11 @@ pub fn apply_lighting(
         if delta > 0.02 + min_threshold {
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
-            change_count += 1;
+            // change_count += 1;
         }
     }
-    if mask % 55 == 0 {
-        warn!("change_count: {}", &change_count);
-        warn!("apply_lighting elapsed: {:?}", start.elapsed());
-    }
+    // if mask % 55 == 0 {
+    //     warn!("change_count: {}", &change_count);
+    //     warn!("apply_lighting elapsed: {:?}", start.elapsed());
+    // }
 }
