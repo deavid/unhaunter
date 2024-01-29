@@ -354,7 +354,7 @@ pub fn keyboard_player(
         &mut AnimationTimer,
     )>,
     mut commands: Commands,
-    mut asset_server: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
     colhand: CollisionHandler,
     interactables: Query<
         (Entity, &board::Position, &Interactive, &Behavior),

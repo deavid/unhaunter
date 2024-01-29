@@ -152,8 +152,8 @@ pub fn apply_lighting(
         dst_color.set_a(opacity.clamp(0.2, 1.0));
         sprite.color = dst_color;
     }
-
-    const VSMALL_PRIME: usize = 13;
+    // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
+    const VSMALL_PRIME: usize = 53;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
@@ -245,7 +245,7 @@ pub fn apply_lighting(
         let mut dst_color = src_color; // <- remove brightness calculation for main tile.
         let src_a = new_mat.data.color.a();
         let opacity = opacity.clamp(0.000, 1.0);
-        const A_DELTA: f32 = 0.2;
+        const A_DELTA: f32 = 0.05;
         let new_a = if (src_a - opacity).abs() < A_DELTA {
             opacity
         } else {
