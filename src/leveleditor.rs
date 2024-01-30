@@ -67,6 +67,7 @@ pub fn apply_lighting(
     mut bf: ResMut<board::BoardData>,
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
+    roomdb: ResMut<board::RoomDB>,
 ) {
     const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
@@ -99,9 +100,18 @@ pub fn apply_lighting(
         compute_visibility(&mut visibility_field, &bf.collision_field, pos);
     }
     // --- ambient sound processing ---
-    let total_vis: f32 = visibility_field.iter().map(|(_k, v)| v).sum();
-    let house_volume = (120.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999);
-    let street_volume = (total_vis / 250.0).powi(3).tanh().clamp(0.00001, 0.9999);
+
+    let total_vis: f32 = visibility_field
+        .iter()
+        .map(|(k, v)| {
+            v * match roomdb.room_tiles.get(k).is_some() {
+                true => 0.2,
+                false => 1.0,
+            }
+        })
+        .sum();
+    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+    let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
@@ -140,8 +150,9 @@ pub fn apply_lighting(
     let exposure = bf.current_exposure;
 
     for (pos, mut sprite) in qt.iter_mut() {
-        let opacity: f32 = 1.0;
         let bpos = pos.to_board_position();
+        let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
+        opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
         let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
@@ -150,7 +161,9 @@ pub fn apply_lighting(
         } else {
             src_color
         };
-        dst_color.set_a(opacity.clamp(0.2, 1.0));
+        const SMOOTH: f32 = 20.0;
+        let old_a = sprite.color.a().clamp(0.0001, 1.0);
+        dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
         sprite.color = dst_color;
     }
     // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97

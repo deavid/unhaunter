@@ -38,7 +38,7 @@ fn setup(
 
     let (map, layers) = tiledmap::bevy_load_map(
         "assets/maps/map_house1_3x.tmx",
-        asset_server,
+        &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
     );

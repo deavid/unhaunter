@@ -216,7 +216,7 @@ pub struct MapTileSetDb {
 
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
-    asset_server: Res<AssetServer>,
+    asset_server: &AssetServer,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {

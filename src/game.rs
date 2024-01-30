@@ -73,6 +73,15 @@ impl PlayerSprite {
     }
 }
 
+#[derive(Component, Debug)]
+pub struct GhostSprite {}
+
+impl GhostSprite {
+    pub fn new() -> Self {
+        GhostSprite {}
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ControlKeys {
     pub up: KeyCode,
@@ -203,43 +212,6 @@ pub fn setup_ui(
                 });
         });
     info!("Game UI loaded");
-    // Spawn Player 1
-    commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: handles.images.character1.clone(),
-            sprite: TextureAtlasSprite {
-                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                ..Default::default()
-            },
-            ..default()
-        })
-        .insert(GameSprite)
-        .insert(PlayerSprite::new(1))
-        .insert(Position::new_i64(-1, 0, 0).into_global_z(0.0005))
-        .insert(board::Direction::default())
-        .insert(AnimationTimer::from_range(
-            Timer::from_seconds(0.20, TimerMode::Repeating),
-            CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
-        ));
-
-    // Spawn Player 2
-    // commands
-    //     .spawn(SpriteSheetBundle {
-    //         texture_atlas: handles.images.character1.clone(),
-    //         sprite: TextureAtlasSprite {
-    //             anchor: TileSprite::Character.anchor(&tb),
-    //             ..Default::default()
-    //         },
-    //         ..default()
-    //     })
-    //     .insert(GameSprite)
-    //     .insert(PlayerSprite::new(2))
-    //     .insert(board::Direction::default())
-    //     .insert(Position::new_i64(1, 0, 0).into_global_z(0.0005))
-    //     .insert(AnimationTimer::from_range(
-    //         Timer::from_seconds(0.20, TimerMode::Repeating),
-    //         OldCharacterAnimation::Walking.animation_range(),
-    //     ));
     ev_load.send(LoadLevelEvent {
         map_filepath: "default.json".to_string(),
     });
@@ -775,13 +747,13 @@ pub fn load_level(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
-    qgs: Query<Entity, With<Behavior>>,
-    mut qp: Query<&mut board::Position, With<PlayerSprite>>,
+    qgs: Query<Entity, With<GameSprite>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
+    handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
 ) {
     let Some(load_event) = ev.read().next() else {
@@ -791,6 +763,7 @@ pub fn load_level(
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
+
     commands
         .spawn(AudioBundle {
             source: asset_server.load("sounds/background-noise-house-1.ogg"),
@@ -827,7 +800,7 @@ pub fn load_level(
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = tiledmap::bevy_load_map(
         "assets/maps/map_house1_3x.tmx",
-        asset_server,
+        &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
     );
@@ -987,17 +960,64 @@ pub fn load_level(
     if player_spawn_points.is_empty() {
         error!("No player spawn points found!! - that will probably not display the map because the player will be out of bounds");
     }
-    for mut pos in qp.iter_mut() {
-        if let Some(spawn) = player_spawn_points.pop() {
-            *pos = spawn;
-        }
-    }
+    // Spawn Player 1
+    commands
+        .spawn(SpriteSheetBundle {
+            texture_atlas: handles.images.character1.clone(),
+            sprite: TextureAtlasSprite {
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
+            ..default()
+        })
+        .insert(GameSprite)
+        .insert(PlayerSprite::new(1))
+        .insert(player_spawn_points.pop().unwrap())
+        .insert(board::Direction::default())
+        .insert(AnimationTimer::from_range(
+            Timer::from_seconds(0.20, TimerMode::Repeating),
+            CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
+        ));
+
+    // Spawn Player 2
+    // commands
+    //     .spawn(SpriteSheetBundle {
+    //         texture_atlas: handles.images.character1.clone(),
+    //         sprite: TextureAtlasSprite {
+    //             anchor: TileSprite::Character.anchor(&tb),
+    //             ..Default::default()
+    //         },
+    //         ..default()
+    //     })
+    //     .insert(GameSprite)
+    //     .insert(PlayerSprite::new(2))
+    //     .insert(board::Direction::default())
+    //     .insert(Position::new_i64(1, 0, 0).into_global_z(0.0005))
+    //     .insert(AnimationTimer::from_range(
+    //         Timer::from_seconds(0.20, TimerMode::Repeating),
+    //         OldCharacterAnimation::Walking.animation_range(),
+    //     ));
 
     ghost_spawn_points.shuffle(&mut thread_rng());
     if ghost_spawn_points.is_empty() {
         error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
     }
-    // TODO: Spawn the ghost here / Set ghost initial position.
+
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("img/ghost.png"),
+            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
+            sprite: Sprite {
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(GameSprite)
+        .insert(GhostSprite::new())
+        .insert(ghost_spawn_points.pop().unwrap());
+
     ev_room.send(RoomChangedEvent);
 }
 

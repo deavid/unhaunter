@@ -733,15 +733,18 @@ pub fn boardfield_update(
                             let src = src_lfs.get(x, y, z).unwrap();
                             let mut src_lux = src.lux;
                             let min_lux = match step {
-                                0 => 0.1,
-                                1 => 0.01,
+                                0 => 0.01,
+                                1 => 0.001,
                                 2 => 0.0001,
                                 3 => 0.000001,
                                 _ => 0.0,
                             };
                             let max_lux = match step {
                                 0 => f32::MAX,
-                                _ => 200.0,
+                                1 => 2000.0,
+                                2 => 400.0,
+                                3 => 100.0,
+                                _ => 50.0,
                             };
                             if src_lux < min_lux {
                                 continue;

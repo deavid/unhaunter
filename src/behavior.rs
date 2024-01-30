@@ -90,12 +90,13 @@ pub struct Display {
 pub struct Light {
     pub opaque: bool,
     pub emits_light: bool,
+    pub emission_power: NotNan<f32>,
 }
 
 impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
         match self.emits_light {
-            true => 2000.0,
+            true => self.emission_power.exp(),
             false => 0.0,
         }
     }
@@ -507,14 +508,17 @@ impl SpriteConfig {
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
                 p.light.emits_light = self.state == State::On;
+                p.light.emission_power = (5.5).try_into().unwrap();
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.light.emits_light = self.state == State::On;
+                p.light.emission_power = (6.0).try_into().unwrap();
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.light.emits_light = self.state == State::On;
+                p.light.emission_power = (6.5).try_into().unwrap();
             }
             Class::WallDecor => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
@@ -522,10 +526,12 @@ impl SpriteConfig {
             Class::CeilingLight => {
                 p.display.disable = true;
                 p.light.emits_light = self.state == State::On;
+                p.light.emission_power = (7.0).try_into().unwrap();
             }
             Class::StreetLight => {
                 p.display.disable = true;
                 p.light.emits_light = true;
+                p.light.emission_power = (6.5).try_into().unwrap();
             }
             Class::Appliance => {
                 p.display.global_z = (0.000070).try_into().unwrap();
