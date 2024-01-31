@@ -62,6 +62,7 @@ fn main() {
         .add_systems(Update, mainmenu::keyboard)
         .add_systems(Update, mainmenu::item_logic)
         .add_systems(Update, mainmenu::menu_event)
+        .add_systems(Update, game::ghost_movement)
         .add_systems(Update, board::apply_perspective)
         .add_systems(Update, game::roomchanged_event)
         .add_systems(PostUpdate, board::boardfield_update)

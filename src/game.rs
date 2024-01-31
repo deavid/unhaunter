@@ -13,6 +13,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
 use bevy::{prelude::*, render::camera::ScalingMode};
+use rand::Rng;
 use std::time::Duration;
 
 #[derive(Component)]
@@ -74,11 +75,17 @@ impl PlayerSprite {
 }
 
 #[derive(Component, Debug)]
-pub struct GhostSprite {}
+pub struct GhostSprite {
+    spawn_point: BoardPosition,
+    target_point: Option<Position>,
+}
 
 impl GhostSprite {
-    pub fn new() -> Self {
-        GhostSprite {}
+    pub fn new(spawn_point: BoardPosition) -> Self {
+        GhostSprite {
+            spawn_point,
+            target_point: None,
+        }
     }
 }
 
@@ -294,7 +301,7 @@ impl<'w> CollisionHandler<'w> {
                 .get(&npos)
                 .copied()
                 .unwrap_or_default();
-            if !cf.free && Self::ENABLE_COLLISION {
+            if !cf.player_free && Self::ENABLE_COLLISION {
                 let dpos = npos.to_position().to_vec3() - pos.to_vec3();
                 let mut dapos = dpos.abs();
                 dapos.x -= Self::PILLAR_SZ;
@@ -1003,7 +1010,7 @@ pub fn load_level(
     if ghost_spawn_points.is_empty() {
         error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
     }
-
+    let ghost_spawn = ghost_spawn_points.pop().unwrap();
     commands
         .spawn(SpriteBundle {
             texture: asset_server.load("img/ghost.png"),
@@ -1015,8 +1022,8 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
-        .insert(GhostSprite::new())
-        .insert(ghost_spawn_points.pop().unwrap());
+        .insert(GhostSprite::new(ghost_spawn.to_board_position()))
+        .insert(ghost_spawn);
 
     ev_room.send(RoomChangedEvent);
 }
@@ -1053,4 +1060,47 @@ pub fn roomchanged_event(
 enum InteractionExecutionType {
     ChangeState,
     ReadRoomState,
+}
+
+pub fn ghost_movement(
+    mut q: Query<(&mut GhostSprite, &mut Position)>,
+    roomdb: Res<board::RoomDB>,
+    bf: Res<board::BoardData>,
+) {
+    for (mut ghost, mut pos) in q.iter_mut() {
+        if let Some(target_point) = ghost.target_point {
+            let mut delta = target_point.delta(*pos);
+            let dlen = delta.distance();
+            if dlen > 1.0 {
+                delta.dx /= dlen.sqrt();
+                delta.dy /= dlen.sqrt();
+            }
+            pos.x += delta.dx / 200.0;
+            pos.y += delta.dy / 200.0;
+            if dlen < 0.5 {
+                ghost.target_point = None;
+            }
+        } else {
+            let mut target_point = ghost.spawn_point.to_position();
+            let mut rng = rand::thread_rng();
+            let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+            let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+            let dist: f32 = (0..15).map(|_| rng.gen_range(0.0..2.0)).sum();
+            let dd = (dx * dx + dy * dy).sqrt() / dist;
+            const WANDER: f32 = 5.0;
+            target_point.x = (target_point.x + pos.x * WANDER) / (1.0 + WANDER) + dx / dd;
+            target_point.y = (target_point.y + pos.y * WANDER) / (1.0 + WANDER) + dy / dd;
+
+            let bpos = target_point.to_board_position();
+            if roomdb.room_tiles.get(&bpos).is_some()
+                && bf
+                    .collision_field
+                    .get(&bpos)
+                    .map(|x| x.ghost_free)
+                    .unwrap_or_default()
+            {
+                ghost.target_point = Some(target_point);
+            }
+        }
+    }
 }

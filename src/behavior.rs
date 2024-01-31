@@ -115,7 +115,9 @@ pub struct Movement {
 
     /// true for walls and closed doors. It signals that the player cannot stand
     /// here. For detailed collision, there will be a map of collision.
-    pub collision: bool,
+    pub player_collision: bool,
+
+    pub ghost_collision: bool,
     // 9x9 collision map on the sub-tile. This is using a subtile of 3x3, so it
     // means it can cover an area of 3x3 board tiles.
     // collision_map: [[bool; 9]; 9],
@@ -460,13 +462,14 @@ impl SpriteConfig {
                 p.display.global_z = (-0.00025).try_into().unwrap();
             }
             Class::Wall => {
-                p.movement.collision = true;
+                p.movement.player_collision = true;
+                p.movement.ghost_collision = true;
                 p.light.opaque = true;
                 p.display.global_z = (-0.00005).try_into().unwrap();
             }
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
-                p.movement.collision = self.state == State::Closed;
+                p.movement.player_collision = self.state == State::Closed;
             }
             Class::Switch => {
                 p.display.global_z = (0.000040).try_into().unwrap();

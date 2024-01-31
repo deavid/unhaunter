@@ -436,7 +436,8 @@ impl Default for LightFieldData {
 
 #[derive(Clone, Debug, Default, Copy)]
 pub struct CollisionFieldData {
-    pub free: bool,
+    pub player_free: bool,
+    pub ghost_free: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -660,12 +661,18 @@ pub fn boardfield_update(
             bf.collision_field.clear();
             for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
                 let pos = pos.to_board_position();
-                let colfd = CollisionFieldData { free: true };
+                let colfd = CollisionFieldData {
+                    player_free: true,
+                    ghost_free: true,
+                };
                 bf.collision_field.insert(pos, colfd);
             }
-            for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.collision) {
+            for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
                 let pos = pos.to_board_position();
-                let colfd = CollisionFieldData { free: false };
+                let colfd = CollisionFieldData {
+                    player_free: false,
+                    ghost_free: !behavior.p.movement.ghost_collision,
+                };
                 bf.collision_field.insert(pos, colfd);
             }
         }

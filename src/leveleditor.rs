@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData},
-    game::{self, GameSound, SoundType},
+    game::{self, GameSound, GhostSprite, SoundType},
     materials::CustomMaterial1,
 };
 use bevy::{prelude::*, utils::HashMap};
@@ -24,7 +24,7 @@ pub fn compute_visibility(
     while let Some((pos, pos2)) = queue.pop_back() {
         let pds = pos.to_position().distance(pos_start);
         let src_f = vf.get(&pos).cloned().unwrap_or_default();
-        if !cf.get(&pos).map(|c| c.free).unwrap_or_default() {
+        if !cf.get(&pos).map(|c| c.player_free).unwrap_or_default() {
             // If the current position analyzed is not free (a wall or out of bounds)
             // then stop extending.
             continue;
@@ -60,7 +60,7 @@ pub fn compute_visibility(
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<(&board::Position, &mut Sprite)>,
+    mut qt: Query<(&board::Position, &mut Sprite, Option<&GhostSprite>)>,
     mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &Behavior)>,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&board::Position, &game::PlayerSprite, &board::Direction)>,
@@ -149,20 +149,27 @@ pub fn apply_lighting(
     bf.current_exposure *= bf.current_exposure_accel;
     let exposure = bf.current_exposure;
 
-    for (pos, mut sprite) in qt.iter_mut() {
+    for (pos, mut sprite, o_ghost) in qt.iter_mut() {
         let bpos = pos.to_board_position();
         let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
         let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let rel_lux = lf.lux / exposure;
+            let mut rel_lux = lf.lux / exposure;
+            if o_ghost.is_some() {
+                rel_lux /= 2.0;
+            }
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
         } else {
             src_color
         };
         const SMOOTH: f32 = 20.0;
+        if o_ghost.is_some() {
+            opacity *= dst_color.l().clamp(0.7, 1.0);
+        }
         let old_a = sprite.color.a().clamp(0.0001, 1.0);
+
         dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
         sprite.color = dst_color;
     }
