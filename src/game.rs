@@ -205,29 +205,33 @@ pub fn setup_ui(
     handles: Res<root::GameAssets>,
     mut ev_load: EventWriter<LoadLevelEvent>,
 ) {
+    const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.003));
     // Spawn game UI
     commands
         .spawn(NodeBundle {
+            border_color: DEBUG_BCOLOR,
+
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::FlexStart,
                 flex_direction: FlexDirection::Column,
-                padding: UiRect {
-                    left: Val::Percent(1.0),
-                    right: Val::Percent(1.0),
-                    top: Val::Percent(1.0),
-                    bottom: Val::Percent(1.0),
-                },
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(1.0)),
                 ..default()
             },
             ..default()
         })
         .insert(GameUI)
         .with_children(|parent| {
+            // Top row (Game title)
             parent
                 .spawn(NodeBundle {
+                    border_color: DEBUG_BCOLOR,
+
                     style: Style {
+                        border: UiRect::all(Val::Px(1.0)),
+                        padding: UiRect::all(Val::Px(1.0)),
                         width: Val::Percent(20.0),
                         height: Val::Percent(5.0),
                         min_width: Val::Px(0.0),
@@ -253,6 +257,97 @@ pub fn setup_ui(
                         image: handles.images.title.clone().into(),
                         ..default()
                     });
+                });
+
+            // Main game viewport - middle
+            parent.spawn(NodeBundle {
+                border_color: DEBUG_BCOLOR,
+                style: Style {
+                    border: UiRect::all(Val::Px(1.0)),
+                    padding: UiRect::all(Val::Px(1.0)),
+                    flex_grow: 1.0,
+                    min_height: Val::Px(2.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+
+            // Bottom side - inventory and stats
+            parent
+                .spawn(NodeBundle {
+                    border_color: DEBUG_BCOLOR,
+                    style: Style {
+                        border: UiRect::all(Val::Px(1.0)),
+                        padding: UiRect::all(Val::Px(1.0)),
+                        height: Val::Px(100.0),
+                        width: Val::Percent(99.9),
+                        flex_direction: FlexDirection::Row,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .with_children(|parent| {
+                    // Split for the bottom side in three regions
+
+                    // Left side
+                    parent.spawn(NodeBundle {
+                        border_color: DEBUG_BCOLOR,
+                        style: Style {
+                            border: UiRect::all(Val::Px(1.0)),
+                            padding: UiRect::all(Val::Px(1.0)),
+                            flex_grow: 0.5,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    });
+
+                    // Mid side
+                    parent.spawn(NodeBundle {
+                        border_color: DEBUG_BCOLOR,
+                        style: Style {
+                            border: UiRect::all(Val::Px(1.0)),
+                            padding: UiRect::all(Val::Px(1.0)),
+                            flex_grow: 0.5,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    });
+
+                    // Right side
+                    parent
+                        .spawn(NodeBundle {
+                            border_color: DEBUG_BCOLOR,
+                            style: Style {
+                                border: UiRect::all(Val::Px(1.0)),
+                                padding: UiRect::all(Val::Px(1.0)),
+                                flex_grow: 0.5,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        })
+                        .with_children(|parent| {
+                            // Right side panel - inventory
+                            parent
+                                .spawn(AtlasImageBundle {
+                                    texture_atlas: handles.images.gear.clone(),
+                                    texture_atlas_image: UiTextureAtlasImage {
+                                        index: gear::GearSpriteID::Flashlight2 as usize,
+                                        ..Default::default()
+                                    },
+                                    ..default()
+                                })
+                                .insert(gear::Inventory::new_left());
+                            parent
+                                .spawn(AtlasImageBundle {
+                                    texture_atlas: handles.images.gear.clone(),
+                                    texture_atlas_image: UiTextureAtlasImage {
+                                        index: gear::GearSpriteID::IonMeter2 as usize,
+                                        ..Default::default()
+                                    },
+                                    ..default()
+                                })
+                                .insert(gear::Inventory::new_right());
+                        });
                 });
         });
     info!("Game UI loaded");
@@ -1062,17 +1157,6 @@ pub fn load_level(
         .insert(GameSprite)
         .insert(GhostSprite::new(ghost_spawn.to_board_position()))
         .insert(ghost_spawn);
-
-    // Inventory
-    commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: handles.images.gear.clone(),
-            transform: Transform::from_xyz(300.0, -200.0, 0.0),
-            ..default()
-        })
-        .insert(GameSprite)
-        .insert(RenderLayers::layer(2))
-        .insert(gear::Inventory::default());
 
     ev_room.send(RoomChangedEvent);
 }

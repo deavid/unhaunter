@@ -1,3 +1,5 @@
+use std::default;
+
 use bevy::ecs::component::Component;
 use enum_iterator::Sequence;
 
@@ -65,7 +67,7 @@ pub enum GearSpriteID {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy, Sequence)]
-enum Gear {
+pub enum Gear {
     Thermometer,
     ThermalImager,
     EMFMeter,
@@ -85,8 +87,22 @@ enum Gear {
     None,
 }
 
-#[derive(Component, Debug, Default, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence)]
+pub enum Hand {
+    Left,
+    Right,
+}
+
+#[derive(Component, Debug, Clone)]
 pub struct Inventory {
-    left_hand: Gear,
-    right_hand: Gear,
+    hand: Hand,
+}
+
+impl Inventory {
+    pub fn new_left() -> Self {
+        Inventory { hand: Hand::Left }
+    }
+    pub fn new_right() -> Self {
+        Inventory { hand: Hand::Right }
+    }
 }
