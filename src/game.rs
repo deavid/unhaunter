@@ -100,34 +100,62 @@ pub struct ControlKeys {
     pub down: KeyCode,
     pub left: KeyCode,
     pub right: KeyCode,
+
+    /// Interaction key (open doors, switches, etc).
     pub activate: KeyCode,
+    /// Grab stuff from the ground.
+    pub grab: KeyCode,
+    /// Drop stuff to the ground.
+    pub drop: KeyCode,
+    /// Trigger the left-hand item.
     pub torch: KeyCode,
+    /// Trigger the right-hand item.
+    pub trigger: KeyCode,
+    /// Cycle through the items on the inventory.
+    pub cycle: KeyCode,
+    /// Swap the left hand item with the right hand one.
+    pub swap: KeyCode,
 }
 
 impl ControlKeys {
-    const WASD: Self = ControlKeys {
+    pub const WASD: Self = ControlKeys {
         up: KeyCode::W,
         down: KeyCode::S,
         left: KeyCode::A,
         right: KeyCode::D,
         activate: KeyCode::E,
+        trigger: KeyCode::R,
         torch: KeyCode::T,
+        cycle: KeyCode::Q,
+        swap: KeyCode::Tab,
+        drop: KeyCode::G,
+        grab: KeyCode::F,
     };
-    const IJKL: Self = ControlKeys {
+    pub const IJKL: Self = ControlKeys {
         up: KeyCode::I,
         down: KeyCode::K,
         left: KeyCode::J,
         right: KeyCode::L,
         activate: KeyCode::O,
         torch: KeyCode::T,
+        cycle: KeyCode::Unlabeled,
+        swap: KeyCode::Unlabeled,
+        grab: KeyCode::Unlabeled,
+        drop: KeyCode::Unlabeled,
+        trigger: KeyCode::Unlabeled,
     };
-    const NONE: Self = ControlKeys {
+    pub const NONE: Self = ControlKeys {
         up: KeyCode::Unlabeled,
         down: KeyCode::Unlabeled,
         left: KeyCode::Unlabeled,
         right: KeyCode::Unlabeled,
         activate: KeyCode::Unlabeled,
         torch: KeyCode::Unlabeled,
+        cycle: KeyCode::Unlabeled,
+        swap: KeyCode::Unlabeled,
+        grab: KeyCode::Unlabeled,
+        drop: KeyCode::Unlabeled,
+        trigger: KeyCode::Unlabeled,
     };
 }
 
@@ -205,7 +233,9 @@ pub fn setup_ui(
     handles: Res<root::GameAssets>,
     mut ev_load: EventWriter<LoadLevelEvent>,
 ) {
-    const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.003));
+    const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
+    const INVENTORY_STATS_COLOR: Color = Color::rgba(0.7, 0.7, 0.7, 0.6);
+    const PANEL_BGCOLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.3);
     // Spawn game UI
     commands
         .spawn(NodeBundle {
@@ -295,7 +325,7 @@ pub fn setup_ui(
                         style: Style {
                             border: UiRect::all(Val::Px(1.0)),
                             padding: UiRect::all(Val::Px(1.0)),
-                            flex_grow: 0.5,
+                            flex_grow: 1.0,
                             ..Default::default()
                         },
                         ..Default::default()
@@ -307,7 +337,7 @@ pub fn setup_ui(
                         style: Style {
                             border: UiRect::all(Val::Px(1.0)),
                             padding: UiRect::all(Val::Px(1.0)),
-                            flex_grow: 0.5,
+                            flex_grow: 1.0,
                             ..Default::default()
                         },
                         ..Default::default()
@@ -317,10 +347,14 @@ pub fn setup_ui(
                     parent
                         .spawn(NodeBundle {
                             border_color: DEBUG_BCOLOR,
+                            background_color: BackgroundColor(PANEL_BGCOLOR),
                             style: Style {
                                 border: UiRect::all(Val::Px(1.0)),
                                 padding: UiRect::all(Val::Px(1.0)),
-                                flex_grow: 0.5,
+                                flex_grow: 1.0,
+                                max_width: Val::Percent(33.3),
+                                align_items: AlignItems::Center, // Vertical alignment
+                                align_content: AlignContent::Start, // Horizontal alignment - start from the left.
                                 ..Default::default()
                             },
                             ..Default::default()
@@ -347,6 +381,22 @@ pub fn setup_ui(
                                     ..default()
                                 })
                                 .insert(gear::Inventory::new_right());
+                            let mut text_bundle = TextBundle::from_section(
+                                "IonDetector: ON\nReading: ION 2 - 30V/m\nBattery: 40%",
+                                TextStyle {
+                                    font: handles.fonts.londrina.w300_light.clone(),
+                                    font_size: 26.0,
+                                    color: INVENTORY_STATS_COLOR,
+                                },
+                            );
+                            text_bundle.style = Style {
+                                // width: Val::Px(200.0),
+                                flex_grow: 1.0,
+                                ..Default::default()
+                            };
+                            // text_bundle.background_color = BackgroundColor(PANEL_BGCOLOR);
+
+                            parent.spawn(text_bundle).insert(gear::InventoryStats);
                         });
                 });
         });
@@ -933,6 +983,9 @@ pub fn load_level(
         });
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
+
+    // Override any previous data when loading the map.
+    commands.insert_resource(gear::PlayerGear::new());
 
     info!("Load Level");
 

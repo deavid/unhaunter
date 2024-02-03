@@ -1,13 +1,13 @@
 mod behavior;
 mod board;
 mod game;
+mod gear;
 mod leveleditor;
 mod mainmenu;
 mod materials;
 mod pause;
 mod root;
 mod tiledmap;
-mod gear;
 
 use std::time::Duration;
 
@@ -51,6 +51,7 @@ fn main() {
         .init_resource::<board::SpriteDB>()
         .init_resource::<board::RoomDB>()
         .init_resource::<game::GameConfig>()
+        .init_resource::<gear::PlayerGear>()
         .add_event::<board::BoardDataToRebuild>()
         .add_event::<game::RoomChangedEvent>()
         .add_state::<root::State>()
@@ -63,6 +64,8 @@ fn main() {
         .add_systems(Update, mainmenu::keyboard)
         .add_systems(Update, mainmenu::item_logic)
         .add_systems(Update, mainmenu::menu_event)
+        .add_systems(Update, gear::keyboard_gear)
+        .add_systems(Update, gear::update_gear_inventory)
         .add_systems(Update, game::ghost_movement)
         .add_systems(Update, board::apply_perspective)
         .add_systems(Update, game::roomchanged_event)
