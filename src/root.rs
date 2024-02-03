@@ -26,6 +26,7 @@ pub struct FontAssets {
 pub struct ImageAssets {
     pub title: Handle<Image>,
     pub character1: Handle<TextureAtlas>,
+    pub gear: Handle<TextureAtlas>,
 }
 
 #[derive(Debug, Clone)]
@@ -134,9 +135,17 @@ pub fn load_assets(
             title: server.load("img/title.png"),
             character1: texture_atlases.add(TextureAtlas::from_grid(
                 server.load("img/characters-model1-demo.png"),
-                Vec2::new(32.0, 32.0),
+                Vec2::new(32.0 * 2.0, 32.0 * 2.0),
                 16,
                 4,
+                Some(Vec2::new(0.0, 0.0)),
+                Some(Vec2::new(0.0, 0.0)),
+            )),
+            gear: texture_atlases.add(TextureAtlas::from_grid(
+                server.load("img/gear_spritesheetA_48x48.png"),
+                Vec2::new(48.0 * 2.0, 48.0 * 2.0),
+                10,
+                10,
                 Some(Vec2::new(0.0, 0.0)),
                 Some(Vec2::new(0.0, 0.0)),
             )),

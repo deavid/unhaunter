@@ -4,12 +4,14 @@ use crate::board::{Bdl, BoardPosition, Direction, MapTileComponents, Position, S
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
-use crate::{behavior, tiledmap};
+use crate::{behavior, gear, tiledmap};
 use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::ecs::system::SystemParam;
+use bevy::render::view::RenderLayers;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
 use bevy::{prelude::*, render::camera::ScalingMode};
@@ -17,7 +19,10 @@ use rand::Rng;
 use std::time::Duration;
 
 #[derive(Component)]
-pub struct GCamera;
+pub struct GCameraArena;
+
+#[derive(Component)]
+pub struct GCameraUI;
 
 #[derive(Component, Debug)]
 pub struct GameUI;
@@ -126,27 +131,59 @@ impl ControlKeys {
     };
 }
 
-pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCamera>>) {
+pub fn setup(
+    mut commands: Commands,
+    qc: Query<Entity, With<GCameraArena>>,
+    qc2: Query<Entity, With<GCameraUI>>,
+) {
     // Despawn old camera if exists
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
-    // 2D orthographic camera
+    for cam in qc2.iter() {
+        commands.entity(cam).despawn_recursive();
+    }
+    // 2D orthographic camera - Arena
     let mut cam = Camera2dBundle::default();
     cam.projection.scaling_mode = ScalingMode::FixedVertical(200.0);
-    commands.spawn(cam).insert(GCamera);
+    commands
+        .spawn(cam)
+        .insert(GCameraArena)
+        .insert(RenderLayers::from_layers(&[0, 1]));
+
+    // 2D orthographic camera - UI
+    let cam = Camera2dBundle {
+        camera_2d: Camera2d {
+            // no "background color", we need to see the main camera's output
+            clear_color: ClearColorConfig::None,
+        },
+        camera: Camera {
+            // renders after / on top of the main camera
+            order: 1,
+            ..default()
+        },
+        ..default()
+    };
+    commands
+        .spawn(cam)
+        .insert(GCameraUI)
+        .insert(RenderLayers::from_layers(&[2, 3]));
     info!("Game camera setup");
 }
 
 pub fn cleanup(
     mut commands: Commands,
-    qc: Query<Entity, With<GCamera>>,
+    qc: Query<Entity, With<GCameraArena>>,
+    qc2: Query<Entity, With<GCameraUI>>,
     qg: Query<Entity, With<GameUI>>,
     qgs: Query<Entity, With<GameSprite>>,
     qs: Query<Entity, With<GameSound>>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
+        commands.entity(cam).despawn_recursive();
+    }
+    for cam in qc2.iter() {
         commands.entity(cam).despawn_recursive();
     }
     // Despawn game UI if not used
@@ -228,9 +265,9 @@ pub fn keyboard(
     app_state: Res<State<root::State>>,
     mut app_next_state: ResMut<NextState<root::State>>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut camera: Query<&mut Transform, With<GCamera>>,
+    mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCamera>>,
+    pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
 ) {
     if *app_state.get() != root::State::InGame {
         return;
@@ -975,7 +1012,8 @@ pub fn load_level(
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
+            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0)
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             ..default()
         })
         .insert(GameSprite)
@@ -1024,6 +1062,17 @@ pub fn load_level(
         .insert(GameSprite)
         .insert(GhostSprite::new(ghost_spawn.to_board_position()))
         .insert(ghost_spawn);
+
+    // Inventory
+    commands
+        .spawn(SpriteSheetBundle {
+            texture_atlas: handles.images.gear.clone(),
+            transform: Transform::from_xyz(300.0, -200.0, 0.0),
+            ..default()
+        })
+        .insert(GameSprite)
+        .insert(RenderLayers::layer(2))
+        .insert(gear::Inventory::default());
 
     ev_room.send(RoomChangedEvent);
 }
