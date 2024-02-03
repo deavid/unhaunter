@@ -320,16 +320,32 @@ pub fn setup_ui(
                     // Split for the bottom side in three regions
 
                     // Left side
-                    parent.spawn(NodeBundle {
-                        border_color: DEBUG_BCOLOR,
-                        style: Style {
-                            border: UiRect::all(Val::Px(1.0)),
-                            padding: UiRect::all(Val::Px(1.0)),
-                            flex_grow: 1.0,
+                    parent
+                        .spawn(NodeBundle {
+                            border_color: DEBUG_BCOLOR,
+                            style: Style {
+                                border: UiRect::all(Val::Px(1.0)),
+                                padding: UiRect::all(Val::Px(1.0)),
+                                flex_grow: 1.0,
+                                align_content: AlignContent::Center,
+                                align_items: AlignItems::Center,
+                                ..Default::default()
+                            },
                             ..Default::default()
-                        },
-                        ..Default::default()
-                    });
+                        })
+                        .with_children(|parent| {
+                            // For now a reminder of the keys:
+                            let text_bundle = TextBundle::from_section(
+                                "Movement: WASD - Interact: E\nToggle Aux: T - Toggle Main: R\nCycle Inv: Q - Swap: TAB",
+                                TextStyle {
+                                    font: handles.fonts.londrina.w100_thin.clone(),
+                                    font_size: 20.0,
+                                    color: INVENTORY_STATS_COLOR,
+                                },
+                            );
+
+                            parent.spawn(text_bundle);
+                        });
 
                     // Mid side
                     parent.spawn(NodeBundle {
