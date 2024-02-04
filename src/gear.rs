@@ -32,7 +32,7 @@ use self::uvtorch::UVTorch;
 use self::videocam::Videocam;
 
 use self::playergear::{Inventory, InventoryStats, PlayerGear};
-use crate::game::ControlKeys;
+use crate::game::{GameConfig, PlayerSprite};
 use bevy::prelude::*;
 
 #[allow(dead_code)]
@@ -256,37 +256,46 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn box_clone(&self) -> Box<dyn GearUsable>;
 }
 
-pub fn keyboard_gear(keyboard_input: Res<Input<KeyCode>>, mut playergear: ResMut<PlayerGear>) {
-    const CONTROLS: ControlKeys = ControlKeys::WASD;
-    if keyboard_input.just_pressed(CONTROLS.cycle) {
-        playergear.cycle();
-    }
-    if keyboard_input.just_pressed(CONTROLS.swap) {
-        playergear.swap();
-    }
-    if keyboard_input.just_pressed(CONTROLS.trigger) {
-        playergear.right_hand.set_trigger();
-    }
-    if keyboard_input.just_pressed(CONTROLS.torch) {
-        playergear.left_hand.set_trigger();
+pub fn keyboard_gear(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+) {
+    for (ps, mut playergear) in q_gear.iter_mut() {
+        if keyboard_input.just_pressed(ps.controls.cycle) {
+            playergear.cycle();
+        }
+        if keyboard_input.just_pressed(ps.controls.swap) {
+            playergear.swap();
+        }
+        if keyboard_input.just_pressed(ps.controls.trigger) {
+            playergear.right_hand.set_trigger();
+        }
+        if keyboard_input.just_pressed(ps.controls.torch) {
+            playergear.left_hand.set_trigger();
+        }
     }
 }
 
 pub fn update_gear_inventory(
-    mut playergear: ResMut<PlayerGear>,
+    gc: Res<GameConfig>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
     mut qs: Query<(&InventoryStats, &mut Text)>,
 ) {
-    playergear.left_hand.update();
-    playergear.right_hand.update();
+    for (ps, mut playergear) in q_gear.iter_mut() {
+        playergear.left_hand.update();
+        playergear.right_hand.update();
 
-    for (inv, mut utai) in qi.iter_mut() {
-        let gear = playergear.get_hand(&inv.hand);
-        let idx = gear.get_sprite_idx() as usize;
-        utai.index = idx;
-    }
-    for (_, mut txt) in qs.iter_mut() {
-        let gear = &playergear.right_hand;
-        txt.sections[0].value = gear.get_status();
+        if gc.player_id == ps.id {
+            for (inv, mut utai) in qi.iter_mut() {
+                let gear = playergear.get_hand(&inv.hand);
+                let idx = gear.get_sprite_idx() as usize;
+                utai.index = idx;
+            }
+            for (_, mut txt) in qs.iter_mut() {
+                let gear = &playergear.right_hand;
+                txt.sections[0].value = gear.get_status();
+            }
+        }
     }
 }

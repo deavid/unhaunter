@@ -38,10 +38,18 @@ impl Inventory {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EquipmentPosition {
+    Hand(Hand),
+    Stowed,
+    // Van,
+    // Ground,
+}
+
 #[derive(Component, Debug, Clone)]
 pub struct InventoryStats;
 
-#[derive(Clone, Debug, Resource, Default)]
+#[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {
     pub left_hand: Gear,
     pub right_hand: Gear,
@@ -49,6 +57,16 @@ pub struct PlayerGear {
 }
 
 impl PlayerGear {
+    pub fn as_vec(&self) -> Vec<(&Gear, EquipmentPosition)> {
+        let mut ret = vec![
+            (&self.left_hand, EquipmentPosition::Hand(Hand::Left)),
+            (&self.right_hand, EquipmentPosition::Hand(Hand::Right)),
+        ];
+        for g in self.inventory.iter() {
+            ret.push((g, EquipmentPosition::Stowed));
+        }
+        ret
+    }
     pub fn new() -> Self {
         Self {
             left_hand: Flashlight::default().into(),

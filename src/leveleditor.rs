@@ -3,8 +3,9 @@ use std::collections::VecDeque;
 
 use crate::{
     behavior::{Behavior, Orientation},
-    board::{self, BoardPosition, CollisionFieldData},
+    board::{self, BoardPosition, CollisionFieldData, Direction},
     game::{self, GameSound, GhostSprite, SoundType},
+    gear::{playergear::PlayerGear, GearKind},
     materials::CustomMaterial1,
 };
 use bevy::{prelude::*, utils::HashMap};
@@ -63,7 +64,12 @@ pub fn apply_lighting(
     mut qt: Query<(&board::Position, &mut Sprite, Option<&GhostSprite>)>,
     mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &Behavior)>,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    qp: Query<(&board::Position, &game::PlayerSprite, &board::Direction)>,
+    qp: Query<(
+        &board::Position,
+        &game::PlayerSprite,
+        &board::Direction,
+        &PlayerGear,
+    )>,
     mut bf: ResMut<board::BoardData>,
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
@@ -77,13 +83,29 @@ pub fn apply_lighting(
     let mut exp_count: f32 = 0.001;
     let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
-    const FLASHLIGHT_ON: bool = true;
-    const FLASHLIGHT_POWER: f32 = 0.5;
-    // FIXME: This function should not be in level editor
-    // FIXME: We need to track the current player of the client (might not be id=1)
-    for (pos, player, direction) in qp.iter() {
-        if FLASHLIGHT_ON && player.torch_enabled {
-            flashlights.push((pos, direction));
+
+    for (pos, player, direction, gear) in qp.iter() {
+        let player_flashlight = gear.as_vec().into_iter().filter_map(|(g, p)| {
+            if let GearKind::Flashlight(f) = &g.kind {
+                Some((f, p))
+            } else {
+                None
+            }
+        });
+        for (fl, p) in player_flashlight {
+            let power = fl.power();
+            if power > 0.0 {
+                use crate::gear::playergear::EquipmentPosition::*;
+                let mut fldir = *direction;
+                if p == Stowed {
+                    fldir = Direction {
+                        dx: fldir.dx / 1000.0,
+                        dy: fldir.dy / 1000.0,
+                        dz: fldir.dz / 1000.0,
+                    };
+                }
+                flashlights.push((pos, fldir, power));
+            }
         }
 
         if player.id != gc.player_id {
@@ -127,11 +149,10 @@ pub fn apply_lighting(
     // ---
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.01;
-    if FLASHLIGHT_ON && !flashlights.is_empty() {
-        // account for the eye seeing the flashlight on.
-        // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
-        cursor_exp += FLASHLIGHT_POWER.sqrt() / 8.0;
-    }
+    // account for the eye seeing the flashlight on.
+    // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
+    let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
+    cursor_exp += fl_total_power.sqrt() / 8.0;
 
     assert!(cursor_exp.is_normal());
     cursor_exp = cursor_exp / 2.0 + 1.0;
@@ -194,15 +215,14 @@ pub fn apply_lighting(
         let bpos_br = bpos.right();
         let bpos_tl = bpos.left();
 
-        const FL_STRENGTH: f32 = 5.0 * FLASHLIGHT_POWER; // flashlight strength
         const FL_MIN_DST: f32 = 7.0; // minimum distance for flashlight
 
         let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
             let rpos = bpos.to_position();
             let mut lux_fl = 0.0; // lux from flashlight
 
-            for (flpos, fldir) in flashlights.iter() {
-                let pdist = flpos.distance(&rpos);
+            for (flpos, fldir, flpower) in flashlights.iter() {
+                let pdist = flpos.distance(&rpos).powf(2.0);
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
                 let lpos = *flpos + *fldir / (100.0 / focus);
                 let mut lpos = lpos.unrotate_by_dir(fldir);
@@ -219,9 +239,10 @@ pub fn apply_lighting(
                     rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
                     rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
-                let dist = lpos.distance(&rpos);
-                lux_fl +=
-                    FL_STRENGTH / (dist * dist + FL_MIN_DST) * (pdist / 5.0 + 0.6).clamp(0.0, 1.0);
+                let dist = lpos
+                    .distance(&rpos)
+                    .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
+                lux_fl += flpower / (dist * dist + FL_MIN_DST) * (pdist / 5.0).clamp(0.0, 1.0);
             }
 
             lf.get(bpos).map(|lf| (lf.lux + lux_fl) / exposure)

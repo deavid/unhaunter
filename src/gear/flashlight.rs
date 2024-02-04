@@ -31,6 +31,17 @@ pub struct Flashlight {
     pub rand: u8,
 }
 
+impl Flashlight {
+    pub fn power(&self) -> f32 {
+        match self.status {
+            FlashlightStatus::Off => 0.0,
+            FlashlightStatus::Low => 2.0,
+            FlashlightStatus::Mid => 6.0,
+            FlashlightStatus::High => 10.0,
+        }
+    }
+}
+
 impl GearUsable for Flashlight {
     fn update(&mut self) {
         self.frame_counter += 1;

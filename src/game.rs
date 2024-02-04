@@ -1000,9 +1000,6 @@ pub fn load_level(
     dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
 
-    // Override any previous data when loading the map.
-    commands.insert_resource(gear::playergear::PlayerGear::new());
-
     info!("Load Level");
 
     // ---------- NEW MAP LOAD ----------
@@ -1181,6 +1178,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
+        .insert(gear::playergear::PlayerGear::new())
         .insert(PlayerSprite::new(1))
         .insert(player_spawn_points.pop().unwrap())
         .insert(board::Direction::default())
