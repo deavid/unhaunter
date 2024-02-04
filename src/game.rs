@@ -386,7 +386,7 @@ pub fn setup_ui(
                                     },
                                     ..default()
                                 })
-                                .insert(gear::Inventory::new_left());
+                                .insert(gear::playergear::Inventory::new_left());
                             parent
                                 .spawn(AtlasImageBundle {
                                     texture_atlas: handles.images.gear.clone(),
@@ -396,7 +396,7 @@ pub fn setup_ui(
                                     },
                                     ..default()
                                 })
-                                .insert(gear::Inventory::new_right());
+                                .insert(gear::playergear::Inventory::new_right());
                             let mut text_bundle = TextBundle::from_section(
                                 "IonDetector: ON\nReading: ION 2 - 30V/m\nBattery: 40%",
                                 TextStyle {
@@ -412,7 +412,7 @@ pub fn setup_ui(
                             };
                             // text_bundle.background_color = BackgroundColor(PANEL_BGCOLOR);
 
-                            parent.spawn(text_bundle).insert(gear::InventoryStats);
+                            parent.spawn(text_bundle).insert(gear::playergear::InventoryStats);
                         });
                 });
         });
@@ -1001,7 +1001,7 @@ pub fn load_level(
     commands.init_resource::<board::BoardData>();
 
     // Override any previous data when loading the map.
-    commands.insert_resource(gear::PlayerGear::new());
+    commands.insert_resource(gear::playergear::PlayerGear::new());
 
     info!("Load Level");
 

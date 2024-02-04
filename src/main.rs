@@ -51,7 +51,7 @@ fn main() {
         .init_resource::<board::SpriteDB>()
         .init_resource::<board::RoomDB>()
         .init_resource::<game::GameConfig>()
-        .init_resource::<gear::PlayerGear>()
+        .init_resource::<gear::playergear::PlayerGear>()
         .add_event::<board::BoardDataToRebuild>()
         .add_event::<game::RoomChangedEvent>()
         .add_state::<root::State>()
