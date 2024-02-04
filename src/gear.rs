@@ -1,16 +1,39 @@
+pub mod compass;
 pub mod emfmeter;
+pub mod estaticmeter;
 pub mod flashlight;
+pub mod geigercounter;
+pub mod ionmeter;
+pub mod motionsensor;
+pub mod photocam;
 pub mod playergear;
+pub mod recorder;
+pub mod redtorch;
+pub mod spiritbox;
+pub mod thermalimager;
 pub mod thermometer;
+pub mod uvtorch;
+pub mod videocam;
 
-use bevy::prelude::*;
-
-use crate::game::ControlKeys;
-
+use self::compass::Compass;
 use self::emfmeter::EMFMeter;
+use self::estaticmeter::EStaticMeter;
 use self::flashlight::Flashlight;
-use self::playergear::{Inventory, InventoryStats, PlayerGear};
+use self::geigercounter::GeigerCounter;
+use self::ionmeter::IonMeter;
+use self::motionsensor::MotionSensor;
+use self::photocam::Photocam;
+use self::recorder::Recorder;
+use self::redtorch::RedTorch;
+use self::spiritbox::SpiritBox;
+use self::thermalimager::ThermalImager;
 use self::thermometer::Thermometer;
+use self::uvtorch::UVTorch;
+use self::videocam::Videocam;
+
+use self::playergear::{Inventory, InventoryStats, PlayerGear};
+use crate::game::ControlKeys;
+use bevy::prelude::*;
 
 #[allow(dead_code)]
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
@@ -79,26 +102,43 @@ pub enum GearSpriteID {
 pub enum Gear {
     Thermometer(Thermometer),
     EMFMeter(EMFMeter),
-    Recorder,
+    Recorder(Recorder),
     Flashlight(Flashlight),
-    GeigerCounter,
-    UVTorch,
-    IonMeter,
-    SpiritBox,
-    ThermalImager,
-    RedTorch,
-    Photocam,
-    Compass,
-    EStaticMeter,
-    Videocam,
-    MotionSensor,
+    GeigerCounter(GeigerCounter),
+    UVTorch(UVTorch),
+    IonMeter(IonMeter),
+    SpiritBox(SpiritBox),
+    ThermalImager(ThermalImager),
+    RedTorch(RedTorch),
+    Photocam(Photocam),
+    Compass(Compass),
+    EStaticMeter(EStaticMeter),
+    Videocam(Videocam),
+    MotionSensor(MotionSensor),
     #[default]
     None,
 }
 
 impl GearUsable for Gear {
     fn get_display_name(&self) -> &'static str {
-        todo!()
+        match &self {
+            Gear::Thermometer(x) => x.get_display_name(),
+            Gear::Flashlight(x) => x.get_display_name(),
+            Gear::EMFMeter(x) => x.get_display_name(),
+            Gear::Recorder(x) => x.get_display_name(),
+            Gear::GeigerCounter(x) => x.get_display_name(),
+            Gear::UVTorch(x) => x.get_display_name(),
+            Gear::IonMeter(x) => x.get_display_name(),
+            Gear::Photocam(x) => x.get_display_name(),
+            Gear::SpiritBox(x) => x.get_display_name(),
+            Gear::RedTorch(x) => x.get_display_name(),
+            Gear::Compass(x) => x.get_display_name(),
+            Gear::ThermalImager(x) => x.get_display_name(),
+            Gear::EStaticMeter(x) => x.get_display_name(),
+            Gear::Videocam(x) => x.get_display_name(),
+            Gear::MotionSensor(x) => x.get_display_name(),
+            Gear::None => "",
+        }
     }
 
     fn get_status(&self) -> String {
@@ -106,18 +146,18 @@ impl GearUsable for Gear {
             Gear::Thermometer(x) => x.get_status(),
             Gear::Flashlight(x) => x.get_status(),
             Gear::EMFMeter(x) => x.get_status(),
-            Gear::Recorder => "Recorder: ON\nVolume: 35dB".to_string(),
-            Gear::GeigerCounter => "Geiger Counter: ON\nClicks: 30c/m".to_string(),
-            Gear::UVTorch => "UV Torch: ON\nBattery: 75%".to_string(),
-            Gear::IonMeter => "Ion Meter: ON\nReading: 35V/m".to_string(),
-            Gear::Photocam => "Photo Camera: Ready\nPhotos remaining: 32".to_string(),
-            Gear::SpiritBox => "Spirit Box: ON\nScanning...".to_string(),
-            Gear::RedTorch => "Red Torch: ON\nBattery: 20%".to_string(),
-            Gear::Compass => "Compass\nHeading: N".to_string(),
-            Gear::ThermalImager => "Thermal Imager: ON\nBattery: 53%".to_string(),
-            Gear::EStaticMeter => "Electrostatic Meter: ON\nReading: 120V/m".to_string(),
-            Gear::Videocam => "Video Camera: ON\nBattery: 32%".to_string(),
-            Gear::MotionSensor => "Motion Sensor\nBattery: 10%".to_string(),
+            Gear::Recorder(x) => x.get_status(),
+            Gear::GeigerCounter(x) => x.get_status(),
+            Gear::UVTorch(x) => x.get_status(),
+            Gear::IonMeter(x) => x.get_status(),
+            Gear::Photocam(x) => x.get_status(),
+            Gear::SpiritBox(x) => x.get_status(),
+            Gear::RedTorch(x) => x.get_status(),
+            Gear::Compass(x) => x.get_status(),
+            Gear::ThermalImager(x) => x.get_status(),
+            Gear::EStaticMeter(x) => x.get_status(),
+            Gear::Videocam(x) => x.get_status(),
+            Gear::MotionSensor(x) => x.get_status(),
             Gear::None => "".to_string(),
         }
     }
@@ -127,19 +167,19 @@ impl GearUsable for Gear {
         match self {
             Gear::Thermometer(x) => x.set_trigger(),
             Gear::Flashlight(x) => x.set_trigger(),
-            Gear::ThermalImager => ni(),
+            Gear::ThermalImager(x) => x.set_trigger(),
             Gear::EMFMeter(x) => x.set_trigger(),
-            Gear::Recorder => ni(),
-            Gear::GeigerCounter => ni(),
-            Gear::RedTorch => ni(),
-            Gear::UVTorch => ni(),
-            Gear::Photocam => ni(),
-            Gear::IonMeter => ni(),
-            Gear::SpiritBox => ni(),
-            Gear::Compass => ni(),
-            Gear::EStaticMeter => ni(),
-            Gear::Videocam => ni(),
-            Gear::MotionSensor => ni(),
+            Gear::Recorder(x) => x.set_trigger(),
+            Gear::GeigerCounter(x) => x.set_trigger(),
+            Gear::RedTorch(x) => x.set_trigger(),
+            Gear::UVTorch(x) => x.set_trigger(),
+            Gear::Photocam(x) => x.set_trigger(),
+            Gear::IonMeter(x) => x.set_trigger(),
+            Gear::SpiritBox(x) => x.set_trigger(),
+            Gear::Compass(x) => x.set_trigger(),
+            Gear::EStaticMeter(x) => x.set_trigger(),
+            Gear::Videocam(x) => x.set_trigger(),
+            Gear::MotionSensor(x) => x.set_trigger(),
             Gear::None => ni(),
         }
     }
@@ -148,19 +188,19 @@ impl GearUsable for Gear {
         match &self {
             Gear::Thermometer(x) => x.get_sprite_idx(),
             Gear::Flashlight(x) => x.get_sprite_idx(),
-            Gear::ThermalImager => GearSpriteID::ThermalImagerOn,
+            Gear::ThermalImager(x) => x.get_sprite_idx(),
             Gear::EMFMeter(x) => x.get_sprite_idx(),
-            Gear::Recorder => GearSpriteID::Recorder1,
-            Gear::GeigerCounter => GearSpriteID::GeigerOn,
-            Gear::RedTorch => GearSpriteID::RedTorchOn,
-            Gear::UVTorch => GearSpriteID::UVTorchOn,
-            Gear::Photocam => GearSpriteID::Photocam,
-            Gear::IonMeter => GearSpriteID::IonMeter0,
-            Gear::SpiritBox => GearSpriteID::SpiritBoxScan1,
-            Gear::Compass => GearSpriteID::Compass,
-            Gear::EStaticMeter => GearSpriteID::EStaticMeter,
-            Gear::Videocam => GearSpriteID::Videocam,
-            Gear::MotionSensor => GearSpriteID::MotionSensor,
+            Gear::Recorder(x) => x.get_sprite_idx(),
+            Gear::GeigerCounter(x) => x.get_sprite_idx(),
+            Gear::RedTorch(x) => x.get_sprite_idx(),
+            Gear::UVTorch(x) => x.get_sprite_idx(),
+            Gear::Photocam(x) => x.get_sprite_idx(),
+            Gear::IonMeter(x) => x.get_sprite_idx(),
+            Gear::SpiritBox(x) => x.get_sprite_idx(),
+            Gear::Compass(x) => x.get_sprite_idx(),
+            Gear::EStaticMeter(x) => x.get_sprite_idx(),
+            Gear::Videocam(x) => x.get_sprite_idx(),
+            Gear::MotionSensor(x) => x.get_sprite_idx(),
             Gear::None => GearSpriteID::None,
         }
     }
@@ -171,19 +211,19 @@ impl GearUsable for Gear {
         match self {
             Gear::Thermometer(x) => x.update(),
             Gear::Flashlight(x) => x.update(),
-            Gear::ThermalImager => {}
+            Gear::ThermalImager(x) => x.update(),
             Gear::EMFMeter(x) => x.update(),
-            Gear::Recorder => {}
-            Gear::GeigerCounter => {}
-            Gear::RedTorch => {}
-            Gear::UVTorch => {}
-            Gear::Photocam => {}
-            Gear::IonMeter => {}
-            Gear::SpiritBox => {}
-            Gear::Compass => {}
-            Gear::EStaticMeter => {}
-            Gear::Videocam => {}
-            Gear::MotionSensor => {}
+            Gear::Recorder(x) => x.update(),
+            Gear::GeigerCounter(x) => x.update(),
+            Gear::RedTorch(x) => x.update(),
+            Gear::UVTorch(x) => x.update(),
+            Gear::Photocam(x) => x.update(),
+            Gear::IonMeter(x) => x.update(),
+            Gear::SpiritBox(x) => x.update(),
+            Gear::Compass(x) => x.update(),
+            Gear::EStaticMeter(x) => x.update(),
+            Gear::Videocam(x) => x.update(),
+            Gear::MotionSensor(x) => x.update(),
             Gear::None => {}
         }
     }

@@ -1,7 +1,22 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
-use super::{emfmeter::EMFMeter, flashlight::Flashlight, thermometer::Thermometer, Gear};
+use super::compass::Compass;
+use super::emfmeter::EMFMeter;
+use super::estaticmeter::EStaticMeter;
+use super::flashlight::Flashlight;
+use super::geigercounter::GeigerCounter;
+use super::ionmeter::IonMeter;
+use super::motionsensor::MotionSensor;
+use super::photocam::Photocam;
+use super::recorder::Recorder;
+use super::redtorch::RedTorch;
+use super::spiritbox::SpiritBox;
+use super::thermalimager::ThermalImager;
+use super::thermometer::Thermometer;
+use super::uvtorch::UVTorch;
+use super::videocam::Videocam;
+use super::Gear;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence)]
 pub enum Hand {
@@ -40,18 +55,18 @@ impl PlayerGear {
             right_hand: Gear::Thermometer(Thermometer::default()),
             inventory: vec![
                 Gear::EMFMeter(EMFMeter::default()),
-                Gear::GeigerCounter,
-                Gear::UVTorch,
-                Gear::Recorder,
-                Gear::IonMeter,
-                Gear::SpiritBox,
-                Gear::ThermalImager,
-                Gear::RedTorch,
-                Gear::Photocam,
-                Gear::Compass,
-                Gear::EStaticMeter,
-                Gear::Videocam,
-                Gear::MotionSensor,
+                Gear::GeigerCounter(GeigerCounter::default()),
+                Gear::UVTorch(UVTorch::default()),
+                Gear::Recorder(Recorder::default()),
+                Gear::IonMeter(IonMeter::default()),
+                Gear::SpiritBox(SpiritBox::default()),
+                Gear::ThermalImager(ThermalImager::default()),
+                Gear::RedTorch(RedTorch::default()),
+                Gear::Photocam(Photocam::default()),
+                Gear::Compass(Compass::default()),
+                Gear::EStaticMeter(EStaticMeter::default()),
+                Gear::Videocam(Videocam::default()),
+                Gear::MotionSensor(MotionSensor::default()),
             ],
         }
     }
