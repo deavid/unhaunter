@@ -67,6 +67,16 @@ impl PlayerGear {
         }
         ret
     }
+    pub fn as_vec_mut(&mut self) -> Vec<(&mut Gear, EquipmentPosition)> {
+        let mut ret = vec![
+            (&mut self.left_hand, EquipmentPosition::Hand(Hand::Left)),
+            (&mut self.right_hand, EquipmentPosition::Hand(Hand::Right)),
+        ];
+        for g in self.inventory.iter_mut() {
+            ret.push((g, EquipmentPosition::Stowed));
+        }
+        ret
+    }
     pub fn new() -> Self {
         Self {
             left_hand: Flashlight::default().into(),

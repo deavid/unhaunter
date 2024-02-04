@@ -31,8 +31,10 @@ use self::thermometer::Thermometer;
 use self::uvtorch::UVTorch;
 use self::videocam::Videocam;
 
-use self::playergear::{Inventory, InventoryStats, PlayerGear};
+use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear};
+use crate::board::{self, Position};
 use crate::game::{GameConfig, PlayerSprite};
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 #[allow(dead_code)]
@@ -98,7 +100,7 @@ pub enum GearSpriteID {
     None,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Clone)]
 pub enum GearKind {
     Thermometer(Thermometer),
     EMFMeter(EMFMeter),
@@ -119,7 +121,7 @@ pub enum GearKind {
     None,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Gear {
     pub kind: GearKind,
 }
@@ -173,24 +175,27 @@ impl GearUsable for Gear {
         }
     }
 
-    fn set_trigger(&mut self) {
+    fn set_trigger(&mut self, gs: &mut GearStuff) {
+        let sound_file = "sounds/switch-on-1.ogg";
+        gs.play_audio(sound_file.into(), 0.6);
+
         let ni = |s| warn!("Trigger not implemented for {:?}", s);
         match &mut self.kind {
-            GearKind::Thermometer(x) => x.set_trigger(),
-            GearKind::Flashlight(x) => x.set_trigger(),
-            GearKind::ThermalImager(x) => x.set_trigger(),
-            GearKind::EMFMeter(x) => x.set_trigger(),
-            GearKind::Recorder(x) => x.set_trigger(),
-            GearKind::GeigerCounter(x) => x.set_trigger(),
-            GearKind::RedTorch(x) => x.set_trigger(),
-            GearKind::UVTorch(x) => x.set_trigger(),
-            GearKind::Photocam(x) => x.set_trigger(),
-            GearKind::IonMeter(x) => x.set_trigger(),
-            GearKind::SpiritBox(x) => x.set_trigger(),
-            GearKind::Compass(x) => x.set_trigger(),
-            GearKind::EStaticMeter(x) => x.set_trigger(),
-            GearKind::Videocam(x) => x.set_trigger(),
-            GearKind::MotionSensor(x) => x.set_trigger(),
+            GearKind::Thermometer(x) => x.set_trigger(gs),
+            GearKind::Flashlight(x) => x.set_trigger(gs),
+            GearKind::ThermalImager(x) => x.set_trigger(gs),
+            GearKind::EMFMeter(x) => x.set_trigger(gs),
+            GearKind::Recorder(x) => x.set_trigger(gs),
+            GearKind::GeigerCounter(x) => x.set_trigger(gs),
+            GearKind::RedTorch(x) => x.set_trigger(gs),
+            GearKind::UVTorch(x) => x.set_trigger(gs),
+            GearKind::Photocam(x) => x.set_trigger(gs),
+            GearKind::IonMeter(x) => x.set_trigger(gs),
+            GearKind::SpiritBox(x) => x.set_trigger(gs),
+            GearKind::Compass(x) => x.set_trigger(gs),
+            GearKind::EStaticMeter(x) => x.set_trigger(gs),
+            GearKind::Videocam(x) => x.set_trigger(gs),
+            GearKind::MotionSensor(x) => x.set_trigger(gs),
             GearKind::None => ni(&self),
         }
     }
@@ -218,23 +223,23 @@ impl GearUsable for Gear {
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
-    fn update(&mut self) {
+    fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
         match &mut self.kind {
-            GearKind::Thermometer(x) => x.update(),
-            GearKind::Flashlight(x) => x.update(),
-            GearKind::ThermalImager(x) => x.update(),
-            GearKind::EMFMeter(x) => x.update(),
-            GearKind::Recorder(x) => x.update(),
-            GearKind::GeigerCounter(x) => x.update(),
-            GearKind::RedTorch(x) => x.update(),
-            GearKind::UVTorch(x) => x.update(),
-            GearKind::Photocam(x) => x.update(),
-            GearKind::IonMeter(x) => x.update(),
-            GearKind::SpiritBox(x) => x.update(),
-            GearKind::Compass(x) => x.update(),
-            GearKind::EStaticMeter(x) => x.update(),
-            GearKind::Videocam(x) => x.update(),
-            GearKind::MotionSensor(x) => x.update(),
+            GearKind::Thermometer(x) => x.update(gs, pos, ep),
+            GearKind::Flashlight(x) => x.update(gs, pos, ep),
+            GearKind::ThermalImager(x) => x.update(gs, pos, ep),
+            GearKind::EMFMeter(x) => x.update(gs, pos, ep),
+            GearKind::Recorder(x) => x.update(gs, pos, ep),
+            GearKind::GeigerCounter(x) => x.update(gs, pos, ep),
+            GearKind::RedTorch(x) => x.update(gs, pos, ep),
+            GearKind::UVTorch(x) => x.update(gs, pos, ep),
+            GearKind::Photocam(x) => x.update(gs, pos, ep),
+            GearKind::IonMeter(x) => x.update(gs, pos, ep),
+            GearKind::SpiritBox(x) => x.update(gs, pos, ep),
+            GearKind::Compass(x) => x.update(gs, pos, ep),
+            GearKind::EStaticMeter(x) => x.update(gs, pos, ep),
+            GearKind::Videocam(x) => x.update(gs, pos, ep),
+            GearKind::MotionSensor(x) => x.update(gs, pos, ep),
             GearKind::None => {}
         }
     }
@@ -250,19 +255,17 @@ pub fn on_off(s: bool) -> &'static str {
 pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn get_display_name(&self) -> &'static str;
     fn get_status(&self) -> String;
-    fn set_trigger(&mut self);
-    fn update(&mut self) {}
+    fn set_trigger(&mut self, gs: &mut GearStuff);
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
     fn get_sprite_idx(&self) -> GearSpriteID;
     fn box_clone(&self) -> Box<dyn GearUsable>;
 }
 
 pub fn keyboard_gear(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
     keyboard_input: Res<Input<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    mut gs: GearStuff,
 ) {
-    let sound_file = "sounds/switch-on-1.ogg";
     for (ps, mut playergear) in q_gear.iter_mut() {
         if keyboard_input.just_pressed(ps.controls.cycle) {
             playergear.cycle();
@@ -271,43 +274,25 @@ pub fn keyboard_gear(
             playergear.swap();
         }
         if keyboard_input.just_released(ps.controls.trigger) {
-            playergear.right_hand.set_trigger();
-            commands.spawn(AudioBundle {
-                source: asset_server.load(sound_file),
-                settings: PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Once,
-                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.6)),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                },
-            });
+            playergear.right_hand.set_trigger(&mut gs);
         }
         if keyboard_input.just_released(ps.controls.torch) {
-            playergear.left_hand.set_trigger();
-            commands.spawn(AudioBundle {
-                source: asset_server.load(sound_file),
-                settings: PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Once,
-                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.3)),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                },
-            });
+            playergear.left_hand.set_trigger(&mut gs);
         }
     }
 }
 
 pub fn update_gear_inventory(
     gc: Res<GameConfig>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    mut q_gear: Query<(&PlayerSprite, &Position, &mut PlayerGear)>,
     mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
     mut qs: Query<(&InventoryStats, &mut Text)>,
+    mut gs: GearStuff,
 ) {
-    for (ps, mut playergear) in q_gear.iter_mut() {
-        playergear.left_hand.update();
-        playergear.right_hand.update();
+    for (ps, position, mut playergear) in q_gear.iter_mut() {
+        for (gear, epos) in playergear.as_vec_mut().into_iter() {
+            gear.update(&mut gs, position, &epos);
+        }
 
         if gc.player_id == ps.id {
             for (inv, mut utai) in qi.iter_mut() {
@@ -320,5 +305,27 @@ pub fn update_gear_inventory(
                 txt.sections[0].value = gear.get_status();
             }
         }
+    }
+}
+
+#[derive(SystemParam)]
+pub struct GearStuff<'w, 's> {
+    _bf: ResMut<'w, board::BoardData>,
+    commands: Commands<'w, 's>,
+    asset_server: Res<'w, AssetServer>,
+}
+
+impl<'w, 's> GearStuff<'w, 's> {
+    pub fn play_audio(&mut self, sound_file: String, volume: f32) {
+        self.commands.spawn(AudioBundle {
+            source: self.asset_server.load(sound_file),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Once,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(volume)),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+            },
+        });
     }
 }

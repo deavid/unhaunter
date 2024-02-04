@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable};
+use crate::board::Position;
+
+use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Sequence)]
 pub enum FlashlightStatus {
@@ -24,30 +26,62 @@ impl FlashlightStatus {
     }
 }
 
-#[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Component, Debug, Clone)]
 pub struct Flashlight {
     pub status: FlashlightStatus,
+    pub inner_temp: f32,
+    pub heatsink_temp: f32,
+    pub battery_level: f32,
     pub frame_counter: u8,
     pub rand: u8,
 }
 
-impl Flashlight {
-    pub fn power(&self) -> f32 {
-        match self.status {
-            FlashlightStatus::Off => 0.0,
-            FlashlightStatus::Low => 2.0,
-            FlashlightStatus::Mid => 6.0,
-            FlashlightStatus::High => 10.0,
+impl Default for Flashlight {
+    fn default() -> Self {
+        Self {
+            status: Default::default(),
+            inner_temp: Default::default(),
+            heatsink_temp: Default::default(),
+            battery_level: 1.0,
+            frame_counter: Default::default(),
+            rand: Default::default(),
         }
     }
 }
 
+impl Flashlight {
+    pub fn power(&self) -> f32 {
+        let bat = self.battery_level.sqrt() + 0.02;
+        let pow = match self.status {
+            FlashlightStatus::Off => 0.0,
+            FlashlightStatus::Low => 2.0,
+            FlashlightStatus::Mid => 6.0,
+            FlashlightStatus::High => 10.0,
+        };
+        pow * bat
+    }
+}
+
 impl GearUsable for Flashlight {
-    fn update(&mut self) {
+    fn update(&mut self, gs: &mut super::GearStuff, _pos: &Position, _ep: &EquipmentPosition) {
         self.frame_counter += 1;
         self.frame_counter %= 210;
         if self.frame_counter % 5 == 0 {
             self.rand = rand::thread_rng().gen_range(0..12);
+        }
+        self.battery_level -= self.power() / 500000.0;
+        if self.battery_level < 0.0 {
+            self.battery_level = 0.0;
+            self.status = FlashlightStatus::Off;
+        }
+        self.inner_temp += self.power() / 10000.0;
+        self.inner_temp /= 1.0006;
+
+        const HS_MASS: f32 = 200.0;
+        self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
+        if self.heatsink_temp > 1.0 && self.status != FlashlightStatus::Off {
+            self.status = FlashlightStatus::Off;
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.2);
         }
     }
     fn get_sprite_idx(&self) -> GearSpriteID {
@@ -75,10 +109,20 @@ impl GearUsable for Flashlight {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = self.status.string();
-        format!("{name}: {on_s}")
+        let overheat = if self.heatsink_temp > 0.8 {
+            "OVERHEAT"
+        } else {
+            ""
+        };
+        let heat_temp = 15.0 + self.heatsink_temp * 70.0;
+
+        format!(
+            "{name}: {on_s}\nBattery: {:.0}% {heat_temp:.1}ºC {overheat}",
+            self.battery_level * 100.0
+        )
     }
 
-    fn set_trigger(&mut self) {
+    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
         self.status = self.status.next().unwrap_or_default();
     }
 

@@ -30,7 +30,7 @@ impl GearUsable for Photocam {
         format!("{name}: {on_s}\n{msg}")
     }
 
-    fn set_trigger(&mut self) {
+    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
         self.enabled = !self.enabled;
     }
 
