@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
 
-use super::{GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Sequence)]
 pub enum FlashlightStatus {
@@ -73,5 +73,11 @@ impl GearUsable for Flashlight {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+}
+
+impl From<Flashlight> for Gear {
+    fn from(value: Flashlight) -> Self {
+        Gear::new_from_kind(GearKind::Flashlight(value))
     }
 }

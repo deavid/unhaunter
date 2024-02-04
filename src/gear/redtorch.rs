@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{on_off, GearSpriteID, GearUsable};
+use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct RedTorch {
@@ -36,5 +36,11 @@ impl GearUsable for RedTorch {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+}
+
+impl From<RedTorch> for Gear {
+    fn from(value: RedTorch) -> Self {
+        Gear::new_from_kind(GearKind::RedTorch(value))
     }
 }

@@ -99,7 +99,7 @@ pub enum GearSpriteID {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub enum Gear {
+pub enum GearKind {
     Thermometer(Thermometer),
     EMFMeter(EMFMeter),
     Recorder(Recorder),
@@ -119,112 +119,123 @@ pub enum Gear {
     None,
 }
 
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
+pub struct Gear {
+    pub kind: GearKind,
+}
+
+impl Gear {
+    pub fn new_from_kind(kind: GearKind) -> Self {
+        Self { kind }
+    }
+}
+
 impl GearUsable for Gear {
     fn get_display_name(&self) -> &'static str {
-        match &self {
-            Gear::Thermometer(x) => x.get_display_name(),
-            Gear::Flashlight(x) => x.get_display_name(),
-            Gear::EMFMeter(x) => x.get_display_name(),
-            Gear::Recorder(x) => x.get_display_name(),
-            Gear::GeigerCounter(x) => x.get_display_name(),
-            Gear::UVTorch(x) => x.get_display_name(),
-            Gear::IonMeter(x) => x.get_display_name(),
-            Gear::Photocam(x) => x.get_display_name(),
-            Gear::SpiritBox(x) => x.get_display_name(),
-            Gear::RedTorch(x) => x.get_display_name(),
-            Gear::Compass(x) => x.get_display_name(),
-            Gear::ThermalImager(x) => x.get_display_name(),
-            Gear::EStaticMeter(x) => x.get_display_name(),
-            Gear::Videocam(x) => x.get_display_name(),
-            Gear::MotionSensor(x) => x.get_display_name(),
-            Gear::None => "",
+        match &self.kind {
+            GearKind::Thermometer(x) => x.get_display_name(),
+            GearKind::Flashlight(x) => x.get_display_name(),
+            GearKind::EMFMeter(x) => x.get_display_name(),
+            GearKind::Recorder(x) => x.get_display_name(),
+            GearKind::GeigerCounter(x) => x.get_display_name(),
+            GearKind::UVTorch(x) => x.get_display_name(),
+            GearKind::IonMeter(x) => x.get_display_name(),
+            GearKind::Photocam(x) => x.get_display_name(),
+            GearKind::SpiritBox(x) => x.get_display_name(),
+            GearKind::RedTorch(x) => x.get_display_name(),
+            GearKind::Compass(x) => x.get_display_name(),
+            GearKind::ThermalImager(x) => x.get_display_name(),
+            GearKind::EStaticMeter(x) => x.get_display_name(),
+            GearKind::Videocam(x) => x.get_display_name(),
+            GearKind::MotionSensor(x) => x.get_display_name(),
+            GearKind::None => "",
         }
     }
 
     fn get_status(&self) -> String {
-        match &self {
-            Gear::Thermometer(x) => x.get_status(),
-            Gear::Flashlight(x) => x.get_status(),
-            Gear::EMFMeter(x) => x.get_status(),
-            Gear::Recorder(x) => x.get_status(),
-            Gear::GeigerCounter(x) => x.get_status(),
-            Gear::UVTorch(x) => x.get_status(),
-            Gear::IonMeter(x) => x.get_status(),
-            Gear::Photocam(x) => x.get_status(),
-            Gear::SpiritBox(x) => x.get_status(),
-            Gear::RedTorch(x) => x.get_status(),
-            Gear::Compass(x) => x.get_status(),
-            Gear::ThermalImager(x) => x.get_status(),
-            Gear::EStaticMeter(x) => x.get_status(),
-            Gear::Videocam(x) => x.get_status(),
-            Gear::MotionSensor(x) => x.get_status(),
-            Gear::None => "".to_string(),
+        match &self.kind {
+            GearKind::Thermometer(x) => x.get_status(),
+            GearKind::Flashlight(x) => x.get_status(),
+            GearKind::EMFMeter(x) => x.get_status(),
+            GearKind::Recorder(x) => x.get_status(),
+            GearKind::GeigerCounter(x) => x.get_status(),
+            GearKind::UVTorch(x) => x.get_status(),
+            GearKind::IonMeter(x) => x.get_status(),
+            GearKind::Photocam(x) => x.get_status(),
+            GearKind::SpiritBox(x) => x.get_status(),
+            GearKind::RedTorch(x) => x.get_status(),
+            GearKind::Compass(x) => x.get_status(),
+            GearKind::ThermalImager(x) => x.get_status(),
+            GearKind::EStaticMeter(x) => x.get_status(),
+            GearKind::Videocam(x) => x.get_status(),
+            GearKind::MotionSensor(x) => x.get_status(),
+            GearKind::None => "".to_string(),
         }
     }
 
     fn set_trigger(&mut self) {
-        let ni = || warn!("Trigger not implemented for {:?}", self);
-        match self {
-            Gear::Thermometer(x) => x.set_trigger(),
-            Gear::Flashlight(x) => x.set_trigger(),
-            Gear::ThermalImager(x) => x.set_trigger(),
-            Gear::EMFMeter(x) => x.set_trigger(),
-            Gear::Recorder(x) => x.set_trigger(),
-            Gear::GeigerCounter(x) => x.set_trigger(),
-            Gear::RedTorch(x) => x.set_trigger(),
-            Gear::UVTorch(x) => x.set_trigger(),
-            Gear::Photocam(x) => x.set_trigger(),
-            Gear::IonMeter(x) => x.set_trigger(),
-            Gear::SpiritBox(x) => x.set_trigger(),
-            Gear::Compass(x) => x.set_trigger(),
-            Gear::EStaticMeter(x) => x.set_trigger(),
-            Gear::Videocam(x) => x.set_trigger(),
-            Gear::MotionSensor(x) => x.set_trigger(),
-            Gear::None => ni(),
+        let ni = |s| warn!("Trigger not implemented for {:?}", s);
+        match &mut self.kind {
+            GearKind::Thermometer(x) => x.set_trigger(),
+            GearKind::Flashlight(x) => x.set_trigger(),
+            GearKind::ThermalImager(x) => x.set_trigger(),
+            GearKind::EMFMeter(x) => x.set_trigger(),
+            GearKind::Recorder(x) => x.set_trigger(),
+            GearKind::GeigerCounter(x) => x.set_trigger(),
+            GearKind::RedTorch(x) => x.set_trigger(),
+            GearKind::UVTorch(x) => x.set_trigger(),
+            GearKind::Photocam(x) => x.set_trigger(),
+            GearKind::IonMeter(x) => x.set_trigger(),
+            GearKind::SpiritBox(x) => x.set_trigger(),
+            GearKind::Compass(x) => x.set_trigger(),
+            GearKind::EStaticMeter(x) => x.set_trigger(),
+            GearKind::Videocam(x) => x.set_trigger(),
+            GearKind::MotionSensor(x) => x.set_trigger(),
+            GearKind::None => ni(&self),
         }
     }
 
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match &self {
-            Gear::Thermometer(x) => x.get_sprite_idx(),
-            Gear::Flashlight(x) => x.get_sprite_idx(),
-            Gear::ThermalImager(x) => x.get_sprite_idx(),
-            Gear::EMFMeter(x) => x.get_sprite_idx(),
-            Gear::Recorder(x) => x.get_sprite_idx(),
-            Gear::GeigerCounter(x) => x.get_sprite_idx(),
-            Gear::RedTorch(x) => x.get_sprite_idx(),
-            Gear::UVTorch(x) => x.get_sprite_idx(),
-            Gear::Photocam(x) => x.get_sprite_idx(),
-            Gear::IonMeter(x) => x.get_sprite_idx(),
-            Gear::SpiritBox(x) => x.get_sprite_idx(),
-            Gear::Compass(x) => x.get_sprite_idx(),
-            Gear::EStaticMeter(x) => x.get_sprite_idx(),
-            Gear::Videocam(x) => x.get_sprite_idx(),
-            Gear::MotionSensor(x) => x.get_sprite_idx(),
-            Gear::None => GearSpriteID::None,
+        match &self.kind {
+            GearKind::Thermometer(x) => x.get_sprite_idx(),
+            GearKind::Flashlight(x) => x.get_sprite_idx(),
+            GearKind::ThermalImager(x) => x.get_sprite_idx(),
+            GearKind::EMFMeter(x) => x.get_sprite_idx(),
+            GearKind::Recorder(x) => x.get_sprite_idx(),
+            GearKind::GeigerCounter(x) => x.get_sprite_idx(),
+            GearKind::RedTorch(x) => x.get_sprite_idx(),
+            GearKind::UVTorch(x) => x.get_sprite_idx(),
+            GearKind::Photocam(x) => x.get_sprite_idx(),
+            GearKind::IonMeter(x) => x.get_sprite_idx(),
+            GearKind::SpiritBox(x) => x.get_sprite_idx(),
+            GearKind::Compass(x) => x.get_sprite_idx(),
+            GearKind::EStaticMeter(x) => x.get_sprite_idx(),
+            GearKind::Videocam(x) => x.get_sprite_idx(),
+            GearKind::MotionSensor(x) => x.get_sprite_idx(),
+            GearKind::None => GearSpriteID::None,
         }
     }
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
     fn update(&mut self) {
-        match self {
-            Gear::Thermometer(x) => x.update(),
-            Gear::Flashlight(x) => x.update(),
-            Gear::ThermalImager(x) => x.update(),
-            Gear::EMFMeter(x) => x.update(),
-            Gear::Recorder(x) => x.update(),
-            Gear::GeigerCounter(x) => x.update(),
-            Gear::RedTorch(x) => x.update(),
-            Gear::UVTorch(x) => x.update(),
-            Gear::Photocam(x) => x.update(),
-            Gear::IonMeter(x) => x.update(),
-            Gear::SpiritBox(x) => x.update(),
-            Gear::Compass(x) => x.update(),
-            Gear::EStaticMeter(x) => x.update(),
-            Gear::Videocam(x) => x.update(),
-            Gear::MotionSensor(x) => x.update(),
-            Gear::None => {}
+        match &mut self.kind {
+            GearKind::Thermometer(x) => x.update(),
+            GearKind::Flashlight(x) => x.update(),
+            GearKind::ThermalImager(x) => x.update(),
+            GearKind::EMFMeter(x) => x.update(),
+            GearKind::Recorder(x) => x.update(),
+            GearKind::GeigerCounter(x) => x.update(),
+            GearKind::RedTorch(x) => x.update(),
+            GearKind::UVTorch(x) => x.update(),
+            GearKind::Photocam(x) => x.update(),
+            GearKind::IonMeter(x) => x.update(),
+            GearKind::SpiritBox(x) => x.update(),
+            GearKind::Compass(x) => x.update(),
+            GearKind::EStaticMeter(x) => x.update(),
+            GearKind::Videocam(x) => x.update(),
+            GearKind::MotionSensor(x) => x.update(),
+            GearKind::None => {}
         }
     }
 }

@@ -51,22 +51,22 @@ pub struct PlayerGear {
 impl PlayerGear {
     pub fn new() -> Self {
         Self {
-            left_hand: Gear::Flashlight(Flashlight::default()),
-            right_hand: Gear::Thermometer(Thermometer::default()),
+            left_hand: Flashlight::default().into(),
+            right_hand: Thermometer::default().into(),
             inventory: vec![
-                Gear::EMFMeter(EMFMeter::default()),
-                Gear::GeigerCounter(GeigerCounter::default()),
-                Gear::UVTorch(UVTorch::default()),
-                Gear::Recorder(Recorder::default()),
-                Gear::IonMeter(IonMeter::default()),
-                Gear::SpiritBox(SpiritBox::default()),
-                Gear::ThermalImager(ThermalImager::default()),
-                Gear::RedTorch(RedTorch::default()),
-                Gear::Photocam(Photocam::default()),
-                Gear::Compass(Compass::default()),
-                Gear::EStaticMeter(EStaticMeter::default()),
-                Gear::Videocam(Videocam::default()),
-                Gear::MotionSensor(MotionSensor::default()),
+                EMFMeter::default().into(),
+                GeigerCounter::default().into(),
+                UVTorch::default().into(),
+                Recorder::default().into(),
+                IonMeter::default().into(),
+                SpiritBox::default().into(),
+                ThermalImager::default().into(),
+                RedTorch::default().into(),
+                Photocam::default().into(),
+                Compass::default().into(),
+                EStaticMeter::default().into(),
+                Videocam::default().into(),
+                MotionSensor::default().into(),
             ],
         }
     }

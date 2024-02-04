@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{on_off, GearSpriteID, GearUsable};
+use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct EMFMeter {
@@ -36,5 +36,11 @@ impl GearUsable for EMFMeter {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+}
+
+impl From<EMFMeter> for Gear {
+    fn from(value: EMFMeter) -> Self {
+        Gear::new_from_kind(GearKind::EMFMeter(value))
     }
 }

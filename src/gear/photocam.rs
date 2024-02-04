@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{on_off, GearSpriteID, GearUsable};
+use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Photocam {
@@ -36,5 +36,11 @@ impl GearUsable for Photocam {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+}
+
+impl From<Photocam> for Gear {
+    fn from(value: Photocam) -> Self {
+        Gear::new_from_kind(GearKind::Photocam(value))
     }
 }

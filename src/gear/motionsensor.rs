@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{on_off, GearSpriteID, GearUsable};
+use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct MotionSensor {
@@ -36,5 +36,11 @@ impl GearUsable for MotionSensor {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+}
+
+impl From<MotionSensor> for Gear {
+    fn from(value: MotionSensor) -> Self {
+        Gear::new_from_kind(GearKind::MotionSensor(value))
     }
 }

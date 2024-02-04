@@ -1241,15 +1241,17 @@ pub fn roomchanged_event(
     }
 
     for (entity, item_pos, behavior, room_state) in interactables.iter() {
-        if interactive_stuff.execute_interaction(
+        let changed = interactive_stuff.execute_interaction(
             entity,
             item_pos,
             None,
             behavior,
             Some(room_state),
             InteractionExecutionType::ReadRoomState,
-        ) {
-            dbg!(&behavior);
+        );
+
+        if changed {
+            // dbg!(&behavior);
         }
     }
     ev_bdr.send(BoardDataToRebuild {
