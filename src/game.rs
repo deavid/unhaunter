@@ -44,7 +44,6 @@ pub enum SoundType {
 pub struct PlayerSprite {
     pub id: usize,
     pub controls: ControlKeys,
-    pub torch_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Event)]
@@ -67,7 +66,6 @@ impl PlayerSprite {
         Self {
             id,
             controls: Self::default_controls(id),
-            torch_enabled: true,
         }
     }
     pub fn default_controls(id: usize) -> ControlKeys {
@@ -533,8 +531,6 @@ pub fn keyboard_player(
         &mut PlayerSprite,
         &mut AnimationTimer,
     )>,
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
     colhand: CollisionHandler,
     interactables: Query<
         (
@@ -555,7 +551,7 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
-    for (mut pos, mut dir, mut player, mut anim) in players.iter_mut() {
+    for (mut pos, mut dir, player, mut anim) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
@@ -577,23 +573,6 @@ pub fn keyboard_player(
         }
         if keyboard_input.pressed(player.controls.right) {
             d.dx += 1.0;
-        }
-        if keyboard_input.just_pressed(player.controls.torch) {
-            player.torch_enabled = !player.torch_enabled;
-            let sound_file = match player.torch_enabled {
-                true => "sounds/switch-on-1.ogg",
-                false => "sounds/switch-off-1.ogg",
-            };
-            commands.spawn(AudioBundle {
-                source: asset_server.load(sound_file),
-                settings: PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Once,
-                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                },
-            });
         }
 
         d = d.normalized();

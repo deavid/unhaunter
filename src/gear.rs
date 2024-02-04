@@ -257,9 +257,12 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
 }
 
 pub fn keyboard_gear(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     keyboard_input: Res<Input<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
 ) {
+    let sound_file = "sounds/switch-on-1.ogg";
     for (ps, mut playergear) in q_gear.iter_mut() {
         if keyboard_input.just_pressed(ps.controls.cycle) {
             playergear.cycle();
@@ -267,11 +270,31 @@ pub fn keyboard_gear(
         if keyboard_input.just_pressed(ps.controls.swap) {
             playergear.swap();
         }
-        if keyboard_input.just_pressed(ps.controls.trigger) {
+        if keyboard_input.just_released(ps.controls.trigger) {
             playergear.right_hand.set_trigger();
+            commands.spawn(AudioBundle {
+                source: asset_server.load(sound_file),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Once,
+                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.6)),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                },
+            });
         }
-        if keyboard_input.just_pressed(ps.controls.torch) {
+        if keyboard_input.just_released(ps.controls.torch) {
             playergear.left_hand.set_trigger();
+            commands.spawn(AudioBundle {
+                source: asset_server.load(sound_file),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Once,
+                    volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.3)),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                },
+            });
         }
     }
 }
