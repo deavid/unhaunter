@@ -58,6 +58,31 @@ impl Behavior {
         }
         self.cfg.orientation.clone()
     }
+    /// Amount of "watts" of heat poured into the environment
+    pub fn temp_heat_output(&self) -> f32 {
+        let heat_coeff = (self.p.light.heat_coef as f32).exp();
+        self.p.light.emmisivity_lumens() / 2000.0 * heat_coeff
+    }
+    /// Resistance to change temperature (how many Joules per Celsius)
+    pub fn _temp_heat_capacity(&self) -> f32 {
+        let f1 = match self.p.light.opaque {
+            true => 10000.0,
+            false => 10.0,
+        };
+        let f2 = match self.p.movement.walkable {
+            true => 100.0,
+            false => 0.0,
+        };
+        f1 + f2
+    }
+    /// Heat Conductivity, Watts per Meter*Kelvin (how many watts are transferred at a meter on a 1ºC difference)
+    /// (f32, f32): (W/mK, weight), weight is used for averaging purposes.
+    pub fn _temp_heat_conductivity(&self) -> (f32, f32) {
+        match self.p.light.opaque {
+            true => (0.001, 1000.0),
+            false => (10.0, 0.1),
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -91,6 +116,7 @@ pub struct Light {
     pub opaque: bool,
     pub emits_light: bool,
     pub emission_power: NotNan<f32>,
+    pub heat_coef: i32,
 }
 
 impl Light {
@@ -512,6 +538,7 @@ impl SpriteConfig {
                 p.display.global_z = (-0.00004).try_into().unwrap();
                 p.light.emits_light = self.state == State::On;
                 p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.heat_coef = -1;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
@@ -530,11 +557,13 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.emits_light = self.state == State::On;
                 p.light.emission_power = (7.0).try_into().unwrap();
+                p.light.heat_coef = -2;
             }
             Class::StreetLight => {
                 p.display.disable = true;
                 p.light.emits_light = true;
                 p.light.emission_power = (6.5).try_into().unwrap();
+                p.light.heat_coef = -6;
             }
             Class::Appliance => {
                 p.display.global_z = (0.000070).try_into().unwrap();
