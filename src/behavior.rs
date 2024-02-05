@@ -61,7 +61,7 @@ impl Behavior {
     /// Amount of "watts" of heat poured into the environment
     pub fn temp_heat_output(&self) -> f32 {
         let heat_coeff = (self.p.light.heat_coef as f32).exp();
-        self.p.light.emmisivity_lumens() / 2000.0 * heat_coeff
+        self.p.light.emmisivity_lumens() / 10000.0 * heat_coeff
     }
     /// Resistance to change temperature (how many Joules per Celsius)
     pub fn _temp_heat_capacity(&self) -> f32 {

@@ -79,8 +79,8 @@ impl PlayerSprite {
 
 #[derive(Component, Debug)]
 pub struct GhostSprite {
-    spawn_point: BoardPosition,
-    target_point: Option<Position>,
+    pub spawn_point: BoardPosition,
+    pub target_point: Option<Position>,
 }
 
 impl GhostSprite {
@@ -1270,13 +1270,14 @@ pub fn ghost_movement(
         } else {
             let mut target_point = ghost.spawn_point.to_position();
             let mut rng = rand::thread_rng();
+            let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-            let dist: f32 = (0..15).map(|_| rng.gen_range(0.0..2.0)).sum();
+            let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
             let dd = (dx * dx + dy * dy).sqrt() / dist;
-            const WANDER: f32 = 5.0;
-            target_point.x = (target_point.x + pos.x * WANDER) / (1.0 + WANDER) + dx / dd;
-            target_point.y = (target_point.y + pos.y * WANDER) / (1.0 + WANDER) + dy / dd;
+
+            target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
+            target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
 
             let bpos = target_point.to_board_position();
             if roomdb.room_tiles.get(&bpos).is_some()

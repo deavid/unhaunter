@@ -1,6 +1,7 @@
 use std::{f32::consts::PI, time::Instant};
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::HashMap};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -657,6 +658,7 @@ pub fn boardfield_update(
 
     qt: Query<(&Position, &Behavior)>,
 ) {
+    let mut rng = rand::thread_rng();
     // Here we will recreate the field (if needed? - not sure how to detect that)
     // ... maybe add a timer since last update.
     for bfr in ev_bdr.read() {
@@ -683,9 +685,51 @@ pub fn boardfield_update(
         // Create temperature field - only missing data
         let valid_k: Vec<_> = bf.collision_field.keys().cloned().collect();
         let ambient_temp = bf.ambient_temp;
+        let mut added_temps: Vec<BoardPosition> = vec![];
+        // Randomize initial temperatures so the player cannot exploit the fact that the data is "flat" at the beginning
         for pos in valid_k.into_iter() {
-            bf.temperature_field.entry(pos).or_insert(ambient_temp);
+            let missing = bf.temperature_field.get(&pos).is_none();
+            if missing {
+                let ambient = ambient_temp + rng.gen_range(-10.0..10.0);
+                added_temps.push(pos.clone());
+                bf.temperature_field.insert(pos, ambient);
+            }
         }
+        // Smoothen after first initialization so it is not as jumpy.
+        for _ in 0..16 {
+            for pos in added_temps.iter() {
+                let nbors = pos.xy_neighbors(1);
+                let mut t_temp = 0.0;
+                let mut count = 0.0;
+                let free_tot = bf
+                    .collision_field
+                    .get(pos)
+                    .map(|x| x.player_free)
+                    .unwrap_or(true);
+                for npos in &nbors {
+                    let free = bf
+                        .collision_field
+                        .get(npos)
+                        .map(|x| x.player_free)
+                        .unwrap_or(true);
+                    if free {
+                        t_temp += bf
+                            .temperature_field
+                            .get(npos)
+                            .copied()
+                            .unwrap_or(ambient_temp);
+                        count += 1.0;
+                    }
+                }
+                if free_tot {
+                    t_temp /= count;
+                    bf.temperature_field
+                        .entry(pos.clone())
+                        .and_modify(|x| *x = t_temp);
+                }
+            }
+        }
+
         if bfr.lighting {
             // Rebuild lighting field since it has changed
             // info!("Lighting rebuild");
