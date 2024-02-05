@@ -5,13 +5,25 @@ use crate::board::Position;
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
-#[derive(Component, Debug, Clone, Default)]
+#[derive(Component, Debug, Clone)]
 pub struct Thermometer {
     pub enabled: bool,
     pub temp: f32,
-    pub temp_l2: [f32; 6],
+    pub temp_l2: [f32; 20],
     pub temp_l1: f32,
     pub frame_counter: u16,
+}
+
+impl Default for Thermometer {
+    fn default() -> Self {
+        Self {
+            enabled: Default::default(),
+            temp: 10.0,
+            temp_l2: [10.0; 20],
+            temp_l1: 10.0,
+            frame_counter: Default::default(),
+        }
+    }
 }
 
 impl GearUsable for Thermometer {
@@ -49,16 +61,16 @@ impl GearUsable for Thermometer {
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
-        let Some(light) = gs.bf.light_field.get(&bpos) else {
+        let Some(temperature) = gs.bf.temperature_field.get(&bpos) else {
             return;
         };
-        let temp_reading = light.lux * 7.0 - 1.0;
-        const AIR_MASS: f32 = 20.0;
+        let temp_reading = temperature;
+        const AIR_MASS: f32 = 5.0;
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.temp_l2.len();
         self.temp_l2[n] = (self.temp_l2[n] * AIR_MASS + self.temp_l1) / (AIR_MASS + 1.0);
         self.temp_l1 = (self.temp_l1 * AIR_MASS + temp_reading) / (AIR_MASS + 1.0);
-        if self.frame_counter % 10 == 0 {
+        if self.frame_counter % 20 == 0 {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
@@ -76,5 +88,76 @@ impl GearUsable for Thermometer {
 impl From<Thermometer> for Gear {
     fn from(value: Thermometer) -> Self {
         Gear::new_from_kind(GearKind::Thermometer(value))
+    }
+}
+
+pub fn temperature_update(
+    mut bf: ResMut<crate::board::BoardData>,
+    roomdb: Res<crate::board::RoomDB>,
+    qt: Query<(&Position, &crate::behavior::Behavior)>,
+) {
+    let ambient = bf.ambient_temp;
+    for (pos, bh) in qt.iter() {
+        let bpos = pos.to_board_position();
+        let t_out = bh.temp_heat_output();
+        bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
+    }
+    let old_temps: Vec<(_, _)> = bf
+        .temperature_field
+        .iter()
+        .map(|(p, t)| (p.clone(), *t))
+        .collect();
+    let mut rng = rand::thread_rng();
+    const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
+    const INSIDE_CONDUCTIVITY: f32 = 10.0;
+    const WALL_CONDUCTIVITY: f32 = 0.02;
+    const SMOOTH: f32 = 1.0;
+
+    for (p, temp) in old_temps.into_iter() {
+        let free = bf
+            .collision_field
+            .get(&p)
+            .map(|x| x.player_free)
+            .unwrap_or(true);
+        let mut self_k = match free {
+            true => INSIDE_CONDUCTIVITY,
+            false => WALL_CONDUCTIVITY,
+        };
+        let is_outside = roomdb.room_tiles.get(&p).is_none();
+        if is_outside {
+            self_k = OUTSIDE_CONDUCTIVITY;
+        }
+
+        let neighbors = p.xy_neighbors(1);
+        let n_idx = rng.gen_range(0..neighbors.len());
+        let neigh = neighbors[n_idx].clone();
+
+        let neigh_free = bf
+            .collision_field
+            .get(&neigh)
+            .map(|x| x.player_free)
+            .unwrap_or(true);
+        let neigh_k = match neigh_free {
+            true => INSIDE_CONDUCTIVITY,
+            false => WALL_CONDUCTIVITY,
+        };
+        let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
+        if nis_outside {
+            self_k = OUTSIDE_CONDUCTIVITY;
+        }
+
+        let neigh_temp = bf.temperature_field.get(&neigh).copied().unwrap_or(ambient);
+
+        let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
+
+        let conductivity = (self_k.recip() + neigh_k.recip()).recip() / SMOOTH;
+
+        let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
+        let new_temp2 = temp - new_temp1 + neigh_temp;
+
+        bf.temperature_field.entry(p).and_modify(|x| *x = new_temp1);
+        bf.temperature_field
+            .entry(neigh)
+            .and_modify(|x| *x = new_temp2);
     }
 }

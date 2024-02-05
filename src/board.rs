@@ -401,6 +401,8 @@ pub struct BoardDataToRebuild {
 pub struct BoardData {
     pub light_field: HashMap<BoardPosition, LightFieldData>,
     pub collision_field: HashMap<BoardPosition, CollisionFieldData>,
+    pub temperature_field: HashMap<BoardPosition, f32>,
+    pub ambient_temp: f32,
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
@@ -412,9 +414,11 @@ impl FromWorld for BoardData {
         Self {
             collision_field: HashMap::new(),
             light_field: HashMap::new(),
+            temperature_field: HashMap::new(),
             exposure_lux: 1.0,
             current_exposure: 1.0,
             current_exposure_accel: 1.0,
+            ambient_temp: 15.0,
         }
     }
 }
@@ -675,6 +679,12 @@ pub fn boardfield_update(
                 };
                 bf.collision_field.insert(pos, colfd);
             }
+        }
+        // Create temperature field - only missing data
+        let valid_k: Vec<_> = bf.collision_field.keys().cloned().collect();
+        let ambient_temp = bf.ambient_temp;
+        for pos in valid_k.into_iter() {
+            bf.temperature_field.entry(pos).or_insert(ambient_temp);
         }
         if bfr.lighting {
             // Rebuild lighting field since it has changed

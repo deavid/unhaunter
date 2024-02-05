@@ -930,6 +930,7 @@ pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    mut bf: ResMut<board::BoardData>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<GameSprite>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
@@ -947,6 +948,11 @@ pub fn load_level(
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
+    // TODO: Ambient temp should probably come from either the map or be influenced by weather.
+    bf.ambient_temp = 6.0;
+
+    // Remove all pre-existing data for environment
+    bf.temperature_field.clear();
 
     commands
         .spawn(AudioBundle {
