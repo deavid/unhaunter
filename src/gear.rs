@@ -310,7 +310,7 @@ pub fn update_gear_inventory(
 
 #[derive(SystemParam)]
 pub struct GearStuff<'w, 's> {
-    _bf: ResMut<'w, board::BoardData>,
+    bf: ResMut<'w, board::BoardData>,
     commands: Commands<'w, 's>,
     asset_server: Res<'w, AssetServer>,
 }
