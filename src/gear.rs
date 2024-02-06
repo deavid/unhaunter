@@ -313,6 +313,7 @@ pub struct GearStuff<'w, 's> {
     bf: ResMut<'w, board::BoardData>,
     commands: Commands<'w, 's>,
     asset_server: Res<'w, AssetServer>,
+    time: Res<'w, Time>,
 }
 
 impl<'w, 's> GearStuff<'w, 's> {
