@@ -130,7 +130,7 @@ impl GearUsable for EMFMeter {
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             let new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
             self.emf -= 0.2;
-            self.emf /= 1.1;
+            self.emf /= 1.4;
             self.emf = self.emf.max(new_emf);
             self.emf_level = EMFLevel::from_milligauss(self.emf);
         }
