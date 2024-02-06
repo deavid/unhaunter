@@ -100,14 +100,16 @@ pub fn temperature_update(
     let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {
         let bpos = pos.to_board_position();
-        let t_out = bh.temp_heat_output() / 8.0;
+        let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
+        let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
+        let t_out = bh.temp_heat_output() * k * 10.0;
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
 
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         const GHOST_TARGET_TEMP: f32 = 1.0;
-        const GHOST_MAX_POWER: f32 = 0.0003;
+        const GHOST_MAX_POWER: f32 = 0.0006;
         for npos in bpos.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
                 *t = (*t + GHOST_TARGET_TEMP * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
@@ -153,7 +155,8 @@ pub fn temperature_update(
             self_k = OUTSIDE_CONDUCTIVITY;
         }
 
-        let neighbors = p.xy_neighbors(1);
+        // let neighbors = p.xy_neighbors(1);
+        let neighbors = [p.left(), p.right(), p.top(), p.bottom()];
         let n_idx = rng.gen_range(0..neighbors.len());
         let neigh = neighbors[n_idx].clone();
 

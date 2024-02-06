@@ -562,7 +562,7 @@ impl SpriteConfig {
             Class::StreetLight => {
                 p.display.disable = true;
                 p.light.emits_light = true;
-                p.light.emission_power = (6.5).try_into().unwrap();
+                p.light.emission_power = (6.0).try_into().unwrap();
                 p.light.heat_coef = -6;
             }
             Class::Appliance => {
