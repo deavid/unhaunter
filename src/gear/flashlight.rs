@@ -60,6 +60,10 @@ impl Flashlight {
         };
         pow * bat
     }
+    pub fn color(&self) -> Color {
+        // Beige
+        Color::rgb(0.96, 0.92, 0.82)
+    }
 }
 
 impl GearUsable for Flashlight {

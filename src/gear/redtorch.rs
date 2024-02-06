@@ -7,6 +7,19 @@ pub struct RedTorch {
     pub enabled: bool,
 }
 
+impl RedTorch {
+    pub fn power(&self) -> f32 {
+        match self.enabled {
+            false => 0.0,
+            true => 5.0,
+        }
+    }
+    pub fn color(&self) -> Color {
+        // Red
+        Color::rgb(1.00, 0.1, 0.02)
+    }
+}
+
 impl GearUsable for RedTorch {
     fn get_sprite_idx(&self) -> GearSpriteID {
         match self.enabled {

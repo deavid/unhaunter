@@ -85,15 +85,17 @@ pub fn apply_lighting(
     let mut flashlights = vec![];
 
     for (pos, player, direction, gear) in qp.iter() {
-        let player_flashlight = gear.as_vec().into_iter().filter_map(|(g, p)| {
-            if let GearKind::Flashlight(f) = &g.kind {
-                Some((f, p))
-            } else {
-                None
-            }
-        });
-        for (fl, p) in player_flashlight {
-            let power = fl.power();
+        let player_flashlight = gear
+            .as_vec()
+            .into_iter()
+            .filter_map(|(g, p)| match &g.kind {
+                GearKind::Flashlight(t) => Some((t.power(), t.color(), p)),
+                GearKind::UVTorch(t) => Some((t.power(), t.color(), p)),
+                GearKind::RedTorch(t) => Some((t.power(), t.color(), p)),
+                GearKind::Videocam(t) => Some((t.power(), t.color(), p)),
+                _ => None,
+            });
+        for (power, color, p) in player_flashlight {
             if power > 0.0 {
                 use crate::gear::playergear::EquipmentPosition::*;
                 let mut fldir = *direction;
@@ -104,7 +106,8 @@ pub fn apply_lighting(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-                flashlights.push((pos, fldir, power));
+
+                flashlights.push((pos, fldir, power, color));
             }
         }
 
@@ -206,9 +209,6 @@ pub fn apply_lighting(
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         let mut opacity: f32 = 1.0;
         let bpos = pos.to_board_position();
-        let src_color = Color::WHITE;
-
-        opacity *= src_color.a();
 
         let bpos_tr = bpos.bottom();
         let bpos_bl = bpos.top();
@@ -217,11 +217,11 @@ pub fn apply_lighting(
 
         const FL_MIN_DST: f32 = 7.0; // minimum distance for flashlight
 
-        let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
+        let fpos_gamma_color = |bpos: &BoardPosition| -> Option<(f32, f32, f32)> {
             let rpos = bpos.to_position();
-            let mut lux_fl = 0.0; // lux from flashlight
+            let mut lux_fl = [0_f32; 3];
 
-            for (flpos, fldir, flpower) in flashlights.iter() {
+            for (flpos, fldir, flpower, flcolor) in flashlights.iter() {
                 let pdist = flpos.distance(&rpos).powf(2.0);
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
                 let lpos = *flpos + *fldir / (100.0 / focus);
@@ -242,17 +242,35 @@ pub fn apply_lighting(
                 let dist = lpos
                     .distance(&rpos)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                lux_fl += flpower / (dist * dist + FL_MIN_DST) * (pdist / 5.0).clamp(0.0, 1.0);
+                let fl = flpower / (dist * dist + FL_MIN_DST) * (pdist / 5.0).clamp(0.0, 1.0);
+                lux_fl[0] += fl * flcolor.r();
+                lux_fl[1] += fl * flcolor.g();
+                lux_fl[2] += fl * flcolor.b();
             }
 
-            lf.get(bpos).map(|lf| (lf.lux + lux_fl) / exposure)
+            lf.get(bpos).map(|lf| {
+                (
+                    (lf.lux + lux_fl[0]) / exposure,
+                    (lf.lux + lux_fl[1]) / exposure,
+                    (lf.lux + lux_fl[2]) / exposure,
+                )
+            })
         };
 
-        let lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
-        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
-        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
-        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
-        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
+        let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
+            let gcolor = fpos_gamma_color(bpos);
+            gcolor.map(|(r, g, b)| (r + g + b) / 3.0)
+        };
+        let (r, g, b) = fpos_gamma_color(&bpos).unwrap_or((1.0, 1.0, 1.0));
+        let max_color = r.max(g).max(b).max(0.01) + 0.01;
+        let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
+        let l = src_color.l().max(0.0001).powf(1.5);
+
+        let lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
+        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c) / l;
+        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c) / l;
+        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c) / l;
+        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c) / l;
 
         match behavior.obsolete_occlusion_type() {
             Orientation::None => {}

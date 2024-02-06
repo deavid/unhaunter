@@ -7,6 +7,19 @@ pub struct UVTorch {
     pub enabled: bool,
 }
 
+impl UVTorch {
+    pub fn power(&self) -> f32 {
+        match self.enabled {
+            false => 0.0,
+            true => 2.0,
+        }
+    }
+    pub fn color(&self) -> Color {
+        // Violet
+        Color::rgb(0.40, 0.01, 1.00)
+    }
+}
+
 impl GearUsable for UVTorch {
     fn get_sprite_idx(&self) -> GearSpriteID {
         match self.enabled {

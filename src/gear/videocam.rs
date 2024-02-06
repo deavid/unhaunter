@@ -7,6 +7,19 @@ pub struct Videocam {
     pub enabled: bool,
 }
 
+impl Videocam {
+    pub fn power(&self) -> f32 {
+        match self.enabled {
+            false => 0.0,
+            true => 12.0,
+        }
+    }
+    pub fn color(&self) -> Color {
+        // Green-Cyan (for NightVision)
+        Color::rgb(0.01, 1.00, 0.20)
+    }
+}
+
 impl GearUsable for Videocam {
     fn get_sprite_idx(&self) -> GearSpriteID {
         match self.enabled {
