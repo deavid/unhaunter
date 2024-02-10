@@ -910,7 +910,7 @@ pub fn player_coloring(
                 let npos = npos.to_position();
                 let dist = npos.distance(position);
                 let f = (1.0 - dist).clamp(0.0, 1.0);
-                let rel_lux = lf.lux / bf.current_exposure;
+                let rel_lux = lf.lux / bf.current_exposure + 0.1;
                 n_rel_lux += f;
                 tot_rel_lux += rel_lux * f;
             }
