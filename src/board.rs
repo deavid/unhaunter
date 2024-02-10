@@ -558,7 +558,7 @@ impl CachedBoardPos {
     const CENTER: i64 = 32;
     const SZ: usize = (Self::CENTER * 2 + 1) as usize;
     /// Perimeter of the circle for indexing.
-    const TAU_I: usize = 48;
+    const TAU_I: usize = 48 * 8;
 
     fn new() -> Self {
         let mut r = Self {
@@ -783,7 +783,7 @@ pub fn boardfield_update(
             for (k, v) in bf.light_field.iter() {
                 lfs.insert(k.x, k.y, k.z, v.clone());
             }
-            for step in 0..6 {
+            for step in 0..3 {
                 // let step_time = Instant::now();
                 let src_lfs = lfs.clone();
                 let size = match step {
@@ -807,7 +807,7 @@ pub fn boardfield_update(
                             };
                             let max_lux = match step {
                                 0 => f32::MAX,
-                                1 => 2000.0,
+                                1 => 20000.0,
                                 2 => 400.0,
                                 3 => 100.0,
                                 _ => 50.0,
@@ -847,7 +847,7 @@ pub fn boardfield_update(
                                 }
                             }
 
-                            let light_height = 1.0;
+                            let light_height = 2.0;
                             let mut total_lux = 0.0000001;
                             for neighbor in nbors.iter() {
                                 let dist = cbp.bpos_dist(&root_pos, neighbor) + light_height;
@@ -863,7 +863,7 @@ pub fn boardfield_update(
                                     if dist <= sd {
                                         lf.lux += src_lux / dist2 / dist2 / total_lux;
                                     } else {
-                                        let f = (dist - sd + 1.0).powi(4);
+                                        let f = (dist - sd + 1.0).powi(2);
                                         lf.lux += src_lux / dist2 / dist2 / total_lux / f;
                                     }
                                 }

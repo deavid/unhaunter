@@ -236,6 +236,7 @@ pub mod component {
 pub enum Class {
     Floor,
     Wall,
+    LowWall,
     Door,
     Switch,
     RoomSwitch,
@@ -437,6 +438,10 @@ impl SpriteConfig {
                 .insert(component::Collision)
                 .insert(component::Opaque)
                 .insert(component::UVSurface),
+            Class::LowWall => entity
+                .insert(component::Collision)
+                .insert(component::Opaque)
+                .insert(component::UVSurface),
             Class::Door => entity.insert(component::Interactive::new(
                 "sounds/door-open.ogg",
                 "sounds/door-close.ogg",
@@ -494,6 +499,12 @@ impl SpriteConfig {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.opaque = true;
+                p.display.global_z = (-0.00005).try_into().unwrap();
+            }
+            Class::LowWall => {
+                p.movement.player_collision = true;
+                p.movement.ghost_collision = true;
+                p.light.see_through = true;
                 p.display.global_z = (-0.00005).try_into().unwrap();
             }
             Class::Door => {

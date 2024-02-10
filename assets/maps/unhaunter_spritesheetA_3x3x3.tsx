@@ -342,6 +342,20 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="45" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="FlatBlue"/>
+  </properties>
+ </tile>
+ <tile id="46" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="FlatBlue"/>
+  </properties>
+ </tile>
  <tile id="47">
   <objectgroup draworder="index" id="2">
    <object id="2" x="0" y="0" width="14" height="14"/>

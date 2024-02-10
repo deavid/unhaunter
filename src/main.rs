@@ -78,7 +78,7 @@ fn main() {
         .add_systems(Update, game::keyboard_player)
         .add_systems(Update, game::animate_sprite)
         .add_systems(Update, game::player_coloring)
-        .add_systems(Update, game::load_level)
+        .add_systems(PostUpdate, game::load_level)
         .add_systems(Update, leveleditor::apply_lighting)
         .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
             1.0 / 30.0,
