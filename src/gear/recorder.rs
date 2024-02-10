@@ -85,7 +85,7 @@ impl GearUsable for Recorder {
             self.sound = (avg_snd.ln() * 10.0).clamp(0.0, 60.0);
             self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
 
-            if self.sound > 1.0 {
+            if self.sound > 1.0 && self.enabled {
                 gs.play_audio("sounds/effects-radio-scan.ogg".into(), self.sound / 60.0);
             }
         }

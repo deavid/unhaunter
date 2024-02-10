@@ -1,21 +1,6 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
-use super::compass::Compass;
-use super::emfmeter::EMFMeter;
-use super::estaticmeter::EStaticMeter;
-use super::flashlight::Flashlight;
-use super::geigercounter::GeigerCounter;
-use super::ionmeter::IonMeter;
-use super::motionsensor::MotionSensor;
-use super::photocam::Photocam;
-use super::recorder::Recorder;
-use super::redtorch::RedTorch;
-use super::spiritbox::SpiritBox;
-use super::thermalimager::ThermalImager;
-use super::thermometer::Thermometer;
-use super::uvtorch::UVTorch;
-use super::videocam::Videocam;
 use super::Gear;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence)]
@@ -78,23 +63,40 @@ impl PlayerGear {
         ret
     }
     pub fn new() -> Self {
+        // use super::compass::Compass;
+        use super::emfmeter::EMFMeter;
+        // use super::estaticmeter::EStaticMeter;
+        use super::flashlight::Flashlight;
+        // use super::geigercounter::GeigerCounter;
+        // use super::ionmeter::IonMeter;
+        // use super::motionsensor::MotionSensor;
+        // use super::photocam::Photocam;
+        use super::recorder::Recorder;
+        use super::redtorch::RedTorch;
+        use super::spiritbox::SpiritBox;
+        // use super::thermalimager::ThermalImager;
+        use super::thermometer::Thermometer;
+        use super::uvtorch::UVTorch;
+        use super::videocam::Videocam;
+
         Self {
             left_hand: Flashlight::default().into(),
             right_hand: Thermometer::default().into(),
             inventory: vec![
                 EMFMeter::default().into(),
-                GeigerCounter::default().into(),
                 UVTorch::default().into(),
                 SpiritBox::default().into(),
                 Recorder::default().into(),
-                IonMeter::default().into(),
-                ThermalImager::default().into(),
-                RedTorch::default().into(),
-                Photocam::default().into(),
-                Compass::default().into(),
-                EStaticMeter::default().into(),
                 Videocam::default().into(),
-                MotionSensor::default().into(),
+                RedTorch::default().into(),
+                // Incomplete equipment:
+                // GeigerCounter::default().into(),
+                // IonMeter::default().into(),
+                // ThermalImager::default().into(),
+                // Photocam::default().into(),
+                // Compass::default().into(),
+                // EStaticMeter::default().into(),
+                // MotionSensor::default().into(),
             ],
         }
     }
