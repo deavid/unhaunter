@@ -109,7 +109,7 @@ pub fn temperature_update(
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         const GHOST_TARGET_TEMP: f32 = 1.0;
-        const GHOST_MAX_POWER: f32 = 0.0006;
+        const GHOST_MAX_POWER: f32 = 0.002;
         for npos in bpos.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
                 *t = (*t + GHOST_TARGET_TEMP * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)

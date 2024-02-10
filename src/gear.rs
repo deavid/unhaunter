@@ -321,7 +321,7 @@ impl<'w, 's> GearStuff<'w, 's> {
         self.commands.spawn(AudioBundle {
             source: self.asset_server.load(sound_file),
             settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Once,
+                mode: bevy::audio::PlaybackMode::Despawn,
                 volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(volume)),
                 speed: 1.0,
                 paused: false,
