@@ -139,7 +139,7 @@ fn fragment(
     c[0] = (c[0] * c[3] + co[0]) / (c[3] + o_alpha) * (f_corr);
     c[1] = (c[1] * c[3] + co[1]) / (c[3] + o_alpha) * (f_corr);
     c[2] = (c[2] * c[3] + co[2]) / (c[3] + o_alpha) * (f_corr);
-    c[3] = pow(c[3], 0.7);
+    c[3] = pow(c[3], 1.2);
 
     return (pow(c + b4, e4) * g + g4 * c) / (1.0 + g) * material.color;
 }

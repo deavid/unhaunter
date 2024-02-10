@@ -671,11 +671,29 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
         let item_bpos = item_pos.to_board_position();
         let tuid = behavior.key_tuid();
         let cvo = behavior.key_cvo();
-        let mut e_commands = self.commands.get_entity(entity).unwrap();
+        if behavior.is_van_entry() {
+            if ietype != InteractionExecutionType::ChangeState {
+                return false;
+            }
+            if let Some(interactive) = interactive {
+                let sound_file = interactive.sound_for_moving_into_state(behavior);
+                self.commands.spawn(AudioBundle {
+                    source: self.asset_server.load(sound_file),
+                    settings: PlaybackSettings {
+                        mode: bevy::audio::PlaybackMode::Despawn,
+                        volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
+                        speed: 1.0,
+                        paused: false,
+                        spatial: false,
+                    },
+                });
+            }
+        }
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
             if *other_tuid == tuid {
                 continue;
             }
+            let mut e_commands = self.commands.get_entity(entity).unwrap();
             let other = self.bf.map_tile.get(other_tuid).unwrap();
 
             let mut beh = other.behavior.clone();
@@ -731,7 +749,7 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     self.commands.spawn(AudioBundle {
                         source: self.asset_server.load(sound_file),
                         settings: PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Once,
+                            mode: bevy::audio::PlaybackMode::Despawn,
                             volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(
                                 1.0,
                             )),

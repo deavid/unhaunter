@@ -83,6 +83,10 @@ impl Behavior {
             false => (10.0, 0.1),
         }
     }
+
+    pub fn is_van_entry(&self) -> bool {
+        self.cfg.class == Class::VanEntry
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -468,7 +472,10 @@ impl SpriteConfig {
             Class::Furniture => entity,
             Class::PlayerSpawn => entity,
             Class::GhostSpawn => entity,
-            Class::VanEntry => entity,
+            Class::VanEntry => entity.insert(component::Interactive::new(
+                "sounds/door-open.ogg",
+                "sounds/door-close.ogg",
+            )),
             Class::RoomDef => entity,
             Class::WallLamp => entity.insert(component::RoomState::new()),
             Class::FloorLamp => entity.insert(component::Interactive::new(
@@ -546,7 +553,7 @@ impl SpriteConfig {
                 p.util = Util::GhostSpawn;
             }
             Class::VanEntry => {
-                p.display.disable = true;
+                // p.display.disable = true;
                 p.util = Util::Van;
             }
             Class::RoomDef => {
