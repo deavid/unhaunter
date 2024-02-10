@@ -66,6 +66,7 @@ fn main() {
         .add_systems(Update, gear::keyboard_gear)
         .add_systems(Update, gear::update_gear_inventory)
         .add_systems(Update, gear::thermometer::temperature_update)
+        .add_systems(Update, gear::recorder::sound_update)
         .add_systems(Update, game::ghost_movement)
         .add_systems(Update, board::apply_perspective)
         .add_systems(Update, game::roomchanged_event)

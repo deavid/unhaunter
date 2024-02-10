@@ -694,8 +694,8 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     .get(&item_roombpos)
                     .cloned()
                     .unwrap_or_default();
-                dbg!(&room_state, &item_roombpos);
-                dbg!(&room_name);
+                // dbg!(&room_state, &item_roombpos);
+                // dbg!(&room_name);
                 match ietype {
                     InteractionExecutionType::ChangeState => {
                         if let Some(main_room_state) = self.roomdb.room_state.get_mut(&room_name) {
@@ -953,6 +953,7 @@ pub fn load_level(
 
     // Remove all pre-existing data for environment
     bf.temperature_field.clear();
+    bf.sound_field.clear();
 
     commands
         .spawn(AudioBundle {

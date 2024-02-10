@@ -315,6 +315,7 @@ pub fn apply_lighting(
         // const A_SOFT: f32 = 1.0;
         // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
         new_mat.data.color = dst_color;
+        // Sound field visualization:
 
         const SMOOTH_F: f32 = 1.0;
         let f_gamma = |lux: f32| {
@@ -327,6 +328,17 @@ pub fn apply_lighting(
         new_mat.data.gtr = (new_mat.data.gtr * SMOOTH_F + f_gamma(lux_tr)) / (1.0 + SMOOTH_F);
         new_mat.data.gbl = (new_mat.data.gbl * SMOOTH_F + f_gamma(lux_bl)) / (1.0 + SMOOTH_F);
         new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
+
+        const DEBUG_SOUND: bool = false;
+        if DEBUG_SOUND {
+            if let Some(sf) = bf.sound_field.get(&bpos) {
+                let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
+                if l > 0.0001 {
+                    new_mat.data.gamma = 2.0;
+                    new_mat.data.color = Color::rgb(1.0, l / 4.0, l / 16.0);
+                }
+            }
+        }
 
         let delta = orig_mat.data.delta(&new_mat.data);
         if delta > 0.02 + min_threshold {
