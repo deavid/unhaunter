@@ -445,6 +445,7 @@ impl Default for LightFieldData {
 pub struct CollisionFieldData {
     pub player_free: bool,
     pub ghost_free: bool,
+    pub see_through: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -672,6 +673,7 @@ pub fn boardfield_update(
                 let colfd = CollisionFieldData {
                     player_free: true,
                     ghost_free: true,
+                    see_through: false,
                 };
                 bf.collision_field.insert(pos, colfd);
             }
@@ -680,6 +682,7 @@ pub fn boardfield_update(
                 let colfd = CollisionFieldData {
                     player_free: false,
                     ghost_free: !behavior.p.movement.ghost_collision,
+                    see_through: behavior.p.light.see_through,
                 };
                 bf.collision_field.insert(pos, colfd);
             }

@@ -33,10 +33,10 @@
                 2
             ],
             "scale": 4,
-            "selectedLayer": 3,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1413.5,
-                "y": 666.625
+                "x": 1367.25,
+                "y": 636.125
             }
         },
         "unhaunter_custom_tileset.tsx": {

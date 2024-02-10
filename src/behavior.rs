@@ -114,6 +114,7 @@ pub struct Display {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Light {
     pub opaque: bool,
+    pub see_through: bool,
     pub emits_light: bool,
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
@@ -256,6 +257,7 @@ pub enum Class {
     Appliance,
     Van,
     Window,
+    InvisibleWall,
     #[default]
     None,
 }
@@ -479,13 +481,14 @@ impl SpriteConfig {
             Class::Van => entity,
             Class::Window => entity,
             Class::None => entity,
+            Class::InvisibleWall => entity,
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
         match self.class {
             Class::Floor => {
                 p.movement.walkable = true;
-                p.display.global_z = (-0.00025).try_into().unwrap();
+                p.display.global_z = (-0.00035).try_into().unwrap();
             }
             Class::Wall => {
                 p.movement.player_collision = true;
@@ -517,6 +520,11 @@ impl SpriteConfig {
             }
             Class::Furniture => {
                 p.display.global_z = (0.000050).try_into().unwrap();
+            }
+            Class::InvisibleWall => {
+                p.movement.player_collision = true;
+                p.light.see_through = true;
+                p.display.disable = true;
             }
             Class::PlayerSpawn => {
                 p.display.disable = true;
@@ -569,7 +577,7 @@ impl SpriteConfig {
                 p.display.global_z = (0.000070).try_into().unwrap();
             }
             Class::Van => {
-                p.display.global_z = (0.000200).try_into().unwrap();
+                p.display.global_z = (0.000050).try_into().unwrap();
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();

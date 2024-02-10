@@ -15,6 +15,7 @@ pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
     pos_start: &board::Position,
+    roomdb: &mut board::RoomDB,
 ) {
     let mut queue = VecDeque::new();
     let start = pos_start.to_board_position();
@@ -25,7 +26,11 @@ pub fn compute_visibility(
     while let Some((pos, pos2)) = queue.pop_back() {
         let pds = pos.to_position().distance(pos_start);
         let src_f = vf.get(&pos).cloned().unwrap_or_default();
-        if !cf.get(&pos).map(|c| c.player_free).unwrap_or_default() {
+        if !cf
+            .get(&pos)
+            .map(|c| c.player_free || c.see_through)
+            .unwrap_or_default()
+        {
             // If the current position analyzed is not free (a wall or out of bounds)
             // then stop extending.
             continue;
@@ -51,7 +56,12 @@ pub fn compute_visibility(
                 if !vf.contains_key(&npos) {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                dst_f /= 1.0 + ((npds - 1.5) / 3.0).clamp(0.0, 6.0);
+                let k = match roomdb.room_tiles.get(&npos).is_some() {
+                    // Decrease view range inside the location
+                    true => 3.0,
+                    false => 7.0,
+                };
+                dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
                 let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
                 *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
             }
@@ -73,7 +83,7 @@ pub fn apply_lighting(
     mut bf: ResMut<board::BoardData>,
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
-    roomdb: ResMut<board::RoomDB>,
+    mut roomdb: ResMut<board::RoomDB>,
 ) {
     const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
@@ -122,7 +132,7 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
             }
         }
-        compute_visibility(&mut visibility_field, &bf.collision_field, pos);
+        compute_visibility(&mut visibility_field, &bf.collision_field, pos, &mut roomdb);
     }
     // --- ambient sound processing ---
 
