@@ -396,7 +396,7 @@ pub fn setup_ui(
                                 })
                                 .insert(gear::playergear::Inventory::new_right());
                             let mut text_bundle = TextBundle::from_section(
-                                "IonDetector: ON\nReading: ION 2 - 30V/m\nBattery: 40%",
+                                "-",
                                 TextStyle {
                                     font: handles.fonts.londrina.w300_light.clone(),
                                     font_size: 26.0,
@@ -414,6 +414,7 @@ pub fn setup_ui(
                         });
                 });
         });
+
     info!("Game UI loaded");
     ev_load.send(LoadLevelEvent {
         map_filepath: "default.json".to_string(),
@@ -422,6 +423,7 @@ pub fn setup_ui(
 
 pub fn keyboard(
     app_state: Res<State<root::State>>,
+    game_state: Res<State<root::GameState>>,
     mut app_next_state: ResMut<NextState<root::State>>,
     keyboard_input: Res<Input<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
@@ -429,6 +431,9 @@ pub fn keyboard(
     pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
 ) {
     if *app_state.get() != root::State::InGame {
+        return;
+    }
+    if *game_state.get() != root::GameState::None {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
@@ -656,6 +661,7 @@ pub struct InteractiveStuff<'w, 's> {
     materials1: ResMut<'w, Assets<CustomMaterial1>>,
     asset_server: Res<'w, AssetServer>,
     roomdb: ResMut<'w, board::RoomDB>,
+    game_next_state: ResMut<'w, NextState<root::GameState>>,
 }
 
 impl<'w, 's> InteractiveStuff<'w, 's> {
@@ -688,6 +694,7 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     },
                 });
             }
+            self.game_next_state.set(root::GameState::Truck);
         }
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
             if *other_tuid == tuid {

@@ -9,6 +9,13 @@ pub enum State {
     InGame,
 }
 
+#[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum GameState {
+    #[default]
+    None,
+    Truck,
+}
+
 #[derive(Debug, Clone)]
 pub struct LondrinaFontAssets {
     pub w100_thin: Handle<Font>,
