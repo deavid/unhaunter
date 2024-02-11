@@ -18,7 +18,7 @@ use bevy::{
     sprite::Material2dPlugin,
     window::WindowResolution,
 };
-use materials::CustomMaterial1;
+use materials::{CustomMaterial1, UIPanelMaterial};
 
 fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
     settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
@@ -44,6 +44,7 @@ fn main() {
     //        .add_plugins(LogDiagnosticsPlugin::default())
     //        .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
+    .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .add_plugins(bevy_framepace::FramepacePlugin)
     .add_systems(Startup, set_fps_limiter)
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))

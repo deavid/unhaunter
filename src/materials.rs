@@ -225,3 +225,19 @@ impl Material2d for CustomMaterial2 {
         Ok(())
     }
 }
+
+#[derive(AsBindGroup, Asset, TypePath, Debug, Clone)]
+pub struct UIPanelMaterial {
+    // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
+    // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
+    #[uniform(0)]
+    pub color: Color,
+}
+
+// All functions on `UiMaterial` have default impls. You only need to implement the
+// functions that are relevant for your material.
+impl UiMaterial for UIPanelMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/uipanel_material.wgsl".into()
+    }
+}
