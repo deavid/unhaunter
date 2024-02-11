@@ -157,6 +157,27 @@ impl ControlKeys {
     };
 }
 
+pub fn app_setup(app: &mut App) {
+    app.init_resource::<GameConfig>()
+        .add_event::<RoomChangedEvent>()
+        .add_event::<LoadLevelEvent>()
+        .add_systems(Update, ghost_movement)
+        .add_systems(Update, roomchanged_event)
+        .add_systems(OnEnter(root::State::InGame), setup)
+        .add_systems(OnEnter(root::State::InGame), setup_ui)
+        .add_systems(OnExit(root::State::InGame), cleanup)
+        .add_systems(OnEnter(root::GameState::None), resume)
+        .add_systems(OnExit(root::GameState::None), pause)
+        .add_systems(Update, keyboard)
+        .add_systems(
+            Update,
+            keyboard_player.run_if(in_state(root::GameState::None)),
+        )
+        .add_systems(Update, animate_sprite)
+        .add_systems(Update, player_coloring)
+        .add_systems(PostUpdate, load_level);
+}
+
 pub fn setup(
     mut commands: Commands,
     qc: Query<Entity, With<GCameraArena>>,
@@ -223,6 +244,18 @@ pub fn cleanup(
     // Despawn game sound
     for gs in qs.iter() {
         commands.entity(gs).despawn_recursive();
+    }
+}
+
+pub fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
+    for mut vis in qg.iter_mut() {
+        *vis = Visibility::Hidden;
+    }
+}
+
+pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
+    for mut vis in qg.iter_mut() {
+        *vis = Visibility::Visible;
     }
 }
 

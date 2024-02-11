@@ -52,13 +52,10 @@ fn main() {
     .init_resource::<board::BoardData>()
     .init_resource::<board::SpriteDB>()
     .init_resource::<board::RoomDB>()
-    .init_resource::<game::GameConfig>()
     .add_event::<board::BoardDataToRebuild>()
-    .add_event::<game::RoomChangedEvent>()
     .add_state::<root::State>()
     .add_state::<root::GameState>()
     .add_event::<mainmenu::MenuEvent>()
-    .add_event::<game::LoadLevelEvent>()
     .add_systems(Startup, root::load_assets)
     .add_systems(OnEnter(root::State::MainMenu), mainmenu::setup)
     .add_systems(OnExit(root::State::MainMenu), mainmenu::cleanup)
@@ -66,33 +63,20 @@ fn main() {
     .add_systems(Update, mainmenu::keyboard)
     .add_systems(Update, mainmenu::item_logic)
     .add_systems(Update, mainmenu::menu_event)
+    .add_systems(Update, gear::update_gear_inventory)
+    .add_systems(Update, gear::thermometer::temperature_update)
+    .add_systems(Update, gear::recorder::sound_update)
     .add_systems(
         Update,
         gear::keyboard_gear.run_if(in_state(root::GameState::None)),
     )
-    .add_systems(Update, gear::update_gear_inventory)
-    .add_systems(Update, gear::thermometer::temperature_update)
-    .add_systems(Update, gear::recorder::sound_update)
-    .add_systems(Update, game::ghost_movement)
     .add_systems(Update, board::apply_perspective)
-    .add_systems(Update, game::roomchanged_event)
     .add_systems(PostUpdate, board::boardfield_update)
-    .add_systems(OnEnter(root::State::InGame), game::setup)
-    .add_systems(OnEnter(root::State::InGame), game::setup_ui)
-    .add_systems(OnExit(root::State::InGame), game::cleanup)
-    .add_systems(Update, game::keyboard)
-    .add_systems(
-        Update,
-        game::keyboard_player.run_if(in_state(root::GameState::None)),
-    )
-    .add_systems(Update, game::animate_sprite)
-    .add_systems(Update, game::player_coloring)
-    .add_systems(PostUpdate, game::load_level)
     .add_systems(Update, leveleditor::apply_lighting)
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 30.0,
     )));
-
+    game::app_setup(&mut app);
     truck::app_setup(&mut app);
 
     app.run();
