@@ -431,8 +431,8 @@ pub fn setup_ui(
                             let mut text_bundle = TextBundle::from_section(
                                 "-",
                                 TextStyle {
-                                    font: handles.fonts.chakra.w300_light.clone(),
-                                    font_size: 22.0,
+                                    font: handles.fonts.kodemono.w400_regular.clone(),
+                                    font_size: 20.0,
                                     color: INVENTORY_STATS_COLOR,
                                 },
                             );

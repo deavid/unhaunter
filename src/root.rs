@@ -74,12 +74,41 @@ pub struct TitilliumWebAssets {
 }
 
 #[derive(Debug, Clone)]
+pub struct VictorMonoAssets {
+    pub w100_thin: Handle<Font>,
+    pub w200_extralight: Handle<Font>,
+    pub w300_light: Handle<Font>,
+    pub w400_regular: Handle<Font>,
+    pub w500_medium: Handle<Font>,
+    pub w600_semibold: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+
+    pub w100i_thin: Handle<Font>,
+    pub w200i_extralight: Handle<Font>,
+    pub w300i_light: Handle<Font>,
+    pub w400i_regular: Handle<Font>,
+    pub w500i_medium: Handle<Font>,
+    pub w600i_semibold: Handle<Font>,
+    pub w700i_bold: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
+pub struct KodeMonoAssets {
+    pub w400_regular: Handle<Font>,
+    pub w500_medium: Handle<Font>,
+    pub w600_semibold: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
 pub struct FontAssets {
     pub londrina: LondrinaFontAssets,
     pub syne: SyneFontAssets,
     pub overlock: OverlockFontAssets,
     pub chakra: ChakraPetchAssets,
     pub titillium: TitilliumWebAssets,
+    pub victormono: VictorMonoAssets,
+    pub kodemono: KodeMonoAssets,
 }
 
 #[derive(Debug, Clone)]
@@ -260,6 +289,31 @@ pub fn load_assets(
                 w400i_regular: server.load("fonts/titillium_web/TitilliumWeb-Italic.ttf"),
                 w600i_semibold: server.load("fonts/titillium_web/TitilliumWeb-SemiBoldItalic.ttf"),
                 w700i_bold: server.load("fonts/titillium_web/TitilliumWeb-BoldItalic.ttf"),
+            },
+            victormono: VictorMonoAssets {
+                w100_thin: server.load("fonts/victor_mono/static/VictorMono-Thin.ttf"),
+                w200_extralight: server.load("fonts/victor_mono/static/VictorMono-ExtraLight.ttf"),
+                w300_light: server.load("fonts/victor_mono/static/VictorMono-Light.ttf"),
+                w400_regular: server.load("fonts/victor_mono/static/VictorMono-Regular.ttf"),
+                w500_medium: server.load("fonts/victor_mono/static/VictorMono-Medium.ttf"),
+                w600_semibold: server.load("fonts/victor_mono/static/VictorMono-SemiBold.ttf"),
+                w700_bold: server.load("fonts/victor_mono/static/VictorMono-Bold.ttf"),
+
+                w100i_thin: server.load("fonts/victor_mono/static/VictorMono-ThinItalic.ttf"),
+                w200i_extralight: server
+                    .load("fonts/victor_mono/static/VictorMono-ExtraLightItalic.ttf"),
+                w300i_light: server.load("fonts/victor_mono/static/VictorMono-LightItalic.ttf"),
+                w400i_regular: server.load("fonts/victor_mono/static/VictorMono-Italic.ttf"),
+                w500i_medium: server.load("fonts/victor_mono/static/VictorMono-MediumItalic.ttf"),
+                w600i_semibold: server
+                    .load("fonts/victor_mono/static/VictorMono-SemiBoldItalic.ttf"),
+                w700i_bold: server.load("fonts/victor_mono/static/VictorMono-BoldItalic.ttf"),
+            },
+            kodemono: KodeMonoAssets {
+                w400_regular: server.load("fonts/kode_mono/static/KodeMono-Regular.ttf"),
+                w500_medium: server.load("fonts/kode_mono/static/KodeMono-Medium.ttf"),
+                w600_semibold: server.load("fonts/kode_mono/static/KodeMono-SemiBold.ttf"),
+                w700_bold: server.load("fonts/kode_mono/static/KodeMono-Bold.ttf"),
             },
         },
         anchors: Anchors {
