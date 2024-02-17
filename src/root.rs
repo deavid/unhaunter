@@ -25,8 +25,61 @@ pub struct LondrinaFontAssets {
 }
 
 #[derive(Debug, Clone)]
+pub struct SyneFontAssets {
+    pub w400_regular: Handle<Font>,
+    pub w500_medium: Handle<Font>,
+    pub w600_semibold: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+    pub w800_extrabold: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
+pub struct OverlockFontAssets {
+    pub w400_regular: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+    pub w900_black: Handle<Font>,
+    pub w400i_regular: Handle<Font>,
+    pub w700i_bold: Handle<Font>,
+    pub w900i_black: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ChakraPetchAssets {
+    pub w300_light: Handle<Font>,
+    pub w400_regular: Handle<Font>,
+    pub w500_medium: Handle<Font>,
+    pub w600_semibold: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+    pub w300i_light: Handle<Font>,
+    pub w400i_regular: Handle<Font>,
+    pub w500i_medium: Handle<Font>,
+    pub w600i_semibold: Handle<Font>,
+    pub w700i_bold: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TitilliumWebAssets {
+    pub w200_extralight: Handle<Font>,
+    pub w300_light: Handle<Font>,
+    pub w400_regular: Handle<Font>,
+    pub w600_semibold: Handle<Font>,
+    pub w700_bold: Handle<Font>,
+    pub w900_black: Handle<Font>,
+
+    pub w200i_extralight: Handle<Font>,
+    pub w300i_light: Handle<Font>,
+    pub w400i_regular: Handle<Font>,
+    pub w600i_semibold: Handle<Font>,
+    pub w700i_bold: Handle<Font>,
+}
+
+#[derive(Debug, Clone)]
 pub struct FontAssets {
     pub londrina: LondrinaFontAssets,
+    pub syne: SyneFontAssets,
+    pub overlock: OverlockFontAssets,
+    pub chakra: ChakraPetchAssets,
+    pub titillium: TitilliumWebAssets,
 }
 
 #[derive(Debug, Clone)]
@@ -163,6 +216,50 @@ pub fn load_assets(
                 w300_light: server.load("fonts/londrina_solid/LondrinaSolid-Light.ttf"),
                 w400_regular: server.load("fonts/londrina_solid/LondrinaSolid-Regular.ttf"),
                 w900_black: server.load("fonts/londrina_solid/LondrinaSolid-Black.ttf"),
+            },
+            syne: SyneFontAssets {
+                w400_regular: server.load("fonts/syne/static/Syne-Regular.ttf"),
+                w500_medium: server.load("fonts/syne/static/Syne-Medium.ttf"),
+                w600_semibold: server.load("fonts/syne/static/Syne-SemiBold.ttf"),
+                w700_bold: server.load("fonts/syne/static/Syne-Bold.ttf"),
+                w800_extrabold: server.load("fonts/syne/static/Syne-ExtraBold.ttf"),
+            },
+            overlock: OverlockFontAssets {
+                w400_regular: server.load("fonts/overlock/Overlock-Regular.ttf"),
+                w700_bold: server.load("fonts/overlock/Overlock-Bold.ttf"),
+                w900_black: server.load("fonts/overlock/Overlock-Black.ttf"),
+
+                w400i_regular: server.load("fonts/overlock/Overlock-Italic.ttf"),
+                w700i_bold: server.load("fonts/overlock/Overlock-BoldItalic.ttf"),
+                w900i_black: server.load("fonts/overlock/Overlock-BlackItalic.ttf"),
+            },
+            chakra: ChakraPetchAssets {
+                w300_light: server.load("fonts/chakra_petch/ChakraPetch-Light.ttf"),
+                w400_regular: server.load("fonts/chakra_petch/ChakraPetch-Regular.ttf"),
+                w500_medium: server.load("fonts/chakra_petch/ChakraPetch-Medium.ttf"),
+                w600_semibold: server.load("fonts/chakra_petch/ChakraPetch-SemiBold.ttf"),
+                w700_bold: server.load("fonts/chakra_petch/ChakraPetch-Bold.ttf"),
+
+                w300i_light: server.load("fonts/chakra_petch/ChakraPetch-LightItalic.ttf"),
+                w400i_regular: server.load("fonts/chakra_petch/ChakraPetch-Italic.ttf"),
+                w500i_medium: server.load("fonts/chakra_petch/ChakraPetch-MediumItalic.ttf"),
+                w600i_semibold: server.load("fonts/chakra_petch/ChakraPetch-SemiBoldItalic.ttf"),
+                w700i_bold: server.load("fonts/chakra_petch/ChakraPetch-BoldItalic.ttf"),
+            },
+            titillium: TitilliumWebAssets {
+                w200_extralight: server.load("fonts/titillium_web/TitilliumWeb-ExtraLight.ttf"),
+                w300_light: server.load("fonts/titillium_web/TitilliumWeb-Light.ttf"),
+                w400_regular: server.load("fonts/titillium_web/TitilliumWeb-Regular.ttf"),
+                w600_semibold: server.load("fonts/titillium_web/TitilliumWeb-SemiBold.ttf"),
+                w700_bold: server.load("fonts/titillium_web/TitilliumWeb-Bold.ttf"),
+                w900_black: server.load("fonts/titillium_web/TitilliumWeb-Black.ttf"),
+
+                w200i_extralight: server
+                    .load("fonts/titillium_web/TitilliumWeb-ExtraLightItalic.ttf"),
+                w300i_light: server.load("fonts/titillium_web/TitilliumWeb-LightItalic.ttf"),
+                w400i_regular: server.load("fonts/titillium_web/TitilliumWeb-Italic.ttf"),
+                w600i_semibold: server.load("fonts/titillium_web/TitilliumWeb-SemiBoldItalic.ttf"),
+                w700i_bold: server.load("fonts/titillium_web/TitilliumWeb-BoldItalic.ttf"),
             },
         },
         anchors: Anchors {

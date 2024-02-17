@@ -104,7 +104,11 @@ pub fn setup_ui(
                                     font_size: 35.0,
                                     color: TRUCKUI_ACCENT_COLOR,
                                 },
-                            );
+                            )
+                            .with_style(Style {
+                                height: Val::Px(40.0),
+                                ..default()
+                            });
 
                             sanity.spawn(title);
                             // Sanity contents
@@ -112,10 +116,7 @@ pub fn setup_ui(
                                 border_color: TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
-                                    justify_content: JustifyContent::FlexStart,
-                                    flex_direction: FlexDirection::Column,
-                                    row_gap: Val::Percent(MARGIN_PERCENT),
-                                    flex_grow: 0.1,
+                                    height: Val::Px(0.0),
                                     ..default()
                                 },
                                 ..default()
@@ -123,7 +124,7 @@ pub fn setup_ui(
                             let mut p1_sanity = TextBundle::from_section(
                                 "Player 1: 90% Sanity",
                                 TextStyle {
-                                    font: handles.fonts.londrina.w100_thin.clone(),
+                                    font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
                                     color: TRUCKUI_TEXT_COLOR,
                                 },
@@ -171,7 +172,11 @@ pub fn setup_ui(
                                     font_size: 35.0,
                                     color: TRUCKUI_ACCENT_COLOR,
                                 },
-                            );
+                            )
+                            .with_style(Style {
+                                height: Val::Px(40.0),
+                                ..default()
+                            });
 
                             sensors.spawn(title);
                             // Sensors contents
@@ -179,10 +184,7 @@ pub fn setup_ui(
                                 border_color: TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
-                                    justify_content: JustifyContent::FlexStart,
-                                    flex_direction: FlexDirection::Column,
-                                    row_gap: Val::Percent(MARGIN_PERCENT),
-                                    flex_grow: 0.5,
+                                    height: Val::Px(0.0),
                                     ..default()
                                 },
                                 ..default()
@@ -190,7 +192,7 @@ pub fn setup_ui(
                             let mut sensor1 = TextBundle::from_section(
                                 "No Sensors",
                                 TextStyle {
-                                    font: handles.fonts.londrina.w100_thin.clone(),
+                                    font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
                                     color: TRUCKUI_TEXT_COLOR,
                                 },
@@ -239,26 +241,27 @@ pub fn setup_ui(
                             font_size: 35.0,
                             color: TRUCKUI_ACCENT_COLOR,
                         },
-                    );
+                    )
+                    .with_style(Style {
+                        height: Val::Px(40.0),
+                        ..default()
+                    });
 
                     mid_blk.spawn(title);
                     // Journal contents
                     mid_blk.spawn(NodeBundle {
                         border_color: TRUCKUI_ACCENT_COLOR.into(),
                         style: Style {
-                            border: UiRect::top(Val::Px(2.0)),
-                            justify_content: JustifyContent::FlexStart,
-                            flex_direction: FlexDirection::Column,
-                            row_gap: Val::Percent(MARGIN_PERCENT),
-                            flex_grow: 0.2,
+                            border: UiRect::top(Val::Px(1.50)),
+                            height: Val::Px(0.0),
                             ..default()
                         },
                         ..default()
                     });
                     let mut sample_text = TextBundle::from_section(
-                        "Select evidence:",
+                        "Select evidence:\n[ ] Freezing   [ ] Orbs   [ ] UV Ectoplasm   [ ] EMF 5   [ ] EVP Recording   [ ] Spirit Box   [ ] RL Presence",
                         TextStyle {
-                            font: handles.fonts.londrina.w100_thin.clone(),
+                            font: handles.fonts.chakra.w300_light.clone(),
                             font_size: 25.0,
                             color: TRUCKUI_TEXT_COLOR,
                         },
@@ -324,7 +327,11 @@ pub fn setup_ui(
                                     font_size: 35.0,
                                     color: TRUCKUI_ACCENT_COLOR,
                                 },
-                            );
+                            )
+                            .with_style(Style {
+                                height: Val::Px(40.0),
+                                ..default()
+                            });
 
                             activity.spawn(title);
                             // Activity contents
@@ -332,10 +339,7 @@ pub fn setup_ui(
                                 border_color: TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
-                                    justify_content: JustifyContent::FlexStart,
-                                    flex_direction: FlexDirection::Column,
-                                    row_gap: Val::Percent(MARGIN_PERCENT),
-                                    flex_grow: 0.2,
+                                    height: Val::Px(0.0),
                                     ..default()
                                 },
                                 ..default()
@@ -343,7 +347,7 @@ pub fn setup_ui(
                             let mut sample_text = TextBundle::from_section(
                                 "Instrumentation broken",
                                 TextStyle {
-                                    font: handles.fonts.londrina.w100_thin.clone(),
+                                    font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
                                     color: TRUCKUI_TEXT_COLOR,
                                 },
@@ -404,7 +408,7 @@ pub fn setup_ui(
                                     btn.spawn(TextBundle::from_section(
                                         "Exit Truck",
                                         TextStyle {
-                                            font: handles.fonts.londrina.w400_regular.clone(),
+                                            font: handles.fonts.titillium.w600_semibold.clone(),
                                             font_size: 35.0,
                                             color: BUTTON_EXIT_TRUCK_TXTCOLOR,
                                         },
@@ -429,7 +433,7 @@ pub fn setup_ui(
                                     btn.spawn(TextBundle::from_section(
                                         "End Mission",
                                         TextStyle {
-                                            font: handles.fonts.londrina.w400_regular.clone(),
+                                            font: handles.fonts.titillium.w600_semibold.clone(),
                                             font_size: 35.0,
                                             color: BUTTON_END_MISSION_TXTCOLOR,
                                         },

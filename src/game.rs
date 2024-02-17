@@ -369,8 +369,8 @@ pub fn setup_ui(
                             let text_bundle = TextBundle::from_section(
                                 "Movement: WASD - Interact: E\nToggle Aux: T - Toggle Main: R\nCycle Inv: Q - Swap: TAB",
                                 TextStyle {
-                                    font: handles.fonts.londrina.w100_thin.clone(),
-                                    font_size: 20.0,
+                                    font: handles.fonts.chakra.w300_light.clone(),
+                                    font_size: 18.0,
                                     color: INVENTORY_STATS_COLOR,
                                 },
                             );
@@ -431,8 +431,8 @@ pub fn setup_ui(
                             let mut text_bundle = TextBundle::from_section(
                                 "-",
                                 TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 26.0,
+                                    font: handles.fonts.chakra.w300_light.clone(),
+                                    font_size: 22.0,
                                     color: INVENTORY_STATS_COLOR,
                                 },
                             );
