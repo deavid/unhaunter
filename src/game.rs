@@ -998,6 +998,7 @@ pub fn load_level(
     mut sdb: ResMut<SpriteDB>,
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
+    mut camera: Query<&mut Transform, With<GCameraArena>>,
 ) {
     let Some(load_event) = ev.read().next() else {
         return;
@@ -1092,6 +1093,13 @@ pub fn load_level(
                         .clone();
 
                     cmat.data.sheet_idx = tileuid;
+                    // Set alpha initially transparent to all materials so they will appear slowly.
+                    cmat.data.color.set_a(0.5);
+                    cmat.data.gamma = 0.1;
+                    cmat.data.gbl = 0.1;
+                    cmat.data.gbr = 0.1;
+                    cmat.data.gtl = 0.1;
+                    cmat.data.gtr = 0.1;
                     let mat = materials1.add(cmat);
                     let transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
                     Bdl::Mmb(MaterialMesh2dBundle {
@@ -1209,6 +1217,12 @@ pub fn load_level(
     if player_spawn_points.is_empty() {
         error!("No player spawn points found!! - that will probably not display the map because the player will be out of bounds");
     }
+    let player_position = player_spawn_points.pop().unwrap();
+    let player_scoord = player_position.to_screen_coord();
+
+    for mut cam_trans in camera.iter_mut() {
+        cam_trans.translation = player_scoord;
+    }
     // Spawn Player 1
     commands
         .spawn(SpriteSheetBundle {
@@ -1217,14 +1231,14 @@ pub fn load_level(
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0)
+            transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             ..default()
         })
         .insert(GameSprite)
         .insert(gear::playergear::PlayerGear::new())
         .insert(PlayerSprite::new(1))
-        .insert(player_spawn_points.pop().unwrap())
+        .insert(player_position)
         .insert(board::Direction::default())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
