@@ -9,11 +9,118 @@ use crate::{
 #[derive(Component, Debug)]
 pub struct TruckUI;
 
+#[derive(Debug)]
+pub enum TruckButtonType {
+    Evidence,
+    Ghost,
+    ExitTruck,
+    EndMission,
+}
+
+impl TruckButtonType {
+    pub fn into_component(self) -> TruckUIButton {
+        TruckUIButton::from(self)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum TruckButtonState {
+    Off,
+    Pressed,
+    Discard,
+}
+#[derive(Component, Debug)]
+pub struct TruckUIButton {
+    status: TruckButtonState,
+    class: TruckButtonType,
+}
+
+impl TruckUIButton {
+    pub fn pressed(&mut self) {
+        self.status = match self.status {
+            TruckButtonState::Off => TruckButtonState::Pressed,
+            TruckButtonState::Pressed => TruckButtonState::Discard,
+            TruckButtonState::Discard => TruckButtonState::Off,
+        }
+    }
+    pub fn border_color(&self, interaction: Interaction) -> Color {
+        match self.class {
+            TruckButtonType::Evidence | TruckButtonType::Ghost => match interaction {
+                Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
+                Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
+                Interaction::None => TRUCKUI_ACCENT2_COLOR,
+            },
+            TruckButtonType::ExitTruck => match interaction {
+                Interaction::Pressed => BUTTON_EXIT_TRUCK_TXTCOLOR,
+                Interaction::Hovered => BUTTON_EXIT_TRUCK_TXTCOLOR,
+                Interaction::None => BUTTON_EXIT_TRUCK_FGCOLOR,
+            },
+            TruckButtonType::EndMission => match interaction {
+                Interaction::Pressed => BUTTON_END_MISSION_TXTCOLOR,
+                Interaction::Hovered => BUTTON_END_MISSION_TXTCOLOR,
+                Interaction::None => BUTTON_END_MISSION_FGCOLOR,
+            },
+        }
+    }
+    pub fn background_color(&self, interaction: Interaction) -> Color {
+        match self.class {
+            TruckButtonType::Evidence | TruckButtonType::Ghost => match self.status {
+                TruckButtonState::Off => TRUCKUI_BGCOLOR,
+                TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
+            },
+            TruckButtonType::ExitTruck => match interaction {
+                Interaction::Pressed => BUTTON_EXIT_TRUCK_FGCOLOR,
+                Interaction::Hovered => BUTTON_EXIT_TRUCK_BGCOLOR,
+                Interaction::None => BUTTON_EXIT_TRUCK_BGCOLOR,
+            },
+            TruckButtonType::EndMission => match interaction {
+                Interaction::Pressed => BUTTON_END_MISSION_FGCOLOR,
+                Interaction::Hovered => BUTTON_END_MISSION_BGCOLOR,
+                Interaction::None => BUTTON_END_MISSION_BGCOLOR,
+            },
+        }
+    }
+
+    pub fn text_color(&self, _interaction: Interaction) -> Color {
+        match self.class {
+            TruckButtonType::Evidence | TruckButtonType::Ghost => TRUCKUI_TEXT_COLOR,
+            TruckButtonType::ExitTruck => BUTTON_EXIT_TRUCK_TXTCOLOR,
+            TruckButtonType::EndMission => BUTTON_END_MISSION_TXTCOLOR,
+        }
+    }
+}
+
+impl From<TruckButtonType> for TruckUIButton {
+    fn from(value: TruckButtonType) -> Self {
+        TruckUIButton {
+            status: TruckButtonState::Off,
+            class: value,
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::GameState::Truck), setup_ui)
         .add_systems(OnExit(root::GameState::Truck), cleanup)
-        .add_systems(Update, keyboard);
+        .add_systems(Update, keyboard)
+        .add_systems(Update, button_system);
 }
+
+const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
+
+const TRUCKUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
+const TRUCKUI_PANEL_BGCOLOR: Color = Color::rgba(0.106, 0.129, 0.157, 0.8);
+const TRUCKUI_ACCENT_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 1.0);
+const TRUCKUI_ACCENT2_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 0.2);
+const TRUCKUI_ACCENT3_COLOR: Color = Color::rgba(0.650, 0.80, 0.856, 1.0);
+const TRUCKUI_TEXT_COLOR: Color = Color::rgba(0.7, 0.82, 0.85, 1.0);
+const BUTTON_EXIT_TRUCK_BGCOLOR: Color = Color::rgba(0.129, 0.165, 0.122, 1.0);
+const BUTTON_EXIT_TRUCK_FGCOLOR: Color = Color::rgba(0.196, 0.275, 0.169, 1.0);
+const BUTTON_EXIT_TRUCK_TXTCOLOR: Color = Color::rgba(0.416, 0.667, 0.271, 1.0);
+const BUTTON_END_MISSION_BGCOLOR: Color = Color::rgba(0.224, 0.129, 0.122, 1.0);
+const BUTTON_END_MISSION_FGCOLOR: Color = Color::rgba(0.388, 0.200, 0.169, 1.0);
+const BUTTON_END_MISSION_TXTCOLOR: Color = Color::rgba(0.851, 0.522, 0.275, 1.0);
 
 pub fn setup_ui(
     mut commands: Commands,
@@ -21,18 +128,6 @@ pub fn setup_ui(
     handles: Res<root::GameAssets>,
 ) {
     // Load Truck UI
-    const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
-
-    const TRUCKUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
-    const TRUCKUI_PANEL_BGCOLOR: Color = Color::rgba(0.106, 0.129, 0.157, 0.8);
-    const TRUCKUI_ACCENT_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 1.0);
-    const TRUCKUI_TEXT_COLOR: Color = Color::rgba(0.7, 0.82, 0.85, 1.0);
-    const BUTTON_EXIT_TRUCK_BGCOLOR: Color = Color::rgba(0.129, 0.165, 0.122, 1.0);
-    const BUTTON_EXIT_TRUCK_FGCOLOR: Color = Color::rgba(0.196, 0.275, 0.169, 1.0);
-    const BUTTON_EXIT_TRUCK_TXTCOLOR: Color = Color::rgba(0.416, 0.667, 0.271, 1.0);
-    const BUTTON_END_MISSION_BGCOLOR: Color = Color::rgba(0.224, 0.129, 0.122, 1.0);
-    const BUTTON_END_MISSION_FGCOLOR: Color = Color::rgba(0.388, 0.200, 0.169, 1.0);
-    const BUTTON_END_MISSION_TXTCOLOR: Color = Color::rgba(0.851, 0.522, 0.275, 1.0);
     const MARGIN_PERCENT: f32 = 0.5;
     const TEXT_MARGIN: UiRect = UiRect::percent(2.0, 0.0, 0.0, 0.0);
     const MARGIN: UiRect = UiRect::percent(
@@ -258,18 +353,212 @@ pub fn setup_ui(
                         },
                         ..default()
                     });
-                    let mut sample_text = TextBundle::from_section(
-                        "Select evidence:\n[ ] Freezing   [ ] Orbs   [ ] UV Ectoplasm   [ ] EMF 5   [ ] EVP Recording   [ ] Spirit Box   [ ] RL Presence",
-                        TextStyle {
-                            font: handles.fonts.chakra.w300_light.clone(),
-                            font_size: 25.0,
-                            color: TRUCKUI_TEXT_COLOR,
-                        },
+
+                    mid_blk.spawn(
+                        TextBundle::from_section(
+                            "Select evidence:",
+                            TextStyle {
+                                font: handles.fonts.chakra.w300_light.clone(),
+                                font_size: 25.0,
+                                color: TRUCKUI_TEXT_COLOR,
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(4.0)),
+                            ..default()
+                        }),
                     );
-                    sample_text.style.margin = TEXT_MARGIN;
 
-                    mid_blk.spawn(sample_text);
+                    // Evidence selection
+                    mid_blk
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::FlexStart,
+                                // flex_direction: FlexDirection::Row,
+                                // flex_wrap: FlexWrap::Wrap,
+                                row_gap: Val::Px(4.0),
+                                column_gap: Val::Px(4.0),
+                                display: Display::Grid,
+                                grid_template_columns: vec![
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                ],
+                                grid_template_rows: vec![GridTrack::auto(), GridTrack::auto()],
 
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|evidence| {
+                            let evidences = vec![
+                                "Freezing temps",
+                                "Floating orbs",
+                                "UV Ectoplasm",
+                                "EMF Level 5",
+                                "EVP Recording",
+                                "Spirit Box",
+                                "RL Presence",
+                                "500+ cpm",
+                            ];
+                            for txt in evidences {
+                                evidence
+                                    .spawn(ButtonBundle {
+                                        style: Style {
+                                            min_height: Val::Px(20.0),
+                                            border: UiRect::all(Val::Px(0.9)),
+                                            align_content: AlignContent::Center,
+                                            justify_content: JustifyContent::Center,
+                                            display: Display::Grid,
+                                            flex_direction: FlexDirection::Column,
+                                            align_items: AlignItems::Center,
+                                            margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
+                                            padding: UiRect::all(Val::Px(4.0)),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    })
+                                    .insert(TruckButtonType::Evidence.into_component())
+                                    .with_children(|btn| {
+                                        btn.spawn(TextBundle::from_section(
+                                            txt,
+                                            TextStyle {
+                                                font: handles
+                                                    .fonts
+                                                    .titillium
+                                                    .w200_extralight
+                                                    .clone(),
+                                                font_size: 21.0,
+                                                ..default()
+                                            },
+                                        ));
+                                    });
+                            }
+                        });
+                    // ----
+                    mid_blk.spawn(
+                        TextBundle::from_section(
+                            "With the above evidence we believe the ghost is:",
+                            TextStyle {
+                                font: handles.fonts.chakra.w300_light.clone(),
+                                font_size: 25.0,
+                                color: TRUCKUI_TEXT_COLOR,
+                            },
+                        )
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(4.0)),
+                            ..default()
+                        }),
+                    );
+
+                    // Ghost selection
+                    mid_blk
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::FlexStart,
+                                row_gap: Val::Px(4.0),
+                                column_gap: Val::Px(4.0),
+                                display: Display::Grid,
+                                grid_template_columns: vec![
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                ],
+                                grid_template_rows: vec![GridTrack::auto(), GridTrack::auto()],
+                                grid_auto_rows: GridTrack::auto(),
+
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|ghost_selection| {
+                            let ghosts = vec![
+                                "Bean Sidhe",
+                                "Dullahan",
+                                "Leprechaun",
+                                "Barghest",
+                                "Will O' Wisp",
+                                "Widow",
+                                "Hobs Tally",
+                                "Ghoul",
+                                "Afrit",
+                                "Domovoi",
+                                "Ghostlight",
+                                "Kappa",
+                                "Tengu",
+                                "La Llorona",
+                                "Curupira",
+                                "Dybbuk",
+                                "Phooka",
+                                "Wisp",
+                                "Gray Man",
+                                "Lady in White",
+                                "Maresca",
+                                "Gashadokuro",
+                                "Jorōgumo",
+                                "Namahage",
+                                "Tsuchinoko",
+                                "Obayifo",
+                                "Brume",
+                                "Bugbear",
+                                "Boggart",
+                                "Grey Lady",
+                                "Old Nan",
+                                "Brown Lady",
+                                "Morag",
+                                "Fionnuala",
+                                "Ailill",
+                                "Cairbre",
+                                "Oonagh",
+                                "Mider",
+                                "Orla",
+                                "Finvarra",
+                                "Caoilte",
+                                "Ceara",
+                                "Muirgheas",
+                            ];
+                            for txt in ghosts {
+                                ghost_selection
+                                    .spawn(ButtonBundle {
+                                        style: Style {
+                                            min_height: Val::Px(20.0),
+                                            border: UiRect::all(Val::Px(0.9)),
+                                            align_content: AlignContent::Center,
+                                            justify_content: JustifyContent::Center,
+                                            padding: UiRect::new(
+                                                Val::Px(5.0),
+                                                Val::Px(2.0),
+                                                Val::Px(0.0),
+                                                Val::Px(2.0),
+                                            ),
+                                            display: Display::Grid,
+                                            flex_direction: FlexDirection::Column,
+                                            align_items: AlignItems::Center,
+                                            ..default()
+                                        },
+                                        ..default()
+                                    })
+                                    .insert(TruckButtonType::Ghost.into_component())
+                                    .with_children(|btn| {
+                                        btn.spawn(TextBundle::from_section(
+                                            txt,
+                                            TextStyle {
+                                                font: handles
+                                                    .fonts
+                                                    .titillium
+                                                    .w200_extralight
+                                                    .clone(),
+                                                font_size: 21.0,
+                                                ..default()
+                                            },
+                                        ));
+                                    });
+                            }
+                        });
+
+                    // ----
                     mid_blk.spawn(NodeBundle {
                         style: Style {
                             justify_content: JustifyContent::FlexStart,
@@ -400,17 +689,16 @@ pub fn setup_ui(
                                         margin: UiRect::bottom(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     },
-                                    background_color: BUTTON_EXIT_TRUCK_BGCOLOR.into(),
-                                    border_color: BUTTON_EXIT_TRUCK_FGCOLOR.into(),
                                     ..default()
                                 })
+                                .insert(TruckButtonType::ExitTruck.into_component())
                                 .with_children(|btn| {
                                     btn.spawn(TextBundle::from_section(
                                         "Exit Truck",
                                         TextStyle {
                                             font: handles.fonts.titillium.w600_semibold.clone(),
                                             font_size: 35.0,
-                                            color: BUTTON_EXIT_TRUCK_TXTCOLOR,
+                                            ..default()
                                         },
                                     ));
                                 });
@@ -425,17 +713,16 @@ pub fn setup_ui(
                                         border: MARGIN,
                                         ..default()
                                     },
-                                    background_color: BUTTON_END_MISSION_BGCOLOR.into(),
-                                    border_color: BUTTON_END_MISSION_FGCOLOR.into(),
                                     ..default()
                                 })
+                                .insert(TruckButtonType::EndMission.into_component())
                                 .with_children(|btn| {
                                     btn.spawn(TextBundle::from_section(
                                         "End Mission",
                                         TextStyle {
                                             font: handles.fonts.titillium.w600_semibold.clone(),
                                             font_size: 35.0,
-                                            color: BUTTON_END_MISSION_TXTCOLOR,
+                                            ..default()
                                         },
                                     ));
                                 });
@@ -462,5 +749,33 @@ pub fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
         game_next_state.set(root::GameState::None);
+    }
+}
+
+#[allow(clippy::type_complexity)]
+fn button_system(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &Children,
+            &mut TruckUIButton,
+        ),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for (interaction, mut color, mut border_color, children, mut tui_button) in
+        &mut interaction_query
+    {
+        let mut text = text_query.get_mut(children[0]).unwrap();
+        if *interaction == Interaction::Pressed {
+            tui_button.pressed();
+        }
+
+        border_color.0 = tui_button.border_color(*interaction);
+        *color = tui_button.background_color(*interaction).into();
+        text.sections[0].style.color = tui_button.text_color(*interaction);
     }
 }
