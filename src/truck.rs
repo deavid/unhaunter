@@ -9,6 +9,14 @@ use crate::{
 #[derive(Component, Debug)]
 pub struct TruckUI;
 
+#[derive(Component, Debug)]
+pub struct TruckUIGhostGuess;
+
+#[derive(Debug, Resource, Default)]
+pub struct GhostGuess {
+    pub ghost_name: Option<String>,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum TruckButtonType {
     Evidence,
@@ -108,7 +116,9 @@ impl From<TruckButtonType> for TruckUIButton {
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::GameState::Truck), setup_ui)
         .add_systems(OnExit(root::GameState::Truck), cleanup)
+        .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
+        .add_systems(Update, ghost_guess_system)
         .add_systems(Update, button_system);
 }
 
@@ -442,20 +452,62 @@ pub fn setup_ui(
                             }
                         });
                     // ----
-                    mid_blk.spawn(
-                        TextBundle::from_section(
-                            "With the above evidence we believe the ghost is:",
-                            TextStyle {
-                                font: handles.fonts.chakra.w300_light.clone(),
-                                font_size: 25.0,
-                                color: TRUCKUI_TEXT_COLOR,
+                    mid_blk
+                        .spawn(NodeBundle {
+                            style: Style {
+                                margin: UiRect::all(Val::Px(4.0)),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::End,
+                                column_gap: Val::Percent(MARGIN_PERCENT),
+                                flex_basis: Val::Px(50.0),
+                                flex_grow: 0.5,
+                                flex_shrink: 0.0,
+                                ..default()
                             },
-                        )
-                        .with_style(Style {
-                            margin: UiRect::all(Val::Px(4.0)),
+
                             ..default()
-                        }),
-                    );
+                        })
+                        .with_children(|guess| {
+                            guess.spawn(
+                                TextBundle::from_section(
+                                    "With the above evidence we believe the ghost is:",
+                                    TextStyle {
+                                        font: handles.fonts.chakra.w300_light.clone(),
+                                        font_size: 25.0,
+                                        color: TRUCKUI_TEXT_COLOR,
+                                    },
+                                )
+                                .with_style(Style {
+                                    flex_grow: 1.0,
+                                    flex_shrink: 1.0,
+                                    ..default()
+                                }),
+                            );
+                            let ghost_guess = TextBundle::from_section(
+                                "-- Unknown --",
+                                TextStyle {
+                                    font: handles.fonts.titillium.w600_semibold.clone(),
+                                    font_size: 28.0,
+                                    color: TRUCKUI_TEXT_COLOR,
+                                },
+                            );
+                            guess
+                                .spawn(NodeBundle {
+                                    background_color: TRUCKUI_BGCOLOR.into(),
+                                    style: Style {
+                                        padding: UiRect::all(Val::Px(4.0)),
+                                        flex_basis: Val::Px(300.0),
+                                        flex_grow: 0.0,
+                                        flex_shrink: 0.0,
+                                        justify_content: JustifyContent::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                })
+                                .with_children(|node| {
+                                    node.spawn(ghost_guess).insert(TruckUIGhostGuess);
+                                });
+                        });
 
                     // Ghost selection
                     mid_blk
@@ -770,6 +822,7 @@ fn button_system(
         With<Button>,
     >,
     mut text_query: Query<&mut Text>,
+    mut gg: ResMut<GhostGuess>,
 ) {
     let mut new_ghost_selected = None;
     for (interaction, _color, _border_color, children, mut tui_button) in &mut interaction_query {
@@ -784,24 +837,41 @@ fn button_system(
             }
         }
     }
-
+    let mut ghost_selected = None;
     for (interaction, mut color, mut border_color, children, mut tui_button) in
         &mut interaction_query
     {
         let mut text = text_query.get_mut(children[0]).unwrap();
         let pressed = tui_button.status == TruckButtonState::Pressed;
-
+        let is_ghost = tui_button.class == TruckButtonType::Ghost;
         if let Some(ghost) = new_ghost_selected.as_ref() {
-            if tui_button.class == TruckButtonType::Ghost
-                && pressed
-                && *ghost != text.sections[0].value
-            {
+            if is_ghost && pressed && *ghost != text.sections[0].value {
                 tui_button.status = TruckButtonState::Off;
             }
+        }
+        let pressed = tui_button.status == TruckButtonState::Pressed;
+        if is_ghost && pressed {
+            ghost_selected = Some(text.sections[0].value.clone());
         }
 
         border_color.0 = tui_button.border_color(*interaction);
         *color = tui_button.background_color(*interaction).into();
         text.sections[0].style.color = tui_button.text_color(*interaction);
+    }
+    gg.ghost_name = ghost_selected;
+}
+
+fn ghost_guess_system(
+    mut guess_query: Query<&mut Text, With<TruckUIGhostGuess>>,
+    gg: Res<GhostGuess>,
+) {
+    if !gg.is_changed() {
+        return;
+    }
+    for mut text in guess_query.iter_mut() {
+        text.sections[0].value = match gg.ghost_name.as_ref() {
+            Some(gn) => gn.clone(),
+            None => "-- Unknown --".to_string(),
+        };
     }
 }
