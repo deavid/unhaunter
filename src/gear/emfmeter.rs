@@ -81,11 +81,15 @@ impl GearUsable for EMFMeter {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
-            format!("Reading: {:.1}mG {}", self.emf, self.emf_level.to_status())
+            format!(
+                "Reading: {:>6.1}mG {}",
+                self.emf,
+                self.emf_level.to_status()
+            )
         } else {
             "".to_string()
         };
-        format!("{name}: {on_s}\n{msg}")
+        format!("{name}:  {on_s}\n{msg}")
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {

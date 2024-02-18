@@ -44,7 +44,7 @@ impl GearUsable for Recorder {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
-            format!("Volume: {:.0}dB", self.sound)
+            format!("Volume: {:>4.0}dB", self.sound)
         } else {
             "".to_string()
         };

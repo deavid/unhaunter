@@ -21,7 +21,7 @@ impl FlashlightStatus {
             FlashlightStatus::Off => "OFF",
             FlashlightStatus::Low => "LOW",
             FlashlightStatus::Mid => "MID",
-            FlashlightStatus::High => "HI",
+            FlashlightStatus::High => " HI",
         }
     }
 }
@@ -121,7 +121,7 @@ impl GearUsable for Flashlight {
         let heat_temp = 15.0 + self.heatsink_temp * 70.0;
 
         format!(
-            "{name}: {on_s}\nBattery: {:.0}% {heat_temp:.1}ºC {overheat}",
+            "{name}: {on_s}  {overheat}\nBattery:   {:>3.0}% {heat_temp:>5.1}ºC",
             self.battery_level * 100.0
         )
     }

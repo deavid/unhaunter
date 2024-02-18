@@ -42,7 +42,7 @@ impl GearUsable for Thermometer {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
-            format!("Temperature: {:.1}ºC", self.temp)
+            format!("Temperature: {:>5.1}ºC", self.temp)
         } else {
             "".to_string()
         };

@@ -466,9 +466,8 @@ pub fn setup_ui(
                                     GridTrack::auto(),
                                     GridTrack::auto(),
                                 ],
-                                grid_template_rows: vec![GridTrack::auto(), GridTrack::auto()],
-                                grid_auto_rows: GridTrack::auto(),
-
+                                grid_auto_rows: GridTrack::flex(1.0),
+                                flex_grow: 1.0,
                                 ..default()
                             },
                             ..default()
