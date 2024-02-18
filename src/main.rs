@@ -2,6 +2,7 @@ mod behavior;
 mod board;
 mod game;
 mod gear;
+mod ghosts;
 mod leveleditor;
 mod mainmenu;
 mod materials;
