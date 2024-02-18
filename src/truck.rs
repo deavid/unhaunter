@@ -9,7 +9,7 @@ use crate::{
 #[derive(Component, Debug)]
 pub struct TruckUI;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TruckButtonType {
     Evidence,
     Ghost,
@@ -45,10 +45,15 @@ impl TruckUIButton {
     }
     pub fn border_color(&self, interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence | TruckButtonType::Ghost => match interaction {
+            TruckButtonType::Evidence => match interaction {
                 Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
                 Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
                 Interaction::None => TRUCKUI_ACCENT2_COLOR,
+            },
+            TruckButtonType::Ghost => match interaction {
+                Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
+                Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
+                Interaction::None => Color::NONE,
             },
             TruckButtonType::ExitTruck => match interaction {
                 Interaction::Pressed => BUTTON_EXIT_TRUCK_TXTCOLOR,
@@ -517,6 +522,7 @@ pub fn setup_ui(
                                 "Caoilte",
                                 "Ceara",
                                 "Muirgheas",
+                                "Domovoy",
                             ];
                             for txt in ghosts {
                                 ghost_selection
@@ -755,22 +761,45 @@ pub fn keyboard(
 fn button_system(
     mut interaction_query: Query<
         (
-            &Interaction,
+            Ref<Interaction>,
             &mut BackgroundColor,
             &mut BorderColor,
             &Children,
             &mut TruckUIButton,
         ),
-        (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     mut text_query: Query<&mut Text>,
 ) {
+    let mut new_ghost_selected = None;
+    for (interaction, _color, _border_color, children, mut tui_button) in &mut interaction_query {
+        let text = text_query.get_mut(children[0]).unwrap();
+
+        if interaction.is_changed() && *interaction == Interaction::Pressed {
+            tui_button.pressed();
+            if tui_button.class == TruckButtonType::Ghost
+                && tui_button.status == TruckButtonState::Pressed
+            {
+                new_ghost_selected = Some(text.sections[0].value.clone());
+                dbg!(&new_ghost_selected);
+            }
+        }
+    }
+
     for (interaction, mut color, mut border_color, children, mut tui_button) in
         &mut interaction_query
     {
         let mut text = text_query.get_mut(children[0]).unwrap();
-        if *interaction == Interaction::Pressed {
-            tui_button.pressed();
+        let pressed = tui_button.status == TruckButtonState::Pressed;
+
+        if let Some(ghost) = new_ghost_selected.as_ref() {
+            dbg!(&ghost, pressed, &text.sections[0].value);
+            if tui_button.class == TruckButtonType::Ghost
+                && pressed
+                && *ghost != text.sections[0].value
+            {
+                tui_button.status = TruckButtonState::Off;
+            }
         }
 
         border_color.0 = tui_button.border_color(*interaction);
