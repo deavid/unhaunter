@@ -1,6 +1,6 @@
+use bevy::utils::HashSet;
 use enum_iterator::all;
 use enum_iterator::Sequence;
-use std::collections::HashSet;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence)]
@@ -16,6 +16,9 @@ pub enum Evidence {
 }
 
 impl Evidence {
+    pub fn all() -> enum_iterator::All<Evidence> {
+        all::<Evidence>()
+    }
     pub fn name(&self) -> &'static str {
         match self {
             Evidence::FreezingTemp => "Freezing Temps",
@@ -96,6 +99,9 @@ pub enum GhostType {
 }
 
 impl GhostType {
+    pub fn all() -> enum_iterator::All<GhostType> {
+        all::<GhostType>()
+    }
     pub fn name(&self) -> &'static str {
         match self {
             GhostType::BeanSidhe => "Bean Sidhe",

@@ -1,7 +1,8 @@
-use bevy::app::App;
 use bevy::prelude::*;
+use bevy::{app::App, utils::HashSet};
 
 use crate::{
+    ghosts::{self, Evidence, GhostType},
     materials::{self, UIPanelMaterial},
     root,
 };
@@ -14,13 +15,13 @@ pub struct TruckUIGhostGuess;
 
 #[derive(Debug, Resource, Default)]
 pub struct GhostGuess {
-    pub ghost_name: Option<String>,
+    pub ghost_type: Option<GhostType>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TruckButtonType {
-    Evidence,
-    Ghost,
+    Evidence(ghosts::Evidence),
+    Ghost(ghosts::GhostType),
     ExitTruck,
     EndMission,
 }
@@ -41,6 +42,7 @@ pub enum TruckButtonState {
 pub struct TruckUIButton {
     status: TruckButtonState,
     class: TruckButtonType,
+    disabled: bool,
 }
 
 impl TruckUIButton {
@@ -53,12 +55,12 @@ impl TruckUIButton {
     }
     pub fn border_color(&self, interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence => match interaction {
+            TruckButtonType::Evidence(_) => match interaction {
                 Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
+                Interaction::Hovered => TRUCKUI_TEXT_COLOR,
                 Interaction::None => TRUCKUI_ACCENT2_COLOR,
             },
-            TruckButtonType::Ghost => match interaction {
+            TruckButtonType::Ghost(_) => match interaction {
                 Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
                 Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
                 Interaction::None => Color::NONE,
@@ -74,10 +76,11 @@ impl TruckUIButton {
                 Interaction::None => BUTTON_END_MISSION_FGCOLOR,
             },
         }
+        .with_a(if self.disabled { 0.2 } else { 1.0 })
     }
     pub fn background_color(&self, interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence | TruckButtonType::Ghost => match self.status {
+            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => match self.status {
                 TruckButtonState::Off => TRUCKUI_BGCOLOR,
                 TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
                 TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
@@ -93,14 +96,19 @@ impl TruckUIButton {
                 Interaction::None => BUTTON_END_MISSION_BGCOLOR,
             },
         }
+        .with_a(if self.disabled { 0.2 } else { 1.0 })
     }
 
     pub fn text_color(&self, _interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence | TruckButtonType::Ghost => TRUCKUI_TEXT_COLOR,
+            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => match self.status {
+                TruckButtonState::Pressed => Color::BLACK,
+                _ => TRUCKUI_TEXT_COLOR,
+            },
             TruckButtonType::ExitTruck => BUTTON_EXIT_TRUCK_TXTCOLOR,
             TruckButtonType::EndMission => BUTTON_END_MISSION_TXTCOLOR,
         }
+        .with_a(if self.disabled { 0.4 } else { 1.0 })
     }
 }
 
@@ -109,6 +117,7 @@ impl From<TruckButtonType> for TruckUIButton {
         TruckUIButton {
             status: TruckButtonState::Off,
             class: value,
+            disabled: false,
         }
     }
 }
@@ -406,19 +415,9 @@ pub fn setup_ui(
                             },
                             ..default()
                         })
-                        .with_children(|evidence| {
-                            let evidences = vec![
-                                "Freezing temps",
-                                "Floating orbs",
-                                "UV Ectoplasm",
-                                "EMF Level 5",
-                                "EVP Recording",
-                                "Spirit Box",
-                                "RL Presence",
-                                "500+ cpm",
-                            ];
-                            for txt in evidences {
-                                evidence
+                        .with_children(|evblock| {
+                            for evidence in ghosts::Evidence::all() {
+                                evblock
                                     .spawn(ButtonBundle {
                                         style: Style {
                                             min_height: Val::Px(20.0),
@@ -434,17 +433,13 @@ pub fn setup_ui(
                                         },
                                         ..default()
                                     })
-                                    .insert(TruckButtonType::Evidence.into_component())
+                                    .insert(TruckButtonType::Evidence(evidence).into_component())
                                     .with_children(|btn| {
                                         btn.spawn(TextBundle::from_section(
-                                            txt,
+                                            evidence.name(),
                                             TextStyle {
-                                                font: handles
-                                                    .fonts
-                                                    .titillium
-                                                    .w200_extralight
-                                                    .clone(),
-                                                font_size: 21.0,
+                                                font: handles.fonts.titillium.w400_regular.clone(),
+                                                font_size: 22.0,
                                                 ..default()
                                             },
                                         ));
@@ -530,53 +525,7 @@ pub fn setup_ui(
                             ..default()
                         })
                         .with_children(|ghost_selection| {
-                            let ghosts = vec![
-                                "Bean Sidhe",
-                                "Dullahan",
-                                "Leprechaun",
-                                "Barghest",
-                                "Will O' Wisp",
-                                "Widow",
-                                "Hobs Tally",
-                                "Ghoul",
-                                "Afrit",
-                                "Domovoi",
-                                "Ghostlight",
-                                "Kappa",
-                                "Tengu",
-                                "La Llorona",
-                                "Curupira",
-                                "Dybbuk",
-                                "Phooka",
-                                "Wisp",
-                                "Gray Man",
-                                "Lady in White",
-                                "Maresca",
-                                "Gashadokuro",
-                                "Jorōgumo",
-                                "Namahage",
-                                "Tsuchinoko",
-                                "Obayifo",
-                                "Brume",
-                                "Bugbear",
-                                "Boggart",
-                                "Grey Lady",
-                                "Old Nan",
-                                "Brown Lady",
-                                "Morag",
-                                "Fionnuala",
-                                "Ailill",
-                                "Cairbre",
-                                "Oonagh",
-                                "Mider",
-                                "Orla",
-                                "Finvarra",
-                                "Caoilte",
-                                "Ceara",
-                                "Muirgheas",
-                                "Domovoy",
-                            ];
-                            for txt in ghosts {
+                            for ghost_type in ghosts::GhostType::all() {
                                 ghost_selection
                                     .spawn(ButtonBundle {
                                         style: Style {
@@ -597,17 +546,13 @@ pub fn setup_ui(
                                         },
                                         ..default()
                                     })
-                                    .insert(TruckButtonType::Ghost.into_component())
+                                    .insert(TruckButtonType::Ghost(ghost_type).into_component())
                                     .with_children(|btn| {
                                         btn.spawn(TextBundle::from_section(
-                                            txt,
+                                            ghost_type.name(),
                                             TextStyle {
-                                                font: handles
-                                                    .fonts
-                                                    .titillium
-                                                    .w200_extralight
-                                                    .clone(),
-                                                font_size: 21.0,
+                                                font: handles.fonts.titillium.w400_regular.clone(),
+                                                font_size: 22.0,
                                                 ..default()
                                             },
                                         ));
@@ -824,16 +769,30 @@ fn button_system(
     mut text_query: Query<&mut Text>,
     mut gg: ResMut<GhostGuess>,
 ) {
+    let mut selected_evidences_found = HashSet::<Evidence>::new();
+    let mut selected_evidences_missing = HashSet::<Evidence>::new();
     let mut new_ghost_selected = None;
-    for (interaction, _color, _border_color, children, mut tui_button) in &mut interaction_query {
-        let text = text_query.get_mut(children[0]).unwrap();
-
-        if interaction.is_changed() && *interaction == Interaction::Pressed {
+    for (interaction, _color, _border_color, _children, mut tui_button) in &mut interaction_query {
+        if interaction.is_changed() && *interaction == Interaction::Pressed && !tui_button.disabled
+        {
             tui_button.pressed();
-            if tui_button.class == TruckButtonType::Ghost
-                && tui_button.status == TruckButtonState::Pressed
-            {
-                new_ghost_selected = Some(text.sections[0].value.clone());
+            if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
+                if tui_button.status == TruckButtonState::Pressed {
+                    new_ghost_selected = Some(ghost_type);
+                }
+            }
+        }
+        if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+            if !tui_button.disabled {
+                match tui_button.status {
+                    TruckButtonState::Off => {}
+                    TruckButtonState::Pressed => {
+                        selected_evidences_found.insert(evidence_type);
+                    }
+                    TruckButtonState::Discard => {
+                        selected_evidences_missing.insert(evidence_type);
+                    }
+                }
             }
         }
     }
@@ -843,22 +802,35 @@ fn button_system(
     {
         let mut text = text_query.get_mut(children[0]).unwrap();
         let pressed = tui_button.status == TruckButtonState::Pressed;
-        let is_ghost = tui_button.class == TruckButtonType::Ghost;
-        if let Some(ghost) = new_ghost_selected.as_ref() {
-            if is_ghost && pressed && *ghost != text.sections[0].value {
-                tui_button.status = TruckButtonState::Off;
+        if let TruckButtonType::Ghost(gh) = tui_button.class {
+            let ghost_ev = gh.evidences();
+            let selected_ev_count = ghost_ev.intersection(&selected_evidences_found).count();
+            let missing_ev_count = ghost_ev.intersection(&selected_evidences_missing).count();
+            tui_button.disabled =
+                selected_ev_count < selected_evidences_found.len() || missing_ev_count > 0;
+
+            if let Some(ghost) = new_ghost_selected.as_ref() {
+                let is_this_ghost = gh == *ghost;
+                if !is_this_ghost && pressed {
+                    tui_button.status = TruckButtonState::Off;
+                }
+            }
+            if tui_button.status == TruckButtonState::Pressed {
+                ghost_selected = Some(gh);
             }
         }
-        let pressed = tui_button.status == TruckButtonState::Pressed;
-        if is_ghost && pressed {
-            ghost_selected = Some(text.sections[0].value.clone());
-        }
+        let interaction = if tui_button.disabled {
+            // Disable mouse actions when button is disabled
+            Interaction::None
+        } else {
+            *interaction
+        };
 
-        border_color.0 = tui_button.border_color(*interaction);
-        *color = tui_button.background_color(*interaction).into();
-        text.sections[0].style.color = tui_button.text_color(*interaction);
+        border_color.0 = tui_button.border_color(interaction);
+        *color = tui_button.background_color(interaction).into();
+        text.sections[0].style.color = tui_button.text_color(interaction);
     }
-    gg.ghost_name = ghost_selected;
+    gg.ghost_type = ghost_selected;
 }
 
 fn ghost_guess_system(
@@ -869,8 +841,8 @@ fn ghost_guess_system(
         return;
     }
     for mut text in guess_query.iter_mut() {
-        text.sections[0].value = match gg.ghost_name.as_ref() {
-            Some(gn) => gn.clone(),
+        text.sections[0].value = match gg.ghost_type.as_ref() {
+            Some(gn) => gn.name().to_owned(),
             None => "-- Unknown --".to_string(),
         };
     }
