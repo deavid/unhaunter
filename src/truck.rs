@@ -771,27 +771,34 @@ fn button_system(
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
+    let mut evidences_possible = HashSet::<Evidence>::new();
     let mut new_ghost_selected = None;
     for (interaction, _color, _border_color, _children, mut tui_button) in &mut interaction_query {
-        if interaction.is_changed() && *interaction == Interaction::Pressed && !tui_button.disabled
-        {
-            tui_button.pressed();
-            if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
-                if tui_button.status == TruckButtonState::Pressed {
-                    new_ghost_selected = Some(ghost_type);
+        if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+            match tui_button.status {
+                TruckButtonState::Off => {}
+                TruckButtonState::Pressed => {
+                    selected_evidences_found.insert(evidence_type);
+                }
+                TruckButtonState::Discard => {
+                    selected_evidences_missing.insert(evidence_type);
                 }
             }
         }
-        if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
-            if !tui_button.disabled {
-                match tui_button.status {
-                    TruckButtonState::Off => {}
-                    TruckButtonState::Pressed => {
-                        selected_evidences_found.insert(evidence_type);
-                    }
-                    TruckButtonState::Discard => {
-                        selected_evidences_missing.insert(evidence_type);
-                    }
+
+        if tui_button.disabled {
+            continue;
+        }
+        if interaction.is_changed() && *interaction == Interaction::Pressed {
+            tui_button.pressed();
+        }
+        if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
+            if interaction.is_changed() && tui_button.status == TruckButtonState::Pressed {
+                new_ghost_selected = Some(ghost_type);
+            }
+            if tui_button.status != TruckButtonState::Discard {
+                for evidence in ghost_type.evidences() {
+                    evidences_possible.insert(evidence);
                 }
             }
         }
@@ -802,6 +809,10 @@ fn button_system(
     {
         let mut text = text_query.get_mut(children[0]).unwrap();
         let pressed = tui_button.status == TruckButtonState::Pressed;
+        if let TruckButtonType::Evidence(ev) = tui_button.class {
+            tui_button.disabled =
+                !evidences_possible.contains(&ev) && tui_button.status != TruckButtonState::Discard;
+        }
         if let TruckButtonType::Ghost(gh) = tui_button.class {
             let ghost_ev = gh.evidences();
             let selected_ev_count = ghost_ev.intersection(&selected_evidences_found).count();
