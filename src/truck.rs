@@ -781,7 +781,6 @@ fn button_system(
                 && tui_button.status == TruckButtonState::Pressed
             {
                 new_ghost_selected = Some(text.sections[0].value.clone());
-                dbg!(&new_ghost_selected);
             }
         }
     }
@@ -793,7 +792,6 @@ fn button_system(
         let pressed = tui_button.status == TruckButtonState::Pressed;
 
         if let Some(ghost) = new_ghost_selected.as_ref() {
-            dbg!(&ghost, pressed, &text.sections[0].value);
             if tui_button.class == TruckButtonType::Ghost
                 && pressed
                 && *ghost != text.sections[0].value
