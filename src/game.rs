@@ -83,6 +83,9 @@ pub struct GhostSprite {
     pub target_point: Option<Position>,
 }
 
+#[derive(Component, Debug)]
+pub struct GhostBreach;
+
 impl GhostSprite {
     pub fn new(spawn_point: BoardPosition) -> Self {
         GhostSprite {
@@ -1281,6 +1284,19 @@ pub fn load_level(
         })
         .insert(GameSprite)
         .insert(GhostSprite::new(ghost_spawn.to_board_position()))
+        .insert(ghost_spawn);
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("img/breach.png"),
+            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
+            sprite: Sprite {
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(GameSprite)
+        .insert(GhostBreach)
         .insert(ghost_spawn);
 
     ev_room.send(RoomChangedEvent);

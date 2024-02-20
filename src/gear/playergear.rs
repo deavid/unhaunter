@@ -1,7 +1,8 @@
+use crate::ghosts::GhostType;
+
+use super::{Gear, GearKind};
 use bevy::prelude::*;
 use enum_iterator::Sequence;
-
-use super::Gear;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence)]
 pub enum Hand {
@@ -75,6 +76,7 @@ impl PlayerGear {
         use super::redtorch::RedTorch;
         use super::spiritbox::SpiritBox;
         // use super::thermalimager::ThermalImager;
+        use super::repellentflask::RepellentFlask;
         use super::thermometer::Thermometer;
         use super::uvtorch::UVTorch;
         use super::videocam::Videocam;
@@ -89,6 +91,7 @@ impl PlayerGear {
                 Recorder::default().into(),
                 Videocam::default().into(),
                 RedTorch::default().into(),
+                RepellentFlask::default().into(),
                 // Incomplete equipment:
                 // GeigerCounter::default().into(),
                 // IonMeter::default().into(),
@@ -116,6 +119,33 @@ impl PlayerGear {
         match hand {
             Hand::Left => self.left_hand.clone(),
             Hand::Right => self.right_hand.clone(),
+        }
+    }
+    pub fn craft_repellent(&mut self, ghost_type: GhostType) {
+        use super::repellentflask::RepellentFlask;
+
+        // Check if the repellent exists in inventory, if not, create it:
+        let flask_exists = self
+            .as_vec()
+            .iter()
+            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
+        if !flask_exists {
+            self.inventory.push(RepellentFlask::default().into());
+        }
+
+        // Assume that one always exists. Retrieve the &mut reference:
+
+        let mut inventory = self.as_vec_mut();
+        let Some(flask) = inventory
+            .iter_mut()
+            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)))
+        else {
+            error!("Flask not found??");
+            return;
+        };
+
+        if let GearKind::RepellentFlask(ref mut flask) = flask.0.kind {
+            flask.liquid_content = Some(ghost_type);
         }
     }
 }

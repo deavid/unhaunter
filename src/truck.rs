@@ -1,6 +1,10 @@
+use std::ops::Mul;
+
 use bevy::prelude::*;
 use bevy::{app::App, utils::HashSet};
 
+use crate::game::{GameConfig, PlayerSprite};
+use crate::gear::playergear::PlayerGear;
 use crate::{
     ghosts::{self, Evidence, GhostType},
     materials::{self, UIPanelMaterial},
@@ -9,6 +13,13 @@ use crate::{
 
 #[derive(Component, Debug)]
 pub struct TruckUI;
+
+#[derive(Clone, Debug, Event)]
+pub enum TruckUIEvent {
+    EndMission,
+    ExitTruck,
+    CraftRepellent,
+}
 
 #[derive(Component, Debug)]
 pub struct TruckUIGhostGuess;
@@ -22,6 +33,7 @@ pub struct GhostGuess {
 pub enum TruckButtonType {
     Evidence(ghosts::Evidence),
     Ghost(ghosts::GhostType),
+    CraftRepellent,
     ExitTruck,
     EndMission,
 }
@@ -46,11 +58,19 @@ pub struct TruckUIButton {
 }
 
 impl TruckUIButton {
-    pub fn pressed(&mut self) {
-        self.status = match self.status {
-            TruckButtonState::Off => TruckButtonState::Pressed,
-            TruckButtonState::Pressed => TruckButtonState::Discard,
-            TruckButtonState::Discard => TruckButtonState::Off,
+    pub fn pressed(&mut self) -> Option<TruckUIEvent> {
+        match self.class {
+            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
+                self.status = match self.status {
+                    TruckButtonState::Off => TruckButtonState::Pressed,
+                    TruckButtonState::Pressed => TruckButtonState::Discard,
+                    TruckButtonState::Discard => TruckButtonState::Off,
+                };
+                None
+            }
+            TruckButtonType::CraftRepellent => Some(TruckUIEvent::CraftRepellent),
+            TruckButtonType::ExitTruck => Some(TruckUIEvent::ExitTruck),
+            TruckButtonType::EndMission => Some(TruckUIEvent::EndMission),
         }
     }
     pub fn border_color(&self, interaction: Interaction) -> Color {
@@ -65,7 +85,7 @@ impl TruckUIButton {
                 Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
                 Interaction::None => Color::NONE,
             },
-            TruckButtonType::ExitTruck => match interaction {
+            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
                 Interaction::Pressed => BUTTON_EXIT_TRUCK_TXTCOLOR,
                 Interaction::Hovered => BUTTON_EXIT_TRUCK_TXTCOLOR,
                 Interaction::None => BUTTON_EXIT_TRUCK_FGCOLOR,
@@ -76,16 +96,25 @@ impl TruckUIButton {
                 Interaction::None => BUTTON_END_MISSION_FGCOLOR,
             },
         }
-        .with_a(if self.disabled { 0.2 } else { 1.0 })
+        .mul(
+            Color::WHITE
+                .with_a(if self.disabled { 0.05 } else { 1.0 })
+                .as_rgba_f32(),
+        )
     }
     pub fn background_color(&self, interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => match self.status {
+            TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Off => TRUCKUI_BGCOLOR,
                 TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
                 TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
             },
-            TruckButtonType::ExitTruck => match interaction {
+            TruckButtonType::Ghost(_) => match self.status {
+                TruckButtonState::Off => TRUCKUI_BGCOLOR.with_a(0.0),
+                TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
+            },
+            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
                 Interaction::Pressed => BUTTON_EXIT_TRUCK_FGCOLOR,
                 Interaction::Hovered => BUTTON_EXIT_TRUCK_BGCOLOR,
                 Interaction::None => BUTTON_EXIT_TRUCK_BGCOLOR,
@@ -96,19 +125,33 @@ impl TruckUIButton {
                 Interaction::None => BUTTON_END_MISSION_BGCOLOR,
             },
         }
-        .with_a(if self.disabled { 0.2 } else { 1.0 })
+        .mul(
+            Color::WHITE
+                .with_a(if self.disabled { 0.05 } else { 1.0 })
+                .as_rgba_f32(),
+        )
     }
 
     pub fn text_color(&self, _interaction: Interaction) -> Color {
         match self.class {
-            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => match self.status {
+            TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Pressed => Color::BLACK,
                 _ => TRUCKUI_TEXT_COLOR,
             },
-            TruckButtonType::ExitTruck => BUTTON_EXIT_TRUCK_TXTCOLOR,
+            TruckButtonType::Ghost(_) => match self.status {
+                TruckButtonState::Pressed => Color::BLACK,
+                _ => TRUCKUI_TEXT_COLOR.with_a(0.5),
+            },
+            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => {
+                BUTTON_EXIT_TRUCK_TXTCOLOR
+            }
             TruckButtonType::EndMission => BUTTON_END_MISSION_TXTCOLOR,
         }
-        .with_a(if self.disabled { 0.4 } else { 1.0 })
+        .mul(
+            Color::WHITE
+                .with_a(if self.disabled { 0.1 } else { 1.0 })
+                .as_rgba_f32(),
+        )
     }
 }
 
@@ -125,10 +168,12 @@ impl From<TruckButtonType> for TruckUIButton {
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::GameState::Truck), setup_ui)
         .add_systems(OnExit(root::GameState::Truck), cleanup)
+        .add_event::<TruckUIEvent>()
         .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
         .add_systems(Update, ghost_guess_system)
-        .add_systems(Update, button_system);
+        .add_systems(Update, button_system)
+        .add_systems(Update, truckui_event_handle);
 }
 
 const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
@@ -446,7 +491,96 @@ pub fn setup_ui(
                                     });
                             }
                         });
-                    // ----
+                    // ---- Ghost guess
+                    mid_blk
+                        .spawn(NodeBundle {
+                            style: Style {
+                                margin: UiRect::all(Val::Px(4.0)),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::End,
+                                column_gap: Val::Percent(MARGIN_PERCENT),
+                                flex_basis: Val::Px(50.0),
+                                flex_grow: 0.5,
+                                flex_shrink: 0.0,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|guess| {
+                            guess.spawn(
+                                TextBundle::from_section(
+                                    "Possible ghost with the selected evidence:",
+                                    TextStyle {
+                                        font: handles.fonts.chakra.w300_light.clone(),
+                                        font_size: 25.0,
+                                        color: TRUCKUI_TEXT_COLOR,
+                                    },
+                                )
+                                .with_style(Style {
+                                    flex_grow: 1.0,
+                                    flex_shrink: 1.0,
+                                    ..default()
+                                }),
+                            );
+                        });
+
+                    // Ghost selection
+                    mid_blk
+                        .spawn(NodeBundle {
+                            style: Style {
+                                justify_content: JustifyContent::FlexStart,
+                                // row_gap: Val::Px(4.0),
+                                // column_gap: Val::Px(4.0),
+                                display: Display::Grid,
+                                grid_template_columns: vec![
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                    GridTrack::auto(),
+                                ],
+                                grid_auto_rows: GridTrack::flex(1.0),
+                                flex_grow: 1.0,
+                                ..default()
+                            },
+                            background_color: TRUCKUI_BGCOLOR.into(),
+                            ..default()
+                        })
+                        .with_children(|ghost_selection| {
+                            for ghost_type in ghosts::GhostType::all() {
+                                ghost_selection
+                                    .spawn(ButtonBundle {
+                                        style: Style {
+                                            min_height: Val::Px(20.0),
+                                            border: UiRect::all(Val::Px(0.9)),
+                                            align_content: AlignContent::Center,
+                                            justify_content: JustifyContent::Center,
+                                            padding: UiRect::new(
+                                                Val::Px(5.0),
+                                                Val::Px(2.0),
+                                                Val::Px(0.0),
+                                                Val::Px(2.0),
+                                            ),
+                                            display: Display::Grid,
+                                            flex_direction: FlexDirection::Column,
+                                            align_items: AlignItems::Center,
+                                            ..default()
+                                        },
+                                        ..default()
+                                    })
+                                    .insert(TruckButtonType::Ghost(ghost_type).into_component())
+                                    .with_children(|btn| {
+                                        btn.spawn(TextBundle::from_section(
+                                            ghost_type.name(),
+                                            TextStyle {
+                                                font: handles.fonts.titillium.w400_regular.clone(),
+                                                font_size: 22.0,
+                                                ..default()
+                                            },
+                                        ));
+                                    });
+                            }
+                        });
+                    // --- Ghost selected
                     mid_blk
                         .spawn(NodeBundle {
                             style: Style {
@@ -504,60 +638,33 @@ pub fn setup_ui(
                                 });
                         });
 
-                    // Ghost selection
+                    // ---- Synthesis of Unhaunter essence
                     mid_blk
-                        .spawn(NodeBundle {
+                        .spawn(ButtonBundle {
                             style: Style {
-                                justify_content: JustifyContent::FlexStart,
-                                row_gap: Val::Px(4.0),
-                                column_gap: Val::Px(4.0),
-                                display: Display::Grid,
-                                grid_template_columns: vec![
-                                    GridTrack::auto(),
-                                    GridTrack::auto(),
-                                    GridTrack::auto(),
-                                    GridTrack::auto(),
-                                ],
-                                grid_auto_rows: GridTrack::flex(1.0),
-                                flex_grow: 1.0,
+                                min_height: Val::Px(30.0),
+                                width: Val::Percent(50.0),
+                                border: MARGIN,
+                                align_self: AlignSelf::Center,
+                                align_content: AlignContent::Center,
+                                justify_content: JustifyContent::Center,
+                                flex_direction: FlexDirection::Column,
+                                align_items: AlignItems::Center,
+                                margin: MARGIN,
                                 ..default()
                             },
                             ..default()
                         })
-                        .with_children(|ghost_selection| {
-                            for ghost_type in ghosts::GhostType::all() {
-                                ghost_selection
-                                    .spawn(ButtonBundle {
-                                        style: Style {
-                                            min_height: Val::Px(20.0),
-                                            border: UiRect::all(Val::Px(0.9)),
-                                            align_content: AlignContent::Center,
-                                            justify_content: JustifyContent::Center,
-                                            padding: UiRect::new(
-                                                Val::Px(5.0),
-                                                Val::Px(2.0),
-                                                Val::Px(0.0),
-                                                Val::Px(2.0),
-                                            ),
-                                            display: Display::Grid,
-                                            flex_direction: FlexDirection::Column,
-                                            align_items: AlignItems::Center,
-                                            ..default()
-                                        },
-                                        ..default()
-                                    })
-                                    .insert(TruckButtonType::Ghost(ghost_type).into_component())
-                                    .with_children(|btn| {
-                                        btn.spawn(TextBundle::from_section(
-                                            ghost_type.name(),
-                                            TextStyle {
-                                                font: handles.fonts.titillium.w400_regular.clone(),
-                                                font_size: 22.0,
-                                                ..default()
-                                            },
-                                        ));
-                                    });
-                            }
+                        .insert(TruckButtonType::CraftRepellent.into_component())
+                        .with_children(|btn| {
+                            btn.spawn(TextBundle::from_section(
+                                "Craft Unhaunter™ Ghost Repellent",
+                                TextStyle {
+                                    font: handles.fonts.titillium.w600_semibold.clone(),
+                                    font_size: 32.0,
+                                    ..default()
+                                },
+                            ));
                         });
 
                     // ----
@@ -754,6 +861,34 @@ pub fn keyboard(
     }
 }
 
+pub fn truckui_event_handle(
+    mut ev_truckui: EventReader<TruckUIEvent>,
+    mut next_state: ResMut<NextState<root::State>>,
+    mut game_next_state: ResMut<NextState<root::GameState>>,
+    gg: Res<GhostGuess>,
+    gc: Res<GameConfig>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+) {
+    for ev in ev_truckui.read() {
+        match ev {
+            TruckUIEvent::EndMission => {
+                game_next_state.set(root::GameState::None);
+                next_state.set(root::State::MainMenu);
+            }
+            TruckUIEvent::ExitTruck => game_next_state.set(root::GameState::None),
+            TruckUIEvent::CraftRepellent => {
+                for (player, mut gear) in q_gear.iter_mut() {
+                    if player.id == gc.player_id {
+                        if let Some(ghost_type) = gg.ghost_type {
+                            gear.craft_repellent(ghost_type);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
@@ -768,6 +903,7 @@ fn button_system(
     >,
     mut text_query: Query<&mut Text>,
     mut gg: ResMut<GhostGuess>,
+    mut ev_truckui: EventWriter<TruckUIEvent>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -790,7 +926,9 @@ fn button_system(
             continue;
         }
         if interaction.is_changed() && *interaction == Interaction::Pressed {
-            tui_button.pressed();
+            if let Some(truckui_event) = tui_button.pressed() {
+                ev_truckui.send(truckui_event);
+            }
         }
         if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
             if interaction.is_changed() && tui_button.status == TruckButtonState::Pressed {
@@ -809,6 +947,9 @@ fn button_system(
     {
         let mut text = text_query.get_mut(children[0]).unwrap();
         let pressed = tui_button.status == TruckButtonState::Pressed;
+        if let TruckButtonType::CraftRepellent = tui_button.class {
+            tui_button.disabled = gg.ghost_type.is_none();
+        }
         if let TruckButtonType::Evidence(ev) = tui_button.class {
             tui_button.disabled =
                 !evidences_possible.contains(&ev) && tui_button.status != TruckButtonState::Discard;

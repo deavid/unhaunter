@@ -9,6 +9,7 @@ pub mod photocam;
 pub mod playergear;
 pub mod recorder;
 pub mod redtorch;
+mod repellentflask;
 pub mod spiritbox;
 pub mod thermalimager;
 pub mod thermometer;
@@ -25,6 +26,7 @@ use self::motionsensor::MotionSensor;
 use self::photocam::Photocam;
 use self::recorder::Recorder;
 use self::redtorch::RedTorch;
+use self::repellentflask::RepellentFlask;
 use self::spiritbox::SpiritBox;
 use self::thermalimager::ThermalImager;
 use self::thermometer::Thermometer;
@@ -90,6 +92,9 @@ pub enum GearSpriteID {
     SpiritBoxAns1,
     SpiritBoxAns2,
 
+    RepelentFlaskEmpty = 60,
+    RepelentFlaskFull,
+
     Compass = 80,
 
     EStaticMeter = 90,
@@ -117,6 +122,7 @@ pub enum GearKind {
     EStaticMeter(EStaticMeter),
     Videocam(Videocam),
     MotionSensor(MotionSensor),
+    RepellentFlask(RepellentFlask),
     #[default]
     None,
 }
@@ -150,6 +156,7 @@ impl GearUsable for Gear {
             GearKind::EStaticMeter(x) => x.get_display_name(),
             GearKind::Videocam(x) => x.get_display_name(),
             GearKind::MotionSensor(x) => x.get_display_name(),
+            GearKind::RepellentFlask(x) => x.get_display_name(),
             GearKind::None => "",
         }
     }
@@ -171,6 +178,7 @@ impl GearUsable for Gear {
             GearKind::EStaticMeter(x) => x.get_status(),
             GearKind::Videocam(x) => x.get_status(),
             GearKind::MotionSensor(x) => x.get_status(),
+            GearKind::RepellentFlask(x) => x.get_status(),
             GearKind::None => "".to_string(),
         }
     }
@@ -196,6 +204,7 @@ impl GearUsable for Gear {
             GearKind::EStaticMeter(x) => x.set_trigger(gs),
             GearKind::Videocam(x) => x.set_trigger(gs),
             GearKind::MotionSensor(x) => x.set_trigger(gs),
+            GearKind::RepellentFlask(x) => x.set_trigger(gs),
             GearKind::None => ni(&self),
         }
     }
@@ -217,6 +226,7 @@ impl GearUsable for Gear {
             GearKind::EStaticMeter(x) => x.get_sprite_idx(),
             GearKind::Videocam(x) => x.get_sprite_idx(),
             GearKind::MotionSensor(x) => x.get_sprite_idx(),
+            GearKind::RepellentFlask(x) => x.get_sprite_idx(),
             GearKind::None => GearSpriteID::None,
         }
     }
@@ -240,6 +250,7 @@ impl GearUsable for Gear {
             GearKind::EStaticMeter(x) => x.update(gs, pos, ep),
             GearKind::Videocam(x) => x.update(gs, pos, ep),
             GearKind::MotionSensor(x) => x.update(gs, pos, ep),
+            GearKind::RepellentFlask(x) => x.update(gs, pos, ep),
             GearKind::None => {}
         }
     }
