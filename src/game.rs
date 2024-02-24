@@ -83,6 +83,8 @@ pub struct GhostSprite {
     pub class: GhostType,
     pub spawn_point: BoardPosition,
     pub target_point: Option<Position>,
+    pub repellent_hits: i64,
+    pub repellent_misses: i64,
 }
 
 #[derive(Component, Debug)]
@@ -99,6 +101,8 @@ impl GhostSprite {
             class,
             spawn_point,
             target_point: None,
+            repellent_hits: 0,
+            repellent_misses: 0,
         }
     }
 }

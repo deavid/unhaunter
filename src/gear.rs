@@ -36,6 +36,7 @@ use self::videocam::Videocam;
 use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear};
 use crate::board::{self, Position};
 use crate::game::{GameConfig, PlayerSprite};
+use crate::root::GameState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -340,4 +341,13 @@ impl<'w, 's> GearStuff<'w, 's> {
             },
         });
     }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.init_resource::<GameConfig>()
+        .add_systems(Update, update_gear_inventory)
+        .add_systems(Update, thermometer::temperature_update)
+        .add_systems(Update, recorder::sound_update)
+        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
+        .add_systems(Update, repellentflask::repellent_update);
 }

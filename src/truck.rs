@@ -166,8 +166,10 @@ impl From<TruckButtonType> for TruckUIButton {
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::GameState::Truck), setup_ui)
-        .add_systems(OnExit(root::GameState::Truck), cleanup)
+    app.add_systems(OnEnter(root::State::InGame), setup_ui)
+        .add_systems(OnExit(root::State::InGame), cleanup)
+        .add_systems(OnEnter(root::GameState::Truck), show_ui)
+        .add_systems(OnExit(root::GameState::Truck), hide_ui)
         .add_event::<TruckUIEvent>()
         .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
@@ -219,6 +221,7 @@ pub fn setup_ui(
                 margin: MARGIN,
                 ..default()
             },
+            visibility: Visibility::Hidden,
             ..default()
         })
         .insert(TruckUI)
@@ -845,6 +848,18 @@ pub fn setup_ui(
 pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
+    }
+}
+
+pub fn show_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
+    for mut v in qtui.iter_mut() {
+        *v = Visibility::Inherited;
+    }
+}
+
+pub fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
+    for mut v in qtui.iter_mut() {
+        *v = Visibility::Hidden;
     }
 }
 

@@ -64,19 +64,13 @@ fn main() {
     .add_systems(Update, mainmenu::keyboard)
     .add_systems(Update, mainmenu::item_logic)
     .add_systems(Update, mainmenu::menu_event)
-    .add_systems(Update, gear::update_gear_inventory)
-    .add_systems(Update, gear::thermometer::temperature_update)
-    .add_systems(Update, gear::recorder::sound_update)
-    .add_systems(
-        Update,
-        gear::keyboard_gear.run_if(in_state(root::GameState::None)),
-    )
     .add_systems(Update, board::apply_perspective)
     .add_systems(PostUpdate, board::boardfield_update)
     .add_systems(Update, leveleditor::apply_lighting)
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 30.0,
     )));
+    gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
 

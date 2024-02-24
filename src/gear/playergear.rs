@@ -145,7 +145,7 @@ impl PlayerGear {
         };
 
         if let GearKind::RepellentFlask(ref mut flask) = flask.0.kind {
-            flask.liquid_content = Some(ghost_type);
+            flask.fill_liquid(ghost_type);
         }
     }
 }
