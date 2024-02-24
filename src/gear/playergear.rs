@@ -68,7 +68,7 @@ impl PlayerGear {
         use super::emfmeter::EMFMeter;
         // use super::estaticmeter::EStaticMeter;
         use super::flashlight::Flashlight;
-        // use super::geigercounter::GeigerCounter;
+        use super::geigercounter::GeigerCounter;
         // use super::ionmeter::IonMeter;
         // use super::motionsensor::MotionSensor;
         // use super::photocam::Photocam;
@@ -91,9 +91,9 @@ impl PlayerGear {
                 Recorder::default().into(),
                 Videocam::default().into(),
                 RedTorch::default().into(),
+                GeigerCounter::default().into(),
                 RepellentFlask::default().into(),
                 // Incomplete equipment:
-                // GeigerCounter::default().into(),
                 // IonMeter::default().into(),
                 // ThermalImager::default().into(),
                 // Photocam::default().into(),

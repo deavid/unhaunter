@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::board::Position;
+use crate::{board::Position, ghosts::Evidence};
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -108,16 +108,17 @@ pub fn temperature_update(
 
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
-        const GHOST_TARGET_TEMP: f32 = 1.0;
+        let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
+        let ghost_target_temp: f32 = if freezing { -5.0 } else { 1.0 };
         const GHOST_MAX_POWER: f32 = 0.002;
         for npos in bpos.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + GHOST_TARGET_TEMP * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
+                *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
             });
         }
         for npos in gs.spawn_point.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + GHOST_TARGET_TEMP * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
+                *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
             });
         }
     }
