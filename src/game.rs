@@ -1,6 +1,7 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{Bdl, BoardPosition, Direction, MapTileComponents, Position, SpriteDB};
+use crate::ghosts::GhostType;
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
@@ -79,6 +80,7 @@ impl PlayerSprite {
 
 #[derive(Component, Debug)]
 pub struct GhostSprite {
+    pub class: GhostType,
     pub spawn_point: BoardPosition,
     pub target_point: Option<Position>,
 }
@@ -88,7 +90,13 @@ pub struct GhostBreach;
 
 impl GhostSprite {
     pub fn new(spawn_point: BoardPosition) -> Self {
+        let mut rng = rand::thread_rng();
+        let ghost_types: Vec<_> = GhostType::all().collect();
+        let idx = rng.gen_range(0..ghost_types.len());
+        let class = ghost_types[idx];
+        warn!("Ghost type: {:?}", class);
         GhostSprite {
+            class,
             spawn_point,
             target_point: None,
         }
