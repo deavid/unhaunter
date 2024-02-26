@@ -11,6 +11,7 @@ mod root;
 mod summary;
 mod tiledmap;
 mod truck;
+mod utils;
 
 use std::time::Duration;
 

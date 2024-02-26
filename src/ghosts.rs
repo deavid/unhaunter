@@ -204,6 +204,12 @@ impl GhostType {
     }
 }
 
+impl Display for GhostType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use bevy::utils::HashMap;

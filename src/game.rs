@@ -1288,7 +1288,7 @@ pub fn load_level(
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position());
     let ghost_types = vec![ghost_sprite.class];
-    summary::SummaryData::new(ghost_types);
+    commands.insert_resource(summary::SummaryData::new(ghost_types));
 
     commands
         .spawn(SpriteBundle {

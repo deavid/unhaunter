@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{ghosts::GhostType, root};
+use crate::{ghosts::GhostType, root, utils};
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;
@@ -8,12 +8,22 @@ pub struct SCamera;
 #[derive(Debug, Component, Clone)]
 pub struct SummaryUI;
 
+#[derive(Debug, Component, Clone)]
+pub enum SummaryUIType {
+    GhostList,
+    TimeTaken,
+    GhostUnhaunted,
+    RepellentUsed,
+    FinalScore,
+}
+
 #[derive(Debug, Clone, Resource, Default)]
 pub struct SummaryData {
     pub time_taken_secs: f32,
     pub ghost_types: Vec<GhostType>,
     pub repellent_used_amt: u32,
     pub ghosts_unhaunted: u32,
+    pub final_score: i64,
 }
 
 impl SummaryData {
@@ -30,7 +40,10 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnEnter(root::State::Summary), (setup, setup_ui))
         .add_systems(OnExit(root::State::Summary), cleanup)
         .add_systems(Update, update_time.run_if(in_state(root::State::InGame)))
-        .add_systems(Update, keyboard.run_if(in_state(root::State::Summary)));
+        .add_systems(
+            Update,
+            (keyboard, update_ui).run_if(in_state(root::State::Summary)),
+        );
 }
 
 pub fn setup(mut commands: Commands) {
@@ -176,22 +189,76 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             color: Color::WHITE,
                         },
                     ));
-                    parent.spawn(TextBundle::from_section(
-                        "Time taken: 00.00.00",
-                        TextStyle {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: Color::GRAY,
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Ghost list",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::GhostList);
+                    parent.spawn(NodeBundle {
+                        style: Style {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(10.0),
+                            ..default()
                         },
-                    ));
-                    parent.spawn(TextBundle::from_section(
-                        "Ghosts remaining: 1",
-                        TextStyle {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: Color::GRAY,
+
+                        ..default()
+                    });
+
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Time taken: 00.00.00",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::TimeTaken);
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Ghosts unhaunted: 0/1",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::GhostUnhaunted);
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Repellent charges used: 0",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::RepellentUsed);
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Final Score: 0",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::FinalScore);
+
+                    parent.spawn(NodeBundle {
+                        style: Style {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(20.0),
+                            ..default()
                         },
-                    ));
+
+                        ..default()
+                    });
                     parent.spawn(TextBundle::from_section(
                         "[ - Press enter to continue - ]",
                         TextStyle {
@@ -212,4 +279,40 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             });
         });
     info!("Main menu loaded");
+}
+
+pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryData>) {
+    for (sui, mut text) in &mut qui {
+        match &sui {
+            SummaryUIType::GhostList => {
+                text.sections[0].value = format!(
+                    "Ghost: {}",
+                    rsd.ghost_types
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+
+            SummaryUIType::TimeTaken => {
+                text.sections[0].value =
+                    format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))
+            }
+            SummaryUIType::GhostUnhaunted => {
+                text.sections[0].value = format!(
+                    "Ghosts unhaunted: {}/{}",
+                    rsd.ghosts_unhaunted,
+                    rsd.ghost_types.len()
+                )
+            }
+            SummaryUIType::RepellentUsed => {
+                text.sections[0].value =
+                    format!("Repellent charges used: {}", rsd.repellent_used_amt)
+            }
+            SummaryUIType::FinalScore => {
+                text.sections[0].value = format!("Final Score: {}", rsd.final_score)
+            }
+        }
+    }
 }
