@@ -888,7 +888,7 @@ pub fn truckui_event_handle(
         match ev {
             TruckUIEvent::EndMission => {
                 game_next_state.set(root::GameState::None);
-                next_state.set(root::State::MainMenu);
+                next_state.set(root::State::Summary);
             }
             TruckUIEvent::ExitTruck => game_next_state.set(root::GameState::None),
             TruckUIEvent::CraftRepellent => {

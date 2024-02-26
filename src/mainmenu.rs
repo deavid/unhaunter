@@ -74,6 +74,15 @@ pub struct MCamera;
 #[derive(Component, Debug)]
 pub struct MenuUI;
 
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, keyboard)
+        .add_systems(Update, item_logic)
+        .add_systems(Update, menu_event)
+        .add_event::<MenuEvent>()
+        .add_systems(OnEnter(root::State::MainMenu), (setup, setup_ui))
+        .add_systems(OnExit(root::State::MainMenu), cleanup);
+}
+
 pub fn setup(mut commands: Commands) {
     // ui camera
     let cam = Camera2dBundle::default();
@@ -81,33 +90,22 @@ pub fn setup(mut commands: Commands) {
     info!("Main menu camera setup");
 }
 
-pub fn cleanup(mut commands: Commands, qc: Query<Entity, With<MCamera>>) {
+pub fn cleanup(
+    mut commands: Commands,
+    qc: Query<Entity, With<MCamera>>,
+    qm: Query<Entity, With<MenuUI>>,
+) {
     // Despawn old camera if exists
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
+    // Despawn menu UI if not used
+    for ui_entity in qm.iter() {
+        commands.entity(ui_entity).despawn_recursive();
+    }
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn setup_ui(
-    mut commands: Commands,
-    handles: Res<root::GameAssets>,
-    state: Res<State<root::State>>,
-    qm: Query<Entity, With<MenuUI>>,
-    _images: Res<Assets<Image>>,
-    _fonts: Res<Assets<Font>>,
-) {
-    if *state.get() != root::State::MainMenu {
-        // Despawn menu UI if not used
-        for ui_entity in qm.iter() {
-            commands.entity(ui_entity).despawn_recursive();
-        }
-        return;
-    }
-    if !qm.is_empty() {
-        return;
-    }
-
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     let main_color = Color::Rgba {
         red: 0.2,
         green: 0.2,

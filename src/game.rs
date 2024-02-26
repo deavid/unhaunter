@@ -5,7 +5,7 @@ use crate::ghosts::GhostType;
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
-use crate::{behavior, gear, tiledmap};
+use crate::{behavior, gear, summary, tiledmap};
 use crate::{
     board::{self, BoardDataToRebuild},
     root,
@@ -485,6 +485,7 @@ pub fn keyboard(
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
+        // TODO: Send this to GameState::Pause
         app_next_state.set(root::State::MainMenu);
     }
     for mut transform in camera.iter_mut() {
@@ -1280,10 +1281,15 @@ pub fn load_level(
     //     ));
 
     ghost_spawn_points.shuffle(&mut thread_rng());
+
     if ghost_spawn_points.is_empty() {
         error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
     }
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
+    let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position());
+    let ghost_types = vec![ghost_sprite.class];
+    summary::SummaryData::new(ghost_types);
+
     commands
         .spawn(SpriteBundle {
             texture: asset_server.load("img/ghost.png"),
@@ -1295,7 +1301,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
-        .insert(GhostSprite::new(ghost_spawn.to_board_position()))
+        .insert(ghost_sprite)
         .insert(ghost_spawn);
     commands
         .spawn(SpriteBundle {

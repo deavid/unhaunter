@@ -8,6 +8,7 @@ mod mainmenu;
 mod materials;
 mod pause;
 mod root;
+mod summary;
 mod tiledmap;
 mod truck;
 
@@ -56,14 +57,7 @@ fn main() {
     .add_event::<board::BoardDataToRebuild>()
     .add_state::<root::State>()
     .add_state::<root::GameState>()
-    .add_event::<mainmenu::MenuEvent>()
     .add_systems(Startup, root::load_assets)
-    .add_systems(OnEnter(root::State::MainMenu), mainmenu::setup)
-    .add_systems(OnExit(root::State::MainMenu), mainmenu::cleanup)
-    .add_systems(Update, mainmenu::setup_ui)
-    .add_systems(Update, mainmenu::keyboard)
-    .add_systems(Update, mainmenu::item_logic)
-    .add_systems(Update, mainmenu::menu_event)
     .add_systems(Update, board::apply_perspective)
     .add_systems(PostUpdate, board::boardfield_update)
     .add_systems(Update, leveleditor::apply_lighting)
@@ -73,6 +67,8 @@ fn main() {
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
+    summary::app_setup(&mut app);
+    mainmenu::app_setup(&mut app);
 
     app.run();
 }

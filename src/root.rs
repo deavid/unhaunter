@@ -7,6 +7,7 @@ pub enum State {
     #[default]
     MainMenu,
     InGame,
+    Summary,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
@@ -14,6 +15,7 @@ pub enum GameState {
     #[default]
     None,
     Truck,
+    Pause,
 }
 
 #[derive(Debug, Clone)]
