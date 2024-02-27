@@ -6,7 +6,7 @@ use bevy::{app::App, utils::HashSet};
 use crate::game::{GameConfig, PlayerSprite};
 use crate::gear::playergear::PlayerGear;
 use crate::{
-    ghosts::{self, Evidence, GhostType},
+    ghost_definitions::{self, Evidence, GhostType},
     materials::{self, UIPanelMaterial},
     root,
 };
@@ -31,8 +31,8 @@ pub struct GhostGuess {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TruckButtonType {
-    Evidence(ghosts::Evidence),
-    Ghost(ghosts::GhostType),
+    Evidence(ghost_definitions::Evidence),
+    Ghost(ghost_definitions::GhostType),
     CraftRepellent,
     ExitTruck,
     EndMission,
@@ -464,7 +464,7 @@ pub fn setup_ui(
                             ..default()
                         })
                         .with_children(|evblock| {
-                            for evidence in ghosts::Evidence::all() {
+                            for evidence in ghost_definitions::Evidence::all() {
                                 evblock
                                     .spawn(ButtonBundle {
                                         style: Style {
@@ -549,7 +549,7 @@ pub fn setup_ui(
                             ..default()
                         })
                         .with_children(|ghost_selection| {
-                            for ghost_type in ghosts::GhostType::all() {
+                            for ghost_type in ghost_definitions::GhostType::all() {
                                 ghost_selection
                                     .spawn(ButtonBundle {
                                         style: Style {

@@ -1,7 +1,7 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{Bdl, BoardPosition, Direction, MapTileComponents, Position, SpriteDB};
-use crate::ghosts::GhostType;
+use crate::ghost_definitions::GhostType;
 use crate::materials::CustomMaterial1;
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};

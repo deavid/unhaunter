@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{board::Position, game::GhostSprite, ghosts::GhostType};
+use crate::{board::Position, game::GhostSprite, ghost_definitions::GhostType};
 
 use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 

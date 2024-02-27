@@ -1,4 +1,4 @@
-use crate::ghosts::GhostType;
+use crate::ghost_definitions::GhostType;
 
 use super::{Gear, GearKind};
 use bevy::prelude::*;

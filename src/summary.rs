@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{ghosts::GhostType, root, utils};
+use crate::{ghost_definitions::GhostType, root, utils};
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;
