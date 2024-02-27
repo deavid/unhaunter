@@ -348,7 +348,8 @@ pub fn setup_ui(
 pub fn keyboard(
     app_state: Res<State<root::State>>,
     game_state: Res<State<root::GameState>>,
-    mut app_next_state: ResMut<NextState<root::State>>,
+    // mut app_next_state: ResMut<NextState<root::State>>,
+    mut game_next_state: ResMut<NextState<root::GameState>>,
     keyboard_input: Res<Input<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
@@ -362,7 +363,8 @@ pub fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
         // TODO: Send this to GameState::Pause
-        app_next_state.set(root::State::MainMenu);
+        game_next_state.set(root::GameState::Pause);
+        // app_next_state.set(root::State::MainMenu);
     }
     for mut transform in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {

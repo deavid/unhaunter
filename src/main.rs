@@ -67,6 +67,7 @@ fn main() {
     ghost::app_setup(&mut app);
     board::app_setup(&mut app);
     player::app_setup(&mut app);
+    pause::app_setup(&mut app);
 
     app.run();
 }
