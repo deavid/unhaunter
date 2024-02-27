@@ -2,11 +2,13 @@ mod behavior;
 mod board;
 mod game;
 mod gear;
+mod ghost;
 mod ghost_definitions;
 mod leveleditor;
 mod mainmenu;
 mod materials;
 mod pause;
+mod player;
 mod root;
 mod summary;
 mod tiledmap;
@@ -52,24 +54,19 @@ fn main() {
     .add_systems(Startup, set_fps_limiter)
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
-    .init_resource::<board::BoardData>()
-    .init_resource::<board::SpriteDB>()
-    .init_resource::<board::RoomDB>()
-    .add_event::<board::BoardDataToRebuild>()
-    .add_state::<root::State>()
-    .add_state::<root::GameState>()
-    .add_systems(Startup, root::load_assets)
-    .add_systems(Update, board::apply_perspective)
-    .add_systems(PostUpdate, board::boardfield_update)
     .add_systems(Update, leveleditor::apply_lighting)
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 30.0,
     )));
+    root::app_setup(&mut app);
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
     summary::app_setup(&mut app);
     mainmenu::app_setup(&mut app);
+    ghost::app_setup(&mut app);
+    board::app_setup(&mut app);
+    player::app_setup(&mut app);
 
     app.run();
 }

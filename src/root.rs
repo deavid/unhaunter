@@ -326,3 +326,9 @@ pub fn load_assets(
         },
     });
 }
+
+pub fn app_setup(app: &mut App) {
+    app.add_state::<State>()
+        .add_state::<GameState>()
+        .add_systems(Startup, load_assets);
+}

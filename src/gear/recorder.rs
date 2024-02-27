@@ -105,7 +105,7 @@ impl From<Recorder> for Gear {
 pub fn sound_update(
     mut bf: ResMut<crate::board::BoardData>,
     roomdb: Res<crate::board::RoomDB>,
-    qg: Query<(&crate::game::GhostSprite, &Position)>,
+    qg: Query<(&crate::ghost::GhostSprite, &Position)>,
 ) {
     let mut rng = rand::thread_rng();
     let gn = rng.gen_range(0..100_u32);

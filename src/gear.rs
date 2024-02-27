@@ -35,7 +35,8 @@ use self::videocam::Videocam;
 
 use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear};
 use crate::board::{self, Position};
-use crate::game::{GameConfig, PlayerSprite};
+use crate::game::GameConfig;
+use crate::player::PlayerSprite;
 use crate::root::GameState;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

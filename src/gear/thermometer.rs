@@ -95,7 +95,7 @@ pub fn temperature_update(
     mut bf: ResMut<crate::board::BoardData>,
     roomdb: Res<crate::board::RoomDB>,
     qt: Query<(&Position, &crate::behavior::Behavior)>,
-    qg: Query<(&crate::game::GhostSprite, &Position)>,
+    qg: Query<(&crate::ghost::GhostSprite, &Position)>,
 ) {
     let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {

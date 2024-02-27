@@ -4,9 +4,11 @@ use std::collections::VecDeque;
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction},
-    game::{self, GameSound, GhostSprite, SoundType},
+    game::{self, GameSound, SoundType},
     gear::{playergear::PlayerGear, GearKind},
+    ghost::GhostSprite,
     materials::CustomMaterial1,
+    player,
 };
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
@@ -76,7 +78,7 @@ pub fn apply_lighting(
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(
         &board::Position,
-        &game::PlayerSprite,
+        &player::PlayerSprite,
         &board::Direction,
         &PlayerGear,
     )>,

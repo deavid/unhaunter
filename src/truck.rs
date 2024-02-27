@@ -3,8 +3,9 @@ use std::ops::Mul;
 use bevy::prelude::*;
 use bevy::{app::App, utils::HashSet};
 
-use crate::game::{GameConfig, PlayerSprite};
+use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
+use crate::player::PlayerSprite;
 use crate::{
     ghost_definitions::{self, Evidence, GhostType},
     materials::{self, UIPanelMaterial},

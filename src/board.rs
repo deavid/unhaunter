@@ -928,3 +928,12 @@ pub fn compute_color_exposure(
     };
     dst_color
 }
+
+pub fn app_setup(app: &mut App) {
+    app.init_resource::<BoardData>()
+        .init_resource::<SpriteDB>()
+        .init_resource::<RoomDB>()
+        .add_systems(Update, apply_perspective)
+        .add_systems(PostUpdate, boardfield_update)
+        .add_event::<BoardDataToRebuild>();
+}
