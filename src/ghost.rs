@@ -12,6 +12,7 @@ pub struct GhostSprite {
     pub target_point: Option<Position>,
     pub repellent_hits: i64,
     pub repellent_misses: i64,
+    pub breach_id: Option<Entity>,
 }
 
 #[derive(Component, Debug)]
@@ -30,16 +31,24 @@ impl GhostSprite {
             target_point: None,
             repellent_hits: 0,
             repellent_misses: 0,
+            breach_id: None,
+        }
+    }
+    pub fn with_breachid(self, breach_id: Entity) -> Self {
+        Self {
+            breach_id: Some(breach_id),
+            ..self
         }
     }
 }
 
 pub fn ghost_movement(
-    mut q: Query<(&mut GhostSprite, &mut Position)>,
+    mut q: Query<(&mut GhostSprite, &mut Position, Entity)>,
     roomdb: Res<crate::board::RoomDB>,
     bf: Res<crate::board::BoardData>,
+    mut commands: Commands,
 ) {
-    for (mut ghost, mut pos) in q.iter_mut() {
+    for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
             let dlen = delta.distance();
@@ -74,6 +83,12 @@ pub fn ghost_movement(
             {
                 ghost.target_point = Some(target_point);
             }
+        }
+        if ghost.repellent_hits > 100 {
+            if let Some(breach) = ghost.breach_id {
+                commands.entity(breach).despawn_recursive();
+            }
+            commands.entity(entity).despawn_recursive();
         }
     }
 }

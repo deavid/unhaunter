@@ -704,6 +704,20 @@ pub fn load_level(
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position());
     let ghost_types = vec![ghost_sprite.class];
     commands.insert_resource(summary::SummaryData::new(ghost_types));
+    let breach_id = commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("img/breach.png"),
+            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
+            sprite: Sprite {
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(GameSprite)
+        .insert(GhostBreach)
+        .insert(ghost_spawn)
+        .id();
 
     commands
         .spawn(SpriteBundle {
@@ -716,20 +730,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
-        .insert(ghost_sprite)
-        .insert(ghost_spawn);
-    commands
-        .spawn(SpriteBundle {
-            texture: asset_server.load("img/breach.png"),
-            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
-            sprite: Sprite {
-                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(GameSprite)
-        .insert(GhostBreach)
+        .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
 
     ev_room.send(RoomChangedEvent);
