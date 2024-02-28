@@ -17,6 +17,37 @@ pub enum SummaryUIType {
     FinalScore,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+pub enum Difficulty {
+    Training,
+    Beginner,
+    Easy,
+    #[default]
+    Normal,
+    Medium,
+    Hard,
+    Expert,
+    Master,
+    Insane,
+}
+
+impl Difficulty {
+    fn get_multiplier(&self) -> f64 {
+        match self {
+            Difficulty::Training => 1.0,
+            Difficulty::Beginner => 1.5,
+            Difficulty::Easy => 2.8,
+            Difficulty::Normal => 4.0,
+            Difficulty::Medium => 5.5,
+            Difficulty::Hard => 7.8,
+            Difficulty::Expert => 11.0,
+            Difficulty::Master => 15.5,
+            Difficulty::Insane => 22.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Resource, Default)]
 pub struct SummaryData {
     pub time_taken_secs: f32,
@@ -24,14 +55,30 @@ pub struct SummaryData {
     pub repellent_used_amt: u32,
     pub ghosts_unhaunted: u32,
     pub final_score: i64,
+    pub difficulty: Difficulty,
 }
 
 impl SummaryData {
     pub fn new(ghost_types: Vec<GhostType>) -> Self {
         Self {
             ghost_types,
+            difficulty: Difficulty::Insane,
             ..default()
         }
+    }
+    pub fn calculate_score(&self) -> i64 {
+        let mut score = (250.0 * self.ghosts_unhaunted as f64)
+            / (1.0 + self.repellent_used_amt as f64)
+            / (1.0 + (self.ghost_types.len() as u32 - self.ghosts_unhaunted) as f64);
+
+        // Apply difficulty multiplier
+        score *= self.difficulty.get_multiplier();
+
+        // Apply time bonus multiplier
+        score *= 1.0 + 360.0 / (60.0 + self.time_taken_secs as f64);
+
+        // Ensure score is within a reasonable range
+        score.clamp(0.0, 1000000.0) as i64
     }
 }
 
@@ -42,7 +89,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, update_time.run_if(in_state(root::State::InGame)))
         .add_systems(
             Update,
-            (keyboard, update_ui).run_if(in_state(root::State::Summary)),
+            (keyboard, update_ui, update_score).run_if(in_state(root::State::Summary)),
         );
 }
 
@@ -315,4 +362,14 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
             }
         }
     }
+}
+
+pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<root::State>>) {
+    if *app_state != root::State::Summary {
+        return;
+    }
+    let desired_score = sd.calculate_score();
+    let max_delta = desired_score - sd.final_score;
+    let delta = (max_delta / 200).max(10).min(max_delta);
+    sd.final_score += delta;
 }

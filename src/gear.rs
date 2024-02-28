@@ -38,6 +38,7 @@ use crate::board::{self, Position};
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
 use crate::root::GameState;
+use crate::summary;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -324,6 +325,7 @@ pub fn update_gear_inventory(
 #[derive(SystemParam)]
 pub struct GearStuff<'w, 's> {
     bf: ResMut<'w, board::BoardData>,
+    summary: ResMut<'w, summary::SummaryData>,
     commands: Commands<'w, 's>,
     asset_server: Res<'w, AssetServer>,
     time: Res<'w, Time>,

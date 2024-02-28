@@ -56,6 +56,9 @@ impl GearUsable for RepellentFlask {
         if !self.active {
             return;
         }
+        if self.qty == Self::MAX_QTY {
+            gs.summary.repellent_used_amt += 1;
+        }
         self.qty -= 1;
         if self.qty <= 0 {
             self.qty = 0;

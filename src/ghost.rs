@@ -1,6 +1,7 @@
 use crate::{
     board::{BoardPosition, Position},
     ghost_definitions::GhostType,
+    summary,
 };
 use bevy::prelude::*;
 use rand::Rng;
@@ -24,7 +25,7 @@ impl GhostSprite {
         let ghost_types: Vec<_> = GhostType::all().collect();
         let idx = rng.gen_range(0..ghost_types.len());
         let class = ghost_types[idx];
-        warn!("Ghost type: {:?}", class);
+        warn!("Ghost type: {:?} - {:?}", class, class.evidences());
         GhostSprite {
             class,
             spawn_point,
@@ -45,6 +46,7 @@ impl GhostSprite {
 pub fn ghost_movement(
     mut q: Query<(&mut GhostSprite, &mut Position, Entity)>,
     roomdb: Res<crate::board::RoomDB>,
+    mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
     mut commands: Commands,
 ) {
@@ -85,6 +87,7 @@ pub fn ghost_movement(
             }
         }
         if ghost.repellent_hits > 100 {
+            summary.ghosts_unhaunted += 1;
             if let Some(breach) = ghost.breach_id {
                 commands.entity(breach).despawn_recursive();
             }
