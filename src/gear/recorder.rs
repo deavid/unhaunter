@@ -3,7 +3,7 @@ use std::mem::swap;
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::board::Position;
+use crate::{board::Position, ghost_definitions::Evidence};
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -14,6 +14,9 @@ pub struct Recorder {
     pub display_secs_since_last_update: f32,
     pub sound: f32,
     pub sound_l: Vec<f32>,
+    pub amt_recorded: f32,
+    pub evp_recorded_time_secs: f32,
+    pub evp_recorded_display: bool,
 }
 
 impl GearUsable for Recorder {
@@ -44,7 +47,11 @@ impl GearUsable for Recorder {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
-            format!("Volume: {:>4.0}dB", self.sound)
+            if self.evp_recorded_display {
+                "- EVP RECORDED -".to_string()
+            } else {
+                format!("Volume: {:>4.0}dB", self.sound)
+            }
         } else {
             "".to_string()
         };
@@ -78,13 +85,26 @@ impl GearUsable for Recorder {
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.sound_l.len();
         self.sound_l[n] = sound_reading;
+        if self.sound > 1.0 && self.enabled && gs.bf.evidences.contains(&Evidence::EVPRecording) {
+            self.amt_recorded += self.sound * gs.time.delta_seconds();
+            if self.amt_recorded > 200.0 {
+                self.evp_recorded_time_secs = gs.time.elapsed_seconds();
+                self.amt_recorded = 0.0;
+            }
+        }
+
         if self.display_secs_since_last_update > 0.1 {
             self.display_secs_since_last_update = 0.0;
             let sum_snd: f32 = self.sound_l.iter().sum();
             let avg_snd: f32 = sum_snd / self.sound_l.len() as f32 + 1.0;
             self.sound = (avg_snd.ln() * 10.0).clamp(0.0, 60.0);
-            self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
-
+            if gs.bf.evidences.contains(&Evidence::EVPRecording) {
+                self.sound_l.iter_mut().for_each(|x| *x /= 1.2);
+                self.evp_recorded_display =
+                    (gs.time.elapsed_seconds() - self.evp_recorded_time_secs) < 2.0;
+            } else {
+                self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
+            }
             if self.sound > 1.0 && self.enabled {
                 gs.play_audio("sounds/effects-radio-scan.ogg".into(), self.sound / 60.0);
             }

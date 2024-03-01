@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng as _;
 
-use crate::board::Position;
+use crate::{board::Position, ghost_definitions::Evidence};
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -109,14 +109,20 @@ impl GearUsable for EMFMeter {
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
-        let Some(temperature) = gs.bf.temperature_field.get(&bpos) else {
-            return;
-        };
-        let temp_reading = temperature;
+        let temperature = gs
+            .bf
+            .temperature_field
+            .get(&bpos)
+            .copied()
+            .unwrap_or_default();
+        let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
+        let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
+
+        let temp_reading = temperature / 10.0 + sound_reading;
         const AIR_MASS: f32 = 5.0;
 
         if self.temp_l2.len() < 2 {
-            self.temp_l2.push(*temp_reading);
+            self.temp_l2.push(temp_reading);
         }
 
         // Double noise reduction to remove any noise from measurement.
@@ -132,9 +138,15 @@ impl GearUsable for EMFMeter {
             self.last_meter_update_secs = sec;
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
-            let new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
+            let mut new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
             self.emf -= 0.2;
             self.emf /= 1.4;
+            if gs.bf.evidences.contains(&Evidence::EMFLevel5) {
+                new_emf = f32::tanh(new_emf / 40.0) * 45.0;
+            } else {
+                // If there's no possibility of EMF5, remap it so it's always below 20 mGauss.
+                new_emf = f32::tanh(new_emf / 19.0) * 15.0;
+            }
             self.emf = self.emf.max(new_emf);
             self.emf_level = EMFLevel::from_milligauss(self.emf);
         }

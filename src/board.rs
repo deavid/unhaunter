@@ -1,11 +1,16 @@
 use std::{f32::consts::PI, time::Instant};
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, utils::HashMap};
+use bevy::{
+    prelude::*,
+    sprite::MaterialMesh2dBundle,
+    utils::{HashMap, HashSet},
+};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     behavior::{self, Behavior, SpriteCVOKey},
+    ghost_definitions::Evidence,
     materials::CustomMaterial1,
 };
 
@@ -408,6 +413,7 @@ pub struct BoardData {
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
+    pub evidences: HashSet<Evidence>,
 }
 
 impl FromWorld for BoardData {
@@ -422,6 +428,7 @@ impl FromWorld for BoardData {
             current_exposure: 1.0,
             current_exposure_accel: 1.0,
             ambient_temp: 15.0,
+            evidences: HashSet::new(),
         }
     }
 }

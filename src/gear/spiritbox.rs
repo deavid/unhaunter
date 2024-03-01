@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::board::Position;
+use crate::{board::Position, ghost_definitions::Evidence};
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -11,6 +11,7 @@ pub struct SpiritBox {
     pub mode_frame: u32,
     pub ghost_answer: bool,
     pub last_change_secs: f32,
+    pub charge: f32,
 }
 
 impl GearUsable for SpiritBox {
@@ -53,7 +54,7 @@ impl GearUsable for SpiritBox {
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
-    fn update(&mut self, gs: &mut super::GearStuff, _pos: &Position, _ep: &EquipmentPosition) {
+    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         let sec = gs.time.elapsed_seconds();
         let delta = sec - self.last_change_secs;
         self.mode_frame = (sec * 4.0).round() as u32;
@@ -61,7 +62,19 @@ impl GearUsable for SpiritBox {
             return;
         }
         let mut rng = rand::thread_rng();
-
+        const K: f32 = 0.5;
+        let pos = Position {
+            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            global_z: pos.global_z,
+        };
+        let bpos = pos.to_board_position();
+        let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
+        let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
+        if gs.bf.evidences.contains(&Evidence::SpiritBox) {
+            self.charge += sound_reading;
+        }
         if self.ghost_answer {
             if delta > 3.0 {
                 self.ghost_answer = false;
@@ -69,7 +82,12 @@ impl GearUsable for SpiritBox {
         } else if delta > 0.3 {
             self.last_change_secs = sec;
             gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3);
-            let r = rng.gen_range(0..100);
+            let r = if self.charge > 30.0 {
+                self.charge = 0.0;
+                rng.gen_range(0..10)
+            } else {
+                99
+            };
 
             self.ghost_answer = true;
             match r {

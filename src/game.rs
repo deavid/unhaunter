@@ -694,6 +694,7 @@ pub fn load_level(
     //         Timer::from_seconds(0.20, TimerMode::Repeating),
     //         OldCharacterAnimation::Walking.animation_range(),
     //     ));
+    bf.evidences.clear();
 
     ghost_spawn_points.shuffle(&mut thread_rng());
 
@@ -703,6 +704,9 @@ pub fn load_level(
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position());
     let ghost_types = vec![ghost_sprite.class];
+    for evidence in ghost_sprite.class.evidences() {
+        bf.evidences.insert(evidence);
+    }
     commands.insert_resource(summary::SummaryData::new(ghost_types));
     let breach_id = commands
         .spawn(SpriteBundle {
