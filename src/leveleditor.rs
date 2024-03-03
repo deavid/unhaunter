@@ -1,17 +1,85 @@
 use std::collections::VecDeque;
-// use std::time::Instant;
 
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction},
-    game::{self, GameSound, SoundType},
+    game::{self, GameSound, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
-    ghost::GhostSprite,
+    ghost_definitions::Evidence,
     materials::CustomMaterial1,
     player,
 };
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LightType {
+    Visible,
+    Red,
+    InfraRedNV,
+    UltraViolet,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LightData {
+    visible: f32,
+    red: f32,
+    infrared: f32,
+    ultraviolet: f32,
+}
+
+impl LightData {
+    pub const UNIT_VISIBLE: Self = Self {
+        visible: 1.0,
+        red: 0.0,
+        infrared: 0.0,
+        ultraviolet: 0.0,
+    };
+    pub fn from_type(light_type: LightType, strength: f32) -> Self {
+        match light_type {
+            LightType::Visible => Self {
+                visible: strength,
+                ..default()
+            },
+            LightType::Red => Self {
+                red: strength,
+                ..default()
+            },
+            LightType::InfraRedNV => Self {
+                infrared: strength,
+                ..default()
+            },
+            LightType::UltraViolet => Self {
+                ultraviolet: strength,
+                ..default()
+            },
+        }
+    }
+    pub fn add(&self, other: &Self) -> Self {
+        Self {
+            visible: self.visible + other.visible,
+            red: self.red + other.red,
+            infrared: self.infrared + other.infrared,
+            ultraviolet: self.ultraviolet + other.ultraviolet,
+        }
+    }
+    pub fn magnitude(&self) -> f32 {
+        let sq_m = self.visible.powi(2)
+            + self.red.powi(2)
+            + self.infrared.powi(2)
+            + self.ultraviolet.powi(2);
+        sq_m.sqrt()
+    }
+    pub fn normalize(&self) -> Self {
+        let mag = self.magnitude() + 1.0;
+        Self {
+            visible: self.visible / mag,
+            red: self.red / mag,
+            infrared: self.infrared / mag,
+            ultraviolet: self.ultraviolet / mag,
+        }
+    }
+}
 
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
@@ -73,7 +141,7 @@ pub fn compute_visibility(
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<(&board::Position, &mut Sprite, Option<&GhostSprite>)>,
+    mut qt: Query<(&board::Position, &mut Sprite, Option<&SpriteType>)>,
     mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &Behavior)>,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(
@@ -101,13 +169,13 @@ pub fn apply_lighting(
             .as_vec()
             .into_iter()
             .filter_map(|(g, p)| match &g.kind {
-                GearKind::Flashlight(t) => Some((t.power(), t.color(), p)),
-                GearKind::UVTorch(t) => Some((t.power(), t.color(), p)),
-                GearKind::RedTorch(t) => Some((t.power(), t.color(), p)),
-                GearKind::Videocam(t) => Some((t.power(), t.color(), p)),
+                GearKind::Flashlight(t) => Some((t.power(), t.color(), p, LightType::Visible)),
+                GearKind::UVTorch(t) => Some((t.power(), t.color(), p, LightType::UltraViolet)),
+                GearKind::RedTorch(t) => Some((t.power(), t.color(), p, LightType::Red)),
+                GearKind::Videocam(t) => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
                 _ => None,
             });
-        for (power, color, p) in player_flashlight {
+        for (power, color, p, light_type) in player_flashlight {
             if power > 0.0 {
                 use crate::gear::playergear::EquipmentPosition::*;
                 let mut fldir = *direction;
@@ -119,7 +187,7 @@ pub fn apply_lighting(
                     };
                 }
 
-                flashlights.push((pos, fldir, power, color));
+                flashlights.push((pos, fldir, power, color, light_type));
             }
         }
 
@@ -185,30 +253,8 @@ pub fn apply_lighting(
     bf.current_exposure *= bf.current_exposure_accel;
     let exposure = bf.current_exposure;
 
-    for (pos, mut sprite, o_ghost) in qt.iter_mut() {
-        let bpos = pos.to_board_position();
-        let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
-        opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
-        let src_color = Color::WHITE;
-        let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
-            let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = lf.lux / exposure;
-            if o_ghost.is_some() {
-                rel_lux /= 2.0;
-            }
-            board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
-        } else {
-            src_color
-        };
-        const SMOOTH: f32 = 20.0;
-        if o_ghost.is_some() {
-            opacity *= dst_color.l().clamp(0.7, 1.0);
-        }
-        let old_a = sprite.color.a().clamp(0.0001, 1.0);
+    let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
-        dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
-        sprite.color = dst_color;
-    }
     // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
     const VSMALL_PRIME: usize = 53;
     const BIG_PRIME: usize = 95629;
@@ -228,12 +274,13 @@ pub fn apply_lighting(
         let bpos_tl = bpos.left();
 
         const FL_MIN_DST: f32 = 7.0; // minimum distance for flashlight
-
-        let fpos_gamma_color = |bpos: &BoardPosition| -> Option<(f32, f32, f32)> {
+                                     // behavior.p.movement.walkable
+        let fpos_gamma_color = |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
             let rpos = bpos.to_position();
             let mut lux_fl = [0_f32; 3];
+            let mut lightdata = LightData::default();
 
-            for (flpos, fldir, flpower, flcolor) in flashlights.iter() {
+            for (flpos, fldir, flpower, flcolor, fltype) in flashlights.iter() {
                 let pdist = flpos.distance(&rpos).powf(2.0);
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
                 let lpos = *flpos + *fldir / (100.0 / focus);
@@ -258,22 +305,33 @@ pub fn apply_lighting(
                 lux_fl[0] += fl * flcolor.r();
                 lux_fl[1] += fl * flcolor.g();
                 lux_fl[2] += fl * flcolor.b();
+
+                let ld = LightData::from_type(*fltype, fl);
+                lightdata = lightdata.add(&ld);
             }
 
             lf.get(bpos).map(|lf| {
                 (
-                    (lf.lux + lux_fl[0]) / exposure,
-                    (lf.lux + lux_fl[1]) / exposure,
-                    (lf.lux + lux_fl[2]) / exposure,
+                    (
+                        (lf.lux + lux_fl[0]) / exposure,
+                        (lf.lux + lux_fl[1]) / exposure,
+                        (lf.lux + lux_fl[2]) / exposure,
+                    ),
+                    lightdata.add(&LightData::from_type(LightType::Visible, lf.lux)),
                 )
             })
         };
 
         let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
             let gcolor = fpos_gamma_color(bpos);
-            gcolor.map(|(r, g, b)| (r + g + b) / 3.0)
+            gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0)
         };
-        let (r, g, b) = fpos_gamma_color(&bpos).unwrap_or((1.0, 1.0, 1.0));
+        let ((r, g, b), light_data) =
+            fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+        if behavior.p.movement.walkable {
+            let ld = light_data.normalize();
+            lightdata_map.insert(bpos.clone(), ld);
+        }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
         let l = src_color.l().max(0.0001).powf(1.5);
@@ -358,6 +416,70 @@ pub fn apply_lighting(
             mat.data = new_mat.data;
             // change_count += 1;
         }
+    }
+
+    // Light ilumination for sprites on map that aren't part of the map (player, ghost, van, ghost breach)
+
+    for (pos, mut sprite, o_type) in qt.iter_mut() {
+        let stype = o_type.cloned().unwrap_or_default();
+        let bpos = pos.to_board_position();
+        let ld = lightdata_map
+            .get(&bpos)
+            .cloned()
+            .unwrap_or(LightData::UNIT_VISIBLE);
+        let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
+        opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
+        let src_color = Color::WHITE;
+        let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
+            let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
+            let mut rel_lux = lf.lux / exposure;
+            if stype == SpriteType::Ghost {
+                rel_lux /= 2.0;
+            }
+            board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
+        } else {
+            src_color
+        };
+        const SMOOTH: f32 = 20.0;
+        if stype == SpriteType::Ghost {
+            opacity *= dst_color.l().clamp(0.7, 1.0);
+            let l = dst_color.l();
+            let r = dst_color.r();
+            let g = dst_color.g();
+            let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
+                ld.ultraviolet * 3.0
+            } else {
+                0.0
+            };
+            let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
+                ld.red * 3.0
+            } else {
+                0.0
+            };
+
+            dst_color.set_l(l * ld.visible);
+            dst_color.set_r(r * ld.visible + e_rl);
+            dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
+        }
+        if stype == SpriteType::Breach {
+            let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
+                ld.infrared * 3.0
+            } else {
+                0.0
+            };
+            opacity *= ((dst_color.l() / 3.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            let l = dst_color.l();
+            dst_color.set_l((l * ld.visible + e_nv).clamp(0.0, 0.99));
+        }
+
+        let old_a = sprite.color.a().clamp(0.0001, 1.0);
+
+        dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
+        sprite.color = dst_color;
+    }
+
+    for (bpos, ld) in lightdata_map.into_iter() {
+        bf.light_field.entry(bpos).and_modify(|l| l.additional = ld);
     }
     // if mask % 55 == 0 {
     //     warn!("change_count: {}", &change_count);

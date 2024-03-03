@@ -55,6 +55,15 @@ impl Default for GameConfig {
     }
 }
 
+#[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
+pub enum SpriteType {
+    Ghost,
+    Breach,
+    Player,
+    #[default]
+    Other,
+}
+
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
         .add_event::<RoomChangedEvent>()
@@ -669,6 +678,7 @@ pub fn load_level(
         .insert(GameSprite)
         .insert(gear::playergear::PlayerGear::new())
         .insert(PlayerSprite::new(1))
+        .insert(SpriteType::Player)
         .insert(player_position)
         .insert(board::Direction::default())
         .insert(AnimationTimer::from_range(
@@ -719,6 +729,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
+        .insert(SpriteType::Breach)
         .insert(GhostBreach)
         .insert(ghost_spawn)
         .id();
@@ -734,6 +745,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
+        .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
 

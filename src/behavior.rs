@@ -22,6 +22,8 @@ use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
+use crate::leveleditor;
+
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
     cfg: SpriteConfig,
@@ -136,6 +138,10 @@ impl Light {
             true => 0.00,
             false => 1.01,
         }
+    }
+    /// This represents if a light on the map is emitting visible light or other types.
+    pub fn additional_data(&self) -> leveleditor::LightData {
+        leveleditor::LightData::UNIT_VISIBLE
     }
 }
 

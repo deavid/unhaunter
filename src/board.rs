@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     behavior::{self, Behavior, SpriteCVOKey},
     ghost_definitions::Evidence,
+    leveleditor,
     materials::CustomMaterial1,
 };
 
@@ -437,6 +438,7 @@ impl FromWorld for BoardData {
 pub struct LightFieldData {
     pub lux: f32,
     pub transmissivity: f32,
+    pub additional: leveleditor::LightData,
 }
 
 impl Default for LightFieldData {
@@ -444,6 +446,7 @@ impl Default for LightFieldData {
         Self {
             lux: 0.0,
             transmissivity: 1.0,
+            additional: leveleditor::LightData::default(),
         }
     }
 }
@@ -773,11 +776,13 @@ pub fn boardfield_update(
                 let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
                     lux: 0.0,
                     transmissivity: 1.0,
+                    additional: leveleditor::LightData::default(),
                 });
                 let lightdata = LightFieldData {
                     lux: behavior.p.light.emmisivity_lumens() + src.lux,
                     transmissivity: behavior.p.light.transmissivity_factor() * src.transmissivity
                         + 0.0001,
+                    additional: src.additional.add(&behavior.p.light.additional_data()),
                 };
                 bf.light_field.insert(pos, lightdata);
             }
