@@ -30,7 +30,7 @@ and right hand.
 
 ## Evidences
 
-* Freezing temps: Termometer. The room that the ghost frequents can go below
+* Freezing temps: Thermometer. The room that the ghost frequents can go below
   zero. Be warned that lights heat up the room and open doors will leak air
   outside. These factors limit your ability to read freezing temps.
 
