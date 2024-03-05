@@ -93,3 +93,32 @@ If needed, you can refill the vial in the van.
 
 Once you're sure there are no more ghosts, proceed to the van
 and click "End Mission".
+
+## Building and Installing
+
+There are no binary, packages or installers for Unhaunter. So far there are no
+plans for them, the only way to run the game is to build it from sources.
+
+Download the repository as usual via your favorite method, for example:
+
+$ git clone https://github.com/deavid/unhaunter.git
+
+You'll need to have Rust, follow the steps to install it at:
+
+https://www.rust-lang.org/tools/install
+
+You'll need also to install dependencies for Bevy, follow the instructions for
+your operating system at:
+
+https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies
+
+With this, you should be able to run the game by simply running:
+
+$ cargo run
+
+The command must be run from the game source folder.
+
+NOTE: The game is currently being developed and built on a single developer 
+  machine using Debian GNU/Linux in some Testing/Sid version in an AMD machine
+  using a NVIDIA 3080. The game should run in a wide range of computers and
+  configurations, but it has not been tested.
