@@ -47,11 +47,15 @@ pub struct RoomChangedEvent;
 pub struct GameConfig {
     /// Which player should the camera and lighting follow
     pub player_id: usize,
+    pub right_hand_status_text: String,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
-        Self { player_id: 1 }
+        Self {
+            player_id: 1,
+            right_hand_status_text: "".into(),
+        }
     }
 }
 

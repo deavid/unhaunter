@@ -296,27 +296,33 @@ pub fn keyboard_gear(
     }
 }
 
-pub fn update_gear_inventory(
-    gc: Res<GameConfig>,
-    mut q_gear: Query<(&PlayerSprite, &Position, &mut PlayerGear)>,
-    mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
-    mut qs: Query<(&InventoryStats, &mut Text)>,
-    mut gs: GearStuff,
-) {
-    for (ps, position, mut playergear) in q_gear.iter_mut() {
+pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
+    for (position, mut playergear) in q_gear.iter_mut() {
         for (gear, epos) in playergear.as_vec_mut().into_iter() {
             gear.update(&mut gs, position, &epos);
         }
+    }
+}
 
+pub fn update_gear_ui(
+    mut gc: ResMut<GameConfig>,
+    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
+    mut qs: Query<&mut Text>,
+) {
+    for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
             for (inv, mut utai) in qi.iter_mut() {
                 let gear = playergear.get_hand(&inv.hand);
                 let idx = gear.get_sprite_idx() as usize;
                 utai.index = idx;
             }
-            for (_, mut txt) in qs.iter_mut() {
-                let gear = &playergear.right_hand;
-                txt.sections[0].value = gear.get_status();
+            let right_hand_status = playergear.right_hand.get_status();
+            if gc.right_hand_status_text != right_hand_status {
+                for mut txt in qs.iter_mut() {
+                    gc.right_hand_status_text = right_hand_status.clone();
+                    txt.sections[0].value = right_hand_status.clone();
+                }
             }
         }
     }
@@ -348,7 +354,8 @@ impl<'w, 's> GearStuff<'w, 's> {
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(Update, update_gear_inventory)
+        .add_systems(FixedUpdate, update_gear_data)
+        .add_systems(FixedUpdate, update_gear_ui)
         .add_systems(Update, thermometer::temperature_update)
         .add_systems(Update, recorder::sound_update)
         .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
