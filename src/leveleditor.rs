@@ -142,7 +142,12 @@ pub fn compute_visibility(
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
     mut qt: Query<(&board::Position, &mut Sprite, Option<&SpriteType>)>,
-    mut qt2: Query<(&board::Position, &Handle<CustomMaterial1>, &Behavior)>,
+    mut qt2: Query<(
+        &board::Position,
+        &Handle<CustomMaterial1>,
+        &Behavior,
+        &mut Visibility,
+    )>,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(
         &board::Position,
@@ -263,7 +268,7 @@ pub fn apply_lighting(
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
     // let mut change_count = 0;
-    for (n, (pos, mat, behavior)) in qt2.iter_mut().enumerate() {
+    for (n, (pos, mat, behavior, mut vis)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         let mut opacity: f32 = 1.0;
         let bpos = pos.to_board_position();
@@ -412,6 +417,12 @@ pub fn apply_lighting(
 
         let delta = orig_mat.data.delta(&new_mat.data);
         if delta > 0.02 + min_threshold {
+            let new_vis = if new_mat.data.color.a() < 0.01 || behavior.p.display.disable {
+                Visibility::Hidden
+            } else {
+                Visibility::Inherited
+            };
+            *vis = new_vis;
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
             // change_count += 1;

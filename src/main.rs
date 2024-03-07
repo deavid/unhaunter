@@ -18,7 +18,7 @@ mod utils;
 use std::time::Duration;
 
 use bevy::{
-    // diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     sprite::Material2dPlugin,
     window::WindowResolution,
@@ -46,8 +46,8 @@ fn main() {
             }),
     )
     //        .add_plugins(FrameTimeDiagnosticsPlugin)
-    //        .add_plugins(LogDiagnosticsPlugin::default())
-    //        .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
+    .add_plugins(LogDiagnosticsPlugin::default())
+    .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .add_plugins(bevy_framepace::FramepacePlugin)
