@@ -33,7 +33,7 @@ use self::thermometer::Thermometer;
 use self::uvtorch::UVTorch;
 use self::videocam::Videocam;
 
-use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear};
+use self::playergear::{EquipmentPosition, Inventory, PlayerGear};
 use crate::board::{self, Position};
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
