@@ -129,14 +129,14 @@ pub fn update_time(
 pub fn keyboard(
     app_state: Res<State<root::State>>,
     mut app_next_state: ResMut<NextState<root::State>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *app_state.get() != root::State::Summary {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape)
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
-        | keyboard_input.just_pressed(KeyCode::Return)
+        | keyboard_input.just_pressed(KeyCode::Enter)
     {
         app_next_state.set(root::State::MainMenu);
     }

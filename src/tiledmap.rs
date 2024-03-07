@@ -198,7 +198,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum AtlasData {
-    Sheet((Handle<TextureAtlas>, CustomMaterial1)),
+    Sheet((Handle<TextureAtlasLayout>, CustomMaterial1)),
     Tiles(Vec<(Handle<Image>, CustomMaterial1)>),
 }
 
@@ -217,7 +217,7 @@ pub struct MapTileSetDb {
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: &AssetServer,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
@@ -243,8 +243,8 @@ pub fn bevy_load_map(
             // .. the texture on the fly.
             let texture: Handle<Image> = asset_server.load(img_src);
             let rows = tileset.tilecount / tileset.columns;
-            let atlas1 = TextureAtlas::from_grid(
-                texture.clone(),
+            let atlas1 = TextureAtlasLayout::from_grid(
+                // FIXME: texture.clone(),   --- this needs to be sent elsewhere
                 Vec2::new(
                     tileset.tile_width as f32 + tileset.spacing as f32 - MARGIN,
                     tileset.tile_height as f32 + tileset.spacing as f32 - MARGIN,
@@ -356,7 +356,6 @@ pub fn bevy_load_layers(
     sprites
 }
 
-#[allow(dead_code)]
 pub fn bevy_load_tile(
     tile: &MapTile,
     tile_size: (f32, f32),
@@ -370,12 +369,14 @@ pub fn bevy_load_tile(
     let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
     match &tileset.data {
         AtlasData::Sheet((handle, _opt_mat)) => {
-            let mut id = TextureAtlasSprite::new(tile.tileuid as usize);
-            id.anchor = anchor;
-            id.flip_x = tile.flip_x;
+            // FIXME: let mut id = Sprite::new(tile.tileuid as usize);
             SpriteEnum::Sheet(SpriteSheetBundle {
-                texture_atlas: handle.clone(),
-                sprite: id,
+                // FIXME: texture: handle.clone(),
+                sprite: Sprite {
+                    anchor,
+                    flip_x: tile.flip_x,
+                    ..default()
+                },
                 transform: Transform {
                     translation: Vec3::new(x, y, z),
                     ..default()

@@ -870,7 +870,7 @@ pub fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
 pub fn keyboard(
     game_state: Res<State<root::GameState>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *game_state.get() != root::GameState::Truck {
         return;

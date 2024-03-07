@@ -99,10 +99,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             source: asset_server.load("music/unhaunter_intro.ogg"),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.1)),
+                volume: bevy::audio::Volume::new(0.1),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
+                spatial_scale: None,
             },
         })
         .insert(MenuSound::default());
@@ -291,16 +292,16 @@ pub fn item_logic(mut q: Query<(&mut MenuItem, &mut Text)>, qmenu: Query<&Menu>)
 }
 
 pub fn keyboard(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q: Query<&mut Menu>,
     mut ev_menu: EventWriter<MenuEvent>,
 ) {
     for mut menu in q.iter_mut() {
-        if keyboard_input.just_pressed(KeyCode::Up) {
+        if keyboard_input.just_pressed(KeyCode::ArrowUp) {
             menu.previous_item();
-        } else if keyboard_input.just_pressed(KeyCode::Down) {
+        } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
             menu.next_item();
-        } else if keyboard_input.just_pressed(KeyCode::Return) {
+        } else if keyboard_input.just_pressed(KeyCode::Enter) {
             ev_menu.send(MenuEvent(menu.selected));
         }
     }
@@ -315,7 +316,9 @@ pub fn menu_event(
         match event.0 {
             MenuID::NewGame => app_next_state.set(root::State::InGame),
             MenuID::Options => {}
-            MenuID::Quit => exit.send(AppExit),
+            MenuID::Quit => {
+                exit.send(AppExit);
+            }
         }
     }
 }
