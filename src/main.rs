@@ -45,7 +45,7 @@ fn main() {
                 ..default()
             }),
     )
-    //        .add_plugins(FrameTimeDiagnosticsPlugin)
+    .add_plugins(FrameTimeDiagnosticsPlugin)
     .add_plugins(LogDiagnosticsPlugin::default())
     .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
@@ -56,7 +56,7 @@ fn main() {
     .init_resource::<tiledmap::MapTileSetDb>()
     .add_systems(Update, leveleditor::apply_lighting)
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
-        1.0 / 30.0,
+        1.0 / 15.0,
     )));
     root::app_setup(&mut app);
     gear::app_setup(&mut app);

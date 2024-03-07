@@ -261,7 +261,7 @@ pub fn apply_lighting(
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
-    const VSMALL_PRIME: usize = 53;
+    const VSMALL_PRIME: usize = 97;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
@@ -270,6 +270,9 @@ pub fn apply_lighting(
     // let mut change_count = 0;
     for (n, (pos, mat, behavior, mut vis)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
+        // if min_threshold > 4.5 {
+        //     continue;
+        // }
         let mut opacity: f32 = 1.0;
         let bpos = pos.to_board_position();
 
@@ -414,15 +417,16 @@ pub fn apply_lighting(
                 }
             }
         }
+        let invisible = new_mat.data.color.a() < 0.01 || behavior.p.display.disable;
+        let new_vis = if invisible {
+            Visibility::Hidden
+        } else {
+            Visibility::Inherited
+        };
+        *vis = new_vis;
 
         let delta = orig_mat.data.delta(&new_mat.data);
-        if delta > 0.02 + min_threshold {
-            let new_vis = if new_mat.data.color.a() < 0.01 || behavior.p.display.disable {
-                Visibility::Hidden
-            } else {
-                Visibility::Inherited
-            };
-            *vis = new_vis;
+        if !invisible && delta > 0.02 + min_threshold {
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
             // change_count += 1;

@@ -49,7 +49,9 @@ pub fn ghost_movement(
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
     mut commands: Commands,
+    time: Res<Time>,
 ) {
+    let dt = time.delta_seconds() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
@@ -58,8 +60,8 @@ pub fn ghost_movement(
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
             }
-            pos.x += delta.dx / 200.0;
-            pos.y += delta.dy / 200.0;
+            pos.x += delta.dx / 200.0 * dt;
+            pos.y += delta.dy / 200.0 * dt;
             if dlen < 0.5 {
                 ghost.target_point = None;
             }

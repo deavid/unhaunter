@@ -354,6 +354,7 @@ pub fn setup_ui(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn keyboard(
     app_state: Res<State<root::State>>,
     game_state: Res<State<root::GameState>>,
@@ -363,6 +364,7 @@ pub fn keyboard(
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
+    time: Res<Time>,
 ) {
     if *app_state.get() != root::State::InGame {
         return;
@@ -370,6 +372,7 @@ pub fn keyboard(
     if *game_state.get() != root::GameState::None {
         return;
     }
+    let dt = time.delta_seconds() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) {
         // TODO: Send this to GameState::Pause
         game_next_state.set(root::GameState::Pause);
@@ -393,27 +396,27 @@ pub fn keyboard(
             const RED: f32 = 120.0;
             const MEAN_DIST: f32 = 120.0;
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
-            transform.translation += vector / RED;
+            transform.translation += vector / RED * dt;
         }
         if keyboard_input.pressed(KeyCode::Right) {
-            transform.translation.x += 2.0;
+            transform.translation.x += 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::Left) {
-            transform.translation.x -= 2.0;
+            transform.translation.x -= 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::Up) {
-            transform.translation.y += 2.0;
+            transform.translation.y += 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::Down) {
-            transform.translation.y -= 2.0;
+            transform.translation.y -= 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::NumpadAdd) {
-            transform.scale.x /= 1.02;
-            transform.scale.y /= 1.02;
+            transform.scale.x /= 1.02 * dt;
+            transform.scale.y /= 1.02 * dt;
         }
         if keyboard_input.pressed(KeyCode::NumpadSubtract) {
-            transform.scale.x *= 1.02;
-            transform.scale.y *= 1.02;
+            transform.scale.x *= 1.02 * dt;
+            transform.scale.y *= 1.02 * dt;
         }
     }
 }

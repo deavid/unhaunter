@@ -96,6 +96,7 @@ impl ControlKeys {
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn keyboard_player(
+    time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     mut players: Query<(
         &mut board::Position,
@@ -123,6 +124,7 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
+    let dt = time.delta_seconds() * 60.0;
     for (mut pos, mut dir, player, mut anim) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
@@ -159,8 +161,8 @@ pub fn keyboard_player(
 
         // d.dx /= 1.5; // Compensate for the projection
 
-        pos.x += PLAYER_SPEED * d.dx;
-        pos.y += PLAYER_SPEED * d.dy;
+        pos.x += PLAYER_SPEED * d.dx * dt;
+        pos.y += PLAYER_SPEED * d.dy * dt;
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;
 

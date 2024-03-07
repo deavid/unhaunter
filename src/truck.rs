@@ -175,7 +175,10 @@ pub fn app_setup(app: &mut App) {
         .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
         .add_systems(Update, ghost_guess_system)
-        .add_systems(Update, button_system)
+        .add_systems(
+            FixedUpdate,
+            button_system.run_if(in_state(root::GameState::Truck)),
+        )
         .add_systems(Update, truckui_event_handle);
 }
 
@@ -957,11 +960,11 @@ fn button_system(
             }
         }
     }
+
     let mut ghost_selected = None;
     for (interaction, mut color, mut border_color, children, mut tui_button) in
         &mut interaction_query
     {
-        let mut text = text_query.get_mut(children[0]).unwrap();
         let pressed = tui_button.status == TruckButtonState::Pressed;
         if let TruckButtonType::CraftRepellent = tui_button.class {
             tui_button.disabled = gg.ghost_type.is_none();
@@ -993,7 +996,7 @@ fn button_system(
         } else {
             *interaction
         };
-
+        let mut text = text_query.get_mut(children[0]).unwrap();
         border_color.0 = tui_button.border_color(interaction);
         *color = tui_button.background_color(interaction).into();
         text.sections[0].style.color = tui_button.text_color(interaction);
