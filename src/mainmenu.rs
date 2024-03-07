@@ -74,26 +74,45 @@ pub struct MCamera;
 #[derive(Component, Debug)]
 pub struct MenuUI;
 
+#[derive(Component, Debug, Default)]
+pub struct MenuSound {
+    despawn: bool,
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_systems(Update, keyboard)
         .add_systems(Update, item_logic)
         .add_systems(Update, menu_event)
         .add_event::<MenuEvent>()
+        .add_systems(Update, despawn_sound)
         .add_systems(OnEnter(root::State::MainMenu), (setup, setup_ui))
         .add_systems(OnExit(root::State::MainMenu), cleanup);
 }
 
-pub fn setup(mut commands: Commands) {
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // ui camera
     let cam = Camera2dBundle::default();
     commands.spawn(cam).insert(MCamera);
     info!("Main menu camera setup");
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("music/unhaunter_intro.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.1)),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+            },
+        })
+        .insert(MenuSound::default());
 }
 
 pub fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<MCamera>>,
     qm: Query<Entity, With<MenuUI>>,
+    mut qs: Query<&mut MenuSound>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
@@ -102,6 +121,25 @@ pub fn cleanup(
     // Despawn menu UI if not used
     for ui_entity in qm.iter() {
         commands.entity(ui_entity).despawn_recursive();
+    }
+    // Despawn Sound
+    for mut sound in qs.iter_mut() {
+        sound.despawn = true;
+    }
+}
+
+pub fn despawn_sound(mut commands: Commands, qs: Query<(Entity, &AudioSink, &MenuSound)>) {
+    for (entity, sink, menusound) in &qs {
+        if !menusound.despawn {
+            continue;
+        }
+        let v = sink.volume() / 1.02;
+        sink.set_volume(v);
+
+        if v < 0.001 {
+            commands.entity(entity).despawn_recursive();
+            dbg!("Song despawned");
+        }
     }
 }
 
