@@ -7,7 +7,7 @@ default-run = "unhaunter"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.0"
+bevy = { version = "0.13.0", features = ["trace"] }
 bevy_framepace = "0.15"
 rand = "0.8"
 enum-iterator = "2.0"
@@ -21,6 +21,7 @@ fastapprox = "0.3.1"
 anyhow = "1.0.79"
 ordered-float = "4.2.0"
 bevy-persistent = { version = "0.5.0", features = ["all"] }
+hierarchical_pathfinding = "0.5.0"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]
