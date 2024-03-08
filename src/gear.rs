@@ -33,7 +33,7 @@ use self::thermometer::Thermometer;
 use self::uvtorch::UVTorch;
 use self::videocam::Videocam;
 
-use self::playergear::{EquipmentPosition, Inventory, PlayerGear};
+use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear};
 use crate::board::{self, Position};
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
@@ -308,7 +308,7 @@ pub fn update_gear_ui(
     mut gc: ResMut<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
-    mut qs: Query<&mut Text>,
+    mut qs: Query<&mut Text, With<InventoryStats>>,
 ) {
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
