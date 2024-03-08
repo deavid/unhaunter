@@ -11,7 +11,6 @@ use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
-// FIXME: use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::render::view::RenderLayers;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
@@ -104,11 +103,7 @@ pub fn setup(
 
     // 2D orthographic camera - UI
     let cam = Camera2dBundle {
-        camera_2d: Camera2d {
-            // no "background color", we need to see the main camera's output
-
-            // FIXME: clear_color: ClearColorConfig::None,
-        },
+        camera_2d: Camera2d,
         camera: Camera {
             // renders after / on top of the main camera
             order: 1,
@@ -318,7 +313,7 @@ pub fn setup_ui(
                                     image: UiImage { texture: handles.images.gear.clone(), flip_x: false, flip_y: false },
                                     texture_atlas: TextureAtlas {
                                         index: gear::GearSpriteID::Flashlight2 as usize,
-                                        ..Default::default()
+                                        layout: handles.images.gear_atlas.clone(),
                                     },
                                     ..default()
                                 })
@@ -328,7 +323,7 @@ pub fn setup_ui(
                                     image: UiImage { texture: handles.images.gear.clone(), flip_x: false, flip_y: false },
                                     texture_atlas: TextureAtlas {
                                         index: gear::GearSpriteID::IonMeter2 as usize,
-                                        ..Default::default()
+                                        layout: handles.images.gear_atlas.clone(),
                                     },
                                     ..default()
                                 })
@@ -379,9 +374,7 @@ pub fn keyboard(
     }
     let dt = time.delta_seconds() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        // TODO: Send this to GameState::Pause
         game_next_state.set(root::GameState::Pause);
-        // app_next_state.set(root::State::MainMenu);
     }
     for mut transform in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {

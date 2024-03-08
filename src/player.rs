@@ -342,9 +342,9 @@ impl AnimationTimer {
 }
 
 pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut TextureAtlas)>) {
-    for (mut anim, mut sprite) in query.iter_mut() {
+    for (mut anim, mut texture_atlas) in query.iter_mut() {
         if let Some(idx) = anim.tick(time.delta()) {
-            sprite.index = idx;
+            texture_atlas.index = idx;
         }
     }
 }

@@ -244,7 +244,6 @@ pub fn bevy_load_map(
             let texture: Handle<Image> = asset_server.load(img_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlasLayout::from_grid(
-                // FIXME: texture.clone(),   --- this needs to be sent elsewhere
                 Vec2::new(
                     tileset.tile_width as f32 + tileset.spacing as f32 - MARGIN,
                     tileset.tile_height as f32 + tileset.spacing as f32 - MARGIN,
@@ -368,22 +367,22 @@ pub fn bevy_load_tile(
     let z: f32 = n as f32 / 1000.0;
     let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
     match &tileset.data {
-        AtlasData::Sheet((handle, _opt_mat)) => {
-            // FIXME: let mut id = Sprite::new(tile.tileuid as usize);
-            SpriteEnum::Sheet(SpriteSheetBundle {
-                // FIXME: texture: handle.clone(),
-                sprite: Sprite {
-                    anchor,
-                    flip_x: tile.flip_x,
-                    ..default()
-                },
-                transform: Transform {
-                    translation: Vec3::new(x, y, z),
-                    ..default()
-                },
+        AtlasData::Sheet((handle, _opt_mat)) => SpriteEnum::Sheet(SpriteSheetBundle {
+            atlas: TextureAtlas {
+                layout: handle.clone(),
+                index: tile.tileuid as usize,
+            },
+            sprite: Sprite {
+                anchor,
+                flip_x: tile.flip_x,
                 ..default()
-            })
-        }
+            },
+            transform: Transform {
+                translation: Vec3::new(x, y, z),
+                ..default()
+            },
+            ..default()
+        }),
         AtlasData::Tiles(v_img) => SpriteEnum::One(SpriteBundle {
             texture: v_img[tile.tileuid as usize].0.clone(),
             sprite: Sprite {
