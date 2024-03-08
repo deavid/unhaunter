@@ -22,7 +22,7 @@ pub fn keyboard(
     game_state: Res<State<root::GameState>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
     mut next_state: ResMut<NextState<root::State>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *game_state.get() != root::GameState::Pause {
         return;
@@ -30,7 +30,7 @@ pub fn keyboard(
     if keyboard_input.just_pressed(KeyCode::Escape) {
         game_next_state.set(root::GameState::None);
     }
-    if keyboard_input.just_pressed(KeyCode::Q) {
+    if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(root::GameState::None);
         next_state.set(root::State::MainMenu);
     }

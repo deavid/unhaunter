@@ -54,50 +54,50 @@ pub struct ControlKeys {
 
 impl ControlKeys {
     pub const WASD: Self = ControlKeys {
-        up: KeyCode::W,
-        down: KeyCode::S,
-        left: KeyCode::A,
-        right: KeyCode::D,
-        activate: KeyCode::E,
-        trigger: KeyCode::R,
-        torch: KeyCode::T,
-        cycle: KeyCode::Q,
+        up: KeyCode::KeyW,
+        down: KeyCode::KeyS,
+        left: KeyCode::KeyA,
+        right: KeyCode::KeyD,
+        activate: KeyCode::KeyE,
+        trigger: KeyCode::KeyR,
+        torch: KeyCode::KeyT,
+        cycle: KeyCode::KeyQ,
         swap: KeyCode::Tab,
-        drop: KeyCode::G,
-        grab: KeyCode::F,
+        drop: KeyCode::KeyG,
+        grab: KeyCode::KeyF,
     };
     pub const IJKL: Self = ControlKeys {
-        up: KeyCode::I,
-        down: KeyCode::K,
-        left: KeyCode::J,
-        right: KeyCode::L,
-        activate: KeyCode::O,
-        torch: KeyCode::T,
-        cycle: KeyCode::Unlabeled,
-        swap: KeyCode::Unlabeled,
-        grab: KeyCode::Unlabeled,
-        drop: KeyCode::Unlabeled,
-        trigger: KeyCode::Unlabeled,
+        up: KeyCode::KeyI,
+        down: KeyCode::KeyK,
+        left: KeyCode::KeyJ,
+        right: KeyCode::KeyL,
+        activate: KeyCode::KeyO,
+        torch: KeyCode::KeyT,
+        cycle: KeyCode::NonConvert,
+        swap: KeyCode::NonConvert,
+        grab: KeyCode::NonConvert,
+        drop: KeyCode::NonConvert,
+        trigger: KeyCode::NonConvert,
     };
     pub const NONE: Self = ControlKeys {
-        up: KeyCode::Unlabeled,
-        down: KeyCode::Unlabeled,
-        left: KeyCode::Unlabeled,
-        right: KeyCode::Unlabeled,
-        activate: KeyCode::Unlabeled,
-        torch: KeyCode::Unlabeled,
-        cycle: KeyCode::Unlabeled,
-        swap: KeyCode::Unlabeled,
-        grab: KeyCode::Unlabeled,
-        drop: KeyCode::Unlabeled,
-        trigger: KeyCode::Unlabeled,
+        up: KeyCode::NonConvert,
+        down: KeyCode::NonConvert,
+        left: KeyCode::NonConvert,
+        right: KeyCode::NonConvert,
+        activate: KeyCode::NonConvert,
+        torch: KeyCode::NonConvert,
+        cycle: KeyCode::NonConvert,
+        swap: KeyCode::NonConvert,
+        grab: KeyCode::NonConvert,
+        drop: KeyCode::NonConvert,
+        trigger: KeyCode::NonConvert,
     };
 }
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn keyboard_player(
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
         &mut board::Position,
         &mut board::Direction,
@@ -341,32 +341,16 @@ impl AnimationTimer {
     }
 }
 
-pub fn animate_sprite(
-    time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-        &Handle<TextureAtlas>,
-    )>,
-) {
-    for (mut anim, mut sprite, texture_atlas_handle) in query.iter_mut() {
+pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut TextureAtlas)>) {
+    for (mut anim, mut texture_atlas) in query.iter_mut() {
         if let Some(idx) = anim.tick(time.delta()) {
-            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
-            sprite.index = idx;
-            if sprite.index >= texture_atlas.textures.len() {
-                error!(
-                    "sprite index {} out of range [0..{}]",
-                    sprite.index,
-                    texture_atlas.textures.len()
-                );
-            }
+            texture_atlas.index = idx;
         }
     }
 }
 
 pub fn player_coloring(
-    mut players: Query<(&mut TextureAtlasSprite, &PlayerSprite, &board::Position)>,
+    mut players: Query<(&mut Sprite, &PlayerSprite, &board::Position)>,
     bf: Res<board::BoardData>,
 ) {
     for (mut tas, player, position) in players.iter_mut() {
@@ -472,10 +456,11 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     source: self.asset_server.load(sound_file),
                     settings: PlaybackSettings {
                         mode: bevy::audio::PlaybackMode::Despawn,
-                        volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(1.0)),
+                        volume: bevy::audio::Volume::new(1.0),
                         speed: 1.0,
                         paused: false,
                         spatial: false,
+                        spatial_scale: None,
                     },
                 });
             }
@@ -542,12 +527,11 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                         source: self.asset_server.load(sound_file),
                         settings: PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(
-                                1.0,
-                            )),
+                            volume: bevy::audio::Volume::new(1.0),
                             speed: 1.0,
                             paused: false,
                             spatial: false,
+                            spatial_scale: None,
                         },
                     });
                 }

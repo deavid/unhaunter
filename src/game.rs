@@ -11,7 +11,6 @@ use crate::{
     board::{self, BoardDataToRebuild},
     root,
 };
-use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::render::view::RenderLayers;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
@@ -104,10 +103,7 @@ pub fn setup(
 
     // 2D orthographic camera - UI
     let cam = Camera2dBundle {
-        camera_2d: Camera2d {
-            // no "background color", we need to see the main camera's output
-            clear_color: ClearColorConfig::None,
-        },
+        camera_2d: Camera2d,
         camera: Camera {
             // renders after / on top of the main camera
             order: 1,
@@ -314,20 +310,20 @@ pub fn setup_ui(
                             // Right side panel - inventory
                             parent
                                 .spawn(AtlasImageBundle {
-                                    texture_atlas: handles.images.gear.clone(),
-                                    texture_atlas_image: UiTextureAtlasImage {
+                                    image: UiImage { texture: handles.images.gear.clone(), flip_x: false, flip_y: false },
+                                    texture_atlas: TextureAtlas {
                                         index: gear::GearSpriteID::Flashlight2 as usize,
-                                        ..Default::default()
+                                        layout: handles.images.gear_atlas.clone(),
                                     },
                                     ..default()
                                 })
                                 .insert(gear::playergear::Inventory::new_left());
                             parent
                                 .spawn(AtlasImageBundle {
-                                    texture_atlas: handles.images.gear.clone(),
-                                    texture_atlas_image: UiTextureAtlasImage {
+                                    image: UiImage { texture: handles.images.gear.clone(), flip_x: false, flip_y: false },
+                                    texture_atlas: TextureAtlas {
                                         index: gear::GearSpriteID::IonMeter2 as usize,
-                                        ..Default::default()
+                                        layout: handles.images.gear_atlas.clone(),
                                     },
                                     ..default()
                                 })
@@ -364,7 +360,7 @@ pub fn keyboard(
     game_state: Res<State<root::GameState>>,
     // mut app_next_state: ResMut<NextState<root::State>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
@@ -378,9 +374,7 @@ pub fn keyboard(
     }
     let dt = time.delta_seconds() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        // TODO: Send this to GameState::Pause
         game_next_state.set(root::GameState::Pause);
-        // app_next_state.set(root::State::MainMenu);
     }
     for mut transform in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {
@@ -402,16 +396,16 @@ pub fn keyboard(
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED * dt;
         }
-        if keyboard_input.pressed(KeyCode::Right) {
+        if keyboard_input.pressed(KeyCode::ArrowRight) {
             transform.translation.x += 2.0 * dt;
         }
-        if keyboard_input.pressed(KeyCode::Left) {
+        if keyboard_input.pressed(KeyCode::ArrowLeft) {
             transform.translation.x -= 2.0 * dt;
         }
-        if keyboard_input.pressed(KeyCode::Up) {
+        if keyboard_input.pressed(KeyCode::ArrowUp) {
             transform.translation.y += 2.0 * dt;
         }
-        if keyboard_input.pressed(KeyCode::Down) {
+        if keyboard_input.pressed(KeyCode::ArrowDown) {
             transform.translation.y -= 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::NumpadAdd) {
@@ -439,7 +433,7 @@ pub fn load_level(
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<GameSprite>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
@@ -466,10 +460,11 @@ pub fn load_level(
             source: asset_server.load("sounds/background-noise-house-1.ogg"),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.00001)),
+                volume: bevy::audio::Volume::new(0.00001),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
+                spatial_scale: None,
             },
         })
         .insert(GameSound {
@@ -480,10 +475,11 @@ pub fn load_level(
             source: asset_server.load("sounds/ambient-clean.ogg"),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(0.00001)),
+                volume: bevy::audio::Volume::new(0.00001),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
+                spatial_scale: None,
             },
         })
         .insert(GameSound {
@@ -673,9 +669,13 @@ pub fn load_level(
     // Spawn Player 1
     commands
         .spawn(SpriteSheetBundle {
-            texture_atlas: handles.images.character1.clone(),
-            sprite: TextureAtlasSprite {
+            texture: handles.images.character1.clone(),
+            sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..default()
+            },
+            atlas: TextureAtlas {
+                layout: handles.images.character1_atlas.clone(),
                 ..Default::default()
             },
             transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])

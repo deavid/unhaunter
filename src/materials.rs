@@ -2,7 +2,7 @@
 
 use bevy::{
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::{
         mesh::MeshVertexBufferLayout,
         render_resource::{
@@ -34,7 +34,9 @@ fn setup(
 ) {
     let size = Vec2::new(128.0, 128.0);
     commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(Mesh::from(shape::Quad::new(size))).into(),
+        mesh: meshes
+            .add(Mesh::from(Rectangle::new(size.x, size.y)))
+            .into(),
         // transform: Transform::from_translation(position.extend(10.0)),
         material: materials1.add(CustomMaterial1 {
             data: CustomMaterial1Data {
@@ -53,7 +55,9 @@ fn setup(
     });
 
     commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(Mesh::from(shape::Quad::new(size))).into(),
+        mesh: meshes
+            .add(Mesh::from(Rectangle::new(size.x, size.y)))
+            .into(),
         // transform: Transform::from_translation(position.extend(10.0)),
         material: materials1.add(CustomMaterial1 {
             data: CustomMaterial1Data {
@@ -134,8 +138,7 @@ impl Default for CustomMaterial1Data {
     }
 }
 
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone, Component, Asset)]
-#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
+#[derive(AsBindGroup, TypePath, Debug, Clone, Component, Asset)]
 pub struct CustomMaterial1 {
     // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
     // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
@@ -179,8 +182,7 @@ impl Material2d for CustomMaterial1 {
 
 // -- additive material example --
 
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone, Asset)]
-#[uuid = "cdf95663-792e-484b-a806-b688a5c6ee54"]
+#[derive(AsBindGroup, TypePath, Debug, Clone, Asset)]
 pub struct CustomMaterial2 {
     // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
     // its shader-compatible equivalent. Most core math types already implement `ShaderType`.

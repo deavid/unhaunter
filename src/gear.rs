@@ -276,7 +276,7 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
 }
 
 pub fn keyboard_gear(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut gs: GearStuff,
 ) {
@@ -307,7 +307,7 @@ pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs:
 pub fn update_gear_ui(
     mut gc: ResMut<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    mut qi: Query<(&Inventory, &mut UiTextureAtlasImage)>,
+    mut qi: Query<(&Inventory, &mut TextureAtlas)>,
     mut qs: Query<&mut Text, With<InventoryStats>>,
 ) {
     for (ps, playergear) in q_gear.iter() {
@@ -343,10 +343,11 @@ impl<'w, 's> GearStuff<'w, 's> {
             source: self.asset_server.load(sound_file),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
-                volume: bevy::audio::Volume::Relative(bevy::audio::VolumeLevel::new(volume)),
+                volume: bevy::audio::Volume::new(volume),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
+                spatial_scale: None,
             },
         });
     }

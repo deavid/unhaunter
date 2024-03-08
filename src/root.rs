@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
 use crate::materials::CustomMaterial1;
 
@@ -116,8 +116,10 @@ pub struct FontAssets {
 #[derive(Debug, Clone)]
 pub struct ImageAssets {
     pub title: Handle<Image>,
-    pub character1: Handle<TextureAtlas>,
-    pub gear: Handle<TextureAtlas>,
+    pub character1: Handle<Image>,
+    pub gear: Handle<Image>,
+    pub character1_atlas: Handle<TextureAtlasLayout>,
+    pub gear_atlas: Handle<TextureAtlasLayout>,
 }
 
 #[derive(Debug, Clone)]
@@ -190,8 +192,11 @@ impl From<QuadCC> for Mesh {
         let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
         let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();
 
-        let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(indices));
+        let mut mesh = Mesh::new(
+            bevy::render::render_resource::PrimitiveTopology::TriangleList,
+            RenderAssetUsages::all(),
+        );
+        mesh.insert_indices(indices);
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
@@ -219,21 +224,21 @@ pub struct GameAssets {
 pub fn load_assets(
     mut commands: Commands,
     server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     commands.insert_resource(GameAssets {
         images: ImageAssets {
             title: server.load("img/title.png"),
-            character1: texture_atlases.add(TextureAtlas::from_grid(
-                server.load("img/characters-model1-demo.png"),
+            character1: server.load("img/characters-model1-demo.png"),
+            gear: server.load("img/gear_spritesheetA_48x48.png"),
+            character1_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
                 Vec2::new(32.0 * 2.0, 32.0 * 2.0),
                 16,
                 4,
                 Some(Vec2::new(0.0, 0.0)),
                 Some(Vec2::new(0.0, 0.0)),
             )),
-            gear: texture_atlases.add(TextureAtlas::from_grid(
-                server.load("img/gear_spritesheetA_48x48.png"),
+            gear_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
                 Vec2::new(48.0 * 2.0, 48.0 * 2.0),
                 10,
                 10,
@@ -328,7 +333,7 @@ pub fn load_assets(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_state::<State>()
-        .add_state::<GameState>()
+    app.init_state::<State>()
+        .init_state::<GameState>()
         .add_systems(Startup, load_assets);
 }
