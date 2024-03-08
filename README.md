@@ -122,3 +122,88 @@ NOTE: The game is currently being developed and built on a single developer
   machine using Debian GNU/Linux in some Testing/Sid version in an AMD machine
   using a NVIDIA 3080. The game should run in a wide range of computers and
   configurations, but it has not been tested.
+
+## Profiling
+
+Unhaunter, as any other game, will perform wildly different depending on where
+it is executed. If there are performance issues on your system, you can help
+by profiling the problem yourself.
+
+WARN: Profiling creates gigabytes worth of data. It is imperative that you know
+what do you want to test and do it as quickly as possible. A minute worth of
+data could be over 3 GiB.
+
+To run a profiling session, run:
+
+  $ cargo run --release --features bevy/trace_chrome
+
+This will create a file named `trace-1999999999999999.json` in the same folder
+from where you executed `cargo run` (numbers will be different).
+
+Be warned that the trace might also contain some private information about your
+system. The trace can be opened by others, but only send it to trusted people.
+(It shows the paths of where do you have Bevy and other libraries installed,
+which is just a minor concern)
+
+Being a JSON file, it is likely that it can be compressed really well. You can
+use 7-Zip, or other tools. ZSTD, if you have it, will probably yield good
+results in a short amount of time.
+
+For example, compressing a sample trace allows us to get 1.3 GiB
+compressed into 33 MiB:
+
+```
+$ zstd -9kv trace-1709882754518652.json 
+*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***
+trace-1709882754518652.json :  2.52%   (  1.30 GiB =>   33.5 MiB, trace-1709882754518652.json.zst) 
+```
+
+This could be useful to share via email or other methods. ZSTD gives very good
+compression ratios at quite fast speed.
+
+If you want to inspect the file yourself, you can use https://ui.perfetto.dev
+
+But usually it won't fit in the browser WASM limit (2 GiB), so you might need 
+to follow instructions here:
+
+https://perfetto.dev/docs/quickstart/trace-analysis#trace-processor
+
+Sample session:
+
+```
+$ curl -LO https://get.perfetto.dev/trace_processor
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  9759  100  9759    0     0  10107      0 --:--:-- --:--:-- --:--:-- 10102
+$ chmod +x ./trace_processor
+$ ./trace_processor ~/git/rust/unhaunter/trace-1709880857003805.json --httpd
+[865.803] processor_shell.cc:1636 Trace loaded: 2644.45 MB in 63.29s (41.8 MB/s)
+[865.804]             httpd.cc:99 [HTTP] Starting RPC server on localhost:9001
+[865.804]            httpd.cc:104 [HTTP] This server can be used by reloading https://ui.perfetto.dev and clicking on YES on the "Trace Processor native acceleration" dialog or through the Python API (see https://perfetto.dev/docs/analysis/trace-processor#python-api).
+```
+
+Once you have the trace up, you can zoom in/out and pan left/right using the
+WASD keys.
+
+In there, zoom in on the timeframe you want, usually it would be on the last
+part (3/4th to the right) and look for a single frame to inspect.
+
+To be exact, we are looking for:
+
+* Process: main 0
+  * bevy_app
+    * winit event_handler
+      * update:
+        * main_app (for CPU bound problems, for GPU: sub app: name=RenderExtractApp)
+          * schedule: name=Main
+            * schedule: name=Update
+
+Take a look on that are and see what are the main culprits of the time spent.
+
+NOTE: bevy_framepace::framerate_limiter is intended to take the majority of the
+  time. This is because its task is to add a sleep/delay so we keep a constant
+  FPS and we don't burn CPU/GPU resources without need.
+
+There's additional info on profiling Bevy here:
+
+https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
