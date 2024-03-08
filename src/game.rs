@@ -492,7 +492,7 @@ pub fn load_level(
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = tiledmap::bevy_load_map(
-        "assets/maps/map_house1_3x.tmx",
+        "assets/maps/map_house2.tmx",
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,

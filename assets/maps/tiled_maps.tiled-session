@@ -20,11 +20,11 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 2,
+            "scale": 0.75,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1710,
-                "y": 1245
+                "x": 1577.333333333333,
+                "y": 1258
             }
         },
         "map_house1_3x.tmx": {
@@ -32,11 +32,22 @@
                 2,
                 13
             ],
-            "scale": 4,
-            "selectedLayer": 1,
+            "scale": 5.5,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 1521.25,
-                "y": 606.375
+                "x": 304.18181818181824,
+                "y": 240.63636363636363
+            }
+        },
+        "map_house2.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 1.5,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 727.3333333333333,
+                "y": 973.6666666666665
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -75,12 +86,12 @@
     "loadedWorlds": [
         "/home/deavid/git/rust/unhaunter/assets/maps/world1.world"
     ],
-    "map.height": 64,
+    "map.height": 128,
     "map.lastUsedFormat": "tmx",
     "map.orientation": "2",
     "map.tileHeight": 36,
     "map.tileWidth": 72,
-    "map.width": 64,
+    "map.width": 128,
     "openFiles": [
         "map_house1_3x.tmx",
         "unhaunter_custom_tileset.tsx",
@@ -91,14 +102,14 @@
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "map_house1.tmx",
         "unhaunter_spritesheet2.tsx",
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",
         "map_house1_3x.tmx",
         "character1.tsx",
-        "unhaunter_test2b.tmx",
-        "map_house1.tmx"
+        "unhaunter_test2b.tmx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",

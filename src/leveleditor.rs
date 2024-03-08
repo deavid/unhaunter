@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{
     behavior::{Behavior, Orientation},
-    board::{self, BoardPosition, CollisionFieldData, Direction},
+    board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     game::{self, GameSound, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
     ghost_definitions::Evidence,
@@ -168,7 +168,7 @@ pub fn apply_lighting(
     let mut exp_count: f32 = 0.001;
     let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
-
+    let mut player_pos = Position::new_i64(0, 0, 0);
     for (pos, player, direction, gear) in qp.iter() {
         let player_flashlight = gear
             .as_vec()
@@ -208,6 +208,7 @@ pub fn apply_lighting(
             }
         }
         compute_visibility(&mut visibility_field, &bf.collision_field, pos, &mut roomdb);
+        player_pos = *pos;
     }
     // --- ambient sound processing ---
 
@@ -486,8 +487,17 @@ pub fn apply_lighting(
             let l = dst_color.l();
             dst_color.set_l((l * ld.visible + e_nv).clamp(0.0, 0.99));
         }
-
-        let old_a = sprite.color.a().clamp(0.0001, 1.0);
+        let mut old_a = sprite.color.a().clamp(0.0001, 1.0);
+        if stype == SpriteType::Other {
+            const MAX_DIST: f32 = 8.0;
+            let dist = pos.distance(&player_pos);
+            if dist < MAX_DIST {
+                let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
+                if delta_z > 0.0 {
+                    old_a /= 1.1;
+                }
+            }
+        }
 
         dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
         sprite.color = dst_color;
