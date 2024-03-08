@@ -118,6 +118,8 @@ pub struct ImageAssets {
     pub title: Handle<Image>,
     pub character1: Handle<Image>,
     pub gear: Handle<Image>,
+    pub character1_atlas: Handle<TextureAtlasLayout>,
+    pub gear_atlas: Handle<TextureAtlasLayout>,
 }
 
 #[derive(Debug, Clone)]
@@ -229,23 +231,20 @@ pub fn load_assets(
             title: server.load("img/title.png"),
             character1: server.load("img/characters-model1-demo.png"),
             gear: server.load("img/gear_spritesheetA_48x48.png"),
-            // FIXME:
-            // character1: texture_atlases.add(TextureAtlas::from_grid(
-            //     server.load("img/characters-model1-demo.png"),
-            //     Vec2::new(32.0 * 2.0, 32.0 * 2.0),
-            //     16,
-            //     4,
-            //     Some(Vec2::new(0.0, 0.0)),
-            //     Some(Vec2::new(0.0, 0.0)),
-            // )),
-            // gear: texture_atlases.add(TextureAtlas::from_grid(
-            //     server.load("img/gear_spritesheetA_48x48.png"),
-            //     Vec2::new(48.0 * 2.0, 48.0 * 2.0),
-            //     10,
-            //     10,
-            //     Some(Vec2::new(0.0, 0.0)),
-            //     Some(Vec2::new(0.0, 0.0)),
-            // )),
+            character1_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
+                Vec2::new(32.0 * 2.0, 32.0 * 2.0),
+                16,
+                4,
+                Some(Vec2::new(0.0, 0.0)),
+                Some(Vec2::new(0.0, 0.0)),
+            )),
+            gear_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
+                Vec2::new(48.0 * 2.0, 48.0 * 2.0),
+                10,
+                10,
+                Some(Vec2::new(0.0, 0.0)),
+                Some(Vec2::new(0.0, 0.0)),
+            )),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

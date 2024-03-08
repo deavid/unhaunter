@@ -677,8 +677,12 @@ pub fn load_level(
     commands
         .spawn(SpriteSheetBundle {
             texture: handles.images.character1.clone(),
+            sprite: Sprite {
+                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                ..default()
+            },
             atlas: TextureAtlas {
-                // FIXME: anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                layout: handles.images.character1_atlas.clone(),
                 ..Default::default()
             },
             transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])

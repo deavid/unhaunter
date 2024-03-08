@@ -341,26 +341,10 @@ impl AnimationTimer {
     }
 }
 
-pub fn animate_sprite(
-    time: Res<Time>,
-    texture_atlas_layout: Res<Assets<TextureAtlasLayout>>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        &mut TextureAtlas,
-        &Handle<TextureAtlasLayout>,
-    )>,
-) {
-    for (mut anim, mut sprite, texture_atlas_handle) in query.iter_mut() {
+pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut TextureAtlas)>) {
+    for (mut anim, mut sprite) in query.iter_mut() {
         if let Some(idx) = anim.tick(time.delta()) {
-            let texture_atlas = texture_atlas_layout.get(texture_atlas_handle).unwrap();
             sprite.index = idx;
-            if sprite.index >= texture_atlas.textures.len() {
-                error!(
-                    "sprite index {} out of range [0..{}]",
-                    sprite.index,
-                    texture_atlas.textures.len()
-                );
-            }
         }
     }
 }
