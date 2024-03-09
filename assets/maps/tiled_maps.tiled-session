@@ -32,22 +32,22 @@
                 2,
                 13
             ],
-            "scale": 5.5,
-            "selectedLayer": 2,
+            "scale": 2,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 304.18181818181824,
-                "y": 240.63636363636363
+                "x": 470.5,
+                "y": 306.75
             }
         },
         "map_house2.tmx": {
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 1.5,
-            "selectedLayer": 5,
+            "scale": 4,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 727.3333333333333,
-                "y": 973.6666666666665
+                "x": 691.75,
+                "y": 958.375
             }
         },
         "unhaunter_custom_tileset.tsx": {

@@ -269,6 +269,7 @@ pub enum Class {
     Van,
     Window,
     InvisibleWall,
+    CornerWall,
     #[default]
     None,
 }
@@ -500,6 +501,7 @@ impl SpriteConfig {
             Class::Window => entity,
             Class::None => entity,
             Class::InvisibleWall => entity,
+            Class::CornerWall => entity,
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
@@ -548,6 +550,11 @@ impl SpriteConfig {
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
                 p.light.see_through = true;
+                p.display.disable = true;
+            }
+            Class::CornerWall => {
+                p.movement.player_collision = true;
+                p.light.see_through = false;
                 p.display.disable = true;
             }
             Class::PlayerSpawn => {
