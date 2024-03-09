@@ -22,7 +22,7 @@ use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
-use crate::leveleditor;
+use crate::maplight;
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
@@ -140,8 +140,8 @@ impl Light {
         }
     }
     /// This represents if a light on the map is emitting visible light or other types.
-    pub fn additional_data(&self) -> leveleditor::LightData {
-        leveleditor::LightData::UNIT_VISIBLE
+    pub fn additional_data(&self) -> maplight::LightData {
+        maplight::LightData::UNIT_VISIBLE
     }
 }
 

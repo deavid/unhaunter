@@ -4,8 +4,8 @@ mod game;
 mod gear;
 mod ghost;
 mod ghost_definitions;
-mod leveleditor;
 mod mainmenu;
+mod maplight;
 mod materials;
 mod pause;
 mod player;
@@ -54,7 +54,6 @@ fn main() {
     .add_systems(Startup, set_fps_limiter)
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
-    .add_systems(Update, leveleditor::apply_lighting)
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
     )));
@@ -68,6 +67,7 @@ fn main() {
     board::app_setup(&mut app);
     player::app_setup(&mut app);
     pause::app_setup(&mut app);
+    maplight::app_setup(&mut app);
 
     app.run();
 }

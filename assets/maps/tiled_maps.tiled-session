@@ -20,11 +20,11 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 0.75,
+            "scale": 2,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1577.333333333333,
-                "y": 1258
+                "x": 449,
+                "y": 289.25
             }
         },
         "map_house1_3x.tmx": {
@@ -48,6 +48,17 @@
             "viewCenter": {
                 "x": 691.75,
                 "y": 958.375
+            }
+        },
+        "map_school1.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1217.3333333333333,
+                "y": 878
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -74,8 +85,8 @@
             "scale": 0.33,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 2299.9999999999995,
-                "y": 1148.4848484848485
+                "x": 2293.939393939394,
+                "y": 1146.969696969697
             }
         }
     },
@@ -103,13 +114,13 @@
     "property.type": "string",
     "recentFiles": [
         "map_house1.tmx",
+        "map_house1_3x.tmx",
+        "unhaunter_test2b.tmx",
         "unhaunter_spritesheet2.tsx",
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",
-        "map_house1_3x.tmx",
-        "character1.tsx",
-        "unhaunter_test2b.tmx"
+        "character1.tsx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",

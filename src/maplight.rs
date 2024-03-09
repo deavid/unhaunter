@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
-    game::{self, GameSound, SoundType, SpriteType},
+    game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
@@ -142,12 +142,15 @@ pub fn compute_visibility(
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
     mut qt: Query<(&board::Position, &mut Sprite, Option<&SpriteType>)>,
-    mut qt2: Query<(
-        &board::Position,
-        &Handle<CustomMaterial1>,
-        &Behavior,
-        &mut Visibility,
-    )>,
+    mut qt2: Query<
+        (
+            &board::Position,
+            &Handle<CustomMaterial1>,
+            &Behavior,
+            &mut Visibility,
+        ),
+        Changed<MapUpdate>,
+    >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(
         &board::Position,
@@ -262,7 +265,7 @@ pub fn apply_lighting(
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
-    const VSMALL_PRIME: usize = 97;
+    const VSMALL_PRIME: usize = 31;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
@@ -452,6 +455,11 @@ pub fn apply_lighting(
             if stype == SpriteType::Ghost {
                 rel_lux /= 2.0;
             }
+            if stype == SpriteType::Player {
+                rel_lux *= 1.1;
+                rel_lux += 0.1;
+            }
+
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
         } else {
             src_color
@@ -510,4 +518,41 @@ pub fn apply_lighting(
     //     warn!("change_count: {}", &change_count);
     //     warn!("apply_lighting elapsed: {:?}", start.elapsed());
     // }
+}
+
+pub fn mark_for_update(
+    time: Res<Time>,
+    gc: Res<GameConfig>,
+    qp: Query<(&board::Position, &player::PlayerSprite)>,
+    mut qt2: Query<(&board::Position, &Visibility, &mut MapUpdate)>,
+) {
+    let mut player_pos = Position::new_i64(0, 0, 0);
+    for (pos, player) in qp.iter() {
+        if player.id != gc.player_id {
+            continue;
+        }
+        player_pos = *pos;
+    }
+    let now = time.elapsed_seconds();
+    use rand::rngs::SmallRng;
+    use rand::{Rng, SeedableRng};
+    let mut small_rng = SmallRng::from_entropy();
+
+    for (pos, vis, mut upd) in qt2.iter_mut() {
+        let r: f32 = small_rng.gen_range(0.0..1.01);
+        let dst = pos.distance_taxicab(&player_pos);
+        let min_dst = 5.0
+            + if vis == Visibility::Hidden {
+                r.powi(10) * 20.0
+            } else {
+                r.powi(10) * 100.0
+            };
+        if dst < min_dst {
+            upd.last_update = now;
+        }
+    }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, (mark_for_update, apply_lighting).chain());
 }

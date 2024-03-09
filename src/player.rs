@@ -349,35 +349,6 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &m
     }
 }
 
-pub fn player_coloring(
-    mut players: Query<(&mut Sprite, &PlayerSprite, &board::Position)>,
-    bf: Res<board::BoardData>,
-) {
-    for (mut tas, player, position) in players.iter_mut() {
-        let color: Color = match player.id {
-            1 => Color::WHITE,
-            2 => Color::GOLD,
-            _ => Color::ORANGE_RED,
-        };
-        let bpos = position.to_board_position();
-        // mapping of... distance vs rel_lux
-        let mut tot_rel_lux = 0.0000001;
-        let mut n_rel_lux = 0.0000001;
-        for npos in bpos.xy_neighbors(2) {
-            if let Some(lf) = bf.light_field.get(&npos) {
-                let npos = npos.to_position();
-                let dist = npos.distance(position);
-                let f = (1.0 - dist).clamp(0.0, 1.0);
-                let rel_lux = lf.lux / bf.current_exposure + 0.1;
-                n_rel_lux += f;
-                tot_rel_lux += rel_lux * f;
-            }
-        }
-        let rel_lux = tot_rel_lux / n_rel_lux;
-        tas.color = board::compute_color_exposure(rel_lux, 0.0, board::DARK_GAMMA, color);
-    }
-}
-
 #[derive(SystemParam)]
 pub struct CollisionHandler<'w> {
     bf: Res<'w, board::BoardData>,
@@ -549,6 +520,5 @@ pub fn app_setup(app: &mut App) {
             Update,
             keyboard_player.run_if(in_state(root::GameState::None)),
         )
-        .add_systems(Update, animate_sprite)
-        .add_systems(Update, player_coloring);
+        .add_systems(Update, animate_sprite);
 }

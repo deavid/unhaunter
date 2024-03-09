@@ -28,6 +28,11 @@ pub struct GameUI;
 #[derive(Component, Debug)]
 pub struct GameSprite;
 
+#[derive(Component, Debug, Default)]
+pub struct MapUpdate {
+    pub last_update: f32,
+}
+
 #[derive(Component, Debug)]
 pub struct GameSound {
     pub class: SoundType,
@@ -409,12 +414,12 @@ pub fn keyboard(
             transform.translation.y -= 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::NumpadAdd) {
-            transform.scale.x /= 1.02 * dt;
-            transform.scale.y /= 1.02 * dt;
+            transform.scale.x /= 1.02_f32.powf(dt);
+            transform.scale.y /= 1.02_f32.powf(dt);
         }
         if keyboard_input.pressed(KeyCode::NumpadSubtract) {
-            transform.scale.x *= 1.02 * dt;
-            transform.scale.y *= 1.02 * dt;
+            transform.scale.x *= 1.02_f32.powf(dt);
+            transform.scale.y *= 1.02_f32.powf(dt);
         }
     }
 }
@@ -492,7 +497,7 @@ pub fn load_level(
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = tiledmap::bevy_load_map(
-        "assets/maps/map_house2.tmx",
+        "assets/maps/map_school1.tmx",
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
@@ -537,7 +542,7 @@ pub fn load_level(
 
                     cmat.data.sheet_idx = tileuid;
                     // Set alpha initially transparent to all materials so they will appear slowly.
-                    cmat.data.color.set_a(0.5);
+                    cmat.data.color.set_a(0.0);
                     cmat.data.gamma = 0.1;
                     cmat.data.gbl = 0.1;
                     cmat.data.gbr = 0.1;
@@ -650,7 +655,11 @@ pub fn load_level(
             let mut beh = mt.behavior.clone();
             beh.flip(tile.flip_x);
 
-            entity.insert(beh).insert(GameSprite).insert(pos);
+            entity
+                .insert(beh)
+                .insert(GameSprite)
+                .insert(pos)
+                .insert(MapUpdate::default());
         }
     }
 
