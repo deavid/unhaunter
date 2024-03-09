@@ -30,6 +30,7 @@ fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
     // bevy_framepace::debug::DiagnosticsPlugin
     //    bevy_framepace::FramePaceStats
 }
+const FPS_DEBUG: bool = false;
 
 fn main() {
     let mut app = App::new();
@@ -45,9 +46,6 @@ fn main() {
                 ..default()
             }),
     )
-    .add_plugins(FrameTimeDiagnosticsPlugin)
-    .add_plugins(LogDiagnosticsPlugin::default())
-    .add_plugins(bevy_framepace::debug::DiagnosticsPlugin)
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .add_plugins(bevy_framepace::FramepacePlugin)
@@ -57,6 +55,13 @@ fn main() {
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
     )));
+
+    if FPS_DEBUG {
+        app.add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_plugins(LogDiagnosticsPlugin::default())
+            .add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
+    }
+
     root::app_setup(&mut app);
     gear::app_setup(&mut app);
     game::app_setup(&mut app);

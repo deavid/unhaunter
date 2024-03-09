@@ -734,6 +734,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
@@ -750,6 +751,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()

@@ -442,10 +442,10 @@ pub fn apply_lighting(
     for (pos, mut sprite, o_type) in qt.iter_mut() {
         let stype = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
-        let ld = lightdata_map
-            .get(&bpos)
-            .cloned()
-            .unwrap_or(LightData::UNIT_VISIBLE);
+        let Some(ld) = lightdata_map.get(&bpos).cloned() else {
+            // If the given cell was not selected for update, skip updating its color (otherwise it can blink)
+            continue;
+        };
         let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
