@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{ghost_definitions::GhostType, root, utils};
+use crate::{ghost_definitions::GhostType, player::PlayerSprite, root, utils};
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;
@@ -14,6 +14,7 @@ pub enum SummaryUIType {
     TimeTaken,
     GhostUnhaunted,
     RepellentUsed,
+    AvgSanity,
     FinalScore,
 }
 
@@ -56,6 +57,7 @@ pub struct SummaryData {
     pub ghosts_unhaunted: u32,
     pub final_score: i64,
     pub difficulty: Difficulty,
+    pub average_sanity: f32,
 }
 
 impl SummaryData {
@@ -71,6 +73,9 @@ impl SummaryData {
             / (1.0 + self.repellent_used_amt as f64)
             / (1.0 + (self.ghost_types.len() as u32 - self.ghosts_unhaunted) as f64);
 
+        // Sanity modifier
+        score *= (self.average_sanity as f64 + 30.0) / 50.0;
+
         // Apply difficulty multiplier
         score *= self.difficulty.get_multiplier();
 
@@ -80,17 +85,6 @@ impl SummaryData {
         // Ensure score is within a reasonable range
         score.clamp(0.0, 1000000.0) as i64
     }
-}
-
-pub fn app_setup(app: &mut App) {
-    app.init_resource::<SummaryData>()
-        .add_systems(OnEnter(root::State::Summary), (setup, setup_ui))
-        .add_systems(OnExit(root::State::Summary), cleanup)
-        .add_systems(Update, update_time.run_if(in_state(root::State::InGame)))
-        .add_systems(
-            Update,
-            (keyboard, update_ui, update_score).run_if(in_state(root::State::Summary)),
-        );
 }
 
 pub fn setup(mut commands: Commands) {
@@ -119,11 +113,18 @@ pub fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
     game_state: Res<State<root::GameState>>,
+    qp: Query<&PlayerSprite>,
 ) {
     if *game_state == root::GameState::Pause {
         return;
     }
     sd.time_taken_secs += time.delta_seconds();
+
+    let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
+    let player_count = qp.iter().count();
+    if player_count > 0 {
+        sd.average_sanity = total_sanity / player_count as f32;
+    }
 }
 
 pub fn keyboard(
@@ -268,6 +269,16 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .insert(SummaryUIType::TimeTaken);
                     parent
                         .spawn(TextBundle::from_section(
+                            "Average Sanity: 00",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::AvgSanity);
+                    parent
+                        .spawn(TextBundle::from_section(
                             "Ghosts unhaunted: 0/1",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
@@ -346,6 +357,9 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
                 text.sections[0].value =
                     format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))
             }
+            SummaryUIType::AvgSanity => {
+                text.sections[0].value = format!("Average Sanity: {:.1}%", rsd.average_sanity)
+            }
             SummaryUIType::GhostUnhaunted => {
                 text.sections[0].value = format!(
                     "Ghosts unhaunted: {}/{}",
@@ -372,4 +386,18 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<root::Stat
     let max_delta = desired_score - sd.final_score;
     let delta = (max_delta / 200).max(10).min(max_delta);
     sd.final_score += delta;
+}
+
+pub fn app_setup(app: &mut App) {
+    app.init_resource::<SummaryData>()
+        .add_systems(OnEnter(root::State::Summary), (setup, setup_ui))
+        .add_systems(OnExit(root::State::Summary), cleanup)
+        .add_systems(
+            FixedUpdate,
+            update_time.run_if(in_state(root::State::InGame)),
+        )
+        .add_systems(
+            Update,
+            (keyboard, update_ui, update_score).run_if(in_state(root::State::Summary)),
+        );
 }
