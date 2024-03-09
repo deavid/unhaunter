@@ -1,6 +1,8 @@
+use std::time::Instant;
+
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
-use crate::materials::CustomMaterial1;
+use crate::{materials::CustomMaterial1, tiledmap::naive_tmx_loader};
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
@@ -369,32 +371,27 @@ pub fn find_tmx_files() -> Vec<String> {
 pub fn init_maps(mut maps: ResMut<Maps>) {
     // Scan for maps:
     let tmx_files = find_tmx_files();
-    let mut loader = tiled::Loader::new();
     for path in tmx_files {
-        let map = match loader.load_tmx_map(&path) {
+        let start = Instant::now();
+        // Loading a map can take 100ms or more. Therefore we do a naive load instead
+        let (classname, display_name) = match naive_tmx_loader(&path) {
             Ok(m) => m,
             Err(e) => {
                 warn!("Cannot load map {path:?}: {e}");
                 continue;
             }
         };
-        if map.user_type != Some("UnhaunterMap1".to_string()) {
+        let load_time_ms = start.elapsed().as_secs_f32() * 1000.0;
+        if classname != Some("UnhaunterMap1".to_string()) {
             warn!(
                 "Unrecognized Class {:?} for map {:?} (Should be 'UnhaunterMap1')",
-                map.user_type, path
+                classname, path
             );
             continue;
         }
         let default_name = format!("Unnamed ({})", path.replace("assets/maps/", ""));
-        let display_name = map
-            .properties
-            .get("display_name")
-            .map(|x| match x {
-                tiled::PropertyValue::StringValue(s) => s.clone(),
-                _ => default_name.clone(),
-            })
-            .unwrap_or(default_name);
-        info!("Found map {display_name:?} at path {path:?}");
+        let display_name = display_name.unwrap_or(default_name);
+        info!("Found map {display_name:?} at path {path:?} - loaded in {load_time_ms:.2}ms");
         maps.maps.push(Map {
             name: display_name,
             path,
