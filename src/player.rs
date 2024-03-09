@@ -30,7 +30,8 @@ impl PlayerSprite {
         }
     }
     pub fn sanity(&self) -> f32 {
-        1000.0 / ((self.crazyness + 100.0).sqrt())
+        const LINEAR: f32 = 30.0;
+        (100.0 * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
     }
 }
 
@@ -575,7 +576,7 @@ fn recover_sanity(
 
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
-            ps.crazyness /= 1.03_f32.powf(dt);
+            ps.crazyness /= 1.05_f32.powf(dt);
             if timer.just_finished() {
                 dbg!(ps.sanity());
             }
