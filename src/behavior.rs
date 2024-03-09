@@ -22,7 +22,7 @@ use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
-use crate::leveleditor;
+use crate::maplight;
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
@@ -140,8 +140,8 @@ impl Light {
         }
     }
     /// This represents if a light on the map is emitting visible light or other types.
-    pub fn additional_data(&self) -> leveleditor::LightData {
-        leveleditor::LightData::UNIT_VISIBLE
+    pub fn additional_data(&self) -> maplight::LightData {
+        maplight::LightData::UNIT_VISIBLE
     }
 }
 
@@ -269,6 +269,7 @@ pub enum Class {
     Van,
     Window,
     InvisibleWall,
+    CornerWall,
     #[default]
     None,
 }
@@ -500,6 +501,7 @@ impl SpriteConfig {
             Class::Window => entity,
             Class::None => entity,
             Class::InvisibleWall => entity,
+            Class::CornerWall => entity,
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
@@ -548,6 +550,11 @@ impl SpriteConfig {
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
                 p.light.see_through = true;
+                p.display.disable = true;
+            }
+            Class::CornerWall => {
+                p.movement.player_collision = true;
+                p.light.see_through = false;
                 p.display.disable = true;
             }
             Class::PlayerSpawn => {

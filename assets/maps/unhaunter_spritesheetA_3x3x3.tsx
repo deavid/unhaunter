@@ -434,6 +434,13 @@
    <property name="sprite:variant" value="Metal"/>
   </properties>
  </tile>
+ <tile id="58" type="CornerWall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
+ </tile>
  <tile id="59" type="InvisibleWall">
   <properties>
    <property name="sprite:orientation" value="None"/>

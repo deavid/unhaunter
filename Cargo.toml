@@ -1,6 +1,6 @@
 [package]
 name = "unhaunter"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 default-run = "unhaunter"
 
@@ -9,7 +9,7 @@ default-run = "unhaunter"
 [dependencies]
 bevy = { version = "0.13.0", features = ["trace"] }
 bevy_framepace = "0.15"
-rand = "0.8"
+rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -22,6 +22,8 @@ anyhow = "1.0.79"
 ordered-float = "4.2.0"
 bevy-persistent = { version = "0.5.0", features = ["all"] }
 hierarchical_pathfinding = "0.5.0"
+walkdir = "2.5.0"
+glob = "0.3.1"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]

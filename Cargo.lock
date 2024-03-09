@@ -3856,7 +3856,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -3865,6 +3865,7 @@ dependencies = [
  "clap",
  "enum-iterator",
  "fastapprox",
+ "glob",
  "hierarchical_pathfinding",
  "image",
  "ordered-float",
@@ -3873,6 +3874,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiled",
+ "walkdir",
 ]
 
 [[package]]

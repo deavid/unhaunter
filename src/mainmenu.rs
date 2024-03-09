@@ -1,6 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 
+use crate::game::LoadLevelEvent;
 use crate::root;
 
 const MENU_ITEM_COLOR_OFF: Color = Color::GRAY;
@@ -9,6 +10,7 @@ const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
     NewGame,
+    Map,
     Options,
     Quit,
 }
@@ -19,10 +21,12 @@ pub struct MenuEvent(MenuID);
 #[derive(Component)]
 pub struct Menu {
     pub selected: MenuID,
+    pub map_idx: usize,
+    pub map_len: usize,
 }
 
 impl Menu {
-    const ITEMS: [MenuID; 3] = [MenuID::NewGame, MenuID::Options, MenuID::Quit];
+    const ITEMS: [MenuID; 4] = [MenuID::NewGame, MenuID::Map, MenuID::Options, MenuID::Quit];
     pub fn item_idx(&self) -> i64 {
         for (n, item) in Menu::ITEMS.iter().enumerate() {
             if item == &self.selected {
@@ -43,12 +47,31 @@ impl Menu {
     pub fn previous_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() - 1);
     }
+    pub fn next_map(&mut self) {
+        self.map_idx = (self.map_idx + 1) % self.map_len;
+    }
+    pub fn previous_map(&mut self) {
+        self.map_idx = if self.map_idx < 1 {
+            self.map_len - 1
+        } else {
+            self.map_idx - 1
+        };
+    }
+    pub fn with_len(map_len: usize) -> Self {
+        let map_len = map_len.max(1); // Ensure that it is at least 1.
+        Self {
+            map_len,
+            ..default()
+        }
+    }
 }
 
 impl Default for Menu {
     fn default() -> Self {
         Self {
             selected: MenuID::NewGame,
+            map_idx: 0,
+            map_len: 1,
         }
     }
 }
@@ -144,7 +167,7 @@ pub fn despawn_sound(mut commands: Commands, qs: Query<(Entity, &AudioSink, &Men
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Res<root::Maps>) {
     let main_color = Color::Rgba {
         red: 0.2,
         green: 0.2,
@@ -228,7 +251,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     background_color: main_color.into(),
                     ..default()
                 })
-                .insert(Menu::default())
+                .insert(Menu::with_len(maps.maps.len()))
                 .with_children(|parent| {
                     // text
                     parent
@@ -241,6 +264,16 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             },
                         ))
                         .insert(MenuItem::new(MenuID::NewGame));
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Map: ?",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: MENU_ITEM_COLOR_OFF,
+                            },
+                        ))
+                        .insert(MenuItem::new(MenuID::Map));
                     parent
                         .spawn(TextBundle::from_section(
                             "Options",
@@ -276,16 +309,36 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     info!("Main menu loaded");
 }
 
-pub fn item_logic(mut q: Query<(&mut MenuItem, &mut Text)>, qmenu: Query<&Menu>) {
+pub fn item_logic(
+    mut q: Query<(&mut MenuItem, &mut Text)>,
+    qmenu: Query<&Menu>,
+    maps: Res<root::Maps>,
+) {
     for (mut mitem, mut text) in q.iter_mut() {
+        let mut map_idx = 0;
         for menu in qmenu.iter() {
             mitem.highlighted = menu.selected == mitem.identifier;
+            map_idx = menu.map_idx;
         }
         for section in text.sections.iter_mut() {
-            if mitem.highlighted {
-                section.style.color = MENU_ITEM_COLOR_ON;
+            let new_color = if mitem.highlighted {
+                MENU_ITEM_COLOR_ON
             } else {
-                section.style.color = MENU_ITEM_COLOR_OFF;
+                MENU_ITEM_COLOR_OFF
+            };
+            if new_color != section.style.color {
+                section.style.color = new_color;
+            }
+            if mitem.identifier == MenuID::Map {
+                let map_name = maps
+                    .maps
+                    .get(map_idx)
+                    .map(|x| x.name.clone())
+                    .unwrap_or("None".to_string());
+                let new_map_name = format!("Map: {}", map_name);
+                if section.value != new_map_name {
+                    section.value = new_map_name;
+                }
             }
         }
     }
@@ -304,17 +357,32 @@ pub fn keyboard(
         } else if keyboard_input.just_pressed(KeyCode::Enter) {
             ev_menu.send(MenuEvent(menu.selected));
         }
+        if menu.selected == MenuID::Map {
+            if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
+                menu.previous_map();
+            }
+            if keyboard_input.just_pressed(KeyCode::ArrowRight) {
+                menu.next_map();
+            }
+        }
     }
 }
 
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut app_next_state: ResMut<NextState<root::State>>,
+    mut ev_load: EventWriter<LoadLevelEvent>,
+    q: Query<&Menu>,
+    maps: Res<root::Maps>,
 ) {
     for event in ev_menu.read() {
         match event.0 {
-            MenuID::NewGame => app_next_state.set(root::State::InGame),
+            MenuID::NewGame => {
+                let map_idx = q.single().map_idx;
+                let map_filepath = maps.maps[map_idx].path.clone();
+                ev_load.send(LoadLevelEvent { map_filepath });
+            }
+            MenuID::Map => {}
             MenuID::Options => {}
             MenuID::Quit => {
                 exit.send(AppExit);

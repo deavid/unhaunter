@@ -1,7 +1,7 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
-use crate::board::{self, Bdl, BoardPosition, Position};
-use crate::game::{InteractionExecutionType, RoomChangedEvent};
+use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
+use crate::game::{GameConfig, InteractionExecutionType, RoomChangedEvent};
 use crate::root;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -11,6 +11,7 @@ use std::time::Duration;
 pub struct PlayerSprite {
     pub id: usize,
     pub controls: ControlKeys,
+    pub crazyness: f32,
 }
 
 impl PlayerSprite {
@@ -18,6 +19,7 @@ impl PlayerSprite {
         Self {
             id,
             controls: Self::default_controls(id),
+            crazyness: 0.0,
         }
     }
     pub fn default_controls(id: usize) -> ControlKeys {
@@ -26,6 +28,10 @@ impl PlayerSprite {
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
         }
+    }
+    pub fn sanity(&self) -> f32 {
+        const LINEAR: f32 = 30.0;
+        (100.0 * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
     }
 }
 
@@ -349,35 +355,6 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &m
     }
 }
 
-pub fn player_coloring(
-    mut players: Query<(&mut Sprite, &PlayerSprite, &board::Position)>,
-    bf: Res<board::BoardData>,
-) {
-    for (mut tas, player, position) in players.iter_mut() {
-        let color: Color = match player.id {
-            1 => Color::WHITE,
-            2 => Color::GOLD,
-            _ => Color::ORANGE_RED,
-        };
-        let bpos = position.to_board_position();
-        // mapping of... distance vs rel_lux
-        let mut tot_rel_lux = 0.0000001;
-        let mut n_rel_lux = 0.0000001;
-        for npos in bpos.xy_neighbors(2) {
-            if let Some(lf) = bf.light_field.get(&npos) {
-                let npos = npos.to_position();
-                let dist = npos.distance(position);
-                let f = (1.0 - dist).clamp(0.0, 1.0);
-                let rel_lux = lf.lux / bf.current_exposure + 0.1;
-                n_rel_lux += f;
-                tot_rel_lux += rel_lux * f;
-            }
-        }
-        let rel_lux = tot_rel_lux / n_rel_lux;
-        tas.color = board::compute_color_exposure(rel_lux, 0.0, board::DARK_GAMMA, color);
-    }
-}
-
 #[derive(SystemParam)]
 pub struct CollisionHandler<'w> {
     bf: Res<'w, board::BoardData>,
@@ -543,12 +520,91 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
     }
 }
 
+fn lose_sanity(
+    time: Res<Time>,
+    mut timer: Local<PrintingTimer>,
+    mut mean_sound: Local<MeanSound>,
+    mut qp: Query<(&mut PlayerSprite, &Position)>,
+    bf: Res<BoardData>,
+) {
+    timer.tick(time.delta());
+
+    let dt = time.delta_seconds();
+    for (mut ps, pos) in &mut qp {
+        let bpos = pos.to_board_position();
+        let lux = bf
+            .light_field
+            .get(&bpos)
+            .map(|x| x.lux)
+            .unwrap_or(2.0)
+            .sqrt()
+            + 0.001;
+        let temp = bf.temperature_field.get(&bpos).cloned().unwrap_or(2.0);
+        let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
+        let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
+        let mut sound = 0.0;
+        for bpos in bpos.xy_neighbors(3).iter() {
+            sound += bf
+                .sound_field
+                .get(bpos)
+                .map(|x| x.iter().map(|y| y.length()).sum::<f32>())
+                .unwrap_or_default()
+                * 10.0;
+        }
+        const MASS: f32 = 60.0;
+        mean_sound.0 =
+            ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
+
+        let crazy =
+            lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
+        ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
+        if timer.just_finished() {
+            dbg!(ps.sanity(), mean_sound.0);
+        }
+    }
+}
+
+fn recover_sanity(
+    time: Res<Time>,
+    mut qp: Query<&mut PlayerSprite>,
+    gc: Res<GameConfig>,
+    mut timer: Local<PrintingTimer>,
+) {
+    // Current player recovers sanity while in the truck.
+    let dt = time.delta_seconds();
+    timer.tick(time.delta());
+
+    for mut ps in &mut qp {
+        if ps.id == gc.player_id {
+            ps.crazyness /= 1.05_f32.powf(dt);
+            if timer.just_finished() {
+                dbg!(ps.sanity());
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct MeanSound(f32);
+
+#[derive(Deref, DerefMut)]
+struct PrintingTimer(Timer);
+
+impl Default for PrintingTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(5.0, TimerMode::Repeating))
+    }
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_event::<RoomChangedEvent>()
         .add_systems(
             Update,
-            keyboard_player.run_if(in_state(root::GameState::None)),
+            (keyboard_player, lose_sanity).run_if(in_state(root::GameState::None)),
         )
-        .add_systems(Update, animate_sprite)
-        .add_systems(Update, player_coloring);
+        .add_systems(
+            Update,
+            recover_sanity.run_if(in_state(root::GameState::Truck)),
+        )
+        .add_systems(Update, animate_sprite);
 }

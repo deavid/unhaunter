@@ -99,10 +99,15 @@ pub fn temperature_update(
 ) {
     let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {
+        let h_out = bh.temp_heat_output();
+        if h_out < 0.001 {
+            continue;
+        }
         let bpos = pos.to_board_position();
         let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = bh.temp_heat_output() * k * 10.0;
+        let t_out = h_out * k * 10.0;
+
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
 
@@ -122,13 +127,15 @@ pub fn temperature_update(
             });
         }
     }
-    let mut rng = rand::thread_rng();
+    use rand::rngs::SmallRng;
+    use rand::SeedableRng;
+    let mut rng = SmallRng::from_entropy();
 
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
         .iter()
         .filter_map(|(p, t)| {
-            if rng.gen_range(0..3) == 0 {
+            if rng.gen_range(0..8) == 0 {
                 Some((p.clone(), *t))
             } else {
                 None

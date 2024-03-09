@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     behavior::{self, Behavior, SpriteCVOKey},
     ghost_definitions::Evidence,
-    leveleditor,
+    maplight,
     materials::CustomMaterial1,
 };
 
@@ -186,6 +186,12 @@ impl Position {
         let dz = self.z - other.z;
         // fastapprox::faster::pow
         (dx * dx + dy * dy + dz * dz).sqrt()
+    }
+    pub fn distance_taxicab(&self, other: &Self) -> f32 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        let dz = self.z - other.z;
+        dx.abs() + dy.abs() + dz.abs()
     }
     pub fn to_board_position(self) -> BoardPosition {
         BoardPosition {
@@ -438,7 +444,7 @@ impl FromWorld for BoardData {
 pub struct LightFieldData {
     pub lux: f32,
     pub transmissivity: f32,
-    pub additional: leveleditor::LightData,
+    pub additional: maplight::LightData,
 }
 
 impl Default for LightFieldData {
@@ -446,7 +452,7 @@ impl Default for LightFieldData {
         Self {
             lux: 0.0,
             transmissivity: 1.0,
-            additional: leveleditor::LightData::default(),
+            additional: maplight::LightData::default(),
         }
     }
 }
@@ -776,7 +782,7 @@ pub fn boardfield_update(
                 let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
                     lux: 0.0,
                     transmissivity: 1.0,
-                    additional: leveleditor::LightData::default(),
+                    additional: maplight::LightData::default(),
                 });
                 let lightdata = LightFieldData {
                     lux: behavior.p.light.emmisivity_lumens() + src.lux,

@@ -23,6 +23,9 @@ pub enum TruckUIEvent {
 }
 
 #[derive(Component, Debug)]
+pub struct SanityText;
+
+#[derive(Component, Debug)]
 pub struct TruckUIGhostGuess;
 
 #[derive(Debug, Resource, Default)]
@@ -166,22 +169,6 @@ impl From<TruckButtonType> for TruckUIButton {
     }
 }
 
-pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::State::InGame), setup_ui)
-        .add_systems(OnExit(root::State::InGame), cleanup)
-        .add_systems(OnEnter(root::GameState::Truck), show_ui)
-        .add_systems(OnExit(root::GameState::Truck), hide_ui)
-        .add_event::<TruckUIEvent>()
-        .init_resource::<GhostGuess>()
-        .add_systems(Update, keyboard)
-        .add_systems(Update, ghost_guess_system)
-        .add_systems(
-            FixedUpdate,
-            button_system.run_if(in_state(root::GameState::Truck)),
-        )
-        .add_systems(Update, truckui_event_handle);
-}
-
 const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
 
 const TRUCKUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
@@ -302,7 +289,7 @@ pub fn setup_ui(
                             );
                             p1_sanity.style.margin = TEXT_MARGIN;
 
-                            sanity.spawn(p1_sanity);
+                            sanity.spawn(p1_sanity).insert(SanityText);
 
                             sanity.spawn(NodeBundle {
                                 style: Style {
@@ -908,6 +895,24 @@ pub fn truckui_event_handle(
     }
 }
 
+fn update_sanity(
+    gc: Res<GameConfig>,
+    qp: Query<&PlayerSprite>,
+    mut qst: Query<&mut Text, With<SanityText>>,
+) {
+    for player in &qp {
+        if player.id != gc.player_id {
+            continue;
+        }
+        for mut text in &mut qst {
+            let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity());
+            if new_sanity_text != text.sections[0].value {
+                text.sections[0].value = new_sanity_text;
+            }
+        }
+    }
+}
+
 #[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
@@ -1017,4 +1022,20 @@ fn ghost_guess_system(
             None => "-- Unknown --".to_string(),
         };
     }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(root::State::InGame), setup_ui)
+        .add_systems(OnExit(root::State::InGame), cleanup)
+        .add_systems(OnEnter(root::GameState::Truck), show_ui)
+        .add_systems(OnExit(root::GameState::Truck), hide_ui)
+        .add_event::<TruckUIEvent>()
+        .init_resource::<GhostGuess>()
+        .add_systems(Update, keyboard)
+        .add_systems(Update, ghost_guess_system)
+        .add_systems(
+            FixedUpdate,
+            (button_system, update_sanity).run_if(in_state(root::GameState::Truck)),
+        )
+        .add_systems(Update, truckui_event_handle);
 }

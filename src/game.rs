@@ -28,6 +28,11 @@ pub struct GameUI;
 #[derive(Component, Debug)]
 pub struct GameSprite;
 
+#[derive(Component, Debug, Default)]
+pub struct MapUpdate {
+    pub last_update: f32,
+}
+
 #[derive(Component, Debug)]
 pub struct GameSound {
     pub class: SoundType,
@@ -159,11 +164,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     }
 }
 
-pub fn setup_ui(
-    mut commands: Commands,
-    handles: Res<root::GameAssets>,
-    mut ev_load: EventWriter<LoadLevelEvent>,
-) {
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
     const INVENTORY_STATS_COLOR: Color = Color::rgba(0.7, 0.7, 0.7, 0.6);
     const PANEL_BGCOLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.3);
@@ -349,9 +350,6 @@ pub fn setup_ui(
         });
 
     info!("Game UI loaded");
-    ev_load.send(LoadLevelEvent {
-        map_filepath: "default.json".to_string(),
-    });
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -409,19 +407,19 @@ pub fn keyboard(
             transform.translation.y -= 2.0 * dt;
         }
         if keyboard_input.pressed(KeyCode::NumpadAdd) {
-            transform.scale.x /= 1.02 * dt;
-            transform.scale.y /= 1.02 * dt;
+            transform.scale.x /= 1.02_f32.powf(dt);
+            transform.scale.y /= 1.02_f32.powf(dt);
         }
         if keyboard_input.pressed(KeyCode::NumpadSubtract) {
-            transform.scale.x *= 1.02 * dt;
-            transform.scale.y *= 1.02 * dt;
+            transform.scale.x *= 1.02_f32.powf(dt);
+            transform.scale.y *= 1.02_f32.powf(dt);
         }
     }
 }
 
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
-    map_filepath: String,
+    pub map_filepath: String,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -440,6 +438,7 @@ pub fn load_level(
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
+    mut app_next_state: ResMut<NextState<root::State>>,
 ) {
     let Some(load_event) = ev.read().next() else {
         return;
@@ -485,14 +484,14 @@ pub fn load_level(
         .insert(GameSound {
             class: SoundType::BackgroundStreet,
         });
-    dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
 
-    info!("Load Level");
+    info!("Load Level: {}", &load_event.map_filepath);
+    app_next_state.set(root::State::InGame);
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = tiledmap::bevy_load_map(
-        "assets/maps/map_house2.tmx",
+        &load_event.map_filepath,
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
@@ -537,7 +536,7 @@ pub fn load_level(
 
                     cmat.data.sheet_idx = tileuid;
                     // Set alpha initially transparent to all materials so they will appear slowly.
-                    cmat.data.color.set_a(0.5);
+                    cmat.data.color.set_a(0.0);
                     cmat.data.gamma = 0.1;
                     cmat.data.gbl = 0.1;
                     cmat.data.gbr = 0.1;
@@ -650,7 +649,11 @@ pub fn load_level(
             let mut beh = mt.behavior.clone();
             beh.flip(tile.flip_x);
 
-            entity.insert(beh).insert(GameSprite).insert(pos);
+            entity
+                .insert(beh)
+                .insert(GameSprite)
+                .insert(pos)
+                .insert(MapUpdate::default());
         }
     }
 
@@ -731,6 +734,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
@@ -747,6 +751,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
