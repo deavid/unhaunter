@@ -164,11 +164,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     }
 }
 
-pub fn setup_ui(
-    mut commands: Commands,
-    handles: Res<root::GameAssets>,
-    mut ev_load: EventWriter<LoadLevelEvent>,
-) {
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
     const INVENTORY_STATS_COLOR: Color = Color::rgba(0.7, 0.7, 0.7, 0.6);
     const PANEL_BGCOLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.3);
@@ -354,9 +350,6 @@ pub fn setup_ui(
         });
 
     info!("Game UI loaded");
-    ev_load.send(LoadLevelEvent {
-        map_filepath: "default.json".to_string(),
-    });
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -426,7 +419,7 @@ pub fn keyboard(
 
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
-    map_filepath: String,
+    pub map_filepath: String,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -445,6 +438,7 @@ pub fn load_level(
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
+    mut app_next_state: ResMut<NextState<root::State>>,
 ) {
     let Some(load_event) = ev.read().next() else {
         return;
@@ -490,14 +484,14 @@ pub fn load_level(
         .insert(GameSound {
             class: SoundType::BackgroundStreet,
         });
-    dbg!(&load_event.map_filepath);
     commands.init_resource::<board::BoardData>();
 
-    info!("Load Level");
+    info!("Load Level: {}", &load_event.map_filepath);
+    app_next_state.set(root::State::InGame);
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = tiledmap::bevy_load_map(
-        "assets/maps/map_school1.tmx",
+        &load_event.map_filepath,
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,

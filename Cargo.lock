@@ -3865,6 +3865,7 @@ dependencies = [
  "clap",
  "enum-iterator",
  "fastapprox",
+ "glob",
  "hierarchical_pathfinding",
  "image",
  "ordered-float",
@@ -3873,6 +3874,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiled",
+ "walkdir",
 ]
 
 [[package]]
