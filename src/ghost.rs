@@ -20,6 +20,7 @@ pub struct GhostSprite {
     pub rage: f32,
     pub hunting: f32,
     pub hunt_target: bool,
+    pub hunt_time_secs: f32,
 }
 
 #[derive(Component, Debug)]
@@ -42,6 +43,7 @@ impl GhostSprite {
             rage: 0.0,
             hunting: 0.0,
             hunt_target: false,
+            hunt_time_secs: 0.0,
         }
     }
     pub fn with_breachid(self, breach_id: Entity) -> Self {
@@ -61,28 +63,36 @@ pub fn ghost_movement(
     mut commands: Commands,
     time: Res<Time>,
 ) {
+    let mut rng = rand::thread_rng();
     let dt = time.delta_seconds() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
-            let dlen = delta.distance();
+            let dlen = delta.distance() + 0.001;
             if dlen > 1.0 {
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
             }
-            pos.x += delta.dx / 200.0 * dt;
-            pos.y += delta.dy / 200.0 * dt;
             let mut finalize = false;
             if ghost.hunt_target {
-                pos.x += delta.dx / 70.0 * dt;
-                pos.y += delta.dy / 70.0 * dt;
-                ghost.hunting -= dt / 60.0;
+                if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
+                    if dlen < 4.0 {
+                        delta.dx /= (dlen + 1.5) / 4.0;
+                        delta.dy /= (dlen + 1.5) / 4.0;
+                    }
+                    pos.x += delta.dx / 70.0 * dt;
+                    pos.y += delta.dy / 70.0 * dt;
+                    ghost.hunting -= dt / 60.0;
+                }
                 if ghost.hunting < 0.0 {
                     ghost.hunting = 0.0;
                     ghost.hunt_target = false;
                     finalize = true;
                     warn!("Hunt finished");
                 }
+            } else {
+                pos.x += delta.dx / 200.0 * dt;
+                pos.y += delta.dy / 200.0 * dt;
             }
             if dlen < 0.5 {
                 finalize = true;
@@ -93,9 +103,9 @@ pub fn ghost_movement(
             if finalize {
                 ghost.target_point = None;
             }
-        } else {
+        }
+        if ghost.target_point.is_none() || (ghost.hunt_target && rng.gen_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let mut rng = rand::thread_rng();
             let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
@@ -123,7 +133,9 @@ pub fn ghost_movement(
                     .unwrap_or_default()
             {
                 if hunt {
-                    ghost.hunting /= 1.2;
+                    if !ghost.hunt_target {
+                        ghost.hunt_time_secs = time.elapsed_seconds();
+                    }
                     warn!("Hunting player for {:.1}s", ghost.hunting);
                 } else if ghost.hunt_target {
                     warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
@@ -177,8 +189,8 @@ fn ghost_enrage(
         let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
-            ghost.rage /= 1.2;
-            ghost.hunting += (prev_rage - ghost.rage) / 4.0;
+            ghost.rage /= 1.5;
+            ghost.hunting += (prev_rage - ghost.rage) / 4.0 + 10.0;
         }
     }
 }
