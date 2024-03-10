@@ -26,6 +26,9 @@ pub struct GCameraUI;
 pub struct GameUI;
 
 #[derive(Component, Debug)]
+pub struct DamageBackground;
+
+#[derive(Component, Debug)]
 pub struct GameSprite;
 
 #[derive(Component, Debug, Default)]
@@ -168,6 +171,19 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
     const INVENTORY_STATS_COLOR: Color = Color::rgba(0.7, 0.7, 0.7, 0.6);
     const PANEL_BGCOLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.3);
+    commands
+        .spawn(NodeBundle {
+            background_color: Color::rgba(0.0, 0.05, 0.2, 0.3).into(),
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(GameUI)
+        .insert(DamageBackground);
     // Spawn game UI
     commands
         .spawn(NodeBundle {

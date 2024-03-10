@@ -5,6 +5,7 @@ use crate::{
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
+    ghost::GhostSprite,
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
     player,
@@ -141,7 +142,12 @@ pub fn compute_visibility(
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<(&board::Position, &mut Sprite, Option<&SpriteType>)>,
+    mut qt: Query<(
+        &board::Position,
+        &mut Sprite,
+        Option<&SpriteType>,
+        Option<&GhostSprite>,
+    )>,
     mut qt2: Query<
         (
             &board::Position,
@@ -439,7 +445,7 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player, ghost, van, ghost breach)
 
-    for (pos, mut sprite, o_type) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs) in qt.iter_mut() {
         let stype = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
         let Some(ld) = lightdata_map.get(&bpos).cloned() else {
@@ -466,24 +472,30 @@ pub fn apply_lighting(
         };
         const SMOOTH: f32 = 20.0;
         if stype == SpriteType::Ghost {
-            opacity *= dst_color.l().clamp(0.7, 1.0);
-            let l = dst_color.l();
-            let r = dst_color.r();
-            let g = dst_color.g();
-            let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                ld.ultraviolet * 3.0
+            let hunting = o_gs.map(|gs| gs.hunt_target).unwrap_or_default();
+            if hunting {
+                dst_color = Color::RED;
             } else {
-                0.0
-            };
-            let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                ld.red * 3.0
-            } else {
-                0.0
-            };
+                opacity *= dst_color.l().clamp(0.7, 1.0);
+                let l = dst_color.l();
+                let r = dst_color.r();
+                let g = dst_color.g();
+                let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
+                    ld.ultraviolet * 3.0
+                } else {
+                    0.0
+                };
+                let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
+                    ld.red * 3.0
+                } else {
+                    0.0
+                };
 
-            dst_color.set_l(l * ld.visible);
-            dst_color.set_r(r * ld.visible + e_rl);
-            dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
+                dst_color.set_l(l * ld.visible);
+                dst_color.set_r(r * ld.visible + e_rl);
+                dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
+            }
+            dst_color = lerp_color(sprite.color, dst_color, 0.02);
         }
         if stype == SpriteType::Breach {
             let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
@@ -555,4 +567,16 @@ pub fn mark_for_update(
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(Update, (mark_for_update, apply_lighting).chain());
+}
+
+pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {
+    let k = start.as_rgba_f32();
+    let l = end.as_rgba_f32();
+    let (sr, sg, sb, sa) = (k[0], k[1], k[2], k[3]);
+    let (er, eg, eb, ea) = (l[0], l[1], l[2], l[3]);
+    let r = sr + (er - sr) * t;
+    let g = sg + (eg - sg) * t;
+    let b = sb + (eb - sb) * t;
+    let a = sa + (ea - sa) * t;
+    Color::rgba(r, g, b, a)
 }

@@ -225,7 +225,7 @@ pub fn setup_ui(
                         border: UiRect::all(Val::Px(1.0)),
                         justify_content: JustifyContent::FlexStart,
                         flex_direction: FlexDirection::Column,
-                        min_width: Val::Px(10.0),
+                        min_width: Val::Px(180.0),
                         min_height: Val::Px(10.0),
                         row_gap: Val::Percent(MARGIN_PERCENT),
                         flex_grow: 0.4,

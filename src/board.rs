@@ -181,11 +181,13 @@ impl Position {
         self.same_x(other) || self.same_y(other)
     }
     pub fn distance(&self, other: &Self) -> f32 {
+        self.distance2(other).sqrt()
+    }
+    pub fn distance2(&self, other: &Self) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         let dz = self.z - other.z;
-        // fastapprox::faster::pow
-        (dx * dx + dy * dy + dz * dz).sqrt()
+        dx * dx + dy * dy + dz * dz
     }
     pub fn distance_taxicab(&self, other: &Self) -> f32 {
         let dx = self.x - other.x;

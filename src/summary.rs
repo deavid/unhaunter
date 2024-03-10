@@ -15,6 +15,7 @@ pub enum SummaryUIType {
     GhostUnhaunted,
     RepellentUsed,
     AvgSanity,
+    PlayersAlive,
     FinalScore,
 }
 
@@ -58,6 +59,8 @@ pub struct SummaryData {
     pub final_score: i64,
     pub difficulty: Difficulty,
     pub average_sanity: f32,
+    pub player_count: usize,
+    pub alive_count: usize,
 }
 
 impl SummaryData {
@@ -79,8 +82,12 @@ impl SummaryData {
         // Apply difficulty multiplier
         score *= self.difficulty.get_multiplier();
 
-        // Apply time bonus multiplier
-        score *= 1.0 + 360.0 / (60.0 + self.time_taken_secs as f64);
+        if self.player_count == self.alive_count {
+            // Apply time bonus multiplier
+            score *= 1.0 + 360.0 / (60.0 + self.time_taken_secs as f64);
+        } else {
+            score *= self.alive_count as f64 / (self.player_count as f64 + 1.0);
+        }
 
         // Ensure score is within a reasonable range
         score.clamp(0.0, 1000000.0) as i64
@@ -113,6 +120,7 @@ pub fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
     game_state: Res<State<root::GameState>>,
+    mut app_next_state: ResMut<NextState<root::State>>,
     qp: Query<&PlayerSprite>,
 ) {
     if *game_state == root::GameState::Pause {
@@ -122,8 +130,14 @@ pub fn update_time(
 
     let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
     let player_count = qp.iter().count();
+    let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
+    sd.player_count = player_count;
+    sd.alive_count = alive_count;
     if player_count > 0 {
         sd.average_sanity = total_sanity / player_count as f32;
+    }
+    if alive_count == 0 {
+        app_next_state.set(root::State::Summary);
     }
 }
 
@@ -299,6 +313,17 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .insert(SummaryUIType::RepellentUsed);
                     parent
                         .spawn(TextBundle::from_section(
+                            "Players Alive: 0/0",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0,
+                                color: Color::GRAY,
+                            },
+                        ))
+                        .insert(SummaryUIType::PlayersAlive);
+
+                    parent
+                        .spawn(TextBundle::from_section(
                             "Final Score: 0",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
@@ -366,6 +391,10 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
                     rsd.ghosts_unhaunted,
                     rsd.ghost_types.len()
                 )
+            }
+            SummaryUIType::PlayersAlive => {
+                text.sections[0].value =
+                    format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
             }
             SummaryUIType::RepellentUsed => {
                 text.sections[0].value =
