@@ -13,7 +13,7 @@ rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-image = "0.24.5"
+image = "0.25.0"
 regex = "1.7.1"
 tiled = "0.11.2"
 clap = "4.4.8"
