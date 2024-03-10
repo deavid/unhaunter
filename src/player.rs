@@ -2,7 +2,7 @@ use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::{GameConfig, InteractionExecutionType, RoomChangedEvent};
-use crate::root;
+use crate::{root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
@@ -12,6 +12,7 @@ pub struct PlayerSprite {
     pub id: usize,
     pub controls: ControlKeys,
     pub crazyness: f32,
+    pub mean_sound: f32,
 }
 
 impl PlayerSprite {
@@ -20,6 +21,7 @@ impl PlayerSprite {
             id,
             controls: Self::default_controls(id),
             crazyness: 0.0,
+            mean_sound: 0.0,
         }
     }
     pub fn default_controls(id: usize) -> ControlKeys {
@@ -522,7 +524,7 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
 
 fn lose_sanity(
     time: Res<Time>,
-    mut timer: Local<PrintingTimer>,
+    mut timer: Local<utils::PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
@@ -551,13 +553,14 @@ fn lose_sanity(
                 .unwrap_or_default()
                 * 10.0;
         }
-        const MASS: f32 = 60.0;
+        const MASS: f32 = 10.0;
         mean_sound.0 =
             ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
 
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
+        ps.mean_sound = mean_sound.0;
         if timer.just_finished() {
             dbg!(ps.sanity(), mean_sound.0);
         }
@@ -568,7 +571,7 @@ fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
-    mut timer: Local<PrintingTimer>,
+    mut timer: Local<utils::PrintingTimer>,
 ) {
     // Current player recovers sanity while in the truck.
     let dt = time.delta_seconds();
@@ -586,15 +589,6 @@ fn recover_sanity(
 
 #[derive(Default)]
 struct MeanSound(f32);
-
-#[derive(Deref, DerefMut)]
-struct PrintingTimer(Timer);
-
-impl Default for PrintingTimer {
-    fn default() -> Self {
-        Self(Timer::from_seconds(5.0, TimerMode::Repeating))
-    }
-}
 
 pub fn app_setup(app: &mut App) {
     app.add_event::<RoomChangedEvent>()

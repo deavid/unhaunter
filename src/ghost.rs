@@ -1,7 +1,8 @@
 use crate::{
     board::{BoardPosition, Position},
     ghost_definitions::GhostType,
-    summary,
+    player::PlayerSprite,
+    summary, utils,
 };
 use bevy::prelude::*;
 use rand::Rng;
@@ -14,6 +15,7 @@ pub struct GhostSprite {
     pub repellent_hits: i64,
     pub repellent_misses: i64,
     pub breach_id: Option<Entity>,
+    pub rage: f32,
 }
 
 #[derive(Component, Debug)]
@@ -33,6 +35,7 @@ impl GhostSprite {
             repellent_hits: 0,
             repellent_misses: 0,
             breach_id: None,
+            rage: 0.0,
         }
     }
     pub fn with_breachid(self, breach_id: Entity) -> Self {
@@ -98,6 +101,34 @@ pub fn ghost_movement(
     }
 }
 
+fn ghost_enrage(
+    time: Res<Time>,
+    mut timer: Local<utils::PrintingTimer>,
+    mut avg_angry: Local<utils::MeanValue>,
+    mut qg: Query<(&mut GhostSprite, &Position)>,
+    qp: Query<(&PlayerSprite, &Position)>,
+) {
+    timer.tick(time.delta());
+    let dt = time.delta_seconds();
+
+    for (mut ghost, gpos) in &mut qg {
+        let mut total_angry2 = 0.0;
+        for (player, ppos) in &qp {
+            let sanity = player.sanity();
+            let dist2 = gpos.distance2(ppos) * (0.01 + sanity) + 0.1 + sanity / 100.0;
+            let angry2 = dist2.recip() * 1000000.0 / sanity * player.mean_sound;
+            total_angry2 += angry2;
+        }
+        let angry = total_angry2.sqrt();
+        ghost.rage /= 1.005_f32.powf(dt);
+        ghost.rage += angry * dt / 10.0;
+        avg_angry.push_len(angry, dt);
+        if timer.just_finished() {
+            dbg!(&avg_angry.avg(), ghost.rage);
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
-    app.add_systems(Update, ghost_movement);
+    app.add_systems(Update, (ghost_movement, ghost_enrage));
 }
