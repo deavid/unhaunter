@@ -56,7 +56,7 @@ impl GhostSprite {
 
 pub fn ghost_movement(
     mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
-    qp: Query<&Position, With<PlayerSprite>>,
+    qp: Query<(&Position, &PlayerSprite)>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
@@ -96,9 +96,6 @@ pub fn ghost_movement(
             }
             if dlen < 0.5 {
                 finalize = true;
-                if ghost.hunt_target {
-                    warn!("Hunt leg over");
-                }
             }
             if finalize {
                 ghost.target_point = None;
@@ -116,12 +113,18 @@ pub fn ghost_movement(
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 1000.0 } else { 0.0001 };
             if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
-                let player_pos_l: Vec<&Position> = qp.iter().collect();
-                let idx = rng.gen_range(0..player_pos_l.len());
-                let ppos = player_pos_l[idx];
-                target_point.x = ppos.x;
-                target_point.y = ppos.y;
-                hunt = true;
+                let player_pos_l: Vec<&Position> = qp
+                    .iter()
+                    .filter(|(_, p)| p.health > 0.0)
+                    .map(|(pos, _)| pos)
+                    .collect();
+                if !player_pos_l.is_empty() {
+                    let idx = rng.gen_range(0..player_pos_l.len());
+                    let ppos = player_pos_l[idx];
+                    target_point.x = ppos.x;
+                    target_point.y = ppos.y;
+                    hunt = true;
+                }
             }
 
             let bpos = target_point.to_board_position();
@@ -135,8 +138,8 @@ pub fn ghost_movement(
                 if hunt {
                     if !ghost.hunt_target {
                         ghost.hunt_time_secs = time.elapsed_seconds();
+                        warn!("Hunting player for {:.1}s", ghost.hunting);
                     }
-                    warn!("Hunting player for {:.1}s", ghost.hunting);
                 } else if ghost.hunt_target {
                     warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
                 }
@@ -160,26 +163,35 @@ fn ghost_enrage(
     mut timer: Local<utils::PrintingTimer>,
     mut avg_angry: Local<utils::MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position)>,
-    qp: Query<(&PlayerSprite, &Position)>,
+    mut qp: Query<(&mut PlayerSprite, &Position)>,
 ) {
     timer.tick(time.delta());
     let dt = time.delta_seconds();
 
     for (mut ghost, gpos) in &mut qg {
         if ghost.hunt_target {
+            if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
+                for (mut player, ppos) in &mut qp {
+                    let dist2 = gpos.distance2(ppos) + 1.0;
+                    let dmg = dist2.recip();
+                    player.health -= dmg * dt * 30.0;
+                }
+            }
             continue;
         }
         let mut total_angry2 = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
             let dist2 = gpos.distance2(ppos) * (0.01 + sanity) + 0.1 + sanity / 100.0;
-            let angry2 = dist2.recip() * 1000000.0 / sanity * player.mean_sound;
+            let angry2 = dist2.recip() * 1000000.0 / sanity
+                * player.mean_sound
+                * (player.health / 100.0).clamp(0.0, 1.0);
             total_angry2 += angry2;
         }
         let angry = total_angry2.sqrt();
         ghost.rage /= 1.005_f32.powf(dt);
         if DEBUG_HUNTS {
-            ghost.rage += angry * dt * 10.0;
+            ghost.rage += angry * dt * 10.0 + 2.0 * dt;
         }
         ghost.rage += angry * dt / 10.0;
         avg_angry.push_len(angry, dt);

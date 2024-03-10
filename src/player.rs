@@ -1,8 +1,8 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
-use crate::game::{GameConfig, InteractionExecutionType, RoomChangedEvent};
-use crate::{root, utils};
+use crate::game::{DamageBackground, GameConfig, InteractionExecutionType, RoomChangedEvent};
+use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
@@ -13,6 +13,7 @@ pub struct PlayerSprite {
     pub controls: ControlKeys,
     pub crazyness: f32,
     pub mean_sound: f32,
+    pub health: f32,
 }
 
 impl PlayerSprite {
@@ -22,6 +23,7 @@ impl PlayerSprite {
             controls: Self::default_controls(id),
             crazyness: 0.0,
             mean_sound: 0.0,
+            health: 100.0,
         }
     }
     pub fn default_controls(id: usize) -> ControlKeys {
@@ -561,8 +563,14 @@ fn lose_sanity(
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
         ps.mean_sound = mean_sound.0;
+        if ps.health < 100.0 && ps.health > 0.0 {
+            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 4.0) * (ps.sanity() / 100.0);
+        }
+        if ps.health > 100.0 {
+            ps.health = 100.0;
+        }
         if timer.just_finished() {
-            dbg!(ps.sanity(), mean_sound.0);
+            dbg!(ps.sanity(), mean_sound.0, ps.health);
         }
     }
 }
@@ -579,9 +587,33 @@ fn recover_sanity(
 
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
+            ps.health = 100.0;
             ps.crazyness /= 1.05_f32.powf(dt);
             if timer.just_finished() {
                 dbg!(ps.sanity());
+            }
+        }
+    }
+}
+
+pub fn visual_health(
+    qp: Query<&PlayerSprite>,
+    gc: Res<GameConfig>,
+    mut qb: Query<&mut BackgroundColor, With<DamageBackground>>,
+) {
+    for player in &qp {
+        if player.id != gc.player_id {
+            continue;
+        }
+        let health = (1.0 - player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 0.999);
+        let red = (f32::tanh(health * 10.0) / (health.powi(4) * 50.0 + 1.0)).clamp(0.0, 1.0) / 2.0;
+        let dst_color = Color::rgba(red, 0.0, 0.0, health.sqrt().sqrt() / 1.002);
+        for mut background in &mut qb {
+            let old_color = background.0;
+            if (old_color.a() - dst_color.a()).abs() > 0.05 {
+                background.0 = maplight::lerp_color(old_color, dst_color, 0.1);
+            } else if old_color != dst_color {
+                background.0 = dst_color;
             }
         }
     }
@@ -594,7 +626,7 @@ pub fn app_setup(app: &mut App) {
     app.add_event::<RoomChangedEvent>()
         .add_systems(
             Update,
-            (keyboard_player, lose_sanity).run_if(in_state(root::GameState::None)),
+            (keyboard_player, lose_sanity, visual_health).run_if(in_state(root::GameState::None)),
         )
         .add_systems(
             Update,
