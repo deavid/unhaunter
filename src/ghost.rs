@@ -7,6 +7,8 @@ use crate::{
 use bevy::prelude::*;
 use rand::Rng;
 
+const DEBUG_HUNTS: bool = false;
+
 #[derive(Component, Debug)]
 pub struct GhostSprite {
     pub class: GhostType,
@@ -16,6 +18,8 @@ pub struct GhostSprite {
     pub repellent_misses: i64,
     pub breach_id: Option<Entity>,
     pub rage: f32,
+    pub hunting: f32,
+    pub hunt_target: bool,
 }
 
 #[derive(Component, Debug)]
@@ -36,6 +40,8 @@ impl GhostSprite {
             repellent_misses: 0,
             breach_id: None,
             rage: 0.0,
+            hunting: 0.0,
+            hunt_target: false,
         }
     }
     pub fn with_breachid(self, breach_id: Entity) -> Self {
@@ -47,7 +53,8 @@ impl GhostSprite {
 }
 
 pub fn ghost_movement(
-    mut q: Query<(&mut GhostSprite, &mut Position, Entity)>,
+    mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
+    qp: Query<&Position, With<PlayerSprite>>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
@@ -65,7 +72,25 @@ pub fn ghost_movement(
             }
             pos.x += delta.dx / 200.0 * dt;
             pos.y += delta.dy / 200.0 * dt;
+            let mut finalize = false;
+            if ghost.hunt_target {
+                pos.x += delta.dx / 70.0 * dt;
+                pos.y += delta.dy / 70.0 * dt;
+                ghost.hunting -= dt / 60.0;
+                if ghost.hunting < 0.0 {
+                    ghost.hunting = 0.0;
+                    ghost.hunt_target = false;
+                    finalize = true;
+                    warn!("Hunt finished");
+                }
+            }
             if dlen < 0.5 {
+                finalize = true;
+                if ghost.hunt_target {
+                    warn!("Hunt leg over");
+                }
+            }
+            if finalize {
                 ghost.target_point = None;
             }
         } else {
@@ -76,9 +101,18 @@ pub fn ghost_movement(
             let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
             let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
             let dd = (dx * dx + dy * dy).sqrt() / dist;
-
+            let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
+            let ghbonus = if ghost.hunt_target { 1000.0 } else { 0.0001 };
+            if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
+                let player_pos_l: Vec<&Position> = qp.iter().collect();
+                let idx = rng.gen_range(0..player_pos_l.len());
+                let ppos = player_pos_l[idx];
+                target_point.x = ppos.x;
+                target_point.y = ppos.y;
+                hunt = true;
+            }
 
             let bpos = target_point.to_board_position();
             if roomdb.room_tiles.get(&bpos).is_some()
@@ -88,7 +122,15 @@ pub fn ghost_movement(
                     .map(|x| x.ghost_free)
                     .unwrap_or_default()
             {
+                if hunt {
+                    ghost.hunting /= 1.2;
+                    warn!("Hunting player for {:.1}s", ghost.hunting);
+                } else if ghost.hunt_target {
+                    warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
+                }
+
                 ghost.target_point = Some(target_point);
+                ghost.hunt_target = hunt;
             }
         }
         if ghost.repellent_hits > 100 {
@@ -112,6 +154,9 @@ fn ghost_enrage(
     let dt = time.delta_seconds();
 
     for (mut ghost, gpos) in &mut qg {
+        if ghost.hunt_target {
+            continue;
+        }
         let mut total_angry2 = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
@@ -121,10 +166,19 @@ fn ghost_enrage(
         }
         let angry = total_angry2.sqrt();
         ghost.rage /= 1.005_f32.powf(dt);
+        if DEBUG_HUNTS {
+            ghost.rage += angry * dt * 10.0;
+        }
         ghost.rage += angry * dt / 10.0;
         avg_angry.push_len(angry, dt);
         if timer.just_finished() {
             dbg!(&avg_angry.avg(), ghost.rage);
+        }
+        let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
+        if ghost.rage > rage_limit {
+            let prev_rage = ghost.rage;
+            ghost.rage /= 1.2;
+            ghost.hunting += (prev_rage - ghost.rage) / 4.0;
         }
     }
 }
