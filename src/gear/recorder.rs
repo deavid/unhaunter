@@ -128,7 +128,7 @@ pub fn sound_update(
     qg: Query<(&crate::ghost::GhostSprite, &Position)>,
 ) {
     let mut rng = rand::thread_rng();
-    let gn = rng.gen_range(0..100_u32);
+    let gn = rng.gen_range(0..30_u32);
 
     if gn == 0 {
         // Ghost talk once in a while
@@ -138,10 +138,11 @@ pub fn sound_update(
             for _ in 0..16 {
                 let mut v = Vec2::new(rng.gen_range(-2.0..2.0), rng.gen_range(-2.0..2.0));
                 let l = v.length();
-                if l < 0.2 {
+                if l < 0.02 {
                     continue;
                 }
-                v *= 4.5 / l;
+                let loudness = rng.gen_range(0.3_f32..2.0).powi(2);
+                v *= loudness * 4.5 / l;
                 let vn = v.normalize() * 1.5;
                 let newbpos = Position {
                     x: (bpos.x as f32 + vn.x),
@@ -171,7 +172,7 @@ pub fn sound_update(
             let mut v = v;
             v.x += rng.gen_range(-0.05..0.05) + rng.gen_range(-0.05..0.05);
             v.y += rng.gen_range(-0.05..0.05) + rng.gen_range(-0.05..0.05);
-            v /= 1.2 * sz as f32;
+            v /= 1.05 * sz as f32;
             let mut v1 = v.normalize() * 1.1;
             v1 *= rng.gen_range(0.1..1.0);
             v1.x += rng.gen_range(-0.3..0.3) + rng.gen_range(-0.3..0.3);
@@ -184,7 +185,7 @@ pub fn sound_update(
             };
             let bn_p = n_p.to_board_position();
 
-            if roomdb.room_tiles.get(&bn_p).is_some() && v.length() > 0.2 {
+            if roomdb.room_tiles.get(&bn_p).is_some() && v.length() > 0.00002 {
                 bf.sound_field.entry(bn_p).or_default().push(v);
             }
         }

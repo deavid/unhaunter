@@ -743,6 +743,7 @@ pub fn load_level(
     for evidence in ghost_sprite.class.evidences() {
         bf.evidences.insert(evidence);
     }
+    bf.breach_pos = ghost_spawn;
     commands.insert_resource(summary::SummaryData::new(ghost_types));
     let breach_id = commands
         .spawn(SpriteBundle {

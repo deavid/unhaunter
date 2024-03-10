@@ -564,7 +564,7 @@ fn lose_sanity(
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 4.0) * (ps.sanity() / 100.0);
+            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 10.0) * (ps.sanity() / 100.0);
         }
         if ps.health > 100.0 {
             ps.health = 100.0;

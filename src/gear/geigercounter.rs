@@ -62,35 +62,38 @@ impl GearUsable for GeigerCounter {
             z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
             global_z: pos.global_z,
         };
+        let dist2breach = gs.bf.breach_pos.distance2(&pos) + 10.0;
+        let breach_energy = dist2breach.recip() * 20000.0;
         let bpos = pos.to_board_position();
-        for (i, bpos) in bpos.xy_neighbors(3).iter().enumerate() {
+        for (i, bpos) in bpos.xy_neighbors(4).iter().enumerate() {
             let sound = gs.bf.sound_field.get(bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
-            if self.sound_l.len() < 30000 {
+            if self.sound_l.len() < 1200 {
                 self.sound_l.push(sound_reading);
             }
             let n = (self.frame_counter as usize + i) % self.sound_l.len();
-            self.sound_l[n] += sound_reading * 10.0;
+            self.sound_l[n] /= 4.0;
+            self.sound_l[n] += sound_reading * 40.0 + breach_energy;
         }
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
         let avg_snd = if gs.bf.evidences.contains(&Evidence::CPM500) {
-            f32::tanh(avg_snd / 300.0) * 600.0
+            f32::tanh(avg_snd.sqrt() / 20.0) * 980.0
         } else {
-            f32::tanh(avg_snd / 200.0) * 450.0
+            f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
         };
         const MASS: f32 = 16.0;
         self.sound_a1 = (self.sound_a1 * MASS + avg_snd * MASS.recip()) / (MASS + MASS.recip());
         self.sound_a2 =
             (self.sound_a2 * MASS + self.sound_a1 * MASS.recip()) / (MASS + MASS.recip());
-        self.sound_l.iter_mut().for_each(|x| *x /= 1.0004);
+        self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
         if gs.time.elapsed_seconds() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
             self.last_sound_time_secs = gs.time.elapsed_seconds() + rng.gen_range(0.01..0.02);
             gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25);
         }
 
-        if self.display_secs_since_last_update > 0.1 {
+        if self.display_secs_since_last_update > 0.5 {
             self.display_secs_since_last_update = 0.0;
             self.sound_display = self.sound_a2;
         }

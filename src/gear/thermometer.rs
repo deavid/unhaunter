@@ -9,7 +9,7 @@ use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID,
 pub struct Thermometer {
     pub enabled: bool,
     pub temp: f32,
-    pub temp_l2: [f32; 20],
+    pub temp_l2: [f32; 5],
     pub temp_l1: f32,
     pub frame_counter: u16,
 }
@@ -19,7 +19,7 @@ impl Default for Thermometer {
         Self {
             enabled: Default::default(),
             temp: 10.0,
-            temp_l2: [10.0; 20],
+            temp_l2: [10.0; 5],
             temp_l1: 10.0,
             frame_counter: Default::default(),
         }
@@ -70,7 +70,7 @@ impl GearUsable for Thermometer {
         let n = self.frame_counter as usize % self.temp_l2.len();
         self.temp_l2[n] = (self.temp_l2[n] * AIR_MASS + self.temp_l1) / (AIR_MASS + 1.0);
         self.temp_l1 = (self.temp_l1 * AIR_MASS + temp_reading) / (AIR_MASS + 1.0);
-        if self.frame_counter % 20 == 0 {
+        if self.frame_counter % 5 == 0 {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
@@ -146,7 +146,7 @@ pub fn temperature_update(
     const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
     const INSIDE_CONDUCTIVITY: f32 = 10.0;
     const WALL_CONDUCTIVITY: f32 = 0.000001;
-    const SMOOTH: f32 = 1000.0;
+    const SMOOTH: f32 = 10.0;
 
     for (p, temp) in old_temps.into_iter() {
         let free = bf
