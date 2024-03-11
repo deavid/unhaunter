@@ -146,6 +146,8 @@ pub fn ghost_movement(
 
                 ghost.target_point = Some(target_point);
                 ghost.hunt_target = hunt;
+            } else {
+                ghost.hunt_target = false;
             }
         }
         if ghost.repellent_hits > 100 {
@@ -175,6 +177,10 @@ fn ghost_enrage(
                     let dist2 = gpos.distance2(ppos) + 1.0;
                     let dmg = dist2.recip();
                     player.health -= dmg * dt * 30.0;
+                    ghost.rage -= dmg * dt * 30.0;
+                    if ghost.rage < 0.0 {
+                        ghost.rage = 0.0;
+                    }
                 }
             }
             continue;
@@ -182,11 +188,12 @@ fn ghost_enrage(
         let mut total_angry2 = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
+            let inv_sanity = (120.0 - sanity) / 100.0;
             let dist2 = gpos.distance2(ppos) * (0.01 + sanity) + 0.1 + sanity / 100.0;
             let angry2 = dist2.recip() * 1000000.0 / sanity
                 * player.mean_sound
                 * (player.health / 100.0).clamp(0.0, 1.0);
-            total_angry2 += angry2;
+            total_angry2 += angry2 * inv_sanity;
         }
         let angry = total_angry2.sqrt();
         ghost.rage /= 1.005_f32.powf(dt);
@@ -201,8 +208,8 @@ fn ghost_enrage(
         let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
-            ghost.rage /= 1.5;
-            ghost.hunting += (prev_rage - ghost.rage) / 4.0 + 10.0;
+            ghost.rage /= 2.0;
+            ghost.hunting += (prev_rage - ghost.rage) / 6.0 + 5.0;
         }
     }
 }
