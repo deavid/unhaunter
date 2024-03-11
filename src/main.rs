@@ -14,6 +14,7 @@ mod summary;
 mod tiledmap;
 mod truck;
 mod utils;
+pub mod colors;
 
 use std::time::Duration;
 

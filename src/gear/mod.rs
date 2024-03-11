@@ -37,8 +37,8 @@ use self::playergear::{EquipmentPosition, Inventory, InventoryStats, PlayerGear}
 use crate::board::{self, Position};
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
-use crate::root::GameState;
-use crate::summary;
+use crate::root::{GameAssets, GameState};
+use crate::{colors, summary};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -326,6 +326,51 @@ pub fn update_gear_ui(
             }
         }
     }
+}
+
+pub fn setup_ui_gear_inventory(parent: &mut ChildBuilder, handles: &GameAssets) {
+    // Right side panel - inventory
+    parent
+        .spawn(AtlasImageBundle {
+            image: UiImage {
+                texture: handles.images.gear.clone(),
+                flip_x: false,
+                flip_y: false,
+            },
+            texture_atlas: TextureAtlas {
+                index: GearSpriteID::Flashlight2 as usize,
+                layout: handles.images.gear_atlas.clone(),
+            },
+            ..default()
+        })
+        .insert(playergear::Inventory::new_left());
+    parent
+        .spawn(AtlasImageBundle {
+            image: UiImage {
+                texture: handles.images.gear.clone(),
+                flip_x: false,
+                flip_y: false,
+            },
+            texture_atlas: TextureAtlas {
+                index: GearSpriteID::IonMeter2 as usize,
+                layout: handles.images.gear_atlas.clone(),
+            },
+            ..default()
+        })
+        .insert(playergear::Inventory::new_right());
+    let mut text_bundle = TextBundle::from_section(
+        "-",
+        TextStyle {
+            font: handles.fonts.victormono.w600_semibold.clone(),
+            font_size: 20.0,
+            color: colors::INVENTORY_STATS_COLOR,
+        },
+    );
+    text_bundle.style = Style {
+        flex_grow: 1.0,
+        ..default()
+    };
+    parent.spawn(text_bundle).insert(playergear::InventoryStats);
 }
 
 #[derive(SystemParam)]

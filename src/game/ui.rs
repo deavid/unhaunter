@@ -1,6 +1,9 @@
 use bevy::{prelude::*, render::view::RenderLayers};
 
-use crate::{gear, root};
+use crate::{
+    colors, gear,
+    root::{self, GameAssets},
+};
 
 #[derive(Component)]
 pub struct GCameraUI;
@@ -60,9 +63,6 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
-    const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
-    const INVENTORY_STATS_COLOR: Color = Color::rgba(0.7, 0.7, 0.7, 0.6);
-    const PANEL_BGCOLOR: Color = Color::rgba(0.1, 0.1, 0.1, 0.3);
     commands
         .spawn(NodeBundle {
             background_color: Color::rgba(0.0, 0.05, 0.2, 0.3).into(),
@@ -85,7 +85,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 18.0,
-                color: INVENTORY_STATS_COLOR,
+                color: colors::INVENTORY_STATS_COLOR,
             },
         );
 
@@ -98,7 +98,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 style: TextStyle {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 22.0,
-                    color: INVENTORY_STATS_COLOR.with_a(1.0),
+                    color: colors::INVENTORY_STATS_COLOR.with_a(1.0),
                 },
             },
             TextSection{value: " [+] Evidence Found\n".into(), 
@@ -112,59 +112,14 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 style: TextStyle {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 20.0,
-                    color: INVENTORY_STATS_COLOR,
+                    color: colors::INVENTORY_STATS_COLOR,
                 },
             },
         ]);
         parent.spawn(text_bundle);
     };
 
-    let inventory = |parent: &mut ChildBuilder| {
-        // Right side panel - inventory
-        parent
-            .spawn(AtlasImageBundle {
-                image: UiImage {
-                    texture: handles.images.gear.clone(),
-                    flip_x: false,
-                    flip_y: false,
-                },
-                texture_atlas: TextureAtlas {
-                    index: gear::GearSpriteID::Flashlight2 as usize,
-                    layout: handles.images.gear_atlas.clone(),
-                },
-                ..default()
-            })
-            .insert(gear::playergear::Inventory::new_left());
-        parent
-            .spawn(AtlasImageBundle {
-                image: UiImage {
-                    texture: handles.images.gear.clone(),
-                    flip_x: false,
-                    flip_y: false,
-                },
-                texture_atlas: TextureAtlas {
-                    index: gear::GearSpriteID::IonMeter2 as usize,
-                    layout: handles.images.gear_atlas.clone(),
-                },
-                ..default()
-            })
-            .insert(gear::playergear::Inventory::new_right());
-        let mut text_bundle = TextBundle::from_section(
-            "-",
-            TextStyle {
-                font: handles.fonts.victormono.w600_semibold.clone(),
-                font_size: 20.0,
-                color: INVENTORY_STATS_COLOR,
-            },
-        );
-        text_bundle.style = Style {
-            flex_grow: 1.0,
-            ..Default::default()
-        };
-        parent
-            .spawn(text_bundle)
-            .insert(gear::playergear::InventoryStats);
-    };
+    let inventory = |parent: &mut ChildBuilder| gear::setup_ui_gear_inventory(parent, &handles);
 
     let bottom_panel = |parent: &mut ChildBuilder| {
         // Split for the bottom side in three regions
@@ -172,8 +127,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Left side
         parent
             .spawn(NodeBundle {
-                border_color: DEBUG_BCOLOR,
-                background_color: BackgroundColor(PANEL_BGCOLOR),
+                border_color: colors::DEBUG_BCOLOR,
+                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
                 style: Style {
                     border: UiRect::all(Val::Px(1.0)),
                     padding: UiRect::all(Val::Px(6.0)),
@@ -190,8 +145,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Mid side
         parent
             .spawn(NodeBundle {
-                border_color: DEBUG_BCOLOR,
-                background_color: BackgroundColor(PANEL_BGCOLOR),
+                border_color: colors::DEBUG_BCOLOR,
+                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
                 style: Style {
                     border: UiRect::all(Val::Px(1.0)),
                     padding: UiRect::all(Val::Px(8.0)),
@@ -206,8 +161,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Right side
         parent
             .spawn(NodeBundle {
-                border_color: DEBUG_BCOLOR,
-                background_color: BackgroundColor(PANEL_BGCOLOR),
+                border_color: colors::DEBUG_BCOLOR,
+                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
                 style: Style {
                     border: UiRect::all(Val::Px(1.0)),
                     padding: UiRect::all(Val::Px(1.0)),
@@ -226,7 +181,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Top row (Game title)
         parent
             .spawn(NodeBundle {
-                border_color: DEBUG_BCOLOR,
+                border_color: colors::DEBUG_BCOLOR,
 
                 style: Style {
                     border: UiRect::all(Val::Px(1.0)),
@@ -260,7 +215,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
 
         // Main game viewport - middle
         parent.spawn(NodeBundle {
-            border_color: DEBUG_BCOLOR,
+            border_color: colors::DEBUG_BCOLOR,
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
@@ -274,7 +229,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Bottom side - inventory and stats
         parent
             .spawn(NodeBundle {
-                border_color: DEBUG_BCOLOR,
+                border_color: colors::DEBUG_BCOLOR,
                 background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.4)),
                 style: Style {
                     border: UiRect::all(Val::Px(1.0)),
@@ -293,7 +248,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     // Build UI
     commands
         .spawn(NodeBundle {
-            border_color: DEBUG_BCOLOR,
+            border_color: colors::DEBUG_BCOLOR,
 
             style: Style {
                 width: Val::Percent(100.0),
