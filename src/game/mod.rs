@@ -5,7 +5,7 @@ use crate::behavior::Behavior;
 use crate::board::{Bdl, MapTileComponents, Position, SpriteDB};
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::materials::CustomMaterial1;
-use crate::player::{AnimationTimer, CharacterAnimation, InteractiveStuff, PlayerSprite};
+use crate::player::{self, AnimationTimer, CharacterAnimation, InteractiveStuff, PlayerSprite};
 use crate::root::QuadCC;
 use crate::tiledmap::{AtlasData, MapLayerType};
 use crate::{behavior, gear, summary, tiledmap};
@@ -557,7 +557,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, roomchanged_event)
         .add_systems(OnEnter(root::State::InGame), setup)
         .add_systems(OnExit(root::State::InGame), cleanup)
-        .add_systems(Update, keyboard)
+        .add_systems(Update, keyboard.before(player::keyboard_player))
         .add_systems(PostUpdate, load_level);
     crate::game::ui::app_setup(app);
 }
