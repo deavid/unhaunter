@@ -1,7 +1,8 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
-use crate::game::{ui::DamageBackground, GameConfig, InteractionExecutionType, RoomChangedEvent};
+use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
+use crate::game::{ui::DamageBackground, GameConfig};
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

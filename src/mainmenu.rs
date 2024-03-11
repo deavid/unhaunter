@@ -1,7 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 
-use crate::game::LoadLevelEvent;
+use crate::game::level::LoadLevelEvent;
 use crate::root;
 
 const MENU_ITEM_COLOR_OFF: Color = Color::GRAY;

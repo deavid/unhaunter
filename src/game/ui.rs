@@ -1,9 +1,6 @@
 use bevy::{prelude::*, render::view::RenderLayers};
 
-use crate::{
-    colors, gear,
-    root::{self, GameAssets},
-};
+use crate::{colors, gear, root};
 
 #[derive(Component)]
 pub struct GCameraUI;
