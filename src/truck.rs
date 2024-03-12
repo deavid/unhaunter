@@ -3,6 +3,7 @@ use std::ops::Mul;
 use bevy::prelude::*;
 use bevy::{app::App, utils::HashSet};
 
+use crate::colors;
 use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
@@ -48,7 +49,7 @@ impl TruckButtonType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TruckButtonState {
     Off,
     Pressed,
@@ -56,9 +57,9 @@ pub enum TruckButtonState {
 }
 #[derive(Component, Debug)]
 pub struct TruckUIButton {
-    status: TruckButtonState,
-    class: TruckButtonType,
-    disabled: bool,
+    pub status: TruckButtonState,
+    pub class: TruckButtonType,
+    pub disabled: bool,
 }
 
 impl TruckUIButton {
@@ -80,24 +81,24 @@ impl TruckUIButton {
     pub fn border_color(&self, interaction: Interaction) -> Color {
         match self.class {
             TruckButtonType::Evidence(_) => match interaction {
-                Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => TRUCKUI_TEXT_COLOR,
-                Interaction::None => TRUCKUI_ACCENT2_COLOR,
+                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
+                Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
+                Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
             },
             TruckButtonType::Ghost(_) => match interaction {
-                Interaction::Pressed => TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => TRUCKUI_ACCENT_COLOR,
+                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
+                Interaction::Hovered => colors::TRUCKUI_ACCENT_COLOR,
                 Interaction::None => Color::NONE,
             },
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::Hovered => BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::None => BUTTON_EXIT_TRUCK_FGCOLOR,
+                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
+                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
+                Interaction::None => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
             },
             TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::Hovered => BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::None => BUTTON_END_MISSION_FGCOLOR,
+                Interaction::Pressed => colors::BUTTON_END_MISSION_TXTCOLOR,
+                Interaction::Hovered => colors::BUTTON_END_MISSION_TXTCOLOR,
+                Interaction::None => colors::BUTTON_END_MISSION_FGCOLOR,
             },
         }
         .mul(
@@ -109,24 +110,24 @@ impl TruckUIButton {
     pub fn background_color(&self, interaction: Interaction) -> Color {
         match self.class {
             TruckButtonType::Evidence(_) => match self.status {
-                TruckButtonState::Off => TRUCKUI_BGCOLOR,
-                TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
-                TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
+                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
+                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
             TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Off => TRUCKUI_BGCOLOR.with_a(0.0),
-                TruckButtonState::Pressed => TRUCKUI_ACCENT2_COLOR,
-                TruckButtonState::Discard => BUTTON_END_MISSION_FGCOLOR,
+                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_a(0.0),
+                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => BUTTON_EXIT_TRUCK_FGCOLOR,
-                Interaction::Hovered => BUTTON_EXIT_TRUCK_BGCOLOR,
-                Interaction::None => BUTTON_EXIT_TRUCK_BGCOLOR,
+                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
+                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
+                Interaction::None => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
             },
             TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => BUTTON_END_MISSION_FGCOLOR,
-                Interaction::Hovered => BUTTON_END_MISSION_BGCOLOR,
-                Interaction::None => BUTTON_END_MISSION_BGCOLOR,
+                Interaction::Pressed => colors::BUTTON_END_MISSION_FGCOLOR,
+                Interaction::Hovered => colors::BUTTON_END_MISSION_BGCOLOR,
+                Interaction::None => colors::BUTTON_END_MISSION_BGCOLOR,
             },
         }
         .mul(
@@ -140,16 +141,16 @@ impl TruckUIButton {
         match self.class {
             TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Pressed => Color::BLACK,
-                _ => TRUCKUI_TEXT_COLOR,
+                _ => colors::TRUCKUI_TEXT_COLOR,
             },
             TruckButtonType::Ghost(_) => match self.status {
                 TruckButtonState::Pressed => Color::BLACK,
-                _ => TRUCKUI_TEXT_COLOR.with_a(0.5),
+                _ => colors::TRUCKUI_TEXT_COLOR.with_a(0.5),
             },
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => {
-                BUTTON_EXIT_TRUCK_TXTCOLOR
+                colors::BUTTON_EXIT_TRUCK_TXTCOLOR
             }
-            TruckButtonType::EndMission => BUTTON_END_MISSION_TXTCOLOR,
+            TruckButtonType::EndMission => colors::BUTTON_END_MISSION_TXTCOLOR,
         }
         .mul(
             Color::WHITE
@@ -169,21 +170,6 @@ impl From<TruckButtonType> for TruckUIButton {
     }
 }
 
-const DEBUG_BCOLOR: BorderColor = BorderColor(Color::rgba(0.0, 1.0, 1.0, 0.0003));
-
-const TRUCKUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
-const TRUCKUI_PANEL_BGCOLOR: Color = Color::rgba(0.106, 0.129, 0.157, 0.8);
-const TRUCKUI_ACCENT_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 1.0);
-const TRUCKUI_ACCENT2_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 0.2);
-const TRUCKUI_ACCENT3_COLOR: Color = Color::rgba(0.650, 0.80, 0.856, 1.0);
-const TRUCKUI_TEXT_COLOR: Color = Color::rgba(0.7, 0.82, 0.85, 1.0);
-const BUTTON_EXIT_TRUCK_BGCOLOR: Color = Color::rgba(0.129, 0.165, 0.122, 1.0);
-const BUTTON_EXIT_TRUCK_FGCOLOR: Color = Color::rgba(0.196, 0.275, 0.169, 1.0);
-const BUTTON_EXIT_TRUCK_TXTCOLOR: Color = Color::rgba(0.416, 0.667, 0.271, 1.0);
-const BUTTON_END_MISSION_BGCOLOR: Color = Color::rgba(0.224, 0.129, 0.122, 1.0);
-const BUTTON_END_MISSION_FGCOLOR: Color = Color::rgba(0.388, 0.200, 0.169, 1.0);
-const BUTTON_END_MISSION_TXTCOLOR: Color = Color::rgba(0.851, 0.522, 0.275, 1.0);
-
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<materials::UIPanelMaterial>>,
@@ -200,7 +186,7 @@ pub fn setup_ui(
     );
     commands
         .spawn(NodeBundle {
-            background_color: TRUCKUI_BGCOLOR.into(),
+            background_color: colors::TRUCKUI_BGCOLOR.into(),
 
             style: Style {
                 width: Val::Percent(98.0),
@@ -220,7 +206,7 @@ pub fn setup_ui(
             // Left column
             parent
                 .spawn(NodeBundle {
-                    border_color: DEBUG_BCOLOR,
+                    border_color: colors::DEBUG_BCOLOR,
                     style: Style {
                         border: UiRect::all(Val::Px(1.0)),
                         justify_content: JustifyContent::FlexStart,
@@ -238,7 +224,7 @@ pub fn setup_ui(
                     left_col
                         .spawn(MaterialNodeBundle {
                             material: materials.add(UIPanelMaterial {
-                                color: TRUCKUI_PANEL_BGCOLOR,
+                                color: colors::TRUCKUI_PANEL_BGCOLOR,
                             }),
 
                             style: Style {
@@ -260,7 +246,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.londrina.w300_light.clone(),
                                     font_size: 35.0,
-                                    color: TRUCKUI_ACCENT_COLOR,
+                                    color: colors::TRUCKUI_ACCENT_COLOR,
                                 },
                             )
                             .with_style(Style {
@@ -271,7 +257,7 @@ pub fn setup_ui(
                             sanity.spawn(title);
                             // Sanity contents
                             sanity.spawn(NodeBundle {
-                                border_color: TRUCKUI_ACCENT_COLOR.into(),
+                                border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
                                     height: Val::Px(0.0),
@@ -284,7 +270,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
-                                    color: TRUCKUI_TEXT_COLOR,
+                                    color: colors::TRUCKUI_TEXT_COLOR,
                                 },
                             );
                             p1_sanity.style.margin = TEXT_MARGIN;
@@ -306,7 +292,7 @@ pub fn setup_ui(
                     left_col
                         .spawn(MaterialNodeBundle {
                             material: materials.add(UIPanelMaterial {
-                                color: TRUCKUI_PANEL_BGCOLOR,
+                                color: colors::TRUCKUI_PANEL_BGCOLOR,
                             }),
 
                             style: Style {
@@ -328,7 +314,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.londrina.w300_light.clone(),
                                     font_size: 35.0,
-                                    color: TRUCKUI_ACCENT_COLOR,
+                                    color: colors::TRUCKUI_ACCENT_COLOR,
                                 },
                             )
                             .with_style(Style {
@@ -339,7 +325,7 @@ pub fn setup_ui(
                             sensors.spawn(title);
                             // Sensors contents
                             sensors.spawn(NodeBundle {
-                                border_color: TRUCKUI_ACCENT_COLOR.into(),
+                                border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
                                     height: Val::Px(0.0),
@@ -352,7 +338,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
-                                    color: TRUCKUI_TEXT_COLOR,
+                                    color: colors::TRUCKUI_TEXT_COLOR,
                                 },
                             );
                             sensor1.style.margin = TEXT_MARGIN;
@@ -375,7 +361,7 @@ pub fn setup_ui(
             parent
                 .spawn(MaterialNodeBundle {
                     material: materials.add(UIPanelMaterial {
-                        color: TRUCKUI_PANEL_BGCOLOR,
+                        color: colors::TRUCKUI_PANEL_BGCOLOR,
                     }),
 
                     style: Style {
@@ -397,7 +383,7 @@ pub fn setup_ui(
                         TextStyle {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 35.0,
-                            color: TRUCKUI_ACCENT_COLOR,
+                            color: colors::TRUCKUI_ACCENT_COLOR,
                         },
                     )
                     .with_style(Style {
@@ -408,7 +394,7 @@ pub fn setup_ui(
                     mid_blk.spawn(title);
                     // Journal contents
                     mid_blk.spawn(NodeBundle {
-                        border_color: TRUCKUI_ACCENT_COLOR.into(),
+                        border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
                         style: Style {
                             border: UiRect::top(Val::Px(1.50)),
                             height: Val::Px(0.0),
@@ -423,7 +409,7 @@ pub fn setup_ui(
                             TextStyle {
                                 font: handles.fonts.chakra.w300_light.clone(),
                                 font_size: 25.0,
-                                color: TRUCKUI_TEXT_COLOR,
+                                color: colors::TRUCKUI_TEXT_COLOR,
                             },
                         )
                         .with_style(Style {
@@ -507,7 +493,7 @@ pub fn setup_ui(
                                     TextStyle {
                                         font: handles.fonts.chakra.w300_light.clone(),
                                         font_size: 25.0,
-                                        color: TRUCKUI_TEXT_COLOR,
+                                        color: colors::TRUCKUI_TEXT_COLOR,
                                     },
                                 )
                                 .with_style(Style {
@@ -536,7 +522,7 @@ pub fn setup_ui(
                                 flex_grow: 1.0,
                                 ..default()
                             },
-                            background_color: TRUCKUI_BGCOLOR.into(),
+                            background_color: colors::TRUCKUI_BGCOLOR.into(),
                             ..default()
                         })
                         .with_children(|ghost_selection| {
@@ -597,7 +583,7 @@ pub fn setup_ui(
                                     TextStyle {
                                         font: handles.fonts.chakra.w300_light.clone(),
                                         font_size: 25.0,
-                                        color: TRUCKUI_TEXT_COLOR,
+                                        color: colors::TRUCKUI_TEXT_COLOR,
                                     },
                                 )
                                 .with_style(Style {
@@ -611,12 +597,12 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.titillium.w600_semibold.clone(),
                                     font_size: 28.0,
-                                    color: TRUCKUI_TEXT_COLOR,
+                                    color: colors::TRUCKUI_TEXT_COLOR,
                                 },
                             );
                             guess
                                 .spawn(NodeBundle {
-                                    background_color: TRUCKUI_BGCOLOR.into(),
+                                    background_color: colors::TRUCKUI_BGCOLOR.into(),
                                     style: Style {
                                         padding: UiRect::all(Val::Px(4.0)),
                                         flex_basis: Val::Px(300.0),
@@ -676,7 +662,7 @@ pub fn setup_ui(
             // Right column
             parent
                 .spawn(NodeBundle {
-                    border_color: DEBUG_BCOLOR,
+                    border_color: colors::DEBUG_BCOLOR,
 
                     style: Style {
                         border: UiRect::all(Val::Px(1.0)),
@@ -695,7 +681,7 @@ pub fn setup_ui(
                     right_col
                         .spawn(MaterialNodeBundle {
                             material: materials.add(UIPanelMaterial {
-                                color: TRUCKUI_PANEL_BGCOLOR,
+                                color: colors::TRUCKUI_PANEL_BGCOLOR,
                             }),
 
                             style: Style {
@@ -717,7 +703,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.londrina.w300_light.clone(),
                                     font_size: 35.0,
-                                    color: TRUCKUI_ACCENT_COLOR,
+                                    color: colors::TRUCKUI_ACCENT_COLOR,
                                 },
                             )
                             .with_style(Style {
@@ -728,7 +714,7 @@ pub fn setup_ui(
                             activity.spawn(title);
                             // Activity contents
                             activity.spawn(NodeBundle {
-                                border_color: TRUCKUI_ACCENT_COLOR.into(),
+                                border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
                                 style: Style {
                                     border: UiRect::top(Val::Px(2.0)),
                                     height: Val::Px(0.0),
@@ -741,7 +727,7 @@ pub fn setup_ui(
                                 TextStyle {
                                     font: handles.fonts.chakra.w300_light.clone(),
                                     font_size: 25.0,
-                                    color: TRUCKUI_TEXT_COLOR,
+                                    color: colors::TRUCKUI_TEXT_COLOR,
                                 },
                             );
                             sample_text.style.margin = TEXT_MARGIN;
@@ -762,7 +748,7 @@ pub fn setup_ui(
                     // Bottom Right - 2 buttons - Exit Truck + End mission.
                     right_col
                         .spawn(NodeBundle {
-                            border_color: DEBUG_BCOLOR,
+                            border_color: colors::DEBUG_BCOLOR,
 
                             style: Style {
                                 border: UiRect::all(Val::Px(1.0)),

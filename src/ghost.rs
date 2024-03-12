@@ -196,7 +196,7 @@ fn ghost_enrage(
             total_angry2 += angry2 * inv_sanity;
         }
         let angry = total_angry2.sqrt();
-        ghost.rage /= 1.005_f32.powf(dt);
+        ghost.rage /= 1.02_f32.powf(dt);
         if DEBUG_HUNTS {
             ghost.rage += angry * dt * 10.0 + 2.0 * dt;
         }
