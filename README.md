@@ -207,3 +207,31 @@ NOTE: bevy_framepace::framerate_limiter is intended to take the majority of the
 There's additional info on profiling Bevy here:
 
 https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
+
+
+## WASM Support
+
+https://bevy-cheatbook.github.io/platforms/wasm.html
+
+Install deps
+
+  rustup target install wasm32-unknown-unknown
+  cargo install wasm-server-runner
+
+Run with:
+
+  cargo run --target wasm32-unknown-unknown --release
+
+
+Current problems:
+
+* Slow?
+* Regular filesystem operation do not work. Bevy Assets do work. Therefore map loading is borked.
+* Instant::now does not work.
+* Framepace does not work on the browser. Solved.
+* Tiled library is never going to work, it opens the files it wants, whenever it wants. It will always fail on WASM.
+
+Here's a sample on how to load custom assets, so we could load our own data:
+https://bevyengine.org/examples/Assets/custom-asset/
+
+But most likely this forces us to pre-bake the maps somehow.

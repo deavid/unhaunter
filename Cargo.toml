@@ -8,7 +8,6 @@ default-run = "unhaunter"
 
 [dependencies]
 bevy = { version = "0.13.0", features = ["trace"] }
-bevy_framepace = "0.15"
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -26,6 +25,9 @@ walkdir = "2.5.0"
 glob = "0.3.1"
 thiserror = "1.0.58"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy_framepace = "0.15"
+
 # Enable only a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 2
@@ -42,3 +44,6 @@ path = "src/main.rs"
 [[bin]]
 name = "materials"
 path = "src/materials.rs"
+
+[package.metadata.wasm-pack.html-info]
+asset_dirs = ["assets/maps"]
