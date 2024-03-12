@@ -14,7 +14,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 image = "0.25.0"
 regex = "1.7.1"
-tiled = "0.11.2"
+
 clap = "4.4.8"
 fastapprox = "0.3.1"
 anyhow = "1.0.79"
@@ -24,9 +24,12 @@ hierarchical_pathfinding = "0.5.0"
 walkdir = "2.5.0"
 glob = "0.3.1"
 thiserror = "1.0.58"
+tiled = { version = "0.11.2", features = ["wasm"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_framepace = "0.15"
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]

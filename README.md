@@ -235,3 +235,5 @@ Here's a sample on how to load custom assets, so we could load our own data:
 https://bevyengine.org/examples/Assets/custom-asset/
 
 But most likely this forces us to pre-bake the maps somehow.
+
+Wait, tiled-rs DOES support wasm.
