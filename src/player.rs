@@ -61,6 +61,8 @@ pub struct ControlKeys {
     pub cycle: KeyCode,
     /// Swap the left hand item with the right hand one.
     pub swap: KeyCode,
+    /// Change the evidence from the quick menu
+    pub change_evidence: KeyCode,
 }
 
 impl ControlKeys {
@@ -76,6 +78,7 @@ impl ControlKeys {
         swap: KeyCode::Tab,
         drop: KeyCode::KeyG,
         grab: KeyCode::KeyF,
+        change_evidence: KeyCode::KeyC,
     };
     pub const IJKL: Self = ControlKeys {
         up: KeyCode::KeyI,
@@ -89,6 +92,7 @@ impl ControlKeys {
         grab: KeyCode::NonConvert,
         drop: KeyCode::NonConvert,
         trigger: KeyCode::NonConvert,
+        change_evidence: KeyCode::NonConvert,
     };
     pub const NONE: Self = ControlKeys {
         up: KeyCode::NonConvert,
@@ -102,6 +106,7 @@ impl ControlKeys {
         grab: KeyCode::NonConvert,
         drop: KeyCode::NonConvert,
         trigger: KeyCode::NonConvert,
+        change_evidence: KeyCode::NonConvert,
     };
 }
 

@@ -305,7 +305,7 @@ pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs:
 }
 
 pub fn update_gear_ui(
-    mut gc: ResMut<GameConfig>,
+    gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     mut qi: Query<(&Inventory, &mut TextureAtlas)>,
     mut qs: Query<&mut Text, With<InventoryStats>>,
@@ -318,9 +318,8 @@ pub fn update_gear_ui(
                 utai.index = idx;
             }
             let right_hand_status = playergear.right_hand.get_status();
-            if gc.right_hand_status_text != right_hand_status {
-                for mut txt in qs.iter_mut() {
-                    gc.right_hand_status_text = right_hand_status.clone();
+            for mut txt in qs.iter_mut() {
+                if txt.sections[0].value != right_hand_status {
                     txt.sections[0].value = right_hand_status.clone();
                 }
             }

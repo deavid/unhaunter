@@ -1,3 +1,4 @@
+pub mod evidence;
 pub mod level;
 pub mod ui;
 
@@ -33,15 +34,11 @@ pub enum SoundType {
 pub struct GameConfig {
     /// Which player should the camera and lighting follow
     pub player_id: usize,
-    pub right_hand_status_text: String,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
-        Self {
-            player_id: 1,
-            right_hand_status_text: "".into(),
-        }
+        Self { player_id: 1 }
     }
 }
 
@@ -154,12 +151,11 @@ pub fn keyboard(
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_event::<level::RoomChangedEvent>()
-        .add_event::<level::LoadLevelEvent>()
-        .add_systems(Update, level::roomchanged_event)
         .add_systems(OnEnter(root::State::InGame), setup)
         .add_systems(OnExit(root::State::InGame), cleanup)
-        .add_systems(Update, keyboard.before(player::keyboard_player))
-        .add_systems(PostUpdate, level::load_level);
-    crate::game::ui::app_setup(app);
+        .add_systems(Update, keyboard.before(player::keyboard_player));
+
+    level::app_setup(app);
+    ui::app_setup(app);
+    evidence::app_setup(app);
 }

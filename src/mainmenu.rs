@@ -376,6 +376,7 @@ pub fn menu_event(
     maps: Res<root::Maps>,
 ) {
     for event in ev_menu.read() {
+        warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
             MenuID::NewGame => {
                 let map_idx = q.single().map_idx;

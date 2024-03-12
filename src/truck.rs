@@ -49,7 +49,7 @@ impl TruckButtonType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TruckButtonState {
     Off,
     Pressed,
@@ -57,9 +57,9 @@ pub enum TruckButtonState {
 }
 #[derive(Component, Debug)]
 pub struct TruckUIButton {
-    status: TruckButtonState,
-    class: TruckButtonType,
-    disabled: bool,
+    pub status: TruckButtonState,
+    pub class: TruckButtonType,
+    pub disabled: bool,
 }
 
 impl TruckUIButton {

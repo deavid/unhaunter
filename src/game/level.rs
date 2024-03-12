@@ -30,6 +30,7 @@ pub fn load_level(
     mut bf: ResMut<board::BoardData>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<GameSprite>>,
+    qgs2: Query<Entity, With<GameSound>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -40,11 +41,19 @@ pub fn load_level(
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     mut app_next_state: ResMut<NextState<root::State>>,
 ) {
-    let Some(load_event) = ev.read().next() else {
+    let mut ev_iter = ev.read();
+    let Some(load_event) = ev_iter.next() else {
         return;
     };
+    // Consume all events, just in case to prevent double loading.
+    let _ = ev_iter.count();
 
+    // Despawn sprites just in case
     for gs in qgs.iter() {
+        commands.entity(gs).despawn_recursive();
+    }
+    // Despawn ambient sounds just in case.
+    for gs in qgs2.iter() {
         commands.entity(gs).despawn_recursive();
     }
     // TODO: Ambient temp should probably come from either the map or be influenced by weather.
@@ -399,4 +408,11 @@ pub fn roomchanged_event(
 pub enum InteractionExecutionType {
     ChangeState,
     ReadRoomState,
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_event::<RoomChangedEvent>()
+        .add_event::<LoadLevelEvent>()
+        .add_systems(Update, roomchanged_event)
+        .add_systems(PostUpdate, load_level);
 }

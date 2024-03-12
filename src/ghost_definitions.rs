@@ -1,7 +1,9 @@
+use crate::gear::GearKind;
 use bevy::utils::HashSet;
 use enum_iterator::all;
 use enum_iterator::Sequence;
 use std::fmt::Display;
+use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence)]
 pub enum Evidence {
@@ -31,6 +33,18 @@ impl Evidence {
             Evidence::CPM500 => "500+ cpm",
         }
     }
+    pub fn help_text(&self) -> &'static str {
+        match self {
+            Evidence::FreezingTemp => "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
+            Evidence::FloatingOrbs => "Check if the breack lights up under Night vision.\nLights need to be off.",
+            Evidence::UVEctoplasm => "Check if the ghost turns green under UV.\nLights need to be off.",
+            Evidence::EMFLevel5 => "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading.",
+            Evidence::EVPRecording => "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear.",
+            Evidence::SpiritBox => "Some ghosts talk trough the SpiritBox.\nIf you hear the ghost talking through it, mark this evidence.",
+            Evidence::RLPresence => "Some ghosts glow orange under red light.\nLights need to be off.",
+            Evidence::CPM500 => "Some ghosts are radioactive and will register above than 500cpm.\nIt takes time for the Geiger counter to settle into a value.",
+        }
+    }
     pub fn from_bits(bits: u8) -> HashSet<Evidence> {
         let mut evidences = HashSet::new();
         let mut mask = 1;
@@ -47,6 +61,38 @@ impl Evidence {
 impl Display for Evidence {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name())
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+pub enum EvidenceError {
+    #[error("No Evidence for Gear")]
+    NoEvidenceForGear,
+}
+
+impl TryFrom<&GearKind> for Evidence {
+    type Error = EvidenceError;
+
+    fn try_from(value: &GearKind) -> Result<Self, Self::Error> {
+        match value {
+            GearKind::Thermometer(_) => Ok(Evidence::FreezingTemp),
+            GearKind::EMFMeter(_) => Ok(Evidence::EMFLevel5),
+            GearKind::Recorder(_) => Ok(Evidence::EVPRecording),
+            GearKind::GeigerCounter(_) => Ok(Evidence::CPM500),
+            GearKind::UVTorch(_) => Ok(Evidence::UVEctoplasm),
+            GearKind::SpiritBox(_) => Ok(Evidence::SpiritBox),
+            GearKind::RedTorch(_) => Ok(Evidence::RLPresence),
+            GearKind::Videocam(_) => Ok(Evidence::FloatingOrbs),
+            GearKind::Flashlight(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::IonMeter(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::ThermalImager(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::Photocam(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::Compass(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::EStaticMeter(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::MotionSensor(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::RepellentFlask(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::None => Err(EvidenceError::NoEvidenceForGear),
+        }
     }
 }
 

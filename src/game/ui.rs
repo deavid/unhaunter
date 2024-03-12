@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::view::RenderLayers};
 
-use crate::{colors, gear, root};
+use crate::{colors, game::evidence, gear, root};
 
 #[derive(Component)]
 pub struct GCameraUI;
@@ -89,32 +89,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         parent.spawn(text_bundle);
     };
 
-    let evidence = |parent: &mut ChildBuilder| {
-        let text_bundle = TextBundle::from_sections([
-            TextSection{value: "Freezing temps:".into(), 
-                style: TextStyle {
-                    font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0,
-                    color: colors::INVENTORY_STATS_COLOR.with_a(1.0),
-                },
-            },
-            TextSection{value: " [+] Evidence Found\n".into(), 
-                style: TextStyle {
-                    font: handles.fonts.victormono.w600_semibold.clone(),
-                    font_size: 20.0,
-                    color: Color::GREEN.with_a(0.4),
-                },
-            },
-            TextSection{value: "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.".into(), 
-                style: TextStyle {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 20.0,
-                    color: colors::INVENTORY_STATS_COLOR,
-                },
-            },
-        ]);
-        parent.spawn(text_bundle);
-    };
+    let evidence = |parent: &mut ChildBuilder| evidence::setup_ui_evidence(parent, &handles);
 
     let inventory = |parent: &mut ChildBuilder| gear::setup_ui_gear_inventory(parent, &handles);
 
