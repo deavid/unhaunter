@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
-use crate::{materials::CustomMaterial1, tiledmap::naive_tmx_loader};
+use crate::materials::CustomMaterial1;
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
@@ -353,6 +353,7 @@ pub fn app_setup(app: &mut App) {
 #[cfg(not(target_arch = "wasm32"))]
 mod arch {
     use super::*;
+    use crate::tiledmap::naive_tmx_loader;
 
     use glob::Pattern;
     use walkdir::WalkDir;

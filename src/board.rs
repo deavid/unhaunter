@@ -1,4 +1,5 @@
-use std::{f32::consts::PI, time::Instant};
+use std::f32::consts::PI;
+// use std::time::Instant;
 
 use bevy::{
     prelude::*,
@@ -758,7 +759,7 @@ pub fn boardfield_update(
         if bfr.lighting {
             // Rebuild lighting field since it has changed
             // info!("Lighting rebuild");
-            let build_start_time = Instant::now();
+            // let build_start_time = Instant::now();
             let cbp = CachedBoardPos::new();
             // info!("CBP time {:?}", build_start_time.elapsed());
             bf.exposure_lux = 1.0;
@@ -913,7 +914,7 @@ pub fn boardfield_update(
             bf.exposure_lux = (avg_lux + 2.0) / 2.0;
             info!(
                 "Lighting rebuild - complete: {:?}",
-                build_start_time.elapsed()
+                0 //build_start_time.elapsed()
             );
         }
     }
