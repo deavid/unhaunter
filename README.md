@@ -211,6 +211,26 @@ https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
 
 ## WASM Support
 
+You can test this game in WASM by navigating to:
+
+https://deavid.github.io/unhaunter/
+
+However, Google Chrome is recommended.
+
+Known issues:
+
+* Firefox seems to have serious performance problems.
+* Noticeable audio crackling.
+* Map names appear by filenames not by their internal name.
+* Map data is pre-backed in, does not react to new maps added into the folder.
+* University/School map is very slow.
+
+NOTE: Overall this is provided as a "demo" that is easy to access for those that
+cannot build the game themselves. Unhaunter is not targeting WASM, and the
+support will be minimal.
+
+Building WASM locally:
+
 https://bevy-cheatbook.github.io/platforms/wasm.html
 
 Install deps
