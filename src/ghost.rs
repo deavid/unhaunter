@@ -202,7 +202,7 @@ fn ghost_enrage(
         }
         ghost.rage += angry * dt / 10.0;
         avg_angry.push_len(angry, dt);
-        if timer.just_finished() {
+        if timer.just_finished() && DEBUG_HUNTS {
             dbg!(&avg_angry.avg(), ghost.rage);
         }
         let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
