@@ -25,10 +25,16 @@ use bevy::{
     window::WindowResolution,
 };
 use materials::{CustomMaterial1, UIPanelMaterial};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 const FPS_DEBUG: bool = false;
 
-fn main() {
+#[wasm_bindgen(start)]
+pub fn wasm_load() {
+    app_run();
+}
+
+pub fn app_run() {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -37,6 +43,8 @@ fn main() {
                 primary_window: Some(Window {
                     title: "Unhaunter".to_string(),
                     resolution: WindowResolution::new(1500.0, 800.0),
+                    // Enabling VSync might make it easier in WASM? (It doesn't)
+                    present_mode: bevy::window::PresentMode::Fifo,
                     ..default()
                 }),
                 ..default()

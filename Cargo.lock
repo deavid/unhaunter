@@ -4319,6 +4319,7 @@ dependencies = [
  "thiserror",
  "tiled",
  "walkdir",
+ "wasm-bindgen",
 ]
 
 [[package]]

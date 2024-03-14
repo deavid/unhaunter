@@ -237,3 +237,17 @@ https://bevyengine.org/examples/Assets/custom-asset/
 But most likely this forces us to pre-bake the maps somehow.
 
 Wait, tiled-rs DOES support wasm.
+
+Update: It works now, but there's stutter. Mainly because there's only one thread
+for executing; and on top of that there's a GC that when it runs it pauses the game.
+
+---
+Wasm bindgen:
+
+  wasm-pack build --release --target web
+
+This will build in pkg/
+
+And to test:
+
+  python3 -m http.server

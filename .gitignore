@@ -1,5 +1,6 @@
 /target
 perf.data
 perf.data.old
-unhaunter
+unhaunter_game
 trace-*.json
+/pkg
