@@ -1,10 +1,9 @@
 use std::f32::consts::PI;
-// use std::time::Instant;
 
 use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
-    utils::{HashMap, HashSet},
+    utils::{HashMap, HashSet, Instant},
 };
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -759,9 +758,9 @@ pub fn boardfield_update(
         if bfr.lighting {
             // Rebuild lighting field since it has changed
             // info!("Lighting rebuild");
-            // let build_start_time = Instant::now();
+            let build_start_time = Instant::now();
             let cbp = CachedBoardPos::new();
-            // info!("CBP time {:?}", build_start_time.elapsed());
+
             bf.exposure_lux = 1.0;
             bf.light_field.clear();
             // Dividing by 4 so later we don't get an overflow if there's no map.
@@ -914,7 +913,7 @@ pub fn boardfield_update(
             bf.exposure_lux = (avg_lux + 2.0) / 2.0;
             info!(
                 "Lighting rebuild - complete: {:?}",
-                0 //build_start_time.elapsed()
+                build_start_time.elapsed()
             );
         }
     }
