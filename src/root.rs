@@ -1,8 +1,6 @@
-use std::time::Instant;
-
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
-use crate::{materials::CustomMaterial1, tiledmap::naive_tmx_loader};
+use crate::materials::CustomMaterial1;
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
@@ -345,63 +343,97 @@ pub struct Maps {
     pub maps: Vec<Map>,
 }
 
-use glob::Pattern;
-use walkdir::WalkDir;
-
-/// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their paths.
-pub fn find_tmx_files() -> Vec<String> {
-    let mut paths = Vec::new();
-    let pattern = Pattern::new("*.tmx").unwrap();
-    let base_path = "assets/maps/";
-
-    for entry in WalkDir::new(base_path).into_iter().filter_map(|e| e.ok()) {
-        let path = entry.path();
-        // Check if the path matches the "*.tmx" pattern and is a file
-        if path.is_file() && pattern.matches_path(path) {
-            // Convert the path to a String and store it in the vector
-            if let Some(str_path) = path.to_str() {
-                paths.push(str_path.to_string());
-            }
-        }
-    }
-
-    paths
-}
-
-pub fn init_maps(mut maps: ResMut<Maps>) {
-    // Scan for maps:
-    let tmx_files = find_tmx_files();
-    for path in tmx_files {
-        let start = Instant::now();
-        // Loading a map can take 100ms or more. Therefore we do a naive load instead
-        let (classname, display_name) = match naive_tmx_loader(&path) {
-            Ok(m) => m,
-            Err(e) => {
-                warn!("Cannot load map {path:?}: {e}");
-                continue;
-            }
-        };
-        let load_time_ms = start.elapsed().as_secs_f32() * 1000.0;
-        if classname != Some("UnhaunterMap1".to_string()) {
-            warn!(
-                "Unrecognized Class {:?} for map {:?} (Should be 'UnhaunterMap1')",
-                classname, path
-            );
-            continue;
-        }
-        let default_name = format!("Unnamed ({})", path.replace("assets/maps/", ""));
-        let display_name = display_name.unwrap_or(default_name);
-        info!("Found map {display_name:?} at path {path:?} - loaded in {load_time_ms:.2}ms");
-        maps.maps.push(Map {
-            name: display_name,
-            path,
-        });
-    }
-}
-
 pub fn app_setup(app: &mut App) {
     app.init_state::<State>()
         .init_state::<GameState>()
         .init_resource::<Maps>()
-        .add_systems(Startup, (load_assets, init_maps));
+        .add_systems(Startup, (load_assets, arch::init_maps));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+mod arch {
+    use super::*;
+    use crate::tiledmap::naive_tmx_loader;
+
+    use glob::Pattern;
+    use walkdir::WalkDir;
+
+    /// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their paths.
+    pub fn find_tmx_files() -> Vec<String> {
+        let mut paths = Vec::new();
+        let pattern = Pattern::new("*.tmx").unwrap();
+        let base_path = "assets/maps/";
+        info!("Loading maps...");
+        for entry in WalkDir::new(base_path).into_iter() {
+            let Ok(entry) = entry else {
+                error!("Error loading: {:?}", entry);
+                continue;
+            };
+            let path = entry.path();
+            info!("Found {:?}", path);
+            // Check if the path matches the "*.tmx" pattern and is a file
+            if path.is_file() && pattern.matches_path(path) {
+                // Convert the path to a String and store it in the vector
+                if let Some(str_path) = path.to_str() {
+                    paths.push(str_path.to_string());
+                }
+            }
+        }
+
+        paths
+    }
+
+    pub fn init_maps(mut maps: ResMut<Maps>) {
+        // Scan for maps:
+        let tmx_files = find_tmx_files();
+        for path in tmx_files {
+            // Loading a map can take 100ms or more. Therefore we do a naive load instead
+            let (classname, display_name) = match naive_tmx_loader(&path) {
+                Ok(m) => m,
+                Err(e) => {
+                    warn!("Cannot load map {path:?}: {e}");
+                    continue;
+                }
+            };
+            if classname != Some("UnhaunterMap1".to_string()) {
+                warn!(
+                    "Unrecognized Class {:?} for map {:?} (Should be 'UnhaunterMap1')",
+                    classname, path
+                );
+                continue;
+            }
+            let default_name = format!("Unnamed ({})", path.replace("assets/maps/", ""));
+            let display_name = display_name.unwrap_or(default_name);
+            info!("Found map {display_name:?} at path {path:?}");
+            maps.maps.push(Map {
+                name: display_name,
+                path,
+            });
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+mod arch {
+    use super::*;
+    pub fn find_tmx_files() -> Vec<String> {
+        // WASM does not support scanning folders it seems...
+        vec![
+            "assets/maps/map_house1.tmx".to_string(),
+            "assets/maps/map_house2.tmx".to_string(),
+            "assets/maps/map_school1.tmx".to_string(),
+        ]
+    }
+    pub fn init_maps(mut maps: ResMut<Maps>) {
+        // Scan for maps:
+        let tmx_files = find_tmx_files();
+        for path in tmx_files {
+            let display_name = path.replace("assets/maps/", "");
+            info!("Found map {display_name:?} at path {path:?}");
+            maps.maps.push(Map {
+                name: display_name,
+                path,
+            });
+        }
+    }
 }

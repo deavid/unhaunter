@@ -207,3 +207,67 @@ NOTE: bevy_framepace::framerate_limiter is intended to take the majority of the
 There's additional info on profiling Bevy here:
 
 https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
+
+
+## WASM Support
+
+You can test this game in WASM by navigating to:
+
+https://deavid.github.io/unhaunter/
+
+However, Google Chrome is recommended.
+
+Known issues:
+
+* Firefox seems to have serious performance problems.
+* Noticeable audio crackling.
+* Map names appear by filenames not by their internal name.
+* Map data is pre-backed in, does not react to new maps added into the folder.
+* University/School map is very slow.
+
+NOTE: Overall this is provided as a "demo" that is easy to access for those that
+cannot build the game themselves. Unhaunter is not targeting WASM, and the
+support will be minimal.
+
+Building WASM locally:
+
+https://bevy-cheatbook.github.io/platforms/wasm.html
+
+Install deps
+
+  rustup target install wasm32-unknown-unknown
+  cargo install wasm-server-runner
+
+Run with:
+
+  cargo run --target wasm32-unknown-unknown --release
+
+
+Current problems:
+
+* Slow?
+* Regular filesystem operation do not work. Bevy Assets do work. Therefore map loading is borked.
+* Instant::now does not work.
+* Framepace does not work on the browser. Solved.
+* Tiled library is never going to work, it opens the files it wants, whenever it wants. It will always fail on WASM.
+
+Here's a sample on how to load custom assets, so we could load our own data:
+https://bevyengine.org/examples/Assets/custom-asset/
+
+But most likely this forces us to pre-bake the maps somehow.
+
+Wait, tiled-rs DOES support wasm.
+
+Update: It works now, but there's stutter. Mainly because there's only one thread
+for executing; and on top of that there's a GC that when it runs it pauses the game.
+
+---
+Wasm bindgen:
+
+  wasm-pack build --release --target web
+
+This will build in pkg/
+
+And to test:
+
+  python3 -m http.server

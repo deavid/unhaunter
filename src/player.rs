@@ -8,6 +8,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
+const DEBUG_PLAYER: bool = false;
+
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
     pub id: usize,
@@ -575,7 +577,7 @@ fn lose_sanity(
         if ps.health > 100.0 {
             ps.health = 100.0;
         }
-        if timer.just_finished() {
+        if timer.just_finished() && DEBUG_PLAYER {
             dbg!(ps.sanity(), mean_sound.0, ps.health);
         }
     }

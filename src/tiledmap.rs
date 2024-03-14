@@ -3,7 +3,7 @@
 //! Most of the classes here are almost a redefinition (for now) of the tiled library.
 //! Currently serve as an example on how to load/store data.
 
-use std::{collections::HashMap, fmt::Debug, io::BufRead as _, slice::Iter};
+use std::{collections::HashMap, fmt::Debug, slice::Iter};
 
 /// A simple 2D position with X and Y components that it is generic.
 ///
@@ -214,6 +214,69 @@ pub struct MapTileSetDb {
     pub db: HashMap<String, MapTileSet>,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+mod arch {
+    pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
+        let mut loader = tiled::Loader::new();
+        loader.load_tmx_map(path).unwrap()
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+mod arch {
+    use std::io::Cursor;
+
+    /// Basic example reader impl that just keeps a few resources in memory
+    struct MemoryReader;
+
+    impl tiled::ResourceReader for MemoryReader {
+        type Resource = Cursor<&'static [u8]>;
+        type Error = std::io::Error;
+
+        fn read_from(
+            &mut self,
+            path: &std::path::Path,
+        ) -> std::result::Result<Self::Resource, Self::Error> {
+            let path = path.to_str().unwrap();
+            match path {
+                "assets/maps/map_house1.tmx" => {
+                    Ok(Cursor::new(include_bytes!("../assets/maps/map_house1.tmx")))
+                }
+                "assets/maps/map_house2.tmx" => {
+                    Ok(Cursor::new(include_bytes!("../assets/maps/map_house2.tmx")))
+                }
+                "assets/maps/map_school1.tmx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/map_school1.tmx"
+                ))),
+                "assets/maps/unhaunter_custom_tileset.tsx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/unhaunter_custom_tileset.tsx"
+                ))),
+                "assets/maps/unhaunter_spritesheet2.tsx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/unhaunter_spritesheet2.tsx"
+                ))),
+                "assets/maps/unhaunter_spritesheetA_3x3x3.tsx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/unhaunter_spritesheetA_3x3x3.tsx"
+                ))),
+                "assets/maps/unhaunter_spritesheetA_6x6x10.tsx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/unhaunter_spritesheetA_6x6x10.tsx"
+                ))),
+                _ => Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "file not found",
+                )),
+            }
+        }
+    }
+    pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
+        let mut loader =
+            tiled::Loader::<tiled::DefaultResourceCache, MemoryReader>::with_cache_and_reader(
+                tiled::DefaultResourceCache::new(),
+                MemoryReader,
+            );
+        loader.load_tmx_map(path).unwrap()
+    }
+}
+
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: &AssetServer,
@@ -221,8 +284,8 @@ pub fn bevy_load_map(
     tilesetdb: &mut ResMut<MapTileSetDb>,
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
-    let mut loader = tiled::Loader::new();
-    let map = loader.load_tmx_map(path).unwrap();
+
+    let map = arch::map_loader(path);
 
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {
@@ -231,10 +294,9 @@ pub fn bevy_load_map(
         let data = if let Some(image) = &tileset.image {
             let img_src = image
                 .source
-                .canonicalize()
-                .expect("incorrect path on image source when loading TileSet")
-                .to_string_lossy()
-                .to_string();
+                .to_str()
+                .unwrap()
+                .replace("assets/maps/../", "");
             // FIXME: When the images are loaded onto the GPU it seems that we need at least 1 pixel of empty space
             // .. so that the GPU can sample surrounding pixels properly.
             // .. This contrasts with how Tiled works, as it assumes a perfect packing if possible.
@@ -269,10 +331,9 @@ pub fn bevy_load_map(
                 if let Some(image) = &tile.image {
                     let img_src = image
                         .source
-                        .canonicalize()
-                        .expect("incorrect path on image source when loading TileSet")
-                        .to_string_lossy()
-                        .to_string();
+                        .to_str()
+                        .unwrap()
+                        .replace("assets/maps/../", "");
                     dbg!(&img_src);
                     let img_handle: Handle<Image> = asset_server.load(img_src);
                     let cmat = CustomMaterial1::from_texture(img_handle.clone());
@@ -400,7 +461,9 @@ pub fn bevy_load_tile(
 }
 
 /// Loads a TMX as text file and inspects the first lines to obtain class and display_name.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn naive_tmx_loader(path: &str) -> anyhow::Result<(Option<String>, Option<String>)> {
+    use std::io::BufRead as _;
     // <map version="1.10" tiledversion="1.10.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="18" nextobjectid="15">
     //     <properties>
     //      <property name="display_name" value="123 Acorn Lane Street House"/>

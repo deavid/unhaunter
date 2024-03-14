@@ -1,21 +1,23 @@
 [package]
 name = "unhaunter"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
-default-run = "unhaunter"
+default-run = "unhaunter_game"
+description = "2D isometric Game about investigating paranormal hauntings"
+repository = "https://github.com/deavid/unhaunter/"
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bevy = { version = "0.13.0", features = ["trace"] }
-bevy_framepace = "0.15"
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 image = "0.25.0"
 regex = "1.7.1"
-tiled = "0.11.2"
+
 clap = "4.4.8"
 fastapprox = "0.3.1"
 anyhow = "1.0.79"
@@ -25,6 +27,13 @@ hierarchical_pathfinding = "0.5.0"
 walkdir = "2.5.0"
 glob = "0.3.1"
 thiserror = "1.0.58"
+tiled = { version = "0.11.2", features = ["wasm"] }
+wasm-bindgen = "0.2.92"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy_framepace = "0.15"
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]
@@ -34,11 +43,20 @@ opt-level = 2
 [profile.dev.package."*"]
 opt-level = 3
 
+# These optimizations for release are trying to target mostly WASM
+[profile.release]
+# This causes slower compilation times in release
+lto = "thin"
+# Compiling to smaller sizes seems to help in WASM
+opt-level = 'z'
 
 [[bin]]
-name = "unhaunter"
-path = "src/main.rs"
+name = "unhaunter_game"
+path = "src/bin/unhaunter.rs"
 
 [[bin]]
 name = "materials"
 path = "src/materials.rs"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
