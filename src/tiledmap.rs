@@ -214,15 +214,15 @@ pub struct MapTileSetDb {
     pub db: HashMap<String, MapTileSet>,
 }
 
-// #[cfg(not(target_arch = "wasm32"))]
-// mod arch {
-//     pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
-//         let mut loader = tiled::Loader::new();
-//         loader.load_tmx_map(path).unwrap()
-//     }
-// }
+#[cfg(not(target_arch = "wasm32"))]
+mod arch {
+    pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
+        let mut loader = tiled::Loader::new();
+        loader.load_tmx_map(path).unwrap()
+    }
+}
 
-// #[cfg(target_arch = "wasm32")]
+#[cfg(target_arch = "wasm32")]
 mod arch {
     use std::io::Cursor;
 
