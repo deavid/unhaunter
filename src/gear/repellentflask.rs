@@ -92,6 +92,9 @@ impl RepellentFlask {
         self.active = false;
         self.qty = Self::MAX_QTY;
     }
+    pub fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
+        !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
+    }
 }
 
 impl From<RepellentFlask> for Gear {

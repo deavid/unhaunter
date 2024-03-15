@@ -36,7 +36,7 @@ impl Evidence {
     pub fn help_text(&self) -> &'static str {
         match self {
             Evidence::FreezingTemp => "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
-            Evidence::FloatingOrbs => "Check if the breack lights up under Night vision.\nLights need to be off.",
+            Evidence::FloatingOrbs => "Check if the breach lights up under Night vision.\nLights need to be off.",
             Evidence::UVEctoplasm => "Check if the ghost turns green under UV.\nLights need to be off.",
             Evidence::EMFLevel5 => "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading.",
             Evidence::EVPRecording => "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear.",

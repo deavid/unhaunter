@@ -853,7 +853,10 @@ pub fn keyboard(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn truckui_event_handle(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut ev_truckui: EventReader<TruckUIEvent>,
     mut next_state: ResMut<NextState<root::State>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
@@ -873,6 +876,17 @@ pub fn truckui_event_handle(
                     if player.id == gc.player_id {
                         if let Some(ghost_type) = gg.ghost_type {
                             gear.craft_repellent(ghost_type);
+                            commands.spawn(AudioBundle {
+                                source: asset_server.load("sounds/effects-dingdingding.ogg"),
+                                settings: PlaybackSettings {
+                                    mode: bevy::audio::PlaybackMode::Despawn,
+                                    volume: bevy::audio::Volume::new(1.0),
+                                    speed: 1.0,
+                                    paused: false,
+                                    spatial: false,
+                                    spatial_scale: None,
+                                },
+                            });
                         }
                     }
                 }
@@ -911,9 +925,11 @@ fn button_system(
         ),
         With<Button>,
     >,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut text_query: Query<&mut Text>,
     mut gg: ResMut<GhostGuess>,
     mut ev_truckui: EventWriter<TruckUIEvent>,
+    gc: Res<GameConfig>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -958,7 +974,20 @@ fn button_system(
     {
         let pressed = tui_button.status == TruckButtonState::Pressed;
         if let TruckButtonType::CraftRepellent = tui_button.class {
-            tui_button.disabled = gg.ghost_type.is_none();
+            let mut disabled = gg.ghost_type.is_none();
+
+            for (player, gear) in q_gear.iter_mut() {
+                if player.id == gc.player_id {
+                    if let Some(ghost_type) = gg.ghost_type {
+                        if !gear.can_craft_repellent(ghost_type) {
+                            disabled = true;
+                        }
+                    }
+                }
+            }
+            if tui_button.disabled != disabled {
+                tui_button.disabled = disabled;
+            }
         }
         if let TruckButtonType::Evidence(ev) = tui_button.class {
             tui_button.disabled =

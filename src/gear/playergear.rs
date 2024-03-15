@@ -11,6 +11,9 @@ pub enum Hand {
 }
 
 #[derive(Component, Debug, Clone)]
+pub struct InventoryNext;
+
+#[derive(Component, Debug, Clone)]
 pub struct Inventory {
     pub hand: Hand,
 }
@@ -103,6 +106,9 @@ impl PlayerGear {
             ],
         }
     }
+    pub fn get_next(&self) -> Gear {
+        self.inventory[0].clone()
+    }
     pub fn cycle(&mut self) {
         let old_right = self.right_hand.clone();
         let last_idx = self.inventory.len() - 1;
@@ -146,6 +152,33 @@ impl PlayerGear {
 
         if let GearKind::RepellentFlask(ref mut flask) = flask.0.kind {
             flask.fill_liquid(ghost_type);
+        }
+    }
+
+    pub fn can_craft_repellent(&self, ghost_type: GhostType) -> bool {
+        // Check if the repellent exists in inventory, if not, create it:
+        let flask_exists = self
+            .as_vec()
+            .iter()
+            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
+        if !flask_exists {
+            return true;
+        }
+
+        // Assume that one always exists. Retrieve the &mut reference:
+        let inventory = self.as_vec();
+        let Some(flask) = inventory
+            .iter()
+            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)))
+        else {
+            error!("Flask not found??");
+            return false;
+        };
+
+        if let GearKind::RepellentFlask(flask) = &flask.0.kind {
+            flask.can_fill_liquid(ghost_type)
+        } else {
+            false
         }
     }
 }

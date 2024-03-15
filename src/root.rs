@@ -120,6 +120,7 @@ pub struct ImageAssets {
     pub gear: Handle<Image>,
     pub character1_atlas: Handle<TextureAtlasLayout>,
     pub gear_atlas: Handle<TextureAtlasLayout>,
+    pub vignette: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -245,6 +246,7 @@ pub fn load_assets(
                 Some(Vec2::new(0.0, 0.0)),
                 Some(Vec2::new(0.0, 0.0)),
             )),
+            vignette: server.load("img/vignette.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

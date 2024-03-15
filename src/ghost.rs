@@ -21,6 +21,7 @@ pub struct GhostSprite {
     pub hunting: f32,
     pub hunt_target: bool,
     pub hunt_time_secs: f32,
+    pub warp: f32,
 }
 
 #[derive(Component, Debug)]
@@ -44,6 +45,7 @@ impl GhostSprite {
             hunting: 0.0,
             hunt_target: false,
             hunt_time_secs: 0.0,
+            warp: 0.0,
         }
     }
     pub fn with_breachid(self, breach_id: Entity) -> Self {
@@ -68,11 +70,22 @@ pub fn ghost_movement(
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
+            if rng.gen_range(0..100) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+                // Sometimes, warp ahead. This also is to increase visibility of the ghost
+                ghost.warp += 40.0;
+            }
+            ghost.warp -= dt * 0.5;
+            if ghost.warp < 0.0 {
+                ghost.warp = 0.0;
+            }
             let dlen = delta.distance() + 0.001;
             if dlen > 1.0 {
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
             }
+            delta.dx *= ghost.warp + 1.0;
+            delta.dy *= ghost.warp + 1.0;
+
             let mut finalize = false;
             if ghost.hunt_target {
                 if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
@@ -111,7 +124,7 @@ pub fn ghost_movement(
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
-            let ghbonus = if ghost.hunt_target { 1000.0 } else { 0.0001 };
+            let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
                 let player_pos_l: Vec<&Position> = qp
                     .iter()
@@ -172,16 +185,16 @@ fn ghost_enrage(
 
     for (mut ghost, gpos) in &mut qg {
         if ghost.hunt_target {
-            if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
-                for (mut player, ppos) in &mut qp {
-                    let dist2 = gpos.distance2(ppos) + 1.0;
-                    let dmg = dist2.recip();
-                    player.health -= dmg * dt * 30.0;
-                    ghost.rage -= dmg * dt * 30.0;
-                    if ghost.rage < 0.0 {
-                        ghost.rage = 0.0;
-                    }
-                }
+            let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
+            for (mut player, ppos) in &mut qp {
+                let dist2 = gpos.distance2(ppos) + 2.0;
+                let dmg = dist2.recip();
+                player.health -= dmg * dt * 30.0 * ghost_strength;
+            }
+
+            ghost.rage -= dt * 20.0;
+            if ghost.rage < 0.0 {
+                ghost.rage = 0.0;
             }
             continue;
         }
@@ -198,9 +211,18 @@ fn ghost_enrage(
         let angry = total_angry2.sqrt();
         ghost.rage /= 1.02_f32.powf(dt);
         if DEBUG_HUNTS {
-            ghost.rage += angry * dt * 10.0 + 2.0 * dt;
+            ghost.rage += angry * dt * 10.0 + 60.0 * dt;
         }
         ghost.rage += angry * dt / 10.0;
+        ghost.rage -= dt * 0.2;
+        ghost.hunting -= dt * 0.2;
+        if ghost.rage < 0.0 {
+            ghost.rage = 0.0;
+        }
+        if ghost.hunting < 0.0 {
+            ghost.hunting = 0.0;
+        }
+
         avg_angry.push_len(angry, dt);
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(&avg_angry.avg(), ghost.rage);
@@ -208,7 +230,7 @@ fn ghost_enrage(
         let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
-            ghost.rage /= 2.0;
+            ghost.rage /= 3.0;
             ghost.hunting += (prev_rage - ghost.rage) / 6.0 + 5.0;
         }
     }

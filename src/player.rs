@@ -75,9 +75,9 @@ impl ControlKeys {
         right: KeyCode::KeyD,
         activate: KeyCode::KeyE,
         trigger: KeyCode::KeyR,
-        torch: KeyCode::KeyT,
+        torch: KeyCode::Tab,
         cycle: KeyCode::KeyQ,
-        swap: KeyCode::Tab,
+        swap: KeyCode::KeyT,
         drop: KeyCode::KeyG,
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
@@ -538,6 +538,7 @@ fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
+    roomdb: Res<board::RoomDB>,
 ) {
     timer.tick(time.delta());
 
@@ -564,15 +565,22 @@ fn lose_sanity(
                 * 10.0;
         }
         const MASS: f32 = 10.0;
-        mean_sound.0 =
-            ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
 
+        if roomdb.room_tiles.contains_key(&bpos) {
+            mean_sound.0 =
+                ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
+        } else {
+            // prevent sanity from being lost outside of the location.
+            mean_sound.0 /= 1.2_f32.powf(dt);
+        }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 10.0) * (ps.sanity() / 100.0);
+            // ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
+
+            ps.health += 0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0;
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
@@ -607,21 +615,27 @@ fn recover_sanity(
 pub fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
-    mut qb: Query<&mut BackgroundColor, With<DamageBackground>>,
+    mut qb: Query<(&mut BackgroundColor, &DamageBackground)>,
 ) {
     for player in &qp {
         if player.id != gc.player_id {
             continue;
         }
-        let health = (1.0 - player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 0.999);
-        let red = (f32::tanh(health * 10.0) / (health.powi(4) * 50.0 + 1.0)).clamp(0.0, 1.0) / 2.0;
-        let dst_color = Color::rgba(red, 0.0, 0.0, health.sqrt().sqrt() / 1.002);
-        for mut background in &mut qb {
+        let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
+        let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
+        for (mut background, dmg) in &mut qb {
+            let rhealth = (1.0 - health).powf(dmg.exp);
+            let crazyness = crazyness.powf(dmg.exp);
+            let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
+                .clamp(0.0, 1.0);
+            let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
+            let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
+            let dst_color = Color::rgba(red, 0.0, 0.0, alpha);
+
             let old_color = background.0;
-            if (old_color.a() - dst_color.a()).abs() > 0.05 {
-                background.0 = maplight::lerp_color(old_color, dst_color, 0.1);
-            } else if old_color != dst_color {
-                background.0 = dst_color;
+            let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
+            if old_color != new_color {
+                background.0 = new_color;
             }
         }
     }
