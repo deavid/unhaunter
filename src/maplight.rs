@@ -482,8 +482,8 @@ pub fn apply_lighting(
             } else {
                 opacity *= dst_color.l().clamp(0.7, 1.0);
                 // Make the ghost oscilate to increase visibility:
-                let osc1 = (elapsed * 2.0).sin() * 0.5 + 0.5;
-                let osc2 = (elapsed * 2.15).cos() * 0.5 + 0.5;
+                let osc1 = (elapsed * 1.0).sin() * 0.25 + 0.75;
+                let osc2 = (elapsed * 1.15).cos() * 0.5 + 0.5;
 
                 opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0);
                 let l = (dst_color.l() + osc2) / 2.0;
@@ -517,7 +517,10 @@ pub fn apply_lighting(
             };
             opacity *= ((dst_color.l() / 3.0) + e_nv / 4.0).clamp(0.0, 0.5);
             let l = dst_color.l();
-            dst_color.set_l((l * ld.visible + e_nv).clamp(0.0, 0.99));
+            // Make the breach oscilate to increase visibility:
+            let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
+
+            dst_color.set_l(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
         }
         let mut old_a = sprite.color.a().clamp(0.0001, 1.0);
         if stype == SpriteType::Other {
