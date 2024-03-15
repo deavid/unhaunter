@@ -7,7 +7,7 @@ use crate::{
 use bevy::prelude::*;
 use rand::Rng;
 
-const DEBUG_HUNTS: bool = false;
+const DEBUG_HUNTS: bool = true;
 
 #[derive(Component, Debug)]
 pub struct GhostSprite {
@@ -198,7 +198,7 @@ fn ghost_enrage(
         let angry = total_angry2.sqrt();
         ghost.rage /= 1.02_f32.powf(dt);
         if DEBUG_HUNTS {
-            ghost.rage += angry * dt * 10.0 + 2.0 * dt;
+            ghost.rage += angry * dt * 10.0 + 60.0 * dt;
         }
         ghost.rage += angry * dt / 10.0;
         ghost.rage -= dt * 0.2;

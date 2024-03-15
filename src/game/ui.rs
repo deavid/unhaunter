@@ -9,7 +9,15 @@ pub struct GCameraUI;
 pub struct GameUI;
 
 #[derive(Component, Debug)]
-pub struct DamageBackground;
+pub struct DamageBackground {
+    pub exp: f32,
+}
+
+impl DamageBackground {
+    pub fn new(exp: f32) -> Self {
+        Self { exp }
+    }
+}
 
 pub fn setup(mut commands: Commands, qc2: Query<Entity, With<GCameraUI>>) {
     // Despawn old camera if exists
@@ -62,7 +70,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     commands
         .spawn(NodeBundle {
-            background_color: Color::rgba(0.0, 0.05, 0.2, 0.3).into(),
+            background_color: Color::NONE.into(),
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -72,7 +80,21 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..default()
         })
         .insert(GameUI)
-        .insert(DamageBackground);
+        .insert(DamageBackground::new(4.0));
+    commands
+        .spawn(ImageBundle {
+            background_color: Color::BLACK.into(),
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            },
+            image: handles.images.vignette.clone().into(),
+            ..default()
+        })
+        .insert(GameUI)
+        .insert(DamageBackground::new(0.7));
     // Spawn game UI
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
 

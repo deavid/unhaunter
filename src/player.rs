@@ -3,7 +3,7 @@ use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
-use crate::{root, utils};
+use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
@@ -572,7 +572,9 @@ fn lose_sanity(
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
+            // ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
+
+            ps.health += 0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0;
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
@@ -607,22 +609,24 @@ fn recover_sanity(
 pub fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
-    mut qb: Query<&mut BackgroundColor, With<DamageBackground>>,
+    mut qb: Query<(&mut BackgroundColor, &DamageBackground)>,
 ) {
     for player in &qp {
         if player.id != gc.player_id {
             continue;
         }
-        let health = (1.0 - player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 0.999);
-        let alpha = health.powf(6.0_f32.recip()) * 0.1 + health.powi(6) * 0.9;
-        let red = f32::tanh(health * 10.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.9);
-        let green = f32::tanh((health - 0.25) * 6.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.95);
-        let blue = f32::tanh((health - 0.5) * 8.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.99);
-        let dst_color = Color::rgba(red, green, blue, alpha);
-        for mut background in &mut qb {
+        let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
+        for (mut background, dmg) in &mut qb {
+            let rhealth = (1.0 - health).powf(dmg.exp);
+            let alpha = (rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7;
+            let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
+            let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
+            let dst_color = Color::rgba(red, 0.0, 0.0, alpha);
+
             let old_color = background.0;
-            if old_color != dst_color {
-                background.0 = dst_color;
+            let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
+            if old_color != new_color {
+                background.0 = new_color;
             }
         }
     }
