@@ -154,4 +154,31 @@ impl PlayerGear {
             flask.fill_liquid(ghost_type);
         }
     }
+
+    pub fn can_craft_repellent(&self, ghost_type: GhostType) -> bool {
+        // Check if the repellent exists in inventory, if not, create it:
+        let flask_exists = self
+            .as_vec()
+            .iter()
+            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
+        if !flask_exists {
+            return true;
+        }
+
+        // Assume that one always exists. Retrieve the &mut reference:
+        let inventory = self.as_vec();
+        let Some(flask) = inventory
+            .iter()
+            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)))
+        else {
+            error!("Flask not found??");
+            return false;
+        };
+
+        if let GearKind::RepellentFlask(flask) = &flask.0.kind {
+            flask.can_fill_liquid(ghost_type)
+        } else {
+            false
+        }
+    }
 }
