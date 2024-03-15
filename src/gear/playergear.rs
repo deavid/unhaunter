@@ -11,6 +11,9 @@ pub enum Hand {
 }
 
 #[derive(Component, Debug, Clone)]
+pub struct InventoryNext;
+
+#[derive(Component, Debug, Clone)]
 pub struct Inventory {
     pub hand: Hand,
 }
@@ -102,6 +105,9 @@ impl PlayerGear {
                 // MotionSensor::default().into(),
             ],
         }
+    }
+    pub fn get_next(&self) -> Gear {
+        self.inventory[0].clone()
     }
     pub fn cycle(&mut self) {
         let old_right = self.right_hand.clone();

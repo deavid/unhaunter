@@ -74,11 +74,12 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         .insert(GameUI)
         .insert(DamageBackground);
     // Spawn game UI
+    type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
 
-    let key_legend = |parent: &mut ChildBuilder| {
+    let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let text_bundle = TextBundle::from_section(
-            "Movement: WASD - Interact: E\nToggle Aux: T - Toggle Main: R\nCycle Inv: Q - Swap: TAB\nChange Evidence: C",
+            "Movement: WASD - Interact: E\nToggle Aux: TAB - Toggle Main: R\nCycle Inv: Q - Swap: T\nChange Evidence: C",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 18.0,
@@ -86,107 +87,123 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             },
         );
 
-        parent.spawn(text_bundle);
+        p.spawn(text_bundle);
     };
 
-    let evidence = |parent: &mut ChildBuilder| evidence::setup_ui_evidence(parent, &handles);
+    let evidence = |p: Cb| evidence::setup_ui_evidence(p, &handles);
 
-    let inventory = |parent: &mut ChildBuilder| gear::setup_ui_gear_inventory(parent, &handles);
+    let inv_left = |p: Cb| gear::ui::setup_ui_gear_inv_left(p, &handles);
+    let inv_right = |p: Cb| gear::ui::setup_ui_gear_inv_right(p, &handles);
 
-    let bottom_panel = |parent: &mut ChildBuilder| {
+    let bottom_panel = |p: Cb| {
         // Split for the bottom side in three regions
 
-        // Left side
-        parent
-            .spawn(NodeBundle {
-                border_color: colors::DEBUG_BCOLOR,
-                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
-                style: Style {
-                    border: UiRect::all(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(6.0)),
-                    flex_grow: 0.0,
-                    min_width: Val::Px(200.0),
-                    align_content: AlignContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Default::default()
-                },
+        // Leftmost side - Inventory left
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(colors::PANEL_BGCOLOR),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(1.0)),
+                flex_grow: 0.0,
+                flex_shrink: 0.0,
+                width: Val::Px(100.0),
+                max_width: Val::Percent(20.0),
+                align_items: AlignItems::Center, // Vertical alignment
+                align_content: AlignContent::Start, // Horizontal alignment - start from the left.
                 ..Default::default()
-            })
-            .with_children(key_legend);
+            },
+            ..Default::default()
+        })
+        .with_children(inv_left);
+
+        // Left side
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(colors::PANEL_BGCOLOR),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(6.0)),
+                flex_grow: 0.0,
+                min_width: Val::Px(200.0),
+                align_content: AlignContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .with_children(key_legend);
 
         // Mid side
-        parent
-            .spawn(NodeBundle {
-                border_color: colors::DEBUG_BCOLOR,
-                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
-                style: Style {
-                    border: UiRect::all(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(8.0)),
-                    flex_grow: 1.0,
-                    max_width: Val::Percent(60.0),
-                    ..Default::default()
-                },
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(colors::PANEL_BGCOLOR),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(8.0)),
+                flex_grow: 1.0,
+                max_width: Val::Percent(60.0),
                 ..Default::default()
-            })
-            .with_children(evidence);
+            },
+            ..Default::default()
+        })
+        .with_children(evidence);
 
         // Right side
-        parent
-            .spawn(NodeBundle {
-                border_color: colors::DEBUG_BCOLOR,
-                background_color: BackgroundColor(colors::PANEL_BGCOLOR),
-                style: Style {
-                    border: UiRect::all(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(1.0)),
-                    flex_grow: 1.0,
-                    max_width: Val::Percent(33.3),
-                    align_items: AlignItems::Center, // Vertical alignment
-                    align_content: AlignContent::Start, // Horizontal alignment - start from the left.
-                    ..Default::default()
-                },
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(colors::PANEL_BGCOLOR),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(1.0)),
+                flex_grow: 1.0,
+                max_width: Val::Percent(33.3),
+                align_items: AlignItems::Center, // Vertical alignment
+                align_content: AlignContent::Start, // Horizontal alignment - start from the left.
                 ..Default::default()
-            })
-            .with_children(inventory);
+            },
+            ..Default::default()
+        })
+        .with_children(inv_right);
     };
 
-    let game_ui = |parent: &mut ChildBuilder| {
+    let game_ui = |p: Cb| {
         // Top row (Game title)
-        parent
-            .spawn(NodeBundle {
-                border_color: colors::DEBUG_BCOLOR,
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
 
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(1.0)),
+                width: Val::Percent(20.0),
+                height: Val::Percent(5.0),
+                min_width: Val::Px(0.0),
+                min_height: Val::Px(16.0),
+                justify_content: JustifyContent::FlexStart,
+                align_items: AlignItems::FlexStart,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            // logo
+            parent.spawn(ImageBundle {
                 style: Style {
-                    border: UiRect::all(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(1.0)),
-                    width: Val::Percent(20.0),
-                    height: Val::Percent(5.0),
-                    min_width: Val::Px(0.0),
-                    min_height: Val::Px(16.0),
-                    justify_content: JustifyContent::FlexStart,
-                    align_items: AlignItems::FlexStart,
+                    aspect_ratio: Some(130.0 / 17.0),
+                    width: Val::Percent(80.0),
+                    height: Val::Auto,
+                    max_width: Val::Percent(80.0),
+                    max_height: Val::Percent(100.0),
+                    flex_shrink: 1.0,
                     ..default()
                 },
+                image: handles.images.title.clone().into(),
                 ..default()
-            })
-            .with_children(|parent| {
-                // logo
-                parent.spawn(ImageBundle {
-                    style: Style {
-                        aspect_ratio: Some(130.0 / 17.0),
-                        width: Val::Percent(80.0),
-                        height: Val::Auto,
-                        max_width: Val::Percent(80.0),
-                        max_height: Val::Percent(100.0),
-                        flex_shrink: 1.0,
-                        ..default()
-                    },
-                    image: handles.images.title.clone().into(),
-                    ..default()
-                });
             });
+        });
 
         // Main game viewport - middle
-        parent.spawn(NodeBundle {
+        p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
@@ -199,22 +216,21 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         });
 
         // Bottom side - inventory and stats
-        parent
-            .spawn(NodeBundle {
-                border_color: colors::DEBUG_BCOLOR,
-                background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.4)),
-                style: Style {
-                    border: UiRect::all(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(1.0)),
-                    height: Val::Px(100.0),
-                    width: Val::Percent(99.9),
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(6.0),
-                    ..Default::default()
-                },
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.4)),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(1.0)),
+                height: Val::Px(100.0),
+                width: Val::Percent(99.9),
+                flex_direction: FlexDirection::Row,
+                column_gap: Val::Px(6.0),
                 ..Default::default()
-            })
-            .with_children(bottom_panel);
+            },
+            ..Default::default()
+        })
+        .with_children(bottom_panel);
     };
 
     // Build UI
