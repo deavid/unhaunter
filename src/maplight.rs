@@ -168,6 +168,7 @@ pub fn apply_lighting(
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
     mut roomdb: ResMut<board::RoomDB>,
+    time: Res<Time>,
 ) {
     const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
@@ -178,6 +179,7 @@ pub fn apply_lighting(
     let mut visibility_field = HashMap::<BoardPosition, f32>::new();
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
+    let elapsed = time.elapsed_seconds();
     for (pos, player, direction, gear) in qp.iter() {
         let player_flashlight = gear
             .as_vec()
@@ -470,14 +472,22 @@ pub fn apply_lighting(
         } else {
             src_color
         };
-        const SMOOTH: f32 = 20.0;
+        let mut smooth: f32 = 20.0;
         if stype == SpriteType::Ghost {
-            let hunting = o_gs.map(|gs| gs.hunt_target).unwrap_or_default();
-            if hunting {
+            let Some(gs) = o_gs else {
+                continue;
+            };
+            if gs.hunt_target {
                 dst_color = Color::RED;
             } else {
                 opacity *= dst_color.l().clamp(0.7, 1.0);
-                let l = dst_color.l();
+                // Make the ghost oscilate to increase visibility:
+                let osc1 = (elapsed * 2.0).sin() * 0.5 + 0.5;
+                let osc2 = (elapsed * 2.15).cos() * 0.5 + 0.5;
+
+                opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0);
+                let l = (dst_color.l() + osc2) / 2.0;
+                dst_color.set_l(l);
                 let r = dst_color.r();
                 let g = dst_color.g();
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
@@ -495,9 +505,11 @@ pub fn apply_lighting(
                 dst_color.set_r(r * ld.visible + e_rl);
                 dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
             }
-            dst_color = lerp_color(sprite.color, dst_color, 0.02);
+            smooth = 1.0;
+            dst_color = lerp_color(sprite.color, dst_color, 0.04);
         }
         if stype == SpriteType::Breach {
+            smooth = 2.0;
             let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
                 ld.infrared * 3.0
             } else {
@@ -519,7 +531,7 @@ pub fn apply_lighting(
             }
         }
 
-        dst_color.set_a((opacity + old_a * SMOOTH) / (SMOOTH + 1.0));
+        dst_color.set_a((opacity + old_a * smooth) / (smooth + 1.0));
         sprite.color = dst_color;
     }
 

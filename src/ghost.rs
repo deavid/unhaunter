@@ -21,6 +21,7 @@ pub struct GhostSprite {
     pub hunting: f32,
     pub hunt_target: bool,
     pub hunt_time_secs: f32,
+    pub warp: f32,
 }
 
 #[derive(Component, Debug)]
@@ -44,6 +45,7 @@ impl GhostSprite {
             hunting: 0.0,
             hunt_target: false,
             hunt_time_secs: 0.0,
+            warp: 0.0,
         }
     }
     pub fn with_breachid(self, breach_id: Entity) -> Self {
@@ -68,11 +70,22 @@ pub fn ghost_movement(
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
+            if rng.gen_range(0..100) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+                // Sometimes, warp ahead. This also is to increase visibility of the ghost
+                ghost.warp += 40.0;
+            }
+            ghost.warp -= dt * 0.5;
+            if ghost.warp < 0.0 {
+                ghost.warp = 0.0;
+            }
             let dlen = delta.distance() + 0.001;
             if dlen > 1.0 {
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
             }
+            delta.dx *= ghost.warp + 1.0;
+            delta.dy *= ghost.warp + 1.0;
+
             let mut finalize = false;
             if ghost.hunt_target {
                 if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
