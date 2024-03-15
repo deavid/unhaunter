@@ -538,6 +538,7 @@ fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
+    roomdb: Res<board::RoomDB>,
 ) {
     timer.tick(time.delta());
 
@@ -564,9 +565,14 @@ fn lose_sanity(
                 * 10.0;
         }
         const MASS: f32 = 10.0;
-        mean_sound.0 =
-            ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
 
+        if roomdb.room_tiles.contains_key(&bpos) {
+            mean_sound.0 =
+                ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
+        } else {
+            // prevent sanity from being lost outside of the location.
+            mean_sound.0 /= 1.2_f32.powf(dt);
+        }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
