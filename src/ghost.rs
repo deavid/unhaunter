@@ -7,7 +7,7 @@ use crate::{
 use bevy::prelude::*;
 use rand::Rng;
 
-const DEBUG_HUNTS: bool = true;
+const DEBUG_HUNTS: bool = false;
 
 #[derive(Component, Debug)]
 pub struct GhostSprite {
