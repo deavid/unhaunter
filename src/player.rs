@@ -3,7 +3,7 @@ use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
-use crate::{maplight, root, utils};
+use crate::{root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
@@ -572,7 +572,7 @@ fn lose_sanity(
         ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 10.0) * (ps.sanity() / 100.0);
+            ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
@@ -614,13 +614,14 @@ pub fn visual_health(
             continue;
         }
         let health = (1.0 - player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 0.999);
-        let red = (f32::tanh(health * 10.0) / (health.powi(4) * 50.0 + 1.0)).clamp(0.0, 1.0) / 2.0;
-        let dst_color = Color::rgba(red, 0.0, 0.0, health.sqrt().sqrt() / 1.002);
+        let alpha = health.powf(6.0_f32.recip()) * 0.1 + health.powi(6) * 0.9;
+        let red = f32::tanh(health * 10.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.9);
+        let green = f32::tanh((health - 0.25) * 6.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.95);
+        let blue = f32::tanh((health - 0.5) * 8.0).clamp(0.0, 1.0) * (1.0 - alpha.sqrt() * 0.99);
+        let dst_color = Color::rgba(red, green, blue, alpha);
         for mut background in &mut qb {
             let old_color = background.0;
-            if (old_color.a() - dst_color.a()).abs() > 0.05 {
-                background.0 = maplight::lerp_color(old_color, dst_color, 0.1);
-            } else if old_color != dst_color {
+            if old_color != dst_color {
                 background.0 = dst_color;
             }
         }
