@@ -622,9 +622,12 @@ pub fn visual_health(
             continue;
         }
         let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
+        let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
         for (mut background, dmg) in &mut qb {
             let rhealth = (1.0 - health).powf(dmg.exp);
-            let alpha = (rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7;
+            let crazyness = crazyness.powf(dmg.exp);
+            let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
+                .clamp(0.0, 1.0);
             let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
             let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
             let dst_color = Color::rgba(red, 0.0, 0.0, alpha);
