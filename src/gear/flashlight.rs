@@ -83,9 +83,12 @@ impl GearUsable for Flashlight {
 
         const HS_MASS: f32 = 200.0;
         self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
-        if self.heatsink_temp > 1.0 && self.status != FlashlightStatus::Off {
-            self.status = FlashlightStatus::Off;
-            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.2);
+        if self.heatsink_temp > 1.0 && self.status == FlashlightStatus::High {
+            self.status = FlashlightStatus::Mid;
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4);
+        } else if self.heatsink_temp > 1.2 && self.status == FlashlightStatus::Mid {
+            self.status = FlashlightStatus::Low;
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4);
         }
     }
     fn get_sprite_idx(&self) -> GearSpriteID {
