@@ -571,7 +571,7 @@ fn lose_sanity(
                 ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
         } else {
             // prevent sanity from being lost outside of the location.
-            mean_sound.0 /= 1.2_f32.powf(dt);
+            mean_sound.0 /= 1.8_f32.powf(dt);
         }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
