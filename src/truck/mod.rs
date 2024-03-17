@@ -1,5 +1,6 @@
 pub mod journal;
 pub mod sanity;
+pub mod sensors;
 pub mod uibutton;
 
 use bevy::app::App;
@@ -66,54 +67,7 @@ pub fn setup_ui(
         color: colors::TRUCKUI_BGCOLOR.with_a(0.5),
     });
 
-    let sensors = |p: Cb| {
-        let title = TextBundle::from_section(
-            "Sensors",
-            TextStyle {
-                font: handles.fonts.londrina.w300_light.clone(),
-                font_size: 35.0,
-                color: colors::TRUCKUI_ACCENT_COLOR,
-            },
-        )
-        .with_style(Style {
-            height: Val::Px(40.0),
-            ..default()
-        });
-
-        p.spawn(title);
-        // Sensors contents
-        p.spawn(NodeBundle {
-            border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-            style: Style {
-                border: UiRect::top(Val::Px(2.0)),
-                height: Val::Px(0.0),
-                ..default()
-            },
-            ..default()
-        });
-        let mut sensor1 = TextBundle::from_section(
-            "No Sensors",
-            TextStyle {
-                font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0,
-                color: colors::TRUCKUI_TEXT_COLOR,
-            },
-        );
-        sensor1.style.margin = TEXT_MARGIN;
-
-        p.spawn(sensor1);
-
-        p.spawn(NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Percent(MARGIN_PERCENT),
-                flex_grow: 1.0,
-                ..default()
-            },
-            ..default()
-        });
-    };
+    let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
 
     let left_column = |p: Cb| {
         // Top Left - Sanity
