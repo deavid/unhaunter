@@ -1,14 +1,16 @@
-use std::ops::Mul;
+pub mod journal;
+pub mod uibutton;
 
+use bevy::app::App;
 use bevy::prelude::*;
-use bevy::{app::App, utils::HashSet};
 
 use crate::colors;
 use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
+use crate::truck::uibutton::TruckButtonType;
 use crate::{
-    ghost_definitions::{self, Evidence, GhostType},
+    ghost_definitions::{self, GhostType},
     materials::{self, UIPanelMaterial},
     root,
 };
@@ -32,142 +34,6 @@ pub struct TruckUIGhostGuess;
 #[derive(Debug, Resource, Default)]
 pub struct GhostGuess {
     pub ghost_type: Option<GhostType>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum TruckButtonType {
-    Evidence(ghost_definitions::Evidence),
-    Ghost(ghost_definitions::GhostType),
-    CraftRepellent,
-    ExitTruck,
-    EndMission,
-}
-
-impl TruckButtonType {
-    pub fn into_component(self) -> TruckUIButton {
-        TruckUIButton::from(self)
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TruckButtonState {
-    Off,
-    Pressed,
-    Discard,
-}
-#[derive(Component, Debug)]
-pub struct TruckUIButton {
-    pub status: TruckButtonState,
-    pub class: TruckButtonType,
-    pub disabled: bool,
-}
-
-impl TruckUIButton {
-    pub fn pressed(&mut self) -> Option<TruckUIEvent> {
-        match self.class {
-            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
-                self.status = match self.status {
-                    TruckButtonState::Off => TruckButtonState::Pressed,
-                    TruckButtonState::Pressed => TruckButtonState::Discard,
-                    TruckButtonState::Discard => TruckButtonState::Off,
-                };
-                None
-            }
-            TruckButtonType::CraftRepellent => Some(TruckUIEvent::CraftRepellent),
-            TruckButtonType::ExitTruck => Some(TruckUIEvent::ExitTruck),
-            TruckButtonType::EndMission => Some(TruckUIEvent::EndMission),
-        }
-    }
-    pub fn border_color(&self, interaction: Interaction) -> Color {
-        match self.class {
-            TruckButtonType::Evidence(_) => match interaction {
-                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
-                Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
-            },
-            TruckButtonType::Ghost(_) => match interaction {
-                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => colors::TRUCKUI_ACCENT_COLOR,
-                Interaction::None => Color::NONE,
-            },
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_TXTCOLOR,
-                Interaction::None => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
-            },
-            TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => colors::BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::Hovered => colors::BUTTON_END_MISSION_TXTCOLOR,
-                Interaction::None => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.05 } else { 1.0 })
-                .as_rgba_f32(),
-        )
-    }
-    pub fn background_color(&self, interaction: Interaction) -> Color {
-        match self.class {
-            TruckButtonType::Evidence(_) => match self.status {
-                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
-                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
-                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
-            TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_a(0.0),
-                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
-                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
-                Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
-                Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
-                Interaction::None => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
-            },
-            TruckButtonType::EndMission => match interaction {
-                Interaction::Pressed => colors::BUTTON_END_MISSION_FGCOLOR,
-                Interaction::Hovered => colors::BUTTON_END_MISSION_BGCOLOR,
-                Interaction::None => colors::BUTTON_END_MISSION_BGCOLOR,
-            },
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.05 } else { 1.0 })
-                .as_rgba_f32(),
-        )
-    }
-
-    pub fn text_color(&self, _interaction: Interaction) -> Color {
-        match self.class {
-            TruckButtonType::Evidence(_) => match self.status {
-                TruckButtonState::Pressed => Color::BLACK,
-                _ => colors::TRUCKUI_TEXT_COLOR,
-            },
-            TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Pressed => Color::BLACK,
-                _ => colors::TRUCKUI_TEXT_COLOR.with_a(0.5),
-            },
-            TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => {
-                colors::BUTTON_EXIT_TRUCK_TXTCOLOR
-            }
-            TruckButtonType::EndMission => colors::BUTTON_END_MISSION_TXTCOLOR,
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.1 } else { 1.0 })
-                .as_rgba_f32(),
-        )
-    }
-}
-
-impl From<TruckButtonType> for TruckUIButton {
-    fn from(value: TruckButtonType) -> Self {
-        TruckUIButton {
-            status: TruckButtonState::Off,
-            class: value,
-            disabled: false,
-        }
-    }
 }
 
 pub fn setup_ui(
@@ -980,132 +846,6 @@ fn update_sanity(
     }
 }
 
-#[allow(clippy::type_complexity)]
-fn button_system(
-    mut interaction_query: Query<
-        (
-            Ref<Interaction>,
-            &mut BackgroundColor,
-            &mut BorderColor,
-            &Children,
-            &mut TruckUIButton,
-        ),
-        With<Button>,
-    >,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
-    mut text_query: Query<&mut Text>,
-    mut gg: ResMut<GhostGuess>,
-    mut ev_truckui: EventWriter<TruckUIEvent>,
-    gc: Res<GameConfig>,
-) {
-    let mut selected_evidences_found = HashSet::<Evidence>::new();
-    let mut selected_evidences_missing = HashSet::<Evidence>::new();
-    let mut evidences_possible = HashSet::<Evidence>::new();
-    let mut new_ghost_selected = None;
-    for (interaction, _color, _border_color, _children, mut tui_button) in &mut interaction_query {
-        if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
-            match tui_button.status {
-                TruckButtonState::Off => {}
-                TruckButtonState::Pressed => {
-                    selected_evidences_found.insert(evidence_type);
-                }
-                TruckButtonState::Discard => {
-                    selected_evidences_missing.insert(evidence_type);
-                }
-            }
-        }
-
-        if tui_button.disabled {
-            continue;
-        }
-        if interaction.is_changed() && *interaction == Interaction::Pressed {
-            if let Some(truckui_event) = tui_button.pressed() {
-                ev_truckui.send(truckui_event);
-            }
-        }
-        if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
-            if interaction.is_changed() && tui_button.status == TruckButtonState::Pressed {
-                new_ghost_selected = Some(ghost_type);
-            }
-            if tui_button.status != TruckButtonState::Discard {
-                for evidence in ghost_type.evidences() {
-                    evidences_possible.insert(evidence);
-                }
-            }
-        }
-    }
-
-    let mut ghost_selected = None;
-    for (interaction, mut color, mut border_color, children, mut tui_button) in
-        &mut interaction_query
-    {
-        let pressed = tui_button.status == TruckButtonState::Pressed;
-        if let TruckButtonType::CraftRepellent = tui_button.class {
-            let mut disabled = gg.ghost_type.is_none();
-
-            for (player, gear) in q_gear.iter_mut() {
-                if player.id == gc.player_id {
-                    if let Some(ghost_type) = gg.ghost_type {
-                        if !gear.can_craft_repellent(ghost_type) {
-                            disabled = true;
-                        }
-                    }
-                }
-            }
-            if tui_button.disabled != disabled {
-                tui_button.disabled = disabled;
-            }
-        }
-        if let TruckButtonType::Evidence(ev) = tui_button.class {
-            tui_button.disabled =
-                !evidences_possible.contains(&ev) && tui_button.status != TruckButtonState::Discard;
-        }
-        if let TruckButtonType::Ghost(gh) = tui_button.class {
-            let ghost_ev = gh.evidences();
-            let selected_ev_count = ghost_ev.intersection(&selected_evidences_found).count();
-            let missing_ev_count = ghost_ev.intersection(&selected_evidences_missing).count();
-            tui_button.disabled =
-                selected_ev_count < selected_evidences_found.len() || missing_ev_count > 0;
-
-            if let Some(ghost) = new_ghost_selected.as_ref() {
-                let is_this_ghost = gh == *ghost;
-                if !is_this_ghost && pressed {
-                    tui_button.status = TruckButtonState::Off;
-                }
-            }
-            if tui_button.status == TruckButtonState::Pressed {
-                ghost_selected = Some(gh);
-            }
-        }
-        let interaction = if tui_button.disabled {
-            // Disable mouse actions when button is disabled
-            Interaction::None
-        } else {
-            *interaction
-        };
-        let mut text = text_query.get_mut(children[0]).unwrap();
-        border_color.0 = tui_button.border_color(interaction);
-        *color = tui_button.background_color(interaction).into();
-        text.sections[0].style.color = tui_button.text_color(interaction);
-    }
-    gg.ghost_type = ghost_selected;
-}
-
-fn ghost_guess_system(
-    mut guess_query: Query<&mut Text, With<TruckUIGhostGuess>>,
-    gg: Res<GhostGuess>,
-) {
-    if !gg.is_changed() {
-        return;
-    }
-    for mut text in guess_query.iter_mut() {
-        text.sections[0].value = match gg.ghost_type.as_ref() {
-            Some(gn) => gn.name().to_owned(),
-            None => "-- Unknown --".to_string(),
-        };
-    }
-}
-
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::State::InGame), setup_ui)
         .add_systems(OnExit(root::State::InGame), cleanup)
@@ -1114,10 +854,10 @@ pub fn app_setup(app: &mut App) {
         .add_event::<TruckUIEvent>()
         .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
-        .add_systems(Update, ghost_guess_system)
+        .add_systems(Update, journal::ghost_guess_system)
         .add_systems(
             FixedUpdate,
-            (button_system, update_sanity).run_if(in_state(root::GameState::Truck)),
+            (journal::button_system, update_sanity).run_if(in_state(root::GameState::Truck)),
         )
         .add_systems(Update, truckui_event_handle);
 }
