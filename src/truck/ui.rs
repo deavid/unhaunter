@@ -3,14 +3,59 @@ use bevy::prelude::*;
 use crate::colors;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, sanity, sensors, TruckUI};
-use crate::{
-    materials::{self, UIPanelMaterial},
-    root,
-};
+use crate::{materials::UIPanelMaterial, root};
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum TabState {
+    Selected,
+    Hover,
+    #[default]
+    Default,
+    Disabled,
+}
+
+#[derive(Debug, Clone, Component)]
+pub struct TruckTab {
+    pub tabname: String,
+    pub state: TabState,
+}
+
+impl TruckTab {
+    pub fn new(tabname: &str, state: TabState) -> Self {
+        let tabname = tabname.to_owned();
+        Self { tabname, state }
+    }
+    pub fn update_from_interaction(&mut self, interaction: &Interaction) {
+        if self.state == TabState::Disabled {
+            return;
+        }
+        self.state = match interaction {
+            Interaction::Pressed => TabState::Selected,
+            Interaction::Hovered => TabState::Hover,
+            Interaction::None => TabState::Default,
+        };
+    }
+    pub fn text_color(&self) -> Color {
+        match self.state {
+            TabState::Selected => colors::TRUCKUI_BGCOLOR.with_a(1.0),
+            TabState::Hover => colors::TRUCKUI_ACCENT2_COLOR.with_a(0.6),
+            TabState::Default => colors::TRUCKUI_ACCENT_COLOR.with_s(0.1).with_a(0.6),
+            TabState::Disabled => colors::INVENTORY_STATS_COLOR.with_a(0.05),
+        }
+    }
+    pub fn bg_color(&self) -> Color {
+        match self.state {
+            TabState::Selected => colors::TRUCKUI_ACCENT_COLOR,
+            TabState::Hover => colors::TRUCKUI_BGCOLOR,
+            TabState::Default => colors::TRUCKUI_BGCOLOR.with_a(0.7),
+            TabState::Disabled => colors::TRUCKUI_BGCOLOR.with_a(0.5),
+        }
+    }
+}
 
 pub fn setup_ui(
     mut commands: Commands,
-    mut materials: ResMut<Assets<materials::UIPanelMaterial>>,
+    mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<root::GameAssets>,
 ) {
     // Load Truck UI
@@ -25,18 +70,6 @@ pub fn setup_ui(
 
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR,
-    });
-    let tab_selected_material = materials.add(UIPanelMaterial {
-        color: colors::TRUCKUI_ACCENT_COLOR,
-    });
-    let tab_hover_material = materials.add(UIPanelMaterial {
-        color: colors::TRUCKUI_BGCOLOR,
-    });
-    let tab_default_material = materials.add(UIPanelMaterial {
-        color: colors::TRUCKUI_BGCOLOR.with_a(0.7),
-    });
-    let tab_disabled_material = materials.add(UIPanelMaterial {
-        color: colors::TRUCKUI_BGCOLOR.with_a(0.5),
     });
 
     let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
@@ -81,25 +114,12 @@ pub fn setup_ui(
     };
 
     let mid_column = |p: Cb| {
-        enum TabState {
-            Selected,
-            Hover,
-            Default,
-            Disabled,
-        }
-        let title_tab = |p: Cb, txt: &str, state: TabState| {
-            let tab_bg = match state {
-                TabState::Selected => tab_selected_material.clone(),
-                TabState::Hover => tab_hover_material.clone(),
-                TabState::Default => tab_default_material.clone(),
-                TabState::Disabled => tab_disabled_material.clone(),
-            };
-            let txt_fg = match state {
-                TabState::Selected => colors::TRUCKUI_BGCOLOR.with_a(1.0),
-                TabState::Hover => colors::TRUCKUI_ACCENT2_COLOR.with_a(0.6),
-                TabState::Default => colors::TRUCKUI_ACCENT_COLOR.with_s(0.1).with_a(0.6),
-                TabState::Disabled => colors::INVENTORY_STATS_COLOR.with_a(0.05),
-            };
+        let mut title_tab = |p: Cb, txt: &str, state: TabState| {
+            let truck_tab = TruckTab::new(txt, state);
+            let txt_fg = truck_tab.text_color();
+            let tab_bg = materials.add(UIPanelMaterial {
+                color: truck_tab.bg_color(),
+            });
 
             let text = TextBundle::from_section(
                 txt,
@@ -130,6 +150,8 @@ pub fn setup_ui(
                 },
                 ..default()
             })
+            .insert(Interaction::None)
+            .insert(truck_tab)
             .with_children(|p| {
                 p.spawn(text);
             });
@@ -320,4 +342,27 @@ pub fn setup_ui(
         .with_children(truck_ui);
 
     // ---
+}
+
+pub fn update_tab_interactions(
+    mut materials: ResMut<Assets<UIPanelMaterial>>,
+    mut qt: Query<
+        (
+            &Interaction,
+            &mut TruckTab,
+            &Children,
+            &Handle<UIPanelMaterial>,
+        ),
+        Changed<Interaction>,
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for (int, mut tt, children, panmat) in &mut qt {
+        warn!("Truck Tab {:?} - Interaction: {:?}", tt, int);
+        tt.update_from_interaction(int);
+        let mut text = text_query.get_mut(children[0]).unwrap();
+        text.sections[0].style.color = tt.text_color();
+        let mat = materials.get_mut(panmat).unwrap();
+        mat.color = tt.bg_color();
+    }
 }

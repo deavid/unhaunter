@@ -119,5 +119,6 @@ pub fn app_setup(app: &mut App) {
             (journal::button_system, sanity::update_sanity)
                 .run_if(in_state(root::GameState::Truck)),
         )
-        .add_systems(Update, truckui_event_handle);
+        .add_systems(Update, (truckui_event_handle, ui::update_tab_interactions))
+        ;
 }
