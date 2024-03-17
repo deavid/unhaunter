@@ -384,7 +384,9 @@ pub fn setup_ui(
                 justify_content: JustifyContent::FlexStart,
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Percent(MARGIN_PERCENT),
+                flex_basis: Val::Percent(55.0),
                 flex_grow: 1.0,
+                flex_shrink: 0.0,
                 ..default()
             },
             ..default()
