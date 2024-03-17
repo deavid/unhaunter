@@ -5,6 +5,7 @@ pub mod sanity;
 pub mod sensors;
 pub mod ui;
 pub mod uibutton;
+pub mod loadoutui;
 
 use bevy::app::App;
 use bevy::prelude::*;

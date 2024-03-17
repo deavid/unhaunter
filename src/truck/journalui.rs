@@ -14,16 +14,6 @@ const MARGIN: UiRect = UiRect::percent(
 
 pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
     // Journal contents
-    p.spawn(NodeBundle {
-        border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-        style: Style {
-            margin: UiRect::top(Val::Px(-3.0)),
-            padding: UiRect::all(Val::ZERO),
-            border: UiRect::all(Val::Px(1.50)),
-            ..default()
-        },
-        ..default()
-    });
 
     p.spawn(
         TextBundle::from_section(
@@ -264,15 +254,4 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         ));
     });
 
-    // ----
-    p.spawn(NodeBundle {
-        style: Style {
-            justify_content: JustifyContent::FlexStart,
-            flex_direction: FlexDirection::Column,
-            row_gap: Val::Percent(MARGIN_PERCENT),
-            flex_grow: 1.0,
-            ..default()
-        },
-        ..default()
-    });
 }

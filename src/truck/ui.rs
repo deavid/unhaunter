@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::colors;
 use crate::truck::uibutton::TruckButtonType;
-use crate::truck::{activity, journalui, sanity, sensors, TruckUI};
+use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use crate::{materials::UIPanelMaterial, root};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -15,16 +15,47 @@ pub enum TabState {
     Disabled,
 }
 
+#[derive(Debug, Clone, Component, PartialEq, Eq)]
+pub enum TabContents {
+    Loadout,
+    LocationMap,
+    CameraFeed,
+    Journal,
+}
+
+impl TabContents {
+    pub fn name(&self) -> &'static str {
+        match self {
+            TabContents::Loadout => "Loadout",
+            TabContents::LocationMap => "Location Map",
+            TabContents::CameraFeed => "Camera Feed",
+            TabContents::Journal => "Journal",
+        }
+    }
+    pub fn default_state(&self) -> TabState {
+        match self {
+            TabContents::Loadout => TabState::Default,
+            TabContents::LocationMap => TabState::Disabled,
+            TabContents::CameraFeed => TabState::Disabled,
+            TabContents::Journal => TabState::Selected,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Component)]
 pub struct TruckTab {
     pub tabname: String,
     pub state: TabState,
+    pub contents: TabContents,
 }
 
 impl TruckTab {
-    pub fn new(tabname: &str, state: TabState) -> Self {
-        let tabname = tabname.to_owned();
-        Self { tabname, state }
+    pub fn from_tab(tab: TabContents) -> Self {
+        Self {
+            tabname: tab.name().to_owned(),
+            state: tab.default_state(),
+            contents: tab,
+        }
     }
     pub fn update_from_interaction(&mut self, interaction: &Interaction) {
         match self.state {
@@ -119,15 +150,15 @@ pub fn setup_ui(
     };
 
     let mid_column = |p: Cb| {
-        let mut title_tab = |p: Cb, txt: &str, state: TabState| {
-            let truck_tab = TruckTab::new(txt, state);
+        let mut title_tab = |p: Cb, tab: TabContents| {
+            let truck_tab = TruckTab::from_tab(tab);
             let txt_fg = truck_tab.text_color();
             let tab_bg = materials.add(UIPanelMaterial {
                 color: truck_tab.bg_color(),
             });
 
             let text = TextBundle::from_section(
-                txt,
+                &truck_tab.tabname,
                 TextStyle {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 35.0,
@@ -172,13 +203,53 @@ pub fn setup_ui(
             ..default()
         })
         .with_children(|p| {
-            title_tab(p, "Loadout", TabState::Default);
-            title_tab(p, "Location Map", TabState::Disabled);
-            title_tab(p, "Camera Feed", TabState::Disabled);
-            title_tab(p, "Journal", TabState::Selected);
+            title_tab(p, TabContents::Loadout);
+            title_tab(p, TabContents::LocationMap);
+            title_tab(p, TabContents::CameraFeed);
+            title_tab(p, TabContents::Journal);
+        });
+        p.spawn(NodeBundle {
+            border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
+            style: Style {
+                margin: UiRect::top(Val::Px(-4.1)),
+                padding: UiRect::all(Val::ZERO),
+                border: UiRect::all(Val::Px(1.50)),
+                ..default()
+            },
+            ..default()
         });
 
-        journalui::setup_journal_ui(p, &handles);
+        let base_node = NodeBundle {
+            style: Style {
+                justify_content: JustifyContent::FlexStart,
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Percent(MARGIN_PERCENT),
+                flex_grow: 1.0,
+                flex_shrink: 0.0,
+                ..default()
+            },
+            ..default()
+        };
+
+        p.spawn(base_node.clone())
+            .insert(TabContents::Loadout)
+            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles));
+
+        p.spawn(base_node.clone())
+            .insert(TabContents::Journal)
+            .with_children(|p| journalui::setup_journal_ui(p, &handles));
+
+        // ----
+        p.spawn(NodeBundle {
+            style: Style {
+                justify_content: JustifyContent::FlexStart,
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Percent(MARGIN_PERCENT),
+                flex_grow: 1.0,
+                ..default()
+            },
+            ..default()
+        });
     };
 
     let right_column = |p: Cb| {
@@ -357,25 +428,38 @@ pub fn update_tab_interactions(
         &Children,
         &Handle<UIPanelMaterial>,
     )>,
+    mut qc: Query<(&mut Style, &TabContents)>,
     mut text_query: Query<&mut Text>,
 ) {
-    let mut new_selection = false;
+    let mut new_selected_cnt = None;
+    let mut changed = 0;
+    for (int, _, _, _) in &qt {
+        if !int.is_changed() {
+            continue;
+        }
+        changed += 1;
+    }
     for (int, tt, _, _) in &qt {
         if !int.is_changed() {
             continue;
         }
         let int = *int.into_inner();
         if tt.state == TabState::Pressed && int == Interaction::Hovered {
-            new_selection = true;
+            new_selected_cnt = Some(tt.contents.clone());
+        }
+        if changed > 1 && tt.state == TabState::Selected {
+            // For the initialization pass
+            new_selected_cnt = Some(tt.contents.clone());
         }
     }
+    let new_selection = new_selected_cnt.is_some();
     for (int, mut tt, children, panmat) in &mut qt {
         if !int.is_changed() && !new_selection {
             continue;
         }
         let int = *int.into_inner();
         // warn!("Truck Tab {:?} - Interaction: {:?}", tt, int);
-        if tt.state == TabState::Selected && new_selection {
+        if tt.state == TabState::Selected && new_selection && changed <= 1 {
             tt.state = TabState::Default;
         } else if tt.state == TabState::Pressed && int == Interaction::Hovered {
             tt.state = TabState::Selected;
@@ -386,5 +470,16 @@ pub fn update_tab_interactions(
         text.sections[0].style.color = tt.text_color();
         let mat = materials.get_mut(panmat).unwrap();
         mat.color = tt.bg_color();
+    }
+    if let Some(cnt) = new_selected_cnt {
+        for (mut style, tc) in &mut qc {
+            let new_dis = match cnt == *tc {
+                true => Display::Flex,
+                false => Display::None,
+            };
+            if new_dis != style.display {
+                style.display = new_dis;
+            }
+        }
     }
 }
