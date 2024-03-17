@@ -8,6 +8,7 @@ use crate::{materials::UIPanelMaterial, root};
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum TabState {
     Selected,
+    Pressed,
     Hover,
     #[default]
     Default,
@@ -26,18 +27,21 @@ impl TruckTab {
         Self { tabname, state }
     }
     pub fn update_from_interaction(&mut self, interaction: &Interaction) {
-        if self.state == TabState::Disabled {
-            return;
+        match self.state {
+            TabState::Disabled | TabState::Selected => {}
+            TabState::Default | TabState::Hover | TabState::Pressed => {
+                self.state = match interaction {
+                    Interaction::Pressed => TabState::Pressed,
+                    Interaction::Hovered => TabState::Hover,
+                    Interaction::None => TabState::Default,
+                };
+            }
         }
-        self.state = match interaction {
-            Interaction::Pressed => TabState::Selected,
-            Interaction::Hovered => TabState::Hover,
-            Interaction::None => TabState::Default,
-        };
     }
     pub fn text_color(&self) -> Color {
         match self.state {
             TabState::Selected => colors::TRUCKUI_BGCOLOR.with_a(1.0),
+            TabState::Pressed => colors::TRUCKUI_BGCOLOR.with_a(0.8),
             TabState::Hover => colors::TRUCKUI_ACCENT2_COLOR.with_a(0.6),
             TabState::Default => colors::TRUCKUI_ACCENT_COLOR.with_s(0.1).with_a(0.6),
             TabState::Disabled => colors::INVENTORY_STATS_COLOR.with_a(0.05),
@@ -45,6 +49,7 @@ impl TruckTab {
     }
     pub fn bg_color(&self) -> Color {
         match self.state {
+            TabState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
             TabState::Selected => colors::TRUCKUI_ACCENT_COLOR,
             TabState::Hover => colors::TRUCKUI_BGCOLOR,
             TabState::Default => colors::TRUCKUI_BGCOLOR.with_a(0.7),
@@ -167,8 +172,8 @@ pub fn setup_ui(
             ..default()
         })
         .with_children(|p| {
-            title_tab(p, "Loadout", TabState::Hover);
-            title_tab(p, "Location Map", TabState::Default);
+            title_tab(p, "Loadout", TabState::Default);
+            title_tab(p, "Location Map", TabState::Disabled);
             title_tab(p, "Camera Feed", TabState::Disabled);
             title_tab(p, "Journal", TabState::Selected);
         });
@@ -346,20 +351,37 @@ pub fn setup_ui(
 
 pub fn update_tab_interactions(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    mut qt: Query<
-        (
-            &Interaction,
-            &mut TruckTab,
-            &Children,
-            &Handle<UIPanelMaterial>,
-        ),
-        Changed<Interaction>,
-    >,
+    mut qt: Query<(
+        Ref<Interaction>,
+        &mut TruckTab,
+        &Children,
+        &Handle<UIPanelMaterial>,
+    )>,
     mut text_query: Query<&mut Text>,
 ) {
+    let mut new_selection = false;
+    for (int, tt, _, _) in &qt {
+        if !int.is_changed() {
+            continue;
+        }
+        let int = *int.into_inner();
+        if tt.state == TabState::Pressed && int == Interaction::Hovered {
+            new_selection = true;
+        }
+    }
     for (int, mut tt, children, panmat) in &mut qt {
-        warn!("Truck Tab {:?} - Interaction: {:?}", tt, int);
-        tt.update_from_interaction(int);
+        if !int.is_changed() && !new_selection {
+            continue;
+        }
+        let int = *int.into_inner();
+        // warn!("Truck Tab {:?} - Interaction: {:?}", tt, int);
+        if tt.state == TabState::Selected && new_selection {
+            tt.state = TabState::Default;
+        } else if tt.state == TabState::Pressed && int == Interaction::Hovered {
+            tt.state = TabState::Selected;
+        } else {
+            tt.update_from_interaction(&int);
+        }
         let mut text = text_query.get_mut(children[0]).unwrap();
         text.sections[0].style.color = tt.text_color();
         let mat = materials.get_mut(panmat).unwrap();
