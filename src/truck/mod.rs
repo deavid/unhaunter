@@ -1,3 +1,4 @@
+pub mod activity;
 pub mod journal;
 pub mod sanity;
 pub mod sensors;
@@ -42,7 +43,6 @@ pub fn setup_ui(
 ) {
     // Load Truck UI
     const MARGIN_PERCENT: f32 = 0.5;
-    const TEXT_MARGIN: UiRect = UiRect::percent(2.0, 0.0, 0.0, 0.0);
     const MARGIN: UiRect = UiRect::percent(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
@@ -461,54 +461,7 @@ pub fn setup_ui(
             },
             ..default()
         })
-        .with_children(|activity| {
-            let title = TextBundle::from_section(
-                "Activity",
-                TextStyle {
-                    font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 35.0,
-                    color: colors::TRUCKUI_ACCENT_COLOR,
-                },
-            )
-            .with_style(Style {
-                height: Val::Px(40.0),
-                ..default()
-            });
-
-            activity.spawn(title);
-            // Activity contents
-            activity.spawn(NodeBundle {
-                border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-                style: Style {
-                    border: UiRect::top(Val::Px(2.0)),
-                    height: Val::Px(0.0),
-                    ..default()
-                },
-                ..default()
-            });
-            let mut sample_text = TextBundle::from_section(
-                "Instrumentation broken",
-                TextStyle {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0,
-                    color: colors::TRUCKUI_TEXT_COLOR,
-                },
-            );
-            sample_text.style.margin = TEXT_MARGIN;
-
-            activity.spawn(sample_text);
-
-            activity.spawn(NodeBundle {
-                style: Style {
-                    justify_content: JustifyContent::FlexStart,
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Percent(MARGIN_PERCENT),
-                    flex_grow: 1.0,
-                    ..default()
-                },
-                ..default()
-            });
-        });
+        .with_children(|p| activity::setup_activity_ui(p, &handles));
         // Bottom Right - 2 buttons - Exit Truck + End mission.
         p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
