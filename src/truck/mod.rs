@@ -1,4 +1,5 @@
 pub mod journal;
+pub mod sanity;
 pub mod uibutton;
 
 use bevy::app::App;
@@ -24,9 +25,6 @@ pub enum TruckUIEvent {
     ExitTruck,
     CraftRepellent,
 }
-
-#[derive(Component, Debug)]
-pub struct SanityText;
 
 #[derive(Component, Debug)]
 pub struct TruckUIGhostGuess;
@@ -67,55 +65,6 @@ pub fn setup_ui(
     let tab_disabled_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_BGCOLOR.with_a(0.5),
     });
-
-    let sanity = |p: Cb| {
-        let title = TextBundle::from_section(
-            "Sanity",
-            TextStyle {
-                font: handles.fonts.londrina.w300_light.clone(),
-                font_size: 35.0,
-                color: colors::TRUCKUI_ACCENT_COLOR,
-            },
-        )
-        .with_style(Style {
-            height: Val::Px(40.0),
-            ..default()
-        });
-
-        p.spawn(title);
-        // Sanity contents
-        p.spawn(NodeBundle {
-            border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-            style: Style {
-                border: UiRect::top(Val::Px(2.0)),
-                height: Val::Px(0.0),
-                ..default()
-            },
-            ..default()
-        });
-        let mut p1_sanity = TextBundle::from_section(
-            "Player 1: 90% Sanity",
-            TextStyle {
-                font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0,
-                color: colors::TRUCKUI_TEXT_COLOR,
-            },
-        );
-        p1_sanity.style.margin = TEXT_MARGIN;
-
-        p.spawn(p1_sanity).insert(SanityText);
-
-        p.spawn(NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Percent(MARGIN_PERCENT),
-                flex_grow: 1.0,
-                ..default()
-            },
-            ..default()
-        });
-    };
 
     let sensors = |p: Cb| {
         let title = TextBundle::from_section(
@@ -184,7 +133,7 @@ pub fn setup_ui(
             },
             ..default()
         })
-        .with_children(sanity);
+        .with_children(|p| sanity::setup_sanity_ui(p, &handles));
         // Bottom Left - Sensors
         p.spawn(MaterialNodeBundle {
             material: panel_material.clone(),
@@ -828,24 +777,6 @@ pub fn truckui_event_handle(
     }
 }
 
-fn update_sanity(
-    gc: Res<GameConfig>,
-    qp: Query<&PlayerSprite>,
-    mut qst: Query<&mut Text, With<SanityText>>,
-) {
-    for player in &qp {
-        if player.id != gc.player_id {
-            continue;
-        }
-        for mut text in &mut qst {
-            let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity());
-            if new_sanity_text != text.sections[0].value {
-                text.sections[0].value = new_sanity_text;
-            }
-        }
-    }
-}
-
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::State::InGame), setup_ui)
         .add_systems(OnExit(root::State::InGame), cleanup)
@@ -857,7 +788,8 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, journal::ghost_guess_system)
         .add_systems(
             FixedUpdate,
-            (journal::button_system, update_sanity).run_if(in_state(root::GameState::Truck)),
+            (journal::button_system, sanity::update_sanity)
+                .run_if(in_state(root::GameState::Truck)),
         )
         .add_systems(Update, truckui_event_handle);
 }
