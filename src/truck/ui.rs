@@ -87,6 +87,12 @@ impl TruckTab {
             TabState::Disabled => colors::TRUCKUI_BGCOLOR.with_a(0.5),
         }
     }
+    pub fn font_size(&self) -> f32 {
+        match self.state {
+            TabState::Selected => 35.0,
+            _ => 24.0,
+        }
+    }
 }
 
 pub fn setup_ui(
@@ -166,7 +172,7 @@ pub fn setup_ui(
                 },
             )
             .with_style(Style {
-                height: Val::Px(40.0),
+                flex_grow: 0.5,
                 ..default()
             });
             p.spawn(MaterialNodeBundle {
@@ -179,9 +185,7 @@ pub fn setup_ui(
                         Val::Percent(MARGIN_PERCENT),
                         Val::ZERO,
                     ),
-                    justify_content: JustifyContent::FlexStart,
                     flex_direction: FlexDirection::Column,
-                    flex_grow: 0.0,
                     ..default()
                 },
                 ..default()
@@ -189,6 +193,14 @@ pub fn setup_ui(
             .insert(Interaction::None)
             .insert(truck_tab)
             .with_children(|p| {
+                p.spawn(NodeBundle {
+                    style: Style {
+                        flex_grow: 0.5,
+                        flex_shrink: 1.0,
+                        ..default()
+                    },
+                    ..default()
+                });
                 p.spawn(text);
             });
         };
@@ -466,8 +478,9 @@ pub fn update_tab_interactions(
         } else {
             tt.update_from_interaction(&int);
         }
-        let mut text = text_query.get_mut(children[0]).unwrap();
+        let mut text = text_query.get_mut(children[1]).unwrap();
         text.sections[0].style.color = tt.text_color();
+        text.sections[0].style.font_size = tt.font_size();
         let mat = materials.get_mut(panmat).unwrap();
         mat.color = tt.bg_color();
     }
