@@ -70,13 +70,16 @@ pub fn ghost_movement(
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
-            if rng.gen_range(0..100) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+            if rng.gen_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
                 // Sometimes, warp ahead. This also is to increase visibility of the ghost
                 ghost.warp += 40.0;
             }
             ghost.warp -= dt * 0.5;
             if ghost.warp < 0.0 {
                 ghost.warp = 0.0;
+            }
+            if delta.distance() < 5.0 {
+                ghost.warp /= 1.2_f32.powf(dt);
             }
             let dlen = delta.distance() + 0.001;
             if dlen > 1.0 {
@@ -141,7 +144,8 @@ pub fn ghost_movement(
             }
 
             let bpos = target_point.to_board_position();
-            if roomdb.room_tiles.get(&bpos).is_some()
+            let dstroom = roomdb.room_tiles.get(&bpos);
+            if dstroom.is_some()
                 && bf
                     .collision_field
                     .get(&bpos)
@@ -206,19 +210,18 @@ fn ghost_enrage(
             let angry2 = dist2.recip() * 1000000.0 / sanity
                 * player.mean_sound
                 * (player.health / 100.0).clamp(0.0, 1.0);
-            total_angry2 += angry2 * inv_sanity;
+            total_angry2 +=
+                angry2 * inv_sanity + player.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
         }
         let angry = total_angry2.sqrt();
-        ghost.rage /= 1.02_f32.powf(dt);
-        if DEBUG_HUNTS {
-            ghost.rage += angry * dt * 10.0 + 60.0 * dt;
-        }
-        ghost.rage += angry * dt / 10.0;
-        ghost.rage -= dt * 0.2;
-        ghost.hunting -= dt * 0.2;
+        let a_f = 1.0 + (avg_angry.avg() * 2.0).powi(2);
+        ghost.rage /= 1.01_f32.powf(dt / a_f);
+        ghost.rage -= dt * 2.0 / a_f;
         if ghost.rage < 0.0 {
             ghost.rage = 0.0;
         }
+        ghost.rage += angry * dt / 10.0;
+        ghost.hunting -= dt * 0.2;
         if ghost.hunting < 0.0 {
             ghost.hunting = 0.0;
         }
@@ -227,7 +230,7 @@ fn ghost_enrage(
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(&avg_angry.avg(), ghost.rage);
         }
-        let rage_limit = if DEBUG_HUNTS { 40.0 } else { 120.0 };
+        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 120.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 3.0;

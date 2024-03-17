@@ -62,6 +62,8 @@ pub fn load_level(
     // Remove all pre-existing data for environment
     bf.temperature_field.clear();
     bf.sound_field.clear();
+    roomdb.room_state.clear();
+    roomdb.room_tiles.clear();
 
     commands
         .spawn(AudioBundle {
