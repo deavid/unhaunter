@@ -6,6 +6,7 @@ pub mod sensors;
 pub mod ui;
 pub mod uibutton;
 pub mod loadoutui;
+pub mod truckgear;
 
 use bevy::app::App;
 use bevy::prelude::*;

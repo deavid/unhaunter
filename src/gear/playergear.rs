@@ -11,7 +11,15 @@ pub enum Hand {
 }
 
 #[derive(Component, Debug, Clone)]
-pub struct InventoryNext;
+pub struct InventoryNext {
+    pub idx: usize,
+}
+
+impl InventoryNext {
+    pub fn new(idx: usize) -> Self {
+        Self { idx }
+    }
+}
 
 #[derive(Component, Debug, Clone)]
 pub struct Inventory {
@@ -106,9 +114,14 @@ impl PlayerGear {
             ],
         }
     }
-    pub fn get_next(&self) -> Gear {
-        self.inventory[0].clone()
+
+    /// Returns the nth next item in the inventory. If out of bounds, returns
+    /// None. This is different from Some(Gear::None) which means that the slot
+    /// exists but it is empty.
+    pub fn get_next(&self, idx: usize) -> Option<Gear> {
+        self.inventory.get(idx).cloned()
     }
+
     pub fn cycle(&mut self) {
         let old_right = self.right_hand.clone();
         let last_idx = self.inventory.len() - 1;

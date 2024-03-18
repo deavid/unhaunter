@@ -34,10 +34,10 @@ impl TabContents {
     }
     pub fn default_state(&self) -> TabState {
         match self {
-            TabContents::Loadout => TabState::Default,
+            TabContents::Loadout => TabState::Selected,
             TabContents::LocationMap => TabState::Disabled,
             TabContents::CameraFeed => TabState::Disabled,
-            TabContents::Journal => TabState::Selected,
+            TabContents::Journal => TabState::Default,
         }
     }
 }
