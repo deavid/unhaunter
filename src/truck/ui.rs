@@ -245,7 +245,7 @@ pub fn setup_ui(
 
         p.spawn(base_node.clone())
             .insert(TabContents::Loadout)
-            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles));
+            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles, &mut materials));
 
         p.spawn(base_node.clone())
             .insert(TabContents::Journal)

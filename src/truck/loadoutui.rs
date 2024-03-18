@@ -3,12 +3,17 @@ use bevy::prelude::*;
 use crate::{
     colors,
     gear::{playergear, GearSpriteID, GearUsable},
+    materials::UIPanelMaterial,
     root,
 };
 
 use super::truckgear;
 
-pub fn setup_loadout_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
+pub fn setup_loadout_ui(
+    p: &mut ChildBuilder,
+    handles: &root::GameAssets,
+    materials: &mut Assets<UIPanelMaterial>,
+) {
     let equipment = |g: GearSpriteID| AtlasImageBundle {
         image: UiImage {
             texture: handles.images.gear.clone(),
@@ -27,7 +32,19 @@ pub fn setup_loadout_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         ..default()
     };
     let equipment_def = || equipment(GearSpriteID::IonMeterOff);
+    let gear_button = |materials: &mut Assets<UIPanelMaterial>| MaterialNodeBundle {
+        material: materials.add(UIPanelMaterial {
+            color: colors::TRUCKUI_BGCOLOR,
+        }),
 
+        style: Style {
+            padding: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(2.0)),
+            flex_wrap: FlexWrap::Wrap,
+            ..default()
+        },
+        ..default()
+    };
     p.spawn(
         TextBundle::from_section(
             "Player Inventory:",
@@ -46,23 +63,27 @@ pub fn setup_loadout_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         style: Style {
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Row,
-            flex_grow: 0.4,
+            flex_grow: 0.04,
             flex_wrap: FlexWrap::Wrap,
-            min_height: Val::Px(100.0),
             ..default()
         },
         ..default()
     })
     .with_children(|p| {
-        p.spawn(equipment_def())
-            .insert(playergear::Inventory::new_left());
-        p.spawn(equipment_def())
-            .insert(playergear::Inventory::new_right());
-
-        for i in 0..8 {
+        p.spawn(gear_button(materials)).with_children(|p| {
             p.spawn(equipment_def())
-                .insert(playergear::InventoryNext::new(i));
-        }
+                .insert(playergear::Inventory::new_left());
+        });
+        p.spawn(gear_button(materials)).with_children(|p| {
+            p.spawn(equipment_def())
+                .insert(playergear::Inventory::new_right());
+        });
+        p.spawn(gear_button(materials)).with_children(|p| {
+            for i in 0..4 {
+                p.spawn(equipment_def())
+                    .insert(playergear::InventoryNext::new(i));
+            }
+        });
     });
     p.spawn(
         TextBundle::from_section(
@@ -78,16 +99,21 @@ pub fn setup_loadout_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             ..default()
         }),
     );
-    p.spawn(NodeBundle {
-        background_color: colors::TRUCKUI_BGCOLOR.into(),
+    p.spawn(MaterialNodeBundle {
+        material: materials.add(UIPanelMaterial {
+            color: colors::TRUCKUI_BGCOLOR,
+        }),
         style: Style {
-            justify_content: JustifyContent::FlexStart,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
             display: Display::Grid,
-            grid_template_columns: RepeatedGridTrack::flex(8, 1.0),
-            grid_template_rows: RepeatedGridTrack::flex(4, 1.0),
+            grid_template_columns: RepeatedGridTrack::flex(6, 1.0),
+            grid_template_rows: RepeatedGridTrack::flex(5, 1.0),
             grid_auto_flow: GridAutoFlow::Row,
             flex_grow: 0.7,
             min_height: Val::Px(200.0),
+            max_width: Val::Px(600.0),
+            margin: UiRect::all(Val::Px(2.0)),
             ..default()
         },
         ..default()
