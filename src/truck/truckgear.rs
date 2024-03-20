@@ -9,6 +9,7 @@ pub struct TruckGear {
 
 impl TruckGear {
     pub fn new() -> Self {
+        const ENABLE_INCOMPLETE: bool = false;
         use crate::gear::compass::Compass;
         use crate::gear::emfmeter::EMFMeter;
         use crate::gear::estaticmeter::EStaticMeter;
@@ -26,18 +27,20 @@ impl TruckGear {
         use crate::gear::uvtorch::UVTorch;
         use crate::gear::videocam::Videocam;
 
-        Self {
-            inventory: vec![
-                Flashlight::default().into(),
-                Thermometer::default().into(),
-                EMFMeter::default().into(),
-                UVTorch::default().into(),
-                SpiritBox::default().into(),
-                Recorder::default().into(),
-                Videocam::default().into(),
-                RedTorch::default().into(),
-                GeigerCounter::default().into(),
-                RepellentFlask::default().into(),
+        let mut inventory: Vec<Gear> = vec![
+            Flashlight::default().into(),
+            Thermometer::default().into(),
+            EMFMeter::default().into(),
+            UVTorch::default().into(),
+            SpiritBox::default().into(),
+            Recorder::default().into(),
+            Videocam::default().into(),
+            RedTorch::default().into(),
+            GeigerCounter::default().into(),
+            RepellentFlask::default().into(),
+        ];
+        if ENABLE_INCOMPLETE {
+            let mut incomplete: Vec<Gear> = vec![
                 // Incomplete equipment:
                 IonMeter::default().into(),
                 ThermalImager::default().into(),
@@ -45,7 +48,10 @@ impl TruckGear {
                 Compass::default().into(),
                 EStaticMeter::default().into(),
                 MotionSensor::default().into(),
-            ],
+            ];
+            inventory.append(&mut incomplete);
         }
+
+        Self { inventory }
     }
 }
