@@ -99,11 +99,12 @@ pub fn keyboard(
     if *app_state.get() != root::State::InGame {
         return;
     }
-    if *game_state.get() != root::GameState::None {
+    let in_game = *game_state.get() == root::GameState::None;
+    if *game_state.get() == root::GameState::Pause {
         return;
     }
     let dt = time.delta_seconds() * 60.0;
-    if keyboard_input.just_pressed(KeyCode::Escape) {
+    if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
         game_next_state.set(root::GameState::Pause);
     }
     for mut transform in camera.iter_mut() {
@@ -126,25 +127,27 @@ pub fn keyboard(
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED * dt;
         }
-        if keyboard_input.pressed(KeyCode::ArrowRight) {
-            transform.translation.x += 2.0 * dt;
-        }
-        if keyboard_input.pressed(KeyCode::ArrowLeft) {
-            transform.translation.x -= 2.0 * dt;
-        }
-        if keyboard_input.pressed(KeyCode::ArrowUp) {
-            transform.translation.y += 2.0 * dt;
-        }
-        if keyboard_input.pressed(KeyCode::ArrowDown) {
-            transform.translation.y -= 2.0 * dt;
-        }
-        if keyboard_input.pressed(KeyCode::NumpadAdd) {
-            transform.scale.x /= 1.02_f32.powf(dt);
-            transform.scale.y /= 1.02_f32.powf(dt);
-        }
-        if keyboard_input.pressed(KeyCode::NumpadSubtract) {
-            transform.scale.x *= 1.02_f32.powf(dt);
-            transform.scale.y *= 1.02_f32.powf(dt);
+        if in_game {
+            if keyboard_input.pressed(KeyCode::ArrowRight) {
+                transform.translation.x += 2.0 * dt;
+            }
+            if keyboard_input.pressed(KeyCode::ArrowLeft) {
+                transform.translation.x -= 2.0 * dt;
+            }
+            if keyboard_input.pressed(KeyCode::ArrowUp) {
+                transform.translation.y += 2.0 * dt;
+            }
+            if keyboard_input.pressed(KeyCode::ArrowDown) {
+                transform.translation.y -= 2.0 * dt;
+            }
+            if keyboard_input.pressed(KeyCode::NumpadAdd) {
+                transform.scale.x /= 1.02_f32.powf(dt);
+                transform.scale.y /= 1.02_f32.powf(dt);
+            }
+            if keyboard_input.pressed(KeyCode::NumpadSubtract) {
+                transform.scale.x *= 1.02_f32.powf(dt);
+                transform.scale.y *= 1.02_f32.powf(dt);
+            }
         }
     }
 }

@@ -1,12 +1,12 @@
 pub mod activity;
 pub mod journal;
 pub mod journalui;
+pub mod loadoutui;
 pub mod sanity;
 pub mod sensors;
+pub mod truckgear;
 pub mod ui;
 pub mod uibutton;
-pub mod loadoutui;
-pub mod truckgear;
 
 use bevy::app::App;
 use bevy::prelude::*;
@@ -113,6 +113,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnEnter(root::GameState::Truck), show_ui)
         .add_systems(OnExit(root::GameState::Truck), hide_ui)
         .add_event::<TruckUIEvent>()
+        .add_event::<loadoutui::EventButtonClicked>()
         .init_resource::<GhostGuess>()
         .add_systems(Update, keyboard)
         .add_systems(Update, journal::ghost_guess_system)
@@ -121,6 +122,13 @@ pub fn app_setup(app: &mut App) {
             (journal::button_system, sanity::update_sanity)
                 .run_if(in_state(root::GameState::Truck)),
         )
-        .add_systems(Update, (truckui_event_handle, ui::update_tab_interactions))
-        ;
+        .add_systems(
+            Update,
+            (
+                truckui_event_handle,
+                ui::update_tab_interactions,
+                loadoutui::update_loadout_buttons,
+                loadoutui::button_clicked,
+            ),
+        );
 }

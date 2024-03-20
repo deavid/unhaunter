@@ -74,36 +74,49 @@ impl PlayerGear {
         }
         ret
     }
+    pub fn append(&mut self, ngear: Gear) {
+        for (pgear, _hand) in self.as_vec_mut() {
+            if matches!(pgear.kind, GearKind::None) {
+                *pgear = ngear;
+                return;
+            }
+        }
+    }
     pub fn new() -> Self {
         // use super::compass::Compass;
-        use super::emfmeter::EMFMeter;
+        // use super::emfmeter::EMFMeter;
         // use super::estaticmeter::EStaticMeter;
         use super::flashlight::Flashlight;
-        use super::geigercounter::GeigerCounter;
+        // use super::geigercounter::GeigerCounter;
         // use super::ionmeter::IonMeter;
         // use super::motionsensor::MotionSensor;
         // use super::photocam::Photocam;
-        use super::recorder::Recorder;
-        use super::redtorch::RedTorch;
-        use super::spiritbox::SpiritBox;
+        // use super::recorder::Recorder;
+        // use super::redtorch::RedTorch;
+        // use super::spiritbox::SpiritBox;
         // use super::thermalimager::ThermalImager;
-        use super::repellentflask::RepellentFlask;
-        use super::thermometer::Thermometer;
-        use super::uvtorch::UVTorch;
-        use super::videocam::Videocam;
+        // use super::repellentflask::RepellentFlask;
+        // use super::thermometer::Thermometer;
+        // use super::uvtorch::UVTorch;
+        // use super::videocam::Videocam;
 
         Self {
             left_hand: Flashlight::default().into(),
-            right_hand: Thermometer::default().into(),
+            right_hand: Gear::none(),
             inventory: vec![
-                EMFMeter::default().into(),
-                UVTorch::default().into(),
-                SpiritBox::default().into(),
-                Recorder::default().into(),
-                Videocam::default().into(),
-                RedTorch::default().into(),
-                GeigerCounter::default().into(),
-                RepellentFlask::default().into(),
+                Gear::none(),
+                Gear::none(),
+                // Default equipment:
+                // Thermometer::default().into()
+                // EMFMeter::default().into(),
+                // UVTorch::default().into(),
+                // SpiritBox::default().into(),
+                // Recorder::default().into(),
+                // Videocam::default().into(),
+                // RedTorch::default().into(),
+                // GeigerCounter::default().into(),
+                // RepellentFlask::default().into(),
+
                 // Incomplete equipment:
                 // IonMeter::default().into(),
                 // ThermalImager::default().into(),
@@ -120,6 +133,14 @@ impl PlayerGear {
     /// exists but it is empty.
     pub fn get_next(&self, idx: usize) -> Option<Gear> {
         self.inventory.get(idx).cloned()
+    }
+
+    pub fn take_next(&mut self, idx: usize) -> Option<Gear> {
+        self.inventory.get_mut(idx).map(|g| {
+            let mut ret = Gear::none();
+            std::mem::swap(&mut ret, g);
+            ret
+        })
     }
 
     pub fn cycle(&mut self) {
@@ -140,6 +161,17 @@ impl PlayerGear {
             Hand::Right => self.right_hand.clone(),
         }
     }
+    pub fn take_hand(&mut self, hand: &Hand) -> Gear {
+        let mut ret = Gear::none();
+        std::mem::swap(
+            &mut ret,
+            match hand {
+                Hand::Left => &mut self.left_hand,
+                Hand::Right => &mut self.right_hand,
+            },
+        );
+        ret
+    }
     pub fn craft_repellent(&mut self, ghost_type: GhostType) {
         use super::repellentflask::RepellentFlask;
 
@@ -149,7 +181,9 @@ impl PlayerGear {
             .iter()
             .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
         if !flask_exists {
-            self.inventory.push(RepellentFlask::default().into());
+            let old_rh = self.take_hand(&Hand::Right);
+            self.right_hand = RepellentFlask::default().into();
+            self.append(old_rh);
         }
 
         // Assume that one always exists. Retrieve the &mut reference:
