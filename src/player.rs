@@ -233,7 +233,7 @@ pub fn keyboard_player(
                         rs,
                         InteractionExecutionType::ChangeState,
                     ) {
-                        ev_room.send(RoomChangedEvent);
+                        ev_room.send(RoomChangedEvent::default());
                     }
                 }
             }
@@ -414,12 +414,12 @@ impl<'w> CollisionHandler<'w> {
 
 #[derive(SystemParam)]
 pub struct InteractiveStuff<'w, 's> {
-    bf: Res<'w, board::SpriteDB>,
-    commands: Commands<'w, 's>,
-    materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
-    asset_server: Res<'w, AssetServer>,
-    roomdb: ResMut<'w, board::RoomDB>,
-    game_next_state: ResMut<'w, NextState<root::GameState>>,
+    pub bf: Res<'w, board::SpriteDB>,
+    pub commands: Commands<'w, 's>,
+    pub materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
+    pub asset_server: Res<'w, AssetServer>,
+    pub roomdb: ResMut<'w, board::RoomDB>,
+    pub game_next_state: ResMut<'w, NextState<root::GameState>>,
 }
 
 impl<'w, 's> InteractiveStuff<'w, 's> {

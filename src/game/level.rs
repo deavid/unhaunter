@@ -15,7 +15,15 @@ use bevy::utils::hashbrown::HashMap;
 use super::{GCameraArena, GameSprite};
 
 #[derive(Clone, Debug, Default, Event)]
-pub struct RoomChangedEvent;
+pub struct RoomChangedEvent {
+    pub initialize: bool,
+}
+
+impl RoomChangedEvent {
+    pub fn init() -> Self {
+        Self { initialize: true }
+    }
+}
 
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
@@ -373,7 +381,7 @@ pub fn load_level(
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
 
-    ev_room.send(RoomChangedEvent);
+    ev_room.send(RoomChangedEvent::init());
 }
 
 pub fn roomchanged_event(
@@ -382,9 +390,9 @@ pub fn roomchanged_event(
     mut interactive_stuff: InteractiveStuff,
     interactables: Query<(Entity, &board::Position, &Behavior, &RoomState), Without<PlayerSprite>>,
 ) {
-    if ev_room.read().next().is_none() {
+    let Some(ev) = ev_room.read().next() else {
         return;
-    }
+    };
 
     for (entity, item_pos, behavior, room_state) in interactables.iter() {
         let changed = interactive_stuff.execute_interaction(
@@ -404,6 +412,12 @@ pub fn roomchanged_event(
         lighting: true,
         collision: true,
     });
+
+    if ev.initialize {
+        interactive_stuff
+            .game_next_state
+            .set(root::GameState::Truck);
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

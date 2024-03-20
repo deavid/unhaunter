@@ -135,6 +135,11 @@ pub struct Gear {
 }
 
 impl Gear {
+    pub fn none() -> Self {
+        Self {
+            kind: GearKind::None,
+        }
+    }
     pub fn new_from_kind(kind: GearKind) -> Self {
         Self { kind }
     }

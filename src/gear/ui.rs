@@ -49,8 +49,15 @@ pub fn update_gear_ui(
                     txt.sections[0].value = right_hand_status.clone();
                 }
             }
-            let next = playergear.get_next();
-            for (_inv, mut utai) in qin.iter_mut() {
+            for (inv, mut utai) in qin.iter_mut() {
+                // There are 2 possible "None" here, the outside Option::None for
+                // when the idx is out of bounds and the inner Gear::None when a
+                // slot is empty.
+                let next = if let Some(idx) = inv.idx {
+                    playergear.get_next(idx).unwrap_or_default()
+                } else {
+                    playergear.get_next_non_empty().unwrap_or_default()
+                };
                 let idx = next.get_sprite_idx() as usize;
                 if utai.index != idx {
                     utai.index = idx;
@@ -102,7 +109,7 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
             },
             ..default()
         })
-        .insert(playergear::InventoryNext);
+        .insert(playergear::InventoryNext::non_empty());
 
     parent
         .spawn(AtlasImageBundle {

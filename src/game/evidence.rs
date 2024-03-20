@@ -4,7 +4,7 @@ use crate::{
     ghost_definitions::Evidence,
     player::PlayerSprite,
     root::{self, GameAssets},
-    truck::{TruckButtonState, TruckButtonType, TruckUIButton},
+    truck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
 };
 use bevy::prelude::*;
 

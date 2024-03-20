@@ -23,8 +23,8 @@
             "scale": 4,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 457.125,
-                "y": 253.375
+                "x": 502.25,
+                "y": 250.25
             }
         },
         "map_house1_3x.tmx": {
@@ -44,10 +44,10 @@
                 2
             ],
             "scale": 4,
-            "selectedLayer": 9,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 804.625,
-                "y": 930.875
+                "x": 1535.875,
+                "y": 767.875
             }
         },
         "map_school1.tmx": {
@@ -57,8 +57,8 @@
             "scale": 4,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 1030.375,
-                "y": 928.375
+                "x": 1534.25,
+                "y": 766.25
             }
         },
         "unhaunter_custom_tileset.tsx": {
