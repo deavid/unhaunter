@@ -232,7 +232,7 @@ pub fn button_clicked(
             p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
-            p_gear.take_next(invnext.idx);
+            p_gear.take_next(invnext.idx.expect("Truck UI should always specify IDX"));
         }
         LoadoutButton::Van(gear) => {
             p_gear.append(gear.clone());

@@ -12,12 +12,15 @@ pub enum Hand {
 
 #[derive(Component, Debug, Clone)]
 pub struct InventoryNext {
-    pub idx: usize,
+    pub idx: Option<usize>,
 }
 
 impl InventoryNext {
     pub fn new(idx: usize) -> Self {
-        Self { idx }
+        Self { idx: Some(idx) }
+    }
+    pub fn non_empty() -> Self {
+        Self { idx: None }
     }
 }
 
@@ -135,6 +138,13 @@ impl PlayerGear {
         self.inventory.get(idx).cloned()
     }
 
+    pub fn get_next_non_empty(&self) -> Option<Gear> {
+        self.inventory
+            .iter()
+            .find(|e| !matches!(e.kind, GearKind::None))
+            .cloned()
+    }
+
     pub fn take_next(&mut self, idx: usize) -> Option<Gear> {
         self.inventory.get_mut(idx).map(|g| {
             let mut ret = Gear::none();
@@ -146,8 +156,16 @@ impl PlayerGear {
     pub fn cycle(&mut self) {
         let old_right = self.right_hand.clone();
         let last_idx = self.inventory.len() - 1;
-        self.right_hand = self.inventory[0].clone();
-        for i in 0..last_idx {
+        let Some((lidx, inv)) = self
+            .inventory
+            .iter()
+            .enumerate()
+            .find(|(_n, e)| !matches!(e.kind, GearKind::None))
+        else {
+            return;
+        };
+        self.right_hand = inv.clone();
+        for i in lidx..last_idx {
             self.inventory[i] = self.inventory[i + 1].clone()
         }
         self.inventory[last_idx] = old_right;
