@@ -1,6 +1,15 @@
-### Version 0.1.6 - ??
+### Version 0.1.6 - 2024-03-20
 
+Features
+- New Tab in Truck for Loadout that is now the default
+- Able to select the gear the player wants to carry
+- Limit the maximum amount of gear of the player to 2 hands + 2 extra inventory items
+- Skip empty inventory slots when cycling
+- Truck UI is shown when starting the game so player can begin by choosing gear
+- Two extra disabled tabs added in Truck UI for future use
 
+Other:
+- Refactor Truck UI code
 
 ### Version 0.1.5 - 2024-03-15
 
