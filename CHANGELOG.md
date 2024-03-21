@@ -1,4 +1,7 @@
-### Version 0.1.7 - ????
+### Version 0.1.7 - 2024-03-21
+
+Features:
+- WASM version autodeployed from `main` branch
 
 
 ### Version 0.1.6 - 2024-03-20
