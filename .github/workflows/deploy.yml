@@ -23,6 +23,7 @@ jobs:
       run: |
         cargo install wasm-pack
         wasm-pack build --release --target web
+        unlink pkg/.gitignore
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
