@@ -1,0 +1,20 @@
+{
+  "name": "unhaunter",
+  "description": "2D isometric Game about investigating paranormal hauntings",
+  "version": "0.1.7",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deavid/unhaunter/"
+  },
+  "files": [
+    "unhaunter_bg.wasm",
+    "unhaunter.js",
+    "unhaunter.d.ts"
+  ],
+  "module": "unhaunter.js",
+  "types": "unhaunter.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
