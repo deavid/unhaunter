@@ -1,6 +1,6 @@
 [package]
 name = "unhaunter"
-version = "0.1.7"
+version = "0.1.6"
 edition = "2021"
 default-run = "unhaunter_game"
 description = "2D isometric Game about investigating paranormal hauntings"
