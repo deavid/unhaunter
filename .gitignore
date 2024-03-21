@@ -1,0 +1,5 @@
+/target
+perf.data
+perf.data.old
+unhaunter_game
+trace-*.json

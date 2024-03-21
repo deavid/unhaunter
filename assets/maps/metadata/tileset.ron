@@ -1,0 +1,181 @@
+/*
+
+Tile classes
+------------
+
+* Stuff that the player can walk on top of: Floors, etc.
+    * Usually they go to the tile grid.
+    * What about rugs? these are both objects and can be walked on top of.
+    * Maybe a better fitting name is: ground - could be water, grass, wood, steel...
+
+* Stuff that divide spaces such as walls: door frames, walls, ??
+    * Usually they go to the tile grid.
+  * Doors might also fit this category too.
+
+* Fixed collidable objects, such as furniture: table, chair, sofa, ...
+  * They can go to tile grid or finer grid id needed.
+  * Doors fit this category but they're interactable. Doors should go to tile grid.
+
+* Fixed non-collidable objects, such as decorations: 
+  * Usually to the finer grid.
+  * windows, canvas fit this category but they go on walls.
+  * Lamps fit this category but they're interactable.
+  * Rugs, they change sound when walking on top of them.
+
+* Stuff that can be picked up, non-collidable: emf, vases, candles, ...
+  * Almost always to the finer grid.
+
+* Characters: they move freely, per-pixel
+    * Initially placed in the tile grid, but they move freely.
+    * They collide with other stuff, but not with other characters.
+    * Player characters
+    * Ghosts
+
+* Stuff that has physics
+    * Players and ghost could bump into stuff and move it accidentally, making noise.
+    * A ball for example, or a can. 
+    * These could collide with everything except themselves.
+    * Non-collidable objects and/or stuff that can be picked up might have physics.
+
+
+*/
+
+TileSet(
+    id: "basic-tileset",
+    // how to translate the 3D coordinates into screen.
+    perspective: Perspective(
+        name: "Isometric",
+        // Careful, z is from -1.0 to +1.0
+        x: Vec3(x: +4.0, y: -2.0, z: 0.00001),
+        y: Vec3(x: -4.0, y: -2.0, z: 0.000001),
+        z: Vec3(x:  0.0, y: +4.0, z: 0.001),
+    ),
+    // for grid purposes, it defines the size of the big grid.
+    tile_size: Rect(x: 9, y: 9, z: 11),
+    // gimp file where to read the sprites from.
+    xcf_file: "base-tiles.xcf",
+    // reads a layer in gimp to detect where the center point of the sprites is.
+    center_layer: "center",
+    // map of different entities that we can have in a map.
+    // the key is used as the ID in the editor.
+    entities: {
+        "floor": MapEntity(
+            // on xcf_file, what is the layer name. 
+            // layer groups are represented by folder paths.
+            sprite_layer: "base/floor",
+            // map of the space that this tile uses. Must be 9x9 as it's the tile size.
+            gridmap: [
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+                "XXXXXXXXX",
+            ],
+            // false if the area is walkable, true if the character isn't allowed into.
+            collision: false,
+            // if it can'be moved, false. If the object can move and therefore react to collision, true.
+            movable: false,
+            // when drawing, place it beneath others. Also when computing properties of the map, put this one first and
+            // then overlap information with the tiles above.
+            z_index: -1,
+            // represents a categorization for the purpose of sorting in the editor.
+            category: "base/floor/standard",
+        ),
+        "wall-left": MapEntity(
+            sprite_layer: "base/wall-left",
+            gridmap: [
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+                "X        ",
+            ],
+            collision: true,
+            movable: false,
+            z_index: 0, // 0 is default, it can be omitted.
+            category: "base/wall/left+standard" // here we run into a problem where this has more than one property.
+            // Ideally we want to be able to see the walls in one group, but also there might be different wall styles.
+        ),
+        "wall-right": MapEntity(
+            sprite_layer: "base/wall-right",
+            gridmap: [
+                "XXXXXXXXX",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+            ],
+            collision: true,
+            movable: false,
+            category: "base/wall/right+standard" // here we run into a problem where this has more than one property.
+            // Ideally we want to be able to see the walls in one group, but also there might be different wall styles.
+
+            // For solving occlusions, and drawing a different sprite instead:
+            on_occlusion: (
+                height: 11,
+                sprite_layer: "base/minwall-right",
+            ),
+        ),
+        "frame-right": MapEntity(
+            // This is a door frame, without the door.
+            sprite_layer: "base/frame-right",
+            gridmap: [
+                "XX     XX",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+                "         ",
+            ],
+            collision: true,
+            movable: false,
+            category: "base/frame/right+standard"
+        ),
+        "minwall-right": MapEntity(
+            // from would make this inherit properties from the ID specified
+            from: "minwall-right",
+            sprite_layer: "base/minwall-right",
+            category: "base/wall/right+standard",
+            // and we run here into a problem where this is a variant for a specific purpose:
+            // to lower the wall height so the player can see behind the wall. This is not to be used
+            // on the editor directly, but to provide a different sprite when the wall is causing occlusion.
+            // Initially this could be used just as a regular sprite as we only expect to draw a room at a time,
+            // but this might not always work.
+            // Also, this means that this sprite would overlap with a wall-right from another room, being both in the
+            // same effective tile, just depends in which room are you in.
+        ),
+
+        "table-right": MapEntity(
+            sprite_layer: "furniture/table-right",
+            gridmap: [
+                "         ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "  XXXX   ",
+                "         ",
+            ],
+            collision: true,
+            movable: false,
+            category: "furniture/table/standard",
+        )
+    ],
+)
