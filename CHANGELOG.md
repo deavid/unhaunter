@@ -1,6 +1,9 @@
+### Version 0.1.7 - ????
+
+
 ### Version 0.1.6 - 2024-03-20
 
-Features
+Features:
 - New Tab in Truck for Loadout that is now the default
 - Able to select the gear the player wants to carry
 - Limit the maximum amount of gear of the player to 2 hands + 2 extra inventory items
