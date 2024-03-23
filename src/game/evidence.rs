@@ -1,3 +1,4 @@
+use crate::platform::plt::UI_SCALE;
 use crate::{
     colors,
     gear::playergear::PlayerGear,
@@ -6,6 +7,7 @@ use crate::{
     root::{self, GameAssets},
     truck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
 };
+
 use bevy::prelude::*;
 
 use super::GameConfig;
@@ -18,21 +20,21 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
             TextSection{value: "Freezing temps:".into(), 
                 style: TextStyle {
                     font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0,
+                    font_size: 22.0*UI_SCALE,
                     color: colors::INVENTORY_STATS_COLOR.with_a(1.0),
                 },
             },
             TextSection{value: " [+] Evidence Found\n".into(), 
                 style: TextStyle {
                     font: handles.fonts.victormono.w600_semibold.clone(),
-                    font_size: 20.0,
+                    font_size: 20.0*UI_SCALE,
                     color: Color::GREEN.with_a(0.4),
                 },
             },
             TextSection{value: "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.".into(), 
                 style: TextStyle {
                     font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 20.0,
+                    font_size: 20.0*UI_SCALE,
                     color: colors::INVENTORY_STATS_COLOR,
                 },
             },
