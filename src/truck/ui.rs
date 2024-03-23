@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::colors;
+use crate::platform::plt::UI_SCALE;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use crate::{materials::UIPanelMaterial, root};
@@ -89,8 +90,8 @@ impl TruckTab {
     }
     pub fn font_size(&self) -> f32 {
         match self.state {
-            TabState::Selected => 35.0,
-            _ => 24.0,
+            TabState::Selected => 35.0 * UI_SCALE,
+            _ => 24.0 * UI_SCALE,
         }
     }
 }
@@ -101,7 +102,7 @@ pub fn setup_ui(
     handles: Res<root::GameAssets>,
 ) {
     // Load Truck UI
-    const MARGIN_PERCENT: f32 = 0.5;
+    const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
     const MARGIN: UiRect = UiRect::percent(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
@@ -167,7 +168,7 @@ pub fn setup_ui(
                 &truck_tab.tabname,
                 TextStyle {
                     font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 35.0,
+                    font_size: 35.0 * UI_SCALE,
                     color: txt_fg,
                 },
             )
@@ -178,7 +179,12 @@ pub fn setup_ui(
             p.spawn(MaterialNodeBundle {
                 material: tab_bg,
                 style: Style {
-                    padding: UiRect::new(Val::Px(10.0), Val::Px(30.0), Val::ZERO, Val::ZERO),
+                    padding: UiRect::new(
+                        Val::Px(10.0 * UI_SCALE),
+                        Val::Px(30.0 * UI_SCALE),
+                        Val::ZERO,
+                        Val::ZERO,
+                    ),
                     margin: UiRect::new(
                         Val::Percent(MARGIN_PERCENT),
                         Val::Percent(MARGIN_PERCENT),
@@ -306,7 +312,7 @@ pub fn setup_ui(
             buttons
                 .spawn(ButtonBundle {
                     style: Style {
-                        min_height: Val::Px(60.0),
+                        min_height: Val::Px(60.0 * UI_SCALE),
                         border: MARGIN,
                         align_content: AlignContent::Center,
                         justify_content: JustifyContent::Center,
@@ -323,7 +329,7 @@ pub fn setup_ui(
                         "Exit Truck",
                         TextStyle {
                             font: handles.fonts.titillium.w600_semibold.clone(),
-                            font_size: 35.0,
+                            font_size: 35.0 * UI_SCALE,
                             ..default()
                         },
                     ));
@@ -331,7 +337,7 @@ pub fn setup_ui(
             buttons
                 .spawn(ButtonBundle {
                     style: Style {
-                        min_height: Val::Px(60.0),
+                        min_height: Val::Px(60.0 * UI_SCALE),
                         align_content: AlignContent::Center,
                         justify_content: JustifyContent::Center,
                         flex_direction: FlexDirection::Column,
@@ -347,7 +353,7 @@ pub fn setup_ui(
                         "End Mission",
                         TextStyle {
                             font: handles.fonts.titillium.w600_semibold.clone(),
-                            font_size: 35.0,
+                            font_size: 35.0 * UI_SCALE,
                             ..default()
                         },
                     ));
@@ -363,7 +369,7 @@ pub fn setup_ui(
                 border: UiRect::all(Val::Px(1.0)),
                 justify_content: JustifyContent::FlexStart,
                 flex_direction: FlexDirection::Column,
-                min_width: Val::Px(180.0),
+                min_width: Val::Px(180.0 * UI_SCALE),
                 min_height: Val::Px(10.0),
                 row_gap: Val::Percent(MARGIN_PERCENT),
                 flex_grow: 0.4,

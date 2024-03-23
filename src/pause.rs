@@ -1,7 +1,9 @@
+use crate::platform::plt::UI_SCALE;
 use crate::{
     materials::{self, UIPanelMaterial},
     root,
 };
+
 use bevy::prelude::*;
 
 #[derive(Debug, Component)]
@@ -98,12 +100,12 @@ pub fn setup_ui(
                         "Pause",
                         TextStyle {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 35.0,
+                            font_size: 35.0 * UI_SCALE,
                             color: PAUSEUI_ACCENT_COLOR,
                         },
                     )
                     .with_style(Style {
-                        height: Val::Px(40.0),
+                        height: Val::Px(40.0 * UI_SCALE),
                         ..default()
                     });
 
@@ -124,7 +126,7 @@ pub fn setup_ui(
                             "The game is paused. Hit [ESC] again to resume or [Q] to Quit.",
                             TextStyle {
                                 font: handles.fonts.chakra.w300_light.clone(),
-                                font_size: 25.0,
+                                font_size: 25.0 * UI_SCALE,
                                 color: PAUSEUI_TEXT_COLOR,
                             },
                         )

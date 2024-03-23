@@ -37,7 +37,9 @@ pub fn wasm_load() {
 }
 
 pub fn default_resolution() -> WindowResolution {
-    WindowResolution::new(1500.0 * plt::UI_SCALE, 800.0 * plt::UI_SCALE)
+    let height = 800.0 * plt::UI_SCALE;
+    let width = height * plt::ASPECT_RATIO;
+    WindowResolution::new(width, height)
 }
 
 pub fn app_run() {
