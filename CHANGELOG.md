@@ -1,3 +1,11 @@
+### Version 0.1.8 - 2024-03-23
+
+Features:
+- Make WASM window smaller
+
+Other:
+- Fix UI issues after `cargo update` breaks the interface
+
 ### Version 0.1.7 - 2024-03-21
 
 Features:

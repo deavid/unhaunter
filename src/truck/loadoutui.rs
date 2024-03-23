@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use super::truckgear;
+use crate::platform::plt::UI_SCALE;
 use crate::{
     colors,
     game::GameConfig,
@@ -12,8 +14,6 @@ use crate::{
     player::PlayerSprite,
     root,
 };
-
-use super::truckgear;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {
@@ -34,10 +34,10 @@ pub fn setup_loadout_ui(
         background_color: colors::TRUCKUI_ACCENT2_COLOR.into(),
         border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
         style: Style {
-            border: UiRect::all(Val::Px(2.0)),
-            margin: UiRect::all(Val::Px(3.0)),
-            width: Val::Px(70.0),
-            height: Val::Px(74.0),
+            border: UiRect::all(Val::Px(2.0 * UI_SCALE)),
+            margin: UiRect::all(Val::Px(3.0 * UI_SCALE)),
+            width: Val::Px(70.0 * UI_SCALE),
+            height: Val::Px(74.0 * UI_SCALE),
             ..default()
         },
         ..default()
@@ -53,8 +53,8 @@ pub fn setup_loadout_ui(
             layout: handles.images.gear_atlas.clone(),
         },
         style: Style {
-            width: Val::Px(64.0),
-            height: Val::Px(64.0),
+            width: Val::Px(64.0 * UI_SCALE),
+            height: Val::Px(64.0 * UI_SCALE),
             ..default()
         },
         ..default()
@@ -66,8 +66,8 @@ pub fn setup_loadout_ui(
         }),
 
         style: Style {
-            padding: UiRect::all(Val::Px(8.0)),
-            margin: UiRect::all(Val::Px(2.0)),
+            padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
+            margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
             flex_wrap: FlexWrap::Wrap,
             ..default()
         },
@@ -78,12 +78,12 @@ pub fn setup_loadout_ui(
             "Player Inventory:",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0,
+                font_size: 25.0 * UI_SCALE,
                 color: colors::TRUCKUI_TEXT_COLOR,
             },
         )
         .with_style(Style {
-            margin: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             ..default()
         }),
     );
@@ -132,12 +132,12 @@ pub fn setup_loadout_ui(
             "Van Inventory:",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0,
+                font_size: 25.0 * UI_SCALE,
                 color: colors::TRUCKUI_TEXT_COLOR,
             },
         )
         .with_style(Style {
-            margin: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             ..default()
         }),
     );
@@ -157,12 +157,12 @@ pub fn setup_loadout_ui(
                 grid_template_columns: RepeatedGridTrack::flex(6, 1.0),
                 grid_template_rows: RepeatedGridTrack::flex(5, 1.0),
                 grid_auto_flow: GridAutoFlow::Row,
-                row_gap: Val::Px(6.0),
-                column_gap: Val::Px(6.0),
-                min_height: Val::Px(200.0),
-                max_width: Val::Px(600.0),
-                padding: UiRect::all(Val::Px(12.0)),
-                margin: UiRect::all(Val::Px(2.0)),
+                row_gap: Val::Px(6.0 * UI_SCALE),
+                column_gap: Val::Px(6.0 * UI_SCALE),
+                min_height: Val::Px(200.0 * UI_SCALE),
+                max_width: Val::Px(600.0 * UI_SCALE),
+                padding: UiRect::all(Val::Px(12.0 * UI_SCALE)),
+                margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
                 ..default()
             },
             ..default()

@@ -2,8 +2,10 @@ use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGe
 use super::{GearSpriteID, GearStuff, GearUsable};
 use crate::colors;
 use crate::game::GameConfig;
+use crate::platform::plt::UI_SCALE;
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
+
 use bevy::prelude::*;
 
 pub fn keyboard_gear(
@@ -80,6 +82,10 @@ pub fn setup_ui_gear_inv_left(parent: &mut ChildBuilder, handles: &GameAssets) {
                 index: GearSpriteID::Flashlight2 as usize,
                 layout: handles.images.gear_atlas.clone(),
             },
+            style: Style {
+                width: Val::Px(100.0 * UI_SCALE),
+                ..default()
+            },
             ..default()
         })
         .insert(playergear::Inventory::new_left());
@@ -102,8 +108,13 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
             style: Style {
                 flex_grow: 0.0,
                 flex_shrink: 0.0,
-                width: Val::Px(60.0),
-                margin: UiRect::new(Val::Px(16.0), Val::Px(-8.0), Val::Px(8.0), Val::Px(4.0)),
+                width: Val::Px(60.0 * UI_SCALE),
+                margin: UiRect::new(
+                    Val::Px(16.0 * UI_SCALE),
+                    Val::Px(-8.0 * UI_SCALE),
+                    Val::Px(8.0 * UI_SCALE),
+                    Val::Px(4.0 * UI_SCALE),
+                ),
                 align_self: AlignSelf::Center,
                 ..default()
             },
@@ -124,6 +135,7 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
             },
             style: Style {
                 margin: UiRect::left(Val::Px(-8.0)),
+                width: Val::Px(100.0 * UI_SCALE),
                 ..default()
             },
             ..default()
@@ -133,7 +145,7 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
         "-",
         TextStyle {
             font: handles.fonts.victormono.w600_semibold.clone(),
-            font_size: 20.0,
+            font_size: 20.0 * UI_SCALE,
             color: colors::INVENTORY_STATS_COLOR,
         },
     );

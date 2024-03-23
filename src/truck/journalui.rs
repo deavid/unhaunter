@@ -3,8 +3,9 @@ use bevy::prelude::*;
 use crate::{colors, ghost_definitions, root};
 
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
+use crate::platform::plt::UI_SCALE;
 
-const MARGIN_PERCENT: f32 = 0.5;
+const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const MARGIN: UiRect = UiRect::percent(
     MARGIN_PERCENT,
     MARGIN_PERCENT,
@@ -20,12 +21,12 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             "Select evidence:",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0,
+                font_size: 25.0 * UI_SCALE,
                 color: colors::TRUCKUI_TEXT_COLOR,
             },
         )
         .with_style(Style {
-            margin: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             ..default()
         }),
     );
@@ -36,8 +37,8 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             justify_content: JustifyContent::FlexStart,
             // flex_direction: FlexDirection::Row,
             // flex_wrap: FlexWrap::Wrap,
-            row_gap: Val::Px(4.0),
-            column_gap: Val::Px(4.0),
+            row_gap: Val::Px(4.0 * UI_SCALE),
+            column_gap: Val::Px(4.0 * UI_SCALE),
             display: Display::Grid,
             grid_template_columns: vec![
                 GridTrack::auto(),
@@ -56,7 +57,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             evblock
                 .spawn(ButtonBundle {
                     style: Style {
-                        min_height: Val::Px(20.0),
+                        min_height: Val::Px(20.0 * UI_SCALE),
                         border: UiRect::all(Val::Px(0.9)),
                         align_content: AlignContent::Center,
                         justify_content: JustifyContent::Center,
@@ -64,7 +65,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                        padding: UiRect::all(Val::Px(4.0)),
+                        padding: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                         ..default()
                     },
                     ..default()
@@ -75,7 +76,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                         evidence.name(),
                         TextStyle {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0,
+                            font_size: 22.0 * UI_SCALE,
                             ..default()
                         },
                     ));
@@ -85,11 +86,11 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
     // ---- Ghost guess
     p.spawn(NodeBundle {
         style: Style {
-            margin: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::End,
             column_gap: Val::Percent(MARGIN_PERCENT),
-            flex_basis: Val::Px(50.0),
+            flex_basis: Val::Px(50.0 * UI_SCALE),
             flex_grow: 0.5,
             flex_shrink: 0.0,
             ..default()
@@ -102,7 +103,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                 "Possible ghost with the selected evidence:",
                 TextStyle {
                     font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0,
+                    font_size: 25.0 * UI_SCALE,
                     color: colors::TRUCKUI_TEXT_COLOR,
                 },
             )
@@ -126,6 +127,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                 GridTrack::auto(),
                 GridTrack::auto(),
                 GridTrack::auto(),
+                GridTrack::auto(),
             ],
             grid_auto_rows: GridTrack::flex(1.0),
             flex_grow: 1.0,
@@ -139,7 +141,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             ghost_selection
                 .spawn(ButtonBundle {
                     style: Style {
-                        min_height: Val::Px(20.0),
+                        min_height: Val::Px(20.0 * UI_SCALE),
                         border: UiRect::all(Val::Px(0.9)),
                         align_content: AlignContent::Center,
                         justify_content: JustifyContent::Center,
@@ -162,7 +164,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                         ghost_type.name(),
                         TextStyle {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0,
+                            font_size: 22.0 * UI_SCALE,
                             ..default()
                         },
                     ));
@@ -172,11 +174,11 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
     // --- Ghost selected
     p.spawn(NodeBundle {
         style: Style {
-            margin: UiRect::all(Val::Px(4.0)),
+            margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             flex_direction: FlexDirection::Row,
             align_items: AlignItems::End,
             column_gap: Val::Percent(MARGIN_PERCENT),
-            flex_basis: Val::Px(50.0),
+            flex_basis: Val::Px(50.0 * UI_SCALE),
             flex_grow: 0.5,
             flex_shrink: 0.0,
             ..default()
@@ -190,7 +192,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
                 "With the above evidence we believe the ghost is:",
                 TextStyle {
                     font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0,
+                    font_size: 25.0 * UI_SCALE,
                     color: colors::TRUCKUI_TEXT_COLOR,
                 },
             )
@@ -204,7 +206,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             "-- Unknown --",
             TextStyle {
                 font: handles.fonts.titillium.w600_semibold.clone(),
-                font_size: 28.0,
+                font_size: 28.0 * UI_SCALE,
                 color: colors::TRUCKUI_TEXT_COLOR,
             },
         );
@@ -212,8 +214,8 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             .spawn(NodeBundle {
                 background_color: colors::TRUCKUI_BGCOLOR.into(),
                 style: Style {
-                    padding: UiRect::all(Val::Px(4.0)),
-                    flex_basis: Val::Px(300.0),
+                    padding: UiRect::all(Val::Px(4.0 * UI_SCALE)),
+                    flex_basis: Val::Px(300.0 * UI_SCALE),
                     flex_grow: 0.0,
                     flex_shrink: 0.0,
                     justify_content: JustifyContent::Center,
@@ -229,7 +231,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
     // ---- Synthesis of Unhaunter essence
     p.spawn(ButtonBundle {
         style: Style {
-            min_height: Val::Px(30.0),
+            min_height: Val::Px(30.0 * UI_SCALE),
             width: Val::Percent(50.0),
             border: MARGIN,
             align_self: AlignSelf::Center,
@@ -248,10 +250,9 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
             "Craft Unhaunter™ Ghost Repellent",
             TextStyle {
                 font: handles.fonts.titillium.w600_semibold.clone(),
-                font_size: 32.0,
+                font_size: 32.0 * UI_SCALE,
                 ..default()
             },
         ));
     });
-
 }

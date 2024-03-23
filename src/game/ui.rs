@@ -68,6 +68,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+    use crate::platform::plt::UI_SCALE;
     commands
         .spawn(NodeBundle {
             background_color: Color::NONE.into(),
@@ -104,7 +105,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             "Movement: WASD - Interact: E\nToggle Aux: TAB - Toggle Main: R\nCycle Inv: Q - Swap: T\nChange Evidence: C",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 18.0,
+                font_size: 18.0 * UI_SCALE,
                 color: colors::INVENTORY_STATS_COLOR,
             },
         );
@@ -129,7 +130,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 padding: UiRect::all(Val::Px(1.0)),
                 flex_grow: 0.0,
                 flex_shrink: 0.0,
-                width: Val::Px(100.0),
+                width: Val::Px(100.0 * UI_SCALE),
                 max_width: Val::Percent(20.0),
                 align_items: AlignItems::Center, // Vertical alignment
                 align_content: AlignContent::Start, // Horizontal alignment - start from the left.
@@ -145,9 +146,9 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             background_color: BackgroundColor(colors::PANEL_BGCOLOR),
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
-                padding: UiRect::all(Val::Px(6.0)),
+                padding: UiRect::all(Val::Px(6.0 * UI_SCALE)),
                 flex_grow: 0.0,
-                min_width: Val::Px(200.0),
+                min_width: Val::Px(200.0 * UI_SCALE),
                 align_content: AlignContent::Center,
                 align_items: AlignItems::Center,
                 ..Default::default()
@@ -162,7 +163,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             background_color: BackgroundColor(colors::PANEL_BGCOLOR),
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
-                padding: UiRect::all(Val::Px(8.0)),
+                padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
                 flex_grow: 1.0,
                 max_width: Val::Percent(60.0),
                 ..Default::default()
@@ -244,7 +245,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
-                height: Val::Px(100.0),
+                height: Val::Px(100.0 * UI_SCALE),
                 width: Val::Percent(99.9),
                 flex_direction: FlexDirection::Row,
                 column_gap: Val::Px(6.0),
