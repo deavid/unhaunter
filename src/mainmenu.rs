@@ -4,6 +4,9 @@ use bevy::prelude::*;
 use crate::game::level::LoadLevelEvent;
 use crate::root;
 
+use crate::platform::plt::IS_WASM;
+use crate::platform::plt::UI_SCALE;
+
 const MENU_ITEM_COLOR_OFF: Color = Color::GRAY;
 const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
 
@@ -26,9 +29,16 @@ pub struct Menu {
 }
 
 impl Menu {
-    const ITEMS: [MenuID; 4] = [MenuID::NewGame, MenuID::Map, MenuID::Options, MenuID::Quit];
+    pub fn items() -> &'static [MenuID] {
+        if IS_WASM {
+            &[MenuID::NewGame, MenuID::Map, MenuID::Options]
+        } else {
+            &[MenuID::NewGame, MenuID::Map, MenuID::Options, MenuID::Quit]
+        }
+    }
+
     pub fn item_idx(&self) -> i64 {
-        for (n, item) in Menu::ITEMS.iter().enumerate() {
+        for (n, item) in Menu::items().iter().enumerate() {
             if item == &self.selected {
                 return n as i64;
             }
@@ -38,8 +48,8 @@ impl Menu {
         0
     }
     pub fn idx_to_item(idx: i64) -> MenuID {
-        let idx = idx.rem_euclid(Menu::ITEMS.len() as i64);
-        Menu::ITEMS[idx as usize]
+        let idx = idx.rem_euclid(Menu::items().len() as i64);
+        Menu::items()[idx as usize]
     }
     pub fn next_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() + 1);
@@ -117,19 +127,21 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let cam = Camera2dBundle::default();
     commands.spawn(cam).insert(MCamera);
     info!("Main menu camera setup");
-    commands
-        .spawn(AudioBundle {
-            source: asset_server.load("music/unhaunter_intro.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.1),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
-        })
-        .insert(MenuSound::default());
+    if !IS_WASM {
+        commands
+            .spawn(AudioBundle {
+                source: asset_server.load("music/unhaunter_intro.ogg"),
+                settings: PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Loop,
+                    volume: bevy::audio::Volume::new(0.1),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                    spatial_scale: None,
+                },
+            })
+            .insert(MenuSound::default());
+    }
 }
 
 pub fn cleanup(
@@ -184,10 +196,10 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::Column,
                 padding: UiRect {
-                    left: Val::Percent(10.0),
-                    right: Val::Percent(10.0),
-                    top: Val::Percent(5.0),
-                    bottom: Val::Percent(5.0),
+                    left: Val::Percent(10.0 * UI_SCALE),
+                    right: Val::Percent(10.0 * UI_SCALE),
+                    top: Val::Percent(5.0 * UI_SCALE),
+                    bottom: Val::Percent(5.0 * UI_SCALE),
                 },
 
                 ..default()
@@ -203,7 +215,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                         width: Val::Percent(100.0),
                         height: Val::Percent(20.0),
                         min_width: Val::Px(0.0),
-                        min_height: Val::Px(64.0),
+                        min_height: Val::Px(64.0 * UI_SCALE),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::FlexStart,
                         ..default()
@@ -230,7 +242,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
             parent.spawn(NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
+                    height: Val::Percent(20.0 * UI_SCALE),
                     ..default()
                 },
 
@@ -259,7 +271,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                             "New Game",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
+                                font_size: 38.0 * UI_SCALE,
                                 color: MENU_ITEM_COLOR_OFF,
                             },
                         ))
@@ -269,7 +281,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                             "Map: ?",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
+                                font_size: 38.0 * UI_SCALE,
                                 color: MENU_ITEM_COLOR_OFF,
                             },
                         ))
@@ -279,27 +291,28 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                             "Options",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
+                                font_size: 38.0 * UI_SCALE,
                                 color: MENU_ITEM_COLOR_OFF,
                             },
                         ))
                         .insert(MenuItem::new(MenuID::Options));
-
-                    parent
-                        .spawn(TextBundle::from_section(
-                            "Quit",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: MENU_ITEM_COLOR_OFF,
-                            },
-                        ))
-                        .insert(MenuItem::new(MenuID::Quit));
+                    if !IS_WASM {
+                        parent
+                            .spawn(TextBundle::from_section(
+                                "Quit",
+                                TextStyle {
+                                    font: handles.fonts.londrina.w300_light.clone(),
+                                    font_size: 38.0 * UI_SCALE,
+                                    color: MENU_ITEM_COLOR_OFF,
+                                },
+                            ))
+                            .insert(MenuItem::new(MenuID::Quit));
+                    }
                 });
             parent.spawn(NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
+                    height: Val::Percent(20.0 * UI_SCALE),
                     ..default()
                 },
 

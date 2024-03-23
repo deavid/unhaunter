@@ -9,6 +9,7 @@ mod mainmenu;
 mod maplight;
 mod materials;
 mod pause;
+pub mod platform;
 mod player;
 mod root;
 mod summary;
@@ -25,6 +26,7 @@ use bevy::{
     window::WindowResolution,
 };
 use materials::{CustomMaterial1, UIPanelMaterial};
+use platform::plt;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 const FPS_DEBUG: bool = false;
@@ -34,22 +36,22 @@ pub fn wasm_load() {
     app_run();
 }
 
+pub fn default_resolution() -> WindowResolution {
+    WindowResolution::new(1500.0 * plt::UI_SCALE, 800.0 * plt::UI_SCALE)
+}
+
 pub fn app_run() {
     let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            // .set(ImagePlugin::default_nearest())
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Unhaunter".to_string(),
-                    resolution: WindowResolution::new(1500.0, 800.0),
-                    // Enabling VSync might make it easier in WASM? (It doesn't)
-                    present_mode: bevy::window::PresentMode::Fifo,
-                    ..default()
-                }),
-                ..default()
-            }),
-    )
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Unhaunter".to_string(),
+            resolution: default_resolution(),
+            // Enabling VSync might make it easier in WASM? (It doesn't)
+            present_mode: bevy::window::PresentMode::Fifo,
+            ..default()
+        }),
+        ..default()
+    }))
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
