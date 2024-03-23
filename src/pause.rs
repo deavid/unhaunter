@@ -59,6 +59,7 @@ pub fn setup_ui(
             background_color: PAUSEUI_BGCOLOR.into(),
 
             style: Style {
+                position_type: PositionType::Absolute,
                 min_width: Val::Percent(50.0),
                 min_height: Val::Percent(30.0),
                 justify_content: JustifyContent::FlexStart,
