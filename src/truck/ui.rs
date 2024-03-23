@@ -416,6 +416,9 @@ pub fn setup_ui(
             background_color: colors::TRUCKUI_BGCOLOR.into(),
 
             style: Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(0.0),
+                left: Val::Px(0.0),
                 width: Val::Percent(98.0),
                 height: Val::Percent(96.0),
                 justify_content: JustifyContent::FlexStart,
