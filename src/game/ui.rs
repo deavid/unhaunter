@@ -102,13 +102,26 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let text_bundle = TextBundle::from_section(
-            "Movement: WASD - Interact: E\nToggle Aux: TAB - Toggle Main: R\nCycle Inv: Q - Swap: T\nChange Evidence: C",
+            "[WASD]: Movement\n[E]: Interact",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 18.0 * UI_SCALE,
+                font_size: 16.0 * UI_SCALE,
                 color: colors::INVENTORY_STATS_COLOR,
             },
-        );
+        )
+        .with_style(Style {
+            // height: Val::Percent(100.0),
+            align_self: AlignSelf::End,
+            justify_self: JustifySelf::End,
+            justify_content: JustifyContent::End,
+            margin: UiRect::new(
+                Val::Px(4.0 * UI_SCALE),
+                Val::Px(4.0 * UI_SCALE),
+                Val::Px(5.0 * UI_SCALE),
+                Val::Px(-5.0 * UI_SCALE),
+            ),
+            ..default()
+        });
 
         p.spawn(text_bundle);
     };
@@ -134,6 +147,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 max_width: Val::Percent(20.0),
                 align_items: AlignItems::Center, // Vertical alignment
                 align_content: AlignContent::Start, // Horizontal alignment - start from the left.
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
             ..Default::default()
@@ -180,9 +194,10 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
                 flex_grow: 1.0,
+                flex_direction: FlexDirection::Column,
                 max_width: Val::Percent(33.3),
-                align_items: AlignItems::Center, // Vertical alignment
-                align_content: AlignContent::Start, // Horizontal alignment - start from the left.
+                align_items: AlignItems::Start,
+                align_content: AlignContent::Center,
                 ..Default::default()
             },
             ..Default::default()

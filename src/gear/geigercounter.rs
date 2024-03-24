@@ -34,6 +34,9 @@ impl GearUsable for GeigerCounter {
     fn get_display_name(&self) -> &'static str {
         "Geiger Counter"
     }
+    fn get_description(&self) -> &'static str {
+        "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."
+    }
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();

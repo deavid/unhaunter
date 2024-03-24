@@ -77,6 +77,10 @@ impl GearUsable for EMFMeter {
         "EMF Meter"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Used to find electric wires behind walls. Ghosts might disturb the electromagnetic field."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

@@ -412,6 +412,11 @@ pub struct BoardDataToRebuild {
     pub collision: bool,
 }
 
+#[derive(Clone, Debug, Resource, Default)]
+pub struct VisibilityData {
+    pub visibility_field: HashMap<BoardPosition, f32>,
+}
+
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
     pub light_field: HashMap<BoardPosition, LightFieldData>,
@@ -953,6 +958,7 @@ pub fn compute_color_exposure(
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<BoardData>()
+        .init_resource::<VisibilityData>()
         .init_resource::<SpriteDB>()
         .init_resource::<RoomDB>()
         .add_systems(Update, apply_perspective)

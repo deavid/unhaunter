@@ -19,6 +19,10 @@ impl GearUsable for IonMeter {
         "Ion Meter"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Detects charged particles in the air. Ghost leave a trace as they move and this tool may help following the ghost."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

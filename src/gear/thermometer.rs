@@ -38,6 +38,10 @@ impl GearUsable for Thermometer {
         "Thermometer"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Reads the temperature of the room. Most paranormal interactions have been correlated with unusual cold temperatures."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

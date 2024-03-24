@@ -32,6 +32,10 @@ impl GearUsable for UVTorch {
         "UV Torch"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Ultraviolet light that can be used to expose evidence invisible to the naked eye since some substances react to it and glow."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

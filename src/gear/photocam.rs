@@ -19,6 +19,10 @@ impl GearUsable for Photocam {
         "Photo Camera"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Takes photos, hopefully of something paranormal."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

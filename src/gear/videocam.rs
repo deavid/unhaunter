@@ -32,6 +32,10 @@ impl GearUsable for Videocam {
         "Video Camera NV"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Mainly used for its infrared night vision, it can also transmit images to the van in real time."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
