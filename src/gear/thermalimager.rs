@@ -19,6 +19,10 @@ impl GearUsable for ThermalImager {
         "Thermal Imager"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Heat vision to see easily what's hot and what's cold. Might improve visibility of the paranormal and haunted objects."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

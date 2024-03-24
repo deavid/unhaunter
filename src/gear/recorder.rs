@@ -43,6 +43,10 @@ impl GearUsable for Recorder {
         "Recorder"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Records ambient sounds and conversations. Sometimes it can capture EVP phenomena."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

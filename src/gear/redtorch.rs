@@ -32,6 +32,10 @@ impl GearUsable for RedTorch {
         "Red Torch"
     }
 
+    fn get_description(&self) -> &'static str {
+        "A simple red light used by astronomers to see on the dark without losing night vision eye's adaptation. But the ghost might also react to this too."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

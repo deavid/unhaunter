@@ -167,7 +167,27 @@ impl GearUsable for Gear {
             GearKind::None => "",
         }
     }
-
+    fn get_description(&self) -> &'static str {
+        match &self.kind {
+            GearKind::Thermometer(x) => x.get_description(),
+            GearKind::Flashlight(x) => x.get_description(),
+            GearKind::EMFMeter(x) => x.get_description(),
+            GearKind::Recorder(x) => x.get_description(),
+            GearKind::GeigerCounter(x) => x.get_description(),
+            GearKind::UVTorch(x) => x.get_description(),
+            GearKind::IonMeter(x) => x.get_description(),
+            GearKind::Photocam(x) => x.get_description(),
+            GearKind::SpiritBox(x) => x.get_description(),
+            GearKind::RedTorch(x) => x.get_description(),
+            GearKind::Compass(x) => x.get_description(),
+            GearKind::ThermalImager(x) => x.get_description(),
+            GearKind::EStaticMeter(x) => x.get_description(),
+            GearKind::Videocam(x) => x.get_description(),
+            GearKind::MotionSensor(x) => x.get_description(),
+            GearKind::RepellentFlask(x) => x.get_description(),
+            GearKind::None => "",
+        }
+    }
     fn get_status(&self) -> String {
         match &self.kind {
             GearKind::Thermometer(x) => x.get_status(),
@@ -272,6 +292,7 @@ pub fn on_off(s: bool) -> &'static str {
 
 pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn get_display_name(&self) -> &'static str;
+    fn get_description(&self) -> &'static str;
     fn get_status(&self) -> String;
     fn set_trigger(&mut self, gs: &mut GearStuff);
     fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
