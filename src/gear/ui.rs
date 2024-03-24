@@ -69,32 +69,67 @@ pub fn update_gear_ui(
     }
 }
 
-pub fn setup_ui_gear_inv_left(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     // Leftmost side panel - inventory
-    parent
-        .spawn(AtlasImageBundle {
-            image: UiImage {
-                texture: handles.images.gear.clone(),
-                flip_x: false,
-                flip_y: false,
-            },
-            texture_atlas: TextureAtlas {
-                index: GearSpriteID::Flashlight2 as usize,
-                layout: handles.images.gear_atlas.clone(),
-            },
-            style: Style {
-                width: Val::Px(100.0 * UI_SCALE),
-                ..default()
-            },
+    p.spawn(AtlasImageBundle {
+        image: UiImage {
+            texture: handles.images.gear.clone(),
+            flip_x: false,
+            flip_y: false,
+        },
+        texture_atlas: TextureAtlas {
+            index: GearSpriteID::Flashlight2 as usize,
+            layout: handles.images.gear_atlas.clone(),
+        },
+        style: Style {
+            width: Val::Px(80.0 * UI_SCALE),
+            margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
             ..default()
-        })
-        .insert(playergear::Inventory::new_left());
+        },
+        ..default()
+    })
+    .insert(playergear::Inventory::new_left());
+
+    p.spawn(
+        TextBundle::from_section(
+            "[TAB]: T.Aux",
+            TextStyle {
+                font: handles.fonts.chakra.w300_light.clone(),
+                font_size: 16.0 * UI_SCALE,
+                color: colors::INVENTORY_STATS_COLOR,
+            },
+        )
+        .with_no_wrap()
+        .with_text_justify(JustifyText::Center)
+        .with_style(Style {
+            margin: UiRect::new(
+                Val::Px(-8.0 * UI_SCALE),
+                Val::Px(-8.0 * UI_SCALE),
+                Val::Px(9.0 * UI_SCALE),
+                Val::Px(-9.0 * UI_SCALE),
+            ),
+            align_self: AlignSelf::Center,
+            justify_self: JustifySelf::Center,
+            align_content: AlignContent::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        }),
+    );
 }
 
-pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
     // Right side panel - inventory
-    parent
-        .spawn(AtlasImageBundle {
+    p.spawn(NodeBundle {
+        style: Style {
+            flex_direction: FlexDirection::Row,
+            flex_grow: 1.0,
+            width: Val::Percent(100.0),
+            ..default()
+        },
+        ..default()
+    })
+    .with_children(|p| {
+        p.spawn(AtlasImageBundle {
             image: UiImage {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
@@ -113,7 +148,7 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
                     Val::Px(16.0 * UI_SCALE),
                     Val::Px(-8.0 * UI_SCALE),
                     Val::Px(8.0 * UI_SCALE),
-                    Val::Px(4.0 * UI_SCALE),
+                    Val::Px(-8.0 * UI_SCALE),
                 ),
                 align_self: AlignSelf::Center,
                 ..default()
@@ -121,9 +156,7 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
             ..default()
         })
         .insert(playergear::InventoryNext::non_empty());
-
-    parent
-        .spawn(AtlasImageBundle {
+        p.spawn(AtlasImageBundle {
             image: UiImage {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
@@ -135,25 +168,51 @@ pub fn setup_ui_gear_inv_right(parent: &mut ChildBuilder, handles: &GameAssets) 
             },
             style: Style {
                 margin: UiRect::left(Val::Px(-8.0)),
-                width: Val::Px(100.0 * UI_SCALE),
+                width: Val::Px(80.0 * UI_SCALE),
                 ..default()
             },
             ..default()
         })
         .insert(playergear::Inventory::new_right());
-    let mut text_bundle = TextBundle::from_section(
-        "-",
-        TextStyle {
-            font: handles.fonts.victormono.w600_semibold.clone(),
-            font_size: 20.0 * UI_SCALE,
-            color: colors::INVENTORY_STATS_COLOR,
-        },
+        let text_bundle = TextBundle::from_section(
+            "-",
+            TextStyle {
+                font: handles.fonts.victormono.w600_semibold.clone(),
+                font_size: 20.0 * UI_SCALE,
+                color: colors::INVENTORY_STATS_COLOR,
+            },
+        )
+        .with_style(Style {
+            justify_content: JustifyContent::Center,
+            margin: UiRect::top(Val::Px(8.0 * UI_SCALE)),
+            flex_grow: 1.0,
+            ..default()
+        });
+        p.spawn(text_bundle).insert(playergear::InventoryStats);
+    });
+    p.spawn(
+        TextBundle::from_section(
+            "[Q]: Next  [R]: M.Toggle  [T]: Swap Hands  [C]: Change Evidence",
+            TextStyle {
+                font: handles.fonts.chakra.w300_light.clone(),
+                font_size: 16.0 * UI_SCALE,
+                color: colors::INVENTORY_STATS_COLOR,
+            },
+        )
+        .with_no_wrap()
+        .with_text_justify(JustifyText::Right)
+        .with_style(Style {
+            margin: UiRect::new(
+                Val::Px(16.0 * UI_SCALE),
+                Val::Px(-8.0 * UI_SCALE),
+                Val::Px(0.0 * UI_SCALE),
+                Val::Px(0.0 * UI_SCALE),
+            ),
+            align_content: AlignContent::End,
+            justify_content: JustifyContent::End,
+            ..default()
+        }),
     );
-    text_bundle.style = Style {
-        flex_grow: 1.0,
-        ..default()
-    };
-    parent.spawn(text_bundle).insert(playergear::InventoryStats);
 }
 
 pub fn app_setup(app: &mut App) {
