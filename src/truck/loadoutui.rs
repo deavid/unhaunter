@@ -68,7 +68,6 @@ pub fn setup_loadout_ui(
         style: Style {
             padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
-            flex_wrap: FlexWrap::Wrap,
             ..default()
         },
         ..default()
