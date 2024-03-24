@@ -127,21 +127,19 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let cam = Camera2dBundle::default();
     commands.spawn(cam).insert(MCamera);
     info!("Main menu camera setup");
-    if !IS_WASM {
-        commands
-            .spawn(AudioBundle {
-                source: asset_server.load("music/unhaunter_intro.ogg"),
-                settings: PlaybackSettings {
-                    mode: bevy::audio::PlaybackMode::Loop,
-                    volume: bevy::audio::Volume::new(0.1),
-                    speed: 1.0,
-                    paused: false,
-                    spatial: false,
-                    spatial_scale: None,
-                },
-            })
-            .insert(MenuSound::default());
-    }
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("music/unhaunter_intro.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::new(0.1),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+                spatial_scale: None,
+            },
+        })
+        .insert(MenuSound::default());
 }
 
 pub fn cleanup(

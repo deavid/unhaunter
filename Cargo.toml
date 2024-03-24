@@ -10,7 +10,8 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.13.0", features = ["trace"] }
+bevy = "0.13.0"
+# bevy = { version = "0.13.0", features = ["trace"] }
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -45,10 +46,13 @@ opt-level = 3
 
 # These optimizations for release are trying to target mostly WASM
 [profile.release]
-# This causes slower compilation times in release
-lto = "thin"
-# Compiling to smaller sizes seems to help in WASM
-opt-level = 'z'
+debug = false
+strip = "debuginfo"
+debug-assertions = false
+overflow-checks = false
+lto = true
+codegen-units = 1
+opt-level = 3
 
 [[bin]]
 name = "unhaunter_game"
