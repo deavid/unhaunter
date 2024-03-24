@@ -1,7 +1,16 @@
-### Version 0.1.9 - ??
+### Version 0.1.9 - 2024-03-24
 
 Features:
-  -
+  - Add Equipment description in Loadout UI on hover, also tracks the evidence
+    status.
+  - Rearrange key help legend to fit the key info closer to the items that the
+    keys act upon.
+
+Fixes:
+  - Found and fixed the issue with bad WASM performance and stutter. It was
+    related to Bevy's trace feature. It has been disabled by default. Now works
+    on Firefox too.
+  - Prevent the player inventory in Loadout UI to wrap (WASM)
 
 
 ### Version 0.1.8 - 2024-03-23
