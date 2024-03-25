@@ -36,6 +36,10 @@ impl GearUsable for SpiritBox {
         "Spirit Box"
     }
 
+    fn get_description(&self) -> &'static str {
+        "A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

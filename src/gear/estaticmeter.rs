@@ -19,6 +19,10 @@ impl GearUsable for EStaticMeter {
         "Electrostatic Meter"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Measures static electricity in the air. Might warn if the ghost is angering."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

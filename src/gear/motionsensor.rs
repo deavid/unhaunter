@@ -19,6 +19,10 @@ impl GearUsable for MotionSensor {
         "Motion Sensor"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Shoots an infrared beam that if cut will make the device beep. Can alert if a presence passes through."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);

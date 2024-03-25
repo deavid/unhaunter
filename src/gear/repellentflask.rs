@@ -24,6 +24,10 @@ impl GearUsable for RepellentFlask {
         "Unhaunter Repellent"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Crafted in the van, specifically targeting a single ghost type to be effective enough to expel a ghost."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = match self.liquid_content {

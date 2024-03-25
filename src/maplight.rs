@@ -8,6 +8,7 @@ use crate::{
     ghost::GhostSprite,
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
+    platform::plt::IS_WASM,
     player,
 };
 use bevy::{prelude::*, utils::HashMap};
@@ -124,13 +125,19 @@ pub fn compute_visibility(
                 if dst_f < 0.00001 {
                     continue;
                 }
-                if !vf.contains_key(&npos) {
+                if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
                 let k = match roomdb.room_tiles.get(&npos).is_some() {
                     // Decrease view range inside the location
                     true => 3.0,
-                    false => 7.0,
+                    false => {
+                        if IS_WASM {
+                            4.0
+                        } else {
+                            7.0
+                        }
+                    }
                 };
                 dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
                 let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
@@ -165,6 +172,7 @@ pub fn apply_lighting(
         &PlayerGear,
     )>,
     mut bf: ResMut<board::BoardData>,
+    mut vf: ResMut<board::VisibilityData>,
     gc: Res<game::GameConfig>,
     qas: Query<(&AudioSink, &GameSound)>,
     mut roomdb: ResMut<board::RoomDB>,
@@ -176,7 +184,14 @@ pub fn apply_lighting(
     const EYE_SPEED: f32 = 0.5;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.001;
-    let mut visibility_field = HashMap::<BoardPosition, f32>::new();
+
+    vf.visibility_field.clear();
+
+    // FIXME: This "faster" approach causes bugs
+    // for v in vf.visibility_field.values_mut() {
+    //     *v = -0.01;
+    // }
+
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_seconds();
@@ -218,12 +233,18 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
             }
         }
-        compute_visibility(&mut visibility_field, &bf.collision_field, pos, &mut roomdb);
+        compute_visibility(
+            &mut vf.visibility_field,
+            &bf.collision_field,
+            pos,
+            &mut roomdb,
+        );
         player_pos = *pos;
     }
     // --- ambient sound processing ---
 
-    let total_vis: f32 = visibility_field
+    let total_vis: f32 = vf
+        .visibility_field
         .iter()
         .map(|(k, v)| {
             v * match roomdb.room_tiles.get(k).is_some() {
@@ -273,7 +294,11 @@ pub fn apply_lighting(
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
+    #[cfg(not(target_arch = "wasm32"))]
     const VSMALL_PRIME: usize = 31;
+    #[cfg(target_arch = "wasm32")]
+    const VSMALL_PRIME: usize = 97;
+
     const BIG_PRIME: usize = 95629;
     let mask: usize = rand::thread_rng().gen();
     let lf = &bf.light_field;
@@ -387,8 +412,8 @@ pub fn apply_lighting(
         dst_color.set_a(opacity.clamp(0.6, 1.0));
 
         opacity = opacity
-            .min(visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
-            .min(1.0);
+            .min(vf.visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
+            .clamp(0.0, 1.0);
 
         let mut new_mat = materials1.get(mat).unwrap().clone();
         let orig_mat = new_mat.clone();
@@ -438,7 +463,8 @@ pub fn apply_lighting(
         *vis = new_vis;
 
         let delta = orig_mat.data.delta(&new_mat.data);
-        if !invisible && delta > 0.02 + min_threshold {
+        let thr = if IS_WASM { 0.2 } else { 0.02 };
+        if !invisible && delta > thr + min_threshold {
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
             // change_count += 1;
@@ -454,7 +480,12 @@ pub fn apply_lighting(
             // If the given cell was not selected for update, skip updating its color (otherwise it can blink)
             continue;
         };
-        let mut opacity: f32 = 1.0 * visibility_field.get(&bpos).copied().unwrap_or_default();
+        let mut opacity: f32 = 1.0
+            * vf.visibility_field
+                .get(&bpos)
+                .copied()
+                .unwrap_or_default()
+                .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
         let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {

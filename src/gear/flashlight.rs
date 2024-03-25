@@ -113,6 +113,10 @@ impl GearUsable for Flashlight {
         "Flashlight"
     }
 
+    fn get_description(&self) -> &'static str {
+        "Iluminates the way. Imprescindible tool to work in the dark."
+    }
+
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = self.status.string();

@@ -217,7 +217,7 @@ https://deavid.github.io/unhaunter/
 
 However, Google Chrome is recommended.
 
-Known issues:
+Known issues: (Some seem to be because we enabled Bevy's trace by default)
 
 * Firefox seems to have serious performance problems.
 * Noticeable audio crackling.
@@ -242,26 +242,6 @@ Run with:
 
   cargo run --target wasm32-unknown-unknown --release
 
-
-Current problems:
-
-* Slow?
-* Regular filesystem operation do not work. Bevy Assets do work. Therefore map loading is borked.
-* Instant::now does not work.
-* Framepace does not work on the browser. Solved.
-* Tiled library is never going to work, it opens the files it wants, whenever it wants. It will always fail on WASM.
-
-Here's a sample on how to load custom assets, so we could load our own data:
-https://bevyengine.org/examples/Assets/custom-asset/
-
-But most likely this forces us to pre-bake the maps somehow.
-
-Wait, tiled-rs DOES support wasm.
-
-Update: It works now, but there's stutter. Mainly because there's only one thread
-for executing; and on top of that there's a GC that when it runs it pauses the game.
-
----
 Wasm bindgen:
 
   wasm-pack build --release --target web

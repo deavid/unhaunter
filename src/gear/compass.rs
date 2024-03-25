@@ -18,6 +18,9 @@ impl GearUsable for Compass {
     fn get_display_name(&self) -> &'static str {
         "Compass"
     }
+    fn get_description(&self) -> &'static str {
+        "Measures the Earth's magnetic field, and sometimes the ghost."
+    }
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
