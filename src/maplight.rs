@@ -181,7 +181,7 @@ pub fn apply_lighting(
     const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
     const CENTER_EXP_GAMMA: f32 = 1.9;
-    const EYE_SPEED: f32 = 0.5;
+    const EYE_SPEED: f32 = 0.25;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.001;
 

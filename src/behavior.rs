@@ -270,6 +270,10 @@ pub enum Class {
     Window,
     InvisibleWall,
     CornerWall,
+    #[allow(clippy::upper_case_acronyms)]
+    NPC,
+    FakeGhost,
+    FakeBreach,
     #[default]
     None,
 }
@@ -502,6 +506,9 @@ impl SpriteConfig {
             Class::None => entity,
             Class::InvisibleWall => entity,
             Class::CornerWall => entity,
+            Class::FakeBreach => entity,
+            Class::FakeGhost => entity,
+            Class::NPC => entity,
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
@@ -547,6 +554,9 @@ impl SpriteConfig {
             Class::Furniture => {
                 p.display.global_z = (0.000050).try_into().unwrap();
             }
+            Class::NPC => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+            }
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
                 p.light.see_through = true;
@@ -564,6 +574,14 @@ impl SpriteConfig {
             Class::GhostSpawn => {
                 p.display.disable = true;
                 p.util = Util::GhostSpawn;
+            }
+            Class::FakeGhost => {
+                p.display.disable = true;
+                // p.util = Util::GhostSpawn;
+            }
+            Class::FakeBreach => {
+                p.display.disable = true;
+                // p.util = Util::GhostSpawn;
             }
             Class::VanEntry => {
                 // p.display.disable = true;

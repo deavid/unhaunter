@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "map_house1_3x.tmx",
+    "activeFile": "tut01_basics.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -23,8 +23,8 @@
             "scale": 4,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 502.25,
-                "y": 250.25
+                "x": 501.875,
+                "y": 249.875
             }
         },
         "map_house1_3x.tmx": {
@@ -46,8 +46,8 @@
             "scale": 4,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 1535.875,
-                "y": 767.875
+                "x": 1619.625,
+                "y": 830.875
             }
         },
         "map_school1.tmx": {
@@ -57,8 +57,19 @@
             "scale": 4,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 1534.25,
-                "y": 766.25
+                "x": 1536,
+                "y": 767.75
+            }
+        },
+        "tut01_basics.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 1.5,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 819.6666666666665,
+                "y": 416.33333333333326
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -104,22 +115,27 @@
     "map.tileWidth": 72,
     "map.width": 128,
     "openFiles": [
-        "map_house1_3x.tmx",
         "unhaunter_custom_tileset.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_spritesheetA_3x3x3.tsx",
-        "unhaunter_spritesheet2.tsx"
+        "unhaunter_spritesheet2.tsx",
+        "map_school1.tmx",
+        "map_house1.tmx",
+        "tut01_basics.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "unhaunter_custom_tileset.tsx",
+        "unhaunter_spritesheetA_6x6x10.tsx",
+        "unhaunter_spritesheetA_3x3x3.tsx",
+        "unhaunter_spritesheet2.tsx",
+        "map_school1.tmx",
         "map_house1.tmx",
+        "tut01_basics.tmx",
+        "map_house2.tmx",
         "map_house1_3x.tmx",
         "unhaunter_test2b.tmx",
-        "unhaunter_spritesheet2.tsx",
-        "unhaunter_spritesheetA_3x3x3.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx",
-        "unhaunter_custom_tileset.tsx",
         "character1.tsx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
