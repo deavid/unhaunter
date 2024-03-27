@@ -183,7 +183,7 @@ pub fn apply_lighting(
     const CENTER_EXP_GAMMA: f32 = 1.2; // Above 1.0, higher the less night vision.
     const EYE_SPEED: f32 = 0.1;
     let mut cursor_exp: f32 = 0.001;
-    let mut exp_count: f32 = 0.001;
+    let mut exp_count: f32 = 0.1;
 
     vf.visibility_field.clear();
 
@@ -276,7 +276,7 @@ pub fn apply_lighting(
     cursor_exp += fl_total_power.sqrt() / 8.0;
 
     assert!(cursor_exp.is_normal());
-    cursor_exp = (cursor_exp + 0.01).sqrt();
+    cursor_exp += 0.2;
 
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
@@ -427,9 +427,6 @@ pub fn apply_lighting(
             src_a - A_DELTA * (src_a - opacity).signum()
         };
         dst_color.set_a(new_a);
-        // const A_SOFT: f32 = 1.0;
-        // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
-        new_mat.data.color = dst_color;
         // Sound field visualization:
 
         const SMOOTH_F: f32 = 1.0;
@@ -443,6 +440,17 @@ pub fn apply_lighting(
         new_mat.data.gtr = (new_mat.data.gtr * SMOOTH_F + f_gamma(lux_tr)) / (1.0 + SMOOTH_F);
         new_mat.data.gbl = (new_mat.data.gbl * SMOOTH_F + f_gamma(lux_bl)) / (1.0 + SMOOTH_F);
         new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
+
+        const DARK_COLOR: Color = Color::rgba(0.247, 0.714, 0.878, 1.0);
+        const DARK_COLOR2: Color = Color::rgba(0.03, 0.336, 0.444, 1.0);
+        let exp_color = ((-(exposure + 0.0001).ln() / 5.0 - 0.3).tanh() + 0.5).clamp(0.0, 1.0);
+        let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+        let dark2 = lerp_color(Color::WHITE, DARK_COLOR2, exp_color);
+        new_mat.data.ambient_color = dark.with_a(0.0);
+        // const A_SOFT: f32 = 1.0;
+        // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
+        new_mat.data.color =
+            Color::rgba_from_array(dst_color.rgba_to_vec4() * dark2.rgba_to_vec4());
 
         const DEBUG_SOUND: bool = false;
         if DEBUG_SOUND {

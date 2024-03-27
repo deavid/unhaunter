@@ -82,6 +82,7 @@ fn setup(
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
 pub struct CustomMaterial1Data {
     pub color: Color,
+    pub ambient_color: Color,
     pub gamma: f32,
     pub gtl: f32,
     pub gtr: f32,
@@ -104,6 +105,13 @@ impl CustomMaterial1Data {
         delta += (color1[1] - color2[1]).abs();
         delta += (color1[2] - color2[2]).abs();
 
+        let acolor1 = self.ambient_color.as_rgba_f32();
+        let acolor2 = other.ambient_color.as_rgba_f32();
+
+        delta += (acolor1[0] - acolor2[0]).abs();
+        delta += (acolor1[1] - acolor2[1]).abs();
+        delta += (acolor1[2] - acolor2[2]).abs();
+
         delta += (self.gamma - other.gamma).abs();
         delta += (self.gtl - other.gtl).abs();
         delta += (self.gtr - other.gtr).abs();
@@ -124,6 +132,7 @@ impl Default for CustomMaterial1Data {
     fn default() -> Self {
         Self {
             color: Color::WHITE,
+            ambient_color: Color::BLACK.with_a(0.0),
             gamma: 1.0,
             gtl: 2.0,
             gtr: 1.0,

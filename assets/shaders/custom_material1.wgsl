@@ -2,6 +2,7 @@
 
 struct CustomMaterial {
     color: vec4<f32>,
+    ambient_color: vec4<f32>,
     gamma: f32,
     gtl: f32,
     gtr: f32,
@@ -73,7 +74,6 @@ fn fragment(
 
 
     let color: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
-
     // <<--
 
 
@@ -128,18 +128,26 @@ fn fragment(
     gamma = (gamma + gc / wcf) / (1.0 + wcf);
 
     // Black point:
-    var black: f32 = 0.0001 * gamma * gamma;
-    var b4: vec4<f32> = vec4(black, black, black, 0.0);
+    let black: f32 = 0.001 * gamma * gamma;
+    let b4: vec4<f32> = vec4(black, black, black, 0.0);
+
+    let zero4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let one4 = vec4(1.0, 1.0, 1.0, 1.0);
 
     // Apply gamma correction
     let gamma4a: vec4<f32> = vec4<f32>(gamma, gamma, gamma, 1.0);
     let gamma4b: vec4<f32> = vec4<f32>(1.0 / gamma, 1.0 / gamma, 1.0 / gamma, 1.0);
     let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 1.0);
-    let corrected_color_rgb = (pow(color + black, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
+    let corrected_color_rgb = (pow(color + b4, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
 
     // Apply material color tint to the gamma-corrected color
     let final_color = corrected_color_rgb * material.color;
 
-    // Return the final color, combining the RGB adjustments with the original alpha
-    return final_color;
+    // Apply material ambient color
+    var ambient = material.ambient_color;
+    ambient[3] = 0.0;
+
+    let ambiented_color = clamp(final_color + ambient, zero4, one4);
+
+    return ambiented_color;
 }
