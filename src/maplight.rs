@@ -179,9 +179,9 @@ pub fn apply_lighting(
     time: Res<Time>,
 ) {
     const GAMMA_EXP: f32 = 1.2;
-    const CENTER_EXP: f32 = 2.3;
-    const CENTER_EXP_GAMMA: f32 = 1.9;
-    const EYE_SPEED: f32 = 0.02;
+    const CENTER_EXP: f32 = 20.0; // Higher values, less blinding light.
+    const CENTER_EXP_GAMMA: f32 = 1.2; // Above 1.0, higher the less night vision.
+    const EYE_SPEED: f32 = 0.1;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.001;
 
@@ -269,7 +269,7 @@ pub fn apply_lighting(
     }
     // ---
     cursor_exp /= exp_count;
-    cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.1;
+    cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.00001;
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
