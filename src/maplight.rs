@@ -181,7 +181,7 @@ pub fn apply_lighting(
     const GAMMA_EXP: f32 = 1.2;
     const CENTER_EXP: f32 = 2.3;
     const CENTER_EXP_GAMMA: f32 = 1.9;
-    const EYE_SPEED: f32 = 0.25;
+    const EYE_SPEED: f32 = 0.02;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.001;
 
@@ -269,14 +269,14 @@ pub fn apply_lighting(
     }
     // ---
     cursor_exp /= exp_count;
-    cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.01;
+    cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.1;
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
     cursor_exp += fl_total_power.sqrt() / 8.0;
 
     assert!(cursor_exp.is_normal());
-    cursor_exp = cursor_exp / 2.0 + 1.0;
+    cursor_exp = (cursor_exp + 0.01).sqrt();
 
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;

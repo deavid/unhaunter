@@ -100,16 +100,31 @@ fn fragment(
     var spy = round(mesh.uv.y * material.sprite_height - d);
     var muvx = (spx + d) / material.sprite_width;
     var muvy = (spy + d) / material.sprite_height;
+
+    var margin = 0.5;
+    var pdx = 1.0 / material.sprite_width ;
+    var pdy = 1.0 / material.sprite_height ;
+
+    // Margin protects the sprites from reading the neighboring sprite
+    muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
+    muvy = clamp(muvy, pdy* margin, 1.0- pdy* margin);
+
+    // Bilinear sample:
+    var uv_xb = muvx * cell_width + cell_min_x;
+    var uv_yb = muvy * cell_height + cell_min_y;
+    var sprite_uvb = vec2(uv_xb, uv_yb);
+    var cb: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvb);
+
+    // Adjustment to get nearest neighbor:
     var duv = vec2<f32>(mesh.uv.x- muvx, mesh.uv.y- muvy);
+    // Taxicab metric for emulating nearest neighbor:
+    var duv_len = max(abs(duv.x),abs(duv.y)) / (1.6);
     var ddx = pow(abs(dpdx(mesh.uv.x)) * material.sprite_width, 3.0);
-    var duv2 = max(length(duv) - 0.002/ material.sprite_width / ddx, 0.0) * normalize(duv);
+    var duv2 = max(duv_len - 0.002/ material.sprite_width / ddx, 0.0) * normalize(duv);
     muvx += duv2.x / 1.0;
     muvy += duv2.y / 1.0;
 
     // Margin protects the sprites from reading the neighboring sprite
-    var margin = 0.5;
-    var pdx = 1.0 / material.sprite_width ;
-    var pdy = 1.0 / material.sprite_height ;
     muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
     muvy = clamp(muvy, pdy* margin, 1.0- pdy* margin);
     
@@ -130,7 +145,7 @@ fn fragment(
     var cr: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvr);
     var cu: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvu);
     var cd: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvd);
-
+    c[3] = cb[3];
     var m_alpha = 1.0001 - c[3];
     var co = (cl * cl[3] + cr * cr[3] + cu * cu[3] + cd * cd[3]) * m_alpha;
     var o_alpha = (cl[3] + cr[3] + cu[3] + cd[3]) * m_alpha;

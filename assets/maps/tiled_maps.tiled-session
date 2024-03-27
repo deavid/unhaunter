@@ -23,8 +23,8 @@
             "scale": 4,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 501.875,
-                "y": 249.875
+                "x": 504,
+                "y": 252
             }
         },
         "map_house1_3x.tmx": {
@@ -65,11 +65,11 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 1.5,
-            "selectedLayer": 4,
+            "scale": 5.5,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 819.6666666666665,
-                "y": 416.33333333333326
+                "x": 284.90909090909093,
+                "y": 702.090909090909
             }
         },
         "unhaunter_custom_tileset.tsx": {
