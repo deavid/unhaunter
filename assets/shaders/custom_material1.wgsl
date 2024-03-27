@@ -25,16 +25,72 @@ var base_color_sampler: sampler;
 fn fragment(
     mesh: VertexOutput,
 ) -> @location(0) vec4<f32> {
-    // separation between tiles is 35x18, sprite is 128x128
+    // Full texture size computation:
+    let tex_width = material.sprite_width * f32(material.sheet_cols);
+    let tex_height = material.sprite_height * f32(material.sheet_rows);
+    let tex_size = vec2<f32>(tex_width, tex_height);
+
+    // Calculate sprite UVs considering the sprite sheet layout
+    let row: u32 = material.sheet_idx / material.sheet_cols;
+    let col: u32 = material.sheet_idx % material.sheet_cols;
+
+    // Compute the size of each cell in the atlas (in UV space)
+    let cell_width: f32 = 1.0 / f32(material.sheet_cols);
+    let cell_height: f32 = 1.0 / f32(material.sheet_rows);
+
+    // Compute the base UV coordinates for the sprite within the atlas
+    let base_u: f32 = f32(col) * cell_width;
+    let base_v: f32 = f32(row) * cell_height;
+
+
+    // Adding a margin to the sprite coordinates to prevent reading from neighboring sprite
+    let margin = 0.5;
+    let mx = margin / material.sprite_width ;
+    let my = margin / material.sprite_height ;
+
+    // Margin protects the sprites from reading the neighboring sprite
+    let margin_uv = clamp(mesh.uv, vec2<f32>(0.0, my*2.0), vec2<f32>(1.0-mx, 1.0-my));
+
+    // Correcting UV coordinates for the sprite
+    var sprite_uv: vec2<f32> = vec2<f32>(
+        base_u + margin_uv.x * cell_width,
+        base_v + margin_uv.y * cell_height,
+    );
+
+    // -->> (Pixel perfect): This uses a neares neighbor that attempts to mitigate moiré effect by antialiasing sub-pixel movements.
+    // Applying pixel-perfect sampling on the gamma corrected base color
+    let uv = sprite_uv; // Using the corrected UV for sprite sheets
+    let texel_per_px = abs(dpdx(mesh.uv.x) * material.sprite_width); // 0.1 at 10x zoom. Amount of texels that fit in one screen pixel.
+    
+    // We need to account that the pixels are centered 0.5 texels to a side, so we need to apply a correction
+    let d_factor = 0.5;
+    let d_corr = vec2<f32>(d_factor * sign(dpdx(mesh.uv.x)), d_factor * sign(dpdy(mesh.uv.y)));
+    let uv_frac = fract(uv * tex_size - d_corr);
+    let uv_floor = (floor(uv * tex_size - d_corr) + d_corr) / tex_size;
+    let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / 2.0 + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
+    let uv_comp = uv_floor + (uv_frac2) / tex_size;
+
+
+
+    let color: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
+
+    // <<--
+
+
+    // Gamma correction based on location within the sprite for gradient effect
+    let gamma_tl = material.gtl;
+    let gamma_tr = material.gtr;
+    let gamma_bl = material.gbl;
+    let gamma_br = material.gbr;
+
+    // Estimate coordinates of an isometric floor to mix the gamma color
     var z: f32 = 0.5;
     var dz: f32 = 2.0 * 35.0/128.0;
     var dp: vec2<f32> = vec2(35.0/128.0/z, 18.0/128.0*2.0/z);
     var dpx: vec2<f32> = vec2(-35.0/128.0/z, 18.0/128.0*2.0/z);
+
     // center of UV -> Anchors::calc(63, 95, 128, 128),
     var cnt: vec2<f32> = vec2(63.0/128.0, 95.0/128.0);
-    // UV seems to go 0..1 and it is X,Y
-    // TODO: Ideally the Y distance should count as doulbe to account for isometric.
-
     var pttl: vec2<f32> = cnt - dp;
     var pttr: vec2<f32> = cnt - dpx;
     var ptbr: vec2<f32> = cnt + dp;
@@ -66,95 +122,24 @@ fn fragment(
     var gbl: f32 = material.gbl;
     var gbr: f32 = material.gbr;
     
-    var g: f32 = (gc * wct + gtl * wtl + gtr * wtr + gbl * wbl + gbr * wbr) / (wct+wtl+wtr+wbl+wbr);
-
+    // Interpolate gamma values based on UV coordinates. Assume uv coordinates are normalized [0,1] within each sprite cell.
+    var gamma: f32 = (gc * wct + gtl * wtl + gtr * wtr + gbl * wbl + gbr * wbr) / (wct+wtl+wtr+wbl+wbr);
     var wcf: f32 = 1.2; // <- softening effect. Higher increases the edge variability
-    g = (g + gc / wcf)/(1.0+wcf);
+    gamma = (gamma + gc / wcf) / (1.0 + wcf);
 
-    var e: f32 = 1.0/g;
-    var e4: vec4<f32> = vec4(e,e,e,1.0);
-    var g4: vec4<f32> = vec4(g,g,g,1.0);
-    var black: f32 = 0.0001 * g * g;
+    // Black point:
+    var black: f32 = 0.0001 * gamma * gamma;
     var b4: vec4<f32> = vec4(black, black, black, 0.0);
 
+    // Apply gamma correction
+    let gamma4a: vec4<f32> = vec4<f32>(gamma, gamma, gamma, 1.0);
+    let gamma4b: vec4<f32> = vec4<f32>(1.0 / gamma, 1.0 / gamma, 1.0 / gamma, 1.0);
+    let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 1.0);
+    let corrected_color_rgb = (pow(color + black, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
 
-    /// remap mesh.uv for spritesheets, cutting the spritesheet to get the sprite_idx
-    var sheet_idx = material.sheet_idx;  
-    var sheet_rows = material.sheet_rows;  
-    var sheet_cols = material.sheet_cols;
+    // Apply material color tint to the gamma-corrected color
+    let final_color = corrected_color_rgb * material.color;
 
-    var row = f32(sheet_idx / sheet_cols);
-    var col = f32(sheet_idx % sheet_cols);
-
-    var cell_width = 1.0 / f32(sheet_cols); 
-    var cell_height = 1.0 / f32(sheet_rows);
-
-    var cell_min_x = col * cell_width;
-    // var cell_max_x = cell_min_x + cell_width;
-
-    var cell_min_y = row * cell_height;  
-    // var cell_max_y = cell_min_y + cell_height;
-
-    var d = 0.5 * sign(dpdx(mesh.uv.x));
-    var spx = round(mesh.uv.x * material.sprite_width - d);
-    var spy = round(mesh.uv.y * material.sprite_height - d);
-    var muvx = (spx + d) / material.sprite_width;
-    var muvy = (spy + d) / material.sprite_height;
-
-    var margin = 0.5;
-    var pdx = 1.0 / material.sprite_width ;
-    var pdy = 1.0 / material.sprite_height ;
-
-    // Margin protects the sprites from reading the neighboring sprite
-    muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
-    muvy = clamp(muvy, pdy* margin, 1.0- pdy* margin);
-
-    // Bilinear sample:
-    var uv_xb = muvx * cell_width + cell_min_x;
-    var uv_yb = muvy * cell_height + cell_min_y;
-    var sprite_uvb = vec2(uv_xb, uv_yb);
-    var cb: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvb);
-
-    // Adjustment to get nearest neighbor:
-    var duv = vec2<f32>(mesh.uv.x- muvx, mesh.uv.y- muvy);
-    // Taxicab metric for emulating nearest neighbor:
-    var duv_len = max(abs(duv.x),abs(duv.y)) / (1.6);
-    var ddx = pow(abs(dpdx(mesh.uv.x)) * material.sprite_width, 3.0);
-    var duv2 = max(duv_len - 0.002/ material.sprite_width / ddx, 0.0) * normalize(duv);
-    muvx += duv2.x / 1.0;
-    muvy += duv2.y / 1.0;
-
-    // Margin protects the sprites from reading the neighboring sprite
-    muvx = clamp(muvx, 0.0, 1.0 - pdx* margin);
-    muvy = clamp(muvy, pdy* margin, 1.0- pdy* margin);
-    
-    
-    var uv_x = muvx * cell_width + cell_min_x;
-    var uv_y = muvy * cell_height + cell_min_y;
-
-    var pxx = pdx * cell_width;
-    var pxy = pdy * cell_height;
-
-    var sprite_uv = vec2(uv_x, uv_y);
-    var sprite_uvl = vec2(uv_x - pxx, uv_y);
-    var sprite_uvr = vec2(uv_x + pxx, uv_y);
-    var sprite_uvu = vec2(uv_x, uv_y - pxy);
-    var sprite_uvd = vec2(uv_x, uv_y + pxy);
-    var c: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uv);
-    var cl: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvl);
-    var cr: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvr);
-    var cu: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvu);
-    var cd: vec4<f32> = textureSample(base_color_texture, base_color_sampler, sprite_uvd);
-    c[3] = cb[3];
-    var m_alpha = 1.0001 - c[3];
-    var co = (cl * cl[3] + cr * cr[3] + cu * cu[3] + cd * cd[3]) * m_alpha;
-    var o_alpha = (cl[3] + cr[3] + cu[3] + cd[3]) * m_alpha;
-    var ff_corr = 5.0;
-    var f_corr = (ff_corr + 1.0) / (c[3] +  ff_corr);
-    c[0] = (c[0] * c[3] + co[0]) / (c[3] + o_alpha) * (f_corr);
-    c[1] = (c[1] * c[3] + co[1]) / (c[3] + o_alpha) * (f_corr);
-    c[2] = (c[2] * c[3] + co[2]) / (c[3] + o_alpha) * (f_corr);
-    c[3] = pow(c[3], 1.2);
-
-    return (pow(c + b4, e4) * g + g4 * c) / (1.0 + g) * material.color;
+    // Return the final color, combining the RGB adjustments with the original alpha
+    return final_color;
 }

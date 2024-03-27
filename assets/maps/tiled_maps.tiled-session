@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "tut01_basics.tmx",
+    "activeFile": "map_house1.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -21,10 +21,10 @@
                 2
             ],
             "scale": 4,
-            "selectedLayer": 4,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 504,
-                "y": 252
+                "x": 612.75,
+                "y": 278.875
             }
         },
         "map_house1_3x.tmx": {
@@ -68,8 +68,8 @@
             "scale": 5.5,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 284.90909090909093,
-                "y": 702.090909090909
+                "x": 273.8181818181818,
+                "y": 701.8181818181819
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -131,8 +131,8 @@
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
-        "map_house1.tmx",
         "tut01_basics.tmx",
+        "map_house1.tmx",
         "map_house2.tmx",
         "map_house1_3x.tmx",
         "unhaunter_test2b.tmx",
