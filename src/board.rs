@@ -827,17 +827,17 @@ pub fn boardfield_update(
                             let mut src_lux = src.lux;
                             let min_lux = match step {
                                 0 => 0.01,
-                                1 => 0.001,
-                                2 => 0.0001,
-                                3 => 0.000001,
+                                1 => 0.00001,
+                                2 => 0.00000001,
+                                3 => 0.00000000001,
                                 _ => 0.0,
                             };
                             let max_lux = match step {
                                 0 => f32::MAX,
                                 1 => 20000.0,
-                                2 => 400.0,
-                                3 => 100.0,
-                                _ => 50.0,
+                                2 => 40.0,
+                                3 => 20.0,
+                                _ => 10.0,
                             };
                             if src_lux < min_lux {
                                 continue;

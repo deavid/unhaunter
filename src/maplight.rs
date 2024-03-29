@@ -178,9 +178,9 @@ pub fn apply_lighting(
     mut roomdb: ResMut<board::RoomDB>,
     time: Res<Time>,
 ) {
-    const GAMMA_EXP: f32 = 1.2;
-    const CENTER_EXP: f32 = 20.0; // Higher values, less blinding light.
-    const CENTER_EXP_GAMMA: f32 = 1.2; // Above 1.0, higher the less night vision.
+    const GAMMA_EXP: f32 = 2.4;
+    const CENTER_EXP: f32 = 10.0; // Higher values, less blinding light.
+    const CENTER_EXP_GAMMA: f32 = 2.25; // Above 1.0, higher the less night vision.
     const EYE_SPEED: f32 = 0.1;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.1;
@@ -276,7 +276,7 @@ pub fn apply_lighting(
     cursor_exp += fl_total_power.sqrt() / 8.0;
 
     assert!(cursor_exp.is_normal());
-    cursor_exp += 0.2;
+    cursor_exp += 0.05;
 
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
@@ -354,15 +354,18 @@ pub fn apply_lighting(
                 let ld = LightData::from_type(*fltype, fl);
                 lightdata = lightdata.add(&ld);
             }
-
+            const AMBIENT_LIGHT: f32 = 0.0001;
             lf.get(bpos).map(|lf| {
                 (
                     (
-                        (lf.lux + lux_fl[0]) / exposure,
-                        (lf.lux + lux_fl[1]) / exposure,
-                        (lf.lux + lux_fl[2]) / exposure,
+                        (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure,
+                        (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure,
+                        (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure,
                     ),
-                    lightdata.add(&LightData::from_type(LightType::Visible, lf.lux)),
+                    lightdata.add(&LightData::from_type(
+                        LightType::Visible,
+                        lf.lux + AMBIENT_LIGHT,
+                    )),
                 )
             })
         };
@@ -404,7 +407,6 @@ pub fn apply_lighting(
                 lux_bl = lux_c;
             }
         }
-
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             board::compute_color_exposure(lux_c, r, board::DARK_GAMMA, src_color)
@@ -435,22 +437,43 @@ pub fn apply_lighting(
                 + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
                 / 2.0
         };
-        new_mat.data.gamma = (new_mat.data.gamma * SMOOTH_F + f_gamma(lux_c)) / (1.0 + SMOOTH_F);
-        new_mat.data.gtl = (new_mat.data.gtl * SMOOTH_F + f_gamma(lux_tl)) / (1.0 + SMOOTH_F);
-        new_mat.data.gtr = (new_mat.data.gtr * SMOOTH_F + f_gamma(lux_tr)) / (1.0 + SMOOTH_F);
-        new_mat.data.gbl = (new_mat.data.gbl * SMOOTH_F + f_gamma(lux_bl)) / (1.0 + SMOOTH_F);
-        new_mat.data.gbr = (new_mat.data.gbr * SMOOTH_F + f_gamma(lux_br)) / (1.0 + SMOOTH_F);
+        const K_COLD: f32 = 0.5;
+        let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
 
-        const DARK_COLOR: Color = Color::rgba(0.247, 0.714, 0.878, 1.0);
+        const DARK_COLOR: Color = Color::rgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
         const DARK_COLOR2: Color = Color::rgba(0.03, 0.336, 0.444, 1.0);
-        let exp_color = ((-(exposure + 0.0001).ln() / 5.0 - 0.3).tanh() + 0.5).clamp(0.0, 1.0);
+        let exp_color =
+            ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
         let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
-        let dark2 = lerp_color(Color::WHITE, DARK_COLOR2, exp_color);
+        let dark2 = lerp_color(
+            Color::WHITE,
+            DARK_COLOR2,
+            exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
+        );
         new_mat.data.ambient_color = dark.with_a(0.0);
         // const A_SOFT: f32 = 1.0;
         // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
         new_mat.data.color =
             Color::rgba_from_array(dst_color.rgba_to_vec4() * dark2.rgba_to_vec4());
+
+        const BRIGHTNESS: f32 = 1.01;
+        let tint_comp = (new_mat.data.color.l() + 0.01).recip() + exp_color;
+        let gamma_mean = |a: f32, b: f32| {
+            (a * SMOOTH_F
+                + f_gamma(
+                    b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
+                        + (tint_comp - 1.0 + cold_f * 2.0 + (exp_color * 2.0).powi(2))
+                            / (10.0 + exposure + b),
+                )
+                + exp_color / 40.0)
+                / (1.0 + SMOOTH_F)
+        };
+
+        new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
+        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_tl);
+        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_tr);
+        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_bl);
+        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_br);
 
         const DEBUG_SOUND: bool = false;
         if DEBUG_SOUND {

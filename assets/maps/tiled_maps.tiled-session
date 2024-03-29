@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "map_house1.tmx",
+    "activeFile": "tut01_basics.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -23,8 +23,8 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 612.75,
-                "y": 278.875
+                "x": 720.5,
+                "y": 342.125
             }
         },
         "map_house1_3x.tmx": {
@@ -66,30 +66,30 @@
                 2
             ],
             "scale": 5.5,
-            "selectedLayer": 5,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 273.8181818181818,
-                "y": 701.8181818181819
+                "x": 223.90909090909093,
+                "y": 717.7272727272727
             }
         },
         "unhaunter_custom_tileset.tsx": {
             "dynamicWrapping": true,
-            "scaleInDock": 1,
+            "scaleInDock": 4,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheet2.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 2,
+            "scaleInDock": 4,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_3x3x3.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 1.5,
+            "scaleInDock": 4,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_6x6x10.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 1.5,
+            "scaleInDock": 4,
             "scaleInEditor": 2
         },
         "unhaunter_test2b.tmx": {
@@ -131,8 +131,8 @@
         "unhaunter_spritesheetA_3x3x3.tsx",
         "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
-        "tut01_basics.tmx",
         "map_house1.tmx",
+        "tut01_basics.tmx",
         "map_house2.tmx",
         "map_house1_3x.tmx",
         "unhaunter_test2b.tmx",
