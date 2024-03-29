@@ -8,7 +8,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
-const DEBUG_PLAYER: bool = false;
+const DEBUG_PLAYER: bool = true;
 
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
@@ -575,7 +575,13 @@ fn lose_sanity(
         }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
-        ps.crazyness += crazy.clamp(0.000000001, 10000000.0).sqrt() * dt;
+        const SANITY_RECOVER: f32 = 4.0 / 100.0;
+        ps.crazyness += (crazy.clamp(0.000000001, 10000000.0).sqrt()
+            - SANITY_RECOVER * ps.crazyness / (1.0 + mean_sound.0 * 10.0))
+            * dt;
+        if ps.crazyness < 0.0 {
+            ps.crazyness = 0.0;
+        }
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
             // ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
