@@ -43,6 +43,8 @@ fn fragment(
     let base_u: f32 = f32(col) * cell_width;
     let base_v: f32 = f32(row) * cell_height;
 
+    let zero4 = vec4(0.0, 0.0, 0.0, 0.0);
+    let one4 = vec4(1.0, 1.0, 1.0, 1.0);
 
     // Adding a margin to the sprite coordinates to prevent reading from neighboring sprite
     let margin = 0.5;
@@ -66,14 +68,39 @@ fn fragment(
     // We need to account that the pixels are centered 0.5 texels to a side, so we need to apply a correction
     let d_factor = 0.5;
     let d_corr = vec2<f32>(d_factor * sign(dpdx(mesh.uv.x)), d_factor * sign(dpdy(mesh.uv.y)));
-    let uv_frac = fract(uv * tex_size - d_corr);
-    let uv_floor = (floor(uv * tex_size - d_corr) + d_corr) / tex_size;
-    let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / 2.0 + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
+    let src_pos = uv * tex_size - d_corr;
+    let uv_frac = fract(src_pos);
+    let uv_floor = (floor(src_pos) + d_corr) / tex_size;
+    let softness = 3.0; // 2.0 -> leave 1px of gradient between pixels ; 4.0 -> 2px of gradient
+    let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / softness + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
+
+    // Reading directly the texture mixes the color incorrectly because of differences in alpha
     let uv_comp = uv_floor + (uv_frac2) / tex_size;
+    let color1: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
+    let color_s: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv);
 
+    // Sample the four nearest texels for bilinear blending
+    // This is for attempting a better alpha color mixing - when one part is transparent
+    // and the other is not, it might darken the borders - this code should combat this.
+    let texel_tl = textureSample(base_color_texture, base_color_sampler, uv_floor);
+    let texel_tr = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 0.0));
+    let texel_bl = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(0.0, 1.0 / tex_height));
+    let texel_br = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 1.0 / tex_height));
 
+    let texel_sum = texel_tl * texel_tl[3] + texel_tr  * texel_tr[3] + texel_bl  * texel_bl[3] + texel_br * texel_br[3];
+    let total_a = texel_tl[3] + texel_tr[3] + texel_bl[3] + texel_br[3];
+    let max_a1 = max(texel_tl[3], texel_tr[3]);
+    let max_a2 = max(texel_bl[3], texel_br[3]);
+    let max_a = max(max_a1, max_a2);
+    var texel_avg = clamp(texel_sum / (total_a + 0.1), zero4, one4);
+    let relight_factor = 1.6;
+    texel_avg[0] *= relight_factor;
+    texel_avg[1] *= relight_factor;
+    texel_avg[2] *= relight_factor;
+    texel_avg[3] = color_s[3];
+    let avg_k = (1.0 - color1[3]) * texel_avg[3];
 
-    let color: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
+    var color: vec4<f32> = (color1 * (1.0 - avg_k) + texel_avg * avg_k);
     // <<--
 
 
@@ -130,9 +157,6 @@ fn fragment(
     // Black point:
     let black: f32 = 0.001 * gamma * gamma;
     let b4: vec4<f32> = vec4(black, black, black, 0.0);
-
-    let zero4 = vec4(0.0, 0.0, 0.0, 0.0);
-    let one4 = vec4(1.0, 1.0, 1.0, 1.0);
 
     // Apply gamma correction
     let gamma4a: vec4<f32> = vec4<f32>(gamma, gamma, gamma, 1.0);
