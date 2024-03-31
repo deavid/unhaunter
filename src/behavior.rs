@@ -165,7 +165,7 @@ pub struct Movement {
 }
 
 pub mod component {
-    use bevy::{ecs::component::Component, math::Vec3};
+    use bevy::{ecs::component::Component, log::warn, math::Vec3};
 
     use crate::{board::BoardPosition, tiledmap::MapLayer};
 
@@ -245,14 +245,27 @@ pub mod component {
         }
     }
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
-    pub struct NPCHelpDialog {}
+    pub struct NPCHelpDialog {
+        pub dialog: String,
+    }
 
     impl NPCHelpDialog {
-        pub fn new(classname: &str, layer: &MapLayer) -> Self {
-            // TODO: Construct this, read the layer metadata to find NPC:A:Dialog
-            // FIXME: This still needs the sprite variant to know the "A"
-
-            Self {}
+        pub fn new(classname: &str, variant: &str, layer: &MapLayer) -> Self {
+            let key = format!("{classname}:{variant}:dialog");
+            let dialog = match layer.user_properties.get(&key) {
+                Some(p) => match p {
+                    tiled::PropertyValue::StringValue(v) => v.to_string(),
+                    _ => {
+                        warn!("NPCHelpDialog was expecting a user property named {key:?} in the layer but it had an unsupported type - it must be text");
+                        "".to_string()
+                    }
+                },
+                None => {
+                    warn!("NPCHelpDialog was expecting a user property named {key:?} in the layer but was not present");
+                    "".to_string()
+                }
+            };
+            Self { dialog }
         }
     }
 }
@@ -523,7 +536,7 @@ impl SpriteConfig {
             Class::CornerWall => entity,
             Class::FakeBreach => entity,
             Class::FakeGhost => entity,
-            Class::NPC => entity.insert(component::NPCHelpDialog::new("NPC", layer)),
+            Class::NPC => entity.insert(component::NPCHelpDialog::new("NPC", &self.variant, layer)),
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
