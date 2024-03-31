@@ -381,7 +381,7 @@ mod arch {
                 }
             }
         }
-
+        paths.sort();
         paths
     }
 
