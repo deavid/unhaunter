@@ -263,7 +263,7 @@ building from scratch, the difference is negligible.
 
 Profiling the build step can be done with: 
 
-  RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/trace_chrome
+  RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/dynamic_linking
 
 Be aware that this requires a nightly toolchain to work, and probably you'll
 need to build twice to get the proper timing for incremental.
