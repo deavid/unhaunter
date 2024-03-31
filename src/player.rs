@@ -8,7 +8,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
-const DEBUG_PLAYER: bool = true;
+const DEBUG_PLAYER: bool = false;
 
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
