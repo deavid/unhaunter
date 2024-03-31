@@ -3,6 +3,7 @@ use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
+use crate::npchelp::NPCHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -135,6 +136,7 @@ pub fn keyboard_player(
     >,
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: EventWriter<RoomChangedEvent>,
+    mut ev_npc: EventWriter<NPCHelpEvent>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -213,9 +215,6 @@ pub fn keyboard_player(
                 // let dref = new_dist + (&d * (new_dist.distance().min(1.0) * dot_p));
                 let dref = new_dist;
                 let dist = dref.distance();
-                // if dist < 1.5 {
-                //     dbg!(cp_delta, old_dist, new_dist, dref, dist);
-                // }
                 if dist < max_dist {
                     max_dist = dist + 0.00001;
                     selected_entity = Some(entity);
@@ -225,6 +224,10 @@ pub fn keyboard_player(
                 for (entity, item_pos, interactive, behavior, rs) in
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
+                    if behavior.is_npc() {
+                        ev_npc.send(NPCHelpEvent::new(entity));
+                    }
+
                     if interactive_stuff.execute_interaction(
                         entity,
                         item_pos,
@@ -454,6 +457,7 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                 });
             }
             self.game_next_state.set(root::GameState::Truck);
+            return false;
         }
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {
             if *other_tuid == tuid {
@@ -651,7 +655,7 @@ pub fn visual_health(
 struct MeanSound(f32);
 
 pub fn app_setup(app: &mut App) {
-    app.add_event::<RoomChangedEvent>()
+    app
         .add_systems(
             Update,
             (keyboard_player, lose_sanity, visual_health).run_if(in_state(root::GameState::None)),

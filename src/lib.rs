@@ -8,6 +8,7 @@ mod ghost_definitions;
 mod mainmenu;
 mod maplight;
 mod materials;
+pub mod npchelp;
 mod pause;
 pub mod platform;
 mod player;
@@ -79,6 +80,7 @@ pub fn app_run() {
     player::app_setup(&mut app);
     pause::app_setup(&mut app);
     maplight::app_setup(&mut app);
+    npchelp::app_setup(&mut app);
 
     app.run();
 }

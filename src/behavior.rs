@@ -93,6 +93,10 @@ impl Behavior {
     pub fn is_van_entry(&self) -> bool {
         self.cfg.class == Class::VanEntry
     }
+
+    pub fn is_npc(&self) -> bool {
+        self.cfg.class == Class::NPC
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -536,7 +540,12 @@ impl SpriteConfig {
             Class::CornerWall => entity,
             Class::FakeBreach => entity,
             Class::FakeGhost => entity,
-            Class::NPC => entity.insert(component::NPCHelpDialog::new("NPC", &self.variant, layer)),
+            Class::NPC => entity
+                .insert(component::NPCHelpDialog::new("NPC", &self.variant, layer))
+                .insert(component::Interactive::new(
+                    "sounds/effects-dongdongdong.ogg",
+                    "sounds/effects-dongdongdong.ogg",
+                )),
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
