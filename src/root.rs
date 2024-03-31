@@ -16,6 +16,7 @@ pub enum GameState {
     None,
     Truck,
     Pause,
+    NpcHelp,
 }
 
 #[derive(Debug, Clone)]

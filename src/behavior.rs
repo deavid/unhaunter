@@ -249,11 +249,11 @@ pub mod component {
         }
     }
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
-    pub struct NPCHelpDialog {
+    pub struct NpcHelpDialog {
         pub dialog: String,
     }
 
-    impl NPCHelpDialog {
+    impl NpcHelpDialog {
         pub fn new(classname: &str, variant: &str, layer: &MapLayer) -> Self {
             let key = format!("{classname}:{variant}:dialog");
             let dialog = match layer.user_properties.get(&key) {
@@ -541,7 +541,7 @@ impl SpriteConfig {
             Class::FakeBreach => entity,
             Class::FakeGhost => entity,
             Class::NPC => entity
-                .insert(component::NPCHelpDialog::new("NPC", &self.variant, layer))
+                .insert(component::NpcHelpDialog::new("NPC", &self.variant, layer))
                 .insert(component::Interactive::new(
                     "sounds/effects-dongdongdong.ogg",
                     "sounds/effects-dongdongdong.ogg",
