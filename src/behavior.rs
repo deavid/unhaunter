@@ -22,7 +22,7 @@ use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
-use crate::maplight;
+use crate::{maplight, tiledmap::MapLayer};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
@@ -45,8 +45,12 @@ impl Behavior {
     pub fn state(&self) -> State {
         self.cfg.state.clone()
     }
-    pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
-        self.cfg.components(entity)
+    pub fn default_components(
+        &self,
+        entity: &mut bevy::ecs::system::EntityCommands,
+        layer: &MapLayer,
+    ) {
+        self.cfg.components(entity, layer)
     }
     pub fn key_cvo(&self) -> SpriteCVOKey {
         self.cfg.key_cvo()
@@ -163,7 +167,7 @@ pub struct Movement {
 pub mod component {
     use bevy::{ecs::component::Component, math::Vec3};
 
-    use crate::board::BoardPosition;
+    use crate::{board::BoardPosition, tiledmap::MapLayer};
 
     use super::Behavior;
 
@@ -238,6 +242,17 @@ pub mod component {
                 },
                 _ => Vec3::ZERO,
             }
+        }
+    }
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct NPCHelpDialog {}
+
+    impl NPCHelpDialog {
+        pub fn new(classname: &str, layer: &MapLayer) -> Self {
+            // TODO: Construct this, read the layer metadata to find NPC:A:Dialog
+            // FIXME: This still needs the sprite variant to know the "A"
+
+            Self {}
         }
     }
 }
@@ -444,7 +459,7 @@ impl SpriteConfig {
         })
     }
 
-    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
+    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands, layer: &MapLayer) {
         match self.class {
             Class::Floor => entity
                 .insert(component::Ground)
@@ -508,7 +523,7 @@ impl SpriteConfig {
             Class::CornerWall => entity,
             Class::FakeBreach => entity,
             Class::FakeGhost => entity,
-            Class::NPC => entity,
+            Class::NPC => entity.insert(component::NPCHelpDialog::new("NPC", layer)),
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {

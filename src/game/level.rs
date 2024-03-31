@@ -198,10 +198,10 @@ pub fn load_level(
     // We will need a 2nd pass load to sync some data
     // ----
     let mut c: f32 = 0.0;
-    for maptiles in layers.iter().filter_map(|(_, layer)| {
+    for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
         // filter only the tile layers and extract that directly
         if let MapLayerType::Tiles(tiles) = &layer.data {
-            Some(tiles)
+            Some((tiles, layer))
         } else {
             None
         }
@@ -263,8 +263,8 @@ pub fn load_level(
                 }
                 behavior::Util::Van => {}
                 behavior::Util::None => {}
-            }
-            mt.behavior.default_components(&mut entity);
+            }           
+            mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();
             beh.flip(tile.flip_x);
 
