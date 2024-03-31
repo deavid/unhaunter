@@ -251,3 +251,23 @@ This will build in pkg/
 And to test:
 
   python3 -m http.server
+
+## Faster compile times:
+
+Dynamic linking for small changes reduces from 20s to 5s:
+
+  cargo run --features bevy/dynamic_linking  
+
+This is only useful for debug incremental builds for small changes. If you're 
+building from scratch, the difference is negligible.
+
+Profiling the build step can be done with: 
+
+  RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/trace_chrome
+
+Be aware that this requires a nightly toolchain to work, and probably you'll
+need to build twice to get the proper timing for incremental.
+
+This shows that the most time is spent in the linker anyway.
+
+

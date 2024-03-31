@@ -1,7 +1,5 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
-use crate::materials::CustomMaterial1;
-
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
     #[default]
@@ -204,16 +202,6 @@ impl From<QuadCC> for Mesh {
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         mesh
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Meshes {
-    pub quad128: Handle<Mesh>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Materials {
-    pub custom1: Handle<CustomMaterial1>,
 }
 
 #[derive(Debug, Clone, Resource)]

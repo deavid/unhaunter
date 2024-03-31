@@ -343,6 +343,7 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
         serde_json::from_str(&t).context("Auto deserialize error")
     }
     fn to_text(&self) -> anyhow::Result<String> {
+        // FIXME: This is not used at all.
         serde_json::to_string(self)
             .map(|x| x.replace('"', ""))
             .context("Auto serialize error")
