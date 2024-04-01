@@ -46,8 +46,8 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1193.875,
-                "y": 939.375
+                "x": 1193.625,
+                "y": 939.125
             }
         },
         "map_school1.tmx": {
@@ -66,10 +66,10 @@
                 2
             ],
             "scale": 5.5,
-            "selectedLayer": 8,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 316.4545454545455,
-                "y": 721.5454545454546
+                "x": 878.0909090909091,
+                "y": 420.27272727272725
             }
         },
         "unhaunter_custom_tileset.tsx": {
@@ -126,6 +126,7 @@
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "tut01_basics.tmx",
         "unhaunter_custom_tileset.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_spritesheetA_3x3x3.tsx",
@@ -133,7 +134,6 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "tut01_basics.tmx",
         "map_house1_3x.tmx",
         "unhaunter_test2b.tmx",
         "character1.tsx"
