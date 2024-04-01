@@ -23,8 +23,8 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 553.625,
-                "y": 237.875
+                "x": 504,
+                "y": 252
             }
         },
         "map_house1_3x.tmx": {
@@ -46,8 +46,8 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1145.625,
-                "y": 876.125
+                "x": 1193.875,
+                "y": 939.375
             }
         },
         "map_school1.tmx": {

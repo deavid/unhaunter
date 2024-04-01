@@ -248,9 +248,11 @@ pub mod component {
             }
         }
     }
-    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    #[derive(Component, Debug, Clone, PartialEq)]
     pub struct NpcHelpDialog {
         pub dialog: String,
+        pub seen: bool,
+        pub trigger: f32,
     }
 
     impl NpcHelpDialog {
@@ -269,7 +271,11 @@ pub mod component {
                     "".to_string()
                 }
             };
-            Self { dialog }
+            Self {
+                dialog,
+                seen: false,
+                trigger: 0.0,
+            }
         }
     }
 }

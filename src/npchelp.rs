@@ -1,10 +1,16 @@
 use bevy::prelude::*;
 
 use crate::{
-    behavior::component::NpcHelpDialog,
+    behavior::{
+        component::{Interactive, NpcHelpDialog},
+        Behavior,
+    },
+    board::Position,
     colors,
+    game::GameConfig,
     materials::{self, UIPanelMaterial},
     platform::plt::UI_SCALE,
+    player::PlayerSprite,
     root,
 };
 
@@ -194,24 +200,62 @@ pub fn setup_ui(
 
 pub fn npchelp_event(
     mut ev_npc: EventReader<NpcHelpEvent>,
-    npc: Query<(Entity, &NpcHelpDialog)>,
+    mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
 ) {
     let Some(ev_npc) = ev_npc.read().next() else {
         return;
     };
-    let Some(npcd) = npc
-        .iter()
+    let Some(mut npcd) = npc
+        .iter_mut()
         .find(|(e, _)| *e == ev_npc.entity)
         .map(|(_, n)| n)
     else {
         warn!("Wrong entity for npchelp_event?");
         return;
     };
+    npcd.seen = true;
     res_npc.dialog = npcd.dialog.clone();
     game_next_state.set(root::GameState::NpcHelp);
     // warn!(npcd.dialog);
+}
+
+/// NPCs will call the player by distance & time if haven't spoken yet.
+pub fn auto_call_npchelp(
+    time: Res<Time>,
+    gc: Res<GameConfig>,
+    q_player: Query<(&Position, &PlayerSprite)>,
+    mut interactables: Query<(
+        Entity,
+        &Position,
+        &Interactive,
+        &Behavior,
+        &mut NpcHelpDialog,
+    )>,
+    mut ev_npc: EventWriter<NpcHelpEvent>,
+) {
+    let Some((pos, _)) = q_player
+        .iter()
+        .find(|(_, player)| player.id == gc.player_id)
+    else {
+        return;
+    };
+    let dt = time.delta_seconds();
+    for (entity, item_pos, _, _, mut npc) in interactables.iter_mut() {
+        if npc.seen {
+            continue;
+        }
+        let dist = pos.distance_taxicab(item_pos);
+        if dist < 4.5 {
+            npc.trigger += dt;
+            if npc.trigger > 2.0 {
+                ev_npc.send(NpcHelpEvent::new(entity));
+            }
+        } else {
+            npc.trigger = 0.0;
+        }
+    }
 }
 
 pub fn app_setup(app: &mut App) {
@@ -220,5 +264,6 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, npchelp_event)
         .add_systems(OnEnter(root::GameState::NpcHelp), setup_ui)
         .add_systems(OnExit(root::GameState::NpcHelp), cleanup)
-        .add_systems(Update, keyboard);
+        .add_systems(Update, keyboard)
+        .add_systems(Update, auto_call_npchelp);
 }
