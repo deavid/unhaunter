@@ -5,7 +5,7 @@ use crate::{
         component::{Interactive, NpcHelpDialog},
         Behavior,
     },
-    board::Position,
+    board::{self, Position},
     colors,
     game::GameConfig,
     materials::{self, UIPanelMaterial},
@@ -225,7 +225,7 @@ pub fn npchelp_event(
 pub fn auto_call_npchelp(
     time: Res<Time>,
     gc: Res<GameConfig>,
-    q_player: Query<(&Position, &PlayerSprite)>,
+    q_player: Query<(&Position, &PlayerSprite, &board::Direction)>,
     mut interactables: Query<(
         Entity,
         &Position,
@@ -235,13 +235,18 @@ pub fn auto_call_npchelp(
     )>,
     mut ev_npc: EventWriter<NpcHelpEvent>,
 ) {
-    let Some((pos, _)) = q_player
+    let Some((pos, _, dir)) = q_player
         .iter()
-        .find(|(_, player)| player.id == gc.player_id)
+        .find(|(_, player, _)| player.id == gc.player_id)
     else {
         return;
     };
+    if dir.distance() > 79.5 {
+        // If the player is walking fast, do not trigger auto-help.
+        return;
+    }
     let dt = time.delta_seconds();
+
     for (entity, item_pos, _, _, mut npc) in interactables.iter_mut() {
         if npc.seen {
             continue;
@@ -249,7 +254,7 @@ pub fn auto_call_npchelp(
         let dist = pos.distance_taxicab(item_pos);
         if dist < 4.5 {
             npc.trigger += dt;
-            if npc.trigger > 2.0 {
+            if npc.trigger > 1.0 {
                 ev_npc.send(NpcHelpEvent::new(entity));
             }
         } else {
