@@ -3,13 +3,24 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "map_house2.tmx",
+    "activeFile": "atut01_basics.tmx",
     "expandedProjectPaths": [
         "."
     ],
     "fileStates": {
         "/home/deavid/tiled/unhaunter_test2.tsx": {
             "scaleInDock": 1
+        },
+        "atut01_basics.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 3,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1252.5,
+                "y": 367.5
+            }
         },
         "character1.tsx": {
             "dynamicWrapping": false,
@@ -74,7 +85,7 @@
         },
         "unhaunter_custom_tileset.tsx": {
             "dynamicWrapping": true,
-            "scaleInDock": 4,
+            "scaleInDock": 2,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheet2.tsx": {
@@ -84,12 +95,12 @@
         },
         "unhaunter_spritesheetA_3x3x3.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 4,
+            "scaleInDock": 2,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_6x6x10.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 4,
+            "scaleInDock": 2,
             "scaleInEditor": 2
         },
         "unhaunter_test2b.tmx": {
@@ -121,12 +132,12 @@
         "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
         "map_house1.tmx",
-        "map_house2.tmx"
+        "map_house2.tmx",
+        "atut01_basics.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
-        "tut01_basics.tmx",
         "unhaunter_custom_tileset.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_spritesheetA_3x3x3.tsx",
@@ -134,6 +145,8 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
+        "atut01_basics.tmx",
+        "tut01_basics.tmx",
         "map_house1_3x.tmx",
         "unhaunter_test2b.tmx",
         "character1.tsx"
