@@ -657,11 +657,11 @@ struct MeanSound(f32);
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (keyboard_player, lose_sanity, visual_health).run_if(in_state(root::GameState::None)),
+        (keyboard_player, lose_sanity, visual_health, animate_sprite)
+            .run_if(in_state(root::GameState::None)),
     )
     .add_systems(
         Update,
         recover_sanity.run_if(in_state(root::GameState::Truck)),
-    )
-    .add_systems(Update, animate_sprite);
+    );
 }
