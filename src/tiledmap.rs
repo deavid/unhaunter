@@ -239,6 +239,9 @@ mod arch {
         ) -> std::result::Result<Self::Resource, Self::Error> {
             let path = path.to_str().unwrap();
             match path {
+                "assets/maps/atut01_basics.tmx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/atut01_basics.tmx"
+                ))),
                 "assets/maps/map_house1.tmx" => {
                     Ok(Cursor::new(include_bytes!("../assets/maps/map_house1.tmx")))
                 }
