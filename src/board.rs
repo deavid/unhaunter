@@ -815,7 +815,9 @@ pub fn boardfield_update(
                 let src_lfs = lfs.clone();
                 let size = match step {
                     0 => 24,
-                    _ => 4,
+                    1 => 6,
+                    2 => 1,
+                    _ => 1,
                 };
                 for x in min_x..=max_x {
                     for y in min_y..=max_y {
@@ -824,20 +826,23 @@ pub fn boardfield_update(
                                 continue;
                             }
                             let src = src_lfs.get(x, y, z).unwrap();
+                            if src.transmissivity < 0.5 && step < 2 {
+                                // Reduce light spread through walls
+                                continue;
+                            }
+
                             let mut src_lux = src.lux;
                             let min_lux = match step {
-                                0 => 0.01,
-                                1 => 0.001,
-                                2 => 0.0001,
-                                3 => 0.000001,
+                                0 => 0.001,
+                                1 => 0.000001,
                                 _ => 0.0,
                             };
                             let max_lux = match step {
                                 0 => f32::MAX,
-                                1 => 20000.0,
-                                2 => 400.0,
-                                3 => 100.0,
-                                _ => 50.0,
+                                1 => 60.0,
+                                2 => 40.0,
+                                3 => 20.0,
+                                _ => 10.0,
                             };
                             if src_lux < min_lux {
                                 continue;
@@ -854,7 +859,7 @@ pub fn boardfield_update(
                             let root_pos = BoardPosition { x, y, z };
                             lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
                             let nbors = root_pos.xy_neighbors(size);
-                            let mut shadow_dist = [128.0f32; CachedBoardPos::TAU_I];
+                            let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
                             // Compute shadows
                             for pillar_pos in nbors.iter() {
                                 if let Some(lf) = lfs.get_pos(pillar_pos) {
@@ -872,6 +877,10 @@ pub fn boardfield_update(
                                         }
                                     }
                                 }
+                            }
+                            if src.transmissivity < 0.5 {
+                                // Reduce light spread through walls
+                                shadow_dist.iter_mut().for_each(|x| *x = 0.0);
                             }
 
                             let light_height = 2.0;

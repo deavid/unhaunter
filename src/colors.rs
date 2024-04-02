@@ -16,3 +16,4 @@ pub const BUTTON_EXIT_TRUCK_TXTCOLOR: Color = Color::rgba(0.416, 0.667, 0.271, 1
 pub const BUTTON_END_MISSION_BGCOLOR: Color = Color::rgba(0.224, 0.129, 0.122, 1.0);
 pub const BUTTON_END_MISSION_FGCOLOR: Color = Color::rgba(0.388, 0.200, 0.169, 1.0);
 pub const BUTTON_END_MISSION_TXTCOLOR: Color = Color::rgba(0.851, 0.522, 0.275, 1.0);
+pub const DIALOG_TEXT_COLOR: Color = Color::rgba(1.0, 1.0, 1.0, 0.7);

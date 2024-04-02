@@ -11,17 +11,22 @@ use crate::{behavior, gear, summary, tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
+use ordered_float::OrderedFloat;
 
-use super::{GCameraArena, GameSprite};
+use super::{GCameraArena, GameConfig, GameSprite};
 
 #[derive(Clone, Debug, Default, Event)]
 pub struct RoomChangedEvent {
     pub initialize: bool,
+    pub open_van: bool,
 }
 
 impl RoomChangedEvent {
-    pub fn init() -> Self {
-        Self { initialize: true }
+    pub fn init(open_van: bool) -> Self {
+        Self {
+            initialize: true,
+            open_van,
+        }
     }
 }
 
@@ -46,7 +51,6 @@ pub fn load_level(
     mut sdb: ResMut<SpriteDB>,
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
-    mut camera: Query<&mut Transform, With<GCameraArena>>,
     mut app_next_state: ResMut<NextState<root::State>>,
 ) {
     let mut ev_iter = ev.read();
@@ -117,6 +121,7 @@ pub fn load_level(
     );
     let mut player_spawn_points: Vec<board::Position> = vec![];
     let mut ghost_spawn_points: Vec<board::Position> = vec![];
+    let mut van_entry_points: Vec<board::Position> = vec![];
 
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     sdb.clear();
@@ -198,10 +203,10 @@ pub fn load_level(
     // We will need a 2nd pass load to sync some data
     // ----
     let mut c: f32 = 0.0;
-    for maptiles in layers.iter().filter_map(|(_, layer)| {
+    for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
         // filter only the tile layers and extract that directly
         if let MapLayerType::Tiles(tiles) = &layer.data {
-            Some(tiles)
+            Some((tiles, layer))
         } else {
             None
         }
@@ -242,18 +247,16 @@ pub fn load_level(
 
             c += 0.000000001;
             pos.global_z = f32::from(mt.behavior.p.display.global_z) + c;
+            let new_pos = Position {
+                global_z: 0.0001,
+                ..pos
+            };
             match &mt.behavior.p.util {
                 behavior::Util::PlayerSpawn => {
-                    player_spawn_points.push(Position {
-                        global_z: 0.0001,
-                        ..pos
-                    });
+                    player_spawn_points.push(new_pos);
                 }
                 behavior::Util::GhostSpawn => {
-                    ghost_spawn_points.push(Position {
-                        global_z: 0.0001,
-                        ..pos
-                    });
+                    ghost_spawn_points.push(new_pos);
                 }
                 behavior::Util::RoomDef(name) => {
                     roomdb
@@ -261,10 +264,12 @@ pub fn load_level(
                         .insert(pos.to_board_position(), name.to_owned());
                     roomdb.room_state.insert(name.clone(), behavior::State::Off);
                 }
-                behavior::Util::Van => {}
+                behavior::Util::Van => {
+                    van_entry_points.push(new_pos);
+                }
                 behavior::Util::None => {}
             }
-            mt.behavior.default_components(&mut entity);
+            mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();
             beh.flip(tile.flip_x);
 
@@ -285,9 +290,13 @@ pub fn load_level(
     let player_position = player_spawn_points.pop().unwrap();
     let player_scoord = player_position.to_screen_coord();
 
-    for mut cam_trans in camera.iter_mut() {
-        cam_trans.translation = player_scoord;
-    }
+    let dist_to_van = van_entry_points
+        .iter()
+        .map(|v| OrderedFloat(v.distance(&player_position)))
+        .min()
+        .unwrap_or(OrderedFloat(1000.0))
+        .into_inner();
+
     // Spawn Player 1
     commands
         .spawn(SpriteSheetBundle {
@@ -381,7 +390,8 @@ pub fn load_level(
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
 
-    ev_room.send(RoomChangedEvent::init());
+    let open_van: bool = dist_to_van < 4.0;
+    ev_room.send(RoomChangedEvent::init(open_van));
 }
 
 pub fn roomchanged_event(
@@ -389,6 +399,9 @@ pub fn roomchanged_event(
     mut ev_room: EventReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
     interactables: Query<(Entity, &board::Position, &Behavior, &RoomState), Without<PlayerSprite>>,
+    gc: Res<GameConfig>,
+    pc: Query<(&PlayerSprite, &Transform), Without<GCameraArena>>,
+    mut camera: Query<&mut Transform, With<GCameraArena>>,
 ) {
     let Some(ev) = ev_room.read().next() else {
         return;
@@ -413,10 +426,20 @@ pub fn roomchanged_event(
         collision: true,
     });
 
-    if ev.initialize {
+    if ev.open_van {
         interactive_stuff
             .game_next_state
             .set(root::GameState::Truck);
+    }
+    if ev.initialize {
+        for (player, p_transform) in pc.iter() {
+            if player.id != gc.player_id {
+                continue;
+            }
+            for mut cam_trans in camera.iter_mut() {
+                cam_trans.translation = p_transform.translation;
+            }
+        }
     }
 }
 

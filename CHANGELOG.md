@@ -1,3 +1,21 @@
+### Version 0.2.0 - 2024-04-02
+
+Features:
+  - New tutorial for basic movement, doors, light switches and torch.
+  - Improved Pixel-perfect shader.
+  - Improved see in the dark view with additional exposure range and bluish
+    tones to convey the sensation of a dark place.
+  - Added "ambient light" mixing mode for the shader for improved visuals.
+  - Sanity now slowly increases when outside or when the ghost is very far.
+  - Added NPC dialogs for use in tutorials.
+  - Auto-trigger NPC dialogs by proximity.
+  - New sprites and utilities to be used mainly by tutorials.
+
+Fixes:
+  - Sort maps by filename in the main menu.
+  - Prevent van from auto-opening if far away.
+  - Do not animate player walking while the game is paused.
+
 ### Version 0.1.9 - 2024-03-24
 
 Features:

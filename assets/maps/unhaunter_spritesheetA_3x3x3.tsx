@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="2" tilecount="264" columns="12" objectalignment="bottom">
- <tileoffset x="-4" y="0"/>
+<tileset version="1.10" tiledversion="1.10.2" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="1" tilecount="264" columns="12" objectalignment="bottom">
+ <tileoffset x="-3" y="0"/>
  <grid orientation="isometric" width="28" height="14"/>
  <transformations hflip="1" vflip="0" rotate="0" preferuntransformed="0"/>
  <properties>
@@ -267,11 +267,11 @@
    </object>
   </objectgroup>
  </tile>
- <tile id="40" type="Doorway">
+ <tile id="40" type="LowWall">
   <properties>
-   <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Base"/>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="Fence"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="9.33333" y="0" width="4.66667" height="14">
@@ -405,6 +405,13 @@
     </properties>
    </object>
   </objectgroup>
+ </tile>
+ <tile id="51" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Full"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
  </tile>
  <tile id="53" type="Door">
   <properties>
@@ -690,6 +697,8 @@
    <property name="sprite:variant" value="Base"/>
   </properties>
  </tile>
+ <tile id="99" type="FakeGhost"/>
+ <tile id="100" type="FakeBreach"/>
  <tile id="108" type="RoomDef">
   <properties>
    <property name="sprite:variant" value="Foyer"/>
@@ -868,6 +877,246 @@
  <tile id="143" type="RoomDef">
   <properties>
    <property name="sprite:variant" value="En Suite"/>
+  </properties>
+ </tile>
+ <tile id="144" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A1"/>
+  </properties>
+ </tile>
+ <tile id="145" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A2"/>
+  </properties>
+ </tile>
+ <tile id="146" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A3"/>
+  </properties>
+ </tile>
+ <tile id="147" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A4"/>
+  </properties>
+ </tile>
+ <tile id="148" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A5"/>
+  </properties>
+ </tile>
+ <tile id="149" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A6"/>
+  </properties>
+ </tile>
+ <tile id="150" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A7"/>
+  </properties>
+ </tile>
+ <tile id="151" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A8"/>
+  </properties>
+ </tile>
+ <tile id="152" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A9"/>
+  </properties>
+ </tile>
+ <tile id="153" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A10"/>
+  </properties>
+ </tile>
+ <tile id="154" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A11"/>
+  </properties>
+ </tile>
+ <tile id="155" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room A12"/>
+  </properties>
+ </tile>
+ <tile id="156" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B1"/>
+  </properties>
+ </tile>
+ <tile id="157" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B2"/>
+  </properties>
+ </tile>
+ <tile id="158" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B3"/>
+  </properties>
+ </tile>
+ <tile id="159" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B4"/>
+  </properties>
+ </tile>
+ <tile id="160" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B5"/>
+  </properties>
+ </tile>
+ <tile id="161" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B6"/>
+  </properties>
+ </tile>
+ <tile id="162" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B7"/>
+  </properties>
+ </tile>
+ <tile id="163" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B8"/>
+  </properties>
+ </tile>
+ <tile id="164" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B9"/>
+  </properties>
+ </tile>
+ <tile id="165" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B10"/>
+  </properties>
+ </tile>
+ <tile id="166" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B11"/>
+  </properties>
+ </tile>
+ <tile id="167" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room B12"/>
+  </properties>
+ </tile>
+ <tile id="168" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C1"/>
+  </properties>
+ </tile>
+ <tile id="169" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C2"/>
+  </properties>
+ </tile>
+ <tile id="170" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C3"/>
+  </properties>
+ </tile>
+ <tile id="171" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C4"/>
+  </properties>
+ </tile>
+ <tile id="172" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C5"/>
+  </properties>
+ </tile>
+ <tile id="173" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C6"/>
+  </properties>
+ </tile>
+ <tile id="174" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C7"/>
+  </properties>
+ </tile>
+ <tile id="175" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C8"/>
+  </properties>
+ </tile>
+ <tile id="176" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C9"/>
+  </properties>
+ </tile>
+ <tile id="177" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C10"/>
+  </properties>
+ </tile>
+ <tile id="178" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C11"/>
+  </properties>
+ </tile>
+ <tile id="179" type="RoomDef">
+  <properties>
+   <property name="sprite:variant" value="Room C12"/>
+  </properties>
+ </tile>
+ <tile id="192" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="A"/>
+  </properties>
+ </tile>
+ <tile id="193" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="B"/>
+  </properties>
+ </tile>
+ <tile id="194" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="C"/>
+  </properties>
+ </tile>
+ <tile id="195" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="D"/>
+  </properties>
+ </tile>
+ <tile id="196" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="E"/>
+  </properties>
+ </tile>
+ <tile id="197" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="F"/>
+  </properties>
+ </tile>
+ <tile id="198" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="G"/>
+  </properties>
+ </tile>
+ <tile id="199" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="H"/>
+  </properties>
+ </tile>
+ <tile id="200" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="I"/>
+  </properties>
+ </tile>
+ <tile id="201" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="J"/>
+  </properties>
+ </tile>
+ <tile id="202" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="K"/>
+  </properties>
+ </tile>
+ <tile id="203" type="NPC">
+  <properties>
+   <property name="sprite:variant" value="L"/>
   </properties>
  </tile>
  <wangsets>

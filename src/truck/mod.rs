@@ -8,7 +8,6 @@ pub mod truckgear;
 pub mod ui;
 pub mod uibutton;
 
-use bevy::app::App;
 use bevy::prelude::*;
 
 use crate::game::GameConfig;

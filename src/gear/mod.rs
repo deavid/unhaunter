@@ -258,6 +258,7 @@ impl GearUsable for Gear {
         }
     }
     fn box_clone(&self) -> Box<dyn GearUsable> {
+        // FIXME: This is not used at all.
         Box::new(self.clone())
     }
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
