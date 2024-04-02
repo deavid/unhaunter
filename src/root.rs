@@ -410,6 +410,7 @@ mod arch {
     pub fn find_tmx_files() -> Vec<String> {
         // WASM does not support scanning folders it seems...
         vec![
+            "assets/maps/atut01_basics.tmx".to_string(),
             "assets/maps/map_house1.tmx".to_string(),
             "assets/maps/map_house2.tmx".to_string(),
             "assets/maps/map_school1.tmx".to_string(),
