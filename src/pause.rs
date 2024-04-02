@@ -9,12 +9,6 @@ use bevy::prelude::*;
 #[derive(Debug, Component)]
 pub struct PauseUI;
 
-pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::GameState::Pause), setup_ui)
-        .add_systems(OnExit(root::GameState::Pause), cleanup)
-        .add_systems(Update, keyboard);
-}
-
 const PAUSEUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
 const PAUSEUI_PANEL_BGCOLOR: Color = Color::rgba(0.106, 0.129, 0.157, 0.8);
 const PAUSEUI_ACCENT_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 1.0);
@@ -110,7 +104,7 @@ pub fn setup_ui(
                     });
 
                     mid_blk.spawn(title);
-                    // Journal contents
+
                     mid_blk.spawn(NodeBundle {
                         border_color: PAUSEUI_ACCENT_COLOR.into(),
                         style: Style {
@@ -151,4 +145,10 @@ pub fn setup_ui(
         });
 
     // ---
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(root::GameState::Pause), setup_ui)
+        .add_systems(OnExit(root::GameState::Pause), cleanup)
+        .add_systems(Update, keyboard);
 }

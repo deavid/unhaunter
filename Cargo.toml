@@ -1,6 +1,6 @@
 [package]
 name = "unhaunter"
-version = "0.1.9"
+version = "0.2.0"
 edition = "2021"
 default-run = "unhaunter_game"
 description = "2D isometric Game about investigating paranormal hauntings"
@@ -11,7 +11,6 @@ license = "Apache-2.0"
 
 [dependencies]
 bevy = "0.13.0"
-# bevy = { version = "0.13.0", features = ["trace"] }
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }

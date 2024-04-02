@@ -1,7 +1,5 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
-use crate::materials::CustomMaterial1;
-
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
     #[default]
@@ -16,6 +14,7 @@ pub enum GameState {
     None,
     Truck,
     Pause,
+    NpcHelp,
 }
 
 #[derive(Debug, Clone)]
@@ -205,16 +204,6 @@ impl From<QuadCC> for Mesh {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Meshes {
-    pub quad128: Handle<Mesh>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Materials {
-    pub custom1: Handle<CustomMaterial1>,
-}
-
 #[derive(Debug, Clone, Resource)]
 pub struct GameAssets {
     pub images: ImageAssets,
@@ -381,7 +370,7 @@ mod arch {
                 }
             }
         }
-
+        paths.sort();
         paths
     }
 

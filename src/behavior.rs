@@ -22,7 +22,7 @@ use bevy::ecs::component::Component;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
-use crate::maplight;
+use crate::{maplight, tiledmap::MapLayer};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
@@ -45,8 +45,12 @@ impl Behavior {
     pub fn state(&self) -> State {
         self.cfg.state.clone()
     }
-    pub fn default_components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
-        self.cfg.components(entity)
+    pub fn default_components(
+        &self,
+        entity: &mut bevy::ecs::system::EntityCommands,
+        layer: &MapLayer,
+    ) {
+        self.cfg.components(entity, layer)
     }
     pub fn key_cvo(&self) -> SpriteCVOKey {
         self.cfg.key_cvo()
@@ -88,6 +92,10 @@ impl Behavior {
 
     pub fn is_van_entry(&self) -> bool {
         self.cfg.class == Class::VanEntry
+    }
+
+    pub fn is_npc(&self) -> bool {
+        self.cfg.class == Class::NPC
     }
 }
 
@@ -161,9 +169,9 @@ pub struct Movement {
 }
 
 pub mod component {
-    use bevy::{ecs::component::Component, math::Vec3};
+    use bevy::{ecs::component::Component, log::warn, math::Vec3};
 
-    use crate::board::BoardPosition;
+    use crate::{board::BoardPosition, tiledmap::MapLayer};
 
     use super::Behavior;
 
@@ -240,6 +248,36 @@ pub mod component {
             }
         }
     }
+    #[derive(Component, Debug, Clone, PartialEq)]
+    pub struct NpcHelpDialog {
+        pub dialog: String,
+        pub seen: bool,
+        pub trigger: f32,
+    }
+
+    impl NpcHelpDialog {
+        pub fn new(classname: &str, variant: &str, layer: &MapLayer) -> Self {
+            let key = format!("{classname}:{variant}:dialog");
+            let dialog = match layer.user_properties.get(&key) {
+                Some(p) => match p {
+                    tiled::PropertyValue::StringValue(v) => v.to_string(),
+                    _ => {
+                        warn!("NPCHelpDialog was expecting a user property named {key:?} in the layer but it had an unsupported type - it must be text");
+                        "".to_string()
+                    }
+                },
+                None => {
+                    warn!("NPCHelpDialog was expecting a user property named {key:?} in the layer but was not present");
+                    "".to_string()
+                }
+            };
+            Self {
+                dialog,
+                seen: false,
+                trigger: 0.0,
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -270,6 +308,10 @@ pub enum Class {
     Window,
     InvisibleWall,
     CornerWall,
+    #[allow(clippy::upper_case_acronyms)]
+    NPC,
+    FakeGhost,
+    FakeBreach,
     #[default]
     None,
 }
@@ -307,6 +349,7 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
         serde_json::from_str(&t).context("Auto deserialize error")
     }
     fn to_text(&self) -> anyhow::Result<String> {
+        // FIXME: This is not used at all.
         serde_json::to_string(self)
             .map(|x| x.replace('"', ""))
             .context("Auto serialize error")
@@ -440,7 +483,7 @@ impl SpriteConfig {
         })
     }
 
-    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands) {
+    pub fn components(&self, entity: &mut bevy::ecs::system::EntityCommands, layer: &MapLayer) {
         match self.class {
             Class::Floor => entity
                 .insert(component::Ground)
@@ -502,6 +545,14 @@ impl SpriteConfig {
             Class::None => entity,
             Class::InvisibleWall => entity,
             Class::CornerWall => entity,
+            Class::FakeBreach => entity,
+            Class::FakeGhost => entity,
+            Class::NPC => entity
+                .insert(component::NpcHelpDialog::new("NPC", &self.variant, layer))
+                .insert(component::Interactive::new(
+                    "sounds/effects-dongdongdong.ogg",
+                    "sounds/effects-dongdongdong.ogg",
+                )),
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {
@@ -547,6 +598,9 @@ impl SpriteConfig {
             Class::Furniture => {
                 p.display.global_z = (0.000050).try_into().unwrap();
             }
+            Class::NPC => {
+                p.display.global_z = (0.000050).try_into().unwrap();
+            }
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
                 p.light.see_through = true;
@@ -564,6 +618,14 @@ impl SpriteConfig {
             Class::GhostSpawn => {
                 p.display.disable = true;
                 p.util = Util::GhostSpawn;
+            }
+            Class::FakeGhost => {
+                p.display.disable = true;
+                // p.util = Util::GhostSpawn;
+            }
+            Class::FakeBreach => {
+                p.display.disable = true;
+                // p.util = Util::GhostSpawn;
             }
             Class::VanEntry => {
                 // p.display.disable = true;
