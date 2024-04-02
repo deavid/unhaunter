@@ -815,7 +815,9 @@ pub fn boardfield_update(
                 let src_lfs = lfs.clone();
                 let size = match step {
                     0 => 24,
-                    _ => 4,
+                    1 => 6,
+                    2 => 1,
+                    _ => 1,
                 };
                 for x in min_x..=max_x {
                     for y in min_y..=max_y {
@@ -824,6 +826,11 @@ pub fn boardfield_update(
                                 continue;
                             }
                             let src = src_lfs.get(x, y, z).unwrap();
+                            if src.transmissivity < 0.5 && step < 2 {
+                                // Reduce light spread through walls
+                                continue;
+                            }
+
                             let mut src_lux = src.lux;
                             let min_lux = match step {
                                 0 => 0.001,
@@ -851,10 +858,6 @@ pub fn boardfield_update(
                             // reset the light value for this light, so we don't count double.
                             let root_pos = BoardPosition { x, y, z };
                             lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
-                            if src.transmissivity < 0.5 {
-                                // Reduce light spread through walls
-                                src_lux /= 2.5;
-                            }
                             let nbors = root_pos.xy_neighbors(size);
                             let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
                             // Compute shadows
@@ -874,6 +877,10 @@ pub fn boardfield_update(
                                         }
                                     }
                                 }
+                            }
+                            if src.transmissivity < 0.5 {
+                                // Reduce light spread through walls
+                                shadow_dist.iter_mut().for_each(|x| *x = 0.0);
                             }
 
                             let light_height = 2.0;
