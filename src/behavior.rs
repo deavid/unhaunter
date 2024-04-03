@@ -576,6 +576,7 @@ impl SpriteConfig {
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == State::Closed;
+                p.light.opaque = self.state == State::Closed;
             }
             Class::Switch => {
                 p.display.global_z = (0.000040).try_into().unwrap();
@@ -657,7 +658,7 @@ impl SpriteConfig {
             Class::CeilingLight => {
                 p.display.disable = true;
                 p.light.emits_light = self.state == State::On;
-                p.light.emission_power = (7.0).try_into().unwrap();
+                p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
             Class::StreetLight => {
