@@ -821,13 +821,13 @@ pub fn boardfield_update(
 
             let mut nbors_buf = Vec::with_capacity(52 * 52);
 
-            let mut lfs_clone_time_total = Duration::ZERO;
-            let mut shadows_time_total = Duration::ZERO;
-            let mut store_lfs_time_total = Duration::ZERO;
+            // let mut lfs_clone_time_total = Duration::ZERO;
+            // let mut shadows_time_total = Duration::ZERO;
+            // let mut store_lfs_time_total = Duration::ZERO;
             for step in 0..3 {
                 let lfs_clone_time = Instant::now();
                 let src_lfs = lfs.clone();
-                lfs_clone_time_total += lfs_clone_time.elapsed();
+                // lfs_clone_time_total += lfs_clone_time.elapsed();
                 let size = match step {
                     0 => 24,
                     1 => 12,
@@ -897,7 +897,7 @@ pub fn boardfield_update(
                                 src_lux /= 1.01;
                             }
 
-                            let shadows_time = Instant::now();
+                            // let shadows_time = Instant::now();
                             // This takes time to process:
                             root_pos.xy_neighbors_buf_clamped(
                                 size,
@@ -937,7 +937,7 @@ pub fn boardfield_update(
                                 }
                             }
 
-                            shadows_time_total += shadows_time.elapsed();
+                            // shadows_time_total += shadows_time.elapsed();
                             // FIXME: Possibly we want to smooth shadow_dist here - a convolution with a gaussian or similar
                             // where we preserve the high values but smooth the transition to low ones.
 
@@ -962,7 +962,7 @@ pub fn boardfield_update(
                             //     let f = (faster::tanh(sd - dist - 0.5) + 1.0) / 2.0;
                             //     total_lux += f / dist2 / dist2;
                             // }
-                            let store_lfs_time = Instant::now();
+                            // let store_lfs_time = Instant::now();
 
                             let total_lux = 2.0;
                             // new shadow method
@@ -976,7 +976,7 @@ pub fn boardfield_update(
                                 if dist - 3.0 < sd {
                                     // FIXME: f here controls the bleed through walls.
                                     if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                        const BLEED_TILES: f32 = 0.5; // 0.3 is too low, it creates un-evenness.
+                                        const BLEED_TILES: f32 = 0.8; // 0.5 is too low, it creates un-evenness.
                                         let f =
                                             (faster::tanh((sd - dist - 0.5) * BLEED_TILES.recip())
                                                 + 1.0)
@@ -986,7 +986,7 @@ pub fn boardfield_update(
                                     }
                                 }
                             }
-                            store_lfs_time_total += store_lfs_time.elapsed();
+                            // store_lfs_time_total += store_lfs_time.elapsed();
                         }
                     }
                 }
@@ -1009,9 +1009,9 @@ pub fn boardfield_update(
             let avg_lux = total_lux / bf.light_field.len() as f32;
             bf.exposure_lux = (avg_lux + 2.0) / 2.0;
 
-            dbg!(lfs_clone_time_total);
-            dbg!(shadows_time_total);
-            dbg!(store_lfs_time_total);
+            // dbg!(lfs_clone_time_total);
+            // dbg!(shadows_time_total);
+            // dbg!(store_lfs_time_total);
 
             info!(
                 "Lighting rebuild - complete: {:?}",
