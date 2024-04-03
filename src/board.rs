@@ -840,11 +840,11 @@ pub fn boardfield_update(
                             let Some(src) = src_lfs.get(x, y, z) else {
                                 continue;
                             };
-                            if src.transmissivity < 0.5 && step > 0 {
-                                // Reduce light spread through walls
-                                // FIXME: If the light is on the wall, this breaks (and this is possible since the wall is really 1/3rd of the tile)
-                                continue;
-                            }
+                            // if src.transmissivity < 0.5 && step > 0 && size > 1 {
+                            //     // Reduce light spread through walls
+                            //     // FIXME: If the light is on the wall, this breaks (and this is possible since the wall is really 1/3rd of the tile)
+                            //     continue;
+                            // }
                             let root_pos = BoardPosition { x, y, z };
 
                             let mut src_lux = src.lux;
@@ -976,7 +976,7 @@ pub fn boardfield_update(
                                 if dist - 3.0 < sd {
                                     // FIXME: f here controls the bleed through walls.
                                     if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                        const BLEED_TILES: f32 = 0.3;
+                                        const BLEED_TILES: f32 = 0.5; // 0.3 is too low, it creates un-evenness.
                                         let f =
                                             (faster::tanh((sd - dist - 0.5) * BLEED_TILES.recip())
                                                 + 1.0)

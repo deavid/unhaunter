@@ -384,7 +384,7 @@ pub fn apply_lighting(
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
         let l = src_color.l().max(0.0001).powf(1.5);
 
-        let lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
+        let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
         let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c) / l;
         let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c) / l;
         let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c) / l;
@@ -468,12 +468,12 @@ pub fn apply_lighting(
                 + exp_color / 40.0)
                 / (1.0 + SMOOTH_F)
         };
-
+        lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
         new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
-        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_tl);
-        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_tr);
-        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_bl);
-        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_br);
+        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
+        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
+        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
+        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
 
         const DEBUG_SOUND: bool = false;
         if DEBUG_SOUND {
