@@ -1,4 +1,5 @@
-use std::{f32::consts::PI, time::Duration};
+use std::f32::consts::PI;
+// use std::time::Duration;
 
 use bevy::{
     prelude::*,
@@ -825,7 +826,7 @@ pub fn boardfield_update(
             // let mut shadows_time_total = Duration::ZERO;
             // let mut store_lfs_time_total = Duration::ZERO;
             for step in 0..3 {
-                let lfs_clone_time = Instant::now();
+                // let lfs_clone_time = Instant::now();
                 let src_lfs = lfs.clone();
                 // lfs_clone_time_total += lfs_clone_time.elapsed();
                 let size = match step {
@@ -877,22 +878,30 @@ pub fn boardfield_update(
                             );
                             let nbors = &nbors_buf;
 
-                            let min_lux = nbors
-                                .iter()
-                                .filter_map(|b| {
-                                    lfs.get_pos(b).map(|l| ordered_float::OrderedFloat(l.lux))
-                                })
-                                .min()
-                                .unwrap_or_default()
-                                .into_inner()
-                                + 0.0000001;
-                            if src_lux / min_lux < 1.05 {
-                                // If there's less than 10% difference, this does not need to be re-examined.
-                                continue;
+                            if step > 0 {
+                                let ldata_iter = nbors.iter().filter_map(|b| {
+                                    lfs.get_pos(b).map(|l| {
+                                        (
+                                            ordered_float::OrderedFloat(l.lux),
+                                            ordered_float::OrderedFloat(l.transmissivity),
+                                        )
+                                    })
+                                });
+                                let mut min_lux = ordered_float::OrderedFloat(f32::MAX);
+                                let mut min_trans = ordered_float::OrderedFloat(2.0);
+                                for (lux, trans) in ldata_iter {
+                                    min_lux = min_lux.min(lux);
+                                    min_trans = min_trans.min(trans);
+                                }
+                                // For smoothing steps only:
+                                if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.8 {
+                                    // If there are no walls nearby, we don't reflect light.
+                                    continue;
+                                }
                             }
                             // This controls how harsh is the light
                             if step > 0 {
-                                src_lux /= 1.5;
+                                src_lux /= 2.5;
                             } else {
                                 src_lux /= 1.01;
                             }
