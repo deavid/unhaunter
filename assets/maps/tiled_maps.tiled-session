@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "atut01_basics.tmx",
+    "activeFile": "topdown.tsx",
     "expandedProjectPaths": [
         "."
     ],
@@ -15,11 +15,11 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 3,
+            "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1252.5,
-                "y": 367.5
+                "x": 1536,
+                "y": 767.5
             }
         },
         "character1.tsx": {
@@ -35,7 +35,7 @@
             "selectedLayer": 1,
             "viewCenter": {
                 "x": 504,
-                "y": 252
+                "y": 251.875
             }
         },
         "map_house1_3x.tmx": {
@@ -58,7 +58,7 @@
             "selectedLayer": 5,
             "viewCenter": {
                 "x": 1536,
-                "y": 768
+                "y": 767.875
             }
         },
         "map_school1.tmx": {
@@ -69,7 +69,19 @@
             "selectedLayer": 6,
             "viewCenter": {
                 "x": 1536,
-                "y": 767.75
+                "y": 767.875
+            }
+        },
+        "topdown.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "topdown_test_128.tmx": {
+            "scale": 0.0625,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 7832,
+                "y": 7368
             }
         },
         "tut01_basics.tmx": {
@@ -121,9 +133,9 @@
     ],
     "map.height": 128,
     "map.lastUsedFormat": "tmx",
-    "map.orientation": "2",
-    "map.tileHeight": 36,
-    "map.tileWidth": 72,
+    "map.orientation": "1",
+    "map.tileHeight": 96,
+    "map.tileWidth": 96,
     "map.width": 128,
     "openFiles": [
         "unhaunter_custom_tileset.tsx",
@@ -133,7 +145,9 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut01_basics.tmx"
+        "atut01_basics.tmx",
+        "topdown.tsx",
+        "topdown_test_128.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
@@ -146,16 +160,18 @@
         "map_house1.tmx",
         "map_house2.tmx",
         "atut01_basics.tmx",
+        "topdown_test_128.tmx",
+        "topdown.tsx",
         "tut01_basics.tmx",
-        "map_house1_3x.tmx",
-        "unhaunter_test2b.tmx",
-        "character1.tsx"
+        "map_house1_3x.tmx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 16,
+    "tileset.spacing": 16,
     "tileset.tileSize": {
         "height": 64,
-        "width": 48
+        "width": 64
     },
     "tileset.type": 0
 }
