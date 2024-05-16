@@ -97,6 +97,10 @@ impl Behavior {
     pub fn is_npc(&self) -> bool {
         self.cfg.class == Class::NPC
     }
+
+    pub fn can_emit_light(&self) -> bool {
+        self.p.light.emission_power.into_inner() > 1.0
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -132,13 +136,24 @@ pub struct Light {
     pub emits_light: bool,
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
+    pub flickering: bool,
 }
 
 impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
-        match self.emits_light {
-            true => self.emission_power.exp(),
-            false => 0.0,
+        if self.flickering {
+            // Reduced emission when flickering, with a slight glow even when off
+            if self.emits_light {
+                self.emission_power.exp() * 0.4
+            } else {
+                self.emission_power.exp() * 0.001
+            }
+        } else {
+            // Normal emission based on emits_light
+            match self.emits_light {
+                true => self.emission_power.exp(),
+                false => 0.0,
+            }
         }
     }
     pub fn transmissivity_factor(&self) -> f32 {
@@ -186,6 +201,12 @@ pub mod component {
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct UVSurface;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Light;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Door;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct RoomState {
@@ -496,10 +517,12 @@ impl SpriteConfig {
                 .insert(component::Collision)
                 .insert(component::Opaque)
                 .insert(component::UVSurface),
-            Class::Door => entity.insert(component::Interactive::new(
-                "sounds/door-open.ogg",
-                "sounds/door-close.ogg",
-            )),
+            Class::Door => entity
+                .insert(component::Interactive::new(
+                    "sounds/door-open.ogg",
+                    "sounds/door-close.ogg",
+                ))
+                .insert(component::Door),
             Class::Switch => entity
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
@@ -527,18 +550,26 @@ impl SpriteConfig {
                 "sounds/door-close.ogg",
             )),
             Class::RoomDef => entity,
-            Class::WallLamp => entity.insert(component::RoomState::new()),
-            Class::FloorLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::TableLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
+            Class::WallLamp => entity
+                .insert(component::RoomState::new())
+                .insert(component::Light),
+            Class::FloorLamp => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::Light),
+            Class::TableLamp => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::Light),
             Class::WallDecor => entity,
-            Class::CeilingLight => entity.insert(component::RoomState::new()),
-            Class::StreetLight => entity,
+            Class::CeilingLight => entity
+                .insert(component::RoomState::new())
+                .insert(component::Light),
+            Class::StreetLight => entity.insert(component::Light),
             Class::Appliance => entity,
             Class::Van => entity,
             Class::Window => entity,

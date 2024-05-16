@@ -431,7 +431,6 @@ pub fn apply_lighting(
         dst_color.set_a(new_a);
         // Sound field visualization:
 
-        const SMOOTH_F: f32 = 1.0;
         let f_gamma = |lux: f32| {
             (fastapprox::faster::pow(lux, board::LIGHT_GAMMA)
                 + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
@@ -458,15 +457,17 @@ pub fn apply_lighting(
 
         const BRIGHTNESS: f32 = 1.01;
         let tint_comp = (new_mat.data.color.l() + 0.01).recip() + exp_color;
+        let smooth_f: f32 = new_mat.data.color.a().sqrt() * 10.0 + 0.0001;
+
         let gamma_mean = |a: f32, b: f32| {
-            (a * SMOOTH_F
+            (a * smooth_f
                 + f_gamma(
                     b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
                         + (tint_comp - 1.0 + cold_f * 2.0 + (exp_color * 2.0).powi(2))
                             / (10.0 + exposure + b),
                 )
                 + exp_color / 40.0)
-                / (1.0 + SMOOTH_F)
+                / (1.0 + smooth_f)
         };
         lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
         new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);

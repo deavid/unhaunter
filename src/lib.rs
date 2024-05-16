@@ -5,6 +5,7 @@ mod game;
 mod gear;
 mod ghost;
 mod ghost_definitions;
+mod ghost_events;
 mod mainmenu;
 mod maplight;
 mod materials;
@@ -77,6 +78,7 @@ pub fn app_run() {
     mainmenu::app_setup(&mut app);
     ghost::app_setup(&mut app);
     board::app_setup(&mut app);
+    ghost_events::app_setup(&mut app);
     player::app_setup(&mut app);
     pause::app_setup(&mut app);
     maplight::app_setup(&mut app);

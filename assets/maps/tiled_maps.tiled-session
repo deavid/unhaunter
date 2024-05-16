@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "topdown.tsx",
+    "activeFile": "topdown_test_128.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -18,8 +18,8 @@
             "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1536,
-                "y": 767.5
+                "x": 1106.5,
+                "y": 848.5
             }
         },
         "character1.tsx": {
@@ -34,8 +34,8 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 504,
-                "y": 251.875
+                "x": 503.625,
+                "y": 251.625
             }
         },
         "map_house1_3x.tmx": {
@@ -57,8 +57,8 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1536,
-                "y": 767.875
+                "x": 1535.625,
+                "y": 767.625
             }
         },
         "map_school1.tmx": {
@@ -80,8 +80,8 @@
             "scale": 0.0625,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 7832,
-                "y": 7368
+                "x": -3912,
+                "y": 2056
             }
         },
         "tut01_basics.tmx": {
@@ -160,8 +160,8 @@
         "map_house1.tmx",
         "map_house2.tmx",
         "atut01_basics.tmx",
-        "topdown_test_128.tmx",
         "topdown.tsx",
+        "topdown_test_128.tmx",
         "tut01_basics.tmx",
         "map_house1_3x.tmx"
     ],
