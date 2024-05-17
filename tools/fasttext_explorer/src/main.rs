@@ -19,14 +19,6 @@ const JSONL_EXTENSION: &str = "jsonl";
 struct Args {
     #[command(subcommand)]
     action: Action,
-
-    /// Don't overwrite existing embedding files
-    #[arg(short, long)]
-    no_overwrite: bool,
-
-    /// Only process files where the source is newer than the destination
-    #[arg(short, long, default_value_t = true)]
-    process_newer: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -36,6 +28,12 @@ enum Action {
         /// The phrasebook type to process (e.g., "player", "ghost")
         #[arg(short, long)]
         phrasebook_type: String,
+        /// Don't overwrite existing embedding files
+        #[arg(short, long)]
+        no_overwrite: bool,
+        /// Only process files where the source is newer than the destination
+        #[arg(short, long)]
+        process_newer: bool,
     },
 }
 
@@ -55,11 +53,15 @@ fn main() {
 
     // Match the selected action
     match args.action {
-        Action::GenerateEmbeddings { phrasebook_type } => embeddings::process_embeddings(
+        Action::GenerateEmbeddings {
+            phrasebook_type,
+            no_overwrite,
+            process_newer,
+        } => embeddings::process_embeddings(
             &project_root,
             phrasebook_type,
-            args.no_overwrite,
-            args.process_newer,
+            no_overwrite,
+            process_newer,
         ),
     }
 }

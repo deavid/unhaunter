@@ -18,7 +18,7 @@
 //! cargo run -p fasttext_explorer -- generate-embeddings --phrasebook-type ghost
 //! ```
 //!
-//! You can also specify subfolders within the phrasebook directories. 
+//! You can also specify subfolders within the phrasebook directories.
 //! For example, to process phrases in the "player/custom" folder, use:
 //!
 //! ```bash
@@ -32,6 +32,7 @@
 
 use std::{
     fs::{create_dir_all, File},
+    io::Write as _,
     path::PathBuf,
 };
 
@@ -74,6 +75,9 @@ pub fn process_embeddings(
         if path.is_dir() || path.extension().unwrap_or_default() != YAML_EXTENSION {
             continue;
         }
+        if path.file_name().unwrap() == "index.yaml" {
+            continue;
+        }
 
         // Get the relative path for the destination file
         let relative_path = path.strip_prefix(project_root).unwrap();
@@ -94,6 +98,7 @@ pub fn process_embeddings(
         }
 
         // Load the YAML file
+        eprintln!("Loading {:?}...", path);
         let file = File::open(path).unwrap();
         let phrases: Vec<String> = serde_yaml::from_reader(file).unwrap();
 
@@ -106,15 +111,19 @@ pub fn process_embeddings(
             })
             .collect();
 
+        eprintln!("Writing file {:?}...", dest_path);
         // Create the destination directory if it doesn't exist
         create_dir_all(dest_path.parent().unwrap()).unwrap();
 
+        let mut dest_file = File::create(dest_path).unwrap();
         // Serialize the embeddings to a JSONL file
-        let dest_file = File::create(dest_path).unwrap();
-        serde_yaml::to_writer(dest_file, &embeddings).unwrap();
+        for embedding in embeddings {
+            serde_json::to_writer(&mut dest_file, &embedding).unwrap();
+            writeln!(&mut dest_file).unwrap(); // Add a newline after each object
+        }
 
-        println!("Processed file: {:?}", path);
+        eprintln!("Processed file: {:?}", path);
     }
 
-    println!("Embedding generation complete!");
+    eprintln!("Embedding generation complete!");
 }
