@@ -1,273 +1,198 @@
-# Unhaunter
+# Unhaunter: Dare to Face the Unseen
 
-A paranormal investigation game in an isometric perspective.
+Dare to enter a world where shadows whisper and every creak could be a ghostly presence. In Unhaunter, you're a paranormal investigator armed with cutting-edge gear, tasked with identifying and expelling restless spirits from haunted locations. 
 
-## How to Play
+This 2D isometric game seamlessly blends exploration, puzzle-solving, and strategic investigation, offering a unique blend of thrills and chills for those brave enough to confront the unknown.
 
-Your task is to expel the ghost(s) from a location (currently 1 ghost only).
+## Gameplay
 
-To be able to do this, first you need to identify the ghost among 44 different
-possible ghost types. Each ghost type interacts with your equipment in a
-different way. Each piece of equipment is responsible for detecting a type of
-evidence.
+### Exploration 
 
-There are 8 types of evidence. A ghost has 5 evidences out of those 8.
+Explore atmospheric, isometric environments and unravel their secrets.  Venture into dimly lit rooms, interact with objects like doors, switches, and lamps, and uncover clues to help you identify the ghost.
 
-Locate the ghost, test the different equipment, note down in the van which
-evidences you found, create the "Unhaunter Ghost Repellent" and use it to expel
-the ghost.
+### Investigation 
 
-Once you're done, you can click "End Mission" on the van and you'll get the
-mission score.
+Your ultimate goal is to banish the lingering spirits (currently one per location). 
 
-Press [E] on the van to access the van UI for the journal and other useful
-stuff. The same key is used to open doors or actuate switches and lamps.
+To achieve this, you must first identify the ghost among 44 distinct possible ghost types. Each ghost type interacts with your equipment in a different way, leaving behind specific clues known as evidence.
 
-Press [R] to activate the gear on your right hand, [T] for the gear in the left
-hand.
+There are 8 types of evidence. Each ghost exhibits 5 of these 8.
 
-Press [Q] to cycle the inventory on your right hand. [TAB] to swap your left
-and right hands.
+### Ghost Identification 
 
-## Evidences
+Locate the ghost, carefully test your equipment, and record your findings in your trusty van. Once you have enough evidence, synthesize a specialized "Unhaunter Ghost Repellent" to expel the ghost.
 
-* Freezing temps: Thermometer. The room that the ghost frequents can go below
-  zero. Be warned that lights heat up the room and open doors will leak air
-  outside. These factors limit your ability to read freezing temps.
+Once you're done, you can click "End Mission" on the van and you'll get the mission score.
 
-* Floating Orbs: Night Vision IR Camera. The ghost's breach (grey translucent
-  dust) can illuminate under Night Vision (IR). The room has to be dark for this
-  effect to be perceptible.
+### Controls
 
-* UV Ectoplasm: UV Torch. The ghost might glow green under UV light. Other light
-  sources might make this very hard to see.
+* **[WASD]:** Movement
+* **[E]:** Interact (doors, switches, lamps)
+* **[R]:** Activate right-hand gear
+* **[T]:** Activate left-hand gear
+* **[Q]:** Cycle right-hand inventory
+* **[TAB]:** Trigger left-hand item
+* **[F]:** Grab item
+* **[G]:** Drop item
+* **[C]:** Change evidence
 
-* EMF Level 5: EMF Meter. The EMF Meter might read EMF5 for some ghosts.
+### Ghost Hunting
 
-* EVP Recording: Recorder. The recorder might show up a "EVP Recorded" message.
+Beware! Ghosts can enter a hunting phase, becoming more aggressive and directly pursuing players to inflict damage. The likelihood of a hunt increases as the ghost's rage grows, and its duration is determined by the ghost's "hunting" state.
 
-* Spirit Box: Spirit Box. Screams and other paranormal sounds might be heard
-  through the static.
+## Evidence & Equipment
 
-* RL Presence: Red Light Torch. The ghost might glow orange under this light.
-  Other light sources might need to be off for the effect to be evident.
-
-* 500+ cpm: Geiger Counter. The device might read above 500cpm for some ghosts.
+| Evidence       | Description                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| Freezing Temps | The room frequented by the ghost becomes unusually cold, sometimes dropping below 0°C.           |
+| Floating Orbs  | The ghost's breach (a spectral dust cloud) might glow when viewed through a Night Vision camera. |
+| UV Ectoplasm   | The ghost might emit a greenish glow under UV light.                                             |
+| EMF Level 5    | The EMF Meter may spike to level 5 in the presence of certain ghosts.                            |
+| EVP Recording  | The Recorder might capture ghostly voices (Electronic Voice Phenomena).                          |
+| Spirit Box     | Screams, whispers, or other paranormal sounds may be heard through the Spirit Box.               |
+| RL Presence    | The ghost might emit an orange glow under red light.                                             |
+| 500+ cpm       | The Geiger Counter may detect elevated radiation levels near certain ghosts.                     |
 
 ## Basic Strategy
 
-First, locate where the ghost is - what room it tends to roam. For this, it is
-best to turn on all the lights in the house and open all doors.
+### Quick Tips:
 
-Press [T] to enable the torch; it has several power settings, but be warned
-that it might turn itself off by overheating.
+* **Use your ears:** Pay close attention to audio cues from your equipment; they can provide valuable clues.
+* **Control the environment:** Closing doors helps contain cold air for more accurate temperature readings. Lights also heat up the room, so turning them off can create a colder environment.
+* **Sanity is key:** Manage your sanity by taking breaks in the truck.
 
-The ghost has a spawn point, which also sets its favorite room. This spawn point
-is known as the ghost's breach, which can be seen as a form of white,
-semi-transparent dust. This is better seen using the location's lights; a
-regular torch will not show it.
+### Finding the Ghost
 
-The ghost always roams around the breach. So most of the analysis and tests
-should be done in this room.
+Your first task is to locate the ghost and determine its preferred area.
 
-Once this is located, turn off the lights of that room and the rooms contiguous
-to it. Also, close the doors of the room.
+The ghost's spawn point, known as its breach, appears as a subtle, semi-transparent dust cloud. It's most visible with the location's lights (not from your torch). 
 
-Try the different equipment and note which ones gave positive results.
+### Gathering Evidence
 
-Go to the van to note these down in the journal. It is not possible to note
-these down outside of the van, so if you cannot memorize them, you'll need to
-make more trips to the van to write them down.
+Ghosts can move throughout the environment, but you might find more activity near their breach (spawn point). Investigate this area carefully.
 
-As you set these on the van, the list of possible ghosts will narrow. Once
-you're sure which one it is, select it and you'll be able to click 
-"Craft Unhaunter Ghost Repellent".
+For the best results, turn off lights near the breach and close the doors. This will help create a colder environment for more accurate temperature readings and might enhance the visibility of certain paranormal phenomena.
 
-This will fill a vial in your inventory with the repellent for that particular
-ghost type. Go to the ghost room (breach) and wait for the ghost to be there,
-then activate the vial, which will spread the substance.
+Use your equipment and take note of which ones yield positive results.
 
-If successful, the ghost should disappear. Be warned, there's no cue indicating
-if it worked. You need to double-check that the ghost is gone.
-If needed, you can refill the vial in the van.
+### Crafting the Repellent
 
-Once you're sure there are no more ghosts, proceed to the van
-and click "End Mission".
+Return to your van and record the evidence you've gathered in your journal. The crafting of the ghost repellent can only be performed inside the van.
+
+As you record evidence, the list of possible ghosts in your journal will narrow down. Once you're confident in your identification, select the ghost and click "Craft Unhaunter Ghost Repellent".
+
+### Expelling the Ghost
+
+This will create a vial filled with the specific repellent needed to banish that ghost type. Return to the ghost's room (breach), wait for it to appear, and activate the vial. 
+
+If successful, the ghost will simply vanish. There's no special animation or sound effect, so it's up to you to confirm that the ghost is truly gone. You can refill the vial automatically when crafting a new repellent in the van.
+
+Once you're certain there are no more ghosts, go back to the van and click "End Mission".
 
 ## Building and Installing
 
-There are no binary, packages or installers for Unhaunter. So far there are no
-plans for them, the only way to run the game is to build it from sources.
+There are no pre-built binaries or installers for Unhaunter. To play, you'll need to build it from source.
 
-Download the repository as usual via your favorite method, for example:
+1. Clone the repository:
 
-$ git clone https://github.com/deavid/unhaunter.git
+   ```bash
+   $ git clone https://github.com/deavid/unhaunter.git
+   ```
 
-You'll need to have Rust, follow the steps to install it at:
+## Prerequisites
 
-https://www.rust-lang.org/tools/install
+You'll need to have Rust and the necessary dependencies for Bevy installed.
 
-You'll need also to install dependencies for Bevy, follow the instructions for
-your operating system at:
+2. Install Rust:
 
-https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies
+   [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
 
-With this, you should be able to run the game by simply running:
+3. Install Bevy dependencies:
 
-$ cargo run
+   Follow the instructions for your operating system at:
 
-The command must be run from the game source folder.
+   [https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies](https://bevyengine.org/learn/quick-start/getting-started/setup/#installing-os-dependencies)
 
-NOTE: The game is currently being developed and built on a single developer 
-  machine using Debian GNU/Linux in some Testing/Sid version in an AMD machine
-  using a NVIDIA 3080. The game should run in a wide range of computers and
-  configurations, but it has not been tested.
+4. Run the game:
+
+   ```bash
+   $ cargo run
+   ```
+
+   Run this command from the game's source folder.
+
+**Note:** Unhaunter is being actively developed and built using Bevy version `0.13.0`. While it should run on a wide range of computers, configurations haven't been extensively tested.
 
 ## Profiling
 
-Unhaunter, as any other game, will perform wildly different depending on where
-it is executed. If there are performance issues on your system, you can help
-by profiling the problem yourself.
+If you encounter performance issues, profiling can help identify the bottlenecks.
+**Warning:** Profiling generates a large amount of data (potentially gigabytes). Be mindful of this and profile only for short durations.
 
-WARN: Profiling creates gigabytes worth of data. It is imperative that you know
-what do you want to test and do it as quickly as possible. A minute worth of
-data could be over 3 GiB.
+To run a profiling session:
 
-To run a profiling session, run:
+   ```bash
+   $ cargo run --release --features bevy/trace_chrome
+   ```
 
-  $ cargo run --release --features bevy/trace_chrome
+   This creates a file named `trace-1999999999999999.json` (the numbers will vary) in the same folder from where you ran `cargo run`.
 
-This will create a file named `trace-1999999999999999.json` in the same folder
-from where you executed `cargo run` (numbers will be different).
+   **Warning:** The trace file may contain private information about your system. Be cautious about sharing it.
 
-Be warned that the trace might also contain some private information about your
-system. The trace can be opened by others, but only send it to trusted people.
-(It shows the paths of where do you have Bevy and other libraries installed,
-which is just a minor concern)
+### Inspecting the Trace
 
-Being a JSON file, it is likely that it can be compressed really well. You can
-use 7-Zip, or other tools. ZSTD, if you have it, will probably yield good
-results in a short amount of time.
+1.  **Compress the trace:** The JSON trace file can be compressed significantly. Use 7-Zip or a tool like ZSTD for efficient compression.
+2.  **Open the trace:**  You can inspect the trace using [https://ui.perfetto.dev](https://ui.perfetto.dev). If the file is too large for the browser's WASM limit, follow the instructions at:
+    [https://perfetto.dev/docs/quickstart/trace-analysis#trace-processor](https://perfetto.dev/docs/quickstart/trace-analysis#trace-processor)
+3.  **Analyze the trace:**  Zoom in on the timeframe you want to analyze (typically the later portion) and look for the `bevy_app -> winit event_handler -> update -> main_app -> schedule: name=Main -> schedule: name=Update` section. This will reveal the main contributors to frame time.
 
-For example, compressing a sample trace allows us to get 1.3 GiB
-compressed into 33 MiB:
+**Note:**  `bevy_framepace::framerate_limiter` will likely take up most of the time, as its purpose is to introduce delays to maintain a consistent FPS.
 
-```
-$ zstd -9kv trace-1709882754518652.json 
-*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***
-trace-1709882754518652.json :  2.52%   (  1.30 GiB =>   33.5 MiB, trace-1709882754518652.json.zst) 
-```
+For more information on profiling Bevy, see:
 
-This could be useful to share via email or other methods. ZSTD gives very good
-compression ratios at quite fast speed.
-
-If you want to inspect the file yourself, you can use https://ui.perfetto.dev
-
-But usually it won't fit in the browser WASM limit (2 GiB), so you might need 
-to follow instructions here:
-
-https://perfetto.dev/docs/quickstart/trace-analysis#trace-processor
-
-Sample session:
-
-```
-$ curl -LO https://get.perfetto.dev/trace_processor
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100  9759  100  9759    0     0  10107      0 --:--:-- --:--:-- --:--:-- 10102
-$ chmod +x ./trace_processor
-$ ./trace_processor ~/git/rust/unhaunter/trace-1709880857003805.json --httpd
-[865.803] processor_shell.cc:1636 Trace loaded: 2644.45 MB in 63.29s (41.8 MB/s)
-[865.804]             httpd.cc:99 [HTTP] Starting RPC server on localhost:9001
-[865.804]            httpd.cc:104 [HTTP] This server can be used by reloading https://ui.perfetto.dev and clicking on YES on the "Trace Processor native acceleration" dialog or through the Python API (see https://perfetto.dev/docs/analysis/trace-processor#python-api).
-```
-
-Once you have the trace up, you can zoom in/out and pan left/right using the
-WASD keys.
-
-In there, zoom in on the timeframe you want, usually it would be on the last
-part (3/4th to the right) and look for a single frame to inspect.
-
-To be exact, we are looking for:
-
-* Process: main 0
-  * bevy_app
-    * winit event_handler
-      * update:
-        * main_app (for CPU bound problems, for GPU: sub app: name=RenderExtractApp)
-          * schedule: name=Main
-            * schedule: name=Update
-
-Take a look on that are and see what are the main culprits of the time spent.
-
-NOTE: bevy_framepace::framerate_limiter is intended to take the majority of the
-  time. This is because its task is to add a sleep/delay so we keep a constant
-  FPS and we don't burn CPU/GPU resources without need.
-
-There's additional info on profiling Bevy here:
-
-https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
-
+[https://github.com/bevyengine/bevy/blob/main/docs/profiling.md](https://github.com/bevyengine/bevy/blob/main/docs/profiling.md)
 
 ## WASM Support
 
-You can test this game in WASM by navigating to:
+You can play Unhaunter directly in your web browser:
 
-https://deavid.github.io/unhaunter/
+[https://deavid.github.io/unhaunter/](https://deavid.github.io/unhaunter/)
 
-However, Google Chrome is recommended.
+**Note:**  Google Chrome is the recommended browser for the best experience.
 
-Known issues: (Some seem to be because we enabled Bevy's trace by default)
+### Current WASM Limitations:
 
-* Firefox seems to have serious performance problems.
-* Noticeable audio crackling.
-* Map names appear by filenames not by their internal name.
-* Map data is pre-backed in, does not react to new maps added into the folder.
-* University/School map is very slow.
+*  Performance issues may occur in Firefox.
+*  Map names are displayed by filename rather than internal name.
+*  Map data is pre-baked and doesn't reflect newly added maps.
 
-NOTE: Overall this is provided as a "demo" that is easy to access for those that
-cannot build the game themselves. Unhaunter is not targeting WASM, and the
-support will be minimal.
+This WASM version is intended as a demo for those who cannot build the game locally. Unhaunter primarily targets native builds, so WASM support will be minimal for now. 
 
-Building WASM locally:
+## Faster Compile Times
 
-https://bevy-cheatbook.github.io/platforms/wasm.html
+### Dynamic Linking
 
-Install deps
+Using dynamic linking for incremental builds (small code changes) can significantly reduce compile times:
 
-  rustup target install wasm32-unknown-unknown
-  cargo install wasm-server-runner
+   ```bash
+   cargo run --features bevy/dynamic_linking  
+   ```
 
-Run with:
+This is mainly beneficial for debug builds. For fresh builds, the difference is negligible.
 
-  cargo run --target wasm32-unknown-unknown --release
+You can profile the build process to identify further optimizations using:
 
-Wasm bindgen:
+   ```bash
+   RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/dynamic_linking
+   ```
 
-  wasm-pack build --release --target web
+**Note:** This requires a nightly Rust toolchain.
 
-This will build in pkg/
+## Community
 
-And to test:
+Unhaunter has a Matrix room for discussion and collaboration. Access is by invitation only. To join, please contact deavid (@deavidsedice:matrix.org) on Matrix.
 
-  python3 -m http.server
+[Matrix Room](https://matrix.to/#/#unhaunter:matrix.org)
 
-## Faster compile times:
+## Future Plans
 
-Dynamic linking for small changes reduces from 20s to 5s:
-
-  cargo run --features bevy/dynamic_linking  
-
-This is only useful for debug incremental builds for small changes. If you're 
-building from scratch, the difference is negligible.
-
-Profiling the build step can be done with: 
-
-  RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/dynamic_linking
-
-Be aware that this requires a nightly toolchain to work, and probably you'll
-need to build twice to get the proper timing for incremental.
-
-This shows that the most time is spent in the linker anyway.
-
-
+Unhaunter is constantly evolving!  Currently, two ghost events are implemented: Door Slamming and Light Flickering. Look forward to more ghost types, expanded locations, additional equipment, new ghost events, and more challenging gameplay in future updates. 
