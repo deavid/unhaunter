@@ -6,7 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
 fasttext = "0.7.8"
+serde = { version = "1.0.202", features = ["derive"] }
+serde_yaml = "0.9.34"
+walkdir = "2.5.0"
 
 
 # NOTE: To run this, use `cargo run -p fasttext_explorer` from the unhaunter folder.
