@@ -26,6 +26,10 @@ use crate::{maplight, tiledmap::MapLayer};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
+    /// This `cfg` property is PRIVATE on purpose! We need to separate the "what it is" from "what it does".
+    /// There is always a tendency to read and write cfg from everywhere because it is "the easiest" thing to do, but
+    /// that creates a mess in the code later on because we are not separating behavior from raw data.
+    /// Always place behavioral traits in "p: Properties" and never read or write from Cfg.
     cfg: SpriteConfig,
     pub p: Properties,
 }
