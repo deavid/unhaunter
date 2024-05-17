@@ -1,3 +1,4 @@
+workspace = { members = ["tools/fasttext_explorer"] }
 [package]
 name = "unhaunter"
 version = "0.2.1-alpha"
