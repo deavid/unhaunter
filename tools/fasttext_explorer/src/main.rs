@@ -1,7 +1,9 @@
 pub mod embeddings;
+pub mod query;
 
 use clap::{Parser, Subcommand};
 
+use fasttext::FastText;
 use serde::{Deserialize, Serialize};
 
 use std::env;
@@ -12,6 +14,7 @@ const PHRASEBOOKS_DIR: &str = "phrasebooks";
 const VECTORS_DIR: &str = "vectors";
 const YAML_EXTENSION: &str = "yaml";
 const JSONL_EXTENSION: &str = "jsonl";
+const MODEL_PATH: &str = "assets/phrasebooks/vectors/crawl-300d-2M-subword.bin";
 
 // Define your command-line arguments using clap
 #[derive(Parser, Debug)]
@@ -35,6 +38,12 @@ enum Action {
         #[arg(short, long)]
         process_newer: bool,
     },
+    /// Load embeddings and query for similar phrases
+    QueryEmbeddings {
+        /// The phrasebook type to load (e.g., "player", "ghost")
+        #[arg(short, long)]
+        phrasebook_type: String,
+    },
 }
 
 // Define a struct to represent a phrase and its embedding
@@ -50,6 +59,11 @@ fn main() {
 
     // Get the absolute path to the project root
     let project_root = env::current_dir().unwrap();
+    eprintln!("Loading model {:?}", MODEL_PATH);
+    // Load the FastText model (only once)
+    let mut model = FastText::new();
+    model.load_model(MODEL_PATH).unwrap();
+    eprintln!("Loading model -> Done");
 
     // Match the selected action
     match args.action {
@@ -62,6 +76,10 @@ fn main() {
             phrasebook_type,
             no_overwrite,
             process_newer,
+            &model,
         ),
+        Action::QueryEmbeddings { phrasebook_type } => {
+            query::query_embeddings(&project_root, phrasebook_type, &model)
+        }
     }
 }

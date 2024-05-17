@@ -48,6 +48,7 @@ pub fn process_embeddings(
     phrasebook_type: String,
     no_overwrite: bool,
     process_newer: bool,
+    model: &FastText,
 ) {
     // Define the source and destination directories
     let source_dir = project_root
@@ -59,12 +60,6 @@ pub fn process_embeddings(
         .join(PHRASEBOOKS_DIR)
         .join(VECTORS_DIR)
         .join(phrasebook_type);
-
-    // Load the FastText model
-    let mut model = FastText::new();
-    model
-        .load_model("assets/phrasebooks/vectors/crawl-300d-2M-subword.bin")
-        .unwrap();
 
     // Iterate through YAML files in the source directory
     for entry in WalkDir::new(source_dir) {
