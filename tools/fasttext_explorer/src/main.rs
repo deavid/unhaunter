@@ -29,7 +29,7 @@ enum Action {
     /// Generate embeddings and store them in JSONL files
     GenerateEmbeddings {
         /// The phrasebook type to process (e.g., "player", "ghost")
-        #[arg(short, long)]
+        #[arg(long)]
         phrasebook_type: String,
         /// Don't overwrite existing embedding files
         #[arg(short, long)]
@@ -41,7 +41,7 @@ enum Action {
     /// Load embeddings and query for similar phrases
     QueryEmbeddings {
         /// The phrasebook type to load (e.g., "player", "ghost")
-        #[arg(short, long)]
+        #[arg(long)]
         phrasebook_type: String,
     },
     /// Simulate ghost responses to player phrases

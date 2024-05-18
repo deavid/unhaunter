@@ -74,8 +74,8 @@ the closest matches from the phrasebook.
 
 **Interactive Loop:**
 
-1. The tool will prompt you to enter a ghost metadata file. 
-2. Enter the filename (e.g., `assets/sample_ghosts/shade.yaml`).
+1. The tool will prompt you to enter a ghost metadata file. (note: we removed this and defaulted to the shade in source code)
+2. Enter the filename (e.g., `sample_ghosts/shade.yaml`), note that the code already looks in `./assets`.
 3. Enter the distance from the ghost in tiles (1, 5, 10, 20, 50).
 4. Enter a phrase to query. 
 5. The tool will display the closest matching phrases and a simulated ghost response based on the specified ghost and distance. 

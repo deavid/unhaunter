@@ -10,8 +10,7 @@
     tags: [Greeting]
     distance: close
   response:
-    type: text
-    content: "... (Faint whisper)"
+    !Text "... (Faint whisper)"
 
 - trigger:
     ghost_type: Shade
@@ -20,8 +19,7 @@
     tags: [Greeting]
     distance: close
   response:
-    type: sound
-    content: rustling_leaves
+    !Sound rustling_leaves
 
 - trigger:
     ghost_type: Shade
@@ -30,7 +28,7 @@
     tags: [Greeting]
     distance: close
   response:
-    type: silence
+    !Silence
 
 - trigger:
     ghost_type: Shade
@@ -39,8 +37,7 @@
     tags: [Greeting]
     distance: close
   response:
-    type: text
-    content: "Who's there?"
+    !Text "Who's there?"
 
 - trigger:
     ghost_type: Shade
@@ -49,8 +46,7 @@
     tags: [Greeting]
     distance: close
   response:
-    type: text
-    content: "Please, leave me alone."
+    !Text "Please, leave me alone."
 
 - trigger:
     ghost_type: Shade
@@ -60,8 +56,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I... I don't remember."
+    !Text "I... I don't remember."
 
 - trigger:
     ghost_type: Shade
@@ -70,8 +65,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I'm lost."
+    !Text "I'm lost."
 
 - trigger:
     ghost_type: Shade
@@ -80,8 +74,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I'm afraid."
+    !Text "I'm afraid."
 
 - trigger:
     ghost_type: Shade
@@ -90,8 +83,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I was once a [profession]..."
+    !Text "I was once a [profession]..."
 
 - trigger:
     ghost_type: Shade
@@ -100,8 +92,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I miss my [loved one]..."
+    !Text "I miss my [loved one]..."
 
 - trigger:
     ghost_type: Shade
@@ -110,8 +101,7 @@
     tags: [Question, Identity]
     distance: close
   response:
-    type: text
-    content: "I'm trapped here."
+    !Text "I'm trapped here."
 
 - trigger:
     ghost_type: Shade
@@ -120,8 +110,7 @@
     tags: [Request, Action]
     distance: close
   response:
-    type: text
-    content: "I can't."
+    !Text "I can't."
 
 - trigger:
     ghost_type: Shade
@@ -130,8 +119,7 @@
     tags: [Request, Action]
     distance: close
   response:
-    type: text
-    content: "I'm too weak."
+    !Text "I'm too weak."
 
 - trigger:
     ghost_type: Shade
@@ -141,8 +129,7 @@
     tags: [Request, Action]
     distance: close
   response:
-    type: text
-    content: "Please, don't make me."
+    !Text "Please, don't make me."
 
 - trigger:
     ghost_type: Shade
@@ -151,8 +138,7 @@
     tags: [Statement, Reassurance]
     distance: close
   response:
-    type: action
-    content: approach_cautiously
+    !Action approach_cautiously
 
 - trigger:
     ghost_type: Shade
@@ -161,8 +147,7 @@
     tags: [Statement, Reassurance]
     distance: close
   response:
-    type: text
-    content: "Do you really mean that?"
+    !Text "Do you really mean that?"
 
 - trigger:
     ghost_type: Shade
@@ -171,8 +156,7 @@
     tags: [Statement, Reassurance]
     distance: close
   response:
-    type: text
-    content: "I haven't felt kindness in so long..."
+    !Text "I haven't felt kindness in so long..."
 
 - trigger:
     ghost_type: Shade
@@ -181,8 +165,7 @@
     tags: [Statement, Reassurance]
     distance: close
   response:
-    type: text
-    content: "Thank you."
+    !Text "Thank you."
 
 - trigger:
     ghost_type: Shade
@@ -191,8 +174,7 @@
     tags: [Provocation]
     distance: close
   response:
-    type: action
-    content: flee
+    !Action flee
 
 - trigger:
     ghost_type: Shade
@@ -201,8 +183,7 @@
     tags: [Provocation]
     distance: close
   response:
-    type: text
-    content: "Why are you doing this?"
+    !Text "Why are you doing this?"
 
 - trigger:
     ghost_type: Shade
@@ -211,8 +192,7 @@
     tags: [Provocation]
     distance: close
   response:
-    type: text
-    content: "Please, stop."
+    !Text "Please, stop."
 
 - trigger:
     ghost_type: Shade
@@ -222,27 +202,30 @@
     tags: [Provocation]
     distance: close
   response:
-    type: text
-    content: "You're hurting me."
+    !Text "You're hurting me."
 
 # --- General Responses (Applicable to any ghost type) ---
 
 - trigger:
-    ghost_type: Any
-    mood:
-      any: 1.0
-    tags: [Question, Location]
+    ghost_type: Any 
+    mood: 
+    tags: []
     distance: far
   response:
-    type: text
-    content: "Too far away to hear you."
+    !Text "... (Faint sound in the distance)"
 
 - trigger:
-    ghost_type: Any
-    mood:
-      any: 1.0
-    tags: [Question, Location]
+    ghost_type: Any 
+    mood: 
+    tags: []
     distance: medium
   response:
-    type: text
-    content: "... (Faint sound in the distance)"
+    !Text "shhh"    
+
+- trigger:
+    ghost_type: Any 
+    mood: 
+    tags: []
+    distance: close
+  response:
+    !Text "?? (did not understand)"

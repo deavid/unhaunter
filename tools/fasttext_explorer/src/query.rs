@@ -68,9 +68,13 @@ pub struct ResponseTrigger {
 
 #[derive(Debug, serde::Deserialize, PartialEq)]
 pub enum Distance {
+    #[serde(rename = "close")]
     Close,
+    #[serde(rename = "medium")]
     Medium,
+    #[serde(rename = "far")]
     Far,
+    #[serde(rename = "any")]
     Any,
 }
 
@@ -92,6 +96,7 @@ fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
 
 pub fn load_ghost_metadata(project_root: &Path, filename: &str) -> Ghost {
     let filepath = project_root.join(ASSETS_DIR).join(filename);
+    eprintln!("Opening Ghost Metadata at: {:?}", filepath);
     let file = File::open(filepath).unwrap();
     let ghost: Ghost = from_reader(file).unwrap();
     ghost
@@ -110,13 +115,16 @@ fn match_response_template<'a>(
     distance: u32,
     templates: &'a [ResponseTemplate],
 ) -> Vec<&'a ResponseTemplate> {
+    dbg!(templates.last());
+    dbg!(&phrase.phrase, phrase.repetition_count, &phrase.tags);
     // Added lifetime specifier
     templates
         .iter()
         .filter(|template| {
             // Check ghost type
             if let Some(ghost_type) = &template.trigger.ghost_type {
-                if ghost_type != &ghost.ghost_type {
+                if ghost_type != "Any" && ghost_type != &ghost.ghost_type {
+                    eprintln!("Ghost type: {ghost_type} != {}", ghost.ghost_type);
                     return false;
                 }
             }
@@ -125,9 +133,11 @@ fn match_response_template<'a>(
             for (emotion, intensity) in &template.trigger.mood {
                 if let Some(ghost_intensity) = ghost.mood.0.get(emotion) {
                     if *ghost_intensity < *intensity {
+                        eprintln!("Intensity insufficient for {emotion:?}: ghost: {ghost_intensity} < {intensity}");
                         return false;
                     }
                 } else {
+                    eprintln!("Emotion/mood {emotion:?} not found in ghost: {:?}", ghost.mood);
                     return false;
                 }
             }
@@ -135,6 +145,7 @@ fn match_response_template<'a>(
             // Check tags
             for tag in &template.trigger.tags {
                 if !phrase.tags.contains(tag) {
+                    eprintln!("Phrase is missing tag {tag:?}");
                     return false;
                 }
             }
@@ -143,16 +154,19 @@ fn match_response_template<'a>(
             match template.trigger.distance {
                 Distance::Close => {
                     if distance > 5 {
+                        eprintln!("Distance {distance:?} not in range for {:?}", template.trigger.distance);
                         return false;
                     }
                 }
                 Distance::Medium => {
                     if distance <= 5 || distance > 20 {
+                        eprintln!("Distance {distance:?} not in range for {:?}", template.trigger.distance);
                         return false;
                     }
                 }
                 Distance::Far => {
                     if distance <= 20 {
+                        eprintln!("Distance {distance:?} not in range for {:?}", template.trigger.distance);
                         return false;
                     }
                 }
@@ -173,6 +187,9 @@ fn select_response_template<'a>(
     // If there's only one matching template, return it
     if matching_templates.len() == 1 {
         return matching_templates[0];
+    }
+    if matching_templates.is_empty() {
+        panic!("Called to `select_response_template` with an empty array - that is not supported")
     }
 
     // If the phrase has been repeated, try to choose a different template
@@ -266,13 +283,14 @@ pub fn query_embeddings(project_root: &Path, phrasebook_type: String, model: &Fa
     // Interactive query loop
     loop {
         // Prompt for ghost metadata file and distance
-        print!("Enter a ghost metadata file: ");
-        std::io::stdout().flush().unwrap();
-        let mut ghost_metadata_file = String::new();
-        std::io::stdin()
-            .read_line(&mut ghost_metadata_file)
-            .unwrap();
-        let ghost_metadata_file = ghost_metadata_file.trim();
+        // print!("Enter a ghost metadata file: ");
+        // std::io::stdout().flush().unwrap();
+        // let mut ghost_metadata_file = String::new();
+        // std::io::stdin()
+        //     .read_line(&mut ghost_metadata_file)
+        //     .unwrap();
+        // let ghost_metadata_file = ghost_metadata_file.trim();
+        let ghost_metadata_file = "sample_ghosts/shade.yaml";
 
         print!("Enter the distance from the ghost in tiles (1, 5, 10, 20, 50): ");
         std::io::stdout().flush().unwrap();
