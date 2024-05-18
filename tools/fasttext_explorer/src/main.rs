@@ -44,13 +44,24 @@ enum Action {
         #[arg(short, long)]
         phrasebook_type: String,
     },
+    /// Simulate ghost responses to player phrases
+    SimulateResponse {
+        /// Path to the ghost metadata YAML file
+        #[arg(short, long)]
+        ghost_metadata_file: String,
+        /// Distance from the ghost in tiles (1, 5, 10, 20, 50)
+        #[arg(short, long)]
+        distance: u32,
+    },
 }
 
 // Define a struct to represent a phrase and its embedding
 #[derive(Debug, Serialize, Deserialize)]
-struct PhraseEmbedding {
-    phrase: String,
-    embedding: Vec<f32>,
+pub struct PhraseEmbedding {
+    pub phrase: String,
+    pub embedding: Vec<f32>,
+    pub tags: Vec<String>,
+    pub repetition_count: u32,
 }
 
 fn main() {
@@ -60,6 +71,7 @@ fn main() {
     // Get the absolute path to the project root
     let project_root = env::current_dir().unwrap();
     eprintln!("Loading model {:?}", MODEL_PATH);
+
     // Load the FastText model (only once)
     let mut model = FastText::new();
     model.load_model(MODEL_PATH).unwrap();
@@ -81,5 +93,9 @@ fn main() {
         Action::QueryEmbeddings { phrasebook_type } => {
             query::query_embeddings(&project_root, phrasebook_type, &model)
         }
+        Action::SimulateResponse {
+            ghost_metadata_file,
+            distance,
+        } => query::simulate_response(&project_root, ghost_metadata_file, distance, &model),
     }
 }

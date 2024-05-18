@@ -37,6 +37,7 @@ use std::{
 };
 
 use fasttext::FastText;
+use serde_yaml::from_reader;
 use walkdir::WalkDir;
 
 use crate::{
@@ -95,7 +96,7 @@ pub fn process_embeddings(
         // Load the YAML file
         eprintln!("Loading {:?}...", path);
         let file = File::open(path).unwrap();
-        let phrases: Vec<String> = serde_yaml::from_reader(file).unwrap();
+        let phrases: Vec<String> = from_reader(file).unwrap();
 
         // Generate embeddings and store them in a vector
         let embeddings: Vec<PhraseEmbedding> = phrases
@@ -103,6 +104,8 @@ pub fn process_embeddings(
             .map(|phrase| PhraseEmbedding {
                 phrase: phrase.clone(),
                 embedding: model.get_sentence_vector(phrase).unwrap(),
+                tags: vec![], // TODO: Add tag extraction logic
+                repetition_count: 0,
             })
             .collect();
 
