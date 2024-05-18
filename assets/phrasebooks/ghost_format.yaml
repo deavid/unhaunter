@@ -1,0 +1,30 @@
+# Ghost Response Metadata
+phrase: <The actual phrase>
+speech_act: <Assertive | Directive | Commissive | Expressive | Declarative>  
+emotional_signature: 
+  # What kind of emotional state should the ghost be in to say this
+  emotional_signature_filter:
+    curiosity: <value>
+    fear: <value>
+    anger: <value>
+    sadness: <value>
+    joy: <value>
+    # ... other emotions as needed
+  # What change in the ghost's emotions is likely to be triggered by uttering this response
+  emotional_signature_delta:
+    curiosity: <value>
+    fear: <value>
+    anger: <value>
+    sadness: <value>
+    joy: <value>
+    # ... other emotions as needed
+response_type: <Text | Action | Event | Silence | Sound> 
+contextual_tags: 
+  # (Added at runtime)
+for_speech_acts: 
+  - <speech_act>
+  - <speech_act>
+for_semantic_tags:
+  - <semantic_tag>
+  - <semantic_tag>
+  

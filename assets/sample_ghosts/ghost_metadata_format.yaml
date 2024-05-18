@@ -1,0 +1,9 @@
+# assets/ghost_metadata.yaml
+name: <Ghost Name> 
+ghost_type: <Ghost Type> 
+mood:
+  fear: 0.8
+  anger: 0.2
+  sadness: 0.1
+  curiosity: 0.1
+  playfulness: 0.0

@@ -1,0 +1,168 @@
+# assets/phrasebooks/ghost.yaml
+- phrase: "I don't remember."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: -0.1
+      fear: 0.0
+      anger: 0.0 
+  response_type: Text 
+  for_speech_acts:
+    - Directive
+    - Expressive
+  for_semantic_tags:
+    - Question:Identity
+    - Question:Motivation
+    - Question:Past Life
+- phrase: "They're gone."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      sadness: -0.1
+      fear: 0.0
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts: 
+    - Directive
+    - Expressive
+  for_semantic_tags:
+    - Question:Loved Ones
+    - Question:Identity
+    - Question:Past Life
+- phrase: "Leave me alone." 
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Challenge
+- phrase: "It's cold here." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      sadness: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      fear: -0.1
+      sadness: 0.0
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Question
+    - Statement
+  for_semantic_tags:
+    - Question:Ability
+    - Question:Past Life
+    - Question:Motivation
+- phrase: "You can't hurt me." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.1
+      sadness: 0.2
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[Object moves on its own]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[Whispers faintly] You'll see."
+  speech_act: Commissive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.9
+      sadness: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      sadness: 0.0
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Question
+    - Request
+  for_semantic_tags:
+    - Question:Ability
+    - Question:Identity
+    - Request:Action
+- phrase: "[Slams Door]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[A growling sound is heard]" 
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+    
