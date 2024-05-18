@@ -39,9 +39,6 @@ fn main() {
         );
         let player_phrase = console_ui::get_player_phrase(&phrases);
 
-        if player_phrase.to_lowercase() == "quit" {
-            break;
-        }
         println!();
         println!("Player says: {}", player_phrase);
         let scores = ghost_ai::score_responses(
@@ -49,6 +46,17 @@ fn main() {
             &ghost_responses,
             &ghost_mood,
         );
+        let mut sc = scores
+            .iter()
+            .map(|(k, v)| (k.clone(), *v))
+            .collect::<Vec<_>>();
+        sc.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        for (resp, score) in sc.into_iter().take(25) {
+            eprintln!("-> {score:.3} :: {resp}");
+            if score < 0.1 {
+                break;
+            }
+        }
 
         // Weighted random selection
         let mut rng = thread_rng();
@@ -63,11 +71,12 @@ fn main() {
 
         // Update ghost mood
         let resd = &response.emotional_signature.emotional_signature_delta;
-        ghost_mood.curiosity += resd.curiosity;
-        ghost_mood.fear += resd.fear;
-        ghost_mood.anger += resd.anger;
-        ghost_mood.sadness += resd.sadness;
-        ghost_mood.joy += resd.joy;
+        const MOOD_F: f32 = 5.0;
+        ghost_mood.curiosity += resd.curiosity * MOOD_F;
+        ghost_mood.fear += resd.fear * MOOD_F;
+        ghost_mood.anger += resd.anger * MOOD_F;
+        ghost_mood.sadness += resd.sadness * MOOD_F;
+        ghost_mood.joy += resd.joy * MOOD_F;
 
         // Ghost mood returns to the mean after N turns
         const RETURN_TO_MEAN_TURNS: f32 = 4.0;

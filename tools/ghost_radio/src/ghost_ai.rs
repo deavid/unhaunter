@@ -25,12 +25,12 @@ pub fn score_responses(
         );
 
         let final_score = (speech_act_score + 0.1)
-            * (semantic_tags_score.clamp(0.0, 1.0) + 0.5)
-            * (emotional_signature_score.clamp(-1.0, 1.0) + 1.1);
-        scores.insert(key.clone(), final_score);
+            * (semantic_tags_score.clamp(0.0, 1.0) + 0.3)
+            * (emotional_signature_score.clamp(0.0, 1.0) + 0.5)
+            / 2.0;
+        scores.insert(key.clone(), final_score.powf(5.0).tanh() * 4.0);
     }
-
-    dbg!(scores)
+    scores
 }
 
 fn emotional_signature_to_vec(es: &EmotionalSignature) -> Vec<f32> {
