@@ -1,4 +1,4 @@
-workspace = { members = ["tools/fasttext_explorer", "tools/ghost_radio"] }
+workspace = { members = ["tools/ghost_radio"] }
 [package]
 name = "unhaunter"
 version = "0.2.1-alpha"
