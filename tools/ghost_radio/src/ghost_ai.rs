@@ -23,12 +23,12 @@ pub fn score_responses(
             &emotional_signature_to_vec(ghost_mood),
             &emotional_signature_to_vec(&response.emotional_signature.emotional_signature_filter),
         );
-
+        let seen: f32 = (response.seen_count as f32 + 2.0).powf(2.5);
         let final_score = (speech_act_score + 0.1)
             * (semantic_tags_score.clamp(0.0, 1.0) + 0.3)
-            * (emotional_signature_score.clamp(0.0, 1.0) + 0.5)
-            / 2.0;
-        scores.insert(key.clone(), final_score.powf(5.0).tanh() * 4.0);
+            * (emotional_signature_score.clamp(0.0, 1.0) + 0.005)
+            / seen;
+        scores.insert(key.clone(), final_score.powf(2.1) * 4.0);
     }
     scores
 }
@@ -39,8 +39,23 @@ fn emotional_signature_to_vec(es: &EmotionalSignature) -> Vec<f32> {
 
 pub fn cosine_similarity(v1: &[String], v2: &[String]) -> f32 {
     // Create sets of the unique elements in each vector
-    let set1: std::collections::HashSet<_> = v1.iter().cloned().collect();
-    let set2: std::collections::HashSet<_> = v2.iter().cloned().collect();
+    let mut set1: std::collections::HashSet<_> = v1.iter().cloned().collect();
+    let mut set2: std::collections::HashSet<_> = v2.iter().cloned().collect();
+
+    for v in v1 {
+        if v.contains(':') {
+            for sv in v.split(':') {
+                set1.insert(sv.to_string());
+            }
+        }
+    }
+    for v in v2 {
+        if v.contains(':') {
+            for sv in v.split(':') {
+                set2.insert(sv.to_string());
+            }
+        }
+    }
 
     // Calculate the intersection of the two sets
     let intersection: std::collections::HashSet<_> = set1.intersection(&set2).collect();

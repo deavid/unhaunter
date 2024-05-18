@@ -15,7 +15,7 @@ mod ghost_ai;
 
 fn main() {
     let player_phrases = load_player_phrases("assets/phrasebooks/player.yaml");
-    let ghost_responses = load_ghost_responses("assets/phrasebooks/ghost.yaml");
+    let mut ghost_responses = load_ghost_responses("assets/phrasebooks/ghost.yaml");
     let ghosts = ["poltergeist", "shade"];
     console_ui::display_ghost_options(&ghosts);
     let ghost_choice = get_user_choice();
@@ -64,11 +64,18 @@ fn main() {
 
         // Weighted random selection
         let mut rng = thread_rng();
-        let weights: Vec<f32> = scores.values().map(|&s| s.clamp(0.00001, 9999.9)).collect();
+        let weights: Vec<f32> = sc
+            .iter()
+            .map(|(_, s)| s.clamp(0.00000001, 9999.9))
+            .collect();
         let dist = WeightedIndex::new(&weights).unwrap();
         let chosen_index = dist.sample(&mut rng);
-        let chosen_response_key = scores.keys().nth(chosen_index).unwrap();
-        let response = &ghost_responses[chosen_response_key];
+        let chosen_response_key = sc.get(chosen_index).unwrap();
+        ghost_responses
+            .get_mut(&chosen_response_key.0)
+            .unwrap()
+            .seen_count += 1;
+        let response = &ghost_responses[&chosen_response_key.0];
 
         console_ui::display_ghost_response(response);
         println!();
@@ -86,11 +93,13 @@ fn main() {
         const RETURN_TO_MEAN_TURNS: f32 = 4.0;
         const F1: f32 = 1.0 / RETURN_TO_MEAN_TURNS;
         const F2: f32 = 1.0 - F1;
-        ghost_mood.curiosity = original_ghost_mood.curiosity * F1 + ghost_mood.curiosity * F2;
-        ghost_mood.fear = original_ghost_mood.fear * F1 + ghost_mood.fear * F2;
-        ghost_mood.anger = original_ghost_mood.anger * F1 + ghost_mood.anger * F2;
-        ghost_mood.sadness = original_ghost_mood.sadness * F1 + ghost_mood.sadness * F2;
-        ghost_mood.joy = original_ghost_mood.joy * F1 + ghost_mood.joy * F2;
+        ghost_mood.curiosity =
+            original_ghost_mood.curiosity * F1 + ghost_mood.curiosity.clamp(0.0, 1.0) * F2;
+        ghost_mood.fear = original_ghost_mood.fear * F1 + ghost_mood.fear.clamp(0.0, 1.0) * F2;
+        ghost_mood.anger = original_ghost_mood.anger * F1 + ghost_mood.anger.clamp(0.0, 1.0) * F2;
+        ghost_mood.sadness =
+            original_ghost_mood.sadness * F1 + ghost_mood.sadness.clamp(0.0, 1.0) * F2;
+        ghost_mood.joy = original_ghost_mood.joy * F1 + ghost_mood.joy.clamp(0.0, 1.0) * F2;
     }
 }
 

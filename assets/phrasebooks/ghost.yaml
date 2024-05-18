@@ -1784,3 +1784,448 @@
   for_semantic_tags:
     - Request:Silence
     - Challenge:Provocation 
+
+# --- Responses to Player Actions --- 
+
+# Action:Illuminate (Flashlight, Candle, Turning on Lights)
+- phrase: "[The ghost retreats further into the shadows]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      anger: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      anger: 0.0
+      sadness: -0.1
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+- phrase: "[The ghost hisses at the light]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate
+- phrase: "Don't look at me!"
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.4
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+- phrase:  "The light... it burns!" 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+
+# Action:Investigate (SpiritBox is ON and Loud) 
+- phrase: "[The ghost interferes with the Spirit Box, creating static]"
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      playfulness: 0.4
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      playfulness: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate
+    - Gear:SpiritBox
+- phrase: "Are you trying to contact me?" 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.7
+      anger: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate 
+    - Gear:SpiritBox
+- phrase: "[A voice whispers through the Spirit Box]  Get out..."
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      anger: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate 
+    - Gear:SpiritBox
+
+# Action:Enter/Action:Exit (Opening or Closing Doors)
+- phrase:  "[The ghost slams the door shut]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Enter
+    - Action:Exit 
+- phrase: "[The ghost blocks the doorway, preventing the player from entering/leaving]"
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Enter
+    - Action:Exit
+
+# Action:Secure/Action:Block (Closing a Door)
+- phrase: "[The ghost rattles the doorknob]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Secure
+    - Action:Block
+- phrase:  "You can't keep me out!" 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Secure
+    - Action:Block
+
+# Action:Take/Object:Significant (Picking Up a Significant Object)
+- phrase: "That's mine!" 
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      sadness: 0.3
+      fear: 0.0
+    emotional_signature_delta:
+      anger: 0.2
+      sadness: -0.1
+      fear: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags: 
+    - Action:Take
+    - Object:Significant 
+- phrase: "[The ghost tries to pull the object away from the player]" 
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      sadness: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      sadness: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Take
+    - Object:Significant
+
+# Action:Disrespect/Object:Significant (Throwing a Significant Object)
+- phrase: "[The ghost lets out a furious roar]" 
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 1.0
+      fear: 0.0
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.3
+      fear: -0.2
+      sadness: -0.1
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Disrespect
+    - Object:Significant 
+- phrase: "How dare you!" 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.0
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      fear: -0.1
+      sadness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Disrespect
+    - Object:Significant
+
+# Action:Panic/Action:Flee (Running Around)
+- phrase: "[The ghost gives chase, its laughter echoing through the halls]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      joy: 0.7
+      anger: 0.3
+      fear: 0.0 
+    emotional_signature_delta:
+      joy: 0.1
+      anger: -0.1
+      fear: 0.0 
+  response_type: Action
+  for_speech_acts: 
+    - Action
+  for_semantic_tags:
+    - Action:Panic
+    - Action:Flee
+- phrase:  "[The ghost appears in front of the player, blocking their path]" 
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      joy: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0 
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Panic
+    - Action:Flee
+
+# Action:Approach/Action:Invade (Getting Close to the Ghost)
+- phrase: "[The ghost recoils, a look of fear on its face]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Approach
+    - Action:Invade
+- phrase:  "Stay back!"
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      anger: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Approach
+    - Action:Invade
+
+# Action:Cleanse/Ritual:Sage (Burning Sage) 
+- phrase:  "[The ghost shrieks in pain as the sage smoke wafts towards it]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      anger: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      anger: -0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Cleanse
+    - Ritual:Sage
+- phrase: "You can't banish me!"
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      sadness: 0.0 
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags: 
+    - Action:Cleanse
+    - Ritual:Sage
+
+# Action:Illuminate/Ritual:Candle (Lighting a Candle)
+- phrase:  "[The candle flame flickers wildly, casting eerie shadows]"
+  speech_act: Event 
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      curiosity: 0.4
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+    - Ritual:Candle 
+- phrase: "Do you think a candle will protect you?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0 
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+    - Ritual:Candle
+
+# Action:Flee/Action:Conceal (Escaping/Hiding)
+- phrase:  "[The ghost phases through walls, appearing in front of the player]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      joy: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      joy: -0.1
+      fear: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Flee
+    - Action:Conceal
+- phrase: "You can't hide from me." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.3
+      joy: 0.1 
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Flee
+    - Action:Conceal

@@ -19,6 +19,8 @@ pub struct GhostResponse {
     pub response_type: String,
     pub for_speech_acts: Vec<String>,
     pub for_semantic_tags: Vec<String>,
+    #[serde(default = "default_usize")]
+    pub seen_count: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,6 +46,10 @@ pub struct EmotionalSignature {
 
 fn default_f32() -> f32 {
     0.0
+}
+
+fn default_usize() -> usize {
+    0
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
