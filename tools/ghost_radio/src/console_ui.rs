@@ -15,11 +15,7 @@ pub fn display_ghost_options(ghost_responses: &[&str]) {
 }
 
 pub fn get_player_phrase(phrases: &[String]) -> String {
-    println!("Available Phrases:");
-    for (i, key) in phrases.iter().enumerate() {
-        println!("{}. {}", i + 1, key);
-    }
-    print!("Enter a phrase (enter number): ");
+    print!("Enter a phrase (enter number 1-{}): ", phrases.len());
     io::stdout().flush().unwrap();
 
     let mut input = String::new();

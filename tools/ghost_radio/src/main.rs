@@ -27,6 +27,10 @@ fn main() {
     let mut ghost_mood = ghost_metadata.mood.clone();
     let original_ghost_mood = ghost_mood.clone();
     let phrases = player_phrases.keys().cloned().collect::<Vec<_>>();
+    println!("Available Phrases:");
+    for (i, key) in phrases.iter().enumerate() {
+        println!("{}. {}", i + 1, key);
+    }
 
     loop {
         println!(
@@ -51,12 +55,12 @@ fn main() {
             .map(|(k, v)| (k.clone(), *v))
             .collect::<Vec<_>>();
         sc.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        for (resp, score) in sc.into_iter().take(25) {
-            eprintln!("-> {score:.3} :: {resp}");
-            if score < 0.1 {
-                break;
-            }
-        }
+        // for (resp, score) in sc.into_iter().take(25) {
+        //     eprintln!("-> {score:.3} :: {resp}");
+        //     if score < 0.1 {
+        //         break;
+        //     }
+        // }
 
         // Weighted random selection
         let mut rng = thread_rng();
