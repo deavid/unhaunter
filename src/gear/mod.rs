@@ -311,11 +311,11 @@ pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs:
 
 #[derive(SystemParam)]
 pub struct GearStuff<'w, 's> {
-    bf: ResMut<'w, board::BoardData>,
-    summary: ResMut<'w, summary::SummaryData>,
-    commands: Commands<'w, 's>,
-    asset_server: Res<'w, AssetServer>,
-    time: Res<'w, Time>,
+    pub bf: ResMut<'w, board::BoardData>,
+    pub summary: ResMut<'w, summary::SummaryData>,
+    pub commands: Commands<'w, 's>,
+    pub asset_server: Res<'w, AssetServer>,
+    pub time: Res<'w, Time>,
 }
 
 impl<'w, 's> GearStuff<'w, 's> {

@@ -18,7 +18,7 @@
 //!
 
 use anyhow::Context;
-use bevy::ecs::component::Component;
+use bevy::{ecs::component::Component, utils::HashMap};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
@@ -115,6 +115,20 @@ pub struct Properties {
     pub util: Util,
     pub display: Display,
     pub flip: bool,
+    pub object: Object,
+}
+
+/// Represents properties specific to objects in the game world.
+///
+/// These properties determine how the player can interact with objects, such as whether they can
+/// be picked up, moved, or used as hiding spots.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct Object {
+    pub pickable: bool,
+    pub movable: bool,
+    pub hidingspot: bool,
+    pub weight: NotNan<f32>,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -408,7 +422,7 @@ pub struct SpriteCVOKey {
     pub orientation: Orientation,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct SpriteConfig {
     /// Main behavior class
     class: Class,
@@ -422,11 +436,36 @@ pub struct SpriteConfig {
     /// Current state of the sprite - or the initial state.
     pub state: State,
 
-    // other interesting metadata
+    // Other interesting metadata:
+    //
     /// Tileset name
     pub tileset: String,
     /// UID of the tileset for this sprite
     pub tileuid: u32,
+    /// All other tiled properties live here
+    pub properties: BehaviorProperties,
+}
+
+impl PartialEq for SpriteConfig {
+    fn eq(&self, other: &Self) -> bool {
+        self.class == other.class
+            && self.variant == other.variant
+            && self.orientation == other.orientation
+            && self.cvo_key == other.cvo_key
+            && self.state == other.state
+    }
+}
+
+impl Eq for SpriteConfig {}
+
+impl std::hash::Hash for SpriteConfig {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.class.hash(state);
+        self.variant.hash(state);
+        self.orientation.hash(state);
+        self.cvo_key.hash(state);
+        self.state.hash(state);
+    }
 }
 
 impl SpriteConfig {
@@ -437,59 +476,49 @@ impl SpriteConfig {
         (self.tileset.clone(), self.tileuid)
     }
     pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
-        let parse = |x: &tiled::PropertyValue| -> String {
-            match x {
-                tiled::PropertyValue::BoolValue(x) => x.to_string(),
-                tiled::PropertyValue::FloatValue(x) => x.to_string(),
-                tiled::PropertyValue::IntValue(x) => x.to_string(),
-                tiled::PropertyValue::ColorValue(x) => {
-                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
-                }
-                tiled::PropertyValue::StringValue(x) => x.to_string(),
-                tiled::PropertyValue::FileValue(x) => x.to_string(),
-                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
-            }
-        };
-        let get_property_str =
-            |key: &str| -> Option<String> { tiled_tile.properties.get(key).map(parse) };
-        Self::from_tiled(
+        // --- Load properties
+        let properties = BehaviorProperties::from_tiled(tiled_tile);
+
+        let sprite_config = Self::from_tiled(
             tiled_tile.user_type.as_deref(),
-            get_property_str("sprite:variant").as_deref(),
-            get_property_str("sprite:orientation").as_deref(),
-            get_property_str("sprite:state").as_deref(),
             tset_name,
             tileuid,
-        )
+            properties,
+        );
+
+        sprite_config
     }
 
     pub fn from_tiled(
         class: Option<&str>,
-        variant: Option<&str>,
-        orientation: Option<&str>,
-        state: Option<&str>,
         tileset: String,
         tileuid: u32,
+        properties: BehaviorProperties,
     ) -> Self {
-        Self::try_from_tiled(class, variant, orientation, state, tileset.clone(), tileuid)
+        Self::try_from_tiled(class, tileset.clone(), tileuid, properties)
             .with_context(|| {
                 format!(
-                    "SpriteConfig: error loading sprite from tiled: {}:{} [c:{:?}, v:{:?}, o:{:?}, s:{:?}]",
-                    tileset, tileuid, class, variant, orientation, state
+                    "SpriteConfig: error loading sprite from tiled: {}:{} [c:{:?}]",
+                    tileset, tileuid, class,
                 )
             })
             .unwrap()
     }
     pub fn try_from_tiled(
         class: Option<&str>,
-        variant: Option<&str>,
-        orientation: Option<&str>,
-        state: Option<&str>,
         tileset: String,
         tileuid: u32,
+        properties: BehaviorProperties,
     ) -> anyhow::Result<Self> {
+        let variant = properties.get_string_opt("sprite:variant");
+        let orientation = properties.get_string_opt("sprite:orientation");
+        let state = properties.get_string_opt("sprite:state");
+        let orientation = orientation.as_deref();
+        let state = state.as_deref();
+
         let tilesetuid_key = format!("{}:{}", tileset, tileuid);
         let class = Class::from_text(class).context("parsing Class")?;
-        let variant = variant.unwrap_or(&tilesetuid_key).to_owned();
+        let variant = variant.unwrap_or(tilesetuid_key).to_owned();
         let orientation = Orientation::from_text(orientation).context("parsing Orientation")?;
         let state = State::from_text(state).context("parsing State")?;
         let cvo_key = SpriteCVOKey {
@@ -505,6 +534,7 @@ impl SpriteConfig {
             tileset,
             tileuid,
             cvo_key,
+            properties,
         })
     }
 
@@ -713,6 +743,16 @@ impl SpriteConfig {
             }
             Class::None => {}
         }
+
+        // --- Load object properties from Tiled data ---
+        p.object.pickable = self.properties.get_bool("object:pickable");
+        p.object.movable = self.properties.get_bool("object:movable");
+        p.object.hidingspot = self.properties.get_bool("object:hidingspot");
+        p.object.weight = NotNan::new(self.properties.get_float("object:weight")).unwrap();
+        p.object.name = self.properties.get_string("object:name");
+        if p.object.name.is_empty() {
+            p.object.name = self.variant.clone();
+        }
     }
 
     /// A class requires a set of states. Not only these are the only valid ones for the given class, also they need all to be included.
@@ -726,6 +766,102 @@ impl SpriteConfig {
             Class::Breaker => vec![On, Off],
             _ => vec![None],
         }
+    }
+}
+
+/// Stores a collection of properties loaded from Tiled map data.
+///
+/// This struct provides helper functions for accessing property values by key.
+#[derive(Debug, Clone)]
+pub struct BehaviorProperties {
+    properties: HashMap<String, tiled::PropertyValue>,
+}
+
+impl BehaviorProperties {
+    /// Creates a new `BehaviorProperties` instance from the properties of a `tiled::Tile`.
+    pub fn from_tiled(tiled_tile: &tiled::Tile) -> Self {
+        let mut properties = HashMap::new();
+        for (key, value) in &tiled_tile.properties {
+            properties.insert(key.clone(), value.clone());
+        }
+        Self { properties }
+    }
+
+    /// Returns the boolean value of a property with the given key.
+    ///
+    /// Returns `false` if the property is not found or is not a boolean value.
+    pub fn get_bool(&self, key: &str) -> bool {
+        self.properties
+            .get(key)
+            .map(|x| matches!(x, tiled::PropertyValue::BoolValue(true)))
+            .unwrap_or(false)
+    }
+
+    /// Returns the floating-point value of a property with the given key.
+    ///
+    /// Returns `0.0` if the property is not found or is not a floating-point value.
+    pub fn get_float(&self, key: &str) -> f32 {
+        self.properties
+            .get(key)
+            .map(|x| match x {
+                tiled::PropertyValue::FloatValue(n) => *n,
+                _ => 0.0,
+            })
+            .unwrap_or(0.0)
+    }
+
+    /// Returns the string value of a property with the given key, or None if not present.
+    pub fn get_string_opt(&self, key: &str) -> Option<String> {
+        let parse = |x: &tiled::PropertyValue| -> String {
+            match x {
+                tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                tiled::PropertyValue::IntValue(x) => x.to_string(),
+                tiled::PropertyValue::ColorValue(x) => {
+                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                }
+                tiled::PropertyValue::StringValue(x) => x.to_string(),
+                tiled::PropertyValue::FileValue(x) => x.to_string(),
+                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+            }
+        };
+        self.properties.get(key).map(parse)
+    }
+
+    /// Returns the string value of a property with the given key.
+    ///
+    /// Returns an empty string if the property is not found or is not a string value.
+    pub fn get_string(&self, key: &str) -> String {
+        let parse = |x: &tiled::PropertyValue| -> String {
+            match x {
+                tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                tiled::PropertyValue::IntValue(x) => x.to_string(),
+                tiled::PropertyValue::ColorValue(x) => {
+                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                }
+                tiled::PropertyValue::StringValue(x) => x.to_string(),
+                tiled::PropertyValue::FileValue(x) => x.to_string(),
+                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+            }
+        };
+        self.properties
+            .get(key)
+            .map(parse)
+            .unwrap_or("".to_string())
+    }
+
+    /// Returns the integer value of a property with the given key.
+    ///
+    /// Returns `0` if the property is not found or is not an integer value.
+    pub fn get_int(&self, key: &str) -> i32 {
+        self.properties
+            .get(key)
+            .map(|x| match x {
+                tiled::PropertyValue::IntValue(n) => *n,
+                _ => 0,
+            })
+            .unwrap_or(0)
     }
 }
 

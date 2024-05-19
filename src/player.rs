@@ -3,6 +3,8 @@ use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
+use crate::gear::playergear::PlayerGear;
+use crate::gear::{self, Gear};
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
@@ -536,6 +538,286 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
     }
 }
 
+/// Represents an object that is currently being held by the player.
+#[derive(Component, Debug, Clone)]
+pub struct HeldObject {
+    pub entity: Entity,
+}
+
+/// Marks a player entity that is currently hiding.
+#[derive(Component)]
+pub struct Hiding {
+    pub hiding_spot: Entity,
+}
+
+/// Allows the player to pick up a pickable object from the environment.
+///
+/// This system checks if the player is pressing the 'grab' key and if there is a pickable object within reach.
+/// If so, the object is visually attached to the player, and the player's right-hand gear is disabled.
+/// Only one object can be held at a time.
+pub fn grab_object(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    pickables: Query<(Entity, &Position, &Behavior)>, // Query for all entities with Behavior
+    mut gs: gear::GearStuff,
+) {
+    for (mut player_gear, player_pos, player) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.grab) {
+            // Find a pickable object near the player
+            if let Some((object_entity, _, _)) = pickables
+                .iter()
+                .filter(|(_, _, behavior)| behavior.p.object.pickable) // Filter for pickable objects
+                .find(|(_, object_pos, _)| player_pos.distance(object_pos) < 1.0)
+            {
+                // Set the held object in the player's gear
+                player_gear.held_item = Some(HeldObject {
+                    entity: object_entity,
+                });
+
+                // Disable the right-hand gear
+                player_gear.right_hand = Gear::none();
+
+                // Remove the object's Transform component
+                commands.entity(object_entity).remove::<Transform>();
+
+                // Play "Pick Up" sound effect
+                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
+            }
+        }
+    }
+}
+
+/// Allows the player to release a held object back into the environment.
+///
+/// This system checks if the player is pressing the 'drop' key and if they are currently holding an object.
+/// If so, it determines if the target tile (the player's current position) is a valid drop location.
+/// A valid drop location is an empty floor tile.
+/// If the drop is valid, the object is placed at the target tile. Otherwise, an "invalid drop" sound effect is played.
+pub fn drop_object(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    mut objects: Query<(Entity, &mut Transform, &Sprite, &Behavior)>,
+    mut gs: gear::GearStuff,
+) {
+    for (mut player_gear, player_pos, player) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.drop) {
+            if let Some(held_object) = player_gear.held_item.take() {
+                // Check if the target tile is valid (floor, no collisions)
+                let target_tile = player_pos.to_board_position();
+                let is_valid_drop = gs
+                    .bf
+                    .collision_field
+                    .get(&target_tile)
+                    .map(|col| col.player_free)
+                    .unwrap_or(false);
+
+                if is_valid_drop {
+                    // Retrieve components from the original held object
+                    if let Ok((_, mut transform, sprite, behavior)) =
+                        objects.get_mut(held_object.entity)
+                    {
+                        transform.translation = player_pos.to_vec3();
+
+                        // Spawn a new object entity at the target location with copied components
+                        commands
+                            .spawn(SpriteBundle {
+                                sprite: sprite.clone(),
+                                transform: *transform,
+                                ..Default::default()
+                            })
+                            .insert(behavior.clone());
+
+                        // Play "Drop" sound effect
+                        gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
+                    } else {
+                        warn!("Failed to retrieve components from held object entity.");
+                    }
+                } else {
+                    // Play "Invalid Drop" sound effect
+                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
+                }
+            }
+        }
+    }
+}
+
+/// Enables the player to push a movable object to an adjacent tile.
+///
+/// This system checks if the player is pressing the 'grab' key, if they are holding a movable object, and if the target tile is a valid location.
+/// A valid location is an empty floor tile.
+/// If the move is valid, the object's position is updated. If not, an "invalid move" sound effect is played.
+pub fn move_object(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
+    players: Query<(&PlayerGear, &Position, &PlayerSprite)>,
+    mut objects: Query<(&mut Transform, &Behavior)>,
+    mut gs: gear::GearStuff,
+) {
+    const MOVE_SPEED: f32 = 0.04; // Adjust as needed
+    let dt = time.delta_seconds() * 60.0;
+
+    for (player_gear, player_pos, player) in players.iter() {
+        if let Some(held_object) = &player_gear.held_item {
+            if let Ok((mut transform, behavior)) = objects.get_mut(held_object.entity) {
+                if behavior.p.object.movable {
+                    // Calculate target position based on player input
+                    let mut target_pos = *player_pos; // Start at player position
+                    if keyboard_input.pressed(player.controls.up) {
+                        target_pos.y += MOVE_SPEED * dt;
+                    }
+                    if keyboard_input.pressed(player.controls.down) {
+                        target_pos.y -= MOVE_SPEED * dt;
+                    }
+                    if keyboard_input.pressed(player.controls.left) {
+                        target_pos.x -= MOVE_SPEED * dt;
+                    }
+                    if keyboard_input.pressed(player.controls.right) {
+                        target_pos.x += MOVE_SPEED * dt;
+                    }
+
+                    // Check for collisions at the target position
+                    let target_tile = target_pos.to_board_position();
+                    let is_valid_move = gs
+                        .bf
+                        .collision_field
+                        .get(&target_tile)
+                        .map(|col| col.player_free)
+                        .unwrap_or(false);
+
+                    if is_valid_move {
+                        // Move the object
+                        transform.translation = target_pos.to_vec3();
+
+                        // Play "Move" sound effect
+                        gs.play_audio("sounds/item-move-scrape.ogg".into(), 1.0);
+                    } else {
+                        // Play "Invalid Move" sound effect
+                        gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Allows the player to hide in a designated hiding spot.
+///
+/// This system checks if the player is pressing the 'activate' key and is near a valid hiding spot.
+/// If so, the player character enters the hiding spot, becoming partially hidden. A visual overlay is added to the hiding spot to indicate the player's presence.
+/// Note that the player's transparency while hiding is not yet fully implemented.
+pub fn hide_player(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<
+        (
+            Entity,
+            &mut PlayerSprite,
+            &mut Transform,
+            &Visibility,
+            &Position,
+        ),
+        Without<Hiding>,
+    >,
+    hiding_spots: Query<(Entity, &Position, &Behavior)>, // Remove incorrect With filter
+    asset_server: Res<AssetServer>,
+    mut gs: gear::GearStuff,
+) {
+    for (player_entity, player, mut transform, _visibility, player_pos) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.activate) {
+            // Using 'activate' for hiding
+            // Find a hiding spot near the player
+            if let Some((hiding_spot_entity, hiding_spot_pos, _)) = hiding_spots
+                .iter()
+                .filter(|(_, _, behavior)| behavior.p.object.hidingspot) // Manually filter for hiding spots
+                .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.0)
+            {
+                // Add the Hiding component to the player
+                commands.entity(player_entity).insert(Hiding {
+                    hiding_spot: hiding_spot_entity,
+                });
+
+                // Apply hiding visual effects
+                // Change player sprite animation to a hiding animation
+                // TODO: Define hiding animation
+                // For now, let's just make the player crouch (animation index 36 in character1_atlas)
+                commands
+                    .entity(player_entity)
+                    .insert(AnimationTimer::from_range(
+                        Timer::from_seconds(0.20, TimerMode::Repeating),
+                        vec![36],
+                    ));
+
+                // Move player sprite to a slightly offset position under the hiding object
+                transform.translation =
+                    hiding_spot_pos.to_screen_coord() + Vec3::new(0.0, -8.0, 0.01);
+
+                // Set player sprite visibility to a lower value (semi-transparent)
+                // TODO: This part of the code was meant to make the player semitransparent when on hiding
+                // .. however due to the lighting system this is not doable from
+                // *visibility = Visibility::Visible.with_opacity(0.5);
+
+                // Play "Hide" sound effect
+                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0);
+
+                // Add Visual Overlay
+                commands.entity(hiding_spot_entity).with_children(|parent| {
+                    parent.spawn(SpriteBundle {
+                        texture: asset_server.load("img/character_position.png"), // TODO: Replace with appropriate overlay image
+                        transform: Transform::from_xyz(0.0, 0.0, 0.02), // Position relative to parent
+                        ..default()
+                    });
+                });
+            }
+        }
+    }
+}
+
+/// Allows the player to leave a hiding spot.
+///
+/// This system checks if the player is pressing the 'activate' key and is currently hiding.
+/// If so, the player character exits the hiding spot, their visibility is restored, and the visual overlay is removed from the hiding spot.
+pub fn unhide_player(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(
+        Entity,
+        &mut PlayerSprite,
+        &mut Transform,
+        &mut Visibility,
+        &Hiding,
+    )>,
+) {
+    for (player_entity, player, _, mut visibility, hiding) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.activate) {
+            // Using 'activate' for unhiding
+            // Remove the Hiding component
+            commands.entity(player_entity).remove::<Hiding>();
+
+            // Reset player sprite animation
+            // TODO: Define default animation
+            // For now, let's just set it back to the standing animation (index 32)
+            commands
+                .entity(player_entity)
+                .insert(AnimationTimer::from_range(
+                    Timer::from_seconds(0.20, TimerMode::Repeating),
+                    vec![32],
+                ));
+
+            // Reset player position
+            // TODO: Consider using the hiding spot's position
+            // For now, let's just leave the position as is.
+
+            // Reset player visibility
+            *visibility = Visibility::Visible;
+
+            // --- Remove Visual Overlay ---
+            commands.entity(hiding.hiding_spot).despawn_descendants();
+        }
+    }
+}
+
 fn lose_sanity(
     time: Res<Time>,
     mut timer: Local<utils::PrintingTimer>,
@@ -588,8 +870,6 @@ fn lose_sanity(
         }
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            // ps.health += dt * 10.0 / (1.0 + ps.mean_sound / 30.0) * (0.5 + ps.sanity() / 200.0);
-
             ps.health += 0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0;
         }
         if ps.health > 100.0 {
@@ -663,5 +943,13 @@ pub fn app_setup(app: &mut App) {
     .add_systems(
         Update,
         recover_sanity.run_if(in_state(root::GameState::Truck)),
+    )
+    .add_systems(Update, grab_object.run_if(in_state(root::GameState::None)))
+    .add_systems(Update, drop_object.run_if(in_state(root::GameState::None)))
+    .add_systems(Update, move_object.run_if(in_state(root::GameState::None)))
+    .add_systems(Update, hide_player.run_if(in_state(root::GameState::None)))
+    .add_systems(
+        Update,
+        unhide_player.run_if(in_state(root::GameState::None)),
     );
 }

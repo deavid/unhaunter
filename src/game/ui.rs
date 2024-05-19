@@ -1,12 +1,29 @@
 use bevy::{prelude::*, render::view::RenderLayers};
 
-use crate::{colors, game::evidence, gear, root};
+use crate::{
+    behavior::Behavior,
+    colors,
+    game::evidence,
+    gear::{
+        self,
+        playergear::{self, PlayerGear},
+    },
+    player::PlayerSprite,
+    root,
+};
 
 #[derive(Component)]
 pub struct GCameraUI;
 
 #[derive(Component, Debug)]
 pub struct GameUI;
+
+#[derive(Component, Debug, PartialEq, Eq)]
+pub enum ElementObjectUI {
+    Name,
+    Description,
+    Grab,
+}
 
 #[derive(Component, Debug)]
 pub struct DamageBackground {
@@ -18,6 +35,9 @@ impl DamageBackground {
         Self { exp }
     }
 }
+
+#[derive(Component, Debug)]
+pub struct HeldObjectUI;
 
 pub fn setup(mut commands: Commands, qc2: Query<Entity, With<GCameraUI>>) {
     // Despawn old camera if exists
@@ -102,7 +122,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let text_bundle = TextBundle::from_section(
-            "[WASD]: Movement\n[E]: Interact",
+            "[WASD]: Movement\n[E]: Interact\n[F]: Grab/Move\n[G]: Drop",
             TextStyle {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 16.0 * UI_SCALE,
@@ -269,6 +289,70 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .with_children(bottom_panel);
+
+        // --- Held Object UI ---
+        p.spawn(NodeBundle {
+            border_color: colors::DEBUG_BCOLOR,
+            background_color: BackgroundColor(colors::PANEL_BGCOLOR),
+            style: Style {
+                border: UiRect::all(Val::Px(1.0)),
+                padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
+                flex_grow: 1.0,
+                max_width: Val::Percent(33.3),
+                display: Display::None, // Initially hidden
+                ..Default::default()
+            },
+            visibility: Visibility::Hidden, // Initially hidden
+            ..Default::default()
+        })
+        .insert(HeldObjectUI)
+        .with_children(|parent| {
+            // --- Object Name ---
+            parent
+                .spawn(TextBundle::from_section(
+                    "Object Name",
+                    TextStyle {
+                        font: handles.fonts.victormono.w600_semibold.clone(),
+                        font_size: 20.0 * UI_SCALE,
+                        color: colors::INVENTORY_STATS_COLOR,
+                    },
+                ))
+                .insert(ElementObjectUI::Name);
+
+            // --- Object Description ---
+            parent
+                .spawn(TextBundle::from_section(
+                    "Object Description",
+                    TextStyle {
+                        font: handles.fonts.chakra.w300_light.clone(),
+                        font_size: 16.0 * UI_SCALE,
+                        color: colors::INVENTORY_STATS_COLOR,
+                    },
+                ))
+                .insert(ElementObjectUI::Description);
+
+            // --- Control Actions ---
+            parent
+                .spawn(TextBundle::from_sections([
+                    TextSection {
+                        value: "[Drop]: Drop Object\n".into(),
+                        style: TextStyle {
+                            font: handles.fonts.chakra.w300_light.clone(),
+                            font_size: 16.0 * UI_SCALE,
+                            color: colors::INVENTORY_STATS_COLOR,
+                        },
+                    },
+                    TextSection {
+                        value: "[Grab]: Move Object".into(), // Placeholder (will be dynamic)
+                        style: TextStyle {
+                            font: handles.fonts.chakra.w300_light.clone(),
+                            font_size: 16.0 * UI_SCALE,
+                            color: colors::INVENTORY_STATS_COLOR,
+                        },
+                    },
+                ]))
+                .insert(ElementObjectUI::Grab);
+        });
     };
 
     // Build UI
@@ -293,10 +377,99 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     info!("Game UI loaded");
 }
 
+/// Manages the UI for the "Visual Holding" system.
+///
+/// This system dynamically shows or hides the UI elements related to holding objects.  
+/// It displays the held object's name and provides instructions for dropping or moving the object.
+/// When the player is not holding an object, the UI reverts to displaying the player's gear information.
+#[allow(clippy::type_complexity)]
+pub fn toggle_held_object_ui(
+    mut held_object_ui: Query<
+        (&mut Visibility, &mut Style),
+        (With<HeldObjectUI>, Without<playergear::Inventory>),
+    >,
+    // mut right_hand_ui: Query<(&mut Visibility, &playergear::Inventory), Without<HeldObjectUI>>,
+    mut text_query: Query<(&mut Text, &ElementObjectUI)>,
+    players: Query<&PlayerGear, With<PlayerSprite>>,
+    objects: Query<&Behavior>,
+) {
+    let is_holding_object = players
+        .iter()
+        .any(|player_gear| player_gear.held_item.is_some());
+
+    // --- Toggle Held Object UI ---
+    for (mut visibility, mut style) in held_object_ui.iter_mut() {
+        *visibility = if is_holding_object {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+
+        style.display = if is_holding_object {
+            Display::Flex
+        } else {
+            Display::None
+        };
+    }
+
+    // --- Toggle Right-Hand Gear UI ---
+    // FIXME: This does not work as intended.
+    // for (mut visibility, inv) in right_hand_ui.iter_mut() {
+    //     if inv.hand == playergear::Hand::Right {
+    //         *visibility = if is_holding_object {
+    //             Visibility::Hidden
+    //         } else {
+    //             Visibility::Visible
+    //         };
+    //     }
+    // }
+
+    // --- Retrieve Object Data ---
+    if let Ok(player_gear) = players.get_single() {
+        if let Some(held_object) = &player_gear.held_item {
+            if let Ok(behavior) = objects.get(held_object.entity) {
+                // --- Set Object Name ---
+                for (mut text, _) in text_query
+                    .iter_mut()
+                    .filter(|(_, e)| **e == ElementObjectUI::Name)
+                {
+                    text.sections[0].value = behavior.p.object.name.clone();
+                }
+
+                // --- Set Object Description ---
+                for (mut text, _) in text_query
+                    .iter_mut()
+                    .filter(|(_, e)| **e == ElementObjectUI::Description)
+                {
+                    text.sections[0].value = "Object Description".into();
+                }
+
+                // --- Dynamic "Move" Action ---
+                for (mut text, _) in text_query
+                    .iter_mut()
+                    .filter(|(_, e)| **e == ElementObjectUI::Grab)
+                {
+                    if behavior.p.object.movable {
+                        text.sections[0].value = "[Grab]: Move Object".into();
+                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR;
+                    } else {
+                        text.sections[0].value = "[Grab]: -".into();
+                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR.with_a(0.3);
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(root::State::InGame), setup)
         .add_systems(OnEnter(root::State::InGame), setup_ui)
         .add_systems(OnExit(root::State::InGame), cleanup)
         .add_systems(OnEnter(root::GameState::None), resume)
-        .add_systems(OnExit(root::GameState::None), pause);
+        .add_systems(OnExit(root::GameState::None), pause)
+        .add_systems(
+            Update,
+            toggle_held_object_ui.run_if(in_state(root::GameState::None)),
+        );
 }

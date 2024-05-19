@@ -5,7 +5,7 @@ use crate::{
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
-    ghost::GhostSprite,
+    ghost::{self, GhostSprite},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
     platform::plt::IS_WASM,
@@ -149,12 +149,6 @@ pub fn compute_visibility(
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<(
-        &board::Position,
-        &mut Sprite,
-        Option<&SpriteType>,
-        Option<&GhostSprite>,
-    )>,
     mut qt2: Query<
         (
             &board::Position,
@@ -177,6 +171,23 @@ pub fn apply_lighting(
     qas: Query<(&AudioSink, &GameSound)>,
     mut roomdb: ResMut<board::RoomDB>,
     time: Res<Time>,
+    mut sprite_set: ParamSet<(
+        // Create a ParamSet for Sprite queries
+        Query<(
+            &board::Position,
+            &mut Sprite,
+            Option<&SpriteType>,
+            Option<&GhostSprite>,
+        )>,
+        Query<
+            (&board::Position, &mut Sprite),
+            (
+                With<MapUpdate>,
+                Without<player::PlayerSprite>,
+                Without<ghost::GhostSprite>,
+            ),
+        >,
+    )>,
 ) {
     const GAMMA_EXP: f32 = 2.4;
     const CENTER_EXP: f32 = 10.0; // Higher values, less blinding light.
@@ -241,6 +252,27 @@ pub fn apply_lighting(
         );
         player_pos = *pos;
     }
+    // --- Access queries from the ParamSet ---
+    let mut tile_sprites = sprite_set.p1();
+
+    // --- Highlight placement tiles ---
+    for (player_pos, _, _, player_gear) in qp.iter() {
+        if player_gear.held_item.is_some() {
+            // Only highlight if the player is holding an object
+            let target_tile = player_pos.to_board_position();
+            for (tile_pos, mut sprite) in tile_sprites.iter_mut() {
+                // Removed 'behavior' from the loop
+                if tile_pos.to_board_position() == target_tile {
+                    // Removed walkable check
+                    // Adjust highlight color and intensity as needed
+                    let highlight_color = Color::rgba(0.0, 1.0, 0.0, 0.3);
+                    sprite.color = lerp_color(sprite.color, highlight_color, 0.5);
+                }
+            }
+        }
+    }
+    let mut qt = sprite_set.p0();
+
     // --- ambient sound processing ---
 
     let total_vis: f32 = vf

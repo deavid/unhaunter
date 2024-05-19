@@ -22,7 +22,7 @@ regex = "1.7.1"
 clap = "4.4.8"
 fastapprox = "0.3.1"
 anyhow = "1.0.79"
-ordered-float = "4.2.0"
+ordered-float = { version = "4.2.0", features = ["serde"] }
 bevy-persistent = { version = "0.5.0", features = ["all"] }
 hierarchical_pathfinding = "0.5.0"
 walkdir = "2.5.0"
