@@ -11,8 +11,8 @@ use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
+use crate::gear;
 use crate::gear::playergear::PlayerGear;
-use crate::gear::{self, Gear};
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
@@ -155,6 +155,7 @@ pub fn keyboard_player(
         &mut board::Direction,
         &mut PlayerSprite,
         &mut AnimationTimer,
+        &PlayerGear,
     )>,
     colhand: CollisionHandler,
     interactables: Query<
@@ -178,7 +179,7 @@ pub fn keyboard_player(
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
     let dt = time.delta_seconds() * 60.0;
-    for (mut pos, mut dir, player, mut anim) in players.iter_mut() {
+    for (mut pos, mut dir, player, mut anim, player_gear) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
@@ -214,8 +215,17 @@ pub fn keyboard_player(
 
         // d.dx /= 1.5; // Compensate for the projection
 
-        pos.x += PLAYER_SPEED * d.dx * dt;
-        pos.y += PLAYER_SPEED * d.dy * dt;
+        // --- Speed Penalty Based on Held Object Weight ---
+        let speed_penalty = if player_gear.held_item.is_some() {
+            0.5
+        } else {
+            1.0
+        };
+
+        // Apply speed penalty
+        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty;
+        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty;
+
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;
 
@@ -457,7 +467,7 @@ impl<'w> CollisionHandler<'w> {
 ///  * Changing the state of interactive objects based on player interaction or room state.
 ///  * Playing appropriate sound effects for different interactions.
 ///  * Triggering transitions to the truck UI when the player enters the van.
-/// 
+///
 #[derive(SystemParam)]
 pub struct InteractiveStuff<'w, 's> {
     /// Database of sprites for map tiles. Used to retrieve alternative sprites for interactive objects.
@@ -622,14 +632,13 @@ pub struct Hiding {
 /// If so, the object is visually attached to the player, and the player's right-hand gear is disabled.
 /// Only one object can be held at a time.
 pub fn grab_object(
-    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
     pickables: Query<(Entity, &Position, &Behavior)>, // Query for all entities with Behavior
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
-        if keyboard_input.just_pressed(player.controls.grab) {
+        if keyboard_input.just_pressed(player.controls.grab) && player_gear.held_item.is_none() {
             // Find a pickable object near the player
             if let Some((object_entity, _, _)) = pickables
                 .iter()
@@ -641,12 +650,6 @@ pub fn grab_object(
                     entity: object_entity,
                 });
 
-                // Disable the right-hand gear
-                player_gear.right_hand = Gear::none();
-
-                // Remove the object's Transform component
-                commands.entity(object_entity).remove::<Transform>();
-
                 // Play "Pick Up" sound effect
                 gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
             }
@@ -657,18 +660,20 @@ pub fn grab_object(
 /// Allows the player to release a held object back into the environment.
 ///
 /// This system checks if the player is pressing the 'drop' key and if they are currently holding an object.
-/// If so, it determines if the target tile (the player's current position) is a valid drop location.
-/// A valid drop location is an empty floor tile.
-/// If the drop is valid, the object is placed at the target tile. Otherwise, an "invalid drop" sound effect is played.
+/// It then determines if the target tile (the player's current position) is a valid drop location
+/// (an empty floor tile).
+///
+/// If the drop is valid, the object is placed at the target tile.
+/// If the drop is invalid, an "invalid drop" sound effect is played, and the object is not dropped.
 pub fn drop_object(
-    mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
-    mut objects: Query<(Entity, &mut Transform, &Sprite, &Behavior)>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
+    mut objects: Query<(Entity, &mut Position), Without<PlayerSprite>>,
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop) {
+            // Take the held object from the player's gear (this removes it temporarily)
             if let Some(held_object) = player_gear.held_item.take() {
                 // Check if the target tile is valid (floor, no collisions)
                 let target_tile = player_pos.to_board_position();
@@ -680,88 +685,26 @@ pub fn drop_object(
                     .unwrap_or(false);
 
                 if is_valid_drop {
-                    // Retrieve components from the original held object
-                    if let Ok((_, mut transform, sprite, behavior)) =
-                        objects.get_mut(held_object.entity)
-                    {
-                        transform.translation = player_pos.to_vec3();
-
-                        // Spawn a new object entity at the target location with copied components
-                        commands
-                            .spawn(SpriteBundle {
-                                sprite: sprite.clone(),
-                                transform: *transform,
-                                ..Default::default()
-                            })
-                            .insert(behavior.clone());
+                    // Retrieve the ORIGINAL entity of the held object
+                    if let Ok((_, mut position)) = objects.get_mut(held_object.entity) {
+                        // Update the object's Position component
+                        *position = *player_pos;
 
                         // Play "Drop" sound effect
                         gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
                     } else {
                         warn!("Failed to retrieve components from held object entity.");
+
+                        // Put the object back in the player's gear if we can't drop it
+                        player_gear.held_item = Some(held_object);
                     }
                 } else {
+                    // --- Invalid Drop Handling ---
                     // Play "Invalid Drop" sound effect
                     gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
-                }
-            }
-        }
-    }
-}
 
-/// Enables the player to push a movable object to an adjacent tile.
-///
-/// This system checks if the player is pressing the 'grab' key, if they are holding a movable object, and if the target tile is a valid location.
-/// A valid location is an empty floor tile.
-/// If the move is valid, the object's position is updated. If not, an "invalid move" sound effect is played.
-pub fn move_object(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
-    players: Query<(&PlayerGear, &Position, &PlayerSprite)>,
-    mut objects: Query<(&mut Transform, &Behavior)>,
-    mut gs: gear::GearStuff,
-) {
-    const MOVE_SPEED: f32 = 0.04; // Adjust as needed
-    let dt = time.delta_seconds() * 60.0;
-
-    for (player_gear, player_pos, player) in players.iter() {
-        if let Some(held_object) = &player_gear.held_item {
-            if let Ok((mut transform, behavior)) = objects.get_mut(held_object.entity) {
-                if behavior.p.object.movable {
-                    // Calculate target position based on player input
-                    let mut target_pos = *player_pos; // Start at player position
-                    if keyboard_input.pressed(player.controls.up) {
-                        target_pos.y += MOVE_SPEED * dt;
-                    }
-                    if keyboard_input.pressed(player.controls.down) {
-                        target_pos.y -= MOVE_SPEED * dt;
-                    }
-                    if keyboard_input.pressed(player.controls.left) {
-                        target_pos.x -= MOVE_SPEED * dt;
-                    }
-                    if keyboard_input.pressed(player.controls.right) {
-                        target_pos.x += MOVE_SPEED * dt;
-                    }
-
-                    // Check for collisions at the target position
-                    let target_tile = target_pos.to_board_position();
-                    let is_valid_move = gs
-                        .bf
-                        .collision_field
-                        .get(&target_tile)
-                        .map(|col| col.player_free)
-                        .unwrap_or(false);
-
-                    if is_valid_move {
-                        // Move the object
-                        transform.translation = target_pos.to_vec3();
-
-                        // Play "Move" sound effect
-                        gs.play_audio("sounds/item-move-scrape.ogg".into(), 1.0);
-                    } else {
-                        // Play "Invalid Move" sound effect
-                        gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
-                    }
+                    // Put the object back in the player's gear
+                    player_gear.held_item = Some(held_object);
                 }
             }
         }
@@ -997,13 +940,62 @@ pub fn visual_health(
     }
 }
 
+/// Updates the position of the player's held object to match the player's position.
+///
+/// This system ensures that the held object visually follows the player when they move.
+/// It also slightly elevates the object's Z position to create a visual indication
+/// that the object is being held. Additionally, it plays a scraping sound effect
+/// when the player moves while holding a movable object, with a cooldown to prevent
+/// the sound from playing too frequently.
+#[allow(clippy::type_complexity)]
+pub fn update_held_object_position(
+    mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
+    players: Query<(&Position, &PlayerGear, &board::Direction), With<PlayerSprite>>,
+    mut gs: gear::GearStuff,
+    mut last_sound_time: Local<f32>,
+) {
+    let current_time = gs.time.elapsed_seconds();
+
+    for (player_pos, player_gear, direction) in players.iter() {
+        if let Some(held_object) = &player_gear.held_item {
+            if let Ok((mut object_pos, behavior)) = objects.get_mut(held_object.entity) {
+                // Match the object's position to the player's position
+                *object_pos = *player_pos;
+
+                // Slightly elevate the object's Z position
+                const OBJECT_ELEVATION: f32 = 0.1;
+                object_pos.z += OBJECT_ELEVATION;
+
+                // --- Play Scraping Sound if Object is Movable and Player is Moving ---
+                if behavior.p.object.movable
+                   && direction.distance() > 75.0 // Player is moving
+                   && current_time - *last_sound_time > 2.0
+                // Sound cooldown
+                {
+                    // Play "Move" sound effect
+                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 1.0);
+
+                    // Update last sound time
+                    *last_sound_time = current_time;
+                }
+            }
+        }
+    }
+}
+
 #[derive(Default)]
 struct MeanSound(f32);
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (keyboard_player, lose_sanity, visual_health, animate_sprite)
+        (
+            keyboard_player,
+            lose_sanity,
+            visual_health,
+            animate_sprite,
+            update_held_object_position,
+        )
             .run_if(in_state(root::GameState::None)),
     )
     .add_systems(
@@ -1012,7 +1004,6 @@ pub fn app_setup(app: &mut App) {
     )
     .add_systems(Update, grab_object.run_if(in_state(root::GameState::None)))
     .add_systems(Update, drop_object.run_if(in_state(root::GameState::None)))
-    .add_systems(Update, move_object.run_if(in_state(root::GameState::None)))
     .add_systems(Update, hide_player.run_if(in_state(root::GameState::None)))
     .add_systems(
         Update,
