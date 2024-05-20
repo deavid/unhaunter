@@ -1,3 +1,11 @@
+//! Player Module
+//! -------------
+//!
+//! This module defines the player character and its interactions with the game world, including:
+//! * The `PlayerSprite` component, which stores player attributes, controls, and state.
+//! * Systems for handling player input, movement, collisions, interactions with objects, and sanity changes.
+//! * Data structures and enums for managing player controls, animations, and held objects.
+
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
@@ -11,18 +19,28 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
+/// Enables/disables debug logs related to the player.
 const DEBUG_PLAYER: bool = false;
 
+/// Represents a player character in the game world.
+///
+/// This component stores the player's attributes, control scheme, sanity level, health, and mean sound exposure.
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
+    /// The unique identifier for the player (e.g., Player 1, Player 2).
     pub id: usize,
+    /// The keyboard control scheme for the player (WASD, IJKL, etc.).
     pub controls: ControlKeys,
+    /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
     pub crazyness: f32,
+    /// The average sound level the player has been exposed to, used for sanity calculations.
     pub mean_sound: f32,
+    /// The player's current health. A value of 0 indicates the player is incapacitated.
     pub health: f32,
 }
 
 impl PlayerSprite {
+    /// Creates a new `PlayerSprite` with the specified ID and default controls.
     pub fn new(id: usize) -> Self {
         Self {
             id,
@@ -32,44 +50,57 @@ impl PlayerSprite {
             health: 100.0,
         }
     }
-    pub fn default_controls(id: usize) -> ControlKeys {
+
+    /// Returns the default `ControlKeys` for the given player ID.
+    fn default_controls(id: usize) -> ControlKeys {
         match id {
             1 => ControlKeys::WASD,
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
         }
     }
+
+    /// Calculates the player's current sanity level based on their accumulated craziness.
     pub fn sanity(&self) -> f32 {
         const LINEAR: f32 = 30.0;
         (100.0 * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
     }
 }
 
+/// Defines the keyboard controls for a player.
 #[derive(Debug, Clone)]
 pub struct ControlKeys {
+    /// Key for moving up.
     pub up: KeyCode,
+    /// Key for moving down.
     pub down: KeyCode,
+    /// Key for moving left.
     pub left: KeyCode,
+    /// Key for moving right.
     pub right: KeyCode,
 
-    /// Interaction key (open doors, switches, etc).
+    /// Key for interacting with objects (doors, switches, etc.).
     pub activate: KeyCode,
-    /// Grab stuff from the ground.
+    /// Key for grabbing objects.
     pub grab: KeyCode,
-    /// Drop stuff to the ground.
+    /// Key for dropping objects.
     pub drop: KeyCode,
-    /// Trigger the left-hand item.
+    /// Key for triggering the left-hand item (e.g., flashlight).
     pub torch: KeyCode,
-    /// Trigger the right-hand item.
+    /// Key for triggering the right-hand item (e.g., EMF reader).
     pub trigger: KeyCode,
-    /// Cycle through the items on the inventory.
+    /// Key for cycling through inventory items.
     pub cycle: KeyCode,
-    /// Swap the left hand item with the right hand one.
+    /// Key for swapping left and right hand items.
     pub swap: KeyCode,
-    /// Change the evidence from the quick menu
+    /// Key for changing the evidence selection in the quick menu.
     pub change_evidence: KeyCode,
 }
 
+/// System for handling player movement, interaction, and collision.
+///
+/// This system processes player input, updates the player's position and direction,
+/// handles interactions with interactive objects, and manages collisions with the environment.
 impl ControlKeys {
     pub const WASD: Self = ControlKeys {
         up: KeyCode::KeyW,
@@ -372,8 +403,10 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &m
     }
 }
 
+/// System parameter for handling player collisions with the environment.
 #[derive(SystemParam)]
 pub struct CollisionHandler<'w> {
+    /// Access to the game's board data, including collision information.
     bf: Res<'w, board::BoardData>,
 }
 
@@ -417,17 +450,50 @@ impl<'w> CollisionHandler<'w> {
     }
 }
 
+/// The `InteractiveStuff` system handles interactions between the player and interactive objects
+/// in the game world, such as doors, switches, lamps, and the van entry.
+///
+/// This system centralizes the logic for:
+///  * Changing the state of interactive objects based on player interaction or room state.
+///  * Playing appropriate sound effects for different interactions.
+///  * Triggering transitions to the truck UI when the player enters the van.
+/// 
 #[derive(SystemParam)]
 pub struct InteractiveStuff<'w, 's> {
+    /// Database of sprites for map tiles. Used to retrieve alternative sprites for interactive objects.
     pub bf: Res<'w, board::SpriteDB>,
+    /// Used to spawn sound effects and potentially other entities related to interactions.
     pub commands: Commands<'w, 's>,
-    pub materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
+    /// Access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
+    /// Access to the materials used for rendering map tiles. Used to update tile visuals
+    /// when object states change.
+    pub materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
+    /// Database of room data, used to track the state of rooms and update interactive
+    /// objects accordingly.
     pub roomdb: ResMut<'w, board::RoomDB>,
+    /// Controls the transition to different game states, such as the truck UI.
     pub game_next_state: ResMut<'w, NextState<root::GameState>>,
 }
 
 impl<'w, 's> InteractiveStuff<'w, 's> {
+    /// Executes an interaction with an interactive object.
+    ///
+    /// This method determines the object's new state based on the type of interaction, updates its `Behavior` component,
+    /// plays the corresponding sound effect, and updates the room state if applicable.
+    ///
+    /// # Parameters:
+    ///
+    /// * `entity`: The entity of the interactive object.
+    /// * `item_pos`: The position of the interactive object in the game world.
+    /// * `interactive`: The `Interactive` component of the object, if present.
+    /// * `behavior`: The `Behavior` component of the object.
+    /// * `room_state`: The `RoomState` component of the object, if present.
+    /// * `ietype`: The type of interaction being executed (`ChangeState` or `ReadRoomState`).
+    ///
+    /// # Returns:
+    ///
+    /// `true` if the interaction resulted in a change to the object's state, `false` otherwise.
     pub fn execute_interaction(
         &mut self,
         entity: Entity,

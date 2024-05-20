@@ -7,27 +7,48 @@ use crate::{
 use bevy::prelude::*;
 use rand::Rng;
 
+/// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
 
+/// Represents a ghost entity in the game world.
+///
+/// This component stores the ghost's type, spawn point, target location,
+/// interaction stats, current mood, hunting state, and other relevant attributes.
 #[derive(Component, Debug)]
 pub struct GhostSprite {
+    /// The specific type of ghost, which determines its characteristics and abilities.
     pub class: GhostType,
+    /// The ghost's designated spawn point (breach) on the game board.
     pub spawn_point: BoardPosition,
+    /// The ghost's current target location in the game world. `None` if the ghost is wandering aimlessly.
     pub target_point: Option<Position>,
+    /// Number of times the ghost has been hit with the correct type of repellent.
     pub repellent_hits: i64,
+    /// Number of times the ghost has been hit with an incorrect type of repellent.
     pub repellent_misses: i64,
+    /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
+    /// The ghost's current rage level, which influences its hunting behavior.
+    /// Higher rage increases the likelihood of a hunt.
     pub rage: f32,
+    /// The ghost's hunting state. A value greater than 0 indicates that the ghost is actively hunting a player.
     pub hunting: f32,
+    /// Flag indicating whether the ghost is currently targeting a player during a hunt.
     pub hunt_target: bool,
+    /// Time in seconds since the ghost started its current hunt.
     pub hunt_time_secs: f32,
+    /// The ghost's current warping intensity, which affects its movement speed. Higher values result in faster warping.
     pub warp: f32,
 }
 
+/// Marker component for the ghost's visual breach effect.
 #[derive(Component, Debug)]
 pub struct GhostBreach;
 
 impl GhostSprite {
+    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn point.
+    ///
+    /// The ghost's initial mood, hunting state, and other attributes are set to default values.
     pub fn new(spawn_point: BoardPosition) -> Self {
         let mut rng = rand::thread_rng();
         let ghost_types: Vec<_> = GhostType::all().collect();
@@ -48,6 +69,8 @@ impl GhostSprite {
             warp: 0.0,
         }
     }
+
+    ///  Sets the `breach_id` field, associating the ghost with its visual breach effect.
     pub fn with_breachid(self, breach_id: Entity) -> Self {
         Self {
             breach_id: Some(breach_id),
@@ -56,6 +79,10 @@ impl GhostSprite {
     }
 }
 
+/// Updates the ghost's position based on its target location, hunting state, and warping intensity.
+///
+/// This system handles the ghost's movement logic, ensuring it navigates the game world according to its
+/// current state and objectives.
 pub fn ghost_movement(
     mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
     qp: Query<(&Position, &PlayerSprite)>,
@@ -177,6 +204,10 @@ pub fn ghost_movement(
     }
 }
 
+/// Manages the ghost's rage level, hunting behavior, and player interactions during a hunt.
+///
+/// This system updates the ghost's rage based on player proximity, sanity, and sound levels.
+/// It triggers hunts when rage exceeds a threshold and handles player damage during hunts.
 fn ghost_enrage(
     time: Res<Time>,
     mut timer: Local<utils::PrintingTimer>,

@@ -1,3 +1,16 @@
+//! Level Management Module
+//! -------------------------
+//!
+//! This module handles the loading and management of game levels, including:
+//! * Loading TMX map data.
+//! * Spawning Bevy entities for map tiles, players, ghosts, and other game objects.
+//! * Initializing entity components based on TMX data and game logic.
+//! * Managing room-related events and states, such as lighting conditions and interactive object behavior.
+//! * Handling interactions between the player and interactive objects in the game world.
+//!
+//! This module provides the core functionality for setting up and managing the interactive environment
+//! that the player explores and investigates.
+
 use crate::behavior::component::RoomState;
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardDataToRebuild, MapTileComponents, Position, SpriteDB};
@@ -15,13 +28,22 @@ use ordered_float::OrderedFloat;
 
 use super::{GCameraArena, GameConfig, GameSprite};
 
+/// Event triggered when the player enters a new room or when a significant room-related change occurs.
+///
+/// This event is used to trigger actions like opening the van UI or updating the state of interactive objects
+/// based on the room's current state.
 #[derive(Clone, Debug, Default, Event)]
 pub struct RoomChangedEvent {
+    /// Set to `true` if the event is triggered during level initialization.
     pub initialize: bool,
+    /// Set to `true` if the van UI should be opened automatically (e.g., when the player returns to the starting area).
     pub open_van: bool,
 }
 
 impl RoomChangedEvent {
+    /// Creates a new `RoomChangedEvent` specifically for level initialization.
+    ///
+    /// The `initialize` flag is set to `true`, and the `open_van` flag is set based on the given value.
     pub fn init(open_van: bool) -> Self {
         Self {
             initialize: true,
@@ -30,11 +52,21 @@ impl RoomChangedEvent {
     }
 }
 
+/// Event triggered to load a new level from a TMX map file.
+///
+/// This event initiates the level loading process, despawning existing entities, loading map data,
+/// and spawning new entities based on the TMX file.
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
+    /// The file path to the TMX map file to be loaded.
     pub map_filepath: String,
 }
 
+/// Loads a new level based on the `LoadLevelEvent`.
+///
+/// This function despawns existing game entities, loads the specified TMX map, creates Bevy entities
+/// for map tiles, players, ghosts, and other objects, initializes their components, and sets up game-related
+/// resources, such as `BoardData`, `SpriteDB`, and `RoomDB`.
 #[allow(clippy::too_many_arguments)]
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
@@ -394,6 +426,12 @@ pub fn load_level(
     ev_room.send(RoomChangedEvent::init(open_van));
 }
 
+/// Handles `RoomChangedEvent` events, updating interactive object states and room data.
+///
+/// This system is responsible for:
+/// * Updating the state of interactive objects based on the current room's state.
+/// * Triggering the opening of the van UI when appropriate (e.g., when the player enters the starting area).
+/// * Updating the game's collision and lighting data after room-related changes.
 pub fn roomchanged_event(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     mut ev_room: EventReader<RoomChangedEvent>,

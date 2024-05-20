@@ -1,3 +1,15 @@
+//! Gear Module
+//! -----------
+//!
+//! This module defines the gear system for the game, including:
+//! * Different types of gear available to the player.
+//! * A common interface for interacting with gear (`GearUsable` trait).
+//! * Functions for updating gear state based on player actions and game conditions.
+//! * Visual representations of gear using sprites and animations.
+//!
+//! The gear system allows players to equip and use various tools to investigate paranormal activity,
+//! gather evidence, and ultimately banish ghosts.
+
 pub mod compass;
 pub mod emfmeter;
 pub mod estaticmeter;
@@ -41,6 +53,10 @@ use crate::summary;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
+/// Unique identifiers for different gear sprites.
+///
+/// Each variant represents a specific sprite or animation frame for a piece of gear.
+/// The values are used to index into the gear spritesheet.
 #[allow(dead_code)]
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum GearSpriteID {
@@ -107,6 +123,9 @@ pub enum GearSpriteID {
     None,
 }
 
+/// Represents the different types of gear available in the game.
+///
+/// Each variant holds a specific gear struct with its own attributes and behavior.
 #[derive(Debug, Default, Clone)]
 pub enum GearKind {
     Thermometer(Thermometer),
@@ -129,8 +148,10 @@ pub enum GearKind {
     None,
 }
 
+/// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]
 pub struct Gear {
+    /// The type of gear being held.
     pub kind: GearKind,
 }
 
@@ -284,6 +305,7 @@ impl GearUsable for Gear {
     }
 }
 
+/// Utility function to convert a boolean value to "ON" or "OFF".
 pub fn on_off(s: bool) -> &'static str {
     match s {
         true => "ON",
@@ -291,16 +313,28 @@ pub fn on_off(s: bool) -> &'static str {
     }
 }
 
+/// Provides a common interface for all gear types, enabling consistent interactions.
 pub trait GearUsable: std::fmt::Debug + Sync + Send {
+    /// Returns the display name of the gear (e.g., "EMF Reader").
     fn get_display_name(&self) -> &'static str;
+    /// Returns a brief description of the gear's functionality.
     fn get_description(&self) -> &'static str;
+    /// Returns a string representing the current status of the gear (e.g., "ON", "OFF", "Reading: 5.0 mG").
     fn get_status(&self) -> String;
+    /// Triggers the gear's primary action (e.g., turn on/off, take a reading).
     fn set_trigger(&mut self, gs: &mut GearStuff);
+    /// Updates the gear's internal state based on time, player actions, or game conditions.
     fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
+    /// Returns the `GearSpriteID` for the gear's current state.
     fn get_sprite_idx(&self) -> GearSpriteID;
+    /// Creates a boxed clone of the `GearUsable` object.
     fn box_clone(&self) -> Box<dyn GearUsable>;
 }
 
+/// System for updating the internal state of all gear carried by the player.
+///
+/// This system iterates through the player's gear and calls the `update` method for each piece of gear,
+/// allowing gear to update their state based on time, player actions, or environmental conditions.
 pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
     for (position, mut playergear) in q_gear.iter_mut() {
         for (gear, epos) in playergear.as_vec_mut().into_iter() {
@@ -309,16 +343,23 @@ pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs:
     }
 }
 
+/// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]
 pub struct GearStuff<'w, 's> {
+    /// Access to the game's board data, including collision, lighting, and temperature fields.
     pub bf: ResMut<'w, board::BoardData>,
+    /// Access to summary data, which tracks game progress and statistics.
     pub summary: ResMut<'w, summary::SummaryData>,
+    /// Allows gear systems to spawn new entities (e.g., for sound effects).
     pub commands: Commands<'w, 's>,
+    /// Provides access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
+    /// Access to the current game time.
     pub time: Res<'w, Time>,
 }
 
 impl<'w, 's> GearStuff<'w, 's> {
+    /// Plays a sound effect using the specified file path and volume.
     pub fn play_audio(&mut self, sound_file: String, volume: f32) {
         self.commands.spawn(AudioBundle {
             source: self.asset_server.load(sound_file),

@@ -1,21 +1,20 @@
 //! Behavior module
 //! ----------------
 //!
-//! The objective of this module is to replace the TileSprite code in board.rs
-//! so all the logic and behavior functionality comes here.
+//! This module defines the `Behavior` component and its associated data structures,
+//! which are used to represent the behavior of objects in the game world.
 //!
-//! This must represent all possible functionality that can be expressed from
-//! Tiled.
+//! The `Behavior` component stores information about the object's type, variant, orientation, state,
+//! and a collection of properties that determine how it interacts with the player and the environment.
+//! This component is crucial for separating the object's visual representation (its sprite) from its logical behavior.
 //!
-//! In Tiled, it should be possible to have only the following defined:
-//! - Class / user_type: Door
-//! - sprite:orientation: Y
-//! - sprite:state: closed
-//! - sprite:variant: wooden
+//! The information stored in the `Behavior` component is loaded from Tiled map data.
+//!  Each tile in Tiled can be assigned a "class" (e.g., "Door", "Wall", "Light"),
+//! a "variant" (e.g., "wooden", "brick", "fluorescent"), an "orientation", and a "state" (e.g., "open", "closed", "on", "off").
 //!
-//! When loaded, we should be able to transform that into a property list that
-//! defines the behavior.
-//!
+//! This data is used to create a `SpriteConfig` struct, which is then used to initialize the `Behavior` component.
+//! The `Behavior` component, in turn, is used to add other Bevy components to the object's entity,
+//! such as `Collision`, `Interactive`, `Light`, etc., based on its configuration.
 
 use anyhow::Context;
 use bevy::{ecs::component::Component, utils::HashMap};
@@ -24,6 +23,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{maplight, tiledmap::MapLayer};
 
+/// The `Behavior` component defines the behavior of an object in the game world.
+///
+/// It stores a `SpriteConfig` struct, which contains the object's basic configuration
+/// (class, variant, orientation, state), and a `Properties` struct,
+/// which holds a collection of properties that determine how the object interacts with the player and the environment.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
     /// This `cfg` property is PRIVATE on purpose! We need to separate the "what it is" from "what it does".
@@ -31,24 +35,38 @@ pub struct Behavior {
     /// that creates a mess in the code later on because we are not separating behavior from raw data.
     /// Always place behavioral traits in "p: Properties" and never read or write from Cfg.
     cfg: SpriteConfig,
+    /// The `p` field stores a collection of properties that define the object's behavior.
     pub p: Properties,
 }
 
 impl Behavior {
+    /// Creates a new `Behavior` component from a `SpriteConfig`.
+    ///
+    /// The `cfg` field is set to the given `SpriteConfig`, and the `p` field is initialized
+    /// based on the properties defined in the `SpriteConfig`.
     pub fn from_config(cfg: SpriteConfig) -> Self {
         let mut p = Properties::default();
         cfg.set_properties(&mut p);
         Self { cfg, p }
     }
+
+    /// Flips horizontally a sprite. Some sprites work just by flipping the image, however
+    /// other sprites have an alternative sprite for when it is flipped.
     pub fn flip(&mut self, f: bool) {
         if f != self.p.flip {
             self.cfg.orientation.flip();
             self.p.flip = f;
         }
     }
+
+    /// Returns the state (On/Off, Open/Closed) as a copy so that it is not possible to
+    /// modify the original from outside code.
     pub fn state(&self) -> State {
         self.cfg.state.clone()
     }
+
+    /// Creates the default components as required by this behavior for a new entity.
+    /// This is often used to spawn new map tiles to add the required components automatically.
     pub fn default_components(
         &self,
         entity: &mut bevy::ecs::system::EntityCommands,
@@ -56,6 +74,7 @@ impl Behavior {
     ) {
         self.cfg.components(entity, layer)
     }
+
     pub fn key_cvo(&self) -> SpriteCVOKey {
         self.cfg.key_cvo()
     }
@@ -107,14 +126,27 @@ impl Behavior {
     }
 }
 
+/// Stores a collection of properties that define the behavior of an object.
+///
+/// These properties determine how the object interacts with the player, the environment,
+/// and other systems in the game.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Properties {
-    // ---
+    // --- Movement Properties ---
+    /// Properties related to movement and collision.
     pub movement: Movement,
+    // --- Light Properties ---
+    /// Properties related to light emission, opacity, and visibility.
     pub light: Light,
+    // --- Utility Properties ---
+    /// Properties that define the object's utility or purpose in the game world.
     pub util: Util,
+    // --- Display Properties ---
+    /// Properties related to the object's visual display, such as visibility and global Z position.
     pub display: Display,
+    /// Whether the sprite should be horizontally flipped.
     pub flip: bool,
+    /// Properties specific to objects in the game world.
     pub object: Object,
 }
 

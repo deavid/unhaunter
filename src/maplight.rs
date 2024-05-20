@@ -1,3 +1,13 @@
+//! Map Lighting and Visibility Module
+//! -----------------------------------
+//!
+//! This module handles lighting, visibility, and color calculations for the game world.
+//! It includes:
+//! * Functions for calculating the player's visibility field based on line-of-sight and potentially sanity levels.
+//! * Functions for applying lighting effects to map tiles and sprites, simulating various light sources
+//!   (ambient, flashlight, ghost effects) and adjusting colors based on visibility and exposure.
+//! * Systems for dynamically updating lighting and visibility as the player moves and interacts with the environment.
+
 use std::collections::VecDeque;
 
 use crate::{
@@ -14,19 +24,32 @@ use crate::{
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
 
+/// Represents different types of light in the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LightType {
+    /// Standard visible light.
     Visible,
+    /// Red light, often used for night vision or specific ghost interactions.
     Red,
+    /// Infrared light used for night vision cameras.
     InfraRedNV,
+    /// Ultraviolet light, used to reveal evidence or trigger ghost reactions.
     UltraViolet,
 }
 
+/// Stores the intensity of different light types at a specific location.
+///
+/// This data structure is used to represent the combined light levels from various sources,
+/// such as ambient light, flashlights, and ghost effects.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LightData {
+    /// Intensity of visible light.
     visible: f32,
+    /// Intensity of red light.
     red: f32,
+    /// Intensity of infrared light.
     infrared: f32,
+    /// Intensity of ultraviolet light.
     ultraviolet: f32,
 }
 
@@ -83,6 +106,11 @@ impl LightData {
     }
 }
 
+/// Computes the player's visibility field, determining which areas of the map are visible.
+///
+/// This function uses a line-of-sight algorithm to calculate visibility, taking into account walls, obstacles,
+/// and potentially the player's sanity level. The visibility field is stored in a `HashMap`, where the keys are
+/// `BoardPosition`s and the values are visibility factors (0.0 to 1.0).
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
@@ -147,6 +175,13 @@ pub fn compute_visibility(
     }
 }
 
+/// Applies lighting effects to map tiles and sprites, adjusting colors based on visibility and exposure.
+///
+/// This function:
+/// * Simulates lighting from various sources (ambient light, flashlights, ghost effects).
+/// * Calculates the relative exposure based on light levels and the player's current exposure adaptation.
+/// * Adjusts tile and sprite colors based on lighting, visibility, and exposure, creating a realistic and
+///   atmospheric visual experience.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
     mut qt2: Query<
@@ -642,6 +677,11 @@ pub fn apply_lighting(
     // }
 }
 
+/// Marks map tiles for lighting update based on player position and visibility.
+///
+/// This system optimizes the lighting system by only updating tiles that are likely visible to the player.
+/// It uses a distance-based heuristic to determine which tiles need updating, potentially improving performance
+/// by avoiding unnecessary lighting calculations.
 pub fn mark_for_update(
     time: Res<Time>,
     gc: Res<GameConfig>,

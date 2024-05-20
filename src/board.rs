@@ -17,6 +17,18 @@ use crate::{
     materials::CustomMaterial1,
 };
 
+/// Represents the logical position of an object on the game board.
+///
+/// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical coordinate system,
+/// as well as a `global_z` value for fine-tuning the object's vertical position in the isometric view.
+///
+/// The `to_screen_coord` method converts the logical position to screen coordinates,
+/// applying the isometric perspective transformation.
+/// This transformation is necessary to display the 3D game world in a 2D isometric view.
+///
+/// Other systems, such as the `apply_perspective` system, use the `Position` component
+/// to update the `Transform` component of the object's sprite,
+/// ensuring that the sprite is rendered at the correct position in the isometric view.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
     pub x: f32,
@@ -416,16 +428,42 @@ pub struct MapTileComponents {
     pub behavior: Behavior,
 }
 
+/// The `SpriteDB` resource stores a database of pre-built Bevy components and sprites for map tiles.
+///
+/// This resource optimizes map loading and manipulation by:
+/// * Pre-building Bevy components for each tile type, avoiding redundant entity creation during map loading.
+/// * Providing efficient lookup of tile components based on their unique identifiers.
+/// * Indexing tiles based on their visual characteristics (class, variant, orientation) for quick access
+///   during interaction events.
 #[derive(Clone, Default, Resource)]
 pub struct SpriteDB {
+    /// Maps a unique tile identifier (tileset name + tile UID) to its pre-built Bevy components,
+    /// including the `Bdl` (bundle) and the `Behavior`.
+    /// This enables efficient lookup of components during map loading and interaction events.
     pub map_tile: HashMap<(String, u32), MapTileComponents>,
+    /// Indexes tile identifiers based on their visual characteristics:
+    /// * `class`: The type of tile (e.g., "Door", "Wall").
+    /// * `variant`:  A specific variation of the tile type (e.g., "wooden", "brick").
+    /// * `orientation`: The direction the tile is facing (e.g., "XAxis", "YAxis").
+    ///
+    /// This index allows for quick retrieval of tiles that share the same sprite, which is useful
+    /// when updating the state of interactive objects that have multiple instances in the map.
+    /// For example, when the player opens a door, all other doors of the same type can be updated efficiently.
     pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
 }
 
+/// The `RoomDB` resource manages room-related data, including room boundaries and states.
 #[derive(Clone, Default, Resource)]
 pub struct RoomDB {
+    /// Maps each board position to the name of the room it belongs to. 
+    /// This defines the boundaries of each room in the game world.
     pub room_tiles: HashMap<BoardPosition, String>,
-    pub room_state: HashMap<String, behavior::State>,
+    /// Tracks the current state of each room, using the room name as the key.
+    /// The exact nature of the room state is not explicitly defined but could include things like:
+    /// * Lighting conditions (lit/unlit).
+    /// * Presence of specific objects or entities.
+    /// * Temperature or other environmental factors. 
+    pub room_state: HashMap<String, behavior::State>, 
 }
 
 impl SpriteDB {
