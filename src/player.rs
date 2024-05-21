@@ -156,6 +156,7 @@ pub fn keyboard_player(
         &mut PlayerSprite,
         &mut AnimationTimer,
         &PlayerGear,
+        Option<&Hiding>,
     )>,
     colhand: CollisionHandler,
     interactables: Query<
@@ -179,7 +180,7 @@ pub fn keyboard_player(
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
     let dt = time.delta_seconds() * 60.0;
-    for (mut pos, mut dir, player, mut anim, player_gear) in players.iter_mut() {
+    for (mut pos, mut dir, player, mut anim, player_gear, hiding) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
@@ -210,8 +211,6 @@ pub fn keyboard_player(
         d.dy -= col_delta_n.y * col_dotp;
 
         let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
-        let dscreen = delta.to_screen_coord();
-        anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
 
         // d.dx /= 1.5; // Compensate for the projection
 
@@ -221,11 +220,6 @@ pub fn keyboard_player(
         } else {
             1.0
         };
-
-        // Apply speed penalty
-        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty;
-        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty;
-
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;
 
@@ -237,6 +231,26 @@ pub fn keyboard_player(
             dir.dx /= DIR_RED;
             dir.dy /= DIR_RED;
         }
+
+        // --- Check if Player is Hiding ---
+        if hiding.is_some() {
+            // Update player animation
+            let dscreen = delta.to_screen_coord();
+            anim.set_range(
+                CharacterAnimation::from_dir(dscreen.x / 2000.0, dscreen.y / 1000.0).to_vec(),
+            );
+
+            // Check if the Hiding component is present
+            continue; // Skip movement input handling if hiding
+        }
+
+        // Apply speed penalty
+        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty;
+        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty;
+
+        // Update player animation
+        let dscreen = delta.to_screen_coord();
+        anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
 
         // ----
         if keyboard_input.just_pressed(player.controls.activate) {
@@ -773,8 +787,9 @@ pub fn hide_player(
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
                     parent.spawn(SpriteBundle {
-                        texture: asset_server.load("img/character_position.png"), // TODO: Replace with appropriate overlay image
-                        transform: Transform::from_xyz(0.0, 0.0, 0.02), // Position relative to parent
+                        texture: asset_server.load("img/hiding_overlay.png"),
+                        transform: Transform::from_xyz(0.0, 0.0, 0.02)
+                            .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Position relative to parent
                         ..default()
                     });
                 });
