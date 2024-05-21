@@ -973,7 +973,7 @@ pub fn update_held_object_position(
                 // Sound cooldown
                 {
                     // Play "Move" sound effect
-                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 1.0);
+                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1);
 
                     // Update last sound time
                     *last_sound_time = current_time;
