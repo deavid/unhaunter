@@ -1,7 +1,7 @@
 use crate::{
     board::{BoardPosition, Position},
     ghost_definitions::GhostType,
-    player::PlayerSprite,
+    player::{Hiding, PlayerSprite},
     summary, utils,
 };
 use bevy::prelude::*;
@@ -85,7 +85,7 @@ impl GhostSprite {
 /// current state and objectives.
 pub fn ghost_movement(
     mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
@@ -156,16 +156,29 @@ pub fn ghost_movement(
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
-                let player_pos_l: Vec<&Position> = qp
+                let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
-                    .filter(|(_, p)| p.health > 0.0)
-                    .map(|(pos, _)| pos)
+                    .filter(|(_, p, _)| p.health > 0.0)
+                    .map(|(pos, _, h)| (pos, h))
                     .collect();
                 if !player_pos_l.is_empty() {
                     let idx = rng.gen_range(0..player_pos_l.len());
-                    let ppos = player_pos_l[idx];
-                    target_point.x = ppos.x;
-                    target_point.y = ppos.y;
+                    let (ppos, h) = player_pos_l[idx];
+                    let search_radius = if h.is_some() { 2.0 } else { 1.0 };
+
+                    let mut old_target = ghost.target_point.unwrap_or(*pos);
+                    old_target.x += rng.gen_range(-search_radius..search_radius);
+                    old_target.y += rng.gen_range(-search_radius..search_radius);
+                    let ppos = if h.is_some() { old_target } else { *ppos };
+
+                    let mut rng = rand::thread_rng();
+                    let random_offset = Vec2::new(
+                        rng.gen_range(-search_radius..search_radius),
+                        rng.gen_range(-search_radius..search_radius),
+                    );
+
+                    target_point.x = ppos.x + random_offset.x;
+                    target_point.y = ppos.y + random_offset.y;
                     hunt = true;
                 }
             }
@@ -190,7 +203,12 @@ pub fn ghost_movement(
 
                 ghost.target_point = Some(target_point);
                 ghost.hunt_target = hunt;
-            } else {
+            } else if ghost
+                .target_point
+                .map(|gp| pos.distance(&gp))
+                .unwrap_or_default()
+                < 0.5
+            {
                 ghost.hunt_target = false;
             }
         }
