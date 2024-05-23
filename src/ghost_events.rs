@@ -45,7 +45,9 @@ pub fn trigger_ghost_events(
         roomdb.room_tiles.contains_key(&bpos)
     }) {
         // Find the ghost
-        let (_ghost, ghost_pos) = q_ghost.single();
+        let Ok((_ghost, ghost_pos)) = q_ghost.get_single() else {
+            return;
+        };
 
         // Calculate distance and event probability
         let distance = player_pos.distance2(ghost_pos);

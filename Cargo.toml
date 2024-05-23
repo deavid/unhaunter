@@ -11,25 +11,25 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.0"
+bevy = "0.13"
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-image = "0.25.0"
-regex = "1.7.1"
-
-clap = "4.4.8"
-fastapprox = "0.3.1"
-anyhow = "1.0.79"
-ordered-float = { version = "4.2.0", features = ["serde"] }
-bevy-persistent = { version = "0.5.0", features = ["all"] }
-hierarchical_pathfinding = "0.5.0"
-walkdir = "2.5.0"
-glob = "0.3.1"
-thiserror = "1.0.58"
-tiled = { version = "0.11.2", features = ["wasm"] }
-wasm-bindgen = "0.2.92"
+image = "0.25"
+regex = "1.7"
+bevy_dylib = "0.13"
+clap = "4.4"
+fastapprox = "0.3"
+anyhow = "1.0"
+ordered-float = { version = "4.2", features = ["serde"] }
+bevy-persistent = { version = "0.5", features = ["all"] }
+hierarchical_pathfinding = "0.5"
+walkdir = "2.5"
+glob = "0.3"
+thiserror = "1.0"
+tiled = { version = "0.11", features = ["wasm"] }
+wasm-bindgen = "0.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_framepace = "0.15"

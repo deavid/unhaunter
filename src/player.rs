@@ -790,6 +790,10 @@ pub fn hide_player(
                         texture: asset_server.load("img/hiding_overlay.png"),
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
                             .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Position relative to parent
+                        sprite: Sprite {
+                            color: Color::GRAY.with_a(0.2),
+                            ..default()
+                        },
                         ..default()
                     });
                 });

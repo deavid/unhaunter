@@ -3,7 +3,7 @@
 //! Most of the classes here are almost a redefinition (for now) of the tiled library.
 //! Currently serve as an example on how to load/store data.
 
-use std::{collections::HashMap, fmt::Debug, slice::Iter};
+use std::{fmt::Debug, slice::Iter};
 
 /// A simple 2D position with X and Y components that it is generic.
 ///
@@ -138,12 +138,16 @@ pub fn load_tile_layer_iter<'a>(
 ) -> Vec<MapLayer> {
     let mut ret = vec![];
     for layer in layer_iter {
+        let mut user_properties = HashMap::new();
+        for (k, v) in &layer.properties {
+            user_properties.insert(k.clone(), v.clone());
+        }
         let map_layer = MapLayer {
             name: layer.name.to_string(),
             visible: layer.visible,
             offset: Pos::new(layer.offset_x, layer.offset_y),
             user_class: layer.user_type.clone(),
-            user_properties: layer.properties.clone(),
+            user_properties,
             opacity: layer.opacity,
             data: load_tile_layer(layer),
         };
@@ -193,7 +197,7 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
 // ------------ Bevy map loading utils --------------------
 
 use crate::materials::CustomMaterial1;
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
