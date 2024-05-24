@@ -175,6 +175,36 @@ pub fn compute_visibility(
     }
 }
 
+/// System to calculate the player's visibility field and update VisibilityData.
+fn player_visibility_system(
+    mut vf: ResMut<board::VisibilityData>,
+    bf: Res<board::BoardData>,
+    gc: Res<game::GameConfig>,
+    qp: Query<(&board::Position, &player::PlayerSprite)>,
+    mut roomdb: ResMut<board::RoomDB>,
+) {
+    vf.visibility_field.clear();
+
+    // Find the active player's position
+    let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
+        if player.id == gc.player_id {
+            Some(*pos)
+        } else {
+            None
+        }
+    }) else {
+        return;
+    };
+
+    // Calculate visibility
+    compute_visibility(
+        &mut vf.visibility_field,
+        &bf.collision_field,
+        &player_pos,
+        &mut roomdb,
+    );
+}
+
 /// Applies lighting effects to map tiles and sprites, adjusting colors based on visibility and exposure.
 ///
 /// This function:
@@ -201,10 +231,8 @@ pub fn apply_lighting(
         &PlayerGear,
     )>,
     mut bf: ResMut<board::BoardData>,
-    mut vf: ResMut<board::VisibilityData>,
+    vf: Res<board::VisibilityData>,
     gc: Res<game::GameConfig>,
-    qas: Query<(&AudioSink, &GameSound)>,
-    mut roomdb: ResMut<board::RoomDB>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
         // Create a ParamSet for Sprite queries
@@ -230,13 +258,6 @@ pub fn apply_lighting(
     const EYE_SPEED: f32 = 0.1;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.1;
-
-    vf.visibility_field.clear();
-
-    // FIXME: This "faster" approach causes bugs
-    // for v in vf.visibility_field.values_mut() {
-    //     *v = -0.01;
-    // }
 
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
@@ -279,12 +300,6 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
             }
         }
-        compute_visibility(
-            &mut vf.visibility_field,
-            &bf.collision_field,
-            pos,
-            &mut roomdb,
-        );
         player_pos = *pos;
     }
     // --- Access queries from the ParamSet ---
@@ -308,33 +323,6 @@ pub fn apply_lighting(
     }
     let mut qt = sprite_set.p0();
 
-    // --- ambient sound processing ---
-
-    let total_vis: f32 = vf
-        .visibility_field
-        .iter()
-        .map(|(k, v)| {
-            v * match roomdb.room_tiles.get(k).is_some() {
-                true => 0.2,
-                false => 1.0,
-            }
-        })
-        .sum();
-    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
-    let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
-
-    for (sink, gamesound) in qas.iter() {
-        const SMOOTH: f32 = 60.0;
-        if gamesound.class == SoundType::BackgroundHouse {
-            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
-        }
-        if gamesound.class == SoundType::BackgroundStreet {
-            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
-        }
-    }
-    // ---
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.00001;
     // account for the eye seeing the flashlight on.
@@ -715,8 +703,44 @@ pub fn mark_for_update(
     }
 }
 
+/// System to manage ambient sound levels based on visibility.
+fn ambient_sound_system(
+    vf: Res<board::VisibilityData>,
+    qas: Query<(&AudioSink, &GameSound)>,
+    roomdb: Res<board::RoomDB>,
+) {
+    let total_vis: f32 = vf
+        .visibility_field
+        .iter()
+        .map(|(k, v)| {
+            v * match roomdb.room_tiles.get(k).is_some() {
+                true => 0.2,
+                false => 1.0,
+            }
+        })
+        .sum();
+    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+    let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+
+    for (sink, gamesound) in qas.iter() {
+        const SMOOTH: f32 = 60.0;
+        if gamesound.class == SoundType::BackgroundHouse {
+            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+        if gamesound.class == SoundType::BackgroundStreet {
+            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
-    app.add_systems(Update, (mark_for_update, apply_lighting).chain());
+    app.add_systems(
+        Update,
+        (mark_for_update, player_visibility_system, apply_lighting).chain(),
+    )
+    .add_systems(Update, ambient_sound_system);
 }
 
 pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {
