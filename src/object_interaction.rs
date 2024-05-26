@@ -20,6 +20,8 @@ pub struct ObjectInteractionConfig {
     pub repulsive_influence_multiplier: f32,
     // When the ghost decides to move, sample N possible choices to get the best one.
     pub num_destination_points_to_sample: usize,
+    /// The radius around the ghost's breach within which a Repulsive object can provoke a hunt.
+    pub hunt_provocation_radius: f32,
 }
 
 impl Default for ObjectInteractionConfig {
@@ -32,6 +34,7 @@ impl Default for ObjectInteractionConfig {
             attractive_influence_multiplier: 1.0,
             repulsive_influence_multiplier: 1.0,
             num_destination_points_to_sample: 10,
+            hunt_provocation_radius: 2.0,
         }
     }
 }

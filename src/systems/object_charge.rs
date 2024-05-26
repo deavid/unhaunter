@@ -31,24 +31,38 @@ struct WithinDischargeRange;
 /// System to check ghost proximity to objects
 fn check_ghost_proximity(
     config: Res<ObjectInteractionConfig>, // Access the object interaction configuration
-    ghost_query: Query<&Position, With<GhostSprite>>, // Query for the ghost's position
+    mut ghost_query: Query<(&Position, &mut GhostSprite)>, // Query for the ghost's position
     object_query: Query<(Entity, &Position, &GhostInfluence)>, // Query for object positions and GhostInfluence
     mut commands: Commands, // Access commands to add/remove components
 ) {
-    // Get ghost position
-    let Ok(ghost_position) = ghost_query.get_single() else {
+    // Get ghost position and breach position
+    let Ok((ghost_position, mut ghost_sprite)) = ghost_query.get_single_mut() else {
         return;
     };
+    let breach_position = ghost_sprite.spawn_point.to_position();
 
     // Iterate through objects with GhostInfluence
-    for (entity, object_position, _) in &object_query {
+    for (entity, object_position, ghost_influence) in &object_query {
         // Calculate distance between object and ghost
-        let distance = ghost_position.distance(object_position);
+        let distance_to_ghost = ghost_position.distance(object_position);
 
         // If distance <= object_discharge_radius
-        if distance <= config.object_discharge_radius {
+        if distance_to_ghost <= config.object_discharge_radius {
             // Add WithinDischargeRange component to the object entity
             commands.entity(entity).insert(WithinDischargeRange);
+
+            // --- Hunt Provocation Logic ---
+            if ghost_influence.influence_type == InfluenceType::Repulsive {
+                // Calculate distance between object and breach
+                let distance_to_breach = breach_position.distance(object_position);
+
+                // If distance <= hunt_provocation_radius and charge_value is above threshold:
+                if distance_to_breach <= config.hunt_provocation_radius
+                    && ghost_influence.charge_value > 0.8
+                {
+                    ghost_sprite.rage += 0.2;
+                }
+            }
         } else {
             commands.entity(entity).remove::<WithinDischargeRange>();
         }
