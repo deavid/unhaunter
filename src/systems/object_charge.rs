@@ -5,6 +5,7 @@ use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use crate::ghost::GhostSprite;
 use crate::object_interaction::ObjectInteractionConfig;
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 
 /// System to accumulate charge on objects over time.
 fn accumulate_charge(
@@ -33,7 +34,10 @@ fn check_ghost_proximity(
     config: Res<ObjectInteractionConfig>, // Access the object interaction configuration
     mut ghost_query: Query<(&Position, &mut GhostSprite)>, // Query for the ghost's position
     object_query: Query<(Entity, &Position, &GhostInfluence)>, // Query for object positions and GhostInfluence
+    mut removed_attractive_objects: Local<HashSet<Entity>>, // FIXME: This parameter would not reset between missions.
     mut commands: Commands, // Access commands to add/remove components
+    roomdb: Res<crate::board::RoomDB>, // Access the room database
+    time: Res<Time>,        // Access the time resource
 ) {
     // Get ghost position and breach position
     let Ok((ghost_position, mut ghost_sprite)) = ghost_query.get_single_mut() else {
@@ -65,7 +69,33 @@ fn check_ghost_proximity(
             }
         } else {
             commands.entity(entity).remove::<WithinDischargeRange>();
+
+            // --- Check for Removed Attractive Objects ---
+            if ghost_influence.influence_type == InfluenceType::Attractive {
+                // If the object was previously within range but is now outside, mark it as removed
+                if removed_attractive_objects.contains(&entity) {
+                    continue;
+                }
+
+                // Remove the object from the list of removed objects if it's back within range
+                if roomdb
+                    .room_tiles
+                    .get(&object_position.to_board_position())
+                    .is_some()
+                {
+                    removed_attractive_objects.remove(&entity);
+                } else {
+                    // Add the object to the list of removed objects
+                    removed_attractive_objects.insert(entity);
+                }
+            }
         }
+    }
+
+    // --- Increase Anger for Removed Attractive Objects ---
+    let delta_time = time.delta_seconds();
+    for _ in removed_attractive_objects.iter() {
+        ghost_sprite.rage += config.attractive_removal_anger_rate * delta_time;
     }
 }
 
