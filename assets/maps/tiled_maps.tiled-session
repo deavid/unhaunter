@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "atut01_basics.tmx",
+    "activeFile": "map_school1.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -18,8 +18,8 @@
             "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 496.5,
-                "y": 575.5
+                "x": 388.5,
+                "y": 590.5
             }
         },
         "character1.tsx": {
@@ -34,8 +34,8 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 503.875,
-                "y": 251.875
+                "x": 503.375,
+                "y": 285.875
             }
         },
         "map_house1_3x.tmx": {
@@ -57,19 +57,19 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1535.875,
-                "y": 767.875
+                "x": 1535.125,
+                "y": 801.625
             }
         },
         "map_school1.tmx": {
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 4,
-            "selectedLayer": 6,
+            "scale": 2,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 1535.875,
-                "y": 733.375
+                "x": 762.75,
+                "y": 751.25
             }
         },
         "topdown.tsx": {
@@ -97,7 +97,7 @@
         },
         "unhaunter_custom_tileset.tsx": {
             "dynamicWrapping": true,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheet2.tsx": {
@@ -107,12 +107,12 @@
         },
         "unhaunter_spritesheetA_3x3x3.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_6x6x10.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_test2b.tmx": {
@@ -138,9 +138,6 @@
     "map.tileWidth": 96,
     "map.width": 128,
     "openFiles": [
-        "unhaunter_custom_tileset.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx",
-        "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
@@ -149,13 +146,13 @@
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
-        "unhaunter_custom_tileset.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx",
-        "unhaunter_spritesheet2.tsx",
-        "map_school1.tmx",
-        "map_house1.tmx",
-        "map_house2.tmx",
         "atut01_basics.tmx",
+        "map_house2.tmx",
+        "map_house1.tmx",
+        "map_school1.tmx",
+        "unhaunter_spritesheet2.tsx",
+        "unhaunter_spritesheetA_6x6x10.tsx",
+        "unhaunter_custom_tileset.tsx",
         "topdown.tsx",
         "topdown_test_128.tmx",
         "unhaunter_spritesheetA_3x3x3.tsx",
