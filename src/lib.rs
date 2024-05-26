@@ -1,19 +1,23 @@
 mod behavior;
 mod board;
 pub mod colors;
+pub mod components;
 mod game;
 mod gear;
 mod ghost;
 mod ghost_definitions;
+mod ghost_events;
 mod mainmenu;
 mod maplight;
 mod materials;
 pub mod npchelp;
+pub mod object_interaction;
 mod pause;
 pub mod platform;
 mod player;
 mod root;
 mod summary;
+pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
@@ -27,6 +31,7 @@ use bevy::{
     window::WindowResolution,
 };
 use materials::{CustomMaterial1, UIPanelMaterial};
+use object_interaction::ObjectInteractionConfig;
 use platform::plt;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -61,7 +66,8 @@ pub fn app_run() {
     .init_resource::<tiledmap::MapTileSetDb>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
-    )));
+    )))
+    .init_resource::<ObjectInteractionConfig>();
 
     if FPS_DEBUG {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
@@ -77,10 +83,12 @@ pub fn app_run() {
     mainmenu::app_setup(&mut app);
     ghost::app_setup(&mut app);
     board::app_setup(&mut app);
+    ghost_events::app_setup(&mut app);
     player::app_setup(&mut app);
     pause::app_setup(&mut app);
     maplight::app_setup(&mut app);
     npchelp::app_setup(&mut app);
+    systems::object_charge::app_setup(&mut app);
 
     app.run();
 }

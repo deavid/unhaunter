@@ -1,0 +1,298 @@
+# assets/phrasebooks/player.yaml
+- phrase: "Hello? Is anyone there?"
+  speech_act: Directive
+  semantic_tags:
+    - Greeting
+    - Question
+  emotional_signature:
+    curiosity: 0.8
+    fear: 0.2
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "We are paranormal researchers."
+  speech_act: Assertive
+  semantic_tags:
+    - Statement:Identity
+    - Occupation:Researcher
+  emotional_signature:
+    curiosity: 0.5
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "What is your name?"
+  speech_act: Directive
+  semantic_tags:
+    - Question:Identity
+  emotional_signature:
+    curiosity: 0.9
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "Why are you here?"
+  speech_act: Directive
+  semantic_tags:
+    - Question:Motivation
+  emotional_signature:
+    curiosity: 0.8
+    fear: 0.2
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "Can you make the EMF reader spike?"
+  speech_act: Directive
+  semantic_tags:
+    - Question:Ability
+    - Request:Action
+  emotional_signature:
+    curiosity: 0.7
+    fear: 0.3
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "We mean you no harm." 
+  speech_act: Assertive
+  semantic_tags:
+    - Greeting
+    - Statement:Intention
+  emotional_signature:
+    curiosity: 0.1
+    fear: 0.0
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.8
+- phrase: "Show us what you've got."
+  speech_act: Directive
+  semantic_tags:
+    - Challenge
+  emotional_signature:
+    curiosity: 0.2
+    fear: 0.1
+    anger: 0.7
+    sadness: 0.0
+    joy: 0.0
+- phrase: "Do you remember Obon?" 
+  speech_act: Directive
+  semantic_tags:
+    - Question:Past Life
+  emotional_signature:
+    curiosity: 0.8
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.1
+    joy: 0.0
+- phrase: "We cleanse this space with sage." 
+  speech_act: Statement
+  semantic_tags:
+    - Ritual
+    - Statement:Action
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.9
+- phrase: "I'm scared." 
+  speech_act: Expressive
+  semantic_tags:
+    - Statement:Emotion
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.9
+    anger: 0.0
+    sadness: 0.1
+    joy: 0.0
+- phrase: "Can you show yourself?"
+  speech_act: Directive
+  semantic_tags:
+    - Question:Ability
+    - Request:Action
+  emotional_signature:
+    curiosity: 0.8
+    fear: 0.2
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "What do you want?"
+  speech_act: Directive
+  semantic_tags:
+    - Question:Motivation
+  emotional_signature:
+    curiosity: 0.7
+    fear: 0.3
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.0
+- phrase: "Leave this place."
+  speech_act: Directive
+  semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.1
+    anger: 0.9
+    sadness: 0.0
+    joy: 0.0
+- phrase: "Please, don't hurt us."
+  speech_act: Directive
+  semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.9
+    anger: 0.0
+    sadness: 0.1
+    joy: 0.0
+- phrase: "[Shines Flashlight]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Illuminate
+  emotional_signature:
+    curiosity: 0.2 
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.7 
+- phrase: "[SpiritBox is ON and Loud]"
+  speech_act: Action 
+  semantic_tags:
+    - Action:Investigate 
+    - Gear:SpiritBox
+  emotional_signature:
+    curiosity: 0.7
+    fear: 0.2
+    anger: 0.1
+    sadness: 0.0
+    joy: 0.0
+- phrase: "[Opens Door]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Enter
+    - Action:Exit
+  emotional_signature:
+    curiosity: 0.5
+    fear: 0.1
+    anger: 0.1
+    sadness: 0.0
+    joy: 0.3
+- phrase: "[Closes Door]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Secure
+    - Action:Block
+  emotional_signature:
+    curiosity: 0.1
+    fear: 0.6
+    anger: 0.1
+    sadness: 0.1
+    joy: 0.1
+- phrase: "[Turns on Light]"
+  speech_act: Action
+  semantic_tags: 
+    - Action:Illuminate 
+  emotional_signature:
+    curiosity: 0.3
+    fear: 0.0
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.7
+- phrase: "[Turns off Light]"
+  speech_act: Action 
+  semantic_tags:
+    - Action:Conceal
+  emotional_signature:
+    curiosity: 0.2
+    fear: 0.5
+    anger: 0.1
+    sadness: 0.1
+    joy: 0.1
+- phrase: "[Picks up object appreciated by the Ghost]"
+  speech_act: Action 
+  semantic_tags:
+    - Action:Take
+    - Object:Significant
+  emotional_signature:
+    curiosity: 0.8
+    fear: 0.1
+    anger: 0.1
+    sadness: 0.0
+    joy: 0.0
+- phrase: "[Throws object appreciated by the Ghost]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Disrespect
+    - Object:Significant
+  emotional_signature:
+    curiosity: 0.1
+    fear: 0.2
+    anger: 0.6
+    sadness: 0.0
+    joy: 0.1
+- phrase: "[Runs around]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Panic
+    - Action:Flee
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.8
+    anger: 0.1
+    sadness: 0.1
+    joy: 0.0
+- phrase: "[Gets uncomfortably close to the Ghost]"
+  speech_act: Action 
+  semantic_tags:
+    - Action:Approach 
+    - Action:Invade
+  emotional_signature:
+    curiosity: 0.6
+    fear: 0.3
+    anger: 0.1
+    sadness: 0.0
+    joy: 0.0
+- phrase: "[Burns Sage near the Ghost]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Cleanse
+    - Ritual:Sage
+  emotional_signature:
+    curiosity: 0.1
+    fear: 0.1
+    anger: 0.1
+    sadness: 0.0
+    joy: 0.7
+- phrase: "[Lights up Candle]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Illuminate
+    - Ritual:Candle
+  emotional_signature:
+    curiosity: 0.2
+    fear: 0.1
+    anger: 0.0
+    sadness: 0.0
+    joy: 0.7 
+- phrase: "[Escaping from the Ghost]"
+  speech_act: Action
+  semantic_tags:
+    - Action:Flee
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.9
+    anger: 0.0
+    sadness: 0.1
+    joy: 0.0 
+- phrase: "[Hiding from the Ghost]" 
+  speech_act: Action
+  semantic_tags:
+    - Action:Conceal
+  emotional_signature:
+    curiosity: 0.0
+    fear: 0.9
+    anger: 0.0
+    sadness: 0.1
+    joy: 0.0

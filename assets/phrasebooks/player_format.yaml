@@ -1,0 +1,15 @@
+- phrase: <The actual phrase>
+  speech_act: <Assertive | Directive | Commissive | Expressive | Declarative> 
+  semantic_tags: 
+    - <semantic_tag>
+    - <semantic_tag>
+  emotional_signature:
+    curiosity: <value>
+    fear: <value>
+    anger: <value>
+    sadness: <value>
+    joy: <value>
+    # ... other emotions as needed
+  contextual_tags:
+    - <contextual_tag> # These will be added at runtime by the demo tool
+    - <contextual_tag>

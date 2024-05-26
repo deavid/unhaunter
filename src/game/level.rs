@@ -1,6 +1,20 @@
+//! Level Management Module
+//! -------------------------
+//!
+//! This module handles the loading and management of game levels, including:
+//! * Loading TMX map data.
+//! * Spawning Bevy entities for map tiles, players, ghosts, and other game objects.
+//! * Initializing entity components based on TMX data and game logic.
+//! * Managing room-related events and states, such as lighting conditions and interactive object behavior.
+//! * Handling interactions between the player and interactive objects in the game world.
+//!
+//! This module provides the core functionality for setting up and managing the interactive environment
+//! that the player explores and investigates.
+
 use crate::behavior::component::RoomState;
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardDataToRebuild, MapTileComponents, Position, SpriteDB};
+use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::materials::CustomMaterial1;
@@ -15,13 +29,22 @@ use ordered_float::OrderedFloat;
 
 use super::{GCameraArena, GameConfig, GameSprite};
 
+/// Event triggered when the player enters a new room or when a significant room-related change occurs.
+///
+/// This event is used to trigger actions like opening the van UI or updating the state of interactive objects
+/// based on the room's current state.
 #[derive(Clone, Debug, Default, Event)]
 pub struct RoomChangedEvent {
+    /// Set to `true` if the event is triggered during level initialization.
     pub initialize: bool,
+    /// Set to `true` if the van UI should be opened automatically (e.g., when the player returns to the starting area).
     pub open_van: bool,
 }
 
 impl RoomChangedEvent {
+    /// Creates a new `RoomChangedEvent` specifically for level initialization.
+    ///
+    /// The `initialize` flag is set to `true`, and the `open_van` flag is set based on the given value.
     pub fn init(open_van: bool) -> Self {
         Self {
             initialize: true,
@@ -30,11 +53,21 @@ impl RoomChangedEvent {
     }
 }
 
+/// Event triggered to load a new level from a TMX map file.
+///
+/// This event initiates the level loading process, despawning existing entities, loading map data,
+/// and spawning new entities based on the TMX file.
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
+    /// The file path to the TMX map file to be loaded.
     pub map_filepath: String,
 }
 
+/// Loads a new level based on the `LoadLevelEvent`.
+///
+/// This function despawns existing game entities, loads the specified TMX map, creates Bevy entities
+/// for map tiles, players, ghosts, and other objects, initializes their components, and sets up game-related
+/// resources, such as `BoardData`, `SpriteDB`, and `RoomDB`.
 #[allow(clippy::too_many_arguments)]
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
@@ -203,6 +236,7 @@ pub fn load_level(
     // We will need a 2nd pass load to sync some data
     // ----
     let mut c: f32 = 0.0;
+    let mut movable_objects: Vec<Entity> = Vec::new();
     for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
         // filter only the tile layers and extract that directly
         if let MapLayerType::Tiles(tiles) = &layer.data {
@@ -273,6 +307,15 @@ pub fn load_level(
             let mut beh = mt.behavior.clone();
             beh.flip(tile.flip_x);
 
+            // --- Check if Object is Movable ---
+            if mt.behavior.p.object.movable {
+                // FIXME: It does not check if the item is in a valid room, since the rooms are still being constructed
+                // .. at this point. This is something to fix later on.
+
+                // --- Collect Movable Objects ---
+                movable_objects.push(entity.id());
+            }
+
             entity
                 .insert(beh)
                 .insert(GameSprite)
@@ -283,6 +326,38 @@ pub fn load_level(
 
     use rand::seq::SliceRandom;
     use rand::thread_rng;
+    let mut rng = thread_rng();
+
+    // --- Map Validation ---
+    if movable_objects.len() < 3 {
+        warn!("Map '{}' has less than 3 movable objects in rooms. Ghost influence system might not work as intended.", load_event.map_filepath);
+    }
+
+    // --- Random Property Assignment ---
+
+    if !movable_objects.is_empty() {
+        // Shuffle the movable objects to ensure random selection
+        movable_objects.shuffle(&mut rng);
+
+        // Select up to 3 objects
+        let selected_objects = movable_objects.iter().take(3);
+
+        // Assign properties
+        for (i, &entity) in selected_objects.enumerate() {
+            let influence_type = if i == 0 {
+                InfluenceType::Repulsive
+            } else {
+                InfluenceType::Attractive
+            };
+
+            // Add the GhostInfluence component to the selected entity
+            commands.entity(entity).insert(GhostInfluence {
+                influence_type,
+                charge_value: 0.0,
+            });
+        }
+    }
+
     player_spawn_points.shuffle(&mut thread_rng());
     if player_spawn_points.is_empty() {
         error!("No player spawn points found!! - that will probably not display the map because the player will be out of bounds");
@@ -394,6 +469,12 @@ pub fn load_level(
     ev_room.send(RoomChangedEvent::init(open_van));
 }
 
+/// Handles `RoomChangedEvent` events, updating interactive object states and room data.
+///
+/// This system is responsible for:
+/// * Updating the state of interactive objects based on the current room's state.
+/// * Triggering the opening of the van UI when appropriate (e.g., when the player enters the starting area).
+/// * Updating the game's collision and lighting data after room-related changes.
 pub fn roomchanged_event(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     mut ev_room: EventReader<RoomChangedEvent>,

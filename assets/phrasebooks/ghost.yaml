@@ -1,0 +1,2231 @@
+# assets/phrasebooks/ghost.yaml
+- phrase: "I don't remember."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: -0.1
+      fear: 0.0
+      anger: 0.0 
+  response_type: Text 
+  for_speech_acts:
+    - Directive
+    - Expressive
+  for_semantic_tags:
+    - Question:Identity
+    - Question:Motivation
+    - Question:Past Life
+- phrase: "They're gone."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      sadness: -0.1
+      fear: 0.0
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts: 
+    - Directive
+    - Expressive
+  for_semantic_tags:
+    - Question:Loved Ones
+    - Question:Identity
+    - Question:Past Life
+- phrase: "Leave me alone." 
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Challenge
+- phrase: "It's cold here." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      sadness: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      fear: -0.1
+      sadness: 0.0
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Question
+    - Statement
+  for_semantic_tags:
+    - Question:Ability
+    - Question:Past Life
+    - Question:Motivation
+- phrase: "You can't hurt me." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.1
+      sadness: 0.2
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[Object moves on its own]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[Whispers faintly] You'll see."
+  speech_act: Commissive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.9
+      sadness: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      sadness: 0.0
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Question
+    - Request
+  for_semantic_tags:
+    - Question:Ability
+    - Question:Identity
+    - Request:Action
+- phrase: "[Slams Door]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+- phrase: "[A growling sound is heard]" 
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Challenge
+    - Statement
+  for_semantic_tags:
+    - Challenge:Provocation
+    - Statement:Observation
+
+# --- Responses for "Hello? Is anyone there?" ---
+- phrase: "Yes, I'm here."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.6
+      fear: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      fear: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Greeting
+    - Question
+- phrase: "[Whispering]  Who's asking?" 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      curiosity: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      fear: -0.1
+      curiosity: 0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Greeting
+    - Question
+- phrase: "You shouldn't be here." 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.3
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: 0.0
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Greeting
+    - Question
+- phrase: "[Silence]"
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.0
+      sadness: 0.0
+      anger: 0.0
+  response_type: Silence
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Greeting
+    - Question
+- phrase: "[A cold breeze rushes through the room]"
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      sadness: 0.4
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Greeting
+    - Question
+
+# --- Responses for "We are paranormal researchers." --- 
+- phrase: "Researchers? You won't find anything here."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      anger: 0.3
+      sadness: 0.1
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Statement:Identity
+    - Occupation:Researcher 
+- phrase: "I don't believe in researchers."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      disgust: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      disgust: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Statement:Identity
+    - Occupation:Researcher
+- phrase: "[An object falls from a shelf]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Statement:Identity
+    - Occupation:Researcher
+- phrase:  "[Silence]"
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.9
+      sadness: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.0
+      sadness: 0.0
+      anger: 0.0
+  response_type: Silence
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Statement:Identity
+    - Occupation:Researcher
+
+# --- Responses for "What is your name?" ---
+- phrase: "My name is [Ghost Name]." 
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.7
+      sadness: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      sadness: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Identity 
+- phrase: "[Whispering] I can't tell you."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      sadness: 0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Identity
+- phrase: "Why do you care?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Identity
+- phrase: "[The temperature in the room drops]" 
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      sadness: 0.3
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Identity
+
+# --- Responses for "Why are you here?" ---
+- phrase: "This was my home." 
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      curiosity: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts: 
+    - Directive
+  for_semantic_tags: 
+    - Question:Motivation
+- phrase: "I'm trapped."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.0
+      sadness: 0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase: "I'm looking for someone." 
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.6
+      curiosity: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.0
+      curiosity: 0.1
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation 
+- phrase: "It's not your concern." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase: "[A door slams shut]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+
+# --- Responses for "Can you make the EMF reader spike?" ---
+- phrase: "Maybe." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      playfulness: 0.7
+      curiosity: 0.3
+      anger: 0.0
+    emotional_signature_delta:
+      playfulness: 0.1
+      curiosity: -0.1
+      anger: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action 
+- phrase: "If I want to." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      playfulness: 0.3
+      fear: 0.1 
+    emotional_signature_delta:
+      anger: 0.1
+      playfulness: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "I don't know how." 
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.6
+      fear: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      fear: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "[The EMF reader spikes to level 5]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      playfulness: 0.4
+      fear: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      playfulness: 0.1
+      fear: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "[The lights flicker]"
+  speech_act: Event 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      fear: 0.5
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Event 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+
+# --- Responses for "We mean you no harm" ---
+- phrase: "You think I care?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      disgust: 0.2
+      fear: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      disgust: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention
+- phrase: "I don't believe you." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      fear: 0.5
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention
+- phrase: "Prove it."
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.6
+      anger: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention
+- phrase: "[A faint, mournful sigh]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      fear: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      fear: -0.1
+      anger: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention
+
+# assets/phrasebooks/ghost.yaml
+# ... (Existing ghost responses) ... 
+
+# --- Responses for "Show us what you've got." ---
+- phrase: "You want a show?  [Throws an object across the room]" 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      playfulness: 0.0
+    emotional_signature_delta:
+      anger: -0.2
+      fear: 0.1
+      playfulness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+- phrase: "You won't like it." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      playfulness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      playfulness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+- phrase: "You're not ready."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      anger: 0.4
+      playfulness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      playfulness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+- phrase: "[The temperature drops sharply]"
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      playfulness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      playfulness: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+- phrase: "[A loud, disembodied scream]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      playfulness: 0.0
+    emotional_signature_delta:
+      anger: -0.2
+      fear: 0.1
+      playfulness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge 
+
+# --- Responses for "Do you remember Obon?" ---
+- phrase: "Obon... a time for remembrance."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      curiosity: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+- phrase: "I miss those days." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.9
+      curiosity: 0.0
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      curiosity: 0.0
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+- phrase: "Why do you ask?" 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.7
+      anger: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life 
+- phrase: "[The air grows heavy with a sense of longing]"
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      curiosity: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+
+# --- Responses for "We cleanse this space with sage." --- 
+- phrase: "You think that will stop me?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      disgust: 0.1
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      disgust: -0.1
+      fear: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+- phrase: "Foolish mortals."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      disgust: 0.8
+      anger: 0.2
+      fear: 0.0
+    emotional_signature_delta:
+      disgust: 0.1
+      anger: -0.1
+      fear: 0.0 
+  response_type: Text 
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+- phrase: "[The sage smoke dissipates quickly]"
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.4
+      sadness: 0.0 
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+
+# --- Responses for "I'm scared." ---
+- phrase: "Good."
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      joy: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      joy: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+- phrase: "You should be."
+  speech_act: Assertive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.4
+      joy: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion 
+- phrase: "Fear is a powerful emotion."
+  speech_act: Assertive 
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.6
+      fear: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      fear: -0.1
+      anger: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+- phrase: "[Whispering] I can smell your fear." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      joy: 0.6
+      anger: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      joy: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+
+
+# assets/phrasebooks/ghost.yaml
+# ... (Existing ghost responses) ... 
+
+# --- Responses for "Can you show yourself?" --- 
+- phrase: "Perhaps." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      playfulness: 0.7
+      curiosity: 0.2
+      anger: 0.1
+    emotional_signature_delta:
+      playfulness: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "You wouldn't want to see me."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      anger: 0.3
+      sadness: 0.1
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "Not yet." 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.6
+      anger: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "[A ghostly figure appears briefly]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "[A cold breath whispers past your ear]" 
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+
+# --- Responses for "What do you want?" --- 
+- phrase: "I want peace."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      anger: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase: "I want to be free."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.3
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase:  "I want revenge."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.0
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      fear: 0.0
+      sadness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase: "[The room grows noticeably colder]" 
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      anger: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      anger: -0.1
+      sadness: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation 
+
+# --- Responses for "Leave this place." ---
+- phrase: "Never!"
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.0
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      fear: 0.0
+      sadness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+- phrase: "You can't make me!" 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+- phrase: "This is my home!"
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      sadness: 0.3
+      fear: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      sadness: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation 
+- phrase: "[The ghost lunges at the player]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.2
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation 
+
+# --- Responses for "Please, don't hurt us." ---
+- phrase: "I make no promises."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      playfulness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      playfulness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+- phrase: "You're already hurting me."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      anger: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation 
+- phrase: "Why should I listen to you?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.4
+      fear: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+- phrase: "[An object flies across the room, narrowly missing the player]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.1
+      sadness: 0.0 
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+
+# assets/phrasebooks/ghost.yaml
+# ... (Existing ghost responses) ... 
+
+# --- Responses for "We cleanse this space with sage." (Continued) --- 
+- phrase: "[A wave of icy cold washes over the players]" 
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+- phrase: "[The ghost laughs menacingly]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      joy: 0.2
+      fear: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      joy: 0.1
+      fear: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+
+# --- Responses for "I'm scared." (Continued) --- 
+- phrase: "Don't worry, I won't hurt you... yet." 
+  speech_act: Assertive 
+  emotional_signature:
+    emotional_signature_filter:
+      playfulness: 0.8
+      anger: 0.1
+      fear: 0.1 
+    emotional_signature_delta:
+      playfulness: 0.1
+      anger: -0.1
+      fear: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+- phrase: "[The ghost vanishes into thin air]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.9
+      sadness: 0.1
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0 
+  response_type: Action
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+
+# --- Responses for "Can you make the EMF reader spike?" (Continued) ---
+- phrase: "What's an EMF reader?" 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.8
+      anger: 0.1
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: 0.0
+      fear: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "I don't need a reader to show my power." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.1
+      sadness: 0.2
+    emotional_signature_delta:
+      anger: 0.1
+      fear: 0.0
+      sadness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "[Silence]"
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      sadness: 0.0
+      fear: 0.0
+      anger: 0.0
+  response_type: Silence
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+
+# --- Responses for "We mean you no harm." (Continued) --- 
+- phrase: "You're in my home, uninvited."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.2
+      sadness: 0.2
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention 
+- phrase: "[The ghost turns away, seemingly uninterested]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      anger: 0.1
+      fear: 0.2
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: 0.0
+      fear: -0.1
+  response_type: Action
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention
+
+# --- Responses for "Show us what you've got." (Continued) ---
+- phrase: "I'll show you fear." 
+  speech_act: Commissive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.3
+      playfulness: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      fear: -0.1
+      playfulness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+- phrase: "You're playing with forces you don't understand."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      fear: 0.5
+      playfulness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      playfulness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge
+
+# --- Responses for "Do you remember Obon?" (Continued) ---
+- phrase:  "It's a painful memory."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.9
+      anger: 0.1
+      curiosity: 0.0 
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: 0.0
+      curiosity: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+- phrase: "[Silence]"
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.9
+      anger: 0.0
+      fear: 0.1
+    emotional_signature_delta:
+      sadness: 0.0
+      anger: 0.0
+      fear: 0.0
+  response_type: Silence
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+
+# --- Responses for "Leave this place." (Continued) --- 
+- phrase:  "This is where I belong."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.6
+      anger: 0.4
+      fear: 0.0 
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+- phrase: "[The lights in the room start flickering wildly]"
+  speech_act: Event
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation 
+
+# --- Responses for "Please, don't hurt us." (Continued) --- 
+- phrase:  "[A bone-chilling whisper] You have no idea what I'm capable of."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.4
+      joy: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+- phrase:  "[Silence]" 
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      anger: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: 0.0
+      anger: 0.0
+      sadness: 0.0 
+  response_type: Silence
+  for_speech_acts:
+    - Directive 
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation
+
+# assets/phrasebooks/ghost.yaml
+# ... (Existing ghost responses) ... 
+
+# --- Responses for "Can you make the EMF reader spike?" (Continued) --- 
+- phrase: "[The ghost lets out an ear-piercing shriek, and the EMF reader explodes]"
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 1.0
+      fear: 0.0
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: -0.3
+      fear: 0.2
+      sadness: 0.1
+  response_type: Action
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+
+# --- Responses for "We mean you no harm." (Continued) --- 
+- phrase:  "Actions speak louder than words."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.4
+      curiosity: 0.4
+      fear: 0.2
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Assertive
+  for_semantic_tags:
+    - Greeting
+    - Statement:Intention 
+
+# --- Responses for "Show us what you've got." (Continued) --- 
+- phrase:  "[A book flies off a shelf and slams against the wall]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      playfulness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.0
+      playfulness: 0.1
+  response_type: Action
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Challenge 
+
+# --- Responses for "Do you remember Obon?" (Continued) --- 
+- phrase:  "It's a time for families to reunite."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.6
+      joy: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      joy: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+- phrase: "I haven't celebrated Obon in a long time."
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      fear: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      fear: 0.0
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Past Life
+
+# --- Responses for "We cleanse this space with sage." (Continued) --- 
+- phrase: "You can't cleanse what you don't understand."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      fear: 0.4
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+- phrase:  "[Silence]"
+  speech_act: Silence
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.6
+      anger: 0.2
+      fear: 0.2
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: 0.0
+      fear: -0.1
+  response_type: Silence
+  for_speech_acts:
+    - Statement
+  for_semantic_tags:
+    - Ritual
+    - Statement:Action
+
+# --- Responses for "I'm scared." (Continued) ---
+- phrase:  "There's nothing to be afraid of... [A loud crash echoes from another room]" 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      playfulness: 0.7
+      anger: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      playfulness: -0.1
+      anger: 0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+- phrase:  "Let me show you true fear."
+  speech_act: Commissive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      joy: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Expressive
+  for_semantic_tags:
+    - Statement:Emotion
+
+# --- Responses for "Can you show yourself?" (Continued) --- 
+- phrase: "I am always here."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      anger: 0.4
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action
+- phrase: "Look closer." 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      playfulness: 0.6
+      curiosity: 0.3
+      anger: 0.1
+    emotional_signature_delta:
+      playfulness: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Ability
+    - Request:Action 
+
+# --- Responses for "What do you want?" (Continued) --- 
+- phrase: "You to leave." 
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation
+- phrase: "What I can never have."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.9
+      anger: 0.1
+      fear: 0.0
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: 0.0
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Question:Motivation 
+
+# --- Responses for "Leave this place." (Continued) --- 
+- phrase: "I can't."
+  speech_act: Declarative
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.7
+      fear: 0.3
+      anger: 0.0
+    emotional_signature_delta:
+      sadness: 0.1
+      fear: -0.1
+      anger: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+- phrase: "You don't understand my pain."
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      sadness: 0.8
+      anger: 0.1
+      fear: 0.1
+    emotional_signature_delta:
+      sadness: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Farewell
+    - Challenge:Provocation
+
+# --- Responses for "Please, don't hurt us." (Continued) ---
+- phrase:  "You fear what you don't know."
+  speech_act: Assertive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.4
+      curiosity: 0.5
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Directive
+  for_semantic_tags:
+    - Request:Silence
+    - Challenge:Provocation 
+
+# --- Responses to Player Actions --- 
+
+# Action:Illuminate (Flashlight, Candle, Turning on Lights)
+- phrase: "[The ghost retreats further into the shadows]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      anger: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      anger: 0.0
+      sadness: -0.1
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+- phrase: "[The ghost hisses at the light]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate
+- phrase: "Don't look at me!"
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.4
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+- phrase:  "The light... it burns!" 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.2
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+
+# Action:Investigate (SpiritBox is ON and Loud) 
+- phrase: "[The ghost interferes with the Spirit Box, creating static]"
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.5
+      playfulness: 0.4
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      playfulness: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate
+    - Gear:SpiritBox
+- phrase: "Are you trying to contact me?" 
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      curiosity: 0.7
+      anger: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      curiosity: 0.1
+      anger: -0.1
+      fear: 0.0
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate 
+    - Gear:SpiritBox
+- phrase: "[A voice whispers through the Spirit Box]  Get out..."
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      anger: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Investigate 
+    - Gear:SpiritBox
+
+# Action:Enter/Action:Exit (Opening or Closing Doors)
+- phrase:  "[The ghost slams the door shut]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: -0.1
+      fear: 0.1
+      sadness: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Enter
+    - Action:Exit 
+- phrase: "[The ghost blocks the doorway, preventing the player from entering/leaving]"
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Enter
+    - Action:Exit
+
+# Action:Secure/Action:Block (Closing a Door)
+- phrase: "[The ghost rattles the doorknob]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Secure
+    - Action:Block
+- phrase:  "You can't keep me out!" 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.8
+      fear: 0.1
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Secure
+    - Action:Block
+
+# Action:Take/Object:Significant (Picking Up a Significant Object)
+- phrase: "That's mine!" 
+  speech_act: Declarative 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      sadness: 0.3
+      fear: 0.0
+    emotional_signature_delta:
+      anger: 0.2
+      sadness: -0.1
+      fear: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags: 
+    - Action:Take
+    - Object:Significant 
+- phrase: "[The ghost tries to pull the object away from the player]" 
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      sadness: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      sadness: -0.1
+      fear: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Take
+    - Object:Significant
+
+# Action:Disrespect/Object:Significant (Throwing a Significant Object)
+- phrase: "[The ghost lets out a furious roar]" 
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 1.0
+      fear: 0.0
+      sadness: 0.0
+    emotional_signature_delta:
+      anger: 0.3
+      fear: -0.2
+      sadness: -0.1
+  response_type: Sound
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Disrespect
+    - Object:Significant 
+- phrase: "How dare you!" 
+  speech_act: Expressive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.9
+      fear: 0.0
+      sadness: 0.1
+    emotional_signature_delta:
+      anger: 0.2
+      fear: -0.1
+      sadness: -0.1
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Disrespect
+    - Object:Significant
+
+# Action:Panic/Action:Flee (Running Around)
+- phrase: "[The ghost gives chase, its laughter echoing through the halls]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      joy: 0.7
+      anger: 0.3
+      fear: 0.0 
+    emotional_signature_delta:
+      joy: 0.1
+      anger: -0.1
+      fear: 0.0 
+  response_type: Action
+  for_speech_acts: 
+    - Action
+  for_semantic_tags:
+    - Action:Panic
+    - Action:Flee
+- phrase:  "[The ghost appears in front of the player, blocking their path]" 
+  speech_act: Action 
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.2
+      joy: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0 
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Panic
+    - Action:Flee
+
+# Action:Approach/Action:Invade (Getting Close to the Ghost)
+- phrase: "[The ghost recoils, a look of fear on its face]" 
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      sadness: 0.1
+      anger: 0.1
+    emotional_signature_delta:
+      fear: 0.1
+      sadness: -0.1
+      anger: 0.0
+  response_type: Action
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Approach
+    - Action:Invade
+- phrase:  "Stay back!"
+  speech_act: Directive 
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.7
+      anger: 0.3
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: -0.1
+      anger: 0.1
+      sadness: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Approach
+    - Action:Invade
+
+# Action:Cleanse/Ritual:Sage (Burning Sage) 
+- phrase:  "[The ghost shrieks in pain as the sage smoke wafts towards it]"
+  speech_act: Sound
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.8
+      anger: 0.2
+      sadness: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      anger: -0.1
+      sadness: 0.0
+  response_type: Sound
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Cleanse
+    - Ritual:Sage
+- phrase: "You can't banish me!"
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      fear: 0.3
+      sadness: 0.0 
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      sadness: 0.0 
+  response_type: Text
+  for_speech_acts:
+    - Action
+  for_semantic_tags: 
+    - Action:Cleanse
+    - Ritual:Sage
+
+# Action:Illuminate/Ritual:Candle (Lighting a Candle)
+- phrase:  "[The candle flame flickers wildly, casting eerie shadows]"
+  speech_act: Event 
+  emotional_signature:
+    emotional_signature_filter:
+      fear: 0.6
+      curiosity: 0.4
+      anger: 0.0
+    emotional_signature_delta:
+      fear: 0.1
+      curiosity: -0.1
+      anger: 0.0
+  response_type: Event
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+    - Ritual:Candle 
+- phrase: "Do you think a candle will protect you?"
+  speech_act: Directive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      curiosity: 0.3
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      curiosity: -0.1
+      fear: 0.0 
+  response_type: Text 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Illuminate 
+    - Ritual:Candle
+
+# Action:Flee/Action:Conceal (Escaping/Hiding)
+- phrase:  "[The ghost phases through walls, appearing in front of the player]"
+  speech_act: Action
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.7
+      joy: 0.2
+      fear: 0.1
+    emotional_signature_delta:
+      anger: 0.1
+      joy: -0.1
+      fear: 0.0
+  response_type: Action 
+  for_speech_acts:
+    - Action
+  for_semantic_tags:
+    - Action:Flee
+    - Action:Conceal
+- phrase: "You can't hide from me." 
+  speech_act: Assertive
+  emotional_signature:
+    emotional_signature_filter:
+      anger: 0.6
+      fear: 0.3
+      joy: 0.1 
+    emotional_signature_delta:
+      anger: 0.1
+      fear: -0.1
+      joy: 0.0
+  response_type: Text
+  for_speech_acts:
+    - Action 
+  for_semantic_tags:
+    - Action:Flee
+    - Action:Conceal

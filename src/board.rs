@@ -1,10 +1,12 @@
 use std::f32::consts::PI;
+// use std::time::Duration;
 
 use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
     utils::{HashMap, HashSet, Instant},
 };
+use fastapprox::faster;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +17,18 @@ use crate::{
     materials::CustomMaterial1,
 };
 
+/// Represents the logical position of an object on the game board.
+///
+/// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical coordinate system,
+/// as well as a `global_z` value for fine-tuning the object's vertical position in the isometric view.
+///
+/// The `to_screen_coord` method converts the logical position to screen coordinates,
+/// applying the isometric perspective transformation.
+/// This transformation is necessary to display the 3D game world in a 2D isometric view.
+///
+/// Other systems, such as the `apply_perspective` system, use the `Position` component
+/// to update the `Transform` component of the object's sprite,
+/// ensuring that the sprite is rendered at the correct position in the isometric view.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
     pub x: f32,
@@ -315,12 +329,8 @@ impl BoardPosition {
             z: self.z,
         }
     }
-
-    pub fn xy_neighbors(&self, dist: u32) -> Vec<BoardPosition> {
-        // TODO: Consider if this should return Vec<Vec<_>> to be a rectangular "image" instead
-        // of just a list. Maybe that helps.
-
-        let mut ret: Vec<BoardPosition> = vec![];
+    pub fn xy_neighbors_buf(&self, dist: u32, out: &mut Vec<BoardPosition>) {
+        out.clear();
         let dist = dist as i64;
         for x in -dist..=dist {
             for y in -dist..=dist {
@@ -329,9 +339,35 @@ impl BoardPosition {
                     y: self.y + y,
                     z: self.z,
                 };
-                ret.push(pos);
+                out.push(pos);
             }
         }
+    }
+    pub fn xy_neighbors_buf_clamped(
+        &self,
+        dist: u32,
+        out: &mut Vec<BoardPosition>,
+        min_x: i64,
+        max_x: i64,
+        min_y: i64,
+        max_y: i64,
+    ) {
+        out.clear();
+        let dist = dist as i64;
+        let x1 = (self.x - dist).clamp(min_x, max_x);
+        let x2 = (self.x + dist).clamp(min_x, max_x);
+        let y1 = (self.y - dist).clamp(min_y, max_y);
+        let y2 = (self.y + dist).clamp(min_y, max_y);
+        for x in x1..=x2 {
+            for y in y1..=y2 {
+                let pos = BoardPosition { x, y, z: self.z };
+                out.push(pos);
+            }
+        }
+    }
+    pub fn xy_neighbors(&self, dist: u32) -> Vec<BoardPosition> {
+        let mut ret: Vec<BoardPosition> = Vec::with_capacity((dist * dist * 4 + dist * 8) as usize);
+        self.xy_neighbors_buf(dist, &mut ret);
         ret
     }
     pub fn distance(&self, other: &Self) -> f32 {
@@ -339,8 +375,13 @@ impl BoardPosition {
         let dy = self.y as f32 - other.y as f32;
         let dz = self.z as f32 - other.z as f32;
 
-        let xy = (dx.powi(2) + dy.powi(2)).sqrt();
-        (xy.powi(2) + dz.powi(2)).sqrt()
+        (dx.powi(2) + dy.powi(2) + dz.powi(2)).sqrt()
+    }
+
+    pub fn fast_distance_xy(&self, other: &Self) -> f32 {
+        let dx = (self.x - other.x) as f32;
+        let dy = (self.y - other.y) as f32;
+        fastapprox::fast::pow(dx * dx + dy * dy, 0.5)
     }
 
     pub fn shadow_proximity(&self, shadow: &Self, tile: &Self) -> f32 {
@@ -387,16 +428,42 @@ pub struct MapTileComponents {
     pub behavior: Behavior,
 }
 
+/// The `SpriteDB` resource stores a database of pre-built Bevy components and sprites for map tiles.
+///
+/// This resource optimizes map loading and manipulation by:
+/// * Pre-building Bevy components for each tile type, avoiding redundant entity creation during map loading.
+/// * Providing efficient lookup of tile components based on their unique identifiers.
+/// * Indexing tiles based on their visual characteristics (class, variant, orientation) for quick access
+///   during interaction events.
 #[derive(Clone, Default, Resource)]
 pub struct SpriteDB {
+    /// Maps a unique tile identifier (tileset name + tile UID) to its pre-built Bevy components,
+    /// including the `Bdl` (bundle) and the `Behavior`.
+    /// This enables efficient lookup of components during map loading and interaction events.
     pub map_tile: HashMap<(String, u32), MapTileComponents>,
+    /// Indexes tile identifiers based on their visual characteristics:
+    /// * `class`: The type of tile (e.g., "Door", "Wall").
+    /// * `variant`:  A specific variation of the tile type (e.g., "wooden", "brick").
+    /// * `orientation`: The direction the tile is facing (e.g., "XAxis", "YAxis").
+    ///
+    /// This index allows for quick retrieval of tiles that share the same sprite, which is useful
+    /// when updating the state of interactive objects that have multiple instances in the map.
+    /// For example, when the player opens a door, all other doors of the same type can be updated efficiently.
     pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
 }
 
+/// The `RoomDB` resource manages room-related data, including room boundaries and states.
 #[derive(Clone, Default, Resource)]
 pub struct RoomDB {
+    /// Maps each board position to the name of the room it belongs to. 
+    /// This defines the boundaries of each room in the game world.
     pub room_tiles: HashMap<BoardPosition, String>,
-    pub room_state: HashMap<String, behavior::State>,
+    /// Tracks the current state of each room, using the room name as the key.
+    /// The exact nature of the room state is not explicitly defined but could include things like:
+    /// * Lighting conditions (lit/unlit).
+    /// * Presence of specific objects or entities.
+    /// * Temperature or other environmental factors. 
+    pub room_state: HashMap<String, behavior::State>, 
 }
 
 impl SpriteDB {
@@ -475,13 +542,14 @@ pub struct CollisionFieldData {
 
 #[derive(Clone, Debug)]
 pub struct LightFieldSector {
-    field: Vec<Vec<Vec<Option<Box<LightFieldData>>>>>,
+    // field: Vec<Vec<Vec<Option<Box<LightFieldData>>>>>,
+    field: Vec<LightFieldData>,
     min_x: i64,
     min_y: i64,
-    min_z: i64,
+    _min_z: i64,
     sz_x: usize,
     sz_y: usize,
-    sz_z: usize,
+    _sz_z: usize,
 }
 // FIXME: This has exactly the same computation as HashMap, at least for the part that it matters.
 impl LightFieldSector {
@@ -489,48 +557,37 @@ impl LightFieldSector {
         let sz_x = (max_x - min_x + 1).max(0) as usize;
         let sz_y = (max_y - min_y + 1).max(0) as usize;
         let sz_z = (max_z - min_z + 1).max(0) as usize;
-        let light_field: Vec<Vec<Vec<Option<Box<LightFieldData>>>>> =
-            vec![vec![vec![None; sz_z]; sz_y]; sz_x];
+        let light_field: Vec<LightFieldData> =
+            vec![LightFieldData::default(); sz_x * sz_y * sz_z + 15000];
         Self {
             field: light_field,
             min_x,
             min_y,
-            min_z,
+            _min_z: min_z,
             sz_x,
             sz_y,
-            sz_z,
+            _sz_z: sz_z,
         }
     }
-    fn vec_coord(&self, x: i64, y: i64, z: i64) -> Option<(usize, usize, usize)> {
+
+    #[inline]
+    fn vec_coord(&self, x: i64, y: i64, _z: i64) -> usize {
         let x = x - self.min_x;
         let y = y - self.min_y;
-        let z = z - self.min_z;
-        if x < 0 || y < 0 || z < 0 {
-            return None;
-        }
-        let x = x as usize;
-        let y = y as usize;
-        let z = z as usize;
+        // let z = z - self.min_z;
+        // These are purposefully allowing overflow and clamping to an out of bounds value.
+        let x = (x as usize).min(self.sz_x);
+        let y = (y as usize).min(self.sz_y);
+        // let z = (z as usize).min(self.sz_z);
 
-        if x >= self.sz_x || y >= self.sz_y || z >= self.sz_z {
-            return None;
-        }
-        Some((x, y, z))
+        x + y * self.sz_x // + z * self.sz_x * self.sz_y
+
+        // (x & 0xF) | ((y & 0xF) << 4) | ((x & 0xFFFFF0) << 4) | ((y & 0xFFFFF0) << 8)
     }
 
     pub fn get_mut(&mut self, x: i64, y: i64, z: i64) -> Option<&mut LightFieldData> {
-        if let Some((x, y, z)) = self.vec_coord(x, y, z) {
-            match self
-                .field
-                .get_mut(x)
-                .map(|v| v.get_mut(y).map(|v| v.get_mut(z)))
-            {
-                Some(Some(Some(Some(t)))) => Some(t.as_mut()),
-                _ => None,
-            }
-        } else {
-            None
-        }
+        let xyz = self.vec_coord(x, y, z);
+        self.field.get_mut(xyz)
     }
     pub fn get_pos(&self, p: &BoardPosition) -> Option<&LightFieldData> {
         self.get(p.x, p.y, p.z)
@@ -539,36 +596,23 @@ impl LightFieldSector {
         self.get_mut(p.x, p.y, p.z)
     }
 
+    #[inline]
     pub fn get(&self, x: i64, y: i64, z: i64) -> Option<&LightFieldData> {
-        if let Some((x, y, z)) = self.vec_coord(x, y, z) {
-            match self.field.get(x).map(|v| v.get(y).map(|v| v.get(z))) {
-                Some(Some(Some(Some(t)))) => Some(t.as_ref()),
-                _ => None,
-            }
-        } else {
-            None
-        }
+        let xyz = self.vec_coord(x, y, z);
+        self.field.get(xyz)
     }
 
-    pub fn is_some(&self, x: i64, y: i64, z: i64) -> bool {
-        if let Some((x, y, z)) = self.vec_coord(x, y, z) {
-            matches!(
-                self.field.get(x).map(|v| v.get(y).map(|v| v.get(z))),
-                Some(Some(Some(Some(_))))
-            )
-        } else {
-            false
-        }
-    }
-
-    pub fn is_none(&self, x: i64, y: i64, z: i64) -> bool {
-        !self.is_some(x, y, z)
-    }
+    /// get_pos_unchecked: Does not seem to be any faster.
+    // #[inline]
+    // pub unsafe fn get_pos_unchecked(&self, p: &BoardPosition) -> &LightFieldData {
+    //     // let xyz = self.vec_coord(p.x, p.y, p.z);
+    //     let xyz = (p.x - self.min_x) as usize + (p.y - self.min_y) as usize * self.sz_x;
+    //     self.field.get_unchecked(xyz)
+    // }
 
     pub fn insert(&mut self, x: i64, y: i64, z: i64, lfd: LightFieldData) {
-        if let Some((x, y, z)) = self.vec_coord(x, y, z) {
-            self.field[x][y][z] = Some(Box::new(lfd));
-        }
+        let xyz = self.vec_coord(x, y, z);
+        self.field[xyz] = lfd;
     }
 }
 
@@ -583,7 +627,7 @@ impl CachedBoardPos {
     const CENTER: i64 = 32;
     const SZ: usize = (Self::CENTER * 2 + 1) as usize;
     /// Perimeter of the circle for indexing.
-    const TAU_I: usize = 48 * 8;
+    const TAU_I: usize = 48 * 2;
 
     fn new() -> Self {
         let mut r = Self {
@@ -666,17 +710,20 @@ impl CachedBoardPos {
     fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
-        self.dist[x][y]
+        // self.dist[x][y]
+        unsafe { *self.dist.get_unchecked(x).get_unchecked(y) }
     }
     fn bpos_angle(&self, s: &BoardPosition, d: &BoardPosition) -> usize {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
-        self.angle[x][y]
+        // self.angle[x][y]
+        unsafe { *self.angle.get_unchecked(x).get_unchecked(y) }
     }
     fn bpos_angle_range(&self, s: &BoardPosition, d: &BoardPosition) -> (i64, i64) {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
-        self.angle_range[x][y]
+        // self.angle_range[x][y]
+        unsafe { *self.angle_range.get_unchecked(x).get_unchecked(y) }
     }
 }
 
@@ -689,247 +736,342 @@ pub fn boardfield_update(
     let mut rng = rand::thread_rng();
     // Here we will recreate the field (if needed? - not sure how to detect that)
     // ... maybe add a timer since last update.
-    for bfr in ev_bdr.read() {
-        if bfr.collision {
-            // info!("Collision rebuild");
-            bf.collision_field.clear();
-            for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
-                let pos = pos.to_board_position();
-                let colfd = CollisionFieldData {
-                    player_free: true,
-                    ghost_free: true,
-                    see_through: false,
-                };
-                bf.collision_field.insert(pos, colfd);
-            }
-            for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
-                let pos = pos.to_board_position();
-                let colfd = CollisionFieldData {
-                    player_free: false,
-                    ghost_free: !behavior.p.movement.ghost_collision,
-                    see_through: behavior.p.light.see_through,
-                };
-                bf.collision_field.insert(pos, colfd);
-            }
+    let mut bdr = BoardDataToRebuild::default();
+    // Merge all the incoming events into a single one.
+    for b in ev_bdr.read() {
+        if b.collision {
+            bdr.collision = true;
         }
-        // Create temperature field - only missing data
-        let valid_k: Vec<_> = bf.collision_field.keys().cloned().collect();
-        let ambient_temp = bf.ambient_temp;
-        let mut added_temps: Vec<BoardPosition> = vec![];
-        // Randomize initial temperatures so the player cannot exploit the fact that the data is "flat" at the beginning
-        for pos in valid_k.into_iter() {
-            let missing = bf.temperature_field.get(&pos).is_none();
-            if missing {
-                let ambient = ambient_temp + rng.gen_range(-10.0..10.0);
-                added_temps.push(pos.clone());
-                bf.temperature_field.insert(pos, ambient);
-            }
+        if b.lighting {
+            bdr.lighting = true;
         }
-        // Smoothen after first initialization so it is not as jumpy.
-        for _ in 0..16 {
-            for pos in added_temps.iter() {
-                let nbors = pos.xy_neighbors(1);
-                let mut t_temp = 0.0;
-                let mut count = 0.0;
-                let free_tot = bf
+    }
+    if bdr.collision {
+        // info!("Collision rebuild");
+        bf.collision_field.clear();
+        for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
+            let pos = pos.to_board_position();
+            let colfd = CollisionFieldData {
+                player_free: true,
+                ghost_free: true,
+                see_through: false,
+            };
+            bf.collision_field.insert(pos, colfd);
+        }
+        for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
+            let pos = pos.to_board_position();
+            let colfd = CollisionFieldData {
+                player_free: false,
+                ghost_free: !behavior.p.movement.ghost_collision,
+                see_through: behavior.p.light.see_through,
+            };
+            bf.collision_field.insert(pos, colfd);
+        }
+    }
+    // Create temperature field - only missing data
+    let valid_k: Vec<_> = bf.collision_field.keys().cloned().collect();
+    let ambient_temp = bf.ambient_temp;
+    let mut added_temps: Vec<BoardPosition> = vec![];
+    // Randomize initial temperatures so the player cannot exploit the fact that the data is "flat" at the beginning
+    for pos in valid_k.into_iter() {
+        let missing = bf.temperature_field.get(&pos).is_none();
+        if missing {
+            let ambient = ambient_temp + rng.gen_range(-10.0..10.0);
+            added_temps.push(pos.clone());
+            bf.temperature_field.insert(pos, ambient);
+        }
+    }
+    // Smoothen after first initialization so it is not as jumpy.
+    for _ in 0..16 {
+        for pos in added_temps.iter() {
+            let nbors = pos.xy_neighbors(1);
+            let mut t_temp = 0.0;
+            let mut count = 0.0;
+            let free_tot = bf
+                .collision_field
+                .get(pos)
+                .map(|x| x.player_free)
+                .unwrap_or(true);
+            for npos in &nbors {
+                let free = bf
                     .collision_field
-                    .get(pos)
+                    .get(npos)
                     .map(|x| x.player_free)
                     .unwrap_or(true);
-                for npos in &nbors {
-                    let free = bf
-                        .collision_field
+                if free {
+                    t_temp += bf
+                        .temperature_field
                         .get(npos)
-                        .map(|x| x.player_free)
-                        .unwrap_or(true);
-                    if free {
-                        t_temp += bf
-                            .temperature_field
-                            .get(npos)
-                            .copied()
-                            .unwrap_or(ambient_temp);
-                        count += 1.0;
-                    }
+                        .copied()
+                        .unwrap_or(ambient_temp);
+                    count += 1.0;
                 }
-                if free_tot {
-                    t_temp /= count;
-                    bf.temperature_field
-                        .entry(pos.clone())
-                        .and_modify(|x| *x = t_temp);
-                }
+            }
+            if free_tot {
+                t_temp /= count;
+                bf.temperature_field
+                    .entry(pos.clone())
+                    .and_modify(|x| *x = t_temp);
             }
         }
+    }
 
-        if bfr.lighting {
-            // Rebuild lighting field since it has changed
-            // info!("Lighting rebuild");
-            let build_start_time = Instant::now();
-            let cbp = CachedBoardPos::new();
+    if bdr.lighting {
+        // Rebuild lighting field since it has changed
+        // info!("Lighting rebuild");
+        let build_start_time = Instant::now();
+        let cbp = CachedBoardPos::new();
 
-            bf.exposure_lux = 1.0;
-            bf.light_field.clear();
-            // Dividing by 4 so later we don't get an overflow if there's no map.
-            let first_p = qt
-                .iter()
-                .next()
-                .map(|(p, _b)| p.to_board_position())
-                .unwrap_or_default();
-            let mut min_x = first_p.x;
-            let mut min_y = first_p.y;
-            let mut min_z = first_p.z;
-            let mut max_x = first_p.x;
-            let mut max_y = first_p.y;
-            let mut max_z = first_p.z;
-            for (pos, behavior) in qt.iter() {
-                let pos = pos.to_board_position();
-                min_x = min_x.min(pos.x);
-                min_y = min_y.min(pos.y);
-                min_z = min_z.min(pos.z);
-                max_x = max_x.max(pos.x);
-                max_y = max_y.max(pos.y);
-                max_z = max_z.max(pos.z);
-                let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
-                    lux: 0.0,
-                    transmissivity: 1.0,
-                    additional: maplight::LightData::default(),
-                });
-                let lightdata = LightFieldData {
-                    lux: behavior.p.light.emmisivity_lumens() + src.lux,
-                    transmissivity: behavior.p.light.transmissivity_factor() * src.transmissivity
-                        + 0.0001,
-                    additional: src.additional.add(&behavior.p.light.additional_data()),
-                };
-                bf.light_field.insert(pos, lightdata);
-            }
-            // info!(
-            //     "Collecting time: {:?} - sz: {}",
-            //     build_start_time.elapsed(),
-            //     bf.light_field.len()
-            // );
-            let mut lfs = LightFieldSector::new(min_x, min_y, min_z, max_x, max_y, max_z);
-            for (k, v) in bf.light_field.iter() {
-                lfs.insert(k.x, k.y, k.z, v.clone());
-            }
-            for step in 0..3 {
-                // let step_time = Instant::now();
-                let src_lfs = lfs.clone();
-                let size = match step {
-                    0 => 24,
-                    1 => 6,
-                    2 => 1,
-                    _ => 1,
-                };
-                for x in min_x..=max_x {
-                    for y in min_y..=max_y {
-                        for z in min_z..=max_z {
-                            if src_lfs.is_none(x, y, z) {
+        bf.exposure_lux = 1.0;
+        bf.light_field.clear();
+        // Dividing by 4 so later we don't get an overflow if there's no map.
+        let first_p = qt
+            .iter()
+            .next()
+            .map(|(p, _b)| p.to_board_position())
+            .unwrap_or_default();
+        let mut min_x = first_p.x;
+        let mut min_y = first_p.y;
+        let mut min_z = first_p.z;
+        let mut max_x = first_p.x;
+        let mut max_y = first_p.y;
+        let mut max_z = first_p.z;
+        for (pos, behavior) in qt.iter() {
+            let pos = pos.to_board_position();
+            min_x = min_x.min(pos.x);
+            min_y = min_y.min(pos.y);
+            min_z = min_z.min(pos.z);
+            max_x = max_x.max(pos.x);
+            max_y = max_y.max(pos.y);
+            max_z = max_z.max(pos.z);
+            let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
+                lux: 0.0,
+                transmissivity: 1.0,
+                additional: maplight::LightData::default(),
+            });
+            let lightdata = LightFieldData {
+                lux: behavior.p.light.emmisivity_lumens() + src.lux,
+                transmissivity: behavior.p.light.transmissivity_factor() * src.transmissivity
+                    + 0.0001,
+                additional: src.additional.add(&behavior.p.light.additional_data()),
+            };
+            bf.light_field.insert(pos, lightdata);
+        }
+        // info!(
+        //     "Collecting time: {:?} - sz: {}",
+        //     build_start_time.elapsed(),
+        //     bf.light_field.len()
+        // );
+        let mut lfs = LightFieldSector::new(min_x, min_y, min_z, max_x, max_y, max_z);
+        for (k, v) in bf.light_field.iter() {
+            lfs.insert(k.x, k.y, k.z, v.clone());
+        }
+
+        let mut nbors_buf = Vec::with_capacity(52 * 52);
+
+        // let mut lfs_clone_time_total = Duration::ZERO;
+        // let mut shadows_time_total = Duration::ZERO;
+        // let mut store_lfs_time_total = Duration::ZERO;
+        for step in 0..3 {
+            // let lfs_clone_time = Instant::now();
+            let src_lfs = lfs.clone();
+            // lfs_clone_time_total += lfs_clone_time.elapsed();
+            let size = match step {
+                0 => 24,
+                1 => 12,
+                2 => 1,
+                _ => 6,
+            };
+            for x in min_x..=max_x {
+                for y in min_y..=max_y {
+                    for z in min_z..=max_z {
+                        let Some(src) = src_lfs.get(x, y, z) else {
+                            continue;
+                        };
+                        // if src.transmissivity < 0.5 && step > 0 && size > 1 {
+                        //     // Reduce light spread through walls
+                        //     // FIXME: If the light is on the wall, this breaks (and this is possible since the wall is really 1/3rd of the tile)
+                        //     continue;
+                        // }
+                        let root_pos = BoardPosition { x, y, z };
+
+                        let mut src_lux = src.lux;
+                        let min_lux = match step {
+                            0 => 0.001,
+                            1 => 0.000001,
+                            _ => 0.0000000001,
+                        };
+                        let max_lux = match step {
+                            0 => f32::MAX,
+                            1 => 10000.0,
+                            2 => 1000.0,
+                            3 => 0.1,
+                            _ => 0.01,
+                        };
+                        if src_lux < min_lux {
+                            continue;
+                        }
+                        if src_lux > max_lux {
+                            continue;
+                        }
+                        // Optimize next steps by only looking to harsh differences.
+                        root_pos.xy_neighbors_buf_clamped(
+                            1,
+                            &mut nbors_buf,
+                            min_x,
+                            max_x,
+                            min_y,
+                            max_y,
+                        );
+                        let nbors = &nbors_buf;
+
+                        if step > 0 {
+                            let ldata_iter = nbors.iter().filter_map(|b| {
+                                lfs.get_pos(b).map(|l| {
+                                    (
+                                        ordered_float::OrderedFloat(l.lux),
+                                        ordered_float::OrderedFloat(l.transmissivity),
+                                    )
+                                })
+                            });
+                            let mut min_lux = ordered_float::OrderedFloat(f32::MAX);
+                            let mut min_trans = ordered_float::OrderedFloat(2.0);
+                            for (lux, trans) in ldata_iter {
+                                min_lux = min_lux.min(lux);
+                                min_trans = min_trans.min(trans);
+                            }
+                            // For smoothing steps only:
+                            if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.8 {
+                                // If there are no walls nearby, we don't reflect light.
                                 continue;
                             }
-                            let src = src_lfs.get(x, y, z).unwrap();
-                            if src.transmissivity < 0.5 && step < 2 {
-                                // Reduce light spread through walls
-                                continue;
-                            }
+                        }
+                        // This controls how harsh is the light
+                        if step > 0 {
+                            src_lux /= 2.5;
+                        } else {
+                            src_lux /= 1.01;
+                        }
 
-                            let mut src_lux = src.lux;
-                            let min_lux = match step {
-                                0 => 0.001,
-                                1 => 0.000001,
-                                _ => 0.0,
+                        // let shadows_time = Instant::now();
+                        // This takes time to process:
+                        root_pos.xy_neighbors_buf_clamped(
+                            size,
+                            &mut nbors_buf,
+                            min_x,
+                            max_x,
+                            min_y,
+                            max_y,
+                        );
+                        let nbors = &nbors_buf;
+
+                        // reset the light value for this light, so we don't count double.
+                        lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
+                        let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
+                        // Compute shadows
+                        for pillar_pos in nbors.iter() {
+                            // 60% of the time spent in compute shadows is obtaining this:
+                            let Some(lf) = lfs.get_pos(pillar_pos) else {
+                                continue;
                             };
-                            let max_lux = match step {
-                                0 => f32::MAX,
-                                1 => 60.0,
-                                2 => 40.0,
-                                3 => 20.0,
-                                _ => 10.0,
-                            };
-                            if src_lux < min_lux {
-                                continue;
-                            }
-                            if src_lux > max_lux {
-                                continue;
-                            }
-                            if step > 0 {
-                                src_lux /= 1.5;
-                            } else {
-                                src_lux /= 1.01;
-                            }
-                            // reset the light value for this light, so we don't count double.
-                            let root_pos = BoardPosition { x, y, z };
-                            lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
-                            let nbors = root_pos.xy_neighbors(size);
-                            let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
-                            // Compute shadows
-                            for pillar_pos in nbors.iter() {
-                                if let Some(lf) = lfs.get_pos(pillar_pos) {
-                                    let min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
-                                    let consider_opaque = lf.transmissivity < 0.5;
-                                    if consider_opaque {
-                                        let angle = cbp.bpos_angle(&root_pos, pillar_pos);
-                                        let angle_range =
-                                            cbp.bpos_angle_range(&root_pos, pillar_pos);
-                                        for d in angle_range.0..=angle_range.1 {
-                                            let ang = (angle as i64 + d)
-                                                .rem_euclid(CachedBoardPos::TAU_I as i64)
-                                                as usize;
-                                            shadow_dist[ang] = shadow_dist[ang].min(min_dist);
-                                        }
-                                    }
-                                }
-                            }
-                            if src.transmissivity < 0.5 {
-                                // Reduce light spread through walls
-                                shadow_dist.iter_mut().for_each(|x| *x = 0.0);
-                            }
 
-                            let light_height = 2.0;
-                            let mut total_lux = 0.0000001;
-                            for neighbor in nbors.iter() {
-                                let dist = cbp.bpos_dist(&root_pos, neighbor) + light_height;
-                                total_lux += 1.0 / dist / dist;
+                            // let lf = unsafe { lfs.get_pos_unchecked(pillar_pos) };
+                            // t_x += lf.lux;
+                            // continue;
+                            let consider_opaque = lf.transmissivity < 0.5;
+                            if !consider_opaque {
+                                continue;
                             }
-                            // new shadow method
-                            for neighbor in nbors.iter() {
+                            let min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
+                            let angle = cbp.bpos_angle(&root_pos, pillar_pos);
+                            let angle_range = cbp.bpos_angle_range(&root_pos, pillar_pos);
+                            for d in angle_range.0..=angle_range.1 {
+                                let ang = (angle as i64 + d)
+                                    .rem_euclid(CachedBoardPos::TAU_I as i64)
+                                    as usize;
+                                shadow_dist[ang] = shadow_dist[ang].min(min_dist);
+                            }
+                        }
+
+                        // shadows_time_total += shadows_time.elapsed();
+                        // FIXME: Possibly we want to smooth shadow_dist here - a convolution with a gaussian or similar
+                        // where we preserve the high values but smooth the transition to low ones.
+
+                        if src.transmissivity < 0.5 {
+                            // Reduce light spread through walls
+                            shadow_dist.iter_mut().for_each(|x| *x = 0.0);
+                        }
+                        // let size = shadow_dist
+                        //     .iter()
+                        //     .map(|d| (d + 1.5).round() as u32)
+                        //     .max()
+                        //     .unwrap()
+                        //     .min(size);
+                        // let nbors = root_pos.xy_neighbors(size);
+                        let light_height = 4.0;
+                        // let mut total_lux = 0.1;
+                        // for neighbor in nbors.iter() {
+                        //     let dist = cbp.bpos_dist(&root_pos, neighbor);
+                        //     let dist2 = dist + light_height;
+                        //     let angle = cbp.bpos_angle(&root_pos, neighbor);
+                        //     let sd = shadow_dist[angle];
+                        //     let f = (faster::tanh(sd - dist - 0.5) + 1.0) / 2.0;
+                        //     total_lux += f / dist2 / dist2;
+                        // }
+                        // let store_lfs_time = Instant::now();
+
+                        let total_lux = 2.0;
+                        // new shadow method
+                        for neighbor in nbors.iter() {
+                            let dist = cbp.bpos_dist(&root_pos, neighbor);
+                            // let dist = root_pos.fast_distance_xy(neighbor);
+                            let dist2 = dist + light_height;
+                            let angle = cbp.bpos_angle(&root_pos, neighbor);
+                            let sd = shadow_dist[angle];
+                            let lux_add = src_lux / dist2 / dist2 / total_lux;
+                            if dist - 3.0 < sd {
+                                // FIXME: f here controls the bleed through walls.
                                 if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                    let dist = cbp.bpos_dist(&root_pos, neighbor);
-                                    let dist2 = dist + light_height;
-                                    let angle = cbp.bpos_angle(&root_pos, neighbor);
-                                    let sd = shadow_dist[angle];
-                                    if dist <= sd {
-                                        lf.lux += src_lux / dist2 / dist2 / total_lux;
-                                    } else {
-                                        let f = (dist - sd + 1.0).powi(2);
-                                        lf.lux += src_lux / dist2 / dist2 / total_lux / f;
-                                    }
+                                    const BLEED_TILES: f32 = 0.8; // 0.5 is too low, it creates un-evenness.
+                                    let f = (faster::tanh((sd - dist - 0.5) * BLEED_TILES.recip())
+                                        + 1.0)
+                                        / 2.0;
+                                    // let f = 1.0;
+                                    lf.lux += lux_add * f;
                                 }
                             }
                         }
+                        // store_lfs_time_total += store_lfs_time.elapsed();
                     }
                 }
-                // info!(
-                //     "Light step {}: {:?}; per size: {:?}",
-                //     step,
-                //     step_time.elapsed(),
-                //     step_time.elapsed() / size
-                // );
             }
-            for (k, v) in bf.light_field.iter_mut() {
-                v.lux = lfs.get_pos(k).unwrap().lux;
-            }
-
-            // let's get an average of lux values
-            let mut total_lux = 0.0;
-            for (_, v) in bf.light_field.iter() {
-                total_lux += v.lux;
-            }
-            let avg_lux = total_lux / bf.light_field.len() as f32;
-            bf.exposure_lux = (avg_lux + 2.0) / 2.0;
-            info!(
-                "Lighting rebuild - complete: {:?}",
-                build_start_time.elapsed()
-            );
+            // info!(
+            //     "Light step {}: {:?}; per size: {:?}",
+            //     step,
+            //     step_time.elapsed(),
+            //     step_time.elapsed() / size
+            // );
         }
+        for (k, v) in bf.light_field.iter_mut() {
+            v.lux = lfs.get_pos(k).unwrap().lux;
+        }
+
+        // let's get an average of lux values
+        let mut total_lux = 0.0;
+        for (_, v) in bf.light_field.iter() {
+            total_lux += v.lux;
+        }
+        let avg_lux = total_lux / bf.light_field.len() as f32;
+        bf.exposure_lux = (avg_lux + 2.0) / 2.0;
+
+        // dbg!(lfs_clone_time_total);
+        // dbg!(shadows_time_total);
+        // dbg!(store_lfs_time_total);
+
+        info!(
+            "Lighting rebuild - complete: {:?}",
+            build_start_time.elapsed()
+        );
     }
 }
 

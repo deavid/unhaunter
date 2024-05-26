@@ -1,0 +1,231 @@
+# Ghost Response Templates
+
+# --- Timid Shade ---
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.6
+      sadness: 0.4
+    tags: [Greeting]
+    distance: close
+  response:
+    !Text "... (Faint whisper)"
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.8
+    tags: [Greeting]
+    distance: close
+  response:
+    !Sound rustling_leaves
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 1.0
+    tags: [Greeting]
+    distance: close
+  response:
+    !Silence
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.8
+    tags: [Greeting]
+    distance: close
+  response:
+    !Text "Who's there?"
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 1.0
+    tags: [Greeting]
+    distance: close
+  response:
+    !Text "Please, leave me alone."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.5
+      sadness: 0.5
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I... I don't remember."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.7
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I'm lost."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.9
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I'm afraid."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.7
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I was once a [profession]..."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.9
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I miss my [loved one]..."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 1.0
+    tags: [Question, Identity]
+    distance: close
+  response:
+    !Text "I'm trapped here."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.6
+    tags: [Request, Action]
+    distance: close
+  response:
+    !Text "I can't."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.6
+    tags: [Request, Action]
+    distance: close
+  response:
+    !Text "I'm too weak."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.4
+      sadness: 0.6
+    tags: [Request, Action]
+    distance: close
+  response:
+    !Text "Please, don't make me."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.3
+    tags: [Statement, Reassurance]
+    distance: close
+  response:
+    !Action approach_cautiously
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.7
+    tags: [Statement, Reassurance]
+    distance: close
+  response:
+    !Text "Do you really mean that?"
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.9
+    tags: [Statement, Reassurance]
+    distance: close
+  response:
+    !Text "I haven't felt kindness in so long..."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 1.0
+    tags: [Statement, Reassurance]
+    distance: close
+  response:
+    !Text "Thank you."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.8
+    tags: [Provocation]
+    distance: close
+  response:
+    !Action flee
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 0.8
+    tags: [Provocation]
+    distance: close
+  response:
+    !Text "Why are you doing this?"
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      sadness: 1.0
+    tags: [Provocation]
+    distance: close
+  response:
+    !Text "Please, stop."
+
+- trigger:
+    ghost_type: Shade
+    mood:
+      fear: 0.5
+      sadness: 0.5
+    tags: [Provocation]
+    distance: close
+  response:
+    !Text "You're hurting me."
+
+# --- General Responses (Applicable to any ghost type) ---
+
+- trigger:
+    ghost_type: Any 
+    mood: 
+    tags: []
+    distance: far
+  response:
+    !Text "... (Faint sound in the distance)"
+
+- trigger:
+    ghost_type: Any 
+    mood: 
+    tags: []
+    distance: medium
+  response:
+    !Text "shhh"    
+
+- trigger:
+    ghost_type: Any 
+    mood: 
+    tags: []
+    distance: close
+  response:
+    !Text "?? (did not understand)"

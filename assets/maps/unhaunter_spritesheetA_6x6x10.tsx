@@ -312,6 +312,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Bed"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="-6.66134e-16" y="-5.33333" width="20" height="29.3333">
@@ -327,6 +331,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Bathtub"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="16" height="24">
@@ -372,6 +380,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="GreenTable"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -387,6 +399,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="OakTable"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -402,6 +418,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="WoodTable"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -417,6 +437,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Desk"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -507,6 +531,10 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Wardrobe"/>
+    <property name="object:pickable" type="bool" value="false" />
+    <property name="object:movable" type="bool" value="false" />
+    <property name="object:hidingspot" type="bool" value="true" />
+    <property name="object:weight" type="float" value="30.0" />
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="24">
@@ -574,3 +602,4 @@
   </objectgroup>
  </tile>
 </tileset>
+ 
