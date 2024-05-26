@@ -1,11 +1,22 @@
+//! Map Lighting and Visibility Module
+//! -----------------------------------
+//!
+//! This module handles lighting, visibility, and color calculations for the game world.
+//! It includes:
+//! * Functions for calculating the player's visibility field based on line-of-sight and potentially sanity levels.
+//! * Functions for applying lighting effects to map tiles and sprites, simulating various light sources
+//!   (ambient, flashlight, ghost effects) and adjusting colors based on visibility and exposure.
+//! * Systems for dynamically updating lighting and visibility as the player moves and interacts with the environment.
+
 use std::collections::VecDeque;
 
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
+    components::ghost_influence::{GhostInfluence, InfluenceType},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
-    ghost::GhostSprite,
+    ghost::{self, GhostSprite},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
     platform::plt::IS_WASM,
@@ -14,19 +25,32 @@ use crate::{
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
 
+/// Represents different types of light in the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LightType {
+    /// Standard visible light.
     Visible,
+    /// Red light, often used for night vision or specific ghost interactions.
     Red,
+    /// Infrared light used for night vision cameras.
     InfraRedNV,
+    /// Ultraviolet light, used to reveal evidence or trigger ghost reactions.
     UltraViolet,
 }
 
+/// Stores the intensity of different light types at a specific location.
+///
+/// This data structure is used to represent the combined light levels from various sources,
+/// such as ambient light, flashlights, and ghost effects.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LightData {
+    /// Intensity of visible light.
     visible: f32,
+    /// Intensity of red light.
     red: f32,
+    /// Intensity of infrared light.
     infrared: f32,
+    /// Intensity of ultraviolet light.
     ultraviolet: f32,
 }
 
@@ -83,6 +107,11 @@ impl LightData {
     }
 }
 
+/// Computes the player's visibility field, determining which areas of the map are visible.
+///
+/// This function uses a line-of-sight algorithm to calculate visibility, taking into account walls, obstacles,
+/// and potentially the player's sanity level. The visibility field is stored in a `HashMap`, where the keys are
+/// `BoardPosition`s and the values are visibility factors (0.0 to 1.0).
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
@@ -147,20 +176,52 @@ pub fn compute_visibility(
     }
 }
 
+/// System to calculate the player's visibility field and update VisibilityData.
+fn player_visibility_system(
+    mut vf: ResMut<board::VisibilityData>,
+    bf: Res<board::BoardData>,
+    gc: Res<game::GameConfig>,
+    qp: Query<(&board::Position, &player::PlayerSprite)>,
+    mut roomdb: ResMut<board::RoomDB>,
+) {
+    vf.visibility_field.clear();
+
+    // Find the active player's position
+    let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
+        if player.id == gc.player_id {
+            Some(*pos)
+        } else {
+            None
+        }
+    }) else {
+        return;
+    };
+
+    // Calculate visibility
+    compute_visibility(
+        &mut vf.visibility_field,
+        &bf.collision_field,
+        &player_pos,
+        &mut roomdb,
+    );
+}
+
+/// Applies lighting effects to map tiles and sprites, adjusting colors based on visibility and exposure.
+///
+/// This function:
+/// * Simulates lighting from various sources (ambient light, flashlights, ghost effects).
+/// * Calculates the relative exposure based on light levels and the player's current exposure adaptation.
+/// * Adjusts tile and sprite colors based on lighting, visibility, and exposure, creating a realistic and
+///   atmospheric visual experience.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn apply_lighting(
-    mut qt: Query<(
-        &board::Position,
-        &mut Sprite,
-        Option<&SpriteType>,
-        Option<&GhostSprite>,
-    )>,
     mut qt2: Query<
         (
             &board::Position,
             &Handle<CustomMaterial1>,
             &Behavior,
             &mut Visibility,
+            Option<&GhostInfluence>,
         ),
         Changed<MapUpdate>,
     >,
@@ -172,11 +233,26 @@ pub fn apply_lighting(
         &PlayerGear,
     )>,
     mut bf: ResMut<board::BoardData>,
-    mut vf: ResMut<board::VisibilityData>,
+    vf: Res<board::VisibilityData>,
     gc: Res<game::GameConfig>,
-    qas: Query<(&AudioSink, &GameSound)>,
-    mut roomdb: ResMut<board::RoomDB>,
     time: Res<Time>,
+    mut sprite_set: ParamSet<(
+        // Create a ParamSet for Sprite queries
+        Query<(
+            &board::Position,
+            &mut Sprite,
+            Option<&SpriteType>,
+            Option<&GhostSprite>,
+        )>,
+        Query<
+            (&board::Position, &mut Sprite),
+            (
+                With<MapUpdate>,
+                Without<player::PlayerSprite>,
+                Without<ghost::GhostSprite>,
+            ),
+        >,
+    )>,
 ) {
     const GAMMA_EXP: f32 = 2.4;
     const CENTER_EXP: f32 = 10.0; // Higher values, less blinding light.
@@ -184,13 +260,6 @@ pub fn apply_lighting(
     const EYE_SPEED: f32 = 0.1;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.1;
-
-    vf.visibility_field.clear();
-
-    // FIXME: This "faster" approach causes bugs
-    // for v in vf.visibility_field.values_mut() {
-    //     *v = -0.01;
-    // }
 
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
@@ -233,41 +302,29 @@ pub fn apply_lighting(
                 exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
             }
         }
-        compute_visibility(
-            &mut vf.visibility_field,
-            &bf.collision_field,
-            pos,
-            &mut roomdb,
-        );
         player_pos = *pos;
     }
-    // --- ambient sound processing ---
+    // --- Access queries from the ParamSet ---
+    let mut tile_sprites = sprite_set.p1();
 
-    let total_vis: f32 = vf
-        .visibility_field
-        .iter()
-        .map(|(k, v)| {
-            v * match roomdb.room_tiles.get(k).is_some() {
-                true => 0.2,
-                false => 1.0,
+    // --- Highlight placement tiles ---
+    for (player_pos, _, _, player_gear) in qp.iter() {
+        if player_gear.held_item.is_some() {
+            // Only highlight if the player is holding an object
+            let target_tile = player_pos.to_board_position();
+            for (tile_pos, mut sprite) in tile_sprites.iter_mut() {
+                // Removed 'behavior' from the loop
+                if tile_pos.to_board_position() == target_tile {
+                    // Removed walkable check
+                    // Adjust highlight color and intensity as needed
+                    let highlight_color = Color::rgba(0.0, 1.0, 0.0, 0.3);
+                    sprite.color = lerp_color(sprite.color, highlight_color, 0.5);
+                }
             }
-        })
-        .sum();
-    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
-    let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
-
-    for (sink, gamesound) in qas.iter() {
-        const SMOOTH: f32 = 60.0;
-        if gamesound.class == SoundType::BackgroundHouse {
-            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
-        }
-        if gamesound.class == SoundType::BackgroundStreet {
-            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
         }
     }
-    // ---
+    let mut qt = sprite_set.p0();
+
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.00001;
     // account for the eye seeing the flashlight on.
@@ -305,7 +362,7 @@ pub fn apply_lighting(
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
     // let mut change_count = 0;
-    for (n, (pos, mat, behavior, mut vis)) in qt2.iter_mut().enumerate() {
+    for (n, (pos, mat, behavior, mut vis, o_ghost_influence)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         // if min_threshold > 4.5 {
         //     continue;
@@ -374,17 +431,35 @@ pub fn apply_lighting(
             let gcolor = fpos_gamma_color(bpos);
             gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0)
         };
-        let ((r, g, b), light_data) =
+        let ((mut r, mut g, mut b), light_data) =
             fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+
+        let (att_charge, rep_charge) = o_ghost_influence
+            .map(|x| match x.influence_type {
+                InfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+            })
+            .unwrap_or_default();
+
+        g += light_data.ultraviolet * att_charge * 2.0;
+        r /= 1.0 + light_data.red * rep_charge * 5.0;
+        b += light_data.infrared * (att_charge + rep_charge) * 0.1;
+        b += light_data.red * rep_charge * 0.3;
+
         if behavior.p.movement.walkable {
             let ld = light_data.normalize();
             lightdata_map.insert(bpos.clone(), ld);
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
-        let l = src_color.l().max(0.0001).powf(1.5);
+        let mut l = src_color.l().max(0.0001).powf(1.5);
 
-        let lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
+        l /= 1.0
+            + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
+                * (att_charge + rep_charge)
+                * 10.0;
+
+        let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
         let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c) / l;
         let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c) / l;
         let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c) / l;
@@ -431,7 +506,6 @@ pub fn apply_lighting(
         dst_color.set_a(new_a);
         // Sound field visualization:
 
-        const SMOOTH_F: f32 = 1.0;
         let f_gamma = |lux: f32| {
             (fastapprox::faster::pow(lux, board::LIGHT_GAMMA)
                 + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
@@ -458,22 +532,24 @@ pub fn apply_lighting(
 
         const BRIGHTNESS: f32 = 1.01;
         let tint_comp = (new_mat.data.color.l() + 0.01).recip() + exp_color;
+        let smooth_f: f32 = new_mat.data.color.a().sqrt() * 10.0 + 0.0001;
+
         let gamma_mean = |a: f32, b: f32| {
-            (a * SMOOTH_F
+            (a * smooth_f
                 + f_gamma(
                     b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
                         + (tint_comp - 1.0 + cold_f * 2.0 + (exp_color * 2.0).powi(2))
                             / (10.0 + exposure + b),
                 )
                 + exp_color / 40.0)
-                / (1.0 + SMOOTH_F)
+                / (1.0 + smooth_f)
         };
-
+        lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
         new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
-        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_tl);
-        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_tr);
-        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_bl);
-        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_br);
+        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
+        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
+        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
+        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
 
         const DEBUG_SOUND: bool = false;
         if DEBUG_SOUND {
@@ -609,6 +685,11 @@ pub fn apply_lighting(
     // }
 }
 
+/// Marks map tiles for lighting update based on player position and visibility.
+///
+/// This system optimizes the lighting system by only updating tiles that are likely visible to the player.
+/// It uses a distance-based heuristic to determine which tiles need updating, potentially improving performance
+/// by avoiding unnecessary lighting calculations.
 pub fn mark_for_update(
     time: Res<Time>,
     gc: Res<GameConfig>,
@@ -642,8 +723,44 @@ pub fn mark_for_update(
     }
 }
 
+/// System to manage ambient sound levels based on visibility.
+fn ambient_sound_system(
+    vf: Res<board::VisibilityData>,
+    qas: Query<(&AudioSink, &GameSound)>,
+    roomdb: Res<board::RoomDB>,
+) {
+    let total_vis: f32 = vf
+        .visibility_field
+        .iter()
+        .map(|(k, v)| {
+            v * match roomdb.room_tiles.get(k).is_some() {
+                true => 0.2,
+                false => 1.0,
+            }
+        })
+        .sum();
+    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+    let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+
+    for (sink, gamesound) in qas.iter() {
+        const SMOOTH: f32 = 60.0;
+        if gamesound.class == SoundType::BackgroundHouse {
+            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+        if gamesound.class == SoundType::BackgroundStreet {
+            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
+            sink.set_volume(v.exp());
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
-    app.add_systems(Update, (mark_for_update, apply_lighting).chain());
+    app.add_systems(
+        Update,
+        (mark_for_update, player_visibility_system, apply_lighting).chain(),
+    )
+    .add_systems(Update, ambient_sound_system);
 }
 
 pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {

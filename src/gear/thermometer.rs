@@ -110,7 +110,7 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = h_out * k * 10.0;
+        let t_out = h_out * k * 3.0;
 
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
@@ -119,7 +119,7 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
         let ghost_target_temp: f32 = if freezing { -5.0 } else { 1.0 };
-        const GHOST_MAX_POWER: f32 = 0.002;
+        const GHOST_MAX_POWER: f32 = 0.02;
         for npos in bpos.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
                 *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
@@ -150,7 +150,7 @@ pub fn temperature_update(
     const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
     const INSIDE_CONDUCTIVITY: f32 = 10.0;
     const WALL_CONDUCTIVITY: f32 = 0.000001;
-    const SMOOTH: f32 = 10.0;
+    const SMOOTH: f32 = 3.0;
 
     for (p, temp) in old_temps.into_iter() {
         let free = bf

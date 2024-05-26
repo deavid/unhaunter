@@ -1,0 +1,101 @@
+# Unhaunter Player Phrasebook
+
+Greetings:
+  description: Initial phrases to acknowledge the ghost's presence.
+  subcategories:
+    - filename: greetings_friendly.yaml
+      name: Friendly
+    - filename: greetings_formal.yaml
+      name: Formal
+    - filename: greetings_curious.yaml
+      name: Curious
+    - filename: greetings_reassuring.yaml
+      name: Reassuring
+
+Questions:
+  description: Inquiries to gather information about the ghost's identity, motivations, and past.
+  subcategories:
+    - filename: questions_identity.yaml
+      name: Identity
+    - filename: questions_motivation.yaml
+      name: Motivation
+    - filename: questions_past_life.yaml
+      name: Past Life
+    - filename: questions_unsolved_matters.yaml
+      name: Unsolved Matters
+    - filename: questions_loved_ones.yaml
+      name: Loved Ones
+    - filename: questions_emotional_state.yaml
+      name: Emotional State
+    - filename: questions_spiritual.yaml
+      name: Spiritual
+
+Requests:
+  description: Phrases to ask the ghost to perform actions or provide evidence.
+  subcategories:
+    - filename: requests_general.yaml
+      name: General
+    - filename: requests_specific.yaml
+      name: Specific  # Actions related to specific objects or locations
+    - filename: requests_gear.yaml
+      name: Gear Interaction 
+
+Statements:
+  description: Declarations or observations to convey the player's intentions or perceptions.
+  subcategories:
+    - filename: statements_reassurance.yaml
+      name: Reassurance
+    - filename: statements_observation.yaml
+      name: Observation
+    - filename: statements_challenge.yaml
+      name: Challenge 
+
+Farewells:
+  description: Phrases to end the communication session.
+  subcategories:
+    - filename: farewells_polite.yaml
+      name: Polite
+    - filename: farewells_hopeful.yaml
+      name: Hopeful
+    - filename: farewells_urgent.yaml
+      name: Urgent 
+
+Provocations:
+  description: Phrases to intentionally provoke or antagonize the ghost (use with caution!).
+  subcategories:
+    - filename: provocations_mild.yaml
+      name: Mild 
+    - filename: provocations_strong.yaml
+      name: Strong
+
+Rituals:
+  description: Phrases associated with performing rituals or offerings to appease the ghost. 
+  subcategories: 
+    - filename: rituals_cleansing.yaml
+      name: Cleansing
+    - filename: rituals_offering.yaml
+      name: Offerings
+    - filename: rituals_protection.yaml
+      name: Protection
+
+Investigations:
+  description: Phrases related to specific investigative techniques or gear usage.
+  subcategories:
+    - filename: investigations_emf.yaml
+      name: EMF
+    - filename: investigations_spirit_box.yaml
+      name: Spirit Box
+    - filename: investigations_temperature.yaml
+      name: Temperature
+    - filename: investigations_cameras.yaml
+      name: Cameras
+
+Personal:
+  description:  Phrases for the player to express their own emotions or beliefs to the ghost. 
+  subcategories:
+    - filename: personal_fear.yaml
+      name: Fear
+    - filename: personal_curiosity.yaml
+      name: Curiosity
+    - filename: personal_beliefs.yaml
+      name: Beliefs

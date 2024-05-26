@@ -1,50 +1,72 @@
 //! Behavior module
 //! ----------------
 //!
-//! The objective of this module is to replace the TileSprite code in board.rs
-//! so all the logic and behavior functionality comes here.
+//! This module defines the `Behavior` component and its associated data structures,
+//! which are used to represent the behavior of objects in the game world.
 //!
-//! This must represent all possible functionality that can be expressed from
-//! Tiled.
+//! The `Behavior` component stores information about the object's type, variant, orientation, state,
+//! and a collection of properties that determine how it interacts with the player and the environment.
+//! This component is crucial for separating the object's visual representation (its sprite) from its logical behavior.
 //!
-//! In Tiled, it should be possible to have only the following defined:
-//! - Class / user_type: Door
-//! - sprite:orientation: Y
-//! - sprite:state: closed
-//! - sprite:variant: wooden
+//! The information stored in the `Behavior` component is loaded from Tiled map data.
+//!  Each tile in Tiled can be assigned a "class" (e.g., "Door", "Wall", "Light"),
+//! a "variant" (e.g., "wooden", "brick", "fluorescent"), an "orientation", and a "state" (e.g., "open", "closed", "on", "off").
 //!
-//! When loaded, we should be able to transform that into a property list that
-//! defines the behavior.
-//!
+//! This data is used to create a `SpriteConfig` struct, which is then used to initialize the `Behavior` component.
+//! The `Behavior` component, in turn, is used to add other Bevy components to the object's entity,
+//! such as `Collision`, `Interactive`, `Light`, etc., based on its configuration.
 
 use anyhow::Context;
-use bevy::ecs::component::Component;
+use bevy::{ecs::component::Component, utils::HashMap};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 use crate::{maplight, tiledmap::MapLayer};
 
+/// The `Behavior` component defines the behavior of an object in the game world.
+///
+/// It stores a `SpriteConfig` struct, which contains the object's basic configuration
+/// (class, variant, orientation, state), and a `Properties` struct,
+/// which holds a collection of properties that determine how the object interacts with the player and the environment.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Behavior {
+    /// This `cfg` property is PRIVATE on purpose! We need to separate the "what it is" from "what it does".
+    /// There is always a tendency to read and write cfg from everywhere because it is "the easiest" thing to do, but
+    /// that creates a mess in the code later on because we are not separating behavior from raw data.
+    /// Always place behavioral traits in "p: Properties" and never read or write from Cfg.
     cfg: SpriteConfig,
+    /// The `p` field stores a collection of properties that define the object's behavior.
     pub p: Properties,
 }
 
 impl Behavior {
+    /// Creates a new `Behavior` component from a `SpriteConfig`.
+    ///
+    /// The `cfg` field is set to the given `SpriteConfig`, and the `p` field is initialized
+    /// based on the properties defined in the `SpriteConfig`.
     pub fn from_config(cfg: SpriteConfig) -> Self {
         let mut p = Properties::default();
         cfg.set_properties(&mut p);
         Self { cfg, p }
     }
+
+    /// Flips horizontally a sprite. Some sprites work just by flipping the image, however
+    /// other sprites have an alternative sprite for when it is flipped.
     pub fn flip(&mut self, f: bool) {
         if f != self.p.flip {
             self.cfg.orientation.flip();
             self.p.flip = f;
         }
     }
+
+    /// Returns the state (On/Off, Open/Closed) as a copy so that it is not possible to
+    /// modify the original from outside code.
     pub fn state(&self) -> State {
         self.cfg.state.clone()
     }
+
+    /// Creates the default components as required by this behavior for a new entity.
+    /// This is often used to spawn new map tiles to add the required components automatically.
     pub fn default_components(
         &self,
         entity: &mut bevy::ecs::system::EntityCommands,
@@ -52,6 +74,7 @@ impl Behavior {
     ) {
         self.cfg.components(entity, layer)
     }
+
     pub fn key_cvo(&self) -> SpriteCVOKey {
         self.cfg.key_cvo()
     }
@@ -97,16 +120,47 @@ impl Behavior {
     pub fn is_npc(&self) -> bool {
         self.cfg.class == Class::NPC
     }
+
+    pub fn can_emit_light(&self) -> bool {
+        self.p.light.emission_power.into_inner() > 1.0
+    }
 }
 
+/// Stores a collection of properties that define the behavior of an object.
+///
+/// These properties determine how the object interacts with the player, the environment,
+/// and other systems in the game.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Properties {
-    // ---
+    // --- Movement Properties ---
+    /// Properties related to movement and collision.
     pub movement: Movement,
+    // --- Light Properties ---
+    /// Properties related to light emission, opacity, and visibility.
     pub light: Light,
+    // --- Utility Properties ---
+    /// Properties that define the object's utility or purpose in the game world.
     pub util: Util,
+    // --- Display Properties ---
+    /// Properties related to the object's visual display, such as visibility and global Z position.
     pub display: Display,
+    /// Whether the sprite should be horizontally flipped.
     pub flip: bool,
+    /// Properties specific to objects in the game world.
+    pub object: Object,
+}
+
+/// Represents properties specific to objects in the game world.
+///
+/// These properties determine how the player can interact with objects, such as whether they can
+/// be picked up, moved, or used as hiding spots.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct Object {
+    pub pickable: bool,
+    pub movable: bool,
+    pub hidingspot: bool,
+    pub weight: NotNan<f32>,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -132,13 +186,24 @@ pub struct Light {
     pub emits_light: bool,
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
+    pub flickering: bool,
 }
 
 impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
-        match self.emits_light {
-            true => self.emission_power.exp(),
-            false => 0.0,
+        if self.flickering {
+            // Reduced emission when flickering, with a slight glow even when off
+            if self.emits_light {
+                self.emission_power.exp() * 0.4
+            } else {
+                self.emission_power.exp() * 0.001
+            }
+        } else {
+            // Normal emission based on emits_light
+            match self.emits_light {
+                true => self.emission_power.exp(),
+                false => 0.0,
+            }
         }
     }
     pub fn transmissivity_factor(&self) -> f32 {
@@ -186,6 +251,12 @@ pub mod component {
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct UVSurface;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Light;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct Door;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct RoomState {
@@ -383,7 +454,7 @@ pub struct SpriteCVOKey {
     pub orientation: Orientation,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct SpriteConfig {
     /// Main behavior class
     class: Class,
@@ -397,11 +468,36 @@ pub struct SpriteConfig {
     /// Current state of the sprite - or the initial state.
     pub state: State,
 
-    // other interesting metadata
+    // Other interesting metadata:
+    //
     /// Tileset name
     pub tileset: String,
     /// UID of the tileset for this sprite
     pub tileuid: u32,
+    /// All other tiled properties live here
+    pub properties: BehaviorProperties,
+}
+
+impl PartialEq for SpriteConfig {
+    fn eq(&self, other: &Self) -> bool {
+        self.class == other.class
+            && self.variant == other.variant
+            && self.orientation == other.orientation
+            && self.cvo_key == other.cvo_key
+            && self.state == other.state
+    }
+}
+
+impl Eq for SpriteConfig {}
+
+impl std::hash::Hash for SpriteConfig {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.class.hash(state);
+        self.variant.hash(state);
+        self.orientation.hash(state);
+        self.cvo_key.hash(state);
+        self.state.hash(state);
+    }
 }
 
 impl SpriteConfig {
@@ -412,59 +508,49 @@ impl SpriteConfig {
         (self.tileset.clone(), self.tileuid)
     }
     pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
-        let parse = |x: &tiled::PropertyValue| -> String {
-            match x {
-                tiled::PropertyValue::BoolValue(x) => x.to_string(),
-                tiled::PropertyValue::FloatValue(x) => x.to_string(),
-                tiled::PropertyValue::IntValue(x) => x.to_string(),
-                tiled::PropertyValue::ColorValue(x) => {
-                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
-                }
-                tiled::PropertyValue::StringValue(x) => x.to_string(),
-                tiled::PropertyValue::FileValue(x) => x.to_string(),
-                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
-            }
-        };
-        let get_property_str =
-            |key: &str| -> Option<String> { tiled_tile.properties.get(key).map(parse) };
-        Self::from_tiled(
+        // --- Load properties
+        let properties = BehaviorProperties::from_tiled(tiled_tile);
+
+        let sprite_config = Self::from_tiled(
             tiled_tile.user_type.as_deref(),
-            get_property_str("sprite:variant").as_deref(),
-            get_property_str("sprite:orientation").as_deref(),
-            get_property_str("sprite:state").as_deref(),
             tset_name,
             tileuid,
-        )
+            properties,
+        );
+
+        sprite_config
     }
 
     pub fn from_tiled(
         class: Option<&str>,
-        variant: Option<&str>,
-        orientation: Option<&str>,
-        state: Option<&str>,
         tileset: String,
         tileuid: u32,
+        properties: BehaviorProperties,
     ) -> Self {
-        Self::try_from_tiled(class, variant, orientation, state, tileset.clone(), tileuid)
+        Self::try_from_tiled(class, tileset.clone(), tileuid, properties)
             .with_context(|| {
                 format!(
-                    "SpriteConfig: error loading sprite from tiled: {}:{} [c:{:?}, v:{:?}, o:{:?}, s:{:?}]",
-                    tileset, tileuid, class, variant, orientation, state
+                    "SpriteConfig: error loading sprite from tiled: {}:{} [c:{:?}]",
+                    tileset, tileuid, class,
                 )
             })
             .unwrap()
     }
     pub fn try_from_tiled(
         class: Option<&str>,
-        variant: Option<&str>,
-        orientation: Option<&str>,
-        state: Option<&str>,
         tileset: String,
         tileuid: u32,
+        properties: BehaviorProperties,
     ) -> anyhow::Result<Self> {
+        let variant = properties.get_string_opt("sprite:variant");
+        let orientation = properties.get_string_opt("sprite:orientation");
+        let state = properties.get_string_opt("sprite:state");
+        let orientation = orientation.as_deref();
+        let state = state.as_deref();
+
         let tilesetuid_key = format!("{}:{}", tileset, tileuid);
         let class = Class::from_text(class).context("parsing Class")?;
-        let variant = variant.unwrap_or(&tilesetuid_key).to_owned();
+        let variant = variant.unwrap_or(tilesetuid_key).to_owned();
         let orientation = Orientation::from_text(orientation).context("parsing Orientation")?;
         let state = State::from_text(state).context("parsing State")?;
         let cvo_key = SpriteCVOKey {
@@ -480,6 +566,7 @@ impl SpriteConfig {
             tileset,
             tileuid,
             cvo_key,
+            properties,
         })
     }
 
@@ -496,10 +583,12 @@ impl SpriteConfig {
                 .insert(component::Collision)
                 .insert(component::Opaque)
                 .insert(component::UVSurface),
-            Class::Door => entity.insert(component::Interactive::new(
-                "sounds/door-open.ogg",
-                "sounds/door-close.ogg",
-            )),
+            Class::Door => entity
+                .insert(component::Interactive::new(
+                    "sounds/door-open.ogg",
+                    "sounds/door-close.ogg",
+                ))
+                .insert(component::Door),
             Class::Switch => entity
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
@@ -527,18 +616,26 @@ impl SpriteConfig {
                 "sounds/door-close.ogg",
             )),
             Class::RoomDef => entity,
-            Class::WallLamp => entity.insert(component::RoomState::new()),
-            Class::FloorLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
-            Class::TableLamp => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
+            Class::WallLamp => entity
+                .insert(component::RoomState::new())
+                .insert(component::Light),
+            Class::FloorLamp => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::Light),
+            Class::TableLamp => entity
+                .insert(component::Interactive::new(
+                    "sounds/switch-on-1.ogg",
+                    "sounds/switch-off-1.ogg",
+                ))
+                .insert(component::Light),
             Class::WallDecor => entity,
-            Class::CeilingLight => entity.insert(component::RoomState::new()),
-            Class::StreetLight => entity,
+            Class::CeilingLight => entity
+                .insert(component::RoomState::new())
+                .insert(component::Light),
+            Class::StreetLight => entity.insert(component::Light),
             Class::Appliance => entity,
             Class::Van => entity,
             Class::Window => entity,
@@ -576,6 +673,7 @@ impl SpriteConfig {
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == State::Closed;
+                p.light.opaque = self.state == State::Closed;
             }
             Class::Switch => {
                 p.display.global_z = (0.000040).try_into().unwrap();
@@ -657,7 +755,7 @@ impl SpriteConfig {
             Class::CeilingLight => {
                 p.display.disable = true;
                 p.light.emits_light = self.state == State::On;
-                p.light.emission_power = (7.0).try_into().unwrap();
+                p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
             Class::StreetLight => {
@@ -677,6 +775,16 @@ impl SpriteConfig {
             }
             Class::None => {}
         }
+
+        // --- Load object properties from Tiled data ---
+        p.object.pickable = self.properties.get_bool("object:pickable");
+        p.object.movable = self.properties.get_bool("object:movable");
+        p.object.hidingspot = self.properties.get_bool("object:hidingspot");
+        p.object.weight = NotNan::new(self.properties.get_float("object:weight")).unwrap();
+        p.object.name = self.properties.get_string("object:name");
+        if p.object.name.is_empty() {
+            p.object.name = self.variant.clone();
+        }
     }
 
     /// A class requires a set of states. Not only these are the only valid ones for the given class, also they need all to be included.
@@ -690,6 +798,102 @@ impl SpriteConfig {
             Class::Breaker => vec![On, Off],
             _ => vec![None],
         }
+    }
+}
+
+/// Stores a collection of properties loaded from Tiled map data.
+///
+/// This struct provides helper functions for accessing property values by key.
+#[derive(Debug, Clone)]
+pub struct BehaviorProperties {
+    properties: HashMap<String, tiled::PropertyValue>,
+}
+
+impl BehaviorProperties {
+    /// Creates a new `BehaviorProperties` instance from the properties of a `tiled::Tile`.
+    pub fn from_tiled(tiled_tile: &tiled::Tile) -> Self {
+        let mut properties = HashMap::new();
+        for (key, value) in &tiled_tile.properties {
+            properties.insert(key.clone(), value.clone());
+        }
+        Self { properties }
+    }
+
+    /// Returns the boolean value of a property with the given key.
+    ///
+    /// Returns `false` if the property is not found or is not a boolean value.
+    pub fn get_bool(&self, key: &str) -> bool {
+        self.properties
+            .get(key)
+            .map(|x| matches!(x, tiled::PropertyValue::BoolValue(true)))
+            .unwrap_or(false)
+    }
+
+    /// Returns the floating-point value of a property with the given key.
+    ///
+    /// Returns `0.0` if the property is not found or is not a floating-point value.
+    pub fn get_float(&self, key: &str) -> f32 {
+        self.properties
+            .get(key)
+            .map(|x| match x {
+                tiled::PropertyValue::FloatValue(n) => *n,
+                _ => 0.0,
+            })
+            .unwrap_or(0.0)
+    }
+
+    /// Returns the string value of a property with the given key, or None if not present.
+    pub fn get_string_opt(&self, key: &str) -> Option<String> {
+        let parse = |x: &tiled::PropertyValue| -> String {
+            match x {
+                tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                tiled::PropertyValue::IntValue(x) => x.to_string(),
+                tiled::PropertyValue::ColorValue(x) => {
+                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                }
+                tiled::PropertyValue::StringValue(x) => x.to_string(),
+                tiled::PropertyValue::FileValue(x) => x.to_string(),
+                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+            }
+        };
+        self.properties.get(key).map(parse)
+    }
+
+    /// Returns the string value of a property with the given key.
+    ///
+    /// Returns an empty string if the property is not found or is not a string value.
+    pub fn get_string(&self, key: &str) -> String {
+        let parse = |x: &tiled::PropertyValue| -> String {
+            match x {
+                tiled::PropertyValue::BoolValue(x) => x.to_string(),
+                tiled::PropertyValue::FloatValue(x) => x.to_string(),
+                tiled::PropertyValue::IntValue(x) => x.to_string(),
+                tiled::PropertyValue::ColorValue(x) => {
+                    format!("{},{},{},{}", x.red, x.green, x.blue, x.alpha)
+                }
+                tiled::PropertyValue::StringValue(x) => x.to_string(),
+                tiled::PropertyValue::FileValue(x) => x.to_string(),
+                tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+            }
+        };
+        self.properties
+            .get(key)
+            .map(parse)
+            .unwrap_or("".to_string())
+    }
+
+    /// Returns the integer value of a property with the given key.
+    ///
+    /// Returns `0` if the property is not found or is not an integer value.
+    pub fn get_int(&self, key: &str) -> i32 {
+        self.properties
+            .get(key)
+            .map(|x| match x {
+                tiled::PropertyValue::IntValue(n) => *n,
+                _ => 0,
+            })
+            .unwrap_or(0)
     }
 }
 

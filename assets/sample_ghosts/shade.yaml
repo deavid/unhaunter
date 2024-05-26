@@ -1,0 +1,8 @@
+name: "The Timid Shade"
+ghost_type: Shade
+mood:
+  fear: 0.8
+  sadness: 0.4
+  curiosity: 0.1
+  joy: 0.05
+  anger: 0.3

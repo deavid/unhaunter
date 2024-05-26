@@ -1,4 +1,4 @@
-use crate::ghost_definitions::GhostType;
+use crate::{ghost_definitions::GhostType, player::HeldObject};
 
 use super::{Gear, GearKind};
 use bevy::prelude::*;
@@ -54,6 +54,7 @@ pub struct PlayerGear {
     pub left_hand: Gear,
     pub right_hand: Gear,
     pub inventory: Vec<Gear>,
+    pub held_item: Option<HeldObject>,
 }
 
 impl PlayerGear {
@@ -128,6 +129,7 @@ impl PlayerGear {
                 // EStaticMeter::default().into(),
                 // MotionSensor::default().into(),
             ],
+            held_item: None,
         }
     }
 

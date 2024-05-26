@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "atut01_basics.tmx",
+    "activeFile": "atut02_glass_house.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -15,11 +15,22 @@
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 3,
+            "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1252.5,
-                "y": 367.5
+                "x": 1535.5,
+                "y": 767.5
+            }
+        },
+        "atut02_glass_house.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "scale": 4,
+            "selectedLayer": 9,
+            "viewCenter": {
+                "x": 620.625,
+                "y": 244.625
             }
         },
         "character1.tsx": {
@@ -34,8 +45,8 @@
             "scale": 4,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 504,
-                "y": 252
+                "x": 512.625,
+                "y": 251.875
             }
         },
         "map_house1_3x.tmx": {
@@ -57,19 +68,31 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1536,
-                "y": 768
+                "x": 1534.875,
+                "y": 801.375
             }
         },
         "map_school1.tmx": {
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 4,
-            "selectedLayer": 6,
+            "scale": 1,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 1536,
-                "y": 767.75
+                "x": 1189.5,
+                "y": 945.5
+            }
+        },
+        "topdown.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "topdown_test_128.tmx": {
+            "scale": 0.0625,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 4056,
+                "y": 2040
             }
         },
         "tut01_basics.tmx": {
@@ -85,7 +108,7 @@
         },
         "unhaunter_custom_tileset.tsx": {
             "dynamicWrapping": true,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheet2.tsx": {
@@ -95,12 +118,12 @@
         },
         "unhaunter_spritesheetA_3x3x3.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_spritesheetA_6x6x10.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 2,
+            "scaleInDock": 1,
             "scaleInEditor": 2
         },
         "unhaunter_test2b.tmx": {
@@ -121,41 +144,39 @@
     ],
     "map.height": 128,
     "map.lastUsedFormat": "tmx",
-    "map.orientation": "2",
-    "map.tileHeight": 36,
-    "map.tileWidth": 72,
+    "map.orientation": "1",
+    "map.tileHeight": 96,
+    "map.tileWidth": 96,
     "map.width": 128,
     "openFiles": [
-        "unhaunter_custom_tileset.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx",
-        "unhaunter_spritesheetA_3x3x3.tsx",
-        "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut01_basics.tmx"
+        "atut02_glass_house.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
     "recentFiles": [
-        "unhaunter_custom_tileset.tsx",
-        "unhaunter_spritesheetA_6x6x10.tsx",
-        "unhaunter_spritesheetA_3x3x3.tsx",
-        "unhaunter_spritesheet2.tsx",
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
+        "atut02_glass_house.tmx",
         "atut01_basics.tmx",
-        "tut01_basics.tmx",
-        "map_house1_3x.tmx",
-        "unhaunter_test2b.tmx",
-        "character1.tsx"
+        "unhaunter_spritesheet2.tsx",
+        "unhaunter_spritesheetA_6x6x10.tsx",
+        "unhaunter_custom_tileset.tsx",
+        "topdown.tsx",
+        "topdown_test_128.tmx",
+        "unhaunter_spritesheetA_3x3x3.tsx",
+        "tut01_basics.tmx"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 16,
+    "tileset.spacing": 16,
     "tileset.tileSize": {
         "height": 64,
-        "width": 48
+        "width": 64
     },
     "tileset.type": 0
 }

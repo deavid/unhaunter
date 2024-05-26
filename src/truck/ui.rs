@@ -6,25 +6,37 @@ use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use crate::{materials::UIPanelMaterial, root};
 
+/// Represents the visual state of a tab in the truck UI.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum TabState {
+    /// The tab is currently selected and active.
     Selected,
+    /// The tab is being pressed.
     Pressed,
+    /// The mouse is hovering over the tab.
     Hover,
+    /// The tab is in its default, unselected state.
     #[default]
     Default,
+    /// The tab is disabled and cannot be interacted with.
     Disabled,
 }
 
+/// Represents the different content sections within the truck UI.
 #[derive(Debug, Clone, Component, PartialEq, Eq)]
 pub enum TabContents {
+    /// The loadout tab for managing player gear.
     Loadout,
+    /// The location map tab. (Currently disabled)
     LocationMap,
+    /// The camera feed tab. (Currently disabled)
     CameraFeed,
+    /// The journal tab for reviewing evidence and guessing the ghost type.
     Journal,
 }
 
 impl TabContents {
+    /// Returns the display name for the tab content.
     pub fn name(&self) -> &'static str {
         match self {
             TabContents::Loadout => "Loadout",
@@ -33,6 +45,8 @@ impl TabContents {
             TabContents::Journal => "Journal",
         }
     }
+
+    /// Returns the default `TabState` for the tab content.
     pub fn default_state(&self) -> TabState {
         match self {
             TabContents::Loadout => TabState::Selected,
@@ -43,14 +57,19 @@ impl TabContents {
     }
 }
 
+/// Represents a tab in the truck UI.
 #[derive(Debug, Clone, Component)]
 pub struct TruckTab {
+    /// The display name of the tab.
     pub tabname: String,
+    /// The current visual state of the tab.
     pub state: TabState,
+    /// The content section associated with the tab.
     pub contents: TabContents,
 }
 
 impl TruckTab {
+    /// Creates a new `TruckTab` from a `TabContents` enum.
     pub fn from_tab(tab: TabContents) -> Self {
         Self {
             tabname: tab.name().to_owned(),
@@ -58,6 +77,8 @@ impl TruckTab {
             contents: tab,
         }
     }
+
+    /// Updates the tab's visual state based on the given interaction.
     pub fn update_from_interaction(&mut self, interaction: &Interaction) {
         match self.state {
             TabState::Disabled | TabState::Selected => {}
@@ -443,6 +464,12 @@ pub fn setup_ui(
     // ---
 }
 
+/// Updates the visual appearance and behavior of tabs in the truck UI.
+///
+/// This system handles:
+/// * Changing the visual state of tabs based on mouse interactions (hover, press).
+/// * Switching between different content sections when tabs are clicked.
+/// * Updating the colors and styles of tabs to reflect their current state.
 pub fn update_tab_interactions(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     mut qt: Query<(

@@ -1,33 +1,56 @@
-use crate::{
-    board::{BoardPosition, Position},
-    ghost_definitions::GhostType,
-    player::PlayerSprite,
-    summary, utils,
-};
+use crate::board::{BoardPosition, Position};
+use crate::components::ghost_influence::GhostInfluence;
+use crate::components::ghost_influence::InfluenceType;
+use crate::ghost_definitions::GhostType;
+use crate::object_interaction::ObjectInteractionConfig;
+use crate::player::{Hiding, PlayerSprite};
+use crate::{summary, utils};
+
 use bevy::prelude::*;
 use rand::Rng;
 
+/// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
 
+/// Represents a ghost entity in the game world.
+///
+/// This component stores the ghost's type, spawn point, target location,
+/// interaction stats, current mood, hunting state, and other relevant attributes.
 #[derive(Component, Debug)]
 pub struct GhostSprite {
+    /// The specific type of ghost, which determines its characteristics and abilities.
     pub class: GhostType,
+    /// The ghost's designated spawn point (breach) on the game board.
     pub spawn_point: BoardPosition,
+    /// The ghost's current target location in the game world. `None` if the ghost is wandering aimlessly.
     pub target_point: Option<Position>,
+    /// Number of times the ghost has been hit with the correct type of repellent.
     pub repellent_hits: i64,
+    /// Number of times the ghost has been hit with an incorrect type of repellent.
     pub repellent_misses: i64,
+    /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
+    /// The ghost's current rage level, which influences its hunting behavior.
+    /// Higher rage increases the likelihood of a hunt.
     pub rage: f32,
+    /// The ghost's hunting state. A value greater than 0 indicates that the ghost is actively hunting a player.
     pub hunting: f32,
+    /// Flag indicating whether the ghost is currently targeting a player during a hunt.
     pub hunt_target: bool,
+    /// Time in seconds since the ghost started its current hunt.
     pub hunt_time_secs: f32,
+    /// The ghost's current warping intensity, which affects its movement speed. Higher values result in faster warping.
     pub warp: f32,
 }
 
+/// Marker component for the ghost's visual breach effect.
 #[derive(Component, Debug)]
 pub struct GhostBreach;
 
 impl GhostSprite {
+    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn point.
+    ///
+    /// The ghost's initial mood, hunting state, and other attributes are set to default values.
     pub fn new(spawn_point: BoardPosition) -> Self {
         let mut rng = rand::thread_rng();
         let ghost_types: Vec<_> = GhostType::all().collect();
@@ -48,6 +71,8 @@ impl GhostSprite {
             warp: 0.0,
         }
     }
+
+    ///  Sets the `breach_id` field, associating the ghost with its visual breach effect.
     pub fn with_breachid(self, breach_id: Entity) -> Self {
         Self {
             breach_id: Some(breach_id),
@@ -56,14 +81,24 @@ impl GhostSprite {
     }
 }
 
+/// Updates the ghost's position based on its target location, hunting state, and warping intensity.
+///
+/// This system handles the ghost's movement logic, ensuring it navigates the game world according to its
+/// current state and objectives.
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn ghost_movement(
-    mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    mut q: Query<
+        (&mut GhostSprite, &mut Position, Entity),
+        (Without<PlayerSprite>, Without<GhostInfluence>),
+    >,
+    qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
     mut commands: Commands,
     time: Res<Time>,
+    config: Res<ObjectInteractionConfig>,
+    object_query: Query<(&Position, &GhostInfluence)>,
 ) {
     let mut rng = rand::thread_rng();
     let dt = time.delta_seconds() * 60.0;
@@ -129,18 +164,61 @@ pub fn ghost_movement(
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
-                let player_pos_l: Vec<&Position> = qp
+                let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
-                    .filter(|(_, p)| p.health > 0.0)
-                    .map(|(pos, _)| pos)
+                    .filter(|(_, p, _)| p.health > 0.0)
+                    .map(|(pos, _, h)| (pos, h))
                     .collect();
                 if !player_pos_l.is_empty() {
                     let idx = rng.gen_range(0..player_pos_l.len());
-                    let ppos = player_pos_l[idx];
-                    target_point.x = ppos.x;
-                    target_point.y = ppos.y;
+                    let (ppos, h) = player_pos_l[idx];
+                    let search_radius = if h.is_some() { 2.0 } else { 1.0 };
+
+                    let mut old_target = ghost.target_point.unwrap_or(*pos);
+                    old_target.x += rng.gen_range(-search_radius..search_radius);
+                    old_target.y += rng.gen_range(-search_radius..search_radius);
+                    let ppos = if h.is_some() { old_target } else { *ppos };
+
+                    let mut rng = rand::thread_rng();
+                    let random_offset = Vec2::new(
+                        rng.gen_range(-search_radius..search_radius),
+                        rng.gen_range(-search_radius..search_radius),
+                    );
+
+                    target_point.x = ppos.x + random_offset.x;
+                    target_point.y = ppos.y + random_offset.y;
                     hunt = true;
                 }
+            }
+
+            // --- Sample Potential Destinations and Calculate Scores ---
+            if !hunt {
+                let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
+                for _ in 0..config.num_destination_points_to_sample {
+                    let mut target_point = ghost.spawn_point.to_position();
+                    let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
+                    let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+                    let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+                    let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+                    let dd = (dx * dx + dy * dy).sqrt() / dist;
+                    target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
+                    target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
+
+                    let score = calculate_destination_score(target_point, &object_query, &config);
+                    potential_destinations.push((score, target_point));
+                }
+
+                // --- Select Destination with Highest Score ---
+                let mut best_destination = ghost.spawn_point.to_position(); // Default to spawn point
+                let mut best_score = f32::MIN;
+                for (score, point) in potential_destinations {
+                    if score > best_score {
+                        best_score = score;
+                        best_destination = point;
+                    }
+                }
+
+                target_point = best_destination;
             }
 
             let bpos = target_point.to_board_position();
@@ -163,7 +241,12 @@ pub fn ghost_movement(
 
                 ghost.target_point = Some(target_point);
                 ghost.hunt_target = hunt;
-            } else {
+            } else if ghost
+                .target_point
+                .map(|gp| pos.distance(&gp))
+                .unwrap_or_default()
+                < 0.5
+            {
                 ghost.hunt_target = false;
             }
         }
@@ -177,6 +260,10 @@ pub fn ghost_movement(
     }
 }
 
+/// Manages the ghost's rage level, hunting behavior, and player interactions during a hunt.
+///
+/// This system updates the ghost's rage based on player proximity, sanity, and sound levels.
+/// It triggers hunts when rage exceeds a threshold and handles player damage during hunts.
 fn ghost_enrage(
     time: Res<Time>,
     mut timer: Local<utils::PrintingTimer>,
@@ -230,13 +317,44 @@ fn ghost_enrage(
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(&avg_angry.avg(), ghost.rage);
         }
-        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 120.0 };
+        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 400.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 3.0;
-            ghost.hunting += (prev_rage - ghost.rage) / 6.0 + 5.0;
+            ghost.hunting += (prev_rage - ghost.rage) / 10.0 + 5.0;
         }
     }
+}
+
+/// Calculates the desirability score of a potential destination point for the ghost,
+/// considering the influence of nearby charged objects.
+fn calculate_destination_score(
+    potential_destination: Position,
+    object_query: &Query<(&Position, &GhostInfluence)>,
+    config: &Res<ObjectInteractionConfig>,
+) -> f32 {
+    let mut score = 0.0;
+
+    // Iterate through objects with GhostInfluence
+    for (object_position, ghost_influence) in object_query.iter() {
+        let distance = potential_destination.distance(object_position);
+
+        // Apply influence based on distance and charge value
+        match ghost_influence.influence_type {
+            InfluenceType::Attractive => {
+                // Add to score for Attractive objects, weighted by attractive_influence_multiplier
+                score += config.attractive_influence_multiplier * ghost_influence.charge_value
+                    / (distance + 1.0);
+            }
+            InfluenceType::Repulsive => {
+                // Subtract from score for Repulsive objects, weighted by repulsive_influence_multiplier
+                score -= config.repulsive_influence_multiplier * ghost_influence.charge_value
+                    / (distance + 1.0);
+            }
+        }
+    }
+
+    score
 }
 
 pub fn app_setup(app: &mut App) {

@@ -1,0 +1,8 @@
+name: "The Mischievous Poltergeist"
+ghost_type: Poltergeist
+mood:
+  joy: 0.8
+  anger: 0.2
+  curiosity: 0.5
+  fear: 0.01
+  sadness: 0.1
