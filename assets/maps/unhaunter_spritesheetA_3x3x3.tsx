@@ -1,4 +1,4 @@
-<? xml version = "1.0" encoding = "UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
     <tileset version="1.10" tiledversion="1.10.2" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="1" tilecount="264" columns="12" objectalignment="bottom">
         <tileoffset x="-3" y="0" />
         <grid orientation="isometric" width="28" height="14" />
