@@ -13,6 +13,7 @@ use std::collections::VecDeque;
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
+    components::ghost_influence::{GhostInfluence, InfluenceType},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
     gear::{playergear::PlayerGear, GearKind},
     ghost::{self, GhostSprite},
@@ -220,6 +221,7 @@ pub fn apply_lighting(
             &Handle<CustomMaterial1>,
             &Behavior,
             &mut Visibility,
+            Option<&GhostInfluence>,
         ),
         Changed<MapUpdate>,
     >,
@@ -360,7 +362,7 @@ pub fn apply_lighting(
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
     // let mut change_count = 0;
-    for (n, (pos, mat, behavior, mut vis)) in qt2.iter_mut().enumerate() {
+    for (n, (pos, mat, behavior, mut vis, o_ghost_influence)) in qt2.iter_mut().enumerate() {
         let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
         // if min_threshold > 4.5 {
         //     continue;
@@ -429,15 +431,33 @@ pub fn apply_lighting(
             let gcolor = fpos_gamma_color(bpos);
             gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0)
         };
-        let ((r, g, b), light_data) =
+        let ((mut r, mut g, mut b), light_data) =
             fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+
+        let (att_charge, rep_charge) = o_ghost_influence
+            .map(|x| match x.influence_type {
+                InfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+            })
+            .unwrap_or_default();
+
+        g += light_data.ultraviolet * att_charge * 2.0;
+        r /= 1.0 + light_data.red * rep_charge * 5.0;
+        b += light_data.infrared * (att_charge + rep_charge) * 0.1;
+        b += light_data.red * rep_charge * 0.3;
+
         if behavior.p.movement.walkable {
             let ld = light_data.normalize();
             lightdata_map.insert(bpos.clone(), ld);
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
-        let l = src_color.l().max(0.0001).powf(1.5);
+        let mut l = src_color.l().max(0.0001).powf(1.5);
+
+        l /= 1.0
+            + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
+                * (att_charge + rep_charge)
+                * 10.0;
 
         let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
         let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c) / l;
