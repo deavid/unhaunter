@@ -1,9 +1,11 @@
-use crate::{
-    board::{BoardPosition, Position},
-    ghost_definitions::GhostType,
-    player::{Hiding, PlayerSprite},
-    summary, utils,
-};
+use crate::board::{BoardPosition, Position};
+use crate::components::ghost_influence::GhostInfluence;
+use crate::components::ghost_influence::InfluenceType;
+use crate::ghost_definitions::GhostType;
+use crate::object_interaction::ObjectInteractionConfig;
+use crate::player::{Hiding, PlayerSprite};
+use crate::{summary, utils};
+
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -83,14 +85,20 @@ impl GhostSprite {
 ///
 /// This system handles the ghost's movement logic, ensuring it navigates the game world according to its
 /// current state and objectives.
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn ghost_movement(
-    mut q: Query<(&mut GhostSprite, &mut Position, Entity), Without<PlayerSprite>>,
+    mut q: Query<
+        (&mut GhostSprite, &mut Position, Entity),
+        (Without<PlayerSprite>, Without<GhostInfluence>),
+    >,
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<crate::board::BoardData>,
     mut commands: Commands,
     time: Res<Time>,
+    config: Res<ObjectInteractionConfig>,
+    object_query: Query<(&Position, &GhostInfluence)>,
 ) {
     let mut rng = rand::thread_rng();
     let dt = time.delta_seconds() * 60.0;
@@ -181,6 +189,36 @@ pub fn ghost_movement(
                     target_point.y = ppos.y + random_offset.y;
                     hunt = true;
                 }
+            }
+
+            // --- Sample Potential Destinations and Calculate Scores ---
+            if !hunt {
+                let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
+                for _ in 0..config.num_destination_points_to_sample {
+                    let mut target_point = ghost.spawn_point.to_position();
+                    let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
+                    let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+                    let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
+                    let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+                    let dd = (dx * dx + dy * dy).sqrt() / dist;
+                    target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
+                    target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
+
+                    let score = calculate_destination_score(target_point, &object_query, &config);
+                    potential_destinations.push((score, target_point));
+                }
+
+                // --- Select Destination with Highest Score ---
+                let mut best_destination = ghost.spawn_point.to_position(); // Default to spawn point
+                let mut best_score = f32::MIN;
+                for (score, point) in potential_destinations {
+                    if score > best_score {
+                        best_score = score;
+                        best_destination = point;
+                    }
+                }
+
+                target_point = best_destination;
             }
 
             let bpos = target_point.to_board_position();
@@ -286,6 +324,37 @@ fn ghost_enrage(
             ghost.hunting += (prev_rage - ghost.rage) / 6.0 + 5.0;
         }
     }
+}
+
+/// Calculates the desirability score of a potential destination point for the ghost,
+/// considering the influence of nearby charged objects.
+fn calculate_destination_score(
+    potential_destination: Position,
+    object_query: &Query<(&Position, &GhostInfluence)>,
+    config: &Res<ObjectInteractionConfig>,
+) -> f32 {
+    let mut score = 0.0;
+
+    // Iterate through objects with GhostInfluence
+    for (object_position, ghost_influence) in object_query.iter() {
+        let distance = potential_destination.distance(object_position);
+
+        // Apply influence based on distance and charge value
+        match ghost_influence.influence_type {
+            InfluenceType::Attractive => {
+                // Add to score for Attractive objects, weighted by attractive_influence_multiplier
+                score += config.attractive_influence_multiplier * ghost_influence.charge_value
+                    / (distance + 1.0);
+            }
+            InfluenceType::Repulsive => {
+                // Subtract from score for Repulsive objects, weighted by repulsive_influence_multiplier
+                score -= config.repulsive_influence_multiplier * ghost_influence.charge_value
+                    / (distance + 1.0);
+            }
+        }
+    }
+
+    score
 }
 
 pub fn app_setup(app: &mut App) {
