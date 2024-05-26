@@ -1,8 +1,51 @@
-### Version 0.2.1 - 2024-04-??
+### Version 0.2.1 - 2024-05-26
 
-Features:
-  - ??
-  - 
+**Features:**
+
+* **Ghost Events:**
+    * The ghost can now slam a door closed.
+    * The ghost can also flicker lightly the lights of the room.
+* **Hiding Mechanics:**
+    * Player can now press `E` near tables, beds, and other objects to hide itself.
+    * The ghost will be confused when hunting for the player.
+    * The player will need to press `E` again to be able to move.
+* **Grab & Drop Items:**
+    * Players can now pick up light items with `F`
+    * While carrying an item they're slower, they can drop the item with `G`
+* **Object-Ghost Interaction System:** 
+    * Introduced a new system that allows players to influence the ghost's 
+      behavior by manipulating objects in the environment.
+    * Objects are assigned hidden properties (`Attractive`, `Repulsive`) that
+      affect how the ghost interacts with them.
+    * The ghost's roaming behavior is now influenced by the proximity
+      and charge levels of objects.
+    * Players can provoke hunts by placing `Repulsive` objects near 
+      the ghost's breach and by removing `Attractive` objects from the location.
+    * Added visual glow effects to objects based on their properties
+      and the active light source, revealing their influence on the ghost.
+
+**Maps:**
+
+* **Updated University map:**
+    * As we now depend on having objects, it was time to get an update to the
+      big university map to add all sorts of objects. It looks pretty cool!
+* **New Tutorial: Glass House:**
+    * A simple map where all walls are transparent so that it is easy to see, 
+      and players can learn the ghost evidences at their own pace.
+
+**Fixes:**
+
+* **Lighting:** Improved lighting system and see in the dark.
+* **Reduced difficulty:** With the new object interaction system it was becoming
+  much more difficult as there's more need to explore, so sanity loss and ghost rage
+  was reduced. Temperatures now update in a more aggressive way to simplify tracking
+  the ghost as it now roams much more.
+
+**Tools:**
+
+* **Ghost Radio Tool:**  Added a console-based demo tool for testing and
+  experimenting with simplified ghost communication.
+
 
 ### Version 0.2.0 - 2024-04-02
 
