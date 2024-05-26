@@ -890,7 +890,7 @@ fn lose_sanity(
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
         const SANITY_RECOVER: f32 = 4.0 / 100.0;
-        ps.crazyness += (crazy.clamp(0.000000001, 10000000.0).sqrt()
+        ps.crazyness += (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2
             - SANITY_RECOVER * ps.crazyness / (1.0 + mean_sound.0 * 10.0))
             * dt;
         if ps.crazyness < 0.0 {

@@ -317,11 +317,11 @@ fn ghost_enrage(
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(&avg_angry.avg(), ghost.rage);
         }
-        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 120.0 };
+        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 400.0 };
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 3.0;
-            ghost.hunting += (prev_rage - ghost.rage) / 6.0 + 5.0;
+            ghost.hunting += (prev_rage - ghost.rage) / 10.0 + 5.0;
         }
     }
 }
