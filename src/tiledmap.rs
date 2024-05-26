@@ -246,6 +246,9 @@ mod arch {
                 "assets/maps/atut01_basics.tmx" => Ok(Cursor::new(include_bytes!(
                     "../assets/maps/atut01_basics.tmx"
                 ))),
+                "assets/maps/atut02_glass_house.tmx" => Ok(Cursor::new(include_bytes!(
+                    "../assets/maps/atut02_glass_house.tmx"
+                ))),
                 "assets/maps/map_house1.tmx" => {
                     Ok(Cursor::new(include_bytes!("../assets/maps/map_house1.tmx")))
                 }
