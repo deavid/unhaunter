@@ -18,6 +18,7 @@ mod summary;
 mod tiledmap;
 mod truck;
 mod utils;
+pub mod components;
 
 use std::time::Duration;
 
