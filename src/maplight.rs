@@ -254,10 +254,11 @@ pub fn apply_lighting(
         >,
     )>,
 ) {
-    const GAMMA_EXP: f32 = 2.4;
-    const CENTER_EXP: f32 = 10.0; // Higher values, less blinding light.
-    const CENTER_EXP_GAMMA: f32 = 2.25; // Above 1.0, higher the less night vision.
-    const EYE_SPEED: f32 = 0.1;
+    const GAMMA_EXP: f32 = 2.5;
+    const CENTER_EXP: f32 = 5.0; // Higher values, less blinding light.
+    const CENTER_EXP_GAMMA: f32 = 1.7; // Above 1.0, higher the less night vision.
+    const BRIGHTNESS_HARSH: f32 = 3.0; // Lower values create an HDR effect, bringing blinding lights back to normal.
+    const EYE_SPEED: f32 = 0.4;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.1;
 
@@ -334,7 +335,7 @@ pub fn apply_lighting(
 
     assert!(cursor_exp.is_normal());
     cursor_exp += 0.05;
-
+    cursor_exp /= 2.1;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -429,7 +430,9 @@ pub fn apply_lighting(
 
         let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
             let gcolor = fpos_gamma_color(bpos);
-            gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0)
+            gcolor
+                .map(|((r, g, b), _)| (r + g + b) / 3.0)
+                .map(|l| (l / BRIGHTNESS_HARSH).tanh() * BRIGHTNESS_HARSH)
         };
         let ((mut r, mut g, mut b), light_data) =
             fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
@@ -452,7 +455,7 @@ pub fn apply_lighting(
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
-        let mut l = src_color.l().max(0.0001).powf(1.5);
+        let mut l = src_color.l().max(0.0001).powf(1.8);
 
         l /= 1.0
             + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
