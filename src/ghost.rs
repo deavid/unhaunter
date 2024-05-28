@@ -7,6 +7,7 @@ use crate::player::{Hiding, PlayerSprite};
 use crate::{summary, utils};
 
 use bevy::prelude::*;
+use ordered_float::OrderedFloat;
 use rand::Rng;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -275,6 +276,20 @@ fn ghost_enrage(
     let dt = time.delta_seconds();
 
     for (mut ghost, gpos) in &mut qg {
+        // Calm ghost when players are far away
+        let min_player_dist = qp
+            .iter()
+            .map(|(_, ppos)| OrderedFloat(gpos.distance(ppos)))
+            .min()
+            .unwrap_or(OrderedFloat(1000.0))
+            .into_inner()
+            .clamp(1.0, 1000.0);
+        // Reduce ghost rage as player is further away
+        ghost.rage -= dt * min_player_dist.sqrt() / 10.0;
+        // Reduce ghost hunting when player is away
+        ghost.hunting -= dt * min_player_dist.sqrt() / 100.0;
+        // ---
+
         if ghost.hunt_target {
             let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
