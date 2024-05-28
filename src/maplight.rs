@@ -331,11 +331,13 @@ pub fn apply_lighting(
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
-    cursor_exp += fl_total_power.sqrt() / 8.0;
+    cursor_exp += fl_total_power.sqrt() / 16.0;
 
     assert!(cursor_exp.is_normal());
-    cursor_exp += 0.05;
-    cursor_exp /= 2.1;
+    // Minimum exp - controls how dark we can see
+    cursor_exp += 0.001;
+    // Compensate overall to make the scene brighter
+    cursor_exp /= 2.4;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -384,9 +386,8 @@ pub fn apply_lighting(
             let mut lightdata = LightData::default();
 
             for (flpos, fldir, flpower, flcolor, fltype) in flashlights.iter() {
-                let pdist = flpos.distance(&rpos).powf(2.0);
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                let lpos = *flpos + *fldir / (100.0 / focus);
+                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
                 let mut lpos = lpos.unrotate_by_dir(fldir);
                 let mut rpos = rpos.unrotate_by_dir(fldir);
                 rpos.x -= lpos.x;
@@ -401,10 +402,9 @@ pub fn apply_lighting(
                     rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
                     rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
-                let dist = lpos
-                    .distance(&rpos)
+                let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                let fl = flpower / (dist * dist + FL_MIN_DST) * (pdist / 5.0).clamp(0.0, 1.0);
+                let fl = flpower / (dist * dist + FL_MIN_DST);
                 lux_fl[0] += fl * flcolor.r();
                 lux_fl[1] += fl * flcolor.g();
                 lux_fl[2] += fl * flcolor.b();
@@ -450,8 +450,7 @@ pub fn apply_lighting(
         b += light_data.red * rep_charge * 0.3;
 
         if behavior.p.movement.walkable {
-            let ld = light_data.normalize();
-            lightdata_map.insert(bpos.clone(), ld);
+            lightdata_map.insert(bpos.clone(), light_data);
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
@@ -586,10 +585,13 @@ pub fn apply_lighting(
     for (pos, mut sprite, o_type, o_gs) in qt.iter_mut() {
         let stype = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
-        let Some(ld) = lightdata_map.get(&bpos).cloned() else {
+        let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
             // If the given cell was not selected for update, skip updating its color (otherwise it can blink)
             continue;
         };
+        let ld_mag = ld_abs.magnitude();
+        let ld = ld_abs.normalize();
+
         let mut opacity: f32 = 1.0
             * vf.visibility_field
                 .get(&bpos)
@@ -598,9 +600,9 @@ pub fn apply_lighting(
                 .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
-        let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
+        let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = lf.lux / exposure;
+            let mut rel_lux = ld_mag / exposure;
             if stype == SpriteType::Ghost {
                 rel_lux /= 2.0;
             }
@@ -608,10 +610,12 @@ pub fn apply_lighting(
                 rel_lux *= 1.1;
                 rel_lux += 0.1;
             }
+            if stype == SpriteType::Breach {
+                rel_lux *= 1.2;
+                rel_lux += 0.2;
+            }
 
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
-        } else {
-            src_color
         };
         let mut smooth: f32 = 20.0;
         if stype == SpriteType::Ghost {
@@ -656,7 +660,8 @@ pub fn apply_lighting(
             } else {
                 0.0
             };
-            opacity *= ((dst_color.l() / 3.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            opacity *= ((dst_color.l() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            opacity = opacity.sqrt();
             let l = dst_color.l();
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
