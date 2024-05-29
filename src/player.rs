@@ -7,7 +7,7 @@
 //! * Data structures and enums for managing player controls, animations, and held objects.
 
 use crate::behavior::component::{Interactive, RoomState};
-use crate::behavior::Behavior;
+use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
@@ -675,32 +675,50 @@ pub fn grab_object(
 ///
 /// This system checks if the player is pressing the 'drop' key and if they are currently holding an object.
 /// It then determines if the target tile (the player's current position) is a valid drop location
-/// (an empty floor tile).
+/// (an empty floor tile and not obstructed by other objects).
 ///
 /// If the drop is valid, the object is placed at the target tile.
 /// If the drop is invalid, an "invalid drop" sound effect is played, and the object is not dropped.
+#[allow(clippy::type_complexity)]
 pub fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
-    mut objects: Query<(Entity, &mut Position), Without<PlayerSprite>>,
+    mut objects: Query<
+        (Entity, &mut Position),
+        (
+            Without<PlayerSprite>,
+            With<behavior::component::FloorItemCollidable>,
+        ),
+    >,
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop) {
             // Take the held object from the player's gear (this removes it temporarily)
             if let Some(held_object) = player_gear.held_item.take() {
-                // Check if the target tile is valid (floor, no collisions)
+                // Check for valid Drop location
                 let target_tile = player_pos.to_board_position();
-                let is_valid_drop = gs
+                let is_valid_tile = gs
                     .bf
                     .collision_field
                     .get(&target_tile)
                     .map(|col| col.player_free)
                     .unwrap_or(false);
+                // Check for object obstruction
+                let is_obstructed = objects.iter().any(|(entity, object_pos)| {
+                    // Skip checking the held object itself
+                    if entity == held_object.entity {
+                        return false;
+                    }
+                    // **Collision Check:**
+                    target_tile.to_position().distance(object_pos) < 0.5
+                });
 
-                if is_valid_drop {
+                // Only drop if valid
+                if is_valid_tile && !is_obstructed {
                     // Retrieve the ORIGINAL entity of the held object
                     if let Ok((_, mut position)) = objects.get_mut(held_object.entity) {
+                        // Update the object's Position component
                         *position = target_tile.to_position();
 
                         // Play "Drop" sound effect
@@ -714,7 +732,7 @@ pub fn drop_object(
                 } else {
                     // --- Invalid Drop Handling ---
                     // Play "Invalid Drop" sound effect
-                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
+                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
 
                     // Put the object back in the player's gear
                     player_gear.held_item = Some(held_object);
