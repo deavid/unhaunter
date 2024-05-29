@@ -701,8 +701,7 @@ pub fn drop_object(
                 if is_valid_drop {
                     // Retrieve the ORIGINAL entity of the held object
                     if let Ok((_, mut position)) = objects.get_mut(held_object.entity) {
-                        // Update the object's Position component
-                        *position = *player_pos;
+                        *position = target_tile.to_position();
 
                         // Play "Drop" sound effect
                         gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
