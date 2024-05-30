@@ -11,8 +11,8 @@ use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
-use crate::gear;
 use crate::gear::playergear::PlayerGear;
+use crate::gear::{self, GearUsable as _};
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
@@ -1041,6 +1041,7 @@ pub fn deploy_gear(
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
     mut gs: gear::GearStuff,
+    handles: Res<root::GameAssets>,
 ) {
     for (player_entity, mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
@@ -1062,16 +1063,28 @@ pub fn deploy_gear(
                 .iter()
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
             if is_valid_tile && !is_obstructed {
-                // FIXME: We are spawning a component directly instead of a bundle
-                // .. this is because we don't have yet clear what Bundle to spawn.
-                // .. so we moved "deployed_gear" from the .insert() to .spawn()
+                let gear_sprite = SpriteSheetBundle {
+                    texture: handles.images.gear.clone(),
+                    atlas: TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                    },
+                    transform: Transform::from_xyz(player_pos.x, player_pos.y, player_pos.z + 0.01)
+                        .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Initial scaling factor
+                    ..Default::default()
+                };
+
                 commands
-                    .spawn(deployed_gear)
+                    .spawn(gear_sprite)
+                    .insert(deployed_gear)
                     .insert(*player_pos)
+                    .insert(behavior::component::FloorItemCollidable)
                     .insert(DeployedGearData {
                         kind: player_gear.right_hand.kind.clone(),
                     });
                 player_gear.right_hand.kind = gear::GearKind::None;
+                // Play "Drop Item" sound effect (reused for gear deployment)
+                gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
             } else {
                 // Play "Invalid Drop" sound effect
                 gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
@@ -1137,6 +1150,8 @@ pub fn retrieve_gear(
                     // Now the right hand is free, proceed with retrieval
                     player_gear.right_hand.kind = deployed_gear_data.kind.clone();
                     commands.entity(closest_gear_entity).despawn();
+                    // Play "Grab Item" sound effect (reused for gear retrieval)
+                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
                 }
             }
             // --
