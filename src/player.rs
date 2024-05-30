@@ -1039,6 +1039,8 @@ pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(Entity, &mut PlayerGear, &Position, &PlayerSprite)>,
     mut commands: Commands,
+    q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
+    mut gs: gear::GearStuff,
 ) {
     for (player_entity, mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
@@ -1048,16 +1050,96 @@ pub fn deploy_gear(
                 player_entity, // Temporary placeholder for player entity
                 direction: player_pos.delta(*player_pos),
             };
-            // FIXME: We are spawning a component directly instead of a bundle
-            // .. this is because we don't have yet clear what Bundle to spawn.
-            // .. so we moved "deployed_gear" from the .insert() to .spawn()
-            commands
-                .spawn(deployed_gear)
-                .insert(*player_pos)
-                .insert(DeployedGearData {
-                    kind: player_gear.right_hand.kind.clone(),
-                });
-            player_gear.right_hand.kind = gear::GearKind::None;
+            let target_tile = player_pos.to_board_position();
+            let is_valid_tile = gs
+                .bf
+                .collision_field
+                .get(&target_tile)
+                .map(|col| col.player_free)
+                .unwrap_or(false);
+
+            let is_obstructed = q_collidable
+                .iter()
+                .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
+            if is_valid_tile && !is_obstructed {
+                // FIXME: We are spawning a component directly instead of a bundle
+                // .. this is because we don't have yet clear what Bundle to spawn.
+                // .. so we moved "deployed_gear" from the .insert() to .spawn()
+                commands
+                    .spawn(deployed_gear)
+                    .insert(*player_pos)
+                    .insert(DeployedGearData {
+                        kind: player_gear.right_hand.kind.clone(),
+                    });
+                player_gear.right_hand.kind = gear::GearKind::None;
+            } else {
+                // Play "Invalid Drop" sound effect
+                gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
+            }
+        }
+    }
+}
+
+/// System for retrieving deployed gear and adding it to the player's right hand.
+pub fn retrieve_gear(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(&Position, &PlayerSprite, &mut PlayerGear)>,
+    q_deployed: Query<(Entity, &Position, &DeployedGearData)>,
+    mut commands: Commands,
+    mut gs: gear::GearStuff,
+) {
+    // FIXME: This code, along with grabbing items are in conflict. It will be
+    // possible for a player to grab equipment from the floor and a location
+    // item at the same time if they are close enough for a well placed player.
+    // This needs to be solved, likely by handling the keypress event in
+    // one single system, then routing the remaining stuff to do via an Event
+    // to the system that handles that exact thing.
+    for (player_pos, player, mut player_gear) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.grab) {
+            // Find the closest deployed gear
+            let mut closest_gear: Option<(Entity, f32)> = None;
+            for (entity, gear_pos, _) in q_deployed.iter() {
+                let distance = player_pos.distance(gear_pos);
+                if distance < 1.5 {
+                    // Assuming 1.5 tile interaction radius
+                    if let Some((_, closest_distance)) = closest_gear {
+                        if distance < closest_distance {
+                            closest_gear = Some((entity, distance));
+                        }
+                    } else {
+                        closest_gear = Some((entity, distance));
+                    }
+                }
+            }
+
+            // Retrieve the closest gear
+            if let Some((closest_gear_entity, _)) = closest_gear {
+                if let Ok((_, _, deployed_gear_data)) = q_deployed.get(closest_gear_entity) {
+                    // Inventory Shifting Logic:
+                    if player_gear.right_hand.kind.is_some() {
+                        // Right hand is occupied, try to shift to inventory
+                        if let Some(empty_slot_index) = player_gear
+                            .inventory
+                            .iter()
+                            .position(|gear| gear.kind.is_none())
+                        {
+                            // Move right-hand gear to the empty slot
+                            player_gear.inventory[empty_slot_index] = gear::Gear {
+                                kind: player_gear.right_hand.kind.clone(),
+                            };
+                        } else {
+                            // No empty slot - play invalid action sound and skip retrieval
+                            gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
+                            return;
+                        }
+                    }
+
+                    // Now the right hand is free, proceed with retrieval
+                    player_gear.right_hand.kind = deployed_gear_data.kind.clone();
+                    commands.entity(closest_gear_entity).despawn();
+                }
+            }
+            // --
         }
     }
 }
@@ -1075,6 +1157,7 @@ pub fn app_setup(app: &mut App) {
             animate_sprite,
             update_held_object_position,
             deploy_gear,
+            retrieve_gear,
         )
             .run_if(in_state(root::GameState::None)),
     )
