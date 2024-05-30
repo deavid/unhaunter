@@ -19,6 +19,21 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
+/// Represents a piece of gear deployed in the game world.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGear {
+    /// The entity ID of the player who deployed the gear.
+    pub player_entity: Entity,
+    /// The direction the gear is facing.
+    pub direction: board::Direction,
+}
+
+/// Component to store the GearKind of a deployed gear entity.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGearData {
+    pub kind: gear::GearKind,
+}
+
 /// Enables/disables debug logs related to the player.
 const DEBUG_PLAYER: bool = false;
 
@@ -1019,6 +1034,34 @@ pub fn update_held_object_position(
     }
 }
 
+/// System for deploying a piece of gear from the player's right hand into the game world.
+pub fn deploy_gear(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(Entity, &mut PlayerGear, &Position, &PlayerSprite)>,
+    mut commands: Commands,
+) {
+    for (player_entity, mut player_gear, player_pos, player) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.drop)
+            && player_gear.right_hand.kind.is_some()
+        {
+            let deployed_gear = DeployedGear {
+                player_entity, // Temporary placeholder for player entity
+                direction: player_pos.delta(*player_pos),
+            };
+            // FIXME: We are spawning a component directly instead of a bundle
+            // .. this is because we don't have yet clear what Bundle to spawn.
+            // .. so we moved "deployed_gear" from the .insert() to .spawn()
+            commands
+                .spawn(deployed_gear)
+                .insert(*player_pos)
+                .insert(DeployedGearData {
+                    kind: player_gear.right_hand.kind.clone(),
+                });
+            player_gear.right_hand.kind = gear::GearKind::None;
+        }
+    }
+}
+
 #[derive(Default)]
 struct MeanSound(f32);
 
@@ -1031,6 +1074,7 @@ pub fn app_setup(app: &mut App) {
             visual_health,
             animate_sprite,
             update_held_object_position,
+            deploy_gear,
         )
             .run_if(in_state(root::GameState::None)),
     )

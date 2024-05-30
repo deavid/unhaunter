@@ -148,6 +148,16 @@ pub enum GearKind {
     None,
 }
 
+impl GearKind {
+    pub fn is_none(&self) -> bool {
+        matches!(self, GearKind::None)
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.is_none()
+    }
+}
+
 /// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]
 pub struct Gear {
