@@ -1065,13 +1065,14 @@ pub fn deploy_gear(
                 .iter()
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
             if is_valid_tile && !is_obstructed {
+                let scoord = player_pos.to_screen_coord();
                 let gear_sprite = SpriteSheetBundle {
                     texture: handles.images.gear.clone(),
                     atlas: TextureAtlas {
                         layout: handles.images.gear_atlas.clone(),
                         index: player_gear.right_hand.get_sprite_idx() as usize,
                     },
-                    transform: Transform::from_xyz(player_pos.x, player_pos.y, player_pos.z + 0.01)
+                    transform: Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
                         .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Initial scaling factor
                     ..Default::default()
                 };
