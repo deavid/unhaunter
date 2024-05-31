@@ -29,6 +29,8 @@ pub mod ui;
 pub mod uvtorch;
 pub mod videocam;
 
+use std::mem::swap;
+
 use self::compass::Compass;
 use self::emfmeter::EMFMeter;
 use self::estaticmeter::EStaticMeter;
@@ -49,6 +51,7 @@ use self::videocam::Videocam;
 use self::playergear::{EquipmentPosition, PlayerGear};
 use crate::board::{self, Position};
 use crate::game::GameConfig;
+use crate::player::{DeployedGear, DeployedGearData};
 use crate::summary;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -166,13 +169,23 @@ pub struct Gear {
 }
 
 impl Gear {
+    /// Creates a new empty Gear
     pub fn none() -> Self {
         Self {
             kind: GearKind::None,
         }
     }
+
+    /// Creates a new Gear of the specified Kind
     pub fn new_from_kind(kind: GearKind) -> Self {
         Self { kind }
+    }
+
+    /// Takes the content of the current Gear and returns it, leaving None.
+    pub fn take(&mut self) -> Self {
+        let mut new = Self::none();
+        swap(&mut new, self);
+        new
     }
 }
 
@@ -345,10 +358,35 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
 ///
 /// This system iterates through the player's gear and calls the `update` method for each piece of gear,
 /// allowing gear to update their state based on time, player actions, or environmental conditions.
-pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
+pub fn update_playerheld_gear_data(
+    mut q_gear: Query<(&Position, &mut PlayerGear)>,
+    mut gs: GearStuff,
+) {
     for (position, mut playergear) in q_gear.iter_mut() {
         for (gear, epos) in playergear.as_vec_mut().into_iter() {
             gear.update(&mut gs, position, &epos);
+        }
+    }
+}
+
+/// System for updating the internal state of all gear deployed in the environment.
+pub fn update_deployed_gear_data(
+    mut q_gear: Query<(&Position, &DeployedGear, &mut DeployedGearData)>,
+    mut gs: GearStuff,
+) {
+    for (position, _deployed_gear, mut gear_data) in q_gear.iter_mut() {
+        gear_data
+            .gear
+            .update(&mut gs, position, &playergear::EquipmentPosition::Deployed);
+    }
+}
+
+/// System for updating the sprites of deployed gear to reflect their internal state.
+pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut TextureAtlas, &DeployedGearData)>) {
+    for (mut texture_atlas, gear_data) in q_gear.iter_mut() {
+        let new_index = gear_data.gear.get_sprite_idx() as usize;
+        if texture_atlas.index != new_index {
+            texture_atlas.index = new_index;
         }
     }
 }
@@ -387,7 +425,9 @@ impl<'w, 's> GearStuff<'w, 's> {
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(FixedUpdate, update_gear_data)
+        .add_systems(FixedUpdate, update_playerheld_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_sprites)
         .add_systems(Update, thermometer::temperature_update)
         .add_systems(Update, recorder::sound_update)
         .add_systems(Update, repellentflask::repellent_update);

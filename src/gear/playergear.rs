@@ -42,8 +42,7 @@ impl Inventory {
 pub enum EquipmentPosition {
     Hand(Hand),
     Stowed,
-    // Van,
-    // Ground,
+    Deployed, // Van,
 }
 
 #[derive(Component, Debug, Clone)]

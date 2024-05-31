@@ -9,6 +9,7 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
+use crate::game;
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
 use crate::gear::playergear::PlayerGear;
@@ -31,7 +32,7 @@ pub struct DeployedGear {
 /// Component to store the GearKind of a deployed gear entity.
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGearData {
-    pub kind: gear::GearKind,
+    pub gear: gear::Gear,
 }
 
 /// Enables/disables debug logs related to the player.
@@ -1079,8 +1080,9 @@ pub fn deploy_gear(
                     .insert(deployed_gear)
                     .insert(*player_pos)
                     .insert(behavior::component::FloorItemCollidable)
+                    .insert(game::GameSprite)
                     .insert(DeployedGearData {
-                        kind: player_gear.right_hand.kind.clone(),
+                        gear: player_gear.right_hand.take(),
                     });
                 player_gear.right_hand.kind = gear::GearKind::None;
                 // Play "Drop Item" sound effect (reused for gear deployment)
@@ -1148,7 +1150,7 @@ pub fn retrieve_gear(
                     }
 
                     // Now the right hand is free, proceed with retrieval
-                    player_gear.right_hand.kind = deployed_gear_data.kind.clone();
+                    player_gear.right_hand = deployed_gear_data.gear.clone();
                     commands.entity(closest_gear_entity).despawn();
                     // Play "Grab Item" sound effect (reused for gear retrieval)
                     gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);

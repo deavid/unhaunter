@@ -165,6 +165,9 @@ impl GearUsable for EMFMeter {
                     EquipmentPosition::Stowed => {
                         gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5)
                     }
+                    EquipmentPosition::Deployed => {
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.2)
+                    }
                 }
             }
         }
