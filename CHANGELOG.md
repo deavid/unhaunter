@@ -1,6 +1,22 @@
 ### Version 0.2.2 - 2024-06-??
 
-???
+**Features:**
+
+* **Item Grab & Drop:** 
+    * Items are now dropped to the center of the tile and it
+      checks for other items to prevent dropping items in occupied tiles.
+* **Deployable Gear:**
+    * Players can now press `G` to drop the gear to the ground.
+    * `F` will pick up the gear if there's space for it.
+    * Gear continues to work while on the ground (except torches)
+
+**Fixes:**
+
+  * Increase overall brightness of the game
+  * Ensure the torch iluminates the player itself
+  * Fix player sprite to follow flashlight ilumination
+  * Lower difficulty by making ghost a bit friendlier
+
 
 ### Version 0.2.1 - 2024-05-26
 
