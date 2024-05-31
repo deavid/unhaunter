@@ -1047,6 +1047,7 @@ pub fn deploy_gear(
     for (player_entity, mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
             && player_gear.right_hand.kind.is_some()
+            && player_gear.held_item.is_none()
         {
             let deployed_gear = DeployedGear {
                 player_entity, // Temporary placeholder for player entity
@@ -1115,8 +1116,8 @@ pub fn retrieve_gear(
             let mut closest_gear: Option<(Entity, f32)> = None;
             for (entity, gear_pos, _) in q_deployed.iter() {
                 let distance = player_pos.distance(gear_pos);
-                if distance < 1.5 {
-                    // Assuming 1.5 tile interaction radius
+                if distance < 0.4 {
+                    // Assuming 0.4 tile interaction radius
                     if let Some((_, closest_distance)) = closest_gear {
                         if distance < closest_distance {
                             closest_gear = Some((entity, distance));
