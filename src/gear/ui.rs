@@ -178,13 +178,19 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             "-",
             TextStyle {
                 font: handles.fonts.victormono.w600_semibold.clone(),
-                font_size: 20.0 * UI_SCALE,
+                font_size: 18.0 * UI_SCALE,
                 color: colors::INVENTORY_STATS_COLOR,
             },
         )
         .with_style(Style {
             justify_content: JustifyContent::Center,
-            margin: UiRect::top(Val::Px(8.0 * UI_SCALE)),
+            margin: UiRect::new(
+                Val::Px(0.0 * UI_SCALE),
+                Val::Px(8.0 * UI_SCALE),
+                Val::Px(4.0 * UI_SCALE),
+                Val::Px(-16.0 * UI_SCALE),
+            ),
+
             flex_grow: 1.0,
             ..default()
         });
@@ -205,7 +211,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             margin: UiRect::new(
                 Val::Px(16.0 * UI_SCALE),
                 Val::Px(-8.0 * UI_SCALE),
-                Val::Px(0.0 * UI_SCALE),
+                Val::Px(-8.0 * UI_SCALE),
                 Val::Px(0.0 * UI_SCALE),
             ),
             align_content: AlignContent::End,
