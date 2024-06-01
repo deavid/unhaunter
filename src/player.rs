@@ -681,7 +681,7 @@ pub fn grab_object(
                 });
 
                 // Play "Pick Up" sound effect
-                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
+                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
             }
         }
     }
@@ -738,7 +738,7 @@ pub fn drop_object(
                         *position = target_tile.to_position();
 
                         // Play "Drop" sound effect
-                        gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
+                        gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
                     } else {
                         warn!("Failed to retrieve components from held object entity.");
 
@@ -748,7 +748,7 @@ pub fn drop_object(
                 } else {
                     // --- Invalid Drop Handling ---
                     // Play "Invalid Drop" sound effect
-                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
+                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
 
                     // Put the object back in the player's gear
                     player_gear.held_item = Some(held_object);
@@ -815,7 +815,7 @@ pub fn hide_player(
                 // *visibility = Visibility::Visible.with_opacity(0.5);
 
                 // Play "Hide" sound effect
-                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0);
+                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, player_pos);
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
@@ -1025,7 +1025,7 @@ pub fn update_held_object_position(
                 // Sound cooldown
                 {
                     // Play "Move" sound effect
-                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1);
+                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1, player_pos);
 
                     // Update last sound time
                     *last_sound_time = current_time;
@@ -1088,10 +1088,10 @@ pub fn deploy_gear(
                     });
                 player_gear.right_hand.kind = gear::GearKind::None;
                 // Play "Drop Item" sound effect (reused for gear deployment)
-                gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
+                gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
             } else {
                 // Play "Invalid Drop" sound effect
-                gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
+                gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
             }
         }
     }
@@ -1146,7 +1146,7 @@ pub fn retrieve_gear(
                             };
                         } else {
                             // No empty slot - play invalid action sound and skip retrieval
-                            gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3);
+                            gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
                             return;
                         }
                     }
@@ -1155,7 +1155,7 @@ pub fn retrieve_gear(
                     player_gear.right_hand = deployed_gear_data.gear.clone();
                     commands.entity(closest_gear_entity).despawn();
                     // Play "Grab Item" sound effect (reused for gear retrieval)
-                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
+                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
                 }
             }
             // --

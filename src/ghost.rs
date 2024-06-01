@@ -374,13 +374,12 @@ fn ghost_enrage(
             should_roar = RoarType::Dim;
             roar_time = 10.0;
         }
-    }
-
-    if *last_roar > roar_time {
-        let roar_sound = should_roar.get_sound();
-        if !roar_sound.is_empty() {
-            gs.play_audio(roar_sound, 0.3);
-            *last_roar = 0.0;
+        if *last_roar > roar_time {
+            let roar_sound = should_roar.get_sound();
+            if !roar_sound.is_empty() {
+                gs.play_audio(roar_sound, 1.0, gpos);
+                *last_roar = 0.0;
+            }
         }
     }
 }

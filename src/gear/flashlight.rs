@@ -67,7 +67,7 @@ impl Flashlight {
 }
 
 impl GearUsable for Flashlight {
-    fn update(&mut self, gs: &mut super::GearStuff, _pos: &Position, _ep: &EquipmentPosition) {
+    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         self.frame_counter += 1;
         self.frame_counter %= 210;
         if self.frame_counter % 5 == 0 {
@@ -85,10 +85,10 @@ impl GearUsable for Flashlight {
         self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
         if self.heatsink_temp > 1.0 && self.status == FlashlightStatus::High {
             self.status = FlashlightStatus::Mid;
-            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4);
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4, pos);
         } else if self.heatsink_temp > 1.2 && self.status == FlashlightStatus::Mid {
             self.status = FlashlightStatus::Low;
-            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4);
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4, pos);
         }
     }
     fn get_sprite_idx(&self) -> GearSpriteID {

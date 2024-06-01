@@ -100,7 +100,7 @@ impl GearUsable for GeigerCounter {
 
         if gs.time.elapsed_seconds() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
             self.last_sound_time_secs = gs.time.elapsed_seconds() + rng.gen_range(0.01..0.02);
-            gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25);
+            gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
         }
 
         if self.display_secs_since_last_update > 0.5 {

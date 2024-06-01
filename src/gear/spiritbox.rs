@@ -85,7 +85,7 @@ impl GearUsable for SpiritBox {
             }
         } else if delta > 0.3 {
             self.last_change_secs = sec;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3);
+            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3, &pos);
             let r = if self.charge > 30.0 {
                 self.charge = 0.0;
                 rng.gen_range(0..10)
@@ -95,10 +95,10 @@ impl GearUsable for SpiritBox {
 
             self.ghost_answer = true;
             match r {
-                0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7),
-                1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7),
-                2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7),
-                3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4),
+                0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, &pos),
+                1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, &pos),
+                2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, &pos),
+                3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, &pos),
                 _ => self.ghost_answer = false,
             }
         }
