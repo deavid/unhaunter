@@ -331,7 +331,7 @@ pub fn apply_lighting(
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
-    cursor_exp += fl_total_power.sqrt() / 16.0;
+    cursor_exp += fl_total_power.sqrt() / 4.0;
 
     assert!(cursor_exp.is_normal());
     // Minimum exp - controls how dark we can see
@@ -443,11 +443,17 @@ pub fn apply_lighting(
                 InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
             })
             .unwrap_or_default();
-
-        g += light_data.ultraviolet * att_charge * 2.0;
-        r /= 1.0 + light_data.red * rep_charge * 5.0;
-        b += light_data.infrared * (att_charge + rep_charge) * 0.1;
-        b += light_data.red * rep_charge * 0.3;
+        let rgbl = (r + g + b) / 3.0 + 1.0;
+        g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
+        b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
+        b += light_data.red * rep_charge * 2.3 * rgbl;
+        r /= 1.0
+            + light_data.red * rep_charge * 5.0 * rgbl
+            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
+        g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
+        b /= 1.0
+            + light_data.infrared * (att_charge + rep_charge) * 10.0 * rgbl
+            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
 
         if behavior.p.movement.walkable {
             lightdata_map.insert(bpos.clone(), light_data);
@@ -636,12 +642,12 @@ pub fn apply_lighting(
                 let r = dst_color.r();
                 let g = dst_color.g();
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 3.0
+                    ld.ultraviolet * 6.0
                 } else {
                     0.0
                 };
                 let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    ld.red * 3.0
+                    ld.red * 6.0
                 } else {
                     0.0
                 };
