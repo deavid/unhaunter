@@ -1117,8 +1117,8 @@ pub fn retrieve_gear(
             let mut closest_gear: Option<(Entity, f32)> = None;
             for (entity, gear_pos, _) in q_deployed.iter() {
                 let distance = player_pos.distance(gear_pos);
-                if distance < 0.4 {
-                    // Assuming 0.4 tile interaction radius
+                if distance < 0.8 {
+                    // Assuming 0.8 tile interaction radius
                     if let Some((_, closest_distance)) = closest_gear {
                         if distance < closest_distance {
                             closest_gear = Some((entity, distance));
