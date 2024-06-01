@@ -334,8 +334,10 @@ fn ghost_enrage(
             .clamp(1.0, 1000.0);
         // Reduce ghost rage as player is further away
         ghost.rage -= dt * min_player_dist.sqrt() / 10.0;
-        // Reduce ghost hunting when player is away
-        ghost.hunting -= dt * min_player_dist.sqrt() / 100.0;
+        if !ghost.hunt_target {
+            // Reduce ghost hunting when player is away
+            ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
+        }
         // ---
 
         if ghost.hunt_target {
