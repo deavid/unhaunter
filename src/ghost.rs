@@ -274,8 +274,14 @@ impl RoarType {
                 "sounds/ghost-roar-1.ogg",
                 "sounds/ghost-roar-2.ogg",
                 "sounds/ghost-roar-3.ogg",
+                "sounds/ghost-roar-4.ogg",
             ],
-            RoarType::Dim => vec!["sounds/ghost-effect-1.ogg"],
+            RoarType::Dim => vec![
+                "sounds/ghost-effect-1.ogg",
+                "sounds/ghost-effect-2.ogg",
+                "sounds/ghost-effect-3.ogg",
+                "sounds/ghost-effect-4.ogg",
+            ],
             RoarType::None => vec![""],
         };
         let random_roar = roar_sounds[rand::thread_rng().gen_range(0..roar_sounds.len())];
