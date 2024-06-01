@@ -465,10 +465,13 @@ pub fn sound_playback_system(
             Some(position) => {
                 const MIN_DIST: f32 = 25.0;
                 // Calculate distance from player to sound source
-                let distance = player_position.distance2(&position) + MIN_DIST; // Ensure non-zero distance
+                let distance2 = player_position.distance2(&position) + MIN_DIST;
+                let distance = distance2.powf(0.7) + MIN_DIST;
 
                 // Calculate adjusted volume based on distance
-                (sound_event.volume / distance * MIN_DIST).clamp(0.0, 1.0)
+                (sound_event.volume / distance2 * MIN_DIST
+                    + sound_event.volume / distance * MIN_DIST)
+                    .clamp(0.0, 1.0)
             }
             None => sound_event.volume,
         };

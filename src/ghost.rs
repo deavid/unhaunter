@@ -264,6 +264,7 @@ pub fn ghost_movement(
 pub enum RoarType {
     Full,
     Dim,
+    Snore,
     None,
 }
 
@@ -282,10 +283,25 @@ impl RoarType {
                 "sounds/ghost-effect-3.ogg",
                 "sounds/ghost-effect-4.ogg",
             ],
+            RoarType::Snore => vec![
+                "sounds/ghost-snore-1.ogg",
+                "sounds/ghost-snore-2.ogg",
+                "sounds/ghost-snore-3.ogg",
+                "sounds/ghost-snore-4.ogg",
+            ],
             RoarType::None => vec![""],
         };
         let random_roar = roar_sounds[rand::thread_rng().gen_range(0..roar_sounds.len())];
         random_roar.to_string()
+    }
+
+    pub fn get_volume(&self) -> f32 {
+        match self {
+            RoarType::Full => 1.0,
+            RoarType::Dim => 0.9,
+            RoarType::Snore => 0.3,
+            RoarType::None => 0.0,
+        }
     }
 }
 
@@ -374,16 +390,19 @@ fn ghost_enrage(
             ghost.rage /= 3.0;
             if ghost.hunting < 1.0 {
                 should_roar = RoarType::Full;
+                roar_time = 0.2;
             }
             ghost.hunting += (prev_rage - ghost.rage) / 10.0 + 5.0;
-        } else if ghost.rage > rage_limit / 2.0 && ghost.hunting < 1.0 {
+        } else if ghost.rage > rage_limit / 2.0 && ghost.hunting < 1.0 && roar_time > 10.0 {
             should_roar = RoarType::Dim;
-            roar_time = 10.0;
+        }
+        if *last_roar > 30.0 && matches!(should_roar, RoarType::None) {
+            should_roar = RoarType::Snore;
         }
         if *last_roar > roar_time {
             let roar_sound = should_roar.get_sound();
             if !roar_sound.is_empty() {
-                gs.play_audio(roar_sound, 1.0, gpos);
+                gs.play_audio(roar_sound, should_roar.get_volume(), gpos);
                 *last_roar = 0.0;
             }
         }
