@@ -7,17 +7,33 @@
 //! * Data structures and enums for managing player controls, animations, and held objects.
 
 use crate::behavior::component::{Interactive, RoomState};
-use crate::behavior::Behavior;
+use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
+use crate::game;
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
-use crate::gear;
 use crate::gear::playergear::PlayerGear;
+use crate::gear::{self, GearUsable as _};
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
+
+/// Represents a piece of gear deployed in the game world.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGear {
+    /// The entity ID of the player who deployed the gear.
+    pub player_entity: Entity,
+    /// The direction the gear is facing.
+    pub direction: board::Direction,
+}
+
+/// Component to store the GearKind of a deployed gear entity.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGearData {
+    pub gear: gear::Gear,
+}
 
 /// Enables/disables debug logs related to the player.
 const DEBUG_PLAYER: bool = false;
@@ -665,7 +681,7 @@ pub fn grab_object(
                 });
 
                 // Play "Pick Up" sound effect
-                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0);
+                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
             }
         }
     }
@@ -675,37 +691,54 @@ pub fn grab_object(
 ///
 /// This system checks if the player is pressing the 'drop' key and if they are currently holding an object.
 /// It then determines if the target tile (the player's current position) is a valid drop location
-/// (an empty floor tile).
+/// (an empty floor tile and not obstructed by other objects).
 ///
 /// If the drop is valid, the object is placed at the target tile.
 /// If the drop is invalid, an "invalid drop" sound effect is played, and the object is not dropped.
+#[allow(clippy::type_complexity)]
 pub fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
-    mut objects: Query<(Entity, &mut Position), Without<PlayerSprite>>,
+    mut objects: Query<
+        (Entity, &mut Position),
+        (
+            Without<PlayerSprite>,
+            With<behavior::component::FloorItemCollidable>,
+        ),
+    >,
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop) {
             // Take the held object from the player's gear (this removes it temporarily)
             if let Some(held_object) = player_gear.held_item.take() {
-                // Check if the target tile is valid (floor, no collisions)
+                // Check for valid Drop location
                 let target_tile = player_pos.to_board_position();
-                let is_valid_drop = gs
+                let is_valid_tile = gs
                     .bf
                     .collision_field
                     .get(&target_tile)
                     .map(|col| col.player_free)
                     .unwrap_or(false);
+                // Check for object obstruction
+                let is_obstructed = objects.iter().any(|(entity, object_pos)| {
+                    // Skip checking the held object itself
+                    if entity == held_object.entity {
+                        return false;
+                    }
+                    // **Collision Check:**
+                    target_tile.to_position().distance(object_pos) < 0.5
+                });
 
-                if is_valid_drop {
+                // Only drop if valid
+                if is_valid_tile && !is_obstructed {
                     // Retrieve the ORIGINAL entity of the held object
                     if let Ok((_, mut position)) = objects.get_mut(held_object.entity) {
                         // Update the object's Position component
-                        *position = *player_pos;
+                        *position = target_tile.to_position();
 
                         // Play "Drop" sound effect
-                        gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0);
+                        gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
                     } else {
                         warn!("Failed to retrieve components from held object entity.");
 
@@ -715,7 +748,7 @@ pub fn drop_object(
                 } else {
                     // --- Invalid Drop Handling ---
                     // Play "Invalid Drop" sound effect
-                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 1.0);
+                    gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
 
                     // Put the object back in the player's gear
                     player_gear.held_item = Some(held_object);
@@ -782,7 +815,7 @@ pub fn hide_player(
                 // *visibility = Visibility::Visible.with_opacity(0.5);
 
                 // Play "Hide" sound effect
-                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0);
+                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, player_pos);
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
@@ -921,7 +954,14 @@ fn recover_sanity(
 
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
-            ps.health = 100.0;
+            // --- Gradual Health Recovery ---
+            const HEALTH_RECOVERY_RATE: f32 = 2.0; // Health points recovered per second
+
+            if ps.health < 100.0 {
+                ps.health += HEALTH_RECOVERY_RATE * dt;
+                ps.health = ps.health.min(100.0); // Clamp health to a maximum of 100%
+            }
+
             ps.crazyness /= 1.05_f32.powf(dt);
             if timer.just_finished() {
                 dbg!(ps.sanity());
@@ -992,12 +1032,145 @@ pub fn update_held_object_position(
                 // Sound cooldown
                 {
                     // Play "Move" sound effect
-                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1);
+                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1, player_pos);
 
                     // Update last sound time
                     *last_sound_time = current_time;
                 }
             }
+        }
+    }
+}
+
+/// System for deploying a piece of gear from the player's right hand into the game world.
+pub fn deploy_gear(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(
+        Entity,
+        &mut PlayerGear,
+        &Position,
+        &PlayerSprite,
+        &board::Direction,
+    )>,
+    mut commands: Commands,
+    q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
+    mut gs: gear::GearStuff,
+    handles: Res<root::GameAssets>,
+) {
+    for (player_entity, mut player_gear, player_pos, player, dir) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.drop)
+            && player_gear.right_hand.kind.is_some()
+            && player_gear.held_item.is_none()
+        {
+            let deployed_gear = DeployedGear {
+                player_entity, // Temporary placeholder for player entity
+                direction: *dir,
+            };
+            let target_tile = player_pos.to_board_position();
+            let is_valid_tile = gs
+                .bf
+                .collision_field
+                .get(&target_tile)
+                .map(|col| col.player_free)
+                .unwrap_or(false);
+
+            let is_obstructed = q_collidable
+                .iter()
+                .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
+            if is_valid_tile && !is_obstructed {
+                let scoord = player_pos.to_screen_coord();
+                let gear_sprite = SpriteSheetBundle {
+                    texture: handles.images.gear.clone(),
+                    atlas: TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                    },
+                    transform: Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
+                        .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Initial scaling factor
+                    ..Default::default()
+                };
+
+                commands
+                    .spawn(gear_sprite)
+                    .insert(deployed_gear)
+                    .insert(*player_pos)
+                    .insert(behavior::component::FloorItemCollidable)
+                    .insert(game::GameSprite)
+                    .insert(DeployedGearData {
+                        gear: player_gear.right_hand.take(),
+                    });
+                player_gear.right_hand.kind = gear::GearKind::None;
+                // Play "Drop Item" sound effect (reused for gear deployment)
+                gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
+            } else {
+                // Play "Invalid Drop" sound effect
+                gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
+            }
+        }
+    }
+}
+
+/// System for retrieving deployed gear and adding it to the player's right hand.
+pub fn retrieve_gear(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<(&Position, &PlayerSprite, &mut PlayerGear)>,
+    q_deployed: Query<(Entity, &Position, &DeployedGearData)>,
+    mut commands: Commands,
+    mut gs: gear::GearStuff,
+) {
+    // FIXME: This code, along with grabbing items are in conflict. It will be
+    // possible for a player to grab equipment from the floor and a location
+    // item at the same time if they are close enough for a well placed player.
+    // This needs to be solved, likely by handling the keypress event in
+    // one single system, then routing the remaining stuff to do via an Event
+    // to the system that handles that exact thing.
+    for (player_pos, player, mut player_gear) in players.iter_mut() {
+        if keyboard_input.just_pressed(player.controls.grab) {
+            // Find the closest deployed gear
+            let mut closest_gear: Option<(Entity, f32)> = None;
+            for (entity, gear_pos, _) in q_deployed.iter() {
+                let distance = player_pos.distance(gear_pos);
+                if distance < 1.2 {
+                    if let Some((_, closest_distance)) = closest_gear {
+                        if distance < closest_distance {
+                            closest_gear = Some((entity, distance));
+                        }
+                    } else {
+                        closest_gear = Some((entity, distance));
+                    }
+                }
+            }
+
+            // Retrieve the closest gear
+            if let Some((closest_gear_entity, _)) = closest_gear {
+                if let Ok((_, _, deployed_gear_data)) = q_deployed.get(closest_gear_entity) {
+                    // Inventory Shifting Logic:
+                    if player_gear.right_hand.kind.is_some() {
+                        // Right hand is occupied, try to shift to inventory
+                        if let Some(empty_slot_index) = player_gear
+                            .inventory
+                            .iter()
+                            .position(|gear| gear.kind.is_none())
+                        {
+                            // Move right-hand gear to the empty slot
+                            player_gear.inventory[empty_slot_index] = gear::Gear {
+                                kind: player_gear.right_hand.kind.clone(),
+                            };
+                        } else {
+                            // No empty slot - play invalid action sound and skip retrieval
+                            gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
+                            return;
+                        }
+                    }
+
+                    // Now the right hand is free, proceed with retrieval
+                    player_gear.right_hand = deployed_gear_data.gear.clone();
+                    commands.entity(closest_gear_entity).despawn();
+                    // Play "Grab Item" sound effect (reused for gear retrieval)
+                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
+                }
+            }
+            // --
         }
     }
 }
@@ -1014,6 +1187,8 @@ pub fn app_setup(app: &mut App) {
             visual_health,
             animate_sprite,
             update_held_object_position,
+            deploy_gear,
+            retrieve_gear,
         )
             .run_if(in_state(root::GameState::None)),
     )

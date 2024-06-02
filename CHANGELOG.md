@@ -1,3 +1,31 @@
+### Version 0.2.2 - 2024-06-02
+
+**Features:**
+
+* **Item Grab & Drop:** 
+    * Items are now dropped to the center of the tile and it
+      checks for other items to prevent dropping items in occupied tiles.
+* **Deployable Gear:**
+    * Players can now press `G` to drop the gear to the ground.
+    * `F` will pick up the gear if there's space for it.
+    * Gear continues to work while on the ground
+* **New Sound effects:**
+    * The ghost will snore, roar and more on different scenarios.
+    * The player will hear a loud heardbeat when the health is low.
+    * The backgroud music will fade out and be replaced by unsettling sounds
+      when the sanity is low. 
+* **Basic Spatial sound:**
+    * Now the sounds will have a volume (not panning) depending on the distance.
+    
+**Fixes:**
+  * Increased overall brightness of the game.
+  * Ensure the torch iluminates the player itself.
+  * Fix player sprite to follow flashlight ilumination.
+  * Lower difficulty by making ghost a bit friendlier.
+  * Now torches have occlusion too.
+  * Prevent the ghost from re-hunting when the player re-enters location.
+
+
 ### Version 0.2.1 - 2024-05-26
 
 **Features:**

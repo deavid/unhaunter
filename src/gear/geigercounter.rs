@@ -76,7 +76,9 @@ impl GearUsable for GeigerCounter {
             }
             let n = (self.frame_counter as usize + i) % self.sound_l.len();
             self.sound_l[n] /= 4.0;
-            self.sound_l[n] += sound_reading * 40.0 + breach_energy;
+            if self.enabled {
+                self.sound_l[n] += sound_reading * 40.0 + breach_energy;
+            }
         }
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
@@ -86,14 +88,19 @@ impl GearUsable for GeigerCounter {
             f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
         };
         const MASS: f32 = 16.0;
-        self.sound_a1 = (self.sound_a1 * MASS + avg_snd * MASS.recip()) / (MASS + MASS.recip());
-        self.sound_a2 =
-            (self.sound_a2 * MASS + self.sound_a1 * MASS.recip()) / (MASS + MASS.recip());
+        if self.enabled {
+            self.sound_a1 = (self.sound_a1 * MASS + avg_snd * MASS.recip()) / (MASS + MASS.recip());
+            self.sound_a2 =
+                (self.sound_a2 * MASS + self.sound_a1 * MASS.recip()) / (MASS + MASS.recip());
+        } else {
+            self.sound_a1 /= 1.01;
+            self.sound_a2 /= 1.01;
+        }
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
         if gs.time.elapsed_seconds() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
             self.last_sound_time_secs = gs.time.elapsed_seconds() + rng.gen_range(0.01..0.02);
-            gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25);
+            gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
         }
 
         if self.display_secs_since_last_update > 0.5 {

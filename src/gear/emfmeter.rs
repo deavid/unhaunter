@@ -160,10 +160,13 @@ impl GearUsable for EMFMeter {
                 self.last_sound_secs = sec;
                 match ep {
                     EquipmentPosition::Hand(_) => {
-                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0)
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, &pos)
                     }
                     EquipmentPosition::Stowed => {
-                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5)
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, &pos)
+                    }
+                    EquipmentPosition::Deployed => {
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, &pos)
                     }
                 }
             }
