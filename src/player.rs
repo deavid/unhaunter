@@ -1038,20 +1038,26 @@ pub fn update_held_object_position(
 /// System for deploying a piece of gear from the player's right hand into the game world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(Entity, &mut PlayerGear, &Position, &PlayerSprite)>,
+    mut players: Query<(
+        Entity,
+        &mut PlayerGear,
+        &Position,
+        &PlayerSprite,
+        &board::Direction,
+    )>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
     mut gs: gear::GearStuff,
     handles: Res<root::GameAssets>,
 ) {
-    for (player_entity, mut player_gear, player_pos, player) in players.iter_mut() {
+    for (player_entity, mut player_gear, player_pos, player, dir) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
             && player_gear.right_hand.kind.is_some()
             && player_gear.held_item.is_none()
         {
             let deployed_gear = DeployedGear {
                 player_entity, // Temporary placeholder for player entity
-                direction: player_pos.delta(*player_pos),
+                direction: *dir,
             };
             let target_tile = player_pos.to_board_position();
             let is_valid_tile = gs
@@ -1117,8 +1123,7 @@ pub fn retrieve_gear(
             let mut closest_gear: Option<(Entity, f32)> = None;
             for (entity, gear_pos, _) in q_deployed.iter() {
                 let distance = player_pos.distance(gear_pos);
-                if distance < 0.8 {
-                    // Assuming 0.8 tile interaction radius
+                if distance < 1.2 {
                     if let Some((_, closest_distance)) = closest_gear {
                         if distance < closest_distance {
                             closest_gear = Some((entity, distance));

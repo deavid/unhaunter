@@ -15,12 +15,15 @@ use crate::{
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     components::ghost_influence::{GhostInfluence, InfluenceType},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
-    gear::{playergear::PlayerGear, GearKind},
+    gear::{
+        playergear::{EquipmentPosition, PlayerGear},
+        GearKind,
+    },
     ghost::{self, GhostSprite},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
     platform::plt::IS_WASM,
-    player,
+    player::{self, DeployedGear, DeployedGearData},
 };
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
@@ -116,7 +119,7 @@ pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
     pos_start: &board::Position,
-    roomdb: &mut board::RoomDB,
+    roomdb: Option<&mut board::RoomDB>,
 ) {
     let mut queue = VecDeque::new();
     let start = pos_start.to_board_position();
@@ -157,16 +160,21 @@ pub fn compute_visibility(
                 if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                let k = match roomdb.room_tiles.get(&npos).is_some() {
-                    // Decrease view range inside the location
-                    true => 3.0,
-                    false => {
-                        if IS_WASM {
-                            4.0
-                        } else {
-                            7.0
+                let k = if let Some(roomdb) = roomdb.as_ref() {
+                    match roomdb.room_tiles.get(&npos).is_some() {
+                        // Decrease view range inside the location
+                        true => 3.0,
+                        false => {
+                            if IS_WASM {
+                                4.0
+                            } else {
+                                7.0
+                            }
                         }
                     }
+                } else {
+                    // For deployed gear
+                    3.0
                 };
                 dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
                 let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
@@ -202,7 +210,7 @@ fn player_visibility_system(
         &mut vf.visibility_field,
         &bf.collision_field,
         &player_pos,
-        &mut roomdb,
+        Some(&mut roomdb),
     );
 }
 
@@ -232,6 +240,7 @@ pub fn apply_lighting(
         &board::Direction,
         &PlayerGear,
     )>,
+    q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
     mut bf: ResMut<board::BoardData>,
     vf: Res<board::VisibilityData>,
     gc: Res<game::GameConfig>,
@@ -265,6 +274,32 @@ pub fn apply_lighting(
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_seconds();
+
+    // Deployed gear
+    for (pos, deployed_gear, gear_data) in q_deployed.iter() {
+        let p = EquipmentPosition::Deployed;
+        let Some((power, color, _p, light_type)) = (match &gear_data.gear.kind {
+            GearKind::Flashlight(t) => Some((t.power(), t.color(), p, LightType::Visible)),
+            GearKind::UVTorch(t) => Some((t.power(), t.color(), p, LightType::UltraViolet)),
+            GearKind::RedTorch(t) => Some((t.power(), t.color(), p, LightType::Red)),
+            GearKind::Videocam(t) => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
+            _ => None,
+        }) else {
+            continue;
+        };
+        if power > 0.0 {
+            let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+            flashlights.push((
+                pos,
+                deployed_gear.direction,
+                power,
+                color,
+                light_type,
+                vis_field,
+            ));
+        }
+    }
+
     for (pos, player, direction, gear) in qp.iter() {
         let player_flashlight = gear
             .as_vec()
@@ -287,8 +322,8 @@ pub fn apply_lighting(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-
-                flashlights.push((pos, fldir, power, color, light_type));
+                let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+                flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
 
@@ -304,6 +339,10 @@ pub fn apply_lighting(
             }
         }
         player_pos = *pos;
+    }
+
+    for (pos, _fldir, _power, _color, _light_type, ref mut vis_field) in flashlights.iter_mut() {
+        compute_visibility(vis_field, &bf.collision_field, pos, None);
     }
     // --- Access queries from the ParamSet ---
     let mut tile_sprites = sprite_set.p1();
@@ -385,7 +424,7 @@ pub fn apply_lighting(
             let mut lux_fl = [0_f32; 3];
             let mut lightdata = LightData::default();
 
-            for (flpos, fldir, flpower, flcolor, fltype) in flashlights.iter() {
+            for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
                 let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
                 let mut lpos = lpos.unrotate_by_dir(fldir);
@@ -404,7 +443,9 @@ pub fn apply_lighting(
                 }
                 let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                let fl = flpower / (dist * dist + FL_MIN_DST);
+                let flvis = flvismap.get(bpos).copied().unwrap_or_default();
+                let fl = flpower / (dist * dist + FL_MIN_DST) * flvis;
+
                 lux_fl[0] += fl * flcolor.r();
                 lux_fl[1] += fl * flcolor.g();
                 lux_fl[2] += fl * flcolor.b();
