@@ -259,6 +259,9 @@ pub mod component {
     pub struct Door;
 
     #[derive(Component, Debug, Clone, PartialEq, Eq)]
+    pub struct FloorItemCollidable;
+
+    #[derive(Component, Debug, Clone, PartialEq, Eq)]
     pub struct RoomState {
         pub room_delta: BoardPosition,
     }
@@ -588,6 +591,7 @@ impl SpriteConfig {
                     "sounds/door-open.ogg",
                     "sounds/door-close.ogg",
                 ))
+                .insert(component::FloorItemCollidable)
                 .insert(component::Door),
             Class::Switch => entity
                 .insert(component::Interactive::new(
@@ -606,15 +610,17 @@ impl SpriteConfig {
                 "sounds/switch-off-1.ogg",
             )),
             Class::Doorway => entity,
-            Class::Decor => entity,
-            Class::Item => entity,
-            Class::Furniture => entity,
+            Class::Decor => entity.insert(component::FloorItemCollidable),
+            Class::Item => entity.insert(component::FloorItemCollidable),
+            Class::Furniture => entity.insert(component::FloorItemCollidable),
             Class::PlayerSpawn => entity,
             Class::GhostSpawn => entity,
-            Class::VanEntry => entity.insert(component::Interactive::new(
-                "sounds/door-open.ogg",
-                "sounds/door-close.ogg",
-            )),
+            Class::VanEntry => entity
+                .insert(component::Interactive::new(
+                    "sounds/door-open.ogg",
+                    "sounds/door-close.ogg",
+                ))
+                .insert(component::FloorItemCollidable),
             Class::RoomDef => entity,
             Class::WallLamp => entity
                 .insert(component::RoomState::new())
@@ -624,19 +630,21 @@ impl SpriteConfig {
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
+                .insert(component::FloorItemCollidable)
                 .insert(component::Light),
             Class::TableLamp => entity
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
+                .insert(component::FloorItemCollidable)
                 .insert(component::Light),
             Class::WallDecor => entity,
             Class::CeilingLight => entity
                 .insert(component::RoomState::new())
                 .insert(component::Light),
             Class::StreetLight => entity.insert(component::Light),
-            Class::Appliance => entity,
+            Class::Appliance => entity.insert(component::FloorItemCollidable),
             Class::Van => entity,
             Class::Window => entity,
             Class::None => entity,
@@ -649,7 +657,8 @@ impl SpriteConfig {
                 .insert(component::Interactive::new(
                     "sounds/effects-dongdongdong.ogg",
                     "sounds/effects-dongdongdong.ogg",
-                )),
+                ))
+                .insert(component::FloorItemCollidable),
         };
     }
     pub fn set_properties(&self, p: &mut Properties) {

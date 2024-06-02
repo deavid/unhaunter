@@ -455,15 +455,15 @@ pub struct SpriteDB {
 /// The `RoomDB` resource manages room-related data, including room boundaries and states.
 #[derive(Clone, Default, Resource)]
 pub struct RoomDB {
-    /// Maps each board position to the name of the room it belongs to. 
+    /// Maps each board position to the name of the room it belongs to.
     /// This defines the boundaries of each room in the game world.
     pub room_tiles: HashMap<BoardPosition, String>,
     /// Tracks the current state of each room, using the room name as the key.
     /// The exact nature of the room state is not explicitly defined but could include things like:
     /// * Lighting conditions (lit/unlit).
     /// * Presence of specific objects or entities.
-    /// * Temperature or other environmental factors. 
-    pub room_state: HashMap<String, behavior::State>, 
+    /// * Temperature or other environmental factors.
+    pub room_state: HashMap<String, behavior::State>,
 }
 
 impl SpriteDB {
@@ -877,9 +877,10 @@ pub fn boardfield_update(
             let src_lfs = lfs.clone();
             // lfs_clone_time_total += lfs_clone_time.elapsed();
             let size = match step {
-                0 => 24,
-                1 => 12,
-                2 => 1,
+                0 => 26,
+                1 => 8,
+                2 => 6,
+                3 => 3,
                 _ => 6,
             };
             for x in min_x..=max_x {
@@ -941,14 +942,14 @@ pub fn boardfield_update(
                                 min_trans = min_trans.min(trans);
                             }
                             // For smoothing steps only:
-                            if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.8 {
+                            if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.9 {
                                 // If there are no walls nearby, we don't reflect light.
                                 continue;
                             }
                         }
                         // This controls how harsh is the light
                         if step > 0 {
-                            src_lux /= 2.5;
+                            src_lux /= 5.5;
                         } else {
                             src_lux /= 1.01;
                         }

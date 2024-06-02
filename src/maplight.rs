@@ -15,12 +15,16 @@ use crate::{
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     components::ghost_influence::{GhostInfluence, InfluenceType},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
-    gear::{playergear::PlayerGear, GearKind},
+    gear::{
+        playergear::{EquipmentPosition, PlayerGear},
+        GearKind,
+    },
     ghost::{self, GhostSprite},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
     platform::plt::IS_WASM,
-    player,
+    player::{self, DeployedGear, DeployedGearData},
+    utils,
 };
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
@@ -116,7 +120,7 @@ pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
     pos_start: &board::Position,
-    roomdb: &mut board::RoomDB,
+    roomdb: Option<&mut board::RoomDB>,
 ) {
     let mut queue = VecDeque::new();
     let start = pos_start.to_board_position();
@@ -157,16 +161,21 @@ pub fn compute_visibility(
                 if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                let k = match roomdb.room_tiles.get(&npos).is_some() {
-                    // Decrease view range inside the location
-                    true => 3.0,
-                    false => {
-                        if IS_WASM {
-                            4.0
-                        } else {
-                            7.0
+                let k = if let Some(roomdb) = roomdb.as_ref() {
+                    match roomdb.room_tiles.get(&npos).is_some() {
+                        // Decrease view range inside the location
+                        true => 3.0,
+                        false => {
+                            if IS_WASM {
+                                4.0
+                            } else {
+                                7.0
+                            }
                         }
                     }
+                } else {
+                    // For deployed gear
+                    3.0
                 };
                 dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
                 let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
@@ -202,7 +211,7 @@ fn player_visibility_system(
         &mut vf.visibility_field,
         &bf.collision_field,
         &player_pos,
-        &mut roomdb,
+        Some(&mut roomdb),
     );
 }
 
@@ -232,6 +241,7 @@ pub fn apply_lighting(
         &board::Direction,
         &PlayerGear,
     )>,
+    q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
     mut bf: ResMut<board::BoardData>,
     vf: Res<board::VisibilityData>,
     gc: Res<game::GameConfig>,
@@ -254,16 +264,43 @@ pub fn apply_lighting(
         >,
     )>,
 ) {
-    const GAMMA_EXP: f32 = 2.4;
-    const CENTER_EXP: f32 = 10.0; // Higher values, less blinding light.
-    const CENTER_EXP_GAMMA: f32 = 2.25; // Above 1.0, higher the less night vision.
-    const EYE_SPEED: f32 = 0.1;
+    const GAMMA_EXP: f32 = 2.5;
+    const CENTER_EXP: f32 = 5.0; // Higher values, less blinding light.
+    const CENTER_EXP_GAMMA: f32 = 1.7; // Above 1.0, higher the less night vision.
+    const BRIGHTNESS_HARSH: f32 = 3.0; // Lower values create an HDR effect, bringing blinding lights back to normal.
+    const EYE_SPEED: f32 = 0.4;
     let mut cursor_exp: f32 = 0.001;
     let mut exp_count: f32 = 0.1;
 
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_seconds();
+
+    // Deployed gear
+    for (pos, deployed_gear, gear_data) in q_deployed.iter() {
+        let p = EquipmentPosition::Deployed;
+        let Some((power, color, _p, light_type)) = (match &gear_data.gear.kind {
+            GearKind::Flashlight(t) => Some((t.power(), t.color(), p, LightType::Visible)),
+            GearKind::UVTorch(t) => Some((t.power(), t.color(), p, LightType::UltraViolet)),
+            GearKind::RedTorch(t) => Some((t.power(), t.color(), p, LightType::Red)),
+            GearKind::Videocam(t) => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
+            _ => None,
+        }) else {
+            continue;
+        };
+        if power > 0.0 {
+            let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+            flashlights.push((
+                pos,
+                deployed_gear.direction,
+                power,
+                color,
+                light_type,
+                vis_field,
+            ));
+        }
+    }
+
     for (pos, player, direction, gear) in qp.iter() {
         let player_flashlight = gear
             .as_vec()
@@ -286,8 +323,8 @@ pub fn apply_lighting(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-
-                flashlights.push((pos, fldir, power, color, light_type));
+                let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+                flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
 
@@ -303,6 +340,10 @@ pub fn apply_lighting(
             }
         }
         player_pos = *pos;
+    }
+
+    for (pos, _fldir, _power, _color, _light_type, ref mut vis_field) in flashlights.iter_mut() {
+        compute_visibility(vis_field, &bf.collision_field, pos, None);
     }
     // --- Access queries from the ParamSet ---
     let mut tile_sprites = sprite_set.p1();
@@ -330,11 +371,13 @@ pub fn apply_lighting(
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
-    cursor_exp += fl_total_power.sqrt() / 8.0;
+    cursor_exp += fl_total_power.sqrt() / 4.0;
 
     assert!(cursor_exp.is_normal());
-    cursor_exp += 0.05;
-
+    // Minimum exp - controls how dark we can see
+    cursor_exp += 0.001;
+    // Compensate overall to make the scene brighter
+    cursor_exp /= 2.4;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -382,10 +425,9 @@ pub fn apply_lighting(
             let mut lux_fl = [0_f32; 3];
             let mut lightdata = LightData::default();
 
-            for (flpos, fldir, flpower, flcolor, fltype) in flashlights.iter() {
-                let pdist = flpos.distance(&rpos).powf(2.0);
+            for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                let lpos = *flpos + *fldir / (100.0 / focus);
+                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
                 let mut lpos = lpos.unrotate_by_dir(fldir);
                 let mut rpos = rpos.unrotate_by_dir(fldir);
                 rpos.x -= lpos.x;
@@ -400,10 +442,11 @@ pub fn apply_lighting(
                     rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
                     rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                 }
-                let dist = lpos
-                    .distance(&rpos)
+                let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                let fl = flpower / (dist * dist + FL_MIN_DST) * (pdist / 5.0).clamp(0.0, 1.0);
+                let flvis = flvismap.get(bpos).copied().unwrap_or_default();
+                let fl = flpower / (dist * dist + FL_MIN_DST) * flvis;
+
                 lux_fl[0] += fl * flcolor.r();
                 lux_fl[1] += fl * flcolor.g();
                 lux_fl[2] += fl * flcolor.b();
@@ -429,7 +472,9 @@ pub fn apply_lighting(
 
         let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
             let gcolor = fpos_gamma_color(bpos);
-            gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0)
+            gcolor
+                .map(|((r, g, b), _)| (r + g + b) / 3.0)
+                .map(|l| (l / BRIGHTNESS_HARSH).tanh() * BRIGHTNESS_HARSH)
         };
         let ((mut r, mut g, mut b), light_data) =
             fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
@@ -440,19 +485,24 @@ pub fn apply_lighting(
                 InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
             })
             .unwrap_or_default();
-
-        g += light_data.ultraviolet * att_charge * 2.0;
-        r /= 1.0 + light_data.red * rep_charge * 5.0;
-        b += light_data.infrared * (att_charge + rep_charge) * 0.1;
-        b += light_data.red * rep_charge * 0.3;
+        let rgbl = (r + g + b) / 3.0 + 1.0;
+        g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
+        b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
+        b += light_data.red * rep_charge * 2.3 * rgbl;
+        r /= 1.0
+            + light_data.red * rep_charge * 5.0 * rgbl
+            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
+        g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
+        b /= 1.0
+            + light_data.infrared * (att_charge + rep_charge) * 10.0 * rgbl
+            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
 
         if behavior.p.movement.walkable {
-            let ld = light_data.normalize();
-            lightdata_map.insert(bpos.clone(), ld);
+            lightdata_map.insert(bpos.clone(), light_data);
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
         let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
-        let mut l = src_color.l().max(0.0001).powf(1.5);
+        let mut l = src_color.l().max(0.0001).powf(1.8);
 
         l /= 1.0
             + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
@@ -583,10 +633,13 @@ pub fn apply_lighting(
     for (pos, mut sprite, o_type, o_gs) in qt.iter_mut() {
         let stype = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
-        let Some(ld) = lightdata_map.get(&bpos).cloned() else {
+        let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
             // If the given cell was not selected for update, skip updating its color (otherwise it can blink)
             continue;
         };
+        let ld_mag = ld_abs.magnitude();
+        let ld = ld_abs.normalize();
+
         let mut opacity: f32 = 1.0
             * vf.visibility_field
                 .get(&bpos)
@@ -595,9 +648,9 @@ pub fn apply_lighting(
                 .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let src_color = Color::WHITE;
-        let mut dst_color = if let Some(lf) = bf.light_field.get(&bpos) {
+        let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = lf.lux / exposure;
+            let mut rel_lux = ld_mag / exposure;
             if stype == SpriteType::Ghost {
                 rel_lux /= 2.0;
             }
@@ -605,10 +658,12 @@ pub fn apply_lighting(
                 rel_lux *= 1.1;
                 rel_lux += 0.1;
             }
+            if stype == SpriteType::Breach {
+                rel_lux *= 1.2;
+                rel_lux += 0.2;
+            }
 
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
-        } else {
-            src_color
         };
         let mut smooth: f32 = 20.0;
         if stype == SpriteType::Ghost {
@@ -629,12 +684,12 @@ pub fn apply_lighting(
                 let r = dst_color.r();
                 let g = dst_color.g();
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 3.0
+                    ld.ultraviolet * 6.0
                 } else {
                     0.0
                 };
                 let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    ld.red * 3.0
+                    ld.red * 6.0
                 } else {
                     0.0
                 };
@@ -653,7 +708,8 @@ pub fn apply_lighting(
             } else {
                 0.0
             };
-            opacity *= ((dst_color.l() / 3.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            opacity *= ((dst_color.l() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            opacity = opacity.sqrt();
             let l = dst_color.l();
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
@@ -728,7 +784,13 @@ fn ambient_sound_system(
     vf: Res<board::VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<board::RoomDB>,
+    gc: Res<GameConfig>,
+    qp: Query<&player::PlayerSprite>,
+    time: Res<Time>,
+    mut timer: Local<utils::PrintingTimer>,
 ) {
+    timer.tick(time.delta());
+
     let total_vis: f32 = vf
         .visibility_field
         .iter()
@@ -742,19 +804,46 @@ fn ambient_sound_system(
     let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
     let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
+    // --- Get Player Health and Sanity ---
+    let player = qp.iter().find(|p| p.id == gc.player_id);
+    let health = player
+        .map(|p| p.health.clamp(0.0, 100.0) / 100.0)
+        .unwrap_or(1.0);
+    let sanity = player.map(|p| p.sanity() / 100.0).unwrap_or(1.0);
+
+    if timer.just_finished() {
+        // dbg!(health, sanity);
+    }
+
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
-        if gamesound.class == SoundType::BackgroundHouse {
-            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
-        }
-        if gamesound.class == SoundType::BackgroundStreet {
-            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
+        match gamesound.class {
+            SoundType::BackgroundHouse => {
+                let v = (sink.volume().ln() * SMOOTH + house_volume.ln() * health * sanity)
+                    / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::BackgroundStreet => {
+                let v = (sink.volume().ln() * SMOOTH + street_volume.ln() * health * sanity)
+                    / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::HeartBeat => {
+                // Handle heartbeat sound
+                let heartbeat_volume = (1.0 - health).powf(0.7) * 0.5 + 0.0000001; // Volume based on health
+                let v = (sink.volume().ln() * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::Insane => {
+                // Handle insanity sound
+                let insanity_volume =
+                    (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.3, 1.0) + 0.0000001; // Volume based on sanity
+                let v = (sink.volume().ln() * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
         }
     }
 }
-
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,

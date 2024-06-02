@@ -4,9 +4,10 @@ use crate::components::ghost_influence::InfluenceType;
 use crate::ghost_definitions::GhostType;
 use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
-use crate::{summary, utils};
+use crate::{gear, summary, utils};
 
 use bevy::prelude::*;
+use ordered_float::OrderedFloat;
 use rand::Rng;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -260,6 +261,50 @@ pub fn ghost_movement(
     }
 }
 
+pub enum RoarType {
+    Full,
+    Dim,
+    Snore,
+    None,
+}
+
+impl RoarType {
+    pub fn get_sound(&self) -> String {
+        let roar_sounds = match self {
+            RoarType::Full => vec![
+                "sounds/ghost-roar-1.ogg",
+                "sounds/ghost-roar-2.ogg",
+                "sounds/ghost-roar-3.ogg",
+                "sounds/ghost-roar-4.ogg",
+            ],
+            RoarType::Dim => vec![
+                "sounds/ghost-effect-1.ogg",
+                "sounds/ghost-effect-2.ogg",
+                "sounds/ghost-effect-3.ogg",
+                "sounds/ghost-effect-4.ogg",
+            ],
+            RoarType::Snore => vec![
+                "sounds/ghost-snore-1.ogg",
+                "sounds/ghost-snore-2.ogg",
+                "sounds/ghost-snore-3.ogg",
+                "sounds/ghost-snore-4.ogg",
+            ],
+            RoarType::None => vec![""],
+        };
+        let random_roar = roar_sounds[rand::thread_rng().gen_range(0..roar_sounds.len())];
+        random_roar.to_string()
+    }
+
+    pub fn get_volume(&self) -> f32 {
+        match self {
+            RoarType::Full => 1.0,
+            RoarType::Dim => 0.9,
+            RoarType::Snore => 0.3,
+            RoarType::None => 0.0,
+        }
+    }
+}
+
 /// Manages the ghost's rage level, hunting behavior, and player interactions during a hunt.
 ///
 /// This system updates the ghost's rage based on player proximity, sanity, and sound levels.
@@ -270,11 +315,31 @@ fn ghost_enrage(
     mut avg_angry: Local<utils::MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position)>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
+    mut gs: gear::GearStuff,
+    mut last_roar: Local<f32>,
 ) {
     timer.tick(time.delta());
     let dt = time.delta_seconds();
-
+    *last_roar += dt;
+    let mut should_roar = RoarType::None;
+    let mut roar_time = 3.0;
     for (mut ghost, gpos) in &mut qg {
+        // Calm ghost when players are far away
+        let min_player_dist = qp
+            .iter()
+            .map(|(_, ppos)| OrderedFloat(gpos.distance(ppos)))
+            .min()
+            .unwrap_or(OrderedFloat(1000.0))
+            .into_inner()
+            .clamp(1.0, 1000.0);
+        // Reduce ghost rage as player is further away
+        ghost.rage -= dt * min_player_dist.sqrt() / 10.0;
+        if !ghost.hunt_target {
+            // Reduce ghost hunting when player is away
+            ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
+        }
+        // ---
+
         if ghost.hunt_target {
             let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
@@ -282,7 +347,11 @@ fn ghost_enrage(
                 let dmg = dist2.recip();
                 player.health -= dmg * dt * 30.0 * ghost_strength;
             }
-
+            if ghost.hunting > 4.0 {
+                should_roar = RoarType::Full;
+            } else {
+                should_roar = RoarType::Dim;
+            }
             ghost.rage -= dt * 20.0;
             if ghost.rage < 0.0 {
                 ghost.rage = 0.0;
@@ -321,7 +390,23 @@ fn ghost_enrage(
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 3.0;
+            if ghost.hunting < 1.0 {
+                should_roar = RoarType::Full;
+                roar_time = 0.2;
+            }
             ghost.hunting += (prev_rage - ghost.rage) / 10.0 + 5.0;
+        } else if ghost.rage > rage_limit / 2.0 && ghost.hunting < 1.0 && roar_time > 10.0 {
+            should_roar = RoarType::Dim;
+        }
+        if *last_roar > 30.0 && matches!(should_roar, RoarType::None) {
+            should_roar = RoarType::Snore;
+        }
+        if *last_roar > roar_time {
+            let roar_sound = should_roar.get_sound();
+            if !roar_sound.is_empty() {
+                gs.play_audio(roar_sound, should_roar.get_volume(), gpos);
+                *last_roar = 0.0;
+            }
         }
     }
 }

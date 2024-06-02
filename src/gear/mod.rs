@@ -29,6 +29,8 @@ pub mod ui;
 pub mod uvtorch;
 pub mod videocam;
 
+use std::mem::swap;
+
 use self::compass::Compass;
 use self::emfmeter::EMFMeter;
 use self::estaticmeter::EStaticMeter;
@@ -49,6 +51,7 @@ use self::videocam::Videocam;
 use self::playergear::{EquipmentPosition, PlayerGear};
 use crate::board::{self, Position};
 use crate::game::GameConfig;
+use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use crate::summary;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -148,6 +151,16 @@ pub enum GearKind {
     None,
 }
 
+impl GearKind {
+    pub fn is_none(&self) -> bool {
+        matches!(self, GearKind::None)
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.is_none()
+    }
+}
+
 /// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]
 pub struct Gear {
@@ -156,13 +169,23 @@ pub struct Gear {
 }
 
 impl Gear {
+    /// Creates a new empty Gear
     pub fn none() -> Self {
         Self {
             kind: GearKind::None,
         }
     }
+
+    /// Creates a new Gear of the specified Kind
     pub fn new_from_kind(kind: GearKind) -> Self {
         Self { kind }
+    }
+
+    /// Takes the content of the current Gear and returns it, leaving None.
+    pub fn take(&mut self) -> Self {
+        let mut new = Self::none();
+        swap(&mut new, self);
+        new
     }
 }
 
@@ -233,7 +256,7 @@ impl GearUsable for Gear {
 
     fn set_trigger(&mut self, gs: &mut GearStuff) {
         let sound_file = "sounds/switch-on-1.ogg";
-        gs.play_audio(sound_file.into(), 0.6);
+        gs.play_audio_nopos(sound_file.into(), 0.6);
 
         let ni = |s| warn!("Trigger not implemented for {:?}", s);
         match &mut self.kind {
@@ -335,10 +358,35 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
 ///
 /// This system iterates through the player's gear and calls the `update` method for each piece of gear,
 /// allowing gear to update their state based on time, player actions, or environmental conditions.
-pub fn update_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
+pub fn update_playerheld_gear_data(
+    mut q_gear: Query<(&Position, &mut PlayerGear)>,
+    mut gs: GearStuff,
+) {
     for (position, mut playergear) in q_gear.iter_mut() {
         for (gear, epos) in playergear.as_vec_mut().into_iter() {
             gear.update(&mut gs, position, &epos);
+        }
+    }
+}
+
+/// System for updating the internal state of all gear deployed in the environment.
+pub fn update_deployed_gear_data(
+    mut q_gear: Query<(&Position, &DeployedGear, &mut DeployedGearData)>,
+    mut gs: GearStuff,
+) {
+    for (position, _deployed_gear, mut gear_data) in q_gear.iter_mut() {
+        gear_data
+            .gear
+            .update(&mut gs, position, &playergear::EquipmentPosition::Deployed);
+    }
+}
+
+/// System for updating the sprites of deployed gear to reflect their internal state.
+pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut TextureAtlas, &DeployedGearData)>) {
+    for (mut texture_atlas, gear_data) in q_gear.iter_mut() {
+        let new_index = gear_data.gear.get_sprite_idx() as usize;
+        if texture_atlas.index != new_index {
+            texture_atlas.index = new_index;
         }
     }
 }
@@ -356,16 +404,84 @@ pub struct GearStuff<'w, 's> {
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the current game time.
     pub time: Res<'w, Time>,
+    /// Event writer for sending sound events.
+    pub sound_events: EventWriter<'w, SoundEvent>,
 }
 
 impl<'w, 's> GearStuff<'w, 's> {
-    /// Plays a sound effect using the specified file path and volume.
-    pub fn play_audio(&mut self, sound_file: String, volume: f32) {
-        self.commands.spawn(AudioBundle {
-            source: self.asset_server.load(sound_file),
+    /// Plays a sound effect using the specified file path and volume from the given position.
+    pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
+        // Create a SoundEvent with the required data
+        let sound_event = SoundEvent {
+            sound_file,
+            volume,
+            position: Some(*position),
+        };
+        // Send the SoundEvent to be handled by the sound playback system
+        self.sound_events.send(sound_event);
+    }
+
+    /// Plays a sound effect without having a position volume modifier.
+    pub fn play_audio_nopos(&mut self, sound_file: String, volume: f32) {
+        // Create a SoundEvent with the required data
+        let sound_event = SoundEvent {
+            sound_file,
+            volume,
+            position: None,
+        };
+        // Send the SoundEvent to be handled by the sound playback system
+        self.sound_events.send(sound_event);
+    }
+}
+
+/// Represents an event to play a sound effect at a specific location in the game world.
+///
+/// This event is used to trigger the playback of a sound with volume adjusted
+/// based on the distance to the player's position.
+#[derive(Debug, Event, Clone)]
+pub struct SoundEvent {
+    /// The path to the sound file to be played.
+    pub sound_file: String,
+    /// The initial volume of the sound effect (this will be adjusted based on distance).
+    pub volume: f32,
+    /// The position in the game world where the sound is originating from.
+    pub position: Option<Position>,
+}
+
+/// System to handle the SoundEvent, playing the sound with volume adjusted by distance.
+pub fn sound_playback_system(
+    mut sound_events: EventReader<SoundEvent>,
+    asset_server: Res<AssetServer>,
+    gc: Res<GameConfig>,
+    qp: Query<(&Position, &PlayerSprite)>,
+    mut commands: Commands,
+) {
+    for sound_event in sound_events.read() {
+        // Get player position (Match against the player ID from GameConfig)
+        let Some((player_position, _)) = qp.iter().find(|(_, p)| p.id == gc.player_id) else {
+            return;
+        };
+        let adjusted_volume = match sound_event.position {
+            Some(position) => {
+                const MIN_DIST: f32 = 25.0;
+                // Calculate distance from player to sound source
+                let distance2 = player_position.distance2(&position) + MIN_DIST;
+                let distance = distance2.powf(0.7) + MIN_DIST;
+
+                // Calculate adjusted volume based on distance
+                (sound_event.volume / distance2 * MIN_DIST
+                    + sound_event.volume / distance * MIN_DIST)
+                    .clamp(0.0, 1.0)
+            }
+            None => sound_event.volume,
+        };
+
+        // Spawn an AudioBundle with the adjusted volume
+        commands.spawn(AudioBundle {
+            source: asset_server.load(sound_event.sound_file.clone()),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
-                volume: bevy::audio::Volume::new(volume),
+                volume: bevy::audio::Volume::new(adjusted_volume),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
@@ -377,9 +493,13 @@ impl<'w, 's> GearStuff<'w, 's> {
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(FixedUpdate, update_gear_data)
+        .add_systems(FixedUpdate, update_playerheld_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_sprites)
         .add_systems(Update, thermometer::temperature_update)
         .add_systems(Update, recorder::sound_update)
-        .add_systems(Update, repellentflask::repellent_update);
+        .add_systems(Update, repellentflask::repellent_update)
+        .add_systems(Update, sound_playback_system)
+        .add_event::<SoundEvent>();
     ui::app_setup(app);
 }
