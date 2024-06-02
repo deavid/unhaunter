@@ -4138,7 +4138,7 @@ checksum = "059d83cc991e7a42fc37bd50941885db0888e34209f8cfd9aab07ddec03bc9cf"
 
 [[package]]
 name = "unhaunter"
-version = "0.2.2"
+version = "0.2.3-alpha"
 dependencies = [
  "anyhow",
  "bevy",
