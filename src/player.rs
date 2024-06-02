@@ -954,7 +954,14 @@ fn recover_sanity(
 
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
-            ps.health = 100.0;
+            // --- Gradual Health Recovery ---
+            const HEALTH_RECOVERY_RATE: f32 = 2.0; // Health points recovered per second
+
+            if ps.health < 100.0 {
+                ps.health += HEALTH_RECOVERY_RATE * dt;
+                ps.health = ps.health.min(100.0); // Clamp health to a maximum of 100%
+            }
+
             ps.crazyness /= 1.05_f32.powf(dt);
             if timer.just_finished() {
                 dbg!(ps.sanity());

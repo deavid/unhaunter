@@ -140,6 +140,36 @@ pub fn load_level(
         .insert(GameSound {
             class: SoundType::BackgroundStreet,
         });
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("sounds/heartbeat-1.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::new(0.00001),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+                spatial_scale: None,
+            },
+        })
+        .insert(GameSound {
+            class: SoundType::HeartBeat,
+        });
+    commands
+        .spawn(AudioBundle {
+            source: asset_server.load("sounds/insane-1.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::new(0.00001),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+                spatial_scale: None,
+            },
+        })
+        .insert(GameSound {
+            class: SoundType::Insane,
+        });
     commands.init_resource::<board::BoardData>();
 
     info!("Load Level: {}", &load_event.map_filepath);

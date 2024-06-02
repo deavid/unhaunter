@@ -27,6 +27,8 @@ pub struct GameSound {
 pub enum SoundType {
     BackgroundHouse,
     BackgroundStreet,
+    HeartBeat,
+    Insane,
 }
 
 /// Resource to know basic stuff of the game.

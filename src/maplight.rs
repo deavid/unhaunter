@@ -24,6 +24,7 @@ use crate::{
     materials::CustomMaterial1,
     platform::plt::IS_WASM,
     player::{self, DeployedGear, DeployedGearData},
+    utils,
 };
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
@@ -783,7 +784,13 @@ fn ambient_sound_system(
     vf: Res<board::VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<board::RoomDB>,
+    gc: Res<GameConfig>,
+    qp: Query<&player::PlayerSprite>,
+    time: Res<Time>,
+    mut timer: Local<utils::PrintingTimer>,
 ) {
+    timer.tick(time.delta());
+
     let total_vis: f32 = vf
         .visibility_field
         .iter()
@@ -797,19 +804,46 @@ fn ambient_sound_system(
     let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
     let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
+    // --- Get Player Health and Sanity ---
+    let player = qp.iter().find(|p| p.id == gc.player_id);
+    let health = player
+        .map(|p| p.health.clamp(0.0, 100.0) / 100.0)
+        .unwrap_or(1.0);
+    let sanity = player.map(|p| p.sanity() / 100.0).unwrap_or(1.0);
+
+    if timer.just_finished() {
+        // dbg!(health, sanity);
+    }
+
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
-        if gamesound.class == SoundType::BackgroundHouse {
-            let v = (sink.volume().ln() * SMOOTH + house_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
-        }
-        if gamesound.class == SoundType::BackgroundStreet {
-            let v = (sink.volume().ln() * SMOOTH + street_volume.ln()) / (SMOOTH + 1.0);
-            sink.set_volume(v.exp());
+        match gamesound.class {
+            SoundType::BackgroundHouse => {
+                let v = (sink.volume().ln() * SMOOTH + house_volume.ln() * health * sanity)
+                    / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::BackgroundStreet => {
+                let v = (sink.volume().ln() * SMOOTH + street_volume.ln() * health * sanity)
+                    / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::HeartBeat => {
+                // Handle heartbeat sound
+                let heartbeat_volume = (1.0 - health).powf(0.7) * 0.5 + 0.0000001; // Volume based on health
+                let v = (sink.volume().ln() * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
+            SoundType::Insane => {
+                // Handle insanity sound
+                let insanity_volume =
+                    (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.0, 1.0) + 0.0000001; // Volume based on sanity
+                let v = (sink.volume().ln() * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0);
+                sink.set_volume(v.exp());
+            }
         }
     }
 }
-
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
