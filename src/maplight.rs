@@ -837,7 +837,7 @@ fn ambient_sound_system(
             SoundType::Insane => {
                 // Handle insanity sound
                 let insanity_volume =
-                    (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.0, 1.0) + 0.0000001; // Volume based on sanity
+                    (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.3, 1.0) + 0.0000001; // Volume based on sanity
                 let v = (sink.volume().ln() * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0);
                 sink.set_volume(v.exp());
             }

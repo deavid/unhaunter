@@ -872,15 +872,15 @@ pub fn boardfield_update(
         // let mut lfs_clone_time_total = Duration::ZERO;
         // let mut shadows_time_total = Duration::ZERO;
         // let mut store_lfs_time_total = Duration::ZERO;
-        for step in 0..4 {
+        for step in 0..3 {
             // let lfs_clone_time = Instant::now();
             let src_lfs = lfs.clone();
             // lfs_clone_time_total += lfs_clone_time.elapsed();
             let size = match step {
-                0 => 24,
-                1 => 12,
-                2 => 8,
-                3 => 8,
+                0 => 26,
+                1 => 8,
+                2 => 6,
+                3 => 3,
                 _ => 6,
             };
             for x in min_x..=max_x {
@@ -942,7 +942,7 @@ pub fn boardfield_update(
                                 min_trans = min_trans.min(trans);
                             }
                             // For smoothing steps only:
-                            if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.5 {
+                            if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.9 {
                                 // If there are no walls nearby, we don't reflect light.
                                 continue;
                             }
