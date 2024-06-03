@@ -370,7 +370,10 @@ pub fn apply_lighting(
     cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.00001;
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
-    let fl_total_power: f32 = flashlights.iter().map(|x| x.2).sum();
+    let fl_total_power: f32 = flashlights
+        .iter()
+        .map(|x| x.2 / (player_pos.distance2(x.0) + 1.0))
+        .sum();
     cursor_exp += fl_total_power.sqrt() / 4.0;
 
     assert!(cursor_exp.is_normal());
