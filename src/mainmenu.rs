@@ -346,7 +346,7 @@ pub fn item_logic(
                     .get(map_idx)
                     .map(|x| x.name.clone())
                     .unwrap_or("None".to_string());
-                let new_map_name = format!("Map: {}", map_name);
+                let new_map_name = format!("«  Map: {}  »", map_name);
                 if section.value != new_map_name {
                     section.value = new_map_name;
                 }
