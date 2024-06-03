@@ -17,6 +17,7 @@ pub struct Recorder {
     pub amt_recorded: f32,
     pub evp_recorded_time_secs: f32,
     pub evp_recorded_display: bool,
+    pub evp_recorded_count: usize,
 }
 
 impl GearUsable for Recorder {
@@ -54,7 +55,10 @@ impl GearUsable for Recorder {
             if self.evp_recorded_display {
                 "- EVP RECORDED -".to_string()
             } else {
-                format!("Volume: {:>4.0}dB", self.sound)
+                format!(
+                    "Volume: {:>4.0}dB ({})",
+                    self.sound, self.evp_recorded_count
+                )
             }
         } else {
             "".to_string()
@@ -88,11 +92,17 @@ impl GearUsable for Recorder {
         }
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.sound_l.len();
-        self.sound_l[n] = sound_reading;
+        if self.enabled {
+            self.sound_l[n] = sound_reading;
+        } else {
+            self.sound_l[n] = 0.0;
+            self.evp_recorded_count = 0;
+        }
         if self.sound > 1.0 && self.enabled && gs.bf.evidences.contains(&Evidence::EVPRecording) {
             self.amt_recorded += self.sound * gs.time.delta_seconds();
             if self.amt_recorded > 200.0 {
                 self.evp_recorded_time_secs = gs.time.elapsed_seconds();
+                self.evp_recorded_count += 1;
                 self.amt_recorded = 0.0;
             }
         }
