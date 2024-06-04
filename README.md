@@ -4,6 +4,18 @@ Dare to enter a world where shadows whisper and every creak could be a ghostly p
 
 This 2D isometric game seamlessly blends exploration, puzzle-solving, and strategic investigation, offering a unique blend of thrills and chills for those brave enough to confront the unknown.
 
+Here are some screenshots of the game:
+
+![Screenshot1](screenshots/unhaunter-c1.png)
+
+![Screenshot2](screenshots/unhaunter-c2.png)
+
+![Screenshot3](screenshots/unhaunter-c3.png)
+
+![Screenshot4](screenshots/unhaunter-c4.png)
+
+![Screenshot5](screenshots/unhaunter-c5.png)
+
 ## Gameplay
 
 ### Exploration 

@@ -3,6 +3,7 @@
 //! Most of the classes here are almost a redefinition (for now) of the tiled library.
 //! Currently serve as an example on how to load/store data.
 
+use std::path::{Path, PathBuf};
 use std::{fmt::Debug, slice::Iter};
 
 /// A simple 2D position with X and Y components that it is generic.
@@ -287,6 +288,16 @@ mod arch {
     }
 }
 
+/// Helps trimming the extra assets/ folder for Bevy
+pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
+    use normalize_path::NormalizePath;
+    img_path
+        .strip_prefix("assets/")
+        .unwrap_or(img_path)
+        .normalize()
+        .to_owned()
+}
+
 pub fn bevy_load_map(
     path: impl AsRef<std::path::Path>,
     asset_server: &AssetServer,
@@ -294,7 +305,7 @@ pub fn bevy_load_map(
     tilesetdb: &mut ResMut<MapTileSetDb>,
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
-
+    let path = path.as_ref();
     let map = arch::map_loader(path);
 
     // Preload all tilesets referenced:
@@ -302,11 +313,7 @@ pub fn bevy_load_map(
         // If an image is included, this is a tilemap. If no image is included this is a sprite collection.
         // Sprite collections are not supported right now.
         let data = if let Some(image) = &tileset.image {
-            let img_src = image
-                .source
-                .to_str()
-                .unwrap()
-                .replace("assets/maps/../", "");
+            let img_src = resolve_tiled_image_path(&image.source);
             // FIXME: When the images are loaded onto the GPU it seems that we need at least 1 pixel of empty space
             // .. so that the GPU can sample surrounding pixels properly.
             // .. This contrasts with how Tiled works, as it assumes a perfect packing if possible.
@@ -339,11 +346,7 @@ pub fn bevy_load_map(
             for (_tileid, tile) in tileset.tiles() {
                 // tile.collision
                 if let Some(image) = &tile.image {
-                    let img_src = image
-                        .source
-                        .to_str()
-                        .unwrap()
-                        .replace("assets/maps/../", "");
+                    let img_src = resolve_tiled_image_path(&image.source);
                     dbg!(&img_src);
                     let img_handle: Handle<Image> = asset_server.load(img_src);
                     let cmat = CustomMaterial1::from_texture(img_handle.clone());
