@@ -20,6 +20,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
 
+const USE_ARROW_KEYS: bool = false;
+
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGear {
@@ -70,7 +72,13 @@ impl PlayerSprite {
     /// Returns the default `ControlKeys` for the given player ID.
     fn default_controls(id: usize) -> ControlKeys {
         match id {
-            1 => ControlKeys::WASD,
+            1 => {
+                if USE_ARROW_KEYS {
+                    ControlKeys::ARROWS
+                } else {
+                    ControlKeys::WASD
+                }
+            }
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
         }
@@ -123,6 +131,20 @@ impl ControlKeys {
         down: KeyCode::KeyS,
         left: KeyCode::KeyA,
         right: KeyCode::KeyD,
+        activate: KeyCode::KeyE,
+        trigger: KeyCode::KeyR,
+        torch: KeyCode::Tab,
+        cycle: KeyCode::KeyQ,
+        swap: KeyCode::KeyT,
+        drop: KeyCode::KeyG,
+        grab: KeyCode::KeyF,
+        change_evidence: KeyCode::KeyC,
+    };
+    pub const ARROWS: Self = ControlKeys {
+        up: KeyCode::ArrowUp,
+        down: KeyCode::ArrowDown,
+        left: KeyCode::ArrowLeft,
+        right: KeyCode::ArrowRight,
         activate: KeyCode::KeyE,
         trigger: KeyCode::KeyR,
         torch: KeyCode::Tab,
