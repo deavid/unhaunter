@@ -544,6 +544,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(FixedUpdate, update_playerheld_gear_data)
         .add_systems(FixedUpdate, update_deployed_gear_data)
         .add_systems(FixedUpdate, update_deployed_gear_sprites)
+        .add_systems(Update, quartz::update_quartz_and_ghost)
         .add_systems(Update, salt::salt_particle_system)
         .add_systems(Update, salt::salt_pile_system)
         .add_systems(Update, sage::sage_smoke_system)

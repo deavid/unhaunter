@@ -3,14 +3,18 @@
 
 use bevy::prelude::*;
 
-use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::board::Position;
+use super::{playergear::PlayerGear, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use crate::{board::Position, ghost::GhostSprite, player::DeployedGearData};
+
+const MAX_CRACKS: u8 = 4;
 
 /// Data structure for the Quartz Stone consumable.
-#[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct QuartzStoneData {
     /// Number of cracks in the stone (0-3).
     pub cracks: u8,
+    /// Amount of energy absorbed from the ghost - what produces the cracks.
+    pub energy_absorbed: f32,
 }
 
 impl GearUsable for QuartzStoneData {
@@ -43,9 +47,8 @@ impl GearUsable for QuartzStoneData {
         pos: &Position,
         _ep: &super::playergear::EquipmentPosition,
     ) {
-        // Check proximity to ghost
-        let distance_to_ghost = gs.bf.breach_pos.distance(pos);
-        if distance_to_ghost <= 7.0 && self.cracks < 3 {
+        if self.energy_absorbed > 30.0 && self.cracks <= MAX_CRACKS {
+            self.energy_absorbed = 0.0;
             // Increment cracks
             self.cracks += 1;
 
@@ -72,5 +75,56 @@ impl GearUsable for QuartzStoneData {
 impl From<QuartzStoneData> for Gear {
     fn from(value: QuartzStoneData) -> Self {
         Gear::new_from_kind(GearKind::QuartzStone(value))
+    }
+}
+
+pub fn aux_quartz_update(
+    gear_pos: &Position,
+    qz_data: &mut QuartzStoneData,
+    ghost_pos: &Position,
+    ghost_sprite: &mut GhostSprite,
+    dt: f32,
+) {
+    const MIN_DIST: f32 = 5.0;
+    const MIN_DIST2: f32 = MIN_DIST * MIN_DIST;
+    let distance2 = gear_pos.distance2(ghost_pos);
+    let dist_adj = (distance2 + MIN_DIST2) / MIN_DIST2;
+    let dist_adj_recip = dist_adj.recip() - 0.2;
+    let stone_health = (MAX_CRACKS - qz_data.cracks) as f32 / MAX_CRACKS as f32;
+
+    let str = (ghost_sprite.hunting
+        * 1.5
+        * dt
+        * dist_adj_recip.clamp(0.0, 1.0)
+        * stone_health.clamp(0.0, 1.0).sqrt())
+    .min(ghost_sprite.hunting);
+
+    ghost_sprite.hunting -= str;
+    qz_data.energy_absorbed += str;
+}
+
+pub fn update_quartz_and_ghost(
+    mut q_gear1: Query<(&Position, &mut PlayerGear)>,
+    mut q_gear2: Query<(&Position, &mut DeployedGearData)>,
+    mut q_ghost: Query<(&Position, &mut GhostSprite)>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_seconds();
+
+    for (gear_pos, mut playergear) in q_gear1.iter_mut() {
+        for (gear, _) in playergear.as_vec_mut().into_iter() {
+            if let GearKind::QuartzStone(ref mut qs) = gear.kind {
+                for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
+                    aux_quartz_update(gear_pos, qs, ghost_pos, &mut ghost_sprite, dt);
+                }
+            }
+        }
+    }
+    for (gear_pos, mut gear_data) in q_gear2.iter_mut() {
+        if let GearKind::QuartzStone(ref mut qs) = gear_data.gear.kind {
+            for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
+                aux_quartz_update(gear_pos, qs, ghost_pos, &mut ghost_sprite, dt);
+            }
+        }
     }
 }
