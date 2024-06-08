@@ -128,7 +128,10 @@ pub struct SmokeParticleTimer(Timer);
 pub fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut smoke_particles: Query<(Entity, &mut Position, &mut SmokeParticleTimer)>,
+    mut smoke_particles: Query<
+        (Entity, &mut Position, &mut SmokeParticleTimer),
+        Without<GhostSprite>,
+    >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
     let dt = time.delta_seconds();
