@@ -23,10 +23,14 @@ impl GearUsable for QuartzStoneData {
     }
 
     fn get_status(&self) -> String {
-        if self.cracks >= 3 {
-            return "Shattered".to_string();
+        match self.cracks {
+            0 => "Pure".to_string(),
+            1 => "Used once".to_string(),
+            2 => "Used twice".to_string(),
+            3 => "Cracked, one use remaining".to_string(),
+            4 => "Shattered - Unusable".to_string(),
+            _ => "unknown".to_string(),
         }
-        format!("Cracks: {}", self.cracks)
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {

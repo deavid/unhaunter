@@ -9,12 +9,21 @@ use crate::{board::Position, ghost::GhostSprite};
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 
 /// Data structure for the Salt consumable.
-#[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct SaltData {
     /// Number of salt charges remaining (0-4).
     pub charges: u8,
     /// If salt should be spawned on the next frame.
     pub spawn_salt: bool,
+}
+
+impl Default for SaltData {
+    fn default() -> Self {
+        Self {
+            charges: 4,
+            spawn_salt: false,
+        }
+    }
 }
 
 impl GearUsable for SaltData {

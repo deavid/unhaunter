@@ -13,6 +13,8 @@ pub struct SageBundleData {
     pub is_active: bool,
     /// Timer for the burn duration.
     pub burn_timer: Timer,
+    /// If the sage has been completely burned.
+    pub consumed: bool,
 }
 
 impl Default for SageBundleData {
@@ -20,6 +22,7 @@ impl Default for SageBundleData {
         Self {
             is_active: false,
             burn_timer: Timer::from_seconds(6.0, TimerMode::Once),
+            consumed: false,
         }
     }
 }
@@ -34,6 +37,9 @@ impl GearUsable for SageBundleData {
     }
 
     fn get_status(&self) -> String {
+        if self.consumed {
+            return "Consumed".to_string();
+        }
         if !self.is_active {
             return "Ready".to_string();
         }
@@ -41,7 +47,7 @@ impl GearUsable for SageBundleData {
     }
 
     fn set_trigger(&mut self, gs: &mut GearStuff) {
-        if !self.is_active {
+        if !self.is_active && !self.consumed {
             self.is_active = true;
             self.burn_timer.reset();
 
@@ -56,19 +62,20 @@ impl GearUsable for SageBundleData {
         pos: &Position,
         _ep: &super::playergear::EquipmentPosition,
     ) {
-        if self.is_active {
+        if self.is_active && !self.consumed {
             self.burn_timer.tick(gs.time.delta());
 
             // Spawn smoke particles
             if self.burn_timer.just_finished() {
                 self.is_active = false;
+                self.consumed = true;
             } else if gs.time.elapsed_seconds() % 0.3 < 0.1 {
                 for _ in 0..3 {
                     // Spawn smoke particle
                     let _smoke_particle_entity = gs
                         .commands
                         .spawn(SpriteBundle {
-                            texture: gs.asset_server.load("img/consumables.png"),
+                            texture: gs.asset_server.load("img/smoke.png"),
                             sprite: Sprite {
                                 custom_size: Some(Vec2::new(8.0, 8.0)),
                                 ..default()
@@ -89,6 +96,9 @@ impl GearUsable for SageBundleData {
     }
 
     fn get_sprite_idx(&self) -> GearSpriteID {
+        if self.consumed {
+            return GearSpriteID::SageBundle4; // Burned out
+        }
         if !self.is_active {
             return GearSpriteID::SageBundle0;
         }
