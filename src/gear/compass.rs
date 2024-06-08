@@ -37,7 +37,7 @@ impl GearUsable for Compass {
         self.enabled = !self.enabled;
     }
 
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
 }

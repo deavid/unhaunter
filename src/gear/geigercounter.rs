@@ -108,7 +108,7 @@ impl GearUsable for GeigerCounter {
             self.sound_display = self.sound_a2;
         }
     }
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
 }

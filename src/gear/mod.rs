@@ -301,7 +301,7 @@ impl GearUsable for Gear {
             GearKind::None => GearSpriteID::None,
         }
     }
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         // FIXME: This is not used at all.
         Box::new(self.clone())
     }
@@ -350,8 +350,8 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
     /// Returns the `GearSpriteID` for the gear's current state.
     fn get_sprite_idx(&self) -> GearSpriteID;
-    /// Creates a boxed clone of the `GearUsable` object.
-    fn box_clone(&self) -> Box<dyn GearUsable>;
+    /// Creates a boxed clone of the `GearUsable` object. (Unused for now)
+    fn _box_clone(&self) -> Box<dyn GearUsable>;
 }
 
 /// System for updating the internal state of all gear carried by the player.

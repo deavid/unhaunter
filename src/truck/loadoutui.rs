@@ -363,7 +363,7 @@ pub fn update_loadout_buttons(
     };
     for mut text in &mut qh {
         if help_text != text.sections[0].value {
-            text.sections[0].value = help_text.clone();
+            text.sections[0].value.clone_from(&help_text);
         }
     }
 }
