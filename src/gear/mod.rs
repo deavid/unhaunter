@@ -19,9 +19,12 @@ pub mod ionmeter;
 pub mod motionsensor;
 pub mod photocam;
 pub mod playergear;
+pub mod quartz;
 pub mod recorder;
 pub mod redtorch;
 pub mod repellentflask;
+pub mod sage;
+pub mod salt;
 pub mod spiritbox;
 pub mod thermalimager;
 pub mod thermometer;
@@ -39,9 +42,12 @@ use self::geigercounter::GeigerCounter;
 use self::ionmeter::IonMeter;
 use self::motionsensor::MotionSensor;
 use self::photocam::Photocam;
+use self::quartz::QuartzStoneData;
 use self::recorder::Recorder;
 use self::redtorch::RedTorch;
 use self::repellentflask::RepellentFlask;
+use self::sage::SageBundleData;
+use self::salt::SaltData;
 use self::spiritbox::SpiritBox;
 use self::thermalimager::ThermalImager;
 use self::thermometer::Thermometer;
@@ -116,7 +122,28 @@ pub enum GearSpriteID {
     RepelentFlaskEmpty = 60,
     RepelentFlaskFull,
 
+    // Quartz Stone
+    QuartzStone0 = 65,
+    QuartzStone1,
+    QuartzStone2,
+    QuartzStone3,
+    QuartzStone4,
+
+    // Salt
+    Salt4 = 75,
+    Salt3,
+    Salt2,
+    Salt1,
+    Salt0,
+
     Compass = 80,
+
+    // Sage Bundle
+    SageBundle0 = 85,
+    SageBundle1,
+    SageBundle2,
+    SageBundle3,
+    SageBundle4,
 
     EStaticMeter = 90,
     Videocam,
@@ -147,6 +174,9 @@ pub enum GearKind {
     Videocam(Videocam),
     MotionSensor(MotionSensor),
     RepellentFlask(RepellentFlask),
+    QuartzStone(QuartzStoneData),
+    Salt(SaltData),
+    SageBundle(SageBundleData),
     #[default]
     None,
 }
@@ -208,6 +238,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.get_display_name(),
             GearKind::MotionSensor(x) => x.get_display_name(),
             GearKind::RepellentFlask(x) => x.get_display_name(),
+            GearKind::QuartzStone(x) => x.get_display_name(),
+            GearKind::Salt(x) => x.get_display_name(),
+            GearKind::SageBundle(x) => x.get_display_name(),
             GearKind::None => "",
         }
     }
@@ -229,6 +262,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.get_description(),
             GearKind::MotionSensor(x) => x.get_description(),
             GearKind::RepellentFlask(x) => x.get_description(),
+            GearKind::QuartzStone(x) => x.get_description(),
+            GearKind::Salt(x) => x.get_description(),
+            GearKind::SageBundle(x) => x.get_description(),
             GearKind::None => "",
         }
     }
@@ -250,6 +286,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.get_status(),
             GearKind::MotionSensor(x) => x.get_status(),
             GearKind::RepellentFlask(x) => x.get_status(),
+            GearKind::QuartzStone(x) => x.get_status(),
+            GearKind::Salt(x) => x.get_status(),
+            GearKind::SageBundle(x) => x.get_status(),
             GearKind::None => "".to_string(),
         }
     }
@@ -276,6 +315,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.set_trigger(gs),
             GearKind::MotionSensor(x) => x.set_trigger(gs),
             GearKind::RepellentFlask(x) => x.set_trigger(gs),
+            GearKind::QuartzStone(x) => x.set_trigger(gs),
+            GearKind::Salt(x) => x.set_trigger(gs),
+            GearKind::SageBundle(x) => x.set_trigger(gs),
             GearKind::None => ni(&self),
         }
     }
@@ -298,6 +340,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.get_sprite_idx(),
             GearKind::MotionSensor(x) => x.get_sprite_idx(),
             GearKind::RepellentFlask(x) => x.get_sprite_idx(),
+            GearKind::QuartzStone(x) => x.get_sprite_idx(),
+            GearKind::Salt(x) => x.get_sprite_idx(),
+            GearKind::SageBundle(x) => x.get_sprite_idx(),
             GearKind::None => GearSpriteID::None,
         }
     }
@@ -323,6 +368,9 @@ impl GearUsable for Gear {
             GearKind::Videocam(x) => x.update(gs, pos, ep),
             GearKind::MotionSensor(x) => x.update(gs, pos, ep),
             GearKind::RepellentFlask(x) => x.update(gs, pos, ep),
+            GearKind::QuartzStone(x) => x.update(gs, pos, ep),
+            GearKind::Salt(x) => x.update(gs, pos, ep),
+            GearKind::SageBundle(x) => x.update(gs, pos, ep),
             GearKind::None => {}
         }
     }
@@ -496,6 +544,9 @@ pub fn app_setup(app: &mut App) {
         .add_systems(FixedUpdate, update_playerheld_gear_data)
         .add_systems(FixedUpdate, update_deployed_gear_data)
         .add_systems(FixedUpdate, update_deployed_gear_sprites)
+        .add_systems(Update, salt::salt_particle_system)
+        .add_systems(Update, salt::salt_pile_system)
+        .add_systems(Update, sage::sage_smoke_system)
         .add_systems(Update, thermometer::temperature_update)
         .add_systems(Update, recorder::sound_update)
         .add_systems(Update, repellentflask::repellent_update)
