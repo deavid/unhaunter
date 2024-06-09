@@ -2,9 +2,12 @@
 //! representing the Sage Bundle consumable item in the game.
 
 use bevy::prelude::*;
+use rand::Rng;
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::{board::Position, ghost::GhostSprite, utils::format_time};
+use crate::{
+    board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor, utils::format_time,
+};
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -15,14 +18,17 @@ pub struct SageBundleData {
     pub burn_timer: Timer,
     /// If the sage has been completely burned.
     pub consumed: bool,
+    /// Amount of particles of smoke produced. Used to pace the smoke production.
+    pub smoke_produced: usize,
 }
 
 impl Default for SageBundleData {
     fn default() -> Self {
         Self {
             is_active: false,
-            burn_timer: Timer::from_seconds(6.0, TimerMode::Once),
+            burn_timer: Timer::from_seconds(8.0, TimerMode::Once),
             consumed: false,
+            smoke_produced: 0,
         }
     }
 }
@@ -52,7 +58,7 @@ impl GearUsable for SageBundleData {
             self.burn_timer.reset();
 
             // Play activation sound
-            gs.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.6);
+            gs.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
         }
     }
 
@@ -69,28 +75,31 @@ impl GearUsable for SageBundleData {
             if self.burn_timer.just_finished() {
                 self.is_active = false;
                 self.consumed = true;
-            } else if gs.time.elapsed_seconds() % 0.3 < 0.1 {
-                for _ in 0..3 {
-                    // Spawn smoke particle
-                    let _smoke_particle_entity = gs
-                        .commands
-                        .spawn(SpriteBundle {
-                            texture: gs.asset_server.load("img/smoke.png"),
-                            sprite: Sprite {
-                                custom_size: Some(Vec2::new(8.0, 8.0)),
-                                ..default()
-                            },
-                            transform: Transform::from_translation(pos.to_screen_coord()),
-                            ..default()
-                        })
-                        .insert(SageSmokeParticle)
-                        .insert(*pos)
-                        .insert(SmokeParticleTimer(Timer::from_seconds(
-                            3.0,
-                            TimerMode::Once,
-                        )))
-                        .id();
-                }
+            } else if (self.smoke_produced as f32) < self.burn_timer.elapsed_secs() * 3.0 {
+                let mut pos = *pos;
+                let mut rng = rand::thread_rng();
+                pos.z += 0.2;
+                pos.x += rng.gen_range(-0.2..0.2);
+                pos.y += rng.gen_range(-0.2..0.2);
+                // Spawn smoke particle
+                gs.commands
+                    .spawn(SpriteBundle {
+                        texture: gs.asset_server.load("img/smoke.png"),
+                        transform: Transform::from_translation(pos.to_screen_coord())
+                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                        ..default()
+                    })
+                    .insert(SageSmokeParticle)
+                    .insert(GameSprite)
+                    .insert(pos)
+                    .insert(MapColor {
+                        color: Color::WHITE.with_a(0.00),
+                    })
+                    .insert(SmokeParticleTimer(Timer::from_seconds(
+                        5.0,
+                        TimerMode::Once,
+                    )));
+                self.smoke_produced += 1;
             }
         }
     }
@@ -103,10 +112,10 @@ impl GearUsable for SageBundleData {
             return GearSpriteID::SageBundle0;
         }
         let remaining_time = self.burn_timer.remaining_secs();
-        if remaining_time > 4.0 {
+        if remaining_time > 5.0 {
             return GearSpriteID::SageBundle1;
         }
-        if remaining_time > 2.0 {
+        if remaining_time > 3.0 {
             return GearSpriteID::SageBundle2;
         }
         if remaining_time > 0.0 {
@@ -139,27 +148,51 @@ pub fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
     mut smoke_particles: Query<
-        (Entity, &mut Position, &mut SmokeParticleTimer),
+        (
+            Entity,
+            &mut Position,
+            &mut Transform,
+            &mut SmokeParticleTimer,
+            &mut MapColor,
+        ),
         Without<GhostSprite>,
     >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
     let dt = time.delta_seconds();
-    for (entity, mut position, mut smoke_particle) in smoke_particles.iter_mut() {
+    for (entity, mut position, mut transform, mut smoke_particle, mut map_color) in
+        smoke_particles.iter_mut()
+    {
         smoke_particle.0.tick(time.delta());
         if smoke_particle.0.just_finished() {
             commands.entity(entity).despawn();
             continue;
         }
+        let elap = smoke_particle.0.elapsed_secs();
+        let rem = smoke_particle.0.remaining_secs();
+        let a = ((elap * 3.0)
+            .clamp(0.0, 1.0)
+            .min((rem / 2.0 - 0.01).clamp(0.0, 1.0)))
+        .powf(2.0);
+        map_color.color.set_a(a * 0.4);
+
         // Make particles float upwards
-        position.z += 0.01 * dt;
+        position.z += 0.3 * dt / (1.0 + elap.powi(2));
+
+        transform.scale.x += 0.1 * dt;
+        transform.scale.y += 0.1 * dt;
 
         // Apply calming effect to ghost if within range
         for (mut ghost, ghost_position) in ghosts.iter_mut() {
-            if position.distance(ghost_position) < 16.0 {
-                ghost.rage -= 0.1;
+            let dist = position.distance(ghost_position);
+            if dist < 5.0 {
+                ghost.rage -= 30.0 * dt * a / (1.0 + dist);
                 if ghost.rage < 0.0 {
                     ghost.rage = 0.0;
+                }
+                ghost.calm_time_secs += 10.0 * dt * a / (1.0 + dist);
+                if ghost.calm_time_secs > 30.0 {
+                    ghost.calm_time_secs = 30.0;
                 }
             }
         }

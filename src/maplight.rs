@@ -29,6 +29,11 @@ use crate::{
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng as _;
 
+#[derive(Debug, Clone, Copy, PartialEq, Component, Default)]
+pub struct MapColor {
+    pub color: Color,
+}
+
 /// Represents different types of light in the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LightType {
@@ -253,6 +258,7 @@ pub fn apply_lighting(
             &mut Sprite,
             Option<&SpriteType>,
             Option<&GhostSprite>,
+            Option<&MapColor>,
         )>,
         Query<
             (&board::Position, &mut Sprite),
@@ -633,7 +639,7 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player, ghost, van, ghost breach)
 
-    for (pos, mut sprite, o_type, o_gs) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs, o_color) in qt.iter_mut() {
         let stype = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
         let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
@@ -642,15 +648,15 @@ pub fn apply_lighting(
         };
         let ld_mag = ld_abs.magnitude();
         let ld = ld_abs.normalize();
-
-        let mut opacity: f32 = 1.0
+        let map_color = o_color.map(|x| x.color).unwrap_or_default();
+        let mut opacity: f32 = map_color.a()
             * vf.visibility_field
                 .get(&bpos)
                 .copied()
                 .unwrap_or_default()
                 .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
-        let src_color = Color::WHITE;
+        let src_color = map_color.with_a(1.0);
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             let mut rel_lux = ld_mag / exposure;
@@ -668,13 +674,17 @@ pub fn apply_lighting(
 
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
         };
-        let mut smooth: f32 = 20.0;
+        let mut smooth: f32 = 0.1; // 20.0;
         if stype == SpriteType::Ghost {
             let Some(gs) = o_gs else {
                 continue;
             };
             if gs.hunt_target {
-                dst_color = Color::RED;
+                dst_color = lerp_color(
+                    Color::RED,
+                    Color::ALICE_BLUE,
+                    (gs.calm_time_secs / 10.0).clamp(0.0, 1.0),
+                );
             } else {
                 opacity *= dst_color.l().clamp(0.7, 1.0);
                 // Make the ghost oscilate to increase visibility:
@@ -719,7 +729,7 @@ pub fn apply_lighting(
 
             dst_color.set_l(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
         }
-        let mut old_a = sprite.color.a().clamp(0.0001, 1.0);
+        let mut old_a = (sprite.color.a()).clamp(0.0001, 1.0);
         if stype == SpriteType::Other {
             const MAX_DIST: f32 = 8.0;
             let dist = pos.distance(&player_pos);
@@ -731,7 +741,8 @@ pub fn apply_lighting(
             }
         }
 
-        dst_color.set_a((opacity + old_a * smooth) / (smooth + 1.0));
+        dst_color
+            .set_a(((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.a());
         sprite.color = dst_color;
     }
 

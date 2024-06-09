@@ -42,6 +42,8 @@ pub struct GhostSprite {
     pub hunt_time_secs: f32,
     /// The ghost's current warping intensity, which affects its movement speed. Higher values result in faster warping.
     pub warp: f32,
+    /// The ghost got hit by sage, and it will be calm for a while.
+    pub calm_time_secs: f32,
 }
 
 /// Marker component for the ghost's visual breach effect.
@@ -70,6 +72,7 @@ impl GhostSprite {
             hunt_target: false,
             hunt_time_secs: 0.0,
             warp: 0.0,
+            calm_time_secs: 0.0,
         }
     }
 
@@ -178,7 +181,12 @@ pub fn ghost_movement(
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
                     old_target.x += rng.gen_range(-search_radius..search_radius);
                     old_target.y += rng.gen_range(-search_radius..search_radius);
-                    let ppos = if h.is_some() { old_target } else { *ppos };
+                    let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
+                        old_target
+                    } else {
+                        *ppos
+                    };
+                    ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
 
                     let mut rng = rand::thread_rng();
                     let random_offset = Vec2::new(
@@ -324,6 +332,9 @@ fn ghost_enrage(
     let mut should_roar = RoarType::None;
     let mut roar_time = 3.0;
     for (mut ghost, gpos) in &mut qg {
+        if ghost.calm_time_secs > 0.0 {
+            ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
+        }
         // Calm ghost when players are far away
         let min_player_dist = qp
             .iter()
@@ -345,7 +356,8 @@ fn ghost_enrage(
             for (mut player, ppos) in &mut qp {
                 let dist2 = gpos.distance2(ppos) + 2.0;
                 let dmg = dist2.recip();
-                player.health -= dmg * dt * 30.0 * ghost_strength;
+                player.health -=
+                    dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
             }
             if ghost.hunting > 4.0 {
                 should_roar = RoarType::Full;
@@ -376,7 +388,7 @@ fn ghost_enrage(
         if ghost.rage < 0.0 {
             ghost.rage = 0.0;
         }
-        ghost.rage += angry * dt / 10.0;
+        ghost.rage += angry * dt / 10.0 / (1.0 + ghost.calm_time_secs);
         ghost.hunting -= dt * 0.2;
         if ghost.hunting < 0.0 {
             ghost.hunting = 0.0;
@@ -384,9 +396,9 @@ fn ghost_enrage(
 
         avg_angry.push_len(angry, dt);
         if timer.just_finished() && DEBUG_HUNTS {
-            dbg!(&avg_angry.avg(), ghost.rage);
+            dbg!(ghost.calm_time_secs, ghost.rage);
         }
-        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 400.0 };
+        let rage_limit = 400.0;
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 3.0;
