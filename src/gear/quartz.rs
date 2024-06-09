@@ -101,6 +101,9 @@ pub fn aux_quartz_update(
 
     ghost_sprite.hunting -= str;
     qz_data.energy_absorbed += str;
+
+    // TODO: Spwan here a red particle from the ghost that travels to the quartz
+    // .. stone to show the energy of the ghost being drawn.
 }
 
 pub fn update_quartz_and_ghost(

@@ -60,7 +60,8 @@ impl GearUsable for SaltData {
                 .commands
                 .spawn(SpriteBundle {
                     texture: gs.asset_server.load("img/salt_pile.png"),
-                    transform: Transform::from_translation(pos.to_screen_coord()),
+                    transform: Transform::from_translation(pos.to_screen_coord())
+                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
                     ..default()
                 })
                 .insert(SaltPile)
