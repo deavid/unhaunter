@@ -15,6 +15,7 @@ use crate::{
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     components::ghost_influence::{GhostInfluence, InfluenceType},
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
+    gear::salt::UVReactive,
     gear::{
         playergear::{EquipmentPosition, PlayerGear},
         GearKind,
@@ -259,6 +260,7 @@ pub fn apply_lighting(
             Option<&SpriteType>,
             Option<&GhostSprite>,
             Option<&MapColor>,
+            Option<&UVReactive>,
         )>,
         Query<
             (&board::Position, &mut Sprite),
@@ -639,8 +641,8 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player, ghost, van, ghost breach)
 
-    for (pos, mut sprite, o_type, o_gs, o_color) in qt.iter_mut() {
-        let stype = o_type.cloned().unwrap_or_default();
+    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive) in qt.iter_mut() {
+        let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
         let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
             // If the given cell was not selected for update, skip updating its color (otherwise it can blink)
@@ -656,26 +658,35 @@ pub fn apply_lighting(
                 .unwrap_or_default()
                 .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
-        let src_color = map_color.with_a(1.0);
+        let mut src_color = map_color.with_a(1.0);
+        let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
+        src_color = lerp_color(
+            src_color,
+            Color::GREEN,
+            (ld.ultraviolet * uv_reactive).sqrt(),
+        );
+
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             let mut rel_lux = ld_mag / exposure;
-            if stype == SpriteType::Ghost {
+            rel_lux += ld.ultraviolet * uv_reactive * 5.0;
+
+            if sprite_type == SpriteType::Ghost {
                 rel_lux /= 2.0;
             }
-            if stype == SpriteType::Player {
+            if sprite_type == SpriteType::Player {
                 rel_lux *= 1.1;
                 rel_lux += 0.1;
             }
-            if stype == SpriteType::Breach {
+            if sprite_type == SpriteType::Breach {
                 rel_lux *= 1.2;
                 rel_lux += 0.2;
             }
 
             board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
         };
-        let mut smooth: f32 = 0.1; // 20.0;
-        if stype == SpriteType::Ghost {
+        let mut smooth: f32 = 1.0; // 20.0;
+        if sprite_type == SpriteType::Ghost {
             let Some(gs) = o_gs else {
                 continue;
             };
@@ -714,7 +725,7 @@ pub fn apply_lighting(
             smooth = 1.0;
             dst_color = lerp_color(sprite.color, dst_color, 0.04);
         }
-        if stype == SpriteType::Breach {
+        if sprite_type == SpriteType::Breach {
             smooth = 2.0;
             let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
                 ld.infrared * 3.0
@@ -730,7 +741,7 @@ pub fn apply_lighting(
             dst_color.set_l(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
         }
         let mut old_a = (sprite.color.a()).clamp(0.0001, 1.0);
-        if stype == SpriteType::Other {
+        if sprite_type == SpriteType::Other {
             const MAX_DIST: f32 = 8.0;
             let dist = pos.distance(&player_pos);
             if dist < MAX_DIST {

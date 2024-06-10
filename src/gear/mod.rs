@@ -547,6 +547,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, quartz::update_quartz_and_ghost)
         .add_systems(Update, salt::salt_particle_system)
         .add_systems(Update, salt::salt_pile_system)
+        .add_systems(Update, salt::salty_trace_system)
         .add_systems(Update, sage::sage_smoke_system)
         .add_systems(Update, thermometer::temperature_update)
         .add_systems(Update, recorder::sound_update)

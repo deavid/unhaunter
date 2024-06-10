@@ -4,7 +4,7 @@
 use bevy::prelude::*;
 use rand::Rng as _;
 
-use crate::{board::Position, ghost::GhostSprite};
+use crate::{board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor};
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 
@@ -53,9 +53,9 @@ impl GearUsable for SaltData {
         _ep: &super::playergear::EquipmentPosition,
     ) {
         if self.spawn_salt {
-            // Spawn salt pile entity
-
             self.spawn_salt = false;
+
+            // Spawn salt pile entity
             let _salt_pile_entity = gs
                 .commands
                 .spawn(SpriteBundle {
@@ -65,6 +65,8 @@ impl GearUsable for SaltData {
                     ..default()
                 })
                 .insert(SaltPile)
+                .insert(GameSprite)
+                .insert(*pos)
                 .id();
 
             gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
@@ -107,34 +109,28 @@ pub struct SaltParticleTimer(Timer);
 /// System to handle salt pile logic.
 pub fn salt_pile_system(
     mut commands: Commands,
-    time: Res<Time>,
     asset_server: Res<AssetServer>,
-    mut ghosts: Query<(&mut GhostSprite, &Transform)>,
-    salt_piles: Query<(Entity, &Transform), With<SaltPile>>,
+    mut ghosts: Query<(&mut GhostSprite, &Position)>, // Retrieve Ghost Position
+    mut salt_piles: Query<(Entity, &Position), With<SaltPile>>, // Retrieve SaltPile Position
 ) {
-    let dt = time.delta_seconds();
-    for (mut ghost, ghost_transform) in ghosts.iter_mut() {
-        for (salt_pile_entity, salt_pile_transform) in salt_piles.iter() {
-            if ghost_transform
-                .translation
-                .distance(salt_pile_transform.translation)
-                < 16.0
+    for (mut ghost, ghost_position) in ghosts.iter_mut() {
+        for (salt_pile_entity, salt_pile_position) in salt_piles.iter_mut() {
+            if ghost_position.distance(salt_pile_position) < 2.0
+                && ghost.salty_effect_timer.elapsed_secs() > 1.0
             {
                 // Increase ghost rage
-                ghost.rage += 10.0 * dt;
+                ghost.rage += 10.0;
 
-                // FIXME: This is incorrect. It should instead give a side-effect
-                // to the ghost, and then the spawning of these would be in a ghost system
-                // The ghost system might be created on this salt.rs file, but it needs to be a separate one.
+                // Reset salty_effect_timer to apply the side effect
+                ghost.salty_effect_timer.reset();
 
                 // Spawn salt particles
                 for _ in 0..5 {
-                    let particle_position = salt_pile_transform.translation
-                        + Vec3::new(
-                            rand::thread_rng().gen_range(-4.0..4.0),
-                            rand::thread_rng().gen_range(-4.0..4.0),
-                            0.0,
-                        );
+                    let mut particle_position = *salt_pile_position; // Copy the salt pile's position
+
+                    // Add a random offset to the particle position
+                    particle_position.x += rand::thread_rng().gen_range(-0.2..0.2);
+                    particle_position.y += rand::thread_rng().gen_range(-0.2..0.2);
 
                     let _salt_particle_entity = commands
                         .spawn(SpriteBundle {
@@ -143,11 +139,18 @@ pub fn salt_pile_system(
                                 custom_size: Some(Vec2::new(4.0, 4.0)),
                                 ..default()
                             },
-                            transform: Transform::from_translation(particle_position),
+                            transform: Transform::from_translation(
+                                particle_position.to_screen_coord(),
+                            ),
                             ..default()
                         })
+                        .insert(particle_position) // Insert the modified Position
+                        .insert(GameSprite)
                         .insert(SaltParticle)
-                        .insert(SaltParticleTimer(Timer::from_seconds(3.0, TimerMode::Once)))
+                        .insert(SaltParticleTimer(Timer::from_seconds(
+                            30.0,
+                            TimerMode::Once,
+                        )))
                         .id();
                 }
 
@@ -171,18 +174,57 @@ pub fn salt_particle_system(
             commands.entity(entity).despawn();
             continue;
         }
-
-        // Update salt particle position (currently just random movement)
-        transform.translation.x += rand::thread_rng().gen_range(-0.1..0.1) * dt;
-        transform.translation.y += rand::thread_rng().gen_range(-0.1..0.1) * dt;
-        transform.translation.z += rand::thread_rng().gen_range(-0.01..0.01) * dt;
-
         // Apply fade-out effect
-        transform.scale.x /= 1.05;
-        transform.scale.y /= 1.05;
-        transform.scale.z /= 1.05;
+        transform.scale.x /= 1.05_f32.powf(dt);
+        transform.scale.y /= 1.05_f32.powf(dt);
+        transform.scale.z /= 1.05_f32.powf(dt);
         transform.scale.x = transform.scale.x.max(0.00001);
         transform.scale.y = transform.scale.y.max(0.00001);
         transform.scale.z = transform.scale.z.max(0.00001);
+    }
+}
+
+/// Marker component for salt trace entities.
+#[derive(Component)]
+pub struct SaltyTrace;
+
+/// Component to store the intensity of the green UV glow for SaltyTrace entities.
+#[derive(Component)]
+pub struct UVReactive(pub f32);
+
+/// Timer component to track the lifetime of a SaltyTrace entity.
+#[derive(Component)]
+pub struct SaltyTraceTimer(pub Timer);
+
+/// System to handle salt trace logic.
+pub fn salty_trace_system(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut salty_traces: Query<
+        (Entity, &mut MapColor, &mut UVReactive, &mut SaltyTraceTimer),
+        With<SaltyTrace>,
+    >,
+) {
+    for (entity, mut map_color, mut uv_reactive, mut salty_trace_timer) in salty_traces.iter_mut() {
+        salty_trace_timer.0.tick(time.delta());
+
+        // --- UV Reactivity Fading ---
+        const UV_FADE_DURATION: f32 = 180.0; // 3 minutes in seconds
+        uv_reactive.0 =
+            (2.0 - salty_trace_timer.0.elapsed_secs() / UV_FADE_DURATION).clamp(0.0, 1.0);
+
+        // --- Opacity Fading ---
+        const OPACITY_FADE_START: f32 = UV_FADE_DURATION; // Start fading opacity after UV glow fades
+        const OPACITY_FADE_DURATION: f32 = 300.0; // 5 minutes in seconds
+        if salty_trace_timer.0.elapsed_secs() > OPACITY_FADE_START {
+            let fade_progress =
+                (salty_trace_timer.0.elapsed_secs() - OPACITY_FADE_START) / OPACITY_FADE_DURATION;
+            map_color.color.set_a(1.0 - fade_progress); // Linear fade
+        }
+
+        // --- Despawn ---
+        if salty_trace_timer.0.finished() && map_color.color.a() == 0.0 {
+            commands.entity(entity).despawn();
+        }
     }
 }

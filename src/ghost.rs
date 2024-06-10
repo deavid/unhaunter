@@ -1,7 +1,11 @@
+use std::time::Duration;
+
 use crate::board::{BoardPosition, Position};
 use crate::components::ghost_influence::GhostInfluence;
 use crate::components::ghost_influence::InfluenceType;
+use crate::game::GameSprite;
 use crate::ghost_definitions::GhostType;
+use crate::maplight::MapColor;
 use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
 use crate::{gear, summary, utils};
@@ -44,6 +48,10 @@ pub struct GhostSprite {
     pub warp: f32,
     /// The ghost got hit by sage, and it will be calm for a while.
     pub calm_time_secs: f32,
+    /// Timer to track the duration of the "Salty" side effect.
+    pub salty_effect_timer: Timer,
+    /// Timer to control the frequency of spawning Salty Traces.
+    pub salty_trace_spawn_timer: Timer,
 }
 
 /// Marker component for the ghost's visual breach effect.
@@ -60,6 +68,8 @@ impl GhostSprite {
         let idx = rng.gen_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());
+        let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);
+        salty_effect_timer.tick(Duration::from_secs(120));
         GhostSprite {
             class,
             spawn_point,
@@ -73,6 +83,8 @@ impl GhostSprite {
             hunt_time_secs: 0.0,
             warp: 0.0,
             calm_time_secs: 0.0,
+            salty_effect_timer,
+            salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
         }
     }
 
@@ -328,6 +340,41 @@ fn ghost_enrage(
 ) {
     timer.tick(time.delta());
     let dt = time.delta_seconds();
+
+    for (mut ghost, ghost_position) in &mut qg {
+        // --- Salty Trace Spawning Logic ---
+        if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
+            // Only spawn traces when NOT hunting and salty effect is active
+            ghost.salty_effect_timer.tick(time.delta());
+            ghost.salty_trace_spawn_timer.tick(time.delta());
+
+            if ghost.salty_trace_spawn_timer.just_finished() {
+                if rand::thread_rng().gen_bool(0.5) {
+                    // 50% chance to spawn
+                    // --- Find Valid Floor Tile ---
+                    let ghost_board_position = ghost_position.to_board_position();
+                    let mut valid_tile = None;
+                    for nearby_tile in ghost_board_position.xy_neighbors(1) {
+                        // Check adjacent tiles
+                        if let Some(collision_data) = gs.bf.collision_field.get(&nearby_tile) {
+                            if collision_data.player_free {
+                                // Check if the tile is walkable
+                                valid_tile = Some(nearby_tile);
+                                break;
+                            }
+                        }
+                    }
+
+                    // --- Spawn SaltyTrace Entity ---
+                    if let Some(tile_position) = valid_tile {
+                        spawn_salty_trace(&mut gs.commands, &gs.asset_server, tile_position);
+                    }
+                }
+                ghost.salty_trace_spawn_timer.reset();
+            }
+        }
+    }
+
     *last_roar += dt;
     let mut should_roar = RoarType::None;
     let mut roar_time = 3.0;
@@ -452,6 +499,40 @@ fn calculate_destination_score(
     }
 
     score
+}
+
+/// Spawns a `SaltyTrace` entity at the given `tile_position`.
+fn spawn_salty_trace(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    tile_position: BoardPosition,
+) {
+    use crate::gear::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+    let mut pos = tile_position.to_position();
+    let mut rng = rand::thread_rng();
+    pos.x += rng.gen_range(-0.2..0.2);
+    pos.y += rng.gen_range(-0.2..0.2);
+
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("img/salt_particle.png"),
+            transform: Transform::from_translation(pos.to_screen_coord())
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            sprite: Sprite {
+                color: Color::DARK_GRAY.with_a(0.5),
+                custom_size: Some(Vec2::new(8.0, 8.0)),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(pos)
+        .insert(SaltyTrace)
+        .insert(UVReactive(1.0))
+        .insert(SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)))
+        .insert(MapColor {
+            color: Color::DARK_GRAY.with_a(0.5),
+        })
+        .insert(GameSprite);
 }
 
 pub fn app_setup(app: &mut App) {
