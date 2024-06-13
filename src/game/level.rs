@@ -101,8 +101,8 @@ pub fn load_level(
     for gs in qgs2.iter() {
         commands.entity(gs).despawn_recursive();
     }
-    // TODO: Ambient temp should probably come from either the map or be influenced by weather.
-    bf.ambient_temp = 6.0;
+    // TODO: Ambient temp should probably come from either the map or be influenced by weather. Or difficulty.
+    bf.ambient_temp = 18.0;
 
     // Remove all pre-existing data for environment
     bf.temperature_field.clear();
