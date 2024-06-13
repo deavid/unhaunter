@@ -110,7 +110,7 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = h_out * k * 3.0;
+        let t_out = h_out * k * 0.5;
 
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
@@ -119,15 +119,16 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
         let ghost_target_temp: f32 = if freezing { -5.0 } else { 1.0 };
-        const GHOST_MAX_POWER: f32 = 0.02;
+        const GHOST_MAX_POWER: f32 = 0.0002;
+        const BREACH_MAX_POWER: f32 = 0.2;
         for npos in bpos.xy_neighbors(1) {
             bf.temperature_field.entry(npos).and_modify(|t| {
                 *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
             });
         }
-        for npos in gs.spawn_point.xy_neighbors(1) {
+        for npos in gs.spawn_point.xy_neighbors(2) {
             bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
+                *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
             });
         }
     }
@@ -148,19 +149,21 @@ pub fn temperature_update(
         .collect();
 
     const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
-    const INSIDE_CONDUCTIVITY: f32 = 10.0;
-    const WALL_CONDUCTIVITY: f32 = 0.000001;
-    const SMOOTH: f32 = 3.0;
+    const INSIDE_CONDUCTIVITY: f32 = 50.0;
+    const OTHER_CONDUCTIVITY: f32 = 2.0; // Closed Doors
+    const WALL_CONDUCTIVITY: f32 = 0.1;
+    const SMOOTH: f32 = 1.0;
 
     for (p, temp) in old_temps.into_iter() {
         let free = bf
             .collision_field
             .get(&p)
-            .map(|x| x.player_free)
-            .unwrap_or(true);
+            .map(|x| (x.player_free, x.ghost_free))
+            .unwrap_or((true, true));
         let mut self_k = match free {
-            true => INSIDE_CONDUCTIVITY,
-            false => WALL_CONDUCTIVITY,
+            (true, true) => INSIDE_CONDUCTIVITY,
+            (false, false) => WALL_CONDUCTIVITY,
+            _ => OTHER_CONDUCTIVITY,
         };
         let is_outside = roomdb.room_tiles.get(&p).is_none();
         if is_outside {
@@ -175,11 +178,12 @@ pub fn temperature_update(
         let neigh_free = bf
             .collision_field
             .get(&neigh)
-            .map(|x| x.player_free)
-            .unwrap_or(true);
+            .map(|x| (x.player_free, x.ghost_free))
+            .unwrap_or((true, true));
         let neigh_k = match neigh_free {
-            true => INSIDE_CONDUCTIVITY,
-            false => WALL_CONDUCTIVITY,
+            (true, true) => INSIDE_CONDUCTIVITY,
+            (false, false) => WALL_CONDUCTIVITY,
+            _ => OTHER_CONDUCTIVITY,
         };
         let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
         if nis_outside {
