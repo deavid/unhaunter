@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::colors;
 use crate::platform::plt::UI_SCALE;
@@ -23,7 +24,7 @@ pub enum TabState {
 }
 
 /// Represents the different content sections within the truck UI.
-#[derive(Debug, Clone, Component, PartialEq, Eq)]
+#[derive(Debug, Clone, Component, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TabContents {
     /// The loadout tab for managing player gear.
     Loadout,

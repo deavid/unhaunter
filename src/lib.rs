@@ -21,6 +21,7 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
+pub mod difficulty;
 
 use std::time::Duration;
 
