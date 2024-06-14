@@ -2,6 +2,7 @@ mod behavior;
 mod board;
 pub mod colors;
 pub mod components;
+pub mod difficulty;
 mod game;
 mod gear;
 mod ghost;
@@ -21,7 +22,6 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
-pub mod difficulty;
 
 use std::time::Duration;
 
@@ -65,6 +65,7 @@ pub fn app_run() {
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
+    .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
     )))

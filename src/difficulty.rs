@@ -13,10 +13,13 @@
 //! By defining these settings directly within the `Difficulty` enum, you can fine-tune
 //! the game experience for each difficulty level, providing a tailored challenge for players.
 
+use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
 
 use crate::truck::ui::TabContents;
+
+pub const DEFAULT_DIFFICULTY: Difficulty = Difficulty::ParanormalAnalyst;
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
@@ -742,4 +745,13 @@ pub struct DifficultyStruct {
     // --- UI and Scoring ---
     pub difficulty_name: String,
     pub difficulty_score_multiplier: f64,
+}
+
+#[derive(Debug, Resource, Clone)]
+pub struct CurrentDifficulty(pub DifficultyStruct);
+
+impl Default for CurrentDifficulty {
+    fn default() -> Self {
+        Self(DEFAULT_DIFFICULTY.create_difficulty_struct())
+    }
 }
