@@ -2,6 +2,7 @@
 
 use crate::board::Position;
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
+use crate::difficulty::CurrentDifficulty;
 use crate::ghost::GhostSprite;
 use crate::object_interaction::ObjectInteractionConfig;
 use bevy::prelude::*;
@@ -30,6 +31,7 @@ fn accumulate_charge(
 struct WithinDischargeRange;
 
 /// System to check ghost proximity to objects
+#[allow(clippy::too_many_arguments)]
 fn check_ghost_proximity(
     config: Res<ObjectInteractionConfig>, // Access the object interaction configuration
     mut ghost_query: Query<(&Position, &mut GhostSprite)>, // Query for the ghost's position
@@ -38,6 +40,7 @@ fn check_ghost_proximity(
     mut commands: Commands, // Access commands to add/remove components
     roomdb: Res<crate::board::RoomDB>, // Access the room database
     time: Res<Time>,        // Access the time resource
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     // Get ghost position and breach position
     let Ok((ghost_position, mut ghost_sprite)) = ghost_query.get_single_mut() else {
@@ -61,7 +64,7 @@ fn check_ghost_proximity(
                 let distance_to_breach = breach_position.distance(object_position);
 
                 // If distance <= hunt_provocation_radius and charge_value is above threshold:
-                if distance_to_breach <= config.hunt_provocation_radius
+                if distance_to_breach <= difficulty.0.hunt_provocation_radius
                     && ghost_influence.charge_value > 0.8
                 {
                     ghost_sprite.rage += 0.2;
@@ -95,7 +98,7 @@ fn check_ghost_proximity(
     // --- Increase Anger for Removed Attractive Objects ---
     let delta_time = time.delta_seconds();
     for _ in removed_attractive_objects.iter() {
-        ghost_sprite.rage += config.attractive_removal_anger_rate * delta_time;
+        ghost_sprite.rage += difficulty.0.attractive_removal_anger_rate * delta_time;
     }
 }
 

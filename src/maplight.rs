@@ -14,10 +14,11 @@ use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     components::ghost_influence::{GhostInfluence, InfluenceType},
+    difficulty::CurrentDifficulty,
     game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
-    gear::salt::UVReactive,
     gear::{
         playergear::{EquipmentPosition, PlayerGear},
+        salt::UVReactive,
         GearKind,
     },
     ghost::{self, GhostSprite},
@@ -271,8 +272,12 @@ pub fn apply_lighting(
             ),
         >,
     )>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
-    const GAMMA_EXP: f32 = 2.5;
+    let gamma_exp: f32 = difficulty.0.environment_gamma;
+    let dark_gamma: f32 = difficulty.0.darkness_intensity;
+    let light_gamma: f32 = 1.1;
+
     const CENTER_EXP: f32 = 5.0; // Higher values, less blinding light.
     const CENTER_EXP_GAMMA: f32 = 1.7; // Above 1.0, higher the less night vision.
     const BRIGHTNESS_HARSH: f32 = 3.0; // Lower values create an HDR effect, bringing blinding lights back to normal.
@@ -343,8 +348,8 @@ pub fn apply_lighting(
         let cursor_pos = pos.to_board_position();
         for npos in cursor_pos.xy_neighbors(1) {
             if let Some(lf) = bf.light_field.get(&npos) {
-                cursor_exp += lf.lux.powf(GAMMA_EXP);
-                exp_count += lf.lux.powf(GAMMA_EXP) / (lf.lux + 0.001);
+                cursor_exp += lf.lux.powf(gamma_exp);
+                exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
             }
         }
         player_pos = *pos;
@@ -545,7 +550,7 @@ pub fn apply_lighting(
         }
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            board::compute_color_exposure(lux_c, r, board::DARK_GAMMA, src_color)
+            board::compute_color_exposure(lux_c, r, dark_gamma, src_color)
         };
         dst_color.set_a(opacity.clamp(0.6, 1.0));
 
@@ -568,8 +573,8 @@ pub fn apply_lighting(
         // Sound field visualization:
 
         let f_gamma = |lux: f32| {
-            (fastapprox::faster::pow(lux, board::LIGHT_GAMMA)
-                + fastapprox::faster::pow(lux, 1.0 / board::DARK_GAMMA))
+            (fastapprox::faster::pow(lux, light_gamma)
+                + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
                 / 2.0
         };
         const K_COLD: f32 = 0.5;
@@ -683,7 +688,7 @@ pub fn apply_lighting(
                 rel_lux += 0.2;
             }
 
-            board::compute_color_exposure(rel_lux, r, board::DARK_GAMMA, src_color)
+            board::compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };
         let mut smooth: f32 = 1.0; // 20.0;
         if sprite_type == SpriteType::Ghost {
@@ -699,21 +704,22 @@ pub fn apply_lighting(
             } else {
                 opacity *= dst_color.l().clamp(0.7, 1.0);
                 // Make the ghost oscilate to increase visibility:
-                let osc1 = (elapsed * 1.0).sin() * 0.25 + 0.75;
-                let osc2 = (elapsed * 1.15).cos() * 0.5 + 0.5;
+                let osc1 = (elapsed * 1.0 * difficulty.0.evidence_visibility).sin() * 0.25 + 0.75;
+                let osc2 = (elapsed * 1.15 * difficulty.0.evidence_visibility).cos() * 0.5 + 0.5;
 
-                opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0);
+                opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0)
+                    * difficulty.0.evidence_visibility;
                 let l = (dst_color.l() + osc2) / 2.0;
                 dst_color.set_l(l);
                 let r = dst_color.r();
                 let g = dst_color.g();
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 6.0
+                    ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility
                 } else {
                     0.0
                 };
                 let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    ld.red * 6.0
+                    ld.red * 6.0 * difficulty.0.evidence_visibility
                 } else {
                     0.0
                 };
@@ -723,7 +729,11 @@ pub fn apply_lighting(
                 dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
             }
             smooth = 1.0;
-            dst_color = lerp_color(sprite.color, dst_color, 0.04);
+            dst_color = lerp_color(
+                sprite.color,
+                dst_color,
+                0.04 * difficulty.0.evidence_visibility,
+            );
         }
         if sprite_type == SpriteType::Breach {
             smooth = 2.0;

@@ -15,6 +15,7 @@ use crate::behavior::component::RoomState;
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardDataToRebuild, MapTileComponents, Position, SpriteDB};
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
+use crate::difficulty::CurrentDifficulty;
 use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::materials::CustomMaterial1;
@@ -85,6 +86,7 @@ pub fn load_level(
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
     mut app_next_state: ResMut<NextState<root::State>>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     let mut ev_iter = ev.read();
     let Some(load_event) = ev_iter.next() else {
@@ -101,8 +103,8 @@ pub fn load_level(
     for gs in qgs2.iter() {
         commands.entity(gs).despawn_recursive();
     }
-    // TODO: Ambient temp should probably come from either the map or be influenced by weather. Or difficulty.
-    bf.ambient_temp = 18.0;
+
+    bf.ambient_temp = difficulty.0.ambient_temperature;
 
     // Remove all pre-existing data for environment
     bf.temperature_field.clear();
@@ -420,7 +422,7 @@ pub fn load_level(
         })
         .insert(GameSprite)
         .insert(gear::playergear::PlayerGear::new())
-        .insert(PlayerSprite::new(1))
+        .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
         .insert(board::Direction::default())
@@ -461,7 +463,7 @@ pub fn load_level(
         bf.evidences.insert(evidence);
     }
     bf.breach_pos = ghost_spawn;
-    commands.insert_resource(summary::SummaryData::new(ghost_types));
+    commands.insert_resource(summary::SummaryData::new(ghost_types, difficulty.clone()));
     let breach_id = commands
         .spawn(SpriteBundle {
             texture: asset_server.load("img/breach.png"),
@@ -495,7 +497,7 @@ pub fn load_level(
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
 
-    let open_van: bool = dist_to_van < 4.0;
+    let open_van: bool = dist_to_van < 4.0 && difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
 }
 

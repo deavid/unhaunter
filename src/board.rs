@@ -1076,12 +1076,6 @@ pub fn boardfield_update(
     }
 }
 
-pub const DARK_GAMMA: f32 = 1.0;
-pub const LIGHT_GAMMA: f32 = 1.1;
-
-// pub const DARK_GAMMA: f32 = 1.5;
-// pub const LIGHT_GAMMA: f32 = 2.5;
-
 pub fn compute_color_exposure(
     rel_exposure: f32,
     dither: f32,

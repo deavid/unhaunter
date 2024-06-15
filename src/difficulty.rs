@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::truck::ui::TabContents;
 
-pub const DEFAULT_DIFFICULTY: Difficulty = Difficulty::ParanormalAnalyst;
+pub const DEFAULT_DIFFICULTY: Difficulty = Difficulty::LeadResearcher;
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
@@ -119,22 +119,22 @@ impl Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     pub fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 0.9,
-            Difficulty::FieldResearcher => 1.0,
-            Difficulty::ParanormalAnalyst => 1.1,
-            Difficulty::SeniorInvestigator => 1.2,
-            Difficulty::LeadResearcher => 1.3,
-            Difficulty::CaseManager => 1.4,
-            Difficulty::RegionalDirector => 1.5,
-            Difficulty::NationalSpecialist => 1.6,
-            Difficulty::GlobalExpert => 1.7,
-            Difficulty::Archivist => 1.8,
-            Difficulty::OccultScholar => 1.9,
-            Difficulty::Exorcist => 2.0,
-            Difficulty::Parapsychologist => 2.1,
-            Difficulty::SpiritualGuardian => 2.2,
-            Difficulty::UnhaunterMaster => 2.3,
-            Difficulty::Legend => 2.7,
+            Difficulty::Apprentice => 0.5,
+            Difficulty::FieldResearcher => 0.7,
+            Difficulty::ParanormalAnalyst => 1.0,
+            Difficulty::SeniorInvestigator => 1.1,
+            Difficulty::LeadResearcher => 1.2,
+            Difficulty::CaseManager => 1.25,
+            Difficulty::RegionalDirector => 1.3,
+            Difficulty::NationalSpecialist => 1.35,
+            Difficulty::GlobalExpert => 1.4,
+            Difficulty::Archivist => 1.45,
+            Difficulty::OccultScholar => 1.5,
+            Difficulty::Exorcist => 1.55,
+            Difficulty::Parapsychologist => 1.6,
+            Difficulty::SpiritualGuardian => 1.65,
+            Difficulty::UnhaunterMaster => 1.7,
+            Difficulty::Legend => 1.8,
         }
     }
 
@@ -146,19 +146,19 @@ impl Difficulty {
             Difficulty::Apprentice => 0.5,
             Difficulty::FieldResearcher => 0.7,
             Difficulty::ParanormalAnalyst => 0.9,
-            Difficulty::SeniorInvestigator => 1.1,
-            Difficulty::LeadResearcher => 1.3,
-            Difficulty::CaseManager => 1.5,
-            Difficulty::RegionalDirector => 1.7,
-            Difficulty::NationalSpecialist => 1.9,
-            Difficulty::GlobalExpert => 2.1,
-            Difficulty::Archivist => 2.3,
-            Difficulty::OccultScholar => 2.5,
-            Difficulty::Exorcist => 2.7,
-            Difficulty::Parapsychologist => 2.9,
-            Difficulty::SpiritualGuardian => 3.1,
-            Difficulty::UnhaunterMaster => 3.3,
-            Difficulty::Legend => 4.0,
+            Difficulty::SeniorInvestigator => 1.0,
+            Difficulty::LeadResearcher => 1.1,
+            Difficulty::CaseManager => 1.2,
+            Difficulty::RegionalDirector => 1.3,
+            Difficulty::NationalSpecialist => 1.4,
+            Difficulty::GlobalExpert => 1.5,
+            Difficulty::Archivist => 1.6,
+            Difficulty::OccultScholar => 1.7,
+            Difficulty::Exorcist => 1.8,
+            Difficulty::Parapsychologist => 1.9,
+            Difficulty::SpiritualGuardian => 2.0,
+            Difficulty::UnhaunterMaster => 2.0,
+            Difficulty::Legend => 2.0,
         }
     }
 
@@ -286,22 +286,22 @@ impl Difficulty {
     /// Returns the base ambient temperature of the location.
     pub fn ambient_temperature(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 20.0,
+            Difficulty::Apprentice => 19.0,
             Difficulty::FieldResearcher => 18.0,
             Difficulty::ParanormalAnalyst => 16.0,
             Difficulty::SeniorInvestigator => 14.0,
             Difficulty::LeadResearcher => 12.0,
             Difficulty::CaseManager => 10.0,
-            Difficulty::RegionalDirector => 8.0,
-            Difficulty::NationalSpecialist => 7.0,
-            Difficulty::GlobalExpert => 6.0,
-            Difficulty::Archivist => 5.5,
-            Difficulty::OccultScholar => 5.0,
-            Difficulty::Exorcist => 4.5,
-            Difficulty::Parapsychologist => 4.0,
-            Difficulty::SpiritualGuardian => 3.5,
-            Difficulty::UnhaunterMaster => 3.0,
-            Difficulty::Legend => 2.0,
+            Difficulty::RegionalDirector => 9.0,
+            Difficulty::NationalSpecialist => 8.0,
+            Difficulty::GlobalExpert => 7.0,
+            Difficulty::Archivist => 6.5,
+            Difficulty::OccultScholar => 6.0,
+            Difficulty::Exorcist => 5.5,
+            Difficulty::Parapsychologist => 5.0,
+            Difficulty::SpiritualGuardian => 4.5,
+            Difficulty::UnhaunterMaster => 4.0,
+            Difficulty::Legend => 3.0,
         }
     }
 
@@ -309,22 +309,22 @@ impl Difficulty {
     /// propagate through the environment.
     pub fn temperature_spread_speed(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 0.7,
-            Difficulty::FieldResearcher => 0.8,
-            Difficulty::ParanormalAnalyst => 0.9,
-            Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::LeadResearcher => 1.1,
-            Difficulty::CaseManager => 1.2,
-            Difficulty::RegionalDirector => 1.25,
-            Difficulty::NationalSpecialist => 1.3,
-            Difficulty::GlobalExpert => 1.35,
-            Difficulty::Archivist => 1.4,
-            Difficulty::OccultScholar => 1.45,
-            Difficulty::Exorcist => 1.5,
-            Difficulty::Parapsychologist => 1.55,
-            Difficulty::SpiritualGuardian => 1.6,
-            Difficulty::UnhaunterMaster => 1.65,
-            Difficulty::Legend => 1.7,
+            Difficulty::Apprentice => 3.0,
+            Difficulty::FieldResearcher => 2.8,
+            Difficulty::ParanormalAnalyst => 2.5,
+            Difficulty::SeniorInvestigator => 2.3,
+            Difficulty::LeadResearcher => 2.1,
+            Difficulty::CaseManager => 1.8,
+            Difficulty::RegionalDirector => 1.6,
+            Difficulty::NationalSpecialist => 1.4,
+            Difficulty::GlobalExpert => 1.2,
+            Difficulty::Archivist => 1.0,
+            Difficulty::OccultScholar => 0.8,
+            Difficulty::Exorcist => 0.6,
+            Difficulty::Parapsychologist => 0.5,
+            Difficulty::SpiritualGuardian => 0.3,
+            Difficulty::UnhaunterMaster => 0.2,
+            Difficulty::Legend => 0.1,
         }
     }
 
@@ -333,22 +333,22 @@ impl Difficulty {
     /// A higher value means lights emit more heat.
     pub fn light_heat(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 0.8,
-            Difficulty::FieldResearcher => 0.9,
-            Difficulty::ParanormalAnalyst => 1.0,
-            Difficulty::SeniorInvestigator => 1.05,
-            Difficulty::LeadResearcher => 1.1,
-            Difficulty::CaseManager => 1.15,
-            Difficulty::RegionalDirector => 1.2,
-            Difficulty::NationalSpecialist => 1.25,
-            Difficulty::GlobalExpert => 1.3,
-            Difficulty::Archivist => 1.35,
-            Difficulty::OccultScholar => 1.4,
-            Difficulty::Exorcist => 1.45,
-            Difficulty::Parapsychologist => 1.5,
-            Difficulty::SpiritualGuardian => 1.55,
-            Difficulty::UnhaunterMaster => 1.6,
-            Difficulty::Legend => 1.7,
+            Difficulty::Apprentice => 0.1,
+            Difficulty::FieldResearcher => 0.2,
+            Difficulty::ParanormalAnalyst => 0.3,
+            Difficulty::SeniorInvestigator => 0.4,
+            Difficulty::LeadResearcher => 0.6,
+            Difficulty::CaseManager => 0.8,
+            Difficulty::RegionalDirector => 1.0,
+            Difficulty::NationalSpecialist => 1.5,
+            Difficulty::GlobalExpert => 2.0,
+            Difficulty::Archivist => 2.5,
+            Difficulty::OccultScholar => 3.0,
+            Difficulty::Exorcist => 3.5,
+            Difficulty::Parapsychologist => 4.0,
+            Difficulty::SpiritualGuardian => 4.5,
+            Difficulty::UnhaunterMaster => 5.0,
+            Difficulty::Legend => 8.0,
         }
     }
 
@@ -383,18 +383,18 @@ impl Difficulty {
     /// potentially highlighting details but creating a less atmospheric look.
     pub fn environment_gamma(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 1.8,
-            Difficulty::FieldResearcher => 1.6,
-            Difficulty::ParanormalAnalyst => 1.4,
-            Difficulty::SeniorInvestigator => 1.3,
-            Difficulty::LeadResearcher => 1.2,
-            Difficulty::CaseManager => 1.15,
-            Difficulty::RegionalDirector => 1.1,
-            Difficulty::NationalSpecialist => 1.05,
-            Difficulty::GlobalExpert => 1.0,
-            Difficulty::Archivist => 0.95,
-            Difficulty::OccultScholar => 0.9,
-            Difficulty::Exorcist => 0.85,
+            Difficulty::Apprentice => 2.5,
+            Difficulty::FieldResearcher => 2.4,
+            Difficulty::ParanormalAnalyst => 2.3,
+            Difficulty::SeniorInvestigator => 2.2,
+            Difficulty::LeadResearcher => 2.1,
+            Difficulty::CaseManager => 2.0,
+            Difficulty::RegionalDirector => 1.8,
+            Difficulty::NationalSpecialist => 1.6,
+            Difficulty::GlobalExpert => 1.4,
+            Difficulty::Archivist => 1.2,
+            Difficulty::OccultScholar => 1.0,
+            Difficulty::Exorcist => 0.9,
             Difficulty::Parapsychologist => 0.8,
             Difficulty::SpiritualGuardian => 0.75,
             Difficulty::UnhaunterMaster => 0.7,
@@ -408,21 +408,21 @@ impl Difficulty {
     pub fn starting_sanity(&self) -> f32 {
         match self {
             Difficulty::Apprentice => 100.0,
-            Difficulty::FieldResearcher => 90.0,
-            Difficulty::ParanormalAnalyst => 80.0,
-            Difficulty::SeniorInvestigator => 75.0,
-            Difficulty::LeadResearcher => 70.0,
-            Difficulty::CaseManager => 65.0,
-            Difficulty::RegionalDirector => 60.0,
-            Difficulty::NationalSpecialist => 55.0,
-            Difficulty::GlobalExpert => 50.0,
-            Difficulty::Archivist => 45.0,
-            Difficulty::OccultScholar => 40.0,
-            Difficulty::Exorcist => 35.0,
-            Difficulty::Parapsychologist => 30.0,
-            Difficulty::SpiritualGuardian => 25.0,
-            Difficulty::UnhaunterMaster => 20.0,
-            Difficulty::Legend => 10.0,
+            Difficulty::FieldResearcher => 100.0,
+            Difficulty::ParanormalAnalyst => 100.0,
+            Difficulty::SeniorInvestigator => 90.0,
+            Difficulty::LeadResearcher => 85.0,
+            Difficulty::CaseManager => 80.0,
+            Difficulty::RegionalDirector => 75.0,
+            Difficulty::NationalSpecialist => 70.0,
+            Difficulty::GlobalExpert => 65.0,
+            Difficulty::Archivist => 60.0,
+            Difficulty::OccultScholar => 55.0,
+            Difficulty::Exorcist => 50.0,
+            Difficulty::Parapsychologist => 45.0,
+            Difficulty::SpiritualGuardian => 40.0,
+            Difficulty::UnhaunterMaster => 35.0,
+            Difficulty::Legend => 30.0,
         }
     }
 
@@ -431,10 +431,10 @@ impl Difficulty {
     /// A higher value results in faster sanity loss for the player.
     pub fn sanity_drain_rate(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 0.5,
-            Difficulty::FieldResearcher => 0.7,
-            Difficulty::ParanormalAnalyst => 0.9,
-            Difficulty::SeniorInvestigator => 1.1,
+            Difficulty::Apprentice => 0.1,
+            Difficulty::FieldResearcher => 0.5,
+            Difficulty::ParanormalAnalyst => 0.7,
+            Difficulty::SeniorInvestigator => 1.0,
             Difficulty::LeadResearcher => 1.3,
             Difficulty::CaseManager => 1.5,
             Difficulty::RegionalDirector => 1.7,
@@ -455,22 +455,22 @@ impl Difficulty {
     /// A higher value means the player loses health more quickly during hunts.
     pub fn health_drain_rate(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 0.8,
-            Difficulty::FieldResearcher => 0.9,
-            Difficulty::ParanormalAnalyst => 1.0,
-            Difficulty::SeniorInvestigator => 1.1,
-            Difficulty::LeadResearcher => 1.2,
-            Difficulty::CaseManager => 1.3,
-            Difficulty::RegionalDirector => 1.4,
-            Difficulty::NationalSpecialist => 1.5,
-            Difficulty::GlobalExpert => 1.6,
-            Difficulty::Archivist => 1.7,
-            Difficulty::OccultScholar => 1.8,
-            Difficulty::Exorcist => 1.9,
-            Difficulty::Parapsychologist => 2.0,
-            Difficulty::SpiritualGuardian => 2.1,
-            Difficulty::UnhaunterMaster => 2.2,
-            Difficulty::Legend => 2.5,
+            Difficulty::Apprentice => 0.4,
+            Difficulty::FieldResearcher => 0.7,
+            Difficulty::ParanormalAnalyst => 0.9,
+            Difficulty::SeniorInvestigator => 1.0,
+            Difficulty::LeadResearcher => 1.05,
+            Difficulty::CaseManager => 1.10,
+            Difficulty::RegionalDirector => 1.15,
+            Difficulty::NationalSpecialist => 1.20,
+            Difficulty::GlobalExpert => 1.25,
+            Difficulty::Archivist => 1.30,
+            Difficulty::OccultScholar => 1.35,
+            Difficulty::Exorcist => 1.40,
+            Difficulty::Parapsychologist => 1.45,
+            Difficulty::SpiritualGuardian => 1.5,
+            Difficulty::UnhaunterMaster => 1.55,
+            Difficulty::Legend => 1.6,
         }
     }
 
@@ -501,22 +501,22 @@ impl Difficulty {
     /// Returns the player's movement speed multiplier.
     pub fn player_speed(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 1.1,
-            Difficulty::FieldResearcher => 1.0,
-            Difficulty::ParanormalAnalyst => 0.95,
-            Difficulty::SeniorInvestigator => 0.9,
-            Difficulty::LeadResearcher => 0.85,
-            Difficulty::CaseManager => 0.8,
-            Difficulty::RegionalDirector => 0.75,
-            Difficulty::NationalSpecialist => 0.7,
-            Difficulty::GlobalExpert => 0.65,
-            Difficulty::Archivist => 0.6,
-            Difficulty::OccultScholar => 0.55,
-            Difficulty::Exorcist => 0.5,
-            Difficulty::Parapsychologist => 0.45,
-            Difficulty::SpiritualGuardian => 0.4,
-            Difficulty::UnhaunterMaster => 0.35,
-            Difficulty::Legend => 0.3,
+            Difficulty::Apprentice => 1.3,
+            Difficulty::FieldResearcher => 1.25,
+            Difficulty::ParanormalAnalyst => 1.20,
+            Difficulty::SeniorInvestigator => 1.15,
+            Difficulty::LeadResearcher => 1.1,
+            Difficulty::CaseManager => 1.05,
+            Difficulty::RegionalDirector => 1.00,
+            Difficulty::NationalSpecialist => 0.98,
+            Difficulty::GlobalExpert => 0.95,
+            Difficulty::Archivist => 0.92,
+            Difficulty::OccultScholar => 0.90,
+            Difficulty::Exorcist => 0.87,
+            Difficulty::Parapsychologist => 0.85,
+            Difficulty::SpiritualGuardian => 0.83,
+            Difficulty::UnhaunterMaster => 0.82,
+            Difficulty::Legend => 0.80,
         }
     }
 
@@ -575,45 +575,23 @@ impl Difficulty {
     /// Returns a boolean value indicating whether the van UI automatically opens
     /// at the beginning of a mission.
     pub fn van_auto_open(&self) -> bool {
-        matches!(
-            self,
-            Difficulty::Apprentice
-                | Difficulty::FieldResearcher
-                | Difficulty::ParanormalAnalyst
-                | Difficulty::SeniorInvestigator
-                | Difficulty::LeadResearcher
-                | Difficulty::CaseManager
-        )
+        true
+        // matches!(
+        //     self,
+        //     Difficulty::Apprentice
+        //         | Difficulty::FieldResearcher
+        //         | Difficulty::ParanormalAnalyst
+        //         | Difficulty::SeniorInvestigator
+        //         | Difficulty::LeadResearcher
+        //         | Difficulty::CaseManager
+        // )
     }
 
     /// Returns the default tab selected in the van UI.
     pub fn default_van_tab(&self) -> TabContents {
         match self {
-            Difficulty::Apprentice | Difficulty::FieldResearcher => TabContents::Loadout,
-            _ => TabContents::Journal,
-        }
-    }
-
-    /// Returns a boolean value indicating whether players are allowed to discard evidence
-    /// in the journal.
-    pub fn allow_evidence_discard(&self) -> bool {
-        matches!(
-            self,
-            Difficulty::Apprentice
-                | Difficulty::FieldResearcher
-                | Difficulty::ParanormalAnalyst
-                | Difficulty::SeniorInvestigator
-        )
-    }
-
-    /// Returns the maximum number of inventory slots the player has available.
-    pub fn max_inventory_slots(&self) -> usize {
-        match self {
-            Difficulty::Apprentice => 4,
-            Difficulty::FieldResearcher
-            | Difficulty::ParanormalAnalyst
-            | Difficulty::SeniorInvestigator => 3,
-            _ => 2,
+            Difficulty::Apprentice | Difficulty::FieldResearcher => TabContents::Journal,
+            _ => TabContents::Loadout,
         }
     }
 
@@ -696,8 +674,6 @@ impl Difficulty {
             equipment_sensitivity: self.equipment_sensitivity(),
             van_auto_open: self.van_auto_open(),
             default_van_tab: self.default_van_tab(),
-            allow_evidence_discard: self.allow_evidence_discard(),
-            max_inventory_slots: self.max_inventory_slots(),
             difficulty_name: self.difficulty_name().to_owned(), // Clone the name
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
         }
@@ -715,7 +691,9 @@ pub struct DifficultyStruct {
     pub ghost_hunt_duration: f32,
     pub ghost_hunt_cooldown: f32,
     pub ghost_attraction_to_breach: f32,
+    /// The radius around the ghost's breach within which a Repulsive object can provoke a hunt.
     pub hunt_provocation_radius: f32,
+    /// The rate at which the ghost's anger increases when an Attractive object is removed from the location.
     pub attractive_removal_anger_rate: f32,
 
     // --- Environment ---
@@ -731,6 +709,7 @@ pub struct DifficultyStruct {
     pub health_drain_rate: f32,
     pub health_recovery_rate: f32,
     pub player_speed: f32,
+    // TODO: Add starter inventory - playergear.rs
 
     // --- Evidence Gathering ---
     pub evidence_visibility: f32,
@@ -739,11 +718,9 @@ pub struct DifficultyStruct {
     // --- Gameplay ---
     pub van_auto_open: bool,
     pub default_van_tab: TabContents,
-    pub allow_evidence_discard: bool,
-    pub max_inventory_slots: usize,
 
     // --- UI and Scoring ---
-    pub difficulty_name: String,
+    pub difficulty_name: String, // TODO
     pub difficulty_score_multiplier: f64,
 }
 

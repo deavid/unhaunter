@@ -56,6 +56,7 @@ use self::videocam::Videocam;
 
 use self::playergear::{EquipmentPosition, PlayerGear};
 use crate::board::{self, Position};
+use crate::difficulty::CurrentDifficulty;
 use crate::game::GameConfig;
 use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use crate::summary;
@@ -454,6 +455,8 @@ pub struct GearStuff<'w, 's> {
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
     pub sound_events: EventWriter<'w, SoundEvent>,
+    /// Access to the current difficulty
+    pub difficulty: Res<'w, CurrentDifficulty>,
 }
 
 impl<'w, 's> GearStuff<'w, 's> {

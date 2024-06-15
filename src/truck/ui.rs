@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::colors;
+use crate::difficulty::CurrentDifficulty;
 use crate::platform::plt::UI_SCALE;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
@@ -50,7 +51,7 @@ impl TabContents {
     /// Returns the default `TabState` for the tab content.
     pub fn default_state(&self) -> TabState {
         match self {
-            TabContents::Loadout => TabState::Selected,
+            TabContents::Loadout => TabState::Default,
             TabContents::LocationMap => TabState::Disabled,
             TabContents::CameraFeed => TabState::Disabled,
             TabContents::Journal => TabState::Default,
@@ -71,10 +72,16 @@ pub struct TruckTab {
 
 impl TruckTab {
     /// Creates a new `TruckTab` from a `TabContents` enum.
-    pub fn from_tab(tab: TabContents) -> Self {
+    pub fn from_tab(tab: TabContents, difficulty: &CurrentDifficulty) -> Self {
+        // Set the tab state based on difficulty
+        let state = if tab == difficulty.0.default_van_tab {
+            TabState::Selected
+        } else {
+            tab.default_state()
+        };
         Self {
             tabname: tab.name().to_owned(),
-            state: tab.default_state(),
+            state,
             contents: tab,
         }
     }
@@ -122,6 +129,7 @@ pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<root::GameAssets>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     // Load Truck UI
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -180,7 +188,7 @@ pub fn setup_ui(
 
     let mid_column = |p: Cb| {
         let mut title_tab = |p: Cb, tab: TabContents| {
-            let truck_tab = TruckTab::from_tab(tab);
+            let truck_tab = TruckTab::from_tab(tab, &difficulty);
             let txt_fg = truck_tab.text_color();
             let tab_bg = materials.add(UIPanelMaterial {
                 color: truck_tab.bg_color(),

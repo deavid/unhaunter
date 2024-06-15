@@ -123,7 +123,7 @@ impl GearUsable for EMFMeter {
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
 
         let temp_reading = temperature / 10.0 + sound_reading;
-        const AIR_MASS: f32 = 5.0;
+        let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
 
         if self.temp_l2.len() < 2 {
             self.temp_l2.push(temp_reading);
@@ -131,8 +131,8 @@ impl GearUsable for EMFMeter {
 
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.temp_l2.len();
-        self.temp_l2[n] = (self.temp_l2[n] * AIR_MASS + temp_reading) / (AIR_MASS + 1.0);
-        self.temp_l1 = (self.temp_l1 * AIR_MASS + temp_reading) / (AIR_MASS + 1.0);
+        self.temp_l2[n] = (self.temp_l2[n] * air_mass + temp_reading) / (air_mass + 1.0);
+        self.temp_l1 = (self.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
         if self.temp_l2.len() < 40 {
             self.temp_l2.push(self.temp_l1);
         }
@@ -143,8 +143,8 @@ impl GearUsable for EMFMeter {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             let mut new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
-            self.emf -= 0.2;
-            self.emf /= 1.4;
+            self.emf -= 0.2 * gs.difficulty.0.equipment_sensitivity;
+            self.emf /= 1.4_f32.powf(gs.difficulty.0.equipment_sensitivity);
             if gs.bf.evidences.contains(&Evidence::EMFLevel5) {
                 new_emf = f32::tanh(new_emf / 40.0) * 45.0;
             } else {

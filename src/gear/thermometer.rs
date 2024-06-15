@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{board::Position, ghost_definitions::Evidence};
+use crate::{board::Position, difficulty::CurrentDifficulty, ghost_definitions::Evidence};
 
 use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -57,7 +57,7 @@ impl GearUsable for Thermometer {
         let mut rng = rand::thread_rng();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
-        const K: f32 = 0.5;
+        const K: f32 = 0.7;
         let pos = Position {
             x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
             y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
@@ -69,11 +69,11 @@ impl GearUsable for Thermometer {
             return;
         };
         let temp_reading = temperature;
-        const AIR_MASS: f32 = 5.0;
+        let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.temp_l2.len();
-        self.temp_l2[n] = (self.temp_l2[n] * AIR_MASS + self.temp_l1) / (AIR_MASS + 1.0);
-        self.temp_l1 = (self.temp_l1 * AIR_MASS + temp_reading) / (AIR_MASS + 1.0);
+        self.temp_l2[n] = (self.temp_l2[n] * air_mass + self.temp_l1) / (air_mass + 1.0);
+        self.temp_l1 = (self.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
         if self.frame_counter % 5 == 0 {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
@@ -100,6 +100,7 @@ pub fn temperature_update(
     roomdb: Res<crate::board::RoomDB>,
     qt: Query<(&Position, &crate::behavior::Behavior)>,
     qg: Query<(&crate::ghost::GhostSprite, &Position)>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {
@@ -110,7 +111,7 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = h_out * k * 0.5;
+        let t_out = h_out * k * 0.5 * difficulty.0.light_heat;
 
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
@@ -152,7 +153,7 @@ pub fn temperature_update(
     const INSIDE_CONDUCTIVITY: f32 = 50.0;
     const OTHER_CONDUCTIVITY: f32 = 2.0; // Closed Doors
     const WALL_CONDUCTIVITY: f32 = 0.1;
-    const SMOOTH: f32 = 1.0;
+    let smooth: f32 = 4.0 / difficulty.0.temperature_spread_speed;
 
     for (p, temp) in old_temps.into_iter() {
         let free = bf
@@ -194,7 +195,7 @@ pub fn temperature_update(
 
         let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
 
-        let conductivity = (self_k.recip() + neigh_k.recip()).recip() / SMOOTH;
+        let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
 
         let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
         let new_temp2 = temp - new_temp1 + neigh_temp;
