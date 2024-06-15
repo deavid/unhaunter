@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "atut01_basics.tmx",
+    "activeFile": "tut01_basics.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -11,7 +11,7 @@
         "/home/deavid/tiled/unhaunter_test2.tsx": {
             "scaleInDock": 1
         },
-        "atut01_basics.tmx": {
+        "tut01_basics.tmx": {
             "expandedGroupLayers": [
                 2
             ],
@@ -22,7 +22,7 @@
                 "y": 115.49999999999999
             }
         },
-        "atut02_glass_house.tmx": {
+        "tut02_glass_house.tmx": {
             "expandedGroupLayers": [
                 2
             ],
@@ -152,8 +152,8 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut02_glass_house.tmx",
-        "atut01_basics.tmx"
+        "tut02_glass_house.tmx",
+        "tut01_basics.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
@@ -161,8 +161,8 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut02_glass_house.tmx",
-        "atut01_basics.tmx",
+        "tut02_glass_house.tmx",
+        "tut01_basics.tmx",
         "unhaunter_spritesheet2.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",
