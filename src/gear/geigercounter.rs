@@ -88,7 +88,7 @@ impl GearUsable for GeigerCounter {
         } else {
             f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
         };
-        let mass: f32 = 16.0 / gs.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 12.0 / gs.difficulty.0.equipment_sensitivity;
         if self.enabled {
             self.sound_a1 = (self.sound_a1 * mass + avg_snd * mass.recip()) / (mass + mass.recip());
             self.sound_a2 =

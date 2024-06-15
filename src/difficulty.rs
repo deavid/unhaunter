@@ -245,22 +245,22 @@ impl Difficulty {
     /// can provoke a hunt.
     pub fn hunt_provocation_radius(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 1.0,
-            Difficulty::FieldResearcher => 1.5,
-            Difficulty::ParanormalAnalyst => 2.0,
-            Difficulty::SeniorInvestigator => 2.5,
-            Difficulty::LeadResearcher => 3.0,
-            Difficulty::CaseManager => 3.2,
-            Difficulty::RegionalDirector => 3.4,
-            Difficulty::NationalSpecialist => 3.6,
-            Difficulty::GlobalExpert => 3.8,
-            Difficulty::Archivist => 4.0,
-            Difficulty::OccultScholar => 4.2,
-            Difficulty::Exorcist => 4.4,
-            Difficulty::Parapsychologist => 4.6,
-            Difficulty::SpiritualGuardian => 4.8,
-            Difficulty::UnhaunterMaster => 5.0,
-            Difficulty::Legend => 5.5,
+            Difficulty::Apprentice => 0.3,
+            Difficulty::FieldResearcher => 0.5,
+            Difficulty::ParanormalAnalyst => 0.6,
+            Difficulty::SeniorInvestigator => 0.7,
+            Difficulty::LeadResearcher => 0.8,
+            Difficulty::CaseManager => 0.9,
+            Difficulty::RegionalDirector => 1.0,
+            Difficulty::NationalSpecialist => 1.1,
+            Difficulty::GlobalExpert => 1.2,
+            Difficulty::Archivist => 1.3,
+            Difficulty::OccultScholar => 1.4,
+            Difficulty::Exorcist => 1.5,
+            Difficulty::Parapsychologist => 1.6,
+            Difficulty::SpiritualGuardian => 1.7,
+            Difficulty::UnhaunterMaster => 1.8,
+            Difficulty::Legend => 2.0,
         }
     }
 
@@ -307,7 +307,7 @@ impl Difficulty {
             Difficulty::Parapsychologist => 5.0,
             Difficulty::SpiritualGuardian => 4.5,
             Difficulty::UnhaunterMaster => 4.0,
-            Difficulty::Legend => 3.0,
+            Difficulty::Legend => 4.0,
         }
     }
 
@@ -330,7 +330,7 @@ impl Difficulty {
             Difficulty::Parapsychologist => 0.5,
             Difficulty::SpiritualGuardian => 0.3,
             Difficulty::UnhaunterMaster => 0.2,
-            Difficulty::Legend => 0.1,
+            Difficulty::Legend => 0.2,
         }
     }
 
@@ -354,7 +354,7 @@ impl Difficulty {
             Difficulty::Parapsychologist => 4.0,
             Difficulty::SpiritualGuardian => 4.5,
             Difficulty::UnhaunterMaster => 5.0,
-            Difficulty::Legend => 8.0,
+            Difficulty::Legend => 5.0,
         }
     }
 
@@ -441,18 +441,18 @@ impl Difficulty {
             Difficulty::FieldResearcher => 0.5,
             Difficulty::ParanormalAnalyst => 0.7,
             Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::LeadResearcher => 1.3,
-            Difficulty::CaseManager => 1.5,
-            Difficulty::RegionalDirector => 1.7,
-            Difficulty::NationalSpecialist => 1.9,
-            Difficulty::GlobalExpert => 2.1,
-            Difficulty::Archivist => 2.3,
-            Difficulty::OccultScholar => 2.5,
-            Difficulty::Exorcist => 2.7,
-            Difficulty::Parapsychologist => 2.9,
-            Difficulty::SpiritualGuardian => 3.1,
-            Difficulty::UnhaunterMaster => 3.3,
-            Difficulty::Legend => 4.0,
+            Difficulty::LeadResearcher => 1.5,
+            Difficulty::CaseManager => 2.0,
+            Difficulty::RegionalDirector => 3.0,
+            Difficulty::NationalSpecialist => 4.0,
+            Difficulty::GlobalExpert => 6.0,
+            Difficulty::Archivist => 8.0,
+            Difficulty::OccultScholar => 10.0,
+            Difficulty::Exorcist => 15.0,
+            Difficulty::Parapsychologist => 20.0,
+            Difficulty::SpiritualGuardian => 30.0,
+            Difficulty::UnhaunterMaster => 50.0,
+            Difficulty::Legend => 100.0,
         }
     }
 
@@ -533,22 +533,22 @@ impl Difficulty {
     /// A higher value makes evidence more visible or noticeable.
     pub fn evidence_visibility(&self) -> f32 {
         match self {
-            Difficulty::Apprentice => 1.5,
-            Difficulty::FieldResearcher => 1.3,
-            Difficulty::ParanormalAnalyst => 1.1,
-            Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::LeadResearcher => 0.9,
-            Difficulty::CaseManager => 0.8,
-            Difficulty::RegionalDirector => 0.7,
-            Difficulty::NationalSpecialist => 0.65,
+            Difficulty::Apprentice => 1.9,
+            Difficulty::FieldResearcher => 1.7,
+            Difficulty::ParanormalAnalyst => 1.5,
+            Difficulty::SeniorInvestigator => 1.2,
+            Difficulty::LeadResearcher => 1.0,
+            Difficulty::CaseManager => 0.9,
+            Difficulty::RegionalDirector => 0.8,
+            Difficulty::NationalSpecialist => 0.7,
             Difficulty::GlobalExpert => 0.6,
             Difficulty::Archivist => 0.55,
             Difficulty::OccultScholar => 0.5,
-            Difficulty::Exorcist => 0.45,
-            Difficulty::Parapsychologist => 0.4,
-            Difficulty::SpiritualGuardian => 0.35,
-            Difficulty::UnhaunterMaster => 0.3,
-            Difficulty::Legend => 0.2,
+            Difficulty::Exorcist => 0.5,
+            Difficulty::Parapsychologist => 0.5,
+            Difficulty::SpiritualGuardian => 0.5,
+            Difficulty::UnhaunterMaster => 0.5,
+            Difficulty::Legend => 0.5,
         }
     }
 

@@ -457,7 +457,7 @@ fn ghost_enrage(
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(ghost.calm_time_secs, ghost.rage);
         }
-        let rage_limit = 400.0;
+        let rage_limit = 400.0 * difficulty.0.ghost_rage_likelihood.sqrt();
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
             ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
