@@ -54,7 +54,7 @@ pub fn app_run() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "Unhaunter".to_string(),
+            title: format!("Unhaunter {}", platform::VERSION),
             resolution: default_resolution(),
             // Enabling VSync might make it easier in WASM? (It doesn't)
             present_mode: bevy::window::PresentMode::Fifo,
