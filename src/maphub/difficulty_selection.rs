@@ -96,9 +96,19 @@ pub fn keyboard(
     mut next_state: ResMut<NextState<MapHubState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::ArrowUp) {
+        for _ in 0..3 {
+            difficulty_selection_state.selected_difficulty =
+                difficulty_selection_state.selected_difficulty.prev();
+        }
+    } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+        for _ in 0..3 {
+            difficulty_selection_state.selected_difficulty =
+                difficulty_selection_state.selected_difficulty.next();
+        }
+    } else if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
         difficulty_selection_state.selected_difficulty =
             difficulty_selection_state.selected_difficulty.prev();
-    } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+    } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
         difficulty_selection_state.selected_difficulty =
             difficulty_selection_state.selected_difficulty.next();
     } else if keyboard_input.just_pressed(KeyCode::Enter) {
@@ -287,31 +297,31 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                         },
                         ..default()
                     });
-                    parent
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                min_height: Val::Px(30.0),
-                                border: UiRect::all(Val::Px(0.9)),
-                                align_content: AlignContent::Center,
-                                justify_content: JustifyContent::Center,
-                                flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                                ..default()
-                            },
-                            background_color: Color::NONE.into(), // Remove background color
-                            ..default()
-                        })
-                        .with_children(|btn| {
-                            btn.spawn(TextBundle::from_section(
-                                "Go Back",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 38.0,
-                                    color: colors::MENU_ITEM_COLOR_OFF, // Default text color
-                                },
-                            ));
-                        });
+                    // parent
+                    //     .spawn(ButtonBundle {
+                    //         style: Style {
+                    //             min_height: Val::Px(30.0),
+                    //             border: UiRect::all(Val::Px(0.9)),
+                    //             align_content: AlignContent::Center,
+                    //             justify_content: JustifyContent::Center,
+                    //             flex_direction: FlexDirection::Column,
+                    //             align_items: AlignItems::Center,
+                    //             margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
+                    //             ..default()
+                    //         },
+                    //         background_color: Color::NONE.into(), // Remove background color
+                    //         ..default()
+                    //     })
+                    //     .with_children(|btn| {
+                    //         btn.spawn(TextBundle::from_section(
+                    //             "Go Back",
+                    //             TextStyle {
+                    //                 font: handles.fonts.londrina.w300_light.clone(),
+                    //                 font_size: 38.0,
+                    //                 color: colors::MENU_ITEM_COLOR_OFF, // Default text color
+                    //             },
+                    //         ));
+                    //     });
                 });
             parent.spawn(NodeBundle {
                 style: Style {
