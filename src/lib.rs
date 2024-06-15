@@ -9,6 +9,7 @@ mod ghost;
 mod ghost_definitions;
 mod ghost_events;
 mod mainmenu;
+pub mod maphub;
 mod maplight;
 mod materials;
 pub mod npchelp;
@@ -91,6 +92,7 @@ pub fn app_run() {
     maplight::app_setup(&mut app);
     npchelp::app_setup(&mut app);
     systems::object_charge::app_setup(&mut app);
+    maphub::app_setup(&mut app);
 
     app.run();
 }

@@ -48,6 +48,12 @@ pub enum Difficulty {
     Legend,
 }
 
+impl Default for Difficulty {
+    fn default() -> Self {
+        DEFAULT_DIFFICULTY
+    }
+}
+
 impl Difficulty {
     /// Returns an iterator over all difficulty levels.
     pub fn all() -> enum_iterator::All<Self> {

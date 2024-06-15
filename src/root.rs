@@ -6,6 +6,7 @@ pub enum State {
     MainMenu,
     InGame,
     Summary,
+    MapHub,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
