@@ -1,7 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 
-use crate::game::level::LoadLevelEvent;
+use crate::platform;
 use crate::root;
 
 use crate::platform::plt::IS_WASM;
@@ -12,14 +12,13 @@ const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
-    NewGame,
-    Map,
-    Options,
+    MapHub,
+    _Options,
     Quit,
 }
 
 #[derive(Debug, Copy, Clone, Event)]
-pub struct MenuEvent(MenuID);
+pub struct MenuEvent(pub MenuID);
 
 #[derive(Component)]
 pub struct Menu {
@@ -31,9 +30,16 @@ pub struct Menu {
 impl Menu {
     pub fn items() -> &'static [MenuID] {
         if IS_WASM {
-            &[MenuID::NewGame, MenuID::Map, MenuID::Options]
+            &[
+                MenuID::MapHub,
+                // MenuID::Options,
+            ]
         } else {
-            &[MenuID::NewGame, MenuID::Map, MenuID::Options, MenuID::Quit]
+            &[
+                MenuID::MapHub,
+                // MenuID::Options,
+                MenuID::Quit,
+            ]
         }
     }
 
@@ -57,16 +63,6 @@ impl Menu {
     pub fn previous_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() - 1);
     }
-    pub fn next_map(&mut self) {
-        self.map_idx = (self.map_idx + 1) % self.map_len;
-    }
-    pub fn previous_map(&mut self) {
-        self.map_idx = if self.map_idx < 1 {
-            self.map_len - 1
-        } else {
-            self.map_idx - 1
-        };
-    }
     pub fn with_len(map_len: usize) -> Self {
         let map_len = map_len.max(1); // Ensure that it is at least 1.
         Self {
@@ -79,7 +75,7 @@ impl Menu {
 impl Default for Menu {
     fn default() -> Self {
         Self {
-            selected: MenuID::NewGame,
+            selected: MenuID::MapHub,
             map_idx: 0,
             map_len: 1,
         }
@@ -119,34 +115,24 @@ pub fn app_setup(app: &mut App) {
         .add_event::<MenuEvent>()
         .add_systems(Update, despawn_sound)
         .add_systems(OnEnter(root::State::MainMenu), (setup, setup_ui))
-        .add_systems(OnExit(root::State::MainMenu), cleanup);
+        .add_systems(OnExit(root::State::MainMenu), cleanup)
+        .add_systems(
+            Update,
+            manage_title_song.run_if(state_changed::<root::State>),
+        );
 }
 
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     // ui camera
     let cam = Camera2dBundle::default();
     commands.spawn(cam).insert(MCamera);
     info!("Main menu camera setup");
-    commands
-        .spawn(AudioBundle {
-            source: asset_server.load("music/unhaunter_intro.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.1),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
-        })
-        .insert(MenuSound::default());
 }
 
 pub fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<MCamera>>,
     qm: Query<Entity, With<MenuUI>>,
-    mut qs: Query<&mut MenuSound>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
@@ -156,24 +142,63 @@ pub fn cleanup(
     for ui_entity in qm.iter() {
         commands.entity(ui_entity).despawn_recursive();
     }
-    // Despawn Sound
-    for mut sound in qs.iter_mut() {
-        sound.despawn = true;
-    }
 }
 
 pub fn despawn_sound(mut commands: Commands, qs: Query<(Entity, &AudioSink, &MenuSound)>) {
     for (entity, sink, menusound) in &qs {
-        if !menusound.despawn {
-            continue;
-        }
-        let v = sink.volume() / 1.02;
+        let vol = sink.volume();
+        let v = if menusound.despawn {
+            vol / 1.02
+        } else {
+            const DESIRED_VOLUME: f32 = 0.2;
+            const STEPS: f32 = 120.0;
+            if vol < DESIRED_VOLUME / 2.0 {
+                vol * 1.02
+            } else {
+                (vol * STEPS + DESIRED_VOLUME) / (STEPS + 1.0)
+            }
+        };
+
         sink.set_volume(v);
 
         if v < 0.001 {
             commands.entity(entity).despawn_recursive();
             dbg!("Song despawned");
         }
+    }
+}
+
+pub fn manage_title_song(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut q_sound: Query<&mut MenuSound>,
+    app_state: Res<State<root::State>>,
+) {
+    // Determine the desired song state directly from the current state
+    let should_play_song = !matches!(app_state.get(), root::State::InGame);
+
+    // Check if a MenuSound entity already exists
+    if let Ok(mut menusound) = q_sound.get_single_mut() {
+        // If the song should be despawned and it exists, despawn it
+        if !should_play_song && !menusound.despawn {
+            menusound.despawn = true; // Trigger fade-out and despawn
+        } else if should_play_song && menusound.despawn {
+            // Song should be playing but is marked for despawn, so reset it
+            menusound.despawn = false;
+        }
+    } else if should_play_song {
+        // No MenuSound entity exists, spawn a new one
+        commands.spawn(MenuSound::default()).insert(AudioBundle {
+            source: asset_server.load("music/unhaunter_intro.ogg"),
+            settings: PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::new(0.2),
+                speed: 1.0,
+                paused: false,
+                spatial: false,
+                spatial_scale: None,
+            },
+        });
     }
 }
 
@@ -199,10 +224,9 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                     top: Val::Percent(5.0 * UI_SCALE),
                     bottom: Val::Percent(5.0 * UI_SCALE),
                 },
-
+                flex_grow: 1.0,
                 ..default()
             },
-
             ..default()
         })
         .insert(MenuUI)
@@ -273,27 +297,17 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                                 color: MENU_ITEM_COLOR_OFF,
                             },
                         ))
-                        .insert(MenuItem::new(MenuID::NewGame));
-                    parent
-                        .spawn(TextBundle::from_section(
-                            "Map: ?",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * UI_SCALE,
-                                color: MENU_ITEM_COLOR_OFF,
-                            },
-                        ))
-                        .insert(MenuItem::new(MenuID::Map));
-                    parent
-                        .spawn(TextBundle::from_section(
-                            "Options",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * UI_SCALE,
-                                color: MENU_ITEM_COLOR_OFF,
-                            },
-                        ))
-                        .insert(MenuItem::new(MenuID::Options));
+                        .insert(MenuItem::new(MenuID::MapHub));
+                    // parent
+                    //     .spawn(TextBundle::from_section(
+                    //         "Options",
+                    //         TextStyle {
+                    //             font: handles.fonts.londrina.w300_light.clone(),
+                    //             font_size: 38.0 * UI_SCALE,
+                    //             color: MENU_ITEM_COLOR_OFF,
+                    //         },
+                    //     ))
+                    //     .insert(MenuItem::new(MenuID::Options));
                     if !IS_WASM {
                         parent
                             .spawn(TextBundle::from_section(
@@ -310,26 +324,43 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
             parent.spawn(NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: Val::Percent(20.0 * UI_SCALE),
+                    min_height: Val::Percent(20.0 * UI_SCALE),
+                    flex_grow: 1.0,
                     ..default()
                 },
-
                 ..default()
             });
+            parent.spawn(TextBundle::from_section(
+                format!("Unhaunter {}    -   [Arrow Up]/[Arrow Down]: Change menu item   -    [Enter]: Select current item   -   [ESC] Go Back   -   Game Controls: [WASD] [TAB] [Q] [E] [R] [T] [F] [G]", platform::VERSION),
+                TextStyle {
+                    font: handles.fonts.titillium.w300_light.clone(),
+                    font_size: 20.0 * UI_SCALE,
+                    color: MENU_ITEM_COLOR_OFF,
+                },
+            ).with_style( Style { 
+                padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
+                align_content: AlignContent::Center,
+                align_self: AlignSelf::Center,
+                justify_content: JustifyContent::Center,
+                justify_self: JustifySelf::Center,
+                flex_grow: 0.0,
+                flex_shrink: 0.0,
+                flex_basis: Val::Px(35.0 * UI_SCALE),
+                max_height: Val::Px(35.0 * UI_SCALE),
+                ..default()}));
+        
         });
+
     info!("Main menu loaded");
 }
 
 pub fn item_logic(
     mut q: Query<(&mut MenuItem, &mut Text)>,
     qmenu: Query<&Menu>,
-    maps: Res<root::Maps>,
 ) {
     for (mut mitem, mut text) in q.iter_mut() {
-        let mut map_idx = 0;
         for menu in qmenu.iter() {
             mitem.highlighted = menu.selected == mitem.identifier;
-            map_idx = menu.map_idx;
         }
         for section in text.sections.iter_mut() {
             let new_color = if mitem.highlighted {
@@ -339,17 +370,6 @@ pub fn item_logic(
             };
             if new_color != section.style.color {
                 section.style.color = new_color;
-            }
-            if mitem.identifier == MenuID::Map {
-                let map_name = maps
-                    .maps
-                    .get(map_idx)
-                    .map(|x| x.name.clone())
-                    .unwrap_or("None".to_string());
-                let new_map_name = format!("«  Map: {}  »", map_name);
-                if section.value != new_map_name {
-                    section.value = new_map_name;
-                }
             }
         }
     }
@@ -368,34 +388,22 @@ pub fn keyboard(
         } else if keyboard_input.just_pressed(KeyCode::Enter) {
             ev_menu.send(MenuEvent(menu.selected));
         }
-        if menu.selected == MenuID::Map {
-            if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-                menu.previous_map();
-            }
-            if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-                menu.next_map();
-            }
-        }
     }
 }
 
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut ev_load: EventWriter<LoadLevelEvent>,
-    q: Query<&Menu>,
-    maps: Res<root::Maps>,
+    mut next_state: ResMut<NextState<root::State>>,
 ) {
     for event in ev_menu.read() {
         warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
-            MenuID::NewGame => {
-                let map_idx = q.single().map_idx;
-                let map_filepath = maps.maps[map_idx].path.clone();
-                ev_load.send(LoadLevelEvent { map_filepath });
+            MenuID::MapHub => {
+                // Transition to the Map Hub state
+                next_state.set(root::State::MapHub);
             }
-            MenuID::Map => {}
-            MenuID::Options => {}
+            MenuID::_Options => {}
             MenuID::Quit => {
                 exit.send(AppExit);
             }

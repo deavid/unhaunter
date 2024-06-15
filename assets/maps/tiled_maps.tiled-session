@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "atut02_glass_house.tmx",
+    "activeFile": "tut01_basics.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -11,26 +11,26 @@
         "/home/deavid/tiled/unhaunter_test2.tsx": {
             "scaleInDock": 1
         },
-        "atut01_basics.tmx": {
+        "tut01_basics.tmx": {
             "expandedGroupLayers": [
                 2
             ],
-            "scale": 1,
-            "selectedLayer": 4,
+            "scale": 3,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 1535.5,
-                "y": 767.5
+                "x": 1536.1666666666665,
+                "y": 115.49999999999999
             }
         },
-        "atut02_glass_house.tmx": {
+        "tut02_glass_house.tmx": {
             "expandedGroupLayers": [
                 2
             ],
             "scale": 4,
             "selectedLayer": 9,
             "viewCenter": {
-                "x": 620.625,
-                "y": 244.625
+                "x": 596.125,
+                "y": 322.375
             }
         },
         "character1.tsx": {
@@ -68,8 +68,8 @@
             "scale": 4,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 1534.875,
-                "y": 801.375
+                "x": 1535.875,
+                "y": 767.875
             }
         },
         "map_school1.tmx": {
@@ -79,8 +79,8 @@
             "scale": 1,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 1189.5,
-                "y": 945.5
+                "x": 1536,
+                "y": 767.5
             }
         },
         "topdown.tsx": {
@@ -152,7 +152,8 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut02_glass_house.tmx"
+        "tut02_glass_house.tmx",
+        "tut01_basics.tmx"
     ],
     "project": "tiled_maps.tiled-project",
     "property.type": "string",
@@ -160,8 +161,8 @@
         "map_school1.tmx",
         "map_house1.tmx",
         "map_house2.tmx",
-        "atut02_glass_house.tmx",
-        "atut01_basics.tmx",
+        "tut02_glass_house.tmx",
+        "tut01_basics.tmx",
         "unhaunter_spritesheet2.tsx",
         "unhaunter_spritesheetA_6x6x10.tsx",
         "unhaunter_custom_tileset.tsx",

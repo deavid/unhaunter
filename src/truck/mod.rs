@@ -31,7 +31,7 @@ use crate::{ghost_definitions::GhostType, root};
 #[derive(Component, Debug)]
 pub struct TruckUI;
 
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug, Event, PartialEq, Eq)]
 pub enum TruckUIEvent {
     EndMission,
     ExitTruck,

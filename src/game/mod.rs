@@ -129,7 +129,8 @@ pub fn keyboard(
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED * dt;
         }
-        if in_game {
+        const DEBUG_CAMERA: bool = false;
+        if in_game && DEBUG_CAMERA {
             if keyboard_input.pressed(KeyCode::ArrowRight) {
                 transform.translation.x += 2.0 * dt;
             }

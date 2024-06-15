@@ -137,7 +137,7 @@ impl GearUsable for Flashlight {
         self.status = self.status.next().unwrap_or_default();
     }
 
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
 }

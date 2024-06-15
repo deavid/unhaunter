@@ -48,7 +48,7 @@ pub fn update_gear_ui(
             let right_hand_status = playergear.right_hand.get_status();
             for mut txt in qs.iter_mut() {
                 if txt.sections[0].value != right_hand_status {
-                    txt.sections[0].value = right_hand_status.clone();
+                    txt.sections[0].value.clone_from(&right_hand_status);
                 }
             }
             for (inv, mut utai) in qin.iter_mut() {

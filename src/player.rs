@@ -9,6 +9,7 @@
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
+use crate::difficulty::CurrentDifficulty;
 use crate::game;
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
@@ -19,6 +20,8 @@ use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use std::time::Duration;
+
+const USE_ARROW_KEYS: bool = false;
 
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]
@@ -67,10 +70,31 @@ impl PlayerSprite {
         }
     }
 
+    /// Returns a modified version with the requested sanity
+    pub fn with_sanity(self, sanity: f32) -> Self {
+        Self {
+            crazyness: Self::required_crazyness(sanity),
+            ..self
+        }
+    }
+
+    /// Calculates the required crazyness based on the player's current sanity level.
+    pub fn required_crazyness(sanity: f32) -> f32 {
+        const LINEAR: f32 = 30.0;
+        const SCALE: f32 = 100.0;
+        (SCALE * LINEAR).powi(2) / (sanity * sanity) - LINEAR.powi(2)
+    }
+
     /// Returns the default `ControlKeys` for the given player ID.
     fn default_controls(id: usize) -> ControlKeys {
         match id {
-            1 => ControlKeys::WASD,
+            1 => {
+                if USE_ARROW_KEYS {
+                    ControlKeys::ARROWS
+                } else {
+                    ControlKeys::WASD
+                }
+            }
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
         }
@@ -79,7 +103,8 @@ impl PlayerSprite {
     /// Calculates the player's current sanity level based on their accumulated craziness.
     pub fn sanity(&self) -> f32 {
         const LINEAR: f32 = 30.0;
-        (100.0 * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
+        const SCALE: f32 = 100.0;
+        (SCALE * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
     }
 }
 
@@ -123,6 +148,20 @@ impl ControlKeys {
         down: KeyCode::KeyS,
         left: KeyCode::KeyA,
         right: KeyCode::KeyD,
+        activate: KeyCode::KeyE,
+        trigger: KeyCode::KeyR,
+        torch: KeyCode::Tab,
+        cycle: KeyCode::KeyQ,
+        swap: KeyCode::KeyT,
+        drop: KeyCode::KeyG,
+        grab: KeyCode::KeyF,
+        change_evidence: KeyCode::KeyC,
+    };
+    pub const ARROWS: Self = ControlKeys {
+        up: KeyCode::ArrowUp,
+        down: KeyCode::ArrowDown,
+        left: KeyCode::ArrowLeft,
+        right: KeyCode::ArrowRight,
         activate: KeyCode::KeyE,
         trigger: KeyCode::KeyR,
         torch: KeyCode::Tab,
@@ -188,6 +227,7 @@ pub fn keyboard_player(
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut ev_npc: EventWriter<NpcHelpEvent>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -261,8 +301,8 @@ pub fn keyboard_player(
         }
 
         // Apply speed penalty
-        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty;
-        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty;
+        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed;
+        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed;
 
         // Update player animation
         let dscreen = delta.to_screen_coord();
@@ -886,6 +926,7 @@ fn lose_sanity(
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
     roomdb: Res<board::RoomDB>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     timer.tick(time.delta());
 
@@ -922,16 +963,22 @@ fn lose_sanity(
         }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
-        const SANITY_RECOVER: f32 = 4.0 / 100.0;
-        ps.crazyness += (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2
-            - SANITY_RECOVER * ps.crazyness / (1.0 + mean_sound.0 * 10.0))
-            * dt;
+        let sanity_recover: f32 = if ps.sanity() < difficulty.0.starting_sanity {
+            4.0 / 100.0 / difficulty.0.sanity_drain_rate
+        } else {
+            0.0
+        };
+        ps.crazyness +=
+            (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2 * difficulty.0.sanity_drain_rate
+                - sanity_recover * ps.crazyness / (1.0 + mean_sound.0 * 10.0))
+                * dt;
         if ps.crazyness < 0.0 {
             ps.crazyness = 0.0;
         }
         ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
-            ps.health += 0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0;
+            ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
+                * difficulty.0.health_recovery_rate;
         }
         if ps.health > 100.0 {
             ps.health = 100.0;
@@ -947,6 +994,7 @@ fn recover_sanity(
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
     mut timer: Local<utils::PrintingTimer>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     // Current player recovers sanity while in the truck.
     let dt = time.delta_seconds();
@@ -961,8 +1009,9 @@ fn recover_sanity(
                 ps.health += HEALTH_RECOVERY_RATE * dt;
                 ps.health = ps.health.min(100.0); // Clamp health to a maximum of 100%
             }
-
-            ps.crazyness /= 1.05_f32.powf(dt);
+            if ps.sanity() < difficulty.0.starting_sanity {
+                ps.crazyness /= 1.07_f32.powf(dt);
+            }
             if timer.just_finished() {
                 dbg!(ps.sanity());
             }

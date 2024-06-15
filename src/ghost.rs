@@ -1,7 +1,12 @@
+use std::time::Duration;
+
 use crate::board::{BoardPosition, Position};
 use crate::components::ghost_influence::GhostInfluence;
 use crate::components::ghost_influence::InfluenceType;
+use crate::difficulty::CurrentDifficulty;
+use crate::game::GameSprite;
 use crate::ghost_definitions::GhostType;
+use crate::maplight::MapColor;
 use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
 use crate::{gear, summary, utils};
@@ -42,6 +47,12 @@ pub struct GhostSprite {
     pub hunt_time_secs: f32,
     /// The ghost's current warping intensity, which affects its movement speed. Higher values result in faster warping.
     pub warp: f32,
+    /// The ghost got hit by sage, and it will be calm for a while.
+    pub calm_time_secs: f32,
+    /// Timer to track the duration of the "Salty" side effect.
+    pub salty_effect_timer: Timer,
+    /// Timer to control the frequency of spawning Salty Traces.
+    pub salty_trace_spawn_timer: Timer,
 }
 
 /// Marker component for the ghost's visual breach effect.
@@ -58,6 +69,8 @@ impl GhostSprite {
         let idx = rng.gen_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());
+        let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);
+        salty_effect_timer.tick(Duration::from_secs(120));
         GhostSprite {
             class,
             spawn_point,
@@ -70,6 +83,9 @@ impl GhostSprite {
             hunt_target: false,
             hunt_time_secs: 0.0,
             warp: 0.0,
+            calm_time_secs: 0.0,
+            salty_effect_timer,
+            salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
         }
     }
 
@@ -100,6 +116,7 @@ pub fn ghost_movement(
     time: Res<Time>,
     config: Res<ObjectInteractionConfig>,
     object_query: Query<(&Position, &GhostInfluence)>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     let mut rng = rand::thread_rng();
     let dt = time.delta_seconds() * 60.0;
@@ -132,8 +149,8 @@ pub fn ghost_movement(
                         delta.dx /= (dlen + 1.5) / 4.0;
                         delta.dy /= (dlen + 1.5) / 4.0;
                     }
-                    pos.x += delta.dx / 70.0 * dt;
-                    pos.y += delta.dy / 70.0 * dt;
+                    pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
+                    pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
@@ -143,8 +160,8 @@ pub fn ghost_movement(
                     warn!("Hunt finished");
                 }
             } else {
-                pos.x += delta.dx / 200.0 * dt;
-                pos.y += delta.dy / 200.0 * dt;
+                pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed;
+                pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed;
             }
             if dlen < 0.5 {
                 finalize = true;
@@ -155,7 +172,7 @@ pub fn ghost_movement(
         }
         if ghost.target_point.is_none() || (ghost.hunt_target && rng.gen_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
+            let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
             let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
@@ -178,7 +195,12 @@ pub fn ghost_movement(
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
                     old_target.x += rng.gen_range(-search_radius..search_radius);
                     old_target.y += rng.gen_range(-search_radius..search_radius);
-                    let ppos = if h.is_some() { old_target } else { *ppos };
+                    let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
+                        old_target
+                    } else {
+                        *ppos
+                    };
+                    ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
 
                     let mut rng = rand::thread_rng();
                     let random_offset = Vec2::new(
@@ -197,7 +219,9 @@ pub fn ghost_movement(
                 let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
                 for _ in 0..config.num_destination_points_to_sample {
                     let mut target_point = ghost.spawn_point.to_position();
-                    let wander: f32 = rng.gen_range(0.0..1.0_f32).powf(6.0) * 12.0 + 0.5;
+                    let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0
+                        / difficulty.0.ghost_attraction_to_breach
+                        + 0.5;
                     let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
                     let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
                     let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
@@ -205,7 +229,9 @@ pub fn ghost_movement(
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
 
-                    let score = calculate_destination_score(target_point, &object_query, &config);
+                    let score = 1.0
+                        + calculate_destination_score(target_point, &object_query, &config)
+                            / difficulty.0.ghost_attraction_to_breach;
                     potential_destinations.push((score, target_point));
                 }
 
@@ -309,6 +335,7 @@ impl RoarType {
 ///
 /// This system updates the ghost's rage based on player proximity, sanity, and sound levels.
 /// It triggers hunts when rage exceeds a threshold and handles player damage during hunts.
+#[allow(clippy::too_many_arguments)]
 fn ghost_enrage(
     time: Res<Time>,
     mut timer: Local<utils::PrintingTimer>,
@@ -317,13 +344,52 @@ fn ghost_enrage(
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     mut gs: gear::GearStuff,
     mut last_roar: Local<f32>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     timer.tick(time.delta());
     let dt = time.delta_seconds();
+
+    for (mut ghost, ghost_position) in &mut qg {
+        // --- Salty Trace Spawning Logic ---
+        if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
+            // Only spawn traces when NOT hunting and salty effect is active
+            ghost.salty_effect_timer.tick(time.delta());
+            ghost.salty_trace_spawn_timer.tick(time.delta());
+
+            if ghost.salty_trace_spawn_timer.just_finished() {
+                if rand::thread_rng().gen_bool(0.5) {
+                    // 50% chance to spawn
+                    // --- Find Valid Floor Tile ---
+                    let ghost_board_position = ghost_position.to_board_position();
+                    let mut valid_tile = None;
+                    for nearby_tile in ghost_board_position.xy_neighbors(1) {
+                        // Check adjacent tiles
+                        if let Some(collision_data) = gs.bf.collision_field.get(&nearby_tile) {
+                            if collision_data.player_free {
+                                // Check if the tile is walkable
+                                valid_tile = Some(nearby_tile);
+                                break;
+                            }
+                        }
+                    }
+
+                    // --- Spawn SaltyTrace Entity ---
+                    if let Some(tile_position) = valid_tile {
+                        spawn_salty_trace(&mut gs.commands, &gs.asset_server, tile_position);
+                    }
+                }
+                ghost.salty_trace_spawn_timer.reset();
+            }
+        }
+    }
+
     *last_roar += dt;
     let mut should_roar = RoarType::None;
     let mut roar_time = 3.0;
     for (mut ghost, gpos) in &mut qg {
+        if ghost.calm_time_secs > 0.0 {
+            ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
+        }
         // Calm ghost when players are far away
         let min_player_dist = qp
             .iter()
@@ -344,8 +410,9 @@ fn ghost_enrage(
             let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
                 let dist2 = gpos.distance2(ppos) + 2.0;
-                let dmg = dist2.recip();
-                player.health -= dmg * dt * 30.0 * ghost_strength;
+                let dmg = dist2.recip() * difficulty.0.health_drain_rate;
+                player.health -=
+                    dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
             }
             if ghost.hunting > 4.0 {
                 should_roar = RoarType::Full;
@@ -362,7 +429,10 @@ fn ghost_enrage(
         for (player, ppos) in &qp {
             let sanity = player.sanity();
             let inv_sanity = (120.0 - sanity) / 100.0;
-            let dist2 = gpos.distance2(ppos) * (0.01 + sanity) + 0.1 + sanity / 100.0;
+            let dist2 = gpos.distance2(ppos) / difficulty.0.hunt_provocation_radius
+                * (0.01 + sanity)
+                + 0.1
+                + sanity / 100.0;
             let angry2 = dist2.recip() * 1000000.0 / sanity
                 * player.mean_sound
                 * (player.health / 100.0).clamp(0.0, 1.0);
@@ -376,25 +446,26 @@ fn ghost_enrage(
         if ghost.rage < 0.0 {
             ghost.rage = 0.0;
         }
-        ghost.rage += angry * dt / 10.0;
-        ghost.hunting -= dt * 0.2;
+        ghost.rage +=
+            angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood;
+        ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration;
         if ghost.hunting < 0.0 {
             ghost.hunting = 0.0;
         }
 
         avg_angry.push_len(angry, dt);
         if timer.just_finished() && DEBUG_HUNTS {
-            dbg!(&avg_angry.avg(), ghost.rage);
+            dbg!(ghost.calm_time_secs, ghost.rage);
         }
-        let rage_limit = if DEBUG_HUNTS { 60.0 } else { 400.0 };
+        let rage_limit = 400.0 * difficulty.0.ghost_rage_likelihood.sqrt();
         if ghost.rage > rage_limit {
             let prev_rage = ghost.rage;
-            ghost.rage /= 3.0;
+            ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
             if ghost.hunting < 1.0 {
                 should_roar = RoarType::Full;
                 roar_time = 0.2;
             }
-            ghost.hunting += (prev_rage - ghost.rage) / 10.0 + 5.0;
+            ghost.hunting += prev_rage / 50.0 + 5.0;
         } else if ghost.rage > rage_limit / 2.0 && ghost.hunting < 1.0 && roar_time > 10.0 {
             should_roar = RoarType::Dim;
         }
@@ -440,6 +511,40 @@ fn calculate_destination_score(
     }
 
     score
+}
+
+/// Spawns a `SaltyTrace` entity at the given `tile_position`.
+fn spawn_salty_trace(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    tile_position: BoardPosition,
+) {
+    use crate::gear::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+    let mut pos = tile_position.to_position();
+    let mut rng = rand::thread_rng();
+    pos.x += rng.gen_range(-0.2..0.2);
+    pos.y += rng.gen_range(-0.2..0.2);
+
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("img/salt_particle.png"),
+            transform: Transform::from_translation(pos.to_screen_coord())
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            sprite: Sprite {
+                color: Color::DARK_GRAY.with_a(0.5),
+                custom_size: Some(Vec2::new(8.0, 8.0)),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(pos)
+        .insert(SaltyTrace)
+        .insert(UVReactive(1.0))
+        .insert(SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)))
+        .insert(MapColor {
+            color: Color::DARK_GRAY.with_a(0.5),
+        })
+        .insert(GameSprite);
 }
 
 pub fn app_setup(app: &mut App) {

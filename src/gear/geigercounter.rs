@@ -75,9 +75,10 @@ impl GearUsable for GeigerCounter {
                 self.sound_l.push(sound_reading);
             }
             let n = (self.frame_counter as usize + i) % self.sound_l.len();
-            self.sound_l[n] /= 4.0;
+            self.sound_l[n] /= 4.0 * gs.difficulty.0.equipment_sensitivity;
             if self.enabled {
-                self.sound_l[n] += sound_reading * 40.0 + breach_energy;
+                self.sound_l[n] +=
+                    sound_reading * 40.0 + breach_energy * gs.difficulty.0.equipment_sensitivity;
             }
         }
         let sum_snd: f32 = self.sound_l.iter().sum();
@@ -87,11 +88,11 @@ impl GearUsable for GeigerCounter {
         } else {
             f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
         };
-        const MASS: f32 = 16.0;
+        let mass: f32 = 12.0 / gs.difficulty.0.equipment_sensitivity;
         if self.enabled {
-            self.sound_a1 = (self.sound_a1 * MASS + avg_snd * MASS.recip()) / (MASS + MASS.recip());
+            self.sound_a1 = (self.sound_a1 * mass + avg_snd * mass.recip()) / (mass + mass.recip());
             self.sound_a2 =
-                (self.sound_a2 * MASS + self.sound_a1 * MASS.recip()) / (MASS + MASS.recip());
+                (self.sound_a2 * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
         } else {
             self.sound_a1 /= 1.01;
             self.sound_a2 /= 1.01;
@@ -108,7 +109,7 @@ impl GearUsable for GeigerCounter {
             self.sound_display = self.sound_a2;
         }
     }
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
 }

@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+use crate::difficulty::CurrentDifficulty;
 use crate::game::level::InteractionExecutionType;
 use crate::{behavior, board, ghost, player};
 
@@ -36,6 +37,7 @@ pub fn trigger_ghost_events(
     >,
     mut interactive_stuff: player::InteractiveStuff,
     mut ev_bdr: EventWriter<board::BoardDataToRebuild>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     let mut rng = rand::thread_rng();
     let roomdb = interactive_stuff.roomdb.clone();
@@ -51,7 +53,8 @@ pub fn trigger_ghost_events(
 
         // Calculate distance and event probability
         let distance = player_pos.distance2(ghost_pos);
-        let event_probability = (10.0 / (distance + 2.0)).sqrt() / 200.0;
+        let event_probability =
+            (10.0 / (distance + 2.0)).sqrt() / 200.0 * difficulty.0.ghost_interaction_frequency;
 
         // Roll for an event
         if rng.gen_range(0.0..1.0) < event_probability {

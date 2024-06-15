@@ -2,12 +2,14 @@ mod behavior;
 mod board;
 pub mod colors;
 pub mod components;
+pub mod difficulty;
 mod game;
 mod gear;
 mod ghost;
 mod ghost_definitions;
 mod ghost_events;
 mod mainmenu;
+pub mod maphub;
 mod maplight;
 mod materials;
 pub mod npchelp;
@@ -52,7 +54,7 @@ pub fn app_run() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "Unhaunter".to_string(),
+            title: format!("Unhaunter {}", platform::VERSION),
             resolution: default_resolution(),
             // Enabling VSync might make it easier in WASM? (It doesn't)
             present_mode: bevy::window::PresentMode::Fifo,
@@ -64,6 +66,7 @@ pub fn app_run() {
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
+    .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
     )))
@@ -89,6 +92,7 @@ pub fn app_run() {
     maplight::app_setup(&mut app);
     npchelp::app_setup(&mut app);
     systems::object_charge::app_setup(&mut app);
+    maphub::app_setup(&mut app);
 
     app.run();
 }
