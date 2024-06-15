@@ -55,7 +55,7 @@ impl GearUsable for SpiritBox {
         self.enabled = !self.enabled;
     }
 
-    fn box_clone(&self) -> Box<dyn GearUsable> {
+    fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {

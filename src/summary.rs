@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::{ghost_definitions::GhostType, player::PlayerSprite, root, utils};
+use crate::{
+    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
+};
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;
@@ -19,37 +21,6 @@ pub enum SummaryUIType {
     FinalScore,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
-pub enum Difficulty {
-    Training,
-    Beginner,
-    Easy,
-    #[default]
-    Normal,
-    Medium,
-    Hard,
-    Expert,
-    Master,
-    Insane,
-}
-
-impl Difficulty {
-    fn get_multiplier(&self) -> f64 {
-        match self {
-            Difficulty::Training => 1.0,
-            Difficulty::Beginner => 1.5,
-            Difficulty::Easy => 2.8,
-            Difficulty::Normal => 4.0,
-            Difficulty::Medium => 5.5,
-            Difficulty::Hard => 7.8,
-            Difficulty::Expert => 11.0,
-            Difficulty::Master => 15.5,
-            Difficulty::Insane => 22.0,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Resource, Default)]
 pub struct SummaryData {
     pub time_taken_secs: f32,
@@ -57,17 +28,17 @@ pub struct SummaryData {
     pub repellent_used_amt: u32,
     pub ghosts_unhaunted: u32,
     pub final_score: i64,
-    pub difficulty: Difficulty,
+    pub difficulty: CurrentDifficulty,
     pub average_sanity: f32,
     pub player_count: usize,
     pub alive_count: usize,
 }
 
 impl SummaryData {
-    pub fn new(ghost_types: Vec<GhostType>) -> Self {
+    pub fn new(ghost_types: Vec<GhostType>, difficulty: CurrentDifficulty) -> Self {
         Self {
             ghost_types,
-            difficulty: Difficulty::Insane,
+            difficulty,
             ..default()
         }
     }
@@ -80,7 +51,7 @@ impl SummaryData {
         score *= (self.average_sanity as f64 + 30.0) / 50.0;
 
         // Apply difficulty multiplier
-        score *= self.difficulty.get_multiplier();
+        score *= self.difficulty.0.difficulty_score_multiplier;
 
         if self.player_count == self.alive_count {
             // Apply time bonus multiplier
@@ -122,10 +93,12 @@ pub fn update_time(
     game_state: Res<State<root::GameState>>,
     mut app_next_state: ResMut<NextState<root::State>>,
     qp: Query<&PlayerSprite>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     if *game_state == root::GameState::Pause {
         return;
     }
+    sd.difficulty = difficulty.clone();
     sd.time_taken_secs += time.delta_seconds();
 
     let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();

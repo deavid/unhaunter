@@ -422,6 +422,7 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
         let t = format!("\"{text}\"");
         serde_json::from_str(&t).context("Auto deserialize error")
     }
+    #[allow(dead_code)]
     fn to_text(&self) -> anyhow::Result<String> {
         // FIXME: This is not used at all.
         serde_json::to_string(self)
@@ -792,7 +793,7 @@ impl SpriteConfig {
         p.object.weight = NotNan::new(self.properties.get_float("object:weight")).unwrap();
         p.object.name = self.properties.get_string("object:name");
         if p.object.name.is_empty() {
-            p.object.name = self.variant.clone();
+            p.object.name.clone_from(&self.variant.clone());
         }
     }
 

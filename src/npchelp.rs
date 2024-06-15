@@ -216,7 +216,7 @@ pub fn npchelp_event(
         return;
     };
     npcd.seen = true;
-    res_npc.dialog = npcd.dialog.clone();
+    res_npc.dialog.clone_from(&npcd.dialog);
     game_next_state.set(root::GameState::NpcHelp);
     // warn!(npcd.dialog);
 }

@@ -18,9 +18,12 @@ impl TruckGear {
         use crate::gear::ionmeter::IonMeter;
         use crate::gear::motionsensor::MotionSensor;
         use crate::gear::photocam::Photocam;
+        use crate::gear::quartz::QuartzStoneData;
         use crate::gear::recorder::Recorder;
         use crate::gear::redtorch::RedTorch;
         use crate::gear::repellentflask::RepellentFlask;
+        use crate::gear::sage::SageBundleData;
+        use crate::gear::salt::SaltData;
         use crate::gear::spiritbox::SpiritBox;
         use crate::gear::thermalimager::ThermalImager;
         use crate::gear::thermometer::Thermometer;
@@ -38,6 +41,9 @@ impl TruckGear {
             RedTorch::default().into(),
             GeigerCounter::default().into(),
             RepellentFlask::default().into(),
+            QuartzStoneData::default().into(),
+            SaltData::default().into(),
+            SageBundleData::default().into(),
         ];
         if ENABLE_INCOMPLETE {
             let mut incomplete: Vec<Gear> = vec![

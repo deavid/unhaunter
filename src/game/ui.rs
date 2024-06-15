@@ -454,7 +454,7 @@ pub fn toggle_held_object_ui(
                     .iter_mut()
                     .filter(|(_, e)| **e == ElementObjectUI::Name)
                 {
-                    text.sections[0].value = behavior.p.object.name.clone();
+                    text.sections[0].value.clone_from(&behavior.p.object.name);
                 }
 
                 // --- Set Object Description ---

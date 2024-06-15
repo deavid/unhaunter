@@ -213,7 +213,7 @@ impl Position {
         BoardPosition {
             x: self.x.round() as i64,
             y: self.y.round() as i64,
-            z: self.z.round() as i64,
+            z: 0,
         }
     }
     pub fn rotate_by_dir(&self, dir: &Direction) -> Self {
@@ -1075,12 +1075,6 @@ pub fn boardfield_update(
         );
     }
 }
-
-pub const DARK_GAMMA: f32 = 1.0;
-pub const LIGHT_GAMMA: f32 = 1.1;
-
-// pub const DARK_GAMMA: f32 = 1.5;
-// pub const LIGHT_GAMMA: f32 = 2.5;
 
 pub fn compute_color_exposure(
     rel_exposure: f32,

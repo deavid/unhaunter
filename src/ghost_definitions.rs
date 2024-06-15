@@ -91,6 +91,9 @@ impl TryFrom<&GearKind> for Evidence {
             GearKind::EStaticMeter(_) => Err(EvidenceError::NoEvidenceForGear),
             GearKind::MotionSensor(_) => Err(EvidenceError::NoEvidenceForGear),
             GearKind::RepellentFlask(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::QuartzStone(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::Salt(_) => Err(EvidenceError::NoEvidenceForGear),
+            GearKind::SageBundle(_) => Err(EvidenceError::NoEvidenceForGear),
             GearKind::None => Err(EvidenceError::NoEvidenceForGear),
         }
     }

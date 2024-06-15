@@ -205,6 +205,32 @@ You can profile the build process to identify further optimizations using:
 
 **Note:** This requires a nightly Rust toolchain.
 
+## Building WASM locally:
+
+https://bevy-cheatbook.github.io/platforms/wasm.html
+
+Install deps
+ 
+```bash
+   rustup target install wasm32-unknown-unknown
+   cargo install wasm-server-runner
+```
+ 
+Run with:
+ 
+```bash 
+   cargo run --target wasm32-unknown-unknown --release
+   wasm-pack build --release --target web
+```
+ 
+This will build in pkg/
+ 
+And to test:
+ 
+ ```bash
+   python3 -m http.server 
+```
+
 ## Community
 
 Unhaunter has a Matrix room for discussion and collaboration. Access is by invitation only. To join, please contact deavid (@deavidsedice:matrix.org) on Matrix.
