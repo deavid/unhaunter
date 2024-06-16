@@ -408,21 +408,36 @@ mod arch {
 #[cfg(target_arch = "wasm32")]
 mod arch {
     use super::*;
-    pub fn find_tmx_files() -> Vec<String> {
+    pub fn find_tmx_files() -> Vec<(String, String)> {
         // WASM does not support scanning folders it seems...
         vec![
-            "assets/maps/map_house1.tmx".to_string(),
-            "assets/maps/map_house2.tmx".to_string(),
-            "assets/maps/map_school1.tmx".to_string(),
-            "assets/maps/tut01_basics.tmx".to_string(),
-            "assets/maps/tut02_glass_house.tmx".to_string(),
+            (
+                "assets/maps/map_house1.tmx".to_string(),
+                "123 Acorn Lane Street House".to_string(),
+            ),
+            (
+                "assets/maps/map_house2.tmx".to_string(),
+                "4567 Chocolate Boulevard Street House".to_string(),
+            ),
+            (
+                "assets/maps/map_school1.tmx".to_string(),
+                "99 Unicorn Way University".to_string(),
+            ),
+            (
+                "assets/maps/tut01_basics.tmx".to_string(),
+                "Tutorial 01: Basics".to_string(),
+            ),
+            (
+                "assets/maps/tut02_glass_house.tmx".to_string(),
+                "Tutorial 02: Glass House".to_string(),
+            ),
         ]
     }
     pub fn init_maps(mut maps: ResMut<Maps>) {
         // Scan for maps:
         let tmx_files = find_tmx_files();
-        for path in tmx_files {
-            let display_name = path.replace("assets/maps/", "");
+        for (path, display_name) in tmx_files {
+            // let display_name = path.replace("assets/maps/", "");
             info!("Found map {display_name:?} at path {path:?}");
             maps.maps.push(Map {
                 name: display_name,

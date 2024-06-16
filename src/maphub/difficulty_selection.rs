@@ -305,7 +305,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                             difficulty.difficulty_name(),
                                             TextStyle {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 32.0, // Reduced font size
+                                                font_size: 28.0 * UI_SCALE, // Reduced font size
                                                 color: colors::MENU_ITEM_COLOR_OFF,
                                             },
                                         ));
@@ -360,7 +360,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                         "Difficulty <>: Description",
                         TextStyle {
                             font: handles.fonts.titillium.w300_light.clone(),
-                            font_size: 24.0 * UI_SCALE,
+                            font_size: 26.0 * UI_SCALE,
                             color: colors::MENU_ITEM_COLOR_OFF,
                         },
                     )
