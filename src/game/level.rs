@@ -22,7 +22,7 @@ use crate::materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, InteractiveStuff, PlayerSprite};
 use crate::root::{self, QuadCC};
 use crate::tiledmap::{AtlasData, MapLayerType};
-use crate::{behavior, gear, summary, tiledmap};
+use crate::{behavior, summary, tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
@@ -421,7 +421,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
-        .insert(gear::playergear::PlayerGear::new())
+        .insert(difficulty.0.player_gear.clone())
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)

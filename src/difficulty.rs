@@ -17,7 +17,10 @@ use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
 
-use crate::truck::ui::TabContents;
+use crate::{
+    gear::{playergear::PlayerGear, Gear},
+    truck::ui::TabContents,
+};
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
@@ -574,16 +577,7 @@ impl Difficulty {
     /// Returns a boolean value indicating whether the van UI automatically opens
     /// at the beginning of a mission.
     pub fn van_auto_open(&self) -> bool {
-        true
-        // matches!(
-        //     self,
-        //     Difficulty::Apprentice
-        //         | Difficulty::FieldResearcher
-        //         | Difficulty::ParanormalAnalyst
-        //         | Difficulty::SeniorInvestigator
-        //         | Difficulty::LeadResearcher
-        //         | Difficulty::CaseManager
-        // )
+        !matches!(self, Difficulty::Apprentice | Difficulty::FieldResearcher)
     }
 
     /// Returns the default tab selected in the van UI.
@@ -591,6 +585,41 @@ impl Difficulty {
         match self {
             Difficulty::Apprentice | Difficulty::FieldResearcher => TabContents::Journal,
             _ => TabContents::Loadout,
+        }
+    }
+
+    pub fn player_gear(&self) -> PlayerGear {
+        let flashlight: Gear = crate::gear::flashlight::Flashlight::default().into();
+
+        let emfmeter: Gear = crate::gear::emfmeter::EMFMeter::default().into();
+        let thermometer: Gear = crate::gear::thermometer::Thermometer::default().into();
+
+        let uvtorch: Gear = crate::gear::uvtorch::UVTorch::default().into();
+
+        // let geigercounter: Gear = crate::gear::geigercounter::GeigerCounter::default().into();
+        // let recorder: Gear = crate::gear::recorder::Recorder::default().into();
+        // let redtorch: Gear = crate::gear::redtorch::RedTorch::default().into();
+        // let videocam: Gear = crate::gear::videocam::Videocam::default().into();
+
+        match self {
+            Difficulty::Apprentice => PlayerGear {
+                left_hand: flashlight.clone(),
+                right_hand: thermometer.clone(),
+                inventory: vec![emfmeter.clone(), Gear::none()],
+                held_item: None,
+            },
+            Difficulty::FieldResearcher => PlayerGear {
+                left_hand: flashlight.clone(),
+                right_hand: uvtorch.clone(),
+                inventory: vec![thermometer.clone(), emfmeter.clone()],
+                held_item: None,
+            },
+            _ => PlayerGear {
+                left_hand: flashlight.clone(),
+                right_hand: Gear::none(),
+                inventory: vec![Gear::none(), Gear::none()],
+                held_item: None,
+            },
         }
     }
 
@@ -669,6 +698,7 @@ impl Difficulty {
             health_drain_rate: self.health_drain_rate(),
             health_recovery_rate: self.health_recovery_rate(),
             player_speed: self.player_speed(),
+            player_gear: self.player_gear(),
             evidence_visibility: self.evidence_visibility(),
             equipment_sensitivity: self.equipment_sensitivity(),
             van_auto_open: self.van_auto_open(),
@@ -680,7 +710,7 @@ impl Difficulty {
 }
 
 /// Holds the concrete values for a specific difficulty level.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone)]
 pub struct DifficultyStruct {
     // --- Ghost Behavior ---
     pub ghost_speed: f32,
@@ -708,7 +738,7 @@ pub struct DifficultyStruct {
     pub health_drain_rate: f32,
     pub health_recovery_rate: f32,
     pub player_speed: f32,
-    // TODO: Add starter inventory - playergear.rs
+    pub player_gear: PlayerGear,
 
     // --- Evidence Gathering ---
     pub evidence_visibility: f32,
@@ -719,7 +749,7 @@ pub struct DifficultyStruct {
     pub default_van_tab: TabContents,
 
     // --- UI and Scoring ---
-    pub difficulty_name: String, // TODO
+    pub difficulty_name: String,
     pub difficulty_score_multiplier: f64,
 }
 
