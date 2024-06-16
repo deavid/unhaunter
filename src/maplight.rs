@@ -276,13 +276,13 @@ pub fn apply_lighting(
 ) {
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
-    let light_gamma: f32 = 1.1;
+    let light_gamma: f32 = difficulty.0.environment_gamma.recip();
 
-    const CENTER_EXP: f32 = 5.0; // Higher values, less blinding light.
-    const CENTER_EXP_GAMMA: f32 = 1.7; // Above 1.0, higher the less night vision.
-    const BRIGHTNESS_HARSH: f32 = 3.0; // Lower values create an HDR effect, bringing blinding lights back to normal.
-    const EYE_SPEED: f32 = 0.4;
-    let mut cursor_exp: f32 = 0.001;
+    let center_exp: f32 = 6.0 - difficulty.0.environment_gamma; // Higher values, less blinding light.
+    let center_exp_gamma: f32 = 1.0 + difficulty.0.darkness_intensity; // Above 1.0, higher the less night vision.
+    let brightness_harsh: f32 = 3.0 * difficulty.0.darkness_intensity; // Lower values create an HDR effect, bringing blinding lights back to normal.
+    let eye_speed: f32 = 0.4 / difficulty.0.darkness_intensity.sqrt();
+    let mut cursor_exp: f32 = 0.001 / difficulty.0.environment_gamma;
     let mut exp_count: f32 = 0.1;
 
     let mut flashlights = vec![];
@@ -380,7 +380,7 @@ pub fn apply_lighting(
     let mut qt = sprite_set.p0();
 
     cursor_exp /= exp_count;
-    cursor_exp = (cursor_exp / CENTER_EXP).powf(CENTER_EXP_GAMMA.recip()) * CENTER_EXP + 0.00001;
+    cursor_exp = (cursor_exp / center_exp).powf(center_exp_gamma.recip()) * center_exp + 0.00001;
     // account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might be off but someother player might have it on.
     let fl_total_power: f32 = flashlights
@@ -391,13 +391,13 @@ pub fn apply_lighting(
 
     assert!(cursor_exp.is_normal());
     // Minimum exp - controls how dark we can see
-    cursor_exp += 0.001;
+    cursor_exp += 0.001 / difficulty.0.environment_gamma;
     // Compensate overall to make the scene brighter
     cursor_exp /= 2.4;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
-        (bf.current_exposure_accel * 1000.0 + exp_f * EYE_SPEED) / (EYE_SPEED + 1000.0);
+        (bf.current_exposure_accel * 1000.0 + exp_f * eye_speed) / (eye_speed + 1000.0);
     if bf.current_exposure_accel > max_acc {
         bf.current_exposure_accel = max_acc;
     } else if bf.current_exposure_accel.recip() > max_acc {
@@ -490,7 +490,7 @@ pub fn apply_lighting(
             let gcolor = fpos_gamma_color(bpos);
             gcolor
                 .map(|((r, g, b), _)| (r + g + b) / 3.0)
-                .map(|l| (l / BRIGHTNESS_HARSH).tanh() * BRIGHTNESS_HARSH)
+                .map(|l| (l / brightness_harsh).tanh() * brightness_harsh)
         };
         let ((mut r, mut g, mut b), light_data) =
             fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));

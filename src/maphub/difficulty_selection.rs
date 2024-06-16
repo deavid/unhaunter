@@ -13,6 +13,9 @@ use crate::maphub::map_selection::MapSelectedEvent; // Add MapSelectedEvent
 pub struct DifficultySelectionUI;
 
 #[derive(Component, Debug)]
+pub struct DifficultyDescriptionUI;
+
+#[derive(Component, Debug)]
 pub struct DifficultySelectionItem {
     pub difficulty: Difficulty,
 }
@@ -96,12 +99,12 @@ pub fn keyboard(
     mut next_state: ResMut<NextState<MapHubState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::ArrowUp) {
-        for _ in 0..3 {
+        for _ in 0..4 {
             difficulty_selection_state.selected_difficulty =
                 difficulty_selection_state.selected_difficulty.prev();
         }
     } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-        for _ in 0..3 {
+        for _ in 0..4 {
             difficulty_selection_state.selected_difficulty =
                 difficulty_selection_state.selected_difficulty.next();
         }
@@ -119,18 +122,22 @@ pub fn keyboard(
         next_state.set(MapHubState::MapSelection);
     }
 }
+
 // Update item colors based on selected difficulty
 pub fn update_item_colors(
     mut q_items: Query<(&DifficultySelectionItem, &Children)>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     mut q_text: Query<&mut Text>,
+    q_desc: Query<Entity, With<DifficultyDescriptionUI>>,
 ) {
+    if !difficulty_selection_state.is_changed() {
+        return;
+    }
+    let sel_difficulty = difficulty_selection_state.selected_difficulty;
     for (difficulty_item, children) in q_items.iter_mut() {
         if let Ok(mut text) = q_text.get_mut(children[0]) {
             for section in text.sections.iter_mut() {
-                let new_color = if difficulty_item.difficulty
-                    == difficulty_selection_state.selected_difficulty
-                {
+                let new_color = if difficulty_item.difficulty == sel_difficulty {
                     colors::MENU_ITEM_COLOR_ON
                 } else {
                     colors::MENU_ITEM_COLOR_OFF
@@ -138,6 +145,22 @@ pub fn update_item_colors(
                 if new_color != section.style.color {
                     section.style.color = new_color;
                 }
+            }
+        }
+    }
+    let dif = sel_difficulty.create_difficulty_struct();
+    for entity in q_desc.iter() {
+        if let Ok(mut text) = q_text.get_mut(entity) {
+            for section in text.sections.iter_mut() {
+                let name = &dif.difficulty_name;
+                let description = &dif.difficulty_description;
+                let score_mult = dif.difficulty_score_multiplier;
+
+                let text = [
+                    format!("Difficulty <{name}>: {description}"),
+                    format!("Score Bonus: {score_mult:.2}x"),
+                ];
+                section.value = text.join("\n");
             }
         }
     }
@@ -250,7 +273,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                 justify_content: JustifyContent::SpaceEvenly,
                                 align_items: AlignItems::Center,
                                 display: Display::Grid,
-                                grid_template_columns: RepeatedGridTrack::flex(3, 1.0), // 3 equal columns
+                                grid_template_columns: RepeatedGridTrack::flex(4, 1.0), // 4 equal columns
                                 grid_auto_rows: GridTrack::auto(),
                                 row_gap: Val::Px(10.0),
                                 column_gap: Val::Px(20.0),
@@ -331,6 +354,30 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                 },
                 ..default()
             });
+            parent
+                .spawn(
+                    TextBundle::from_section(
+                        "Difficulty <>: Description",
+                        TextStyle {
+                            font: handles.fonts.titillium.w300_light.clone(),
+                            font_size: 24.0 * UI_SCALE,
+                            color: colors::MENU_ITEM_COLOR_OFF,
+                        },
+                    )
+                    .with_style(Style {
+                        padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
+                        align_content: AlignContent::Center,
+                        align_self: AlignSelf::Center,
+                        justify_content: JustifyContent::Center,
+                        justify_self: JustifySelf::Center,
+                        flex_grow: 0.0,
+                        flex_shrink: 0.0,
+                        flex_basis: Val::Px(155.0 * UI_SCALE),
+                        max_height: Val::Px(155.0 * UI_SCALE),
+                        ..default()
+                    }),
+                )
+                .insert(DifficultyDescriptionUI);
         });
     info!("MapHub - Difficulty menu loaded");
 }
