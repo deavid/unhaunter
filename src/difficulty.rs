@@ -19,8 +19,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::truck::ui::TabContents;
 
-pub const DEFAULT_DIFFICULTY: Difficulty = Difficulty::LeadResearcher;
-
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
 /// Each variant corresponds to a specific difficulty preset with unique settings,
@@ -28,8 +26,9 @@ pub const DEFAULT_DIFFICULTY: Difficulty = Difficulty::LeadResearcher;
 ///
 /// These difficulty levels impact various gameplay parameters, including ghost behavior,
 /// environment conditions, player attributes, and general gameplay mechanics.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
 pub enum Difficulty {
+    #[default]
     Apprentice,
     FieldResearcher,
     ParanormalAnalyst,
@@ -46,12 +45,6 @@ pub enum Difficulty {
     SpiritualGuardian,
     UnhaunterMaster,
     Legend,
-}
-
-impl Default for Difficulty {
-    fn default() -> Self {
-        DEFAULT_DIFFICULTY
-    }
 }
 
 impl Difficulty {
@@ -735,6 +728,6 @@ pub struct CurrentDifficulty(pub DifficultyStruct);
 
 impl Default for CurrentDifficulty {
     fn default() -> Self {
-        Self(DEFAULT_DIFFICULTY.create_difficulty_struct())
+        Self(Difficulty::default().create_difficulty_struct())
     }
 }
