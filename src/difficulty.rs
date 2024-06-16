@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     gear::{playergear::PlayerGear, Gear},
+    ghost_definitions::GhostSet,
     truck::ui::TabContents,
 };
 
@@ -623,6 +624,16 @@ impl Difficulty {
         }
     }
 
+    pub fn ghost_set(&self) -> GhostSet {
+        match self {
+            Difficulty::Apprentice => GhostSet::TempEMF,
+            Difficulty::FieldResearcher => GhostSet::TempEMFUV,
+            Difficulty::ParanormalAnalyst => GhostSet::Fifth,
+            Difficulty::SeniorInvestigator => GhostSet::Half,
+            _ => GhostSet::All,
+        }
+    }
+
     // --- UI and Scoring ---
 
     /// Returns the display name for the difficulty level.
@@ -698,11 +709,12 @@ impl Difficulty {
             health_drain_rate: self.health_drain_rate(),
             health_recovery_rate: self.health_recovery_rate(),
             player_speed: self.player_speed(),
-            player_gear: self.player_gear(),
             evidence_visibility: self.evidence_visibility(),
             equipment_sensitivity: self.equipment_sensitivity(),
             van_auto_open: self.van_auto_open(),
             default_van_tab: self.default_van_tab(),
+            player_gear: self.player_gear(),
+            ghost_set: self.ghost_set(),
             difficulty_name: self.difficulty_name().to_owned(), // Clone the name
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
         }
@@ -738,7 +750,6 @@ pub struct DifficultyStruct {
     pub health_drain_rate: f32,
     pub health_recovery_rate: f32,
     pub player_speed: f32,
-    pub player_gear: PlayerGear,
 
     // --- Evidence Gathering ---
     pub evidence_visibility: f32,
@@ -747,6 +758,8 @@ pub struct DifficultyStruct {
     // --- Gameplay ---
     pub van_auto_open: bool,
     pub default_van_tab: TabContents,
+    pub player_gear: PlayerGear,
+    pub ghost_set: GhostSet,
 
     // --- UI and Scoring ---
     pub difficulty_name: String,
