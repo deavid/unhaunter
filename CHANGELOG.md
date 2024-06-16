@@ -19,7 +19,7 @@
       of challenge that you need 
 
 **Fixes:**
-  * TBD  
+  * Several changes on lighting, Quartz Stone, Repellent Flash
 
 ### Version 0.2.2 - 2024-06-02
 
