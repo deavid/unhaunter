@@ -34,6 +34,10 @@ pub struct GhostSprite {
     pub repellent_hits: i64,
     /// Number of times the ghost has been hit with an incorrect type of repellent.
     pub repellent_misses: i64,
+    /// Number of times the ghost has been hit with the correct type of repellent - in current frame.
+    pub repellent_hits_frame: f32,
+    /// Number of times the ghost has been hit with an incorrect type of repellent - in current frame.
+    pub repellent_misses_frame: f32,
     /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
     /// The ghost's current rage level, which influences its hunting behavior.
@@ -76,6 +80,8 @@ impl GhostSprite {
             target_point: None,
             repellent_hits: 0,
             repellent_misses: 0,
+            repellent_hits_frame: 0.0,
+            repellent_misses_frame: 0.0,
             breach_id: None,
             rage: 0.0,
             hunting: 0.0,
@@ -276,7 +282,7 @@ pub fn ghost_movement(
                 ghost.hunt_target = false;
             }
         }
-        if ghost.repellent_hits > 100 {
+        if ghost.repellent_hits > 1000 {
             summary.ghosts_unhaunted += 1;
             if let Some(breach) = ghost.breach_id {
                 commands.entity(breach).despawn_recursive();

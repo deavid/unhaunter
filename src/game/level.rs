@@ -425,7 +425,7 @@ pub fn load_level(
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
-        .insert(board::Direction::default())
+        .insert(board::Direction::new_right())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
