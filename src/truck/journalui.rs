@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{colors, ghost_definitions, root};
+use crate::{colors, difficulty::CurrentDifficulty, ghost_definitions, root};
 
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
 use crate::platform::plt::UI_SCALE;
@@ -13,7 +13,11 @@ const MARGIN: UiRect = UiRect::percent(
     MARGIN_PERCENT,
 );
 
-pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
+pub fn setup_journal_ui(
+    p: &mut ChildBuilder,
+    handles: &root::GameAssets,
+    difficulty: &CurrentDifficulty,
+) {
     // Journal contents
 
     p.spawn(
@@ -137,7 +141,7 @@ pub fn setup_journal_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         ..default()
     })
     .with_children(|ghost_selection| {
-        for ghost_type in ghost_definitions::GhostType::all() {
+        for ghost_type in difficulty.0.ghost_set.as_vec() {
             ghost_selection
                 .spawn(ButtonBundle {
                     style: Style {

@@ -22,7 +22,7 @@ use crate::materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, InteractiveStuff, PlayerSprite};
 use crate::root::{self, QuadCC};
 use crate::tiledmap::{AtlasData, MapLayerType};
-use crate::{behavior, gear, summary, tiledmap};
+use crate::{behavior, summary, tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
@@ -421,7 +421,7 @@ pub fn load_level(
             ..default()
         })
         .insert(GameSprite)
-        .insert(gear::playergear::PlayerGear::new())
+        .insert(difficulty.0.player_gear.clone())
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
@@ -457,7 +457,8 @@ pub fn load_level(
         error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
     }
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
-    let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position());
+    let possible_ghost_types: Vec<_> = difficulty.0.ghost_set.as_vec();
+    let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
     let ghost_types = vec![ghost_sprite.class];
     for evidence in ghost_sprite.class.evidences() {
         bf.evidences.insert(evidence);

@@ -63,9 +63,8 @@ impl GhostSprite {
     /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn point.
     ///
     /// The ghost's initial mood, hunting state, and other attributes are set to default values.
-    pub fn new(spawn_point: BoardPosition) -> Self {
+    pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
         let mut rng = rand::thread_rng();
-        let ghost_types: Vec<_> = GhostType::all().collect();
         let idx = rng.gen_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());

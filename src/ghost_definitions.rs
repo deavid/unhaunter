@@ -203,8 +203,18 @@ impl GhostType {
     #[rustfmt::skip]
     pub fn evidences(&self) -> HashSet<Evidence> {
         use GhostType::*;
+        // Order of evidence: (From right to left) 
+        // - FreezingTemp, 1   0000 0001
+        // - FloatingOrbs, 2   0000 0010
+        // - UVEctoplasm,  3   0000 0100
+        // - EMFLevel5,    4   0000 1000
+        // - EVPRecording, 5   0001 0000
+        // - SpiritBox,    6   0010 0000
+        // - RLPresence,   7   0100 0000
+        // - CPM500,       8   1000 0000
 
         match self {
+            // -------------------------------   87654321
             BeanSidhe =>   Evidence::from_bits(0b00011111),
             Dullahan =>    Evidence::from_bits(0b01101101),
             Leprechaun =>  Evidence::from_bits(0b00110111),
@@ -256,6 +266,29 @@ impl GhostType {
 impl Display for GhostType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GhostSet {
+    TempEMF,
+    TempEMFUV,
+    Fifth,
+    Half,
+    #[default]
+    All,
+}
+
+impl GhostSet {
+    pub fn as_vec(&self) -> Vec<GhostType> {
+        use GhostType::*;
+        match self {
+            Self::TempEMF => vec![LadyInWhite, BrownLady],
+            Self::TempEMFUV => vec![Kappa, Tengu, Curupira],
+            Self::Fifth => GhostType::all().step_by(5).collect(),
+            Self::Half => GhostType::all().step_by(2).collect(),
+            Self::All => GhostType::all().collect(),
+        }
     }
 }
 

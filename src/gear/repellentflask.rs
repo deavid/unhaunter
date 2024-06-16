@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{board::Position, ghost::GhostSprite, ghost_definitions::GhostType};
+use crate::{
+    board::Position, game::GameSprite, ghost::GhostSprite, ghost_definitions::GhostType,
+    maplight::MapColor,
+};
 
 use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
@@ -36,9 +39,9 @@ impl GearUsable for RepellentFlask {
         };
         let msg = if self.liquid_content.is_some() {
             if self.active {
-                "Emptying flask...".to_string()
+                "Emptying flask... get close to the ghost!".to_string()
             } else {
-                "Activate in ghost room to expel it".to_string()
+                "Make the ghost absorb the repellent to expel it".to_string()
             }
         } else {
             "Flask must be filled on the van".to_string()
@@ -75,22 +78,22 @@ impl GearUsable for RepellentFlask {
             self.active = false;
             return;
         };
+        let mut pos = *pos;
+        pos.z += 0.2;
 
         gs.commands
-            .spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::YELLOW,
-                    ..default()
-                },
-                ..default()
+            .spawn(SpriteBundle::default())
+            .insert(pos)
+            .insert(GameSprite)
+            .insert(MapColor {
+                color: Color::YELLOW.with_a(0.3).with_b(0.02),
             })
-            .insert(*pos)
             .insert(Repellent::new(liquid_content));
     }
 }
 
 impl RepellentFlask {
-    const MAX_QTY: i32 = 200;
+    const MAX_QTY: i32 = 400;
     pub fn fill_liquid(&mut self, ghost_type: GhostType) {
         self.liquid_content = Some(ghost_type);
         self.active = false;
@@ -114,7 +117,7 @@ pub struct Repellent {
 }
 
 impl Repellent {
-    const MAX_LIFE: i32 = 500;
+    const MAX_LIFE: i32 = 1500;
     pub fn new(class: GhostType) -> Self {
         Self {
             class,
@@ -130,23 +133,29 @@ impl Repellent {
 pub fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
-    mut qrp: Query<(&mut Position, &mut Repellent, Entity), Without<GhostSprite>>,
+    mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
 ) {
     let mut rng = rand::thread_rng();
     const SPREAD: f32 = 0.5;
     const SPREAD_SHORT: f32 = 0.05;
-    for (mut r_pos, mut rep, entity) in &mut qrp {
+    for (mut r_pos, mut rep, mut mapcolor, entity) in &mut qrp {
         rep.life -= 1;
         if rep.life < 0 {
             cmd.entity(entity).despawn();
             continue;
         }
         let rev_factor = 1.01 - rep.life_factor();
+        mapcolor.color.set_a(rep.life_factor().sqrt() / 2.0 + 0.01);
 
         r_pos.x += rng.gen_range(-SPREAD..SPREAD) * rev_factor
             + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT);
         r_pos.y += rng.gen_range(-SPREAD..SPREAD) * rev_factor
             + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT);
+        r_pos.z += (rng.gen_range(-SPREAD..SPREAD) * rev_factor
+            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT))
+            / 10.0;
+
+        r_pos.z = (r_pos.z * 100.0 + 0.5 * rep.life_factor()) / 101.0;
 
         for (g_pos, mut ghost) in &mut qgs {
             let dist = g_pos.distance(&r_pos);

@@ -285,7 +285,7 @@ pub fn setup_ui(
 
         p.spawn(base_node.clone())
             .insert(TabContents::Journal)
-            .with_children(|p| journalui::setup_journal_ui(p, &handles));
+            .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));
 
         // ----
         p.spawn(NodeBundle {
