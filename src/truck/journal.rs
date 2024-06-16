@@ -31,6 +31,8 @@ pub fn button_system(
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
     let mut evidences_possible = HashSet::<Evidence>::new();
+    let mut evidences_all_ghosts = HashSet::<Evidence>::new();
+    let mut first_ghost = true;
     let mut new_ghost_selected = None;
     for (interaction, _color, _border_color, _children, mut tui_button) in &mut interaction_query {
         if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
@@ -58,7 +60,20 @@ pub fn button_system(
                 new_ghost_selected = Some(ghost_type);
             }
             if tui_button.status != TruckButtonState::Discard {
-                for evidence in ghost_type.evidences() {
+                let gh_evidences = ghost_type.evidences();
+                if first_ghost {
+                    first_ghost = false;
+                    evidences_all_ghosts.clone_from(&gh_evidences);
+                } else {
+                    let missing = evidences_all_ghosts
+                        .difference(&gh_evidences)
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    for m_ev in missing {
+                        evidences_all_ghosts.remove(&m_ev);
+                    }
+                }
+                for evidence in gh_evidences {
                     evidences_possible.insert(evidence);
                 }
             }
@@ -87,8 +102,10 @@ pub fn button_system(
             }
         }
         if let TruckButtonType::Evidence(ev) = tui_button.class {
-            tui_button.disabled =
-                !evidences_possible.contains(&ev) && tui_button.status != TruckButtonState::Discard;
+            tui_button.disabled = (!evidences_possible.contains(&ev)
+                && tui_button.status != TruckButtonState::Discard)
+                || (evidences_all_ghosts.contains(&ev)
+                    && tui_button.status == TruckButtonState::Off);
         }
         if let TruckButtonType::Ghost(gh) = tui_button.class {
             let ghost_ev = gh.evidences();
