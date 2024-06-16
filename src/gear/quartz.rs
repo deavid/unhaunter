@@ -91,17 +91,22 @@ pub fn aux_quartz_update(
     let dist_adj = (distance2 + MIN_DIST2) / MIN_DIST2;
     let dist_adj_recip = dist_adj.recip() - 0.2;
     let stone_health = (MAX_CRACKS - qz_data.cracks) as f32 / MAX_CRACKS as f32;
-
-    let str = (ghost_sprite.hunting
-        * 1.5
+    let str = ghost_sprite.hunting
         * dt
         * dist_adj_recip.clamp(0.0, 1.0)
-        * stone_health.clamp(0.0, 1.0).sqrt())
-    .min(ghost_sprite.hunting);
+        * stone_health.clamp(0.0, 1.0).sqrt();
 
-    ghost_sprite.hunting -= str;
-    qz_data.energy_absorbed += str;
-
+    if ghost_sprite.hunt_target {
+        let str = (str * 4.0).min(ghost_sprite.hunting);
+        ghost_sprite.hunting -= str;
+        qz_data.energy_absorbed += str;
+    } else {
+        let str = (str * 0.4).min(ghost_sprite.hunting);
+        ghost_sprite.hunting -= str;
+        qz_data.energy_absorbed += str;
+    }
+    const RESTORE_SPEED: f32 = 0.3;
+    qz_data.energy_absorbed -= (RESTORE_SPEED * dt).min(qz_data.energy_absorbed);
     // TODO: Spwan here a red particle from the ghost that travels to the quartz
     // .. stone to show the energy of the ghost being drawn.
 }

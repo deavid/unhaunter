@@ -1,12 +1,25 @@
 ### Version 0.2.3 - 2024-06-??
 
 **Features:**
+ 
+* **New Consumable Items**:
+    * Salt: You can drop salt on the ground and if the ghost walks over it will
+      leave a trace of salt where it goes.
+    * Quartz Stone: It absorbs the ghost hunting energy effectively shortening
+      hunts and protecting the player.
+    * Sage: Burn it, smoke the ghost and it will calm it down for 30 seconds.
+      During hunts it will confuse the ghost and lose track of the player.   
 
-* **TBD**:
-    * TBD
+* **New Menu**:
+    * Now it should be more clear that there are more maps to play.
+    * Old useless "Options" menu item has been removed for now.
+
+* **Difficulties**:
+    * A wide range of 16 difficulties to experience Unhaunter right at the level
+      of challenge that you need 
 
 **Fixes:**
-  * TBD  
+  * Several changes on lighting, Quartz Stone, Repellent Flash
 
 ### Version 0.2.2 - 2024-06-02
 

@@ -16,6 +16,10 @@ Here are some screenshots of the game:
 
 ![Screenshot5](screenshots/unhaunter-c5.png)
 
+Play directly in the browser here: [https://deavid.github.io/unhaunter/](https://deavid.github.io/unhaunter/)
+
+Or compile the game yourself for Windows or Linux following the instructions in this page. It's quite simple.
+
 ## Gameplay
 
 ### Exploration 
