@@ -181,11 +181,11 @@ impl Difficulty {
             Difficulty::InitiateOccultist => 2.0,
             Difficulty::AdeptOccultist => 2.5,
             Difficulty::ExpertOccultist => 3.0,
-            Difficulty::MasterOccultist => 4.0,
-            Difficulty::AdeptGuardian => 5.0,
-            Difficulty::LeadGuardian => 7.0,
-            Difficulty::ExpertGuardian => 9.0,
-            Difficulty::MasterGuardian => 13.0,
+            Difficulty::MasterOccultist => 3.5,
+            Difficulty::AdeptGuardian => 4.0,
+            Difficulty::LeadGuardian => 4.5,
+            Difficulty::ExpertGuardian => 5.0,
+            Difficulty::MasterGuardian => 6.0,
         }
     }
 

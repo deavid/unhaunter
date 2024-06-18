@@ -57,6 +57,8 @@ pub struct GhostSprite {
     pub salty_effect_timer: Timer,
     /// Timer to control the frequency of spawning Salty Traces.
     pub salty_trace_spawn_timer: Timer,
+    /// Makes the ghost wait more for the next attack but it will be a harder attack.
+    pub rage_limit_multiplier: f32,
 }
 
 /// Marker component for the ghost's visual breach effect.
@@ -91,6 +93,7 @@ impl GhostSprite {
             calm_time_secs: 0.0,
             salty_effect_timer,
             salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
+            rage_limit_multiplier: 1.0,
         }
     }
 
@@ -462,8 +465,10 @@ fn ghost_enrage(
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(ghost.calm_time_secs, ghost.rage);
         }
-        let rage_limit = 400.0 * difficulty.0.ghost_rage_likelihood.sqrt();
+        let rage_limit =
+            400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
         if ghost.rage > rage_limit {
+            ghost.rage_limit_multiplier *= 1.3;
             let prev_rage = ghost.rage;
             ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
             if ghost.hunting < 1.0 {
@@ -473,6 +478,9 @@ fn ghost_enrage(
             ghost.hunting += prev_rage / 50.0 + 5.0;
         } else if ghost.rage > rage_limit / 2.0 && ghost.hunting < 1.0 && roar_time > 10.0 {
             should_roar = RoarType::Dim;
+            if ghost.rage_limit_multiplier > 1.0 {
+                ghost.rage_limit_multiplier /= 1.01_f32.powf(dt);
+            }
         }
         if *last_roar > 30.0 && matches!(should_roar, RoarType::None) {
             should_roar = RoarType::Snore;

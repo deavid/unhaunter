@@ -702,6 +702,7 @@ pub fn apply_lighting(
                     (gs.calm_time_secs / 10.0).clamp(0.0, 1.0),
                 );
             } else {
+                let orig_opacity = opacity;
                 opacity *= dst_color.l().clamp(0.7, 1.0);
                 // Make the ghost oscilate to increase visibility:
                 let osc1 = (elapsed * 1.0 * difficulty.0.evidence_visibility).sin() * 0.25 + 0.75;
@@ -714,15 +715,16 @@ pub fn apply_lighting(
                 let r = dst_color.r();
                 let g = dst_color.g();
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility
+                    ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility.sqrt()
                 } else {
                     0.0
                 };
                 let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    ld.red * 6.0 * difficulty.0.evidence_visibility
+                    ld.red * 6.0 * difficulty.0.evidence_visibility.sqrt()
                 } else {
                     0.0
                 };
+                opacity = opacity * ld.visible + orig_opacity * (1.0 - ld.visible);
 
                 dst_color.set_l(l * ld.visible);
                 dst_color.set_r(r * ld.visible + e_rl);
