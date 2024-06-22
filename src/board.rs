@@ -50,7 +50,7 @@ impl std::ops::Add<Direction> for &Position {
     }
 }
 
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, PartialEq)]
 pub struct Direction {
     pub dx: f32,
     pub dy: f32,
@@ -58,6 +58,22 @@ pub struct Direction {
 }
 
 impl Direction {
+    pub fn new_right() -> Self {
+        Self {
+            dx: 1.0,
+            dy: 0.0,
+            dz: 0.0,
+        }
+    }
+
+    pub fn zero() -> Self {
+        Self {
+            dx: 0.0,
+            dy: 0.0,
+            dz: 0.0,
+        }
+    }
+
     pub fn distance(&self) -> f32 {
         (self.dx.powi(2) + self.dy.powi(2) + self.dz.powi(2)).sqrt()
     }
@@ -125,16 +141,6 @@ impl std::ops::Add<Direction> for Direction {
             dx: self.dx + rhs.dx,
             dy: self.dy + rhs.dy,
             dz: self.dz + rhs.dz,
-        }
-    }
-}
-
-impl Default for Direction {
-    fn default() -> Self {
-        Self {
-            dx: 1.0,
-            dy: 0.0,
-            dz: 0.0,
         }
     }
 }
@@ -297,6 +303,14 @@ impl BoardPosition {
         Position {
             x: self.x as f32,
             y: self.y as f32,
+            z: self.z as f32,
+            global_z: 0.0,
+        }
+    }
+    pub fn to_position_center(&self) -> Position {
+        Position {
+            x: self.x as f32 + 0.5,
+            y: self.y as f32 + 0.5,
             z: self.z as f32,
             global_z: 0.0,
         }

@@ -47,7 +47,9 @@ impl GearUsable for QuartzStoneData {
         pos: &Position,
         _ep: &super::playergear::EquipmentPosition,
     ) {
-        if self.energy_absorbed > 30.0 && self.cracks <= MAX_CRACKS {
+        if self.energy_absorbed > 30.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
+            && self.cracks <= MAX_CRACKS
+        {
             self.energy_absorbed = 0.0;
             // Increment cracks
             self.cracks += 1;
