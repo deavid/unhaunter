@@ -6,7 +6,11 @@ use rand::Rng;
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::{
-    board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor, utils::format_time,
+    board::{self, Position},
+    game::GameSprite,
+    ghost::GhostSprite,
+    maplight::MapColor,
+    utils::format_time,
 };
 
 /// Data structure for the Sage Bundle consumable.
@@ -141,9 +145,10 @@ pub struct SageSmokeParticle;
 
 /// Timer component for smoke particle lifetime.
 #[derive(Component)]
-pub struct SmokeParticleTimer(Timer);
+pub struct SmokeParticleTimer(pub Timer);
 
 /// System to handle smoke particle logic.
+#[allow(clippy::type_complexity)]
 pub fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -154,13 +159,14 @@ pub fn sage_smoke_system(
             &mut Transform,
             &mut SmokeParticleTimer,
             &mut MapColor,
+            Option<&board::Direction>,
         ),
-        Without<GhostSprite>,
+        (Without<GhostSprite>, With<SageSmokeParticle>),
     >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
     let dt = time.delta_seconds();
-    for (entity, mut position, mut transform, mut smoke_particle, mut map_color) in
+    for (entity, mut position, mut transform, mut smoke_particle, mut map_color, o_dir) in
         smoke_particles.iter_mut()
     {
         smoke_particle.0.tick(time.delta());
@@ -168,6 +174,11 @@ pub fn sage_smoke_system(
             commands.entity(entity).despawn();
             continue;
         }
+        let dir = o_dir.unwrap_or(&board::Direction {
+            dx: 0.0,
+            dy: 0.0,
+            dz: 0.0,
+        });
         let elap = smoke_particle.0.elapsed_secs();
         let rem = smoke_particle.0.remaining_secs();
         let a = ((elap * 3.0)
@@ -178,6 +189,8 @@ pub fn sage_smoke_system(
 
         // Make particles float upwards
         position.z += 0.3 * dt / (1.0 + elap.powi(2));
+        position.x += dir.dx * dt;
+        position.y += dir.dy * dt;
 
         transform.scale.x += 0.1 * dt;
         transform.scale.y += 0.1 * dt;
