@@ -1,10 +1,11 @@
 use std::time::Duration;
 
-use crate::board::{BoardPosition, Position};
+use crate::board::{self, BoardPosition, Position};
 use crate::components::ghost_influence::GhostInfluence;
 use crate::components::ghost_influence::InfluenceType;
 use crate::difficulty::CurrentDifficulty;
 use crate::game::GameSprite;
+use crate::gear::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::ghost_definitions::GhostType;
 use crate::maplight::MapColor;
 use crate::object_interaction::ObjectInteractionConfig;
@@ -61,6 +62,21 @@ pub struct GhostSprite {
     pub rage_limit_multiplier: f32,
 }
 
+#[derive(Component)]
+pub struct FadeOut {
+    pub timer: Timer,
+    pub roared: bool,
+}
+
+impl FadeOut {
+    pub fn new(duration: f32) -> Self {
+        Self {
+            timer: Timer::from_seconds(duration, TimerMode::Once),
+            roared: false,
+        }
+    }
+}
+
 /// Marker component for the ghost's visual breach effect.
 #[derive(Component, Debug)]
 pub struct GhostBreach;
@@ -114,7 +130,11 @@ impl GhostSprite {
 pub fn ghost_movement(
     mut q: Query<
         (&mut GhostSprite, &mut Position, Entity),
-        (Without<PlayerSprite>, Without<GhostInfluence>),
+        (
+            Without<PlayerSprite>,
+            Without<GhostInfluence>,
+            Without<FadeOut>,
+        ),
     >,
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::board::RoomDB>,
@@ -288,9 +308,19 @@ pub fn ghost_movement(
         if ghost.repellent_hits > 1000 {
             summary.ghosts_unhaunted += 1;
             if let Some(breach) = ghost.breach_id {
-                commands.entity(breach).despawn_recursive();
+                commands
+                    .entity(breach)
+                    .insert(FadeOut::new(5.0))
+                    .insert(MapColor {
+                        color: Color::WHITE.with_a(1.0),
+                    });
             }
-            commands.entity(entity).despawn_recursive();
+            commands
+                .entity(entity)
+                .insert(FadeOut::new(5.0))
+                .insert(MapColor {
+                    color: Color::WHITE.with_a(1.0),
+                });
         }
     }
 }
@@ -348,7 +378,7 @@ fn ghost_enrage(
     time: Res<Time>,
     mut timer: Local<utils::PrintingTimer>,
     mut avg_angry: Local<utils::MeanValue>,
-    mut qg: Query<(&mut GhostSprite, &Position)>,
+    mut qg: Query<(&mut GhostSprite, &Position), Without<FadeOut>>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     mut gs: gear::GearStuff,
     mut last_roar: Local<f32>,
@@ -560,6 +590,80 @@ fn spawn_salty_trace(
         .insert(GameSprite);
 }
 
+#[allow(clippy::type_complexity)]
+pub fn ghost_fade_out_system(
+    mut commands: Commands,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+    mut query: Query<(
+        Entity,
+        &mut FadeOut,
+        &mut MapColor,
+        &Position,
+        Option<&GhostSprite>,
+    )>,
+    mut gs: gear::GearStuff,
+) {
+    let mut rng = rand::thread_rng();
+    for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
+        fade_out.timer.tick(time.delta());
+        let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
+        // Fade out the sprite
+        map_color.color.set_a(rem_f);
+
+        // Emit smoke particles while fading
+        if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
+            let pos = *position;
+            commands
+                .spawn(SpriteBundle {
+                    texture: asset_server.load("img/smoke.png"),
+                    transform: Transform::from_translation(pos.to_screen_coord())
+                        .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                    sprite: Sprite {
+                        color: Color::NONE,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(SageSmokeParticle)
+                .insert(GameSprite)
+                .insert(pos)
+                .insert(board::Direction {
+                    dx: rng.gen_range(-0.9..0.9),
+                    dy: rng.gen_range(-0.9..0.9),
+                    dz: 0.0,
+                })
+                .insert(MapColor {
+                    color: Color::WHITE.with_a(0.20),
+                })
+                .insert(SmokeParticleTimer(Timer::from_seconds(
+                    5.0,
+                    TimerMode::Once,
+                )));
+        }
+
+        // Play roar sounds
+        if let Some(_ghost_sprite) = ghost_sprite {
+            if !fade_out.roared {
+                // Play the first roar at 100% volume
+                gs.play_audio(RoarType::Full.get_sound(), 1.0, position);
+                fade_out.roared = true;
+            } else if fade_out.timer.finished() {
+                // Play the second roar at a lower volume
+                gs.play_audio(RoarType::Full.get_sound(), 0.2, position);
+                // Despawn the entity
+                commands.entity(entity).despawn();
+            }
+        } else if fade_out.timer.finished() {
+            // Despawn the breach when its timer is done
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
-    app.add_systems(Update, (ghost_movement, ghost_enrage));
+    app.add_systems(
+        Update,
+        (ghost_movement, ghost_enrage, ghost_fade_out_system),
+    );
 }

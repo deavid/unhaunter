@@ -1,25 +1,62 @@
-### Version 0.2.3 - 2024-06-??
+### Version 0.2.3 - 2024-06-23
 
 **Features:**
- 
-* **New Consumable Items**:
-    * Salt: You can drop salt on the ground and if the ghost walks over it will
-      leave a trace of salt where it goes.
-    * Quartz Stone: It absorbs the ghost hunting energy effectively shortening
-      hunts and protecting the player.
-    * Sage: Burn it, smoke the ghost and it will calm it down for 30 seconds.
-      During hunts it will confuse the ghost and lose track of the player.   
 
-* **New Menu**:
-    * Now it should be more clear that there are more maps to play.
-    * Old useless "Options" menu item has been removed for now.
-
-* **Difficulties**:
-    * A wide range of 16 difficulties to experience Unhaunter right at the level
-      of challenge that you need 
+* **New Consumable Items:**
+    * Salt: You can drop salt on the ground, and if the ghost walks over it, 
+      it will leave a trace of salt where it goes. These traces are only visible 
+      under UV light.
+    * Quartz Stone: It absorbs the ghost's hunting energy, effectively shortening 
+      hunts and protecting the player. The stone gradually cracks and eventually 
+      breaks after repeated uses.
+    * Sage: Burn it and smoke the ghost, and it will calm it down for 30 seconds.
+      During hunts, it will confuse the ghost and make it lose track of the player. 
+* **New Menu: Map Hub:**
+    * Provides a clear and dedicated menu for selecting the map and difficulty 
+      level before starting a new game.
+    * Displays all available maps in a list, allowing for easy browsing and selection.
+    * Presents a separate screen for choosing from a range of 16 difficulty levels, 
+      each with a description of its unique challenges.
+* **Expanded Difficulty System:**
+    * Offers 16 distinct difficulty levels, ranging from "Novice Investigator" 
+      to "Master Guardian", providing a wide range of challenges for players 
+      of all skill levels.
+    * Each difficulty level affects various aspects of the game, including 
+      ghost behavior, environment conditions, player attributes, and scoring.
+    * Difficulties now customize the available equipment for the player.
+* **Improved Ghost Expulsion Feedback:**
+    * When a ghost is successfully expelled, it now fades out over 5 seconds 
+      while emitting smoke particles, creating a more noticeable and satisfying
+      visual effect.
+    * The ghost's breach also fades out, indicating its permanent 
+      departure from the location.
+    * Two distinct roar sounds now play during the expulsion, adding to the
+      dramatic effect.
 
 **Fixes:**
-  * Several changes on lighting, Quartz Stone, Repellent Flash
+
+* **Lighting:** Several adjustments have been made to the lighting system to 
+  create a more visually appealing and atmospheric environment.
+* **Quartz Stone:** The Quartz Stone's energy absorption rate is now adjusted
+  based on the selected difficulty level, making it more effective at higher difficulty levels.
+* **Repellent Flask:** The behavior of the Repellent Flask particles has been
+  improved. They now spread more realistically, preventing them from clumping 
+  together or moving in an unnatural way.
+* **Hiding Mechanics:**
+    * Players can no longer hide while carrying any items, 
+      preventing conflicts with other actions.
+    * The player's sprite now changes color when hiding, 
+      providing a visual indicator of their hidden state.
+    * Hiding now requires the player to hold down the "E" key 
+      for a short duration, reducing accidental triggers.
+* **Truck Journal:** The Truck Journal UI now filters possible evidence more
+  effectively based on the selected ghost type, streamlining the evidence selection process.
+* **Windows:** Fixed a bug that prevented map tileset images from loading correctly 
+  in the Windows build, ensuring compatibility and a consistent experience across platforms.
+* **General:**
+    * Addressed several warnings and clippy lints to improve 
+      code quality and maintainability.
+    * Fixed minor UI issues and typos in the game.
 
 ### Version 0.2.2 - 2024-06-02
 
