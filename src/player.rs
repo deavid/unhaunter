@@ -704,11 +704,20 @@ pub struct Hiding {
 pub fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    deployables: Query<(Entity, &Position), With<DeployedGear>>,
     pickables: Query<(Entity, &Position, &Behavior)>, // Query for all entities with Behavior
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.grab) && player_gear.held_item.is_none() {
+            // If there's any gear deployed nearby do not consider furniture.
+            if deployables
+                .iter()
+                .any(|(_, object_pos)| player_pos.distance(object_pos) < 1.0)
+            {
+                return;
+            }
+
             // Find a pickable object near the player
             if let Some((object_entity, _, _)) = pickables
                 .iter()
