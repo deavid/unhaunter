@@ -1,7 +1,7 @@
 workspace = { members = ["tools/ghost_radio"] }
 [package]
 name = "unhaunter"
-version = "0.2.3-rc3"
+version = "0.2.3"
 edition = "2021"
 default-run = "unhaunter_game"
 description = "2D isometric Game about investigating paranormal hauntings"
