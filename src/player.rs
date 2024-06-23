@@ -15,6 +15,7 @@ use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
 use crate::gear::playergear::PlayerGear;
 use crate::gear::{self, GearUsable as _};
+use crate::maplight::MapColor;
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
@@ -818,25 +819,16 @@ pub fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (
-            Entity,
-            &mut PlayerSprite,
-            &mut Transform,
-            &Visibility,
-            &Position,
-            &PlayerGear,
-        ),
-        Without<Hiding>,
+        (Entity, &mut PlayerSprite, &mut Position, &PlayerGear),
+        (Without<Hiding>, Without<Behavior>),
     >,
-    hiding_spots: Query<(Entity, &Position, &Behavior)>,
+    hiding_spots: Query<(Entity, &Position, &Behavior), Without<PlayerSprite>>,
     asset_server: Res<AssetServer>,
     mut gs: gear::GearStuff,
     time: Res<Time>,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, player, mut transform, _visibility, player_pos, player_gear) in
-        players.iter_mut()
-    {
+    for (player_entity, player, mut player_pos, player_gear) in players.iter_mut() {
         // Get the player's hold timer or create a new one
         let timer = hold_timers
             .entry(player_entity)
@@ -863,41 +855,29 @@ pub fn hide_player(
                 timer.reset();
 
                 // Add the Hiding component to the player
-                commands.entity(player_entity).insert(Hiding {
-                    hiding_spot: hiding_spot_entity,
-                });
-
-                // Apply hiding visual effects
-                // Change player sprite animation to a hiding animation
-                // TODO: Define hiding animation
-                // For now, let's just make the player crouch (animation index 36 in character1_atlas)
                 commands
                     .entity(player_entity)
-                    .insert(AnimationTimer::from_range(
-                        Timer::from_seconds(0.20, TimerMode::Repeating),
-                        vec![36],
-                    ));
+                    .insert(Hiding {
+                        hiding_spot: hiding_spot_entity,
+                    })
+                    .insert(MapColor {
+                        color: Color::DARK_GRAY.with_a(0.5),
+                    });
 
-                // Move player sprite to a slightly offset position under the hiding object
-                transform.translation =
-                    hiding_spot_pos.to_screen_coord() + Vec3::new(0.0, -8.0, 0.01);
-
-                // Set player sprite visibility to a lower value (semi-transparent)
-                // TODO: This part of the code was meant to make the player semitransparent when on hiding
-                // .. however due to the lighting system this is not doable from
-                // *visibility = Visibility::Visible.with_opacity(0.5);
+                player_pos.x = (player_pos.x + hiding_spot_pos.x) / 2.0;
+                player_pos.y = (player_pos.y + hiding_spot_pos.y) / 2.0;
 
                 // Play "Hide" sound effect
-                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, player_pos);
+                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
                     parent.spawn(SpriteBundle {
                         texture: asset_server.load("img/hiding_overlay.png"),
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
-                            .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Position relative to parent
+                            .with_scale(Vec3::new(0.20, 0.20, 0.20)), // Position relative to parent
                         sprite: Sprite {
-                            color: Color::GRAY.with_a(0.6),
+                            color: Color::WHITE.with_a(0.4),
                             ..default()
                         },
                         ..default()
@@ -939,7 +919,10 @@ pub fn unhide_player(
                 .insert(AnimationTimer::from_range(
                     Timer::from_seconds(0.20, TimerMode::Repeating),
                     vec![32],
-                ));
+                ))
+                .insert(MapColor {
+                    color: Color::WHITE.with_a(1.0),
+                });
 
             // Reset player position
             // TODO: Consider using the hiding spot's position
