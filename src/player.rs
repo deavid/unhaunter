@@ -19,6 +19,7 @@ use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use std::time::Duration;
 
 const USE_ARROW_KEYS: bool = false;
@@ -812,6 +813,7 @@ pub fn drop_object(
 /// This system checks if the player is pressing the 'activate' key and is near a valid hiding spot.
 /// If so, the player character enters the hiding spot, becoming partially hidden. A visual overlay is added to the hiding spot to indicate the player's presence.
 /// Note that the player's transparency while hiding is not yet fully implemented.
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -822,15 +824,29 @@ pub fn hide_player(
             &mut Transform,
             &Visibility,
             &Position,
+            &PlayerGear,
         ),
         Without<Hiding>,
     >,
-    hiding_spots: Query<(Entity, &Position, &Behavior)>, // Remove incorrect With filter
+    hiding_spots: Query<(Entity, &Position, &Behavior)>,
     asset_server: Res<AssetServer>,
     mut gs: gear::GearStuff,
+    time: Res<Time>,
+    mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, player, mut transform, _visibility, player_pos) in players.iter_mut() {
-        if keyboard_input.just_pressed(player.controls.activate) {
+    for (player_entity, player, mut transform, _visibility, player_pos, player_gear) in
+        players.iter_mut()
+    {
+        // Get the player's hold timer or create a new one
+        let timer = hold_timers
+            .entry(player_entity)
+            .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
+
+        if keyboard_input.pressed(player.controls.activate) {
+            if player_gear.held_item.is_some() {
+                // Player cannot hide while carrying furniture.
+                continue;
+            }
             // Using 'activate' for hiding
             // Find a hiding spot near the player
             if let Some((hiding_spot_entity, hiding_spot_pos, _)) = hiding_spots
@@ -838,6 +854,14 @@ pub fn hide_player(
                 .filter(|(_, _, behavior)| behavior.p.object.hidingspot) // Manually filter for hiding spots
                 .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.0)
             {
+                // Key is held down, tick the timer
+                timer.tick(time.delta());
+
+                if !timer.finished() {
+                    continue;
+                }
+                timer.reset();
+
                 // Add the Hiding component to the player
                 commands.entity(player_entity).insert(Hiding {
                     hiding_spot: hiding_spot_entity,
@@ -873,13 +897,15 @@ pub fn hide_player(
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
                             .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Position relative to parent
                         sprite: Sprite {
-                            color: Color::GRAY.with_a(0.2),
+                            color: Color::GRAY.with_a(0.6),
                             ..default()
                         },
                         ..default()
                     });
                 });
             }
+        } else {
+            timer.reset();
         }
     }
 }
@@ -899,7 +925,7 @@ pub fn unhide_player(
         &Hiding,
     )>,
 ) {
-    for (player_entity, player, _, mut visibility, hiding) in players.iter_mut() {
+    for (player_entity, player, _, _visibility, hiding) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.activate) {
             // Using 'activate' for unhiding
             // Remove the Hiding component
@@ -920,7 +946,7 @@ pub fn unhide_player(
             // For now, let's just leave the position as is.
 
             // Reset player visibility
-            *visibility = Visibility::Visible;
+            // *visibility = Visibility::Visible;
 
             // --- Remove Visual Overlay ---
             commands.entity(hiding.hiding_spot).despawn_descendants();
