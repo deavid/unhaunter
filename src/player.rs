@@ -15,10 +15,12 @@ use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
 use crate::gear::playergear::PlayerGear;
 use crate::gear::{self, GearUsable as _};
+use crate::maplight::MapColor;
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use std::time::Duration;
 
 const USE_ARROW_KEYS: bool = false;
@@ -704,11 +706,20 @@ pub struct Hiding {
 pub fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    deployables: Query<(Entity, &Position), With<DeployedGear>>,
     pickables: Query<(Entity, &Position, &Behavior)>, // Query for all entities with Behavior
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.grab) && player_gear.held_item.is_none() {
+            // If there's any gear deployed nearby do not consider furniture.
+            if deployables
+                .iter()
+                .any(|(_, object_pos)| player_pos.distance(object_pos) < 1.0)
+            {
+                return;
+            }
+
             // Find a pickable object near the player
             if let Some((object_entity, _, _)) = pickables
                 .iter()
@@ -803,25 +814,31 @@ pub fn drop_object(
 /// This system checks if the player is pressing the 'activate' key and is near a valid hiding spot.
 /// If so, the player character enters the hiding spot, becoming partially hidden. A visual overlay is added to the hiding spot to indicate the player's presence.
 /// Note that the player's transparency while hiding is not yet fully implemented.
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
-        (
-            Entity,
-            &mut PlayerSprite,
-            &mut Transform,
-            &Visibility,
-            &Position,
-        ),
-        Without<Hiding>,
+        (Entity, &mut PlayerSprite, &mut Position, &PlayerGear),
+        (Without<Hiding>, Without<Behavior>),
     >,
-    hiding_spots: Query<(Entity, &Position, &Behavior)>, // Remove incorrect With filter
+    hiding_spots: Query<(Entity, &Position, &Behavior), Without<PlayerSprite>>,
     asset_server: Res<AssetServer>,
     mut gs: gear::GearStuff,
+    time: Res<Time>,
+    mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
-    for (player_entity, player, mut transform, _visibility, player_pos) in players.iter_mut() {
-        if keyboard_input.just_pressed(player.controls.activate) {
+    for (player_entity, player, mut player_pos, player_gear) in players.iter_mut() {
+        // Get the player's hold timer or create a new one
+        let timer = hold_timers
+            .entry(player_entity)
+            .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
+
+        if keyboard_input.pressed(player.controls.activate) {
+            if player_gear.held_item.is_some() {
+                // Player cannot hide while carrying furniture.
+                continue;
+            }
             // Using 'activate' for hiding
             // Find a hiding spot near the player
             if let Some((hiding_spot_entity, hiding_spot_pos, _)) = hiding_spots
@@ -829,48 +846,46 @@ pub fn hide_player(
                 .filter(|(_, _, behavior)| behavior.p.object.hidingspot) // Manually filter for hiding spots
                 .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.0)
             {
-                // Add the Hiding component to the player
-                commands.entity(player_entity).insert(Hiding {
-                    hiding_spot: hiding_spot_entity,
-                });
+                // Key is held down, tick the timer
+                timer.tick(time.delta());
 
-                // Apply hiding visual effects
-                // Change player sprite animation to a hiding animation
-                // TODO: Define hiding animation
-                // For now, let's just make the player crouch (animation index 36 in character1_atlas)
+                if !timer.finished() {
+                    continue;
+                }
+                timer.reset();
+
+                // Add the Hiding component to the player
                 commands
                     .entity(player_entity)
-                    .insert(AnimationTimer::from_range(
-                        Timer::from_seconds(0.20, TimerMode::Repeating),
-                        vec![36],
-                    ));
+                    .insert(Hiding {
+                        hiding_spot: hiding_spot_entity,
+                    })
+                    .insert(MapColor {
+                        color: Color::DARK_GRAY.with_a(0.5),
+                    });
 
-                // Move player sprite to a slightly offset position under the hiding object
-                transform.translation =
-                    hiding_spot_pos.to_screen_coord() + Vec3::new(0.0, -8.0, 0.01);
-
-                // Set player sprite visibility to a lower value (semi-transparent)
-                // TODO: This part of the code was meant to make the player semitransparent when on hiding
-                // .. however due to the lighting system this is not doable from
-                // *visibility = Visibility::Visible.with_opacity(0.5);
+                player_pos.x = (player_pos.x + hiding_spot_pos.x) / 2.0;
+                player_pos.y = (player_pos.y + hiding_spot_pos.y) / 2.0;
 
                 // Play "Hide" sound effect
-                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, player_pos);
+                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
                     parent.spawn(SpriteBundle {
                         texture: asset_server.load("img/hiding_overlay.png"),
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
-                            .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Position relative to parent
+                            .with_scale(Vec3::new(0.20, 0.20, 0.20)), // Position relative to parent
                         sprite: Sprite {
-                            color: Color::GRAY.with_a(0.2),
+                            color: Color::WHITE.with_a(0.4),
                             ..default()
                         },
                         ..default()
                     });
                 });
             }
+        } else {
+            timer.reset();
         }
     }
 }
@@ -890,7 +905,7 @@ pub fn unhide_player(
         &Hiding,
     )>,
 ) {
-    for (player_entity, player, _, mut visibility, hiding) in players.iter_mut() {
+    for (player_entity, player, _, _visibility, hiding) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.activate) {
             // Using 'activate' for unhiding
             // Remove the Hiding component
@@ -904,14 +919,17 @@ pub fn unhide_player(
                 .insert(AnimationTimer::from_range(
                     Timer::from_seconds(0.20, TimerMode::Repeating),
                     vec![32],
-                ));
+                ))
+                .insert(MapColor {
+                    color: Color::WHITE.with_a(1.0),
+                });
 
             // Reset player position
             // TODO: Consider using the hiding spot's position
             // For now, let's just leave the position as is.
 
             // Reset player visibility
-            *visibility = Visibility::Visible;
+            // *visibility = Visibility::Visible;
 
             // --- Remove Visual Overlay ---
             commands.entity(hiding.hiding_spot).despawn_descendants();
@@ -1148,7 +1166,7 @@ pub fn deploy_gear(
                     .insert(DeployedGearData {
                         gear: player_gear.right_hand.take(),
                     });
-                player_gear.right_hand.kind = gear::GearKind::None;
+                player_gear.cycle();
                 // Play "Drop Item" sound effect (reused for gear deployment)
                 gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
             } else {
