@@ -14,6 +14,7 @@ const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
 pub enum MenuID {
     MapHub,
     _Options,
+    Manual,
     Quit,
 }
 
@@ -32,11 +33,13 @@ impl Menu {
         if IS_WASM {
             &[
                 MenuID::MapHub,
+                MenuID::Manual,
                 // MenuID::Options,
             ]
         } else {
             &[
                 MenuID::MapHub,
+                MenuID::Manual,
                 // MenuID::Options,
                 MenuID::Quit,
             ]
@@ -298,6 +301,17 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                             },
                         ))
                         .insert(MenuItem::new(MenuID::MapHub));
+                    parent
+                        .spawn(TextBundle::from_section(
+                            "Manual",
+                            TextStyle {
+                                font: handles.fonts.londrina.w300_light.clone(),
+                                font_size: 38.0 * UI_SCALE,
+                                color: MENU_ITEM_COLOR_OFF,
+                            },
+                        ))
+                        .insert(MenuItem::new(MenuID::Manual));
+                    
                     // parent
                     //     .spawn(TextBundle::from_section(
                     //         "Options",
@@ -403,6 +417,10 @@ pub fn menu_event(
                 // Transition to the Map Hub state
                 next_state.set(root::State::MapHub);
             }
+            MenuID::Manual => {
+                // Transition to the Manual state
+                next_state.set(root::State::Manual);
+            }            
             MenuID::_Options => {}
             MenuID::Quit => {
                 exit.send(AppExit);
