@@ -48,7 +48,6 @@ impl ManualPageRange {
     }
 }
 
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn manual_system(
     mut current_page: ResMut<ManualPage>,
     difficulty: Res<CurrentDifficulty>,
@@ -85,11 +84,14 @@ fn manual_system(
         }
     }
 
-    // Handle left/right arrow keys
+    // Handle left/right arrow keys and ESC key
     if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
         *current_page = current_page.previous().unwrap_or(*current_page);
     } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
         *current_page = current_page.next().unwrap_or(*current_page);
+    } else if keyboard_input.just_pressed(KeyCode::Escape) {
+        // Transition back to the main menu when ESC is pressed
+        next_state.set(root::State::MainMenu);
     }
 
     // FIXME: This is wrong. It seems that it attempts a redraw but this is incorrect.
