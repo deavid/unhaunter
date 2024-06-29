@@ -58,6 +58,7 @@ fn manual_system(
     mut next_state: ResMut<NextState<root::State>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
     text_query: Query<&Text>, // Query for Text components
+    mut button_query: Query<(&Children, &mut Visibility), With<Button>>,
 ) {
     // Store the manual UI entity ID
     // let mut manual_ui_entity = None;
@@ -100,13 +101,23 @@ fn manual_system(
         next_state.set(root::State::MainMenu);
     }
 
-    // FIXME: This is wrong. It seems that it attempts a redraw but this is incorrect.
-    // Redraw the UI with the updated page
-    // if let Some(entity) = manual_ui_entity {
-    //     commands.entity(entity).despawn_descendants();
-    // }
-    // manual_ui_entity = Some(draw_manual_ui(&mut commands, &handles, *current_page));
-    // Pass &mut commands
+    // Update button visibility based on current page
+    for (children, mut visibility) in &mut button_query {
+        for child in children.iter() {
+            if let Ok(text) = text_query.get(*child) {
+                let is_first = text.sections[0].value == "Previous"
+                    && *current_page == ManualPage::first().unwrap();
+                let is_last = text.sections[0].value == "Next"
+                    && *current_page == ManualPage::last().unwrap();
+
+                *visibility = if is_first || is_last {
+                    Visibility::Hidden
+                } else {
+                    Visibility::Visible
+                };
+            }
+        }
+    }
 }
 
 #[derive(Component)]
