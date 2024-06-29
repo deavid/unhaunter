@@ -7,6 +7,9 @@ use super::{chapter1, ManualPage};
 #[derive(Component)]
 pub struct ManualUI;
 
+#[derive(Component)]
+pub struct PageContent;
+
 pub fn draw_manual_page(parent: &mut ChildBuilder, handles: &GameAssets, current_page: ManualPage) {
     // Draw page-specific content
     match current_page {
@@ -48,6 +51,7 @@ pub fn draw_manual_ui(
                     },
                     ..default()
                 })
+                .insert(PageContent)
                 .with_children(|content| {
                     draw_manual_page(content, &handles, *current_page);
                 });

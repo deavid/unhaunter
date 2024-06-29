@@ -4,14 +4,16 @@ pub mod index;
 use bevy::prelude::*;
 
 use enum_iterator::Sequence;
+use index::{ManualUI, PageContent};
 
 use crate::{
     difficulty::CurrentDifficulty,
     root::{self, GameAssets},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
 pub enum ManualPage {
+    #[default]
     Introduction,
     BasicControls,
 }
@@ -67,9 +69,11 @@ fn manual_system(
                 if let Ok(text) = text_query.get(*child) {
                     if text.sections[0].value == "Previous" {
                         *current_page = current_page.previous().unwrap_or(*current_page);
+                        info!("Current page: {:?}", *current_page);
                     // Use previous() from Sequence
                     } else if text.sections[0].value == "Next" {
                         *current_page = current_page.next().unwrap_or(*current_page);
+                        info!("Current page: {:?}", *current_page);
                     // Use next() from Sequence
                     } else if text.sections[0].value == "Close" {
                         // Transition back to the appropriate state
@@ -87,8 +91,10 @@ fn manual_system(
     // Handle left/right arrow keys and ESC key
     if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
         *current_page = current_page.previous().unwrap_or(*current_page);
+        info!("Current page: {:?}", *current_page);
     } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
         *current_page = current_page.next().unwrap_or(*current_page);
+        info!("Current page: {:?}", *current_page);
     } else if keyboard_input.just_pressed(KeyCode::Escape) {
         // Transition back to the main menu when ESC is pressed
         next_state.set(root::State::MainMenu);
@@ -120,6 +126,38 @@ pub fn setup(mut commands: Commands, handles: Res<GameAssets>, difficulty: Res<C
     index::draw_manual_ui(&mut commands, handles, &initial_page);
 }
 
+fn redraw_manual_ui_system(
+    mut commands: Commands,
+    current_page: Res<ManualPage>,
+    q_manual_ui: Query<Entity, With<ManualUI>>,
+    q_page_content: Query<Entity, With<PageContent>>,
+    handles: Res<GameAssets>,
+) {
+    if !current_page.is_changed() {
+        return; // Only redraw if the page has changed
+    }
+
+    // Get the ManualUI entity
+    let Ok(_) = q_manual_ui.get_single() else {
+        return;
+    };
+
+    // Get the PageContent entity
+    let Ok(page_content_entity) = q_page_content.get_single() else {
+        return;
+    };
+
+    // Despawn the existing page content
+    commands.entity(page_content_entity).despawn_descendants();
+
+    // Redraw the page content
+    commands
+        .entity(page_content_entity)
+        .with_children(|parent| {
+            index::draw_manual_page(parent, &handles, *current_page);
+        });
+}
+
 pub fn cleanup(
     mut commands: Commands,
     q_manual_ui: Query<Entity, With<index::ManualUI>>,
@@ -141,9 +179,16 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(root::State::Manual), cleanup)
         .add_systems(OnEnter(root::GameState::Manual), setup)
         .add_systems(OnExit(root::GameState::Manual), cleanup)
-        .add_systems(Update, manual_system.run_if(in_state(root::State::Manual)))
         .add_systems(
             Update,
-            manual_system.run_if(in_state(root::GameState::Manual)),
-        );
+            manual_system
+                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))),
+        )
+        .add_systems(
+            Update,
+            redraw_manual_ui_system
+                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))) // Add run_if condition here
+                .after(manual_system),
+        )
+        .insert_resource(ManualPage::default());
 }
