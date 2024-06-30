@@ -13,9 +13,20 @@ pub struct PageContent;
 pub fn draw_manual_page(parent: &mut ChildBuilder, handles: &GameAssets, current_page: ManualPage) {
     // Draw page-specific content
     match current_page {
-        ManualPage::Introduction => chapter1::introduction::draw_introduction_page(parent, handles),
-        ManualPage::BasicControls => {
-            chapter1::basic_controls::draw_basic_controls_page(parent, handles)
+        ManualPage::MissionBriefing => {
+            chapter1::mission_briefing::draw_mission_briefing_page(parent, handles)
+        }
+        ManualPage::EssentialControls => {
+            chapter1::essential_controls::draw_essential_controls_page(parent, handles)
+        }
+        ManualPage::EMFAndThermometer => {
+            chapter1::emf_and_thermometer::draw_emf_and_thermometer_page(parent, handles)
+        }
+        ManualPage::TruckJournal => {
+            chapter1::truck_journal::draw_truck_journal_page(parent, handles)
+        }
+        ManualPage::ExpellingGhost => {
+            chapter1::expelling_ghost::draw_expelling_ghost_page(parent, handles)
         }
     }
 }

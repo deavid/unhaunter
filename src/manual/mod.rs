@@ -14,8 +14,11 @@ use crate::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
 pub enum ManualPage {
     #[default]
-    Introduction,
-    BasicControls,
+    MissionBriefing,
+    EssentialControls,
+    EMFAndThermometer,
+    TruckJournal,
+    ExpellingGhost,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::root::GameAssets;
 
-pub fn draw_basic_controls_page(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw_expelling_ghost_page(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent.spawn(TextBundle::from_section(
         "Learn how to move: WASD. This is the basic controls page.",
         TextStyle {

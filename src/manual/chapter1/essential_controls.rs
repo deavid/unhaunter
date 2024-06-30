@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 use crate::root::GameAssets;
 
-pub fn draw_introduction_page(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw_essential_controls_page(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent.spawn(TextBundle::from_section(
-        "Welcome to Unhaunter! This is the introduction page.",
+        "Learn how to move: WASD. This is the basic controls page.",
         TextStyle {
             font: handles.fonts.londrina.w300_light.clone(),
             font_size: 38.0,

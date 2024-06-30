@@ -123,6 +123,13 @@ pub struct ImageAssets {
     pub character1_atlas: Handle<TextureAtlasLayout>,
     pub gear_atlas: Handle<TextureAtlasLayout>,
     pub vignette: Handle<Image>,
+    // --- Manual Images ---
+    pub manual_investigate: Handle<Image>,
+    pub manual_locate_ghost: Handle<Image>,
+    pub manual_identify_ghost: Handle<Image>,
+    pub manual_craft_repellent: Handle<Image>,
+    pub manual_expel_ghost: Handle<Image>,
+    pub manual_end_mission: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -239,6 +246,13 @@ pub fn load_assets(
                 Some(Vec2::new(0.0, 0.0)),
             )),
             vignette: server.load("img/vignette.png"),
+            // --- Manual Images ---
+            manual_investigate: server.load("manual/images/chapter1/investigate.png"),
+            manual_locate_ghost: server.load("manual/images/chapter1/locate_ghost.png"),
+            manual_identify_ghost: server.load("manual/images/chapter1/identify_ghost.png"),
+            manual_craft_repellent: server.load("manual/images/chapter1/craft_repellent.png"),
+            manual_expel_ghost: server.load("manual/images/chapter1/expel_ghost.png"),
+            manual_end_mission: server.load("manual/images/chapter1/end_mission.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

@@ -18,7 +18,10 @@ use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    gear::{playergear::PlayerGear, Gear}, ghost_definitions::GhostSet, manual::ManualPageRange, truck::ui::TabContents
+    gear::{playergear::PlayerGear, Gear},
+    ghost_definitions::GhostSet,
+    manual::{ManualPage, ManualPageRange},
+    truck::ui::TabContents,
 };
 
 /// Represents the different difficulty levels for the Unhaunter game.
@@ -785,6 +788,15 @@ impl Difficulty {
         }
     }
 
+    pub fn manual_page_range(&self) -> ManualPageRange {
+        match self {
+            Difficulty::NoviceInvestigator => {
+                ManualPageRange::new(ManualPage::MissionBriefing, ManualPage::ExpellingGhost)
+            }
+            _ => ManualPageRange::new(ManualPage::MissionBriefing, ManualPage::MissionBriefing),
+        }
+    }
+
     /// Creates a `DifficultyStruct` instance with the settings for the current
     /// difficulty level.
     ///
@@ -820,11 +832,7 @@ impl Difficulty {
             difficulty_name: self.difficulty_name().to_owned(),
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
-            // TODO: Move this to methods like the above and make it difficulty dependent
-            manual_pages: ManualPageRange::new(
-                crate::manual::ManualPage::Introduction,
-                crate::manual::ManualPage::BasicControls,
-            ),
+            manual_pages: self.manual_page_range(),
         }
     }
 }
@@ -875,7 +883,7 @@ pub struct DifficultyStruct {
     pub difficulty_score_multiplier: f64,
 
     /// The range of manual pages associated with this difficulty.
-    pub manual_pages: ManualPageRange,    
+    pub manual_pages: ManualPageRange,
 }
 
 #[derive(Debug, Resource, Clone)]
