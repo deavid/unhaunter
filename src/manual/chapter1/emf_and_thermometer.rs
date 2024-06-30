@@ -4,7 +4,7 @@ use crate::root::GameAssets;
 
 pub fn draw_emf_and_thermometer_page(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent.spawn(TextBundle::from_section(
-        "Learn how to move: WASD. This is the basic controls page.",
+        "The EMF Reader detects fluctuations in the electromagnetic field, often indicating a ghost's presence. The Thermometer helps you find cold spots, which can also signal paranormal activity.",
         TextStyle {
             font: handles.fonts.londrina.w300_light.clone(),
             font_size: 38.0,

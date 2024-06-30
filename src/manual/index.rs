@@ -54,10 +54,11 @@ pub fn draw_manual_ui(
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Percent(90.0),
-                        height: Val::Percent(80.0),
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(90.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
+                        flex_direction: FlexDirection::Column,
                         ..default()
                     },
                     ..default()
@@ -76,6 +77,7 @@ pub fn draw_manual_ui(
                         flex_direction: FlexDirection::Row,
                         justify_content: JustifyContent::SpaceBetween,
                         align_items: AlignItems::Center,
+                        margin: UiRect::top(Val::Percent(3.0)),
                         ..default()
                     },
                     ..default()
@@ -85,10 +87,11 @@ pub fn draw_manual_ui(
                     buttons
                         .spawn(ButtonBundle {
                             style: Style {
-                                width: Val::Percent(40.0),
+                                width: Val::Percent(30.0),
                                 height: Val::Percent(100.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
+                                margin: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
                             background_color: Color::BLACK.with_a(0.2).into(),
@@ -104,15 +107,39 @@ pub fn draw_manual_ui(
                                 },
                             ));
                         });
-
+                    // Close Button
+                    buttons
+                        .spawn(ButtonBundle {
+                            style: Style {
+                                width: Val::Percent(30.0),
+                                height: Val::Percent(100.0),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                margin: UiRect::all(Val::Px(5.0)),
+                                ..default()
+                            },
+                            background_color: Color::BLACK.with_a(0.2).into(),
+                            ..default()
+                        })
+                        .with_children(|button| {
+                            button.spawn(TextBundle::from_section(
+                                "Close",
+                                TextStyle {
+                                    font: handles.fonts.londrina.w300_light.clone(),
+                                    font_size: 30.0,
+                                    color: Color::WHITE,
+                                },
+                            ));
+                        });
                     // Next Button
                     buttons
                         .spawn(ButtonBundle {
                             style: Style {
-                                width: Val::Percent(40.0),
+                                width: Val::Percent(30.0),
                                 height: Val::Percent(100.0),
                                 justify_content: JustifyContent::Center,
                                 align_items: AlignItems::Center,
+                                margin: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
                             background_color: Color::BLACK.with_a(0.2).into(),
@@ -128,30 +155,6 @@ pub fn draw_manual_ui(
                                 },
                             ));
                         });
-                });
-
-            // Close Button
-            parent
-                .spawn(ButtonBundle {
-                    style: Style {
-                        width: Val::Percent(90.0),
-                        height: Val::Percent(10.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
-                    background_color: Color::BLACK.with_a(0.2).into(),
-                    ..default()
-                })
-                .with_children(|button| {
-                    button.spawn(TextBundle::from_section(
-                        "Close",
-                        TextStyle {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 30.0,
-                            color: Color::WHITE,
-                        },
-                    ));
                 });
         });
 }

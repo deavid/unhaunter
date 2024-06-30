@@ -9,8 +9,8 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
     parent
         .spawn(NodeBundle {
             style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(30.0),
+                width: Val::Percent(100.0), // Occupy full width
+                height: Val::Percent(10.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
@@ -40,26 +40,27 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
             ));
         });
 
-    // Gameplay Loop Section
+    // Gameplay Loop Section (3x2 Grid)
     parent
         .spawn(NodeBundle {
             style: Style {
-                width: Val::Percent(100.0),
+                width: Val::Percent(100.0), // Occupy full width
                 height: Val::Percent(70.0),
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::FlexStart,
-                flex_direction: FlexDirection::Row,
+                display: Display::Grid,
+                grid_template_columns: RepeatedGridTrack::flex(3, 1.0), // 3 equal-width columns
+                grid_template_rows: RepeatedGridTrack::percent(2, 60.0),
+                column_gap: Val::Percent(4.0),
+                padding: UiRect::all(Val::Percent(2.0)),
                 ..default()
             },
+
             ..default()
         })
         .with_children(|parent| {
-            // Column 1
+            // Step 1: Investigate
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Percent(33.3),
-                        height: Val::Percent(100.0),
                         justify_content: JustifyContent::FlexStart,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
@@ -68,15 +69,15 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                     ..default()
                 })
                 .with_children(|parent| {
-                    // Investigate
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
                             margin: UiRect::all(Val::Px(10.0)),
-                            aspect_ratio: Some(4.0/3.0),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_investigate.clone().into(), // Image path
+                        image: handles.images.manual_investigate.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -87,16 +88,29 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                             color: Color::WHITE,
                         },
                     ));
+                });
 
-                    // Locate Ghost
+            // Step 2: Locate Ghost
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        justify_content: JustifyContent::FlexStart,
+                        align_items: AlignItems::Center,
+                        flex_direction: FlexDirection::Column,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
                             margin: UiRect::all(Val::Px(10.0)),
-                            aspect_ratio: Some(4.0/3.0),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_locate_ghost.clone().into(), // Image path
+                        image: handles.images.manual_locate_ghost.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -109,12 +123,10 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                     ));
                 });
 
-            // Column 2
+            // Step 3: Identify Ghost
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Percent(33.3),
-                        height: Val::Percent(100.0),
                         justify_content: JustifyContent::FlexStart,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
@@ -123,15 +135,15 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                     ..default()
                 })
                 .with_children(|parent| {
-                    // Identify Ghost
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
                             margin: UiRect::all(Val::Px(10.0)),
-                            aspect_ratio: Some(4.0/3.0),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_identify_ghost.clone().into(), // Image path
+                        image: handles.images.manual_identify_ghost.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -142,16 +154,29 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                             color: Color::WHITE,
                         },
                     ));
+                });
 
-                    // Craft Repellent
+            // Step 4: Craft Repellent
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        justify_content: JustifyContent::FlexStart,
+                        align_items: AlignItems::Center,
+                        flex_direction: FlexDirection::Column,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
                             margin: UiRect::all(Val::Px(10.0)),
-                            aspect_ratio: Some(4.0/3.0),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_craft_repellent.clone().into(), // Image path
+                        image: handles.images.manual_craft_repellent.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -164,12 +189,10 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                     ));
                 });
 
-            // Column 3
+            // Step 5: Expel Ghost
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Percent(33.3),
-                        height: Val::Percent(100.0),
                         justify_content: JustifyContent::FlexStart,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
@@ -178,15 +201,15 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                     ..default()
                 })
                 .with_children(|parent| {
-                    // Expel Ghost
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
                             margin: UiRect::all(Val::Px(10.0)),
-                            aspect_ratio: Some(4.0/3.0),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_expel_ghost.clone().into(), // Image path
+                        image: handles.images.manual_expel_ghost.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -197,17 +220,29 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
                             color: Color::WHITE,
                         },
                     ));
+                });
 
-                    // End Mission
+            // Step 6: End Mission
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        justify_content: JustifyContent::FlexStart,
+                        align_items: AlignItems::Center,
+                        flex_direction: FlexDirection::Column,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
                     parent.spawn(ImageBundle {
                         style: Style {
-                            max_width: Val::Px(256.0),
-                            margin: UiRect::all(Val::Px(10.0)),   
-                            aspect_ratio: Some(4.0/3.0),
+                            max_width: Val::Percent(90.0),
+                            max_height: Val::Percent(80.0),
+                            margin: UiRect::all(Val::Px(10.0)),
+                            aspect_ratio: Some(4.0 / 3.0),
                             ..default()
                         },
-                        image: handles.images.manual_end_mission.clone().into(), // Image path
-
+                        image: handles.images.manual_end_mission.clone().into(),
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(

@@ -4,7 +4,7 @@ use crate::root::GameAssets;
 
 pub fn draw_expelling_ghost_page(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent.spawn(TextBundle::from_section(
-        "Learn how to move: WASD. This is the basic controls page.",
+        "Once you've crafted the repellent, confront the ghost and use it to banish it. Return to your truck and click 'End Mission' to complete the investigation.",
         TextStyle {
             font: handles.fonts.londrina.w300_light.clone(),
             font_size: 38.0,
