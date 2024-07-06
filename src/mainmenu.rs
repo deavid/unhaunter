@@ -24,8 +24,6 @@ pub struct MenuEvent(pub MenuID);
 #[derive(Component)]
 pub struct Menu {
     pub selected: MenuID,
-    pub map_idx: usize,
-    pub map_len: usize,
 }
 
 impl Menu {
@@ -66,21 +64,12 @@ impl Menu {
     pub fn previous_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() - 1);
     }
-    pub fn with_len(map_len: usize) -> Self {
-        let map_len = map_len.max(1); // Ensure that it is at least 1.
-        Self {
-            map_len,
-            ..default()
-        }
-    }
 }
 
 impl Default for Menu {
     fn default() -> Self {
         Self {
             selected: MenuID::MapHub,
-            map_idx: 0,
-            map_len: 1,
         }
     }
 }
@@ -205,7 +194,7 @@ pub fn manage_title_song(
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Res<root::Maps>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     let main_color = Color::Rgba {
         red: 0.2,
         green: 0.2,
@@ -288,7 +277,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                     background_color: main_color.into(),
                     ..default()
                 })
-                .insert(Menu::with_len(maps.maps.len()))
+                .insert(Menu::default())
                 .with_children(|parent| {
                     // text
                     parent

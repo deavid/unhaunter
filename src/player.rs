@@ -28,8 +28,6 @@ const USE_ARROW_KEYS: bool = false;
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGear {
-    /// The entity ID of the player who deployed the gear.
-    pub player_entity: Entity,
     /// The direction the gear is facing.
     pub direction: board::Direction,
 }
@@ -1112,27 +1110,18 @@ pub fn update_held_object_position(
 /// System for deploying a piece of gear from the player's right hand into the game world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(
-        Entity,
-        &mut PlayerGear,
-        &Position,
-        &PlayerSprite,
-        &board::Direction,
-    )>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
     mut gs: gear::GearStuff,
     handles: Res<root::GameAssets>,
 ) {
-    for (player_entity, mut player_gear, player_pos, player, dir) in players.iter_mut() {
+    for (mut player_gear, player_pos, player, dir) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
             && player_gear.right_hand.kind.is_some()
             && player_gear.held_item.is_none()
         {
-            let deployed_gear = DeployedGear {
-                player_entity, // Temporary placeholder for player entity
-                direction: *dir,
-            };
+            let deployed_gear = DeployedGear { direction: *dir };
             let target_tile = player_pos.to_board_position();
             let is_valid_tile = gs
                 .bf
