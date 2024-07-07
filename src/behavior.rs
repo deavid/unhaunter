@@ -865,6 +865,7 @@ impl BehaviorProperties {
                 tiled::PropertyValue::StringValue(x) => x.to_string(),
                 tiled::PropertyValue::FileValue(x) => x.to_string(),
                 tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+                tiled::PropertyValue::ClassValue { property_type, .. } => property_type.to_string(),
             }
         };
         self.properties.get(key).map(parse)
@@ -885,6 +886,7 @@ impl BehaviorProperties {
                 tiled::PropertyValue::StringValue(x) => x.to_string(),
                 tiled::PropertyValue::FileValue(x) => x.to_string(),
                 tiled::PropertyValue::ObjectValue(x) => x.to_string(),
+                tiled::PropertyValue::ClassValue { property_type, .. } => property_type.to_string(),
             }
         };
         self.properties
