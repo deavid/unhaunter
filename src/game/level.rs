@@ -211,8 +211,8 @@ pub fn load_level(
                         .entry(tset_name.to_string())
                         .or_insert_with(|| {
                             let sprite_size = Vec2::new(
-                                tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
-                                tatlas.size.y / cmat.data.sheet_rows as f32 * 1.005,
+                                tatlas.size.x as f32 / cmat.data.sheet_cols as f32 * 1.005,
+                                tatlas.size.y as f32 / cmat.data.sheet_rows as f32 * 1.005,
                             );
                             let sprite_anchor = Vec2::new(
                                 sprite_size.x / 2.0,
@@ -225,7 +225,7 @@ pub fn load_level(
 
                     cmat.data.sheet_idx = tileuid;
                     // Set alpha initially transparent to all materials so they will appear slowly.
-                    cmat.data.color.set_a(0.0);
+                    cmat.data.color.set_alpha(0.0);
                     cmat.data.gamma = 0.1;
                     cmat.data.gbl = 0.1;
                     cmat.data.gbr = 0.1;
@@ -289,7 +289,7 @@ pub fn load_level(
                     if tile.flip_x {
                         b.transform.scale.x = -1.0;
                     }
-                    let mat = materials1.get(b.material).unwrap().clone();
+                    let mat = materials1.get(&b.material).unwrap().clone();
                     let mat = materials1.add(mat);
 
                     b.material = mat;
@@ -471,7 +471,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
@@ -488,7 +488,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()

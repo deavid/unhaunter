@@ -6,6 +6,7 @@ use crate::platform::plt::UI_SCALE;
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
 
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 
 pub fn keyboard_gear(
@@ -76,6 +77,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
             texture: handles.images.gear.clone(),
             flip_x: false,
             flip_y: false,
+            ..default()
         },
         texture_atlas: TextureAtlas {
             index: GearSpriteID::Flashlight2 as usize,
@@ -134,12 +136,12 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
                 flip_y: false,
+                color: css::GRAY.with_luminance(0.8).with_alpha(0.8).into(),
             },
             texture_atlas: TextureAtlas {
                 index: GearSpriteID::Flashlight2 as usize,
                 layout: handles.images.gear_atlas.clone(),
             },
-            background_color: Color::GRAY.with_l(0.8).with_a(0.8).into(),
             style: Style {
                 flex_grow: 0.0,
                 flex_shrink: 0.0,
@@ -161,6 +163,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
                 flip_y: false,
+                ..default()
             },
             texture_atlas: TextureAtlas {
                 index: GearSpriteID::IonMeter2 as usize,

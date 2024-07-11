@@ -121,12 +121,12 @@ pub fn update_item_colors(
 pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 
-    let main_color = Color::Rgba {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
+    });
 
     commands
         .spawn(NodeBundle {

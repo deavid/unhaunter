@@ -18,6 +18,7 @@ use crate::gear::{self, GearUsable as _};
 use crate::maplight::MapColor;
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
+use bevy::color::palettes::css;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -650,7 +651,7 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
 
             match other.bundle.clone() {
                 Bdl::Mmb(b) => {
-                    let mat = self.materials1.get(b.material).unwrap().clone();
+                    let mat = self.materials1.get(&b.material).unwrap().clone();
                     let mat = self.materials1.add(mat);
 
                     e_commands.insert(mat);
@@ -859,7 +860,7 @@ pub fn hide_player(
                         hiding_spot: hiding_spot_entity,
                     })
                     .insert(MapColor {
-                        color: Color::DARK_GRAY.with_a(0.5),
+                        color: css::DARK_GRAY.with_alpha(0.5).into(),
                     });
 
                 player_pos.x = (player_pos.x + hiding_spot_pos.x) / 2.0;
@@ -875,7 +876,7 @@ pub fn hide_player(
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
                             .with_scale(Vec3::new(0.20, 0.20, 0.20)), // Position relative to parent
                         sprite: Sprite {
-                            color: Color::WHITE.with_a(0.4),
+                            color: css::WHITE.with_alpha(0.4).into(),
                             ..default()
                         },
                         ..default()
@@ -919,7 +920,7 @@ pub fn unhide_player(
                     vec![32],
                 ))
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(1.0),
+                    color: Color::WHITE.with_alpha(1.0),
                 });
 
             // Reset player position
@@ -1053,7 +1054,7 @@ pub fn visual_health(
                 .clamp(0.0, 1.0);
             let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
             let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
-            let dst_color = Color::rgba(red, 0.0, 0.0, alpha);
+            let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
 
             let old_color = background.0;
             let new_color = maplight::lerp_color(old_color, dst_color, 0.2);

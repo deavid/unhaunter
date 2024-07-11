@@ -28,7 +28,7 @@ use crate::{
     player::{self, DeployedGear, DeployedGearData},
     utils,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use rand::Rng as _;
 
 #[derive(Debug, Clone, Copy, PartialEq, Component, Default)]
@@ -371,7 +371,7 @@ pub fn apply_lighting(
                 if tile_pos.to_board_position() == target_tile {
                     // Removed walkable check
                     // Adjust highlight color and intensity as needed
-                    let highlight_color = Color::rgba(0.0, 1.0, 0.0, 0.3);
+                    let highlight_color = Color::srgba(0.0, 1.0, 0.0, 0.3);
                     sprite.color = lerp_color(sprite.color, highlight_color, 0.5);
                 }
             }
@@ -462,10 +462,10 @@ pub fn apply_lighting(
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
                 let flvis = flvismap.get(bpos).copied().unwrap_or_default();
                 let fl = flpower / (dist * dist + FL_MIN_DST) * flvis;
-
-                lux_fl[0] += fl * flcolor.r();
-                lux_fl[1] += fl * flcolor.g();
-                lux_fl[2] += fl * flcolor.b();
+                let flsrgba = flcolor.to_srgba();
+                lux_fl[0] += fl * flsrgba.red;
+                lux_fl[1] += fl * flsrgba.green;
+                lux_fl[2] += fl * flsrgba.blue;
 
                 let ld = LightData::from_type(*fltype, fl);
                 lightdata = lightdata.add(&ld);
@@ -517,8 +517,8 @@ pub fn apply_lighting(
             lightdata_map.insert(bpos.clone(), light_data);
         }
         let max_color = r.max(g).max(b).max(0.01) + 0.01;
-        let src_color = Color::rgb(r / max_color, g / max_color, b / max_color);
-        let mut l = src_color.l().max(0.0001).powf(1.8);
+        let src_color = Color::srgb(r / max_color, g / max_color, b / max_color);
+        let mut l = src_color.luminance().max(0.0001).powf(1.8);
 
         l /= 1.0
             + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
@@ -552,7 +552,7 @@ pub fn apply_lighting(
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             board::compute_color_exposure(lux_c, r, dark_gamma, src_color)
         };
-        dst_color.set_a(opacity.clamp(0.6, 1.0));
+        dst_color.set_alpha(opacity.clamp(0.6, 1.0));
 
         opacity = opacity
             .min(vf.visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
@@ -561,7 +561,7 @@ pub fn apply_lighting(
         let mut new_mat = materials1.get(mat).unwrap().clone();
         let orig_mat = new_mat.clone();
         let mut dst_color = src_color; // <- remove brightness calculation for main tile.
-        let src_a = new_mat.data.color.a();
+        let src_a = new_mat.data.color.alpha();
         let opacity = opacity.clamp(0.000, 1.0);
         const A_DELTA: f32 = 0.05;
         let new_a = if (src_a - opacity).abs() < A_DELTA {
@@ -569,7 +569,7 @@ pub fn apply_lighting(
         } else {
             src_a - A_DELTA * (src_a - opacity).signum()
         };
-        dst_color.set_a(new_a);
+        dst_color.set_alpha(new_a);
         // Sound field visualization:
 
         let f_gamma = |lux: f32| {
@@ -580,8 +580,8 @@ pub fn apply_lighting(
         const K_COLD: f32 = 0.5;
         let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
 
-        const DARK_COLOR: Color = Color::rgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
-        const DARK_COLOR2: Color = Color::rgba(0.03, 0.336, 0.444, 1.0);
+        const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
+        const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
         let exp_color =
             ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
         let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
@@ -590,15 +590,21 @@ pub fn apply_lighting(
             DARK_COLOR2,
             exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
         );
-        new_mat.data.ambient_color = dark.with_a(0.0);
+        new_mat.data.ambient_color = dark.with_alpha(0.0).into();
         // const A_SOFT: f32 = 1.0;
         // dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a * A_SOFT) / (1.0 + A_SOFT));
-        new_mat.data.color =
-            Color::rgba_from_array(dst_color.rgba_to_vec4() * dark2.rgba_to_vec4());
+        // Convert both colors to LinearRgba for multiplication
+        let linear_dst_color = LinearRgba::from(dst_color);
+        let linear_dark2_color = LinearRgba::from(dark2);
 
+        // Perform the multiplication in the LinearRgba space
+        let new_color = linear_dst_color.to_vec4() * linear_dark2_color.to_vec4();
+
+        // Convert back to Color
+        new_mat.data.color = Srgba::from_vec4(new_color).into();
         const BRIGHTNESS: f32 = 1.01;
-        let tint_comp = (new_mat.data.color.l() + 0.01).recip() + exp_color;
-        let smooth_f: f32 = new_mat.data.color.a().sqrt() * 10.0 + 0.0001;
+        let tint_comp = (new_mat.data.color.luminance() + 0.01).recip() + exp_color;
+        let smooth_f: f32 = new_mat.data.color.alpha().sqrt() * 10.0 + 0.0001;
 
         let gamma_mean = |a: f32, b: f32| {
             (a * smooth_f
@@ -623,11 +629,11 @@ pub fn apply_lighting(
                 let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
                 if l > 0.0001 {
                     new_mat.data.gamma = 2.0;
-                    new_mat.data.color = Color::rgb(1.0, l / 4.0, l / 16.0);
+                    new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
                 }
             }
         }
-        let invisible = new_mat.data.color.a() < 0.01 || behavior.p.display.disable;
+        let invisible = new_mat.data.color.alpha() < 0.01 || behavior.p.display.disable;
         let new_vis = if invisible {
             Visibility::Hidden
         } else {
@@ -656,18 +662,18 @@ pub fn apply_lighting(
         let ld_mag = ld_abs.magnitude();
         let ld = ld_abs.normalize();
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
-        let mut opacity: f32 = map_color.a()
+        let mut opacity: f32 = map_color.alpha()
             * vf.visibility_field
                 .get(&bpos)
                 .copied()
                 .unwrap_or_default()
                 .clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
-        let mut src_color = map_color.with_a(1.0);
+        let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
         src_color = lerp_color(
             src_color,
-            Color::GREEN,
+            css::GREEN.into(),
             (ld.ultraviolet * uv_reactive).sqrt(),
         );
 
@@ -697,23 +703,23 @@ pub fn apply_lighting(
             };
             if gs.hunt_target {
                 dst_color = lerp_color(
-                    Color::RED,
-                    Color::ALICE_BLUE,
+                    css::RED.into(),
+                    css::ALICE_BLUE.into(),
                     (gs.calm_time_secs / 10.0).clamp(0.0, 1.0),
                 );
             } else {
                 let orig_opacity = opacity;
-                opacity *= dst_color.l().clamp(0.7, 1.0);
+                opacity *= dst_color.luminance().clamp(0.7, 1.0);
                 // Make the ghost oscilate to increase visibility:
                 let osc1 = (elapsed * 1.0 * difficulty.0.evidence_visibility).sin() * 0.25 + 0.75;
                 let osc2 = (elapsed * 1.15 * difficulty.0.evidence_visibility).cos() * 0.5 + 0.5;
 
                 opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0)
                     * difficulty.0.evidence_visibility;
-                let l = (dst_color.l() + osc2) / 2.0;
-                dst_color.set_l(l);
-                let r = dst_color.r();
-                let g = dst_color.g();
+                let l = (dst_color.luminance() + osc2) / 2.0;
+                dst_color = dst_color.with_luminance(l);
+                let r = dst_color.to_srgba().red;
+                let g = dst_color.to_srgba().green;
                 let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
                     ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility.sqrt()
                 } else {
@@ -726,9 +732,11 @@ pub fn apply_lighting(
                 };
                 opacity = opacity * ld.visible + orig_opacity * (1.0 - ld.visible);
 
-                dst_color.set_l(l * ld.visible);
-                dst_color.set_r(r * ld.visible + e_rl);
-                dst_color.set_g(g * ld.visible + e_uv + e_rl / 2.0);
+                let srgba = dst_color.with_luminance(l * ld.visible).to_srgba();
+                dst_color = srgba
+                    .with_red(r * ld.visible + e_rl)
+                    .with_green(g * ld.visible + e_uv + e_rl / 2.0)
+                    .into();
             }
             smooth = 1.0;
             dst_color = lerp_color(
@@ -744,15 +752,15 @@ pub fn apply_lighting(
             } else {
                 0.0
             };
-            opacity *= ((dst_color.l() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
+            opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
             opacity = opacity.sqrt();
-            let l = dst_color.l();
+            let l = dst_color.luminance();
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
-            dst_color.set_l(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
+            dst_color = dst_color.with_luminance(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
         }
-        let mut old_a = (sprite.color.a()).clamp(0.0001, 1.0);
+        let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
         if sprite_type == SpriteType::Other {
             const MAX_DIST: f32 = 8.0;
             let dist = pos.distance(&player_pos);
@@ -764,8 +772,9 @@ pub fn apply_lighting(
             }
         }
 
-        dst_color
-            .set_a(((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.a());
+        dst_color.set_alpha(
+            ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
+        );
         sprite.color = dst_color;
     }
 
@@ -890,13 +899,13 @@ pub fn app_setup(app: &mut App) {
 }
 
 pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {
-    let k = start.as_rgba_f32();
-    let l = end.as_rgba_f32();
+    let k = start.to_srgba().to_vec4();
+    let l = end.to_srgba().to_vec4();
     let (sr, sg, sb, sa) = (k[0], k[1], k[2], k[3]);
     let (er, eg, eb, ea) = (l[0], l[1], l[2], l[3]);
     let r = sr + (er - sr) * t;
     let g = sg + (eg - sg) * t;
     let b = sb + (eb - sb) * t;
     let a = sa + (ea - sa) * t;
-    Color::rgba(r, g, b, a)
+    Color::srgba(r, g, b, a)
 }

@@ -91,7 +91,7 @@ pub fn setup_ui(
             parent
                 .spawn(MaterialNodeBundle {
                     material: materials.add(UIPanelMaterial {
-                        color: colors::TRUCKUI_PANEL_BGCOLOR,
+                        color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
                     }),
 
                     style: Style {

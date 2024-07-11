@@ -97,7 +97,7 @@ impl GearUsable for SageBundleData {
                     .insert(GameSprite)
                     .insert(pos)
                     .insert(MapColor {
-                        color: Color::WHITE.with_a(0.00),
+                        color: Color::WHITE.with_alpha(0.00).into(),
                     })
                     .insert(SmokeParticleTimer(Timer::from_seconds(
                         5.0,
@@ -185,7 +185,7 @@ pub fn sage_smoke_system(
             .clamp(0.0, 1.0)
             .min((rem / 2.0 - 0.01).clamp(0.0, 1.0)))
         .powf(2.0);
-        map_color.color.set_a(a * 0.4);
+        map_color.color.set_alpha(a * 0.4);
 
         // Make particles float upwards
         position.z += 0.3 * dt / (1.0 + elap.powi(2));

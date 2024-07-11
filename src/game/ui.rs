@@ -308,7 +308,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Bottom side - inventory and stats
         p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
-            background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.4)),
+            background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.4)),
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
@@ -475,7 +475,7 @@ pub fn toggle_held_object_ui(
                         text.sections[0].style.color = colors::INVENTORY_STATS_COLOR;
                     } else {
                         text.sections[0].value = "[Grab]: -".into();
-                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR.with_a(0.3);
+                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
                     }
                 }
             }

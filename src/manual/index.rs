@@ -94,7 +94,7 @@ pub fn draw_manual_ui(
                                 margin: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
-                            background_color: Color::BLACK.with_a(0.2).into(),
+                            background_color: Color::BLACK.with_alpha(0.2).into(),
                             ..default()
                         })
                         .with_children(|button| {
@@ -118,7 +118,7 @@ pub fn draw_manual_ui(
                                 margin: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
-                            background_color: Color::BLACK.with_a(0.2).into(),
+                            background_color: Color::BLACK.with_alpha(0.2).into(),
                             ..default()
                         })
                         .with_children(|button| {
@@ -142,7 +142,7 @@ pub fn draw_manual_ui(
                                 margin: UiRect::all(Val::Px(5.0)),
                                 ..default()
                             },
-                            background_color: Color::BLACK.with_a(0.2).into(),
+                            background_color: Color::BLACK.with_alpha(0.2).into(),
                             ..default()
                         })
                         .with_children(|button| {

@@ -317,20 +317,20 @@ pub fn bevy_load_map(
             // FIXME: When the images are loaded onto the GPU it seems that we need at least 1 pixel of empty space
             // .. so that the GPU can sample surrounding pixels properly.
             // .. This contrasts with how Tiled works, as it assumes a perfect packing if possible.
-            const MARGIN: f32 = 0.8;
+            const MARGIN: u32 = 1;
             // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and add a 2px margin. Recreating
             // .. the texture on the fly.
             let texture: Handle<Image> = asset_server.load(img_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlasLayout::from_grid(
-                Vec2::new(
-                    tileset.tile_width as f32 + tileset.spacing as f32 - MARGIN,
-                    tileset.tile_height as f32 + tileset.spacing as f32 - MARGIN,
+                UVec2::new(
+                    tileset.tile_width + tileset.spacing - MARGIN,
+                    tileset.tile_height + tileset.spacing - MARGIN,
                 ),
-                tileset.columns as usize,
-                rows as usize,
-                Some(Vec2::new(MARGIN, MARGIN)),
-                Some(Vec2::new(MARGIN / 4.0, MARGIN / 2.0)),
+                tileset.columns,
+                rows,
+                Some(UVec2::new(MARGIN, MARGIN)),
+                Some(UVec2::new(0, 0)),
             );
             let mut cmat = CustomMaterial1::from_texture(texture);
             cmat.data.sheet_rows = rows;

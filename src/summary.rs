@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 use crate::{
     difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
@@ -131,12 +131,12 @@ pub fn keyboard(
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
-    let main_color = Color::Rgba {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
+    });
 
     commands
         .spawn(NodeBundle {
@@ -230,7 +230,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::GhostList);
@@ -250,7 +250,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::TimeTaken);
@@ -260,7 +260,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::AvgSanity);
@@ -270,7 +270,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::GhostUnhaunted);
@@ -280,7 +280,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::RepellentUsed);
@@ -290,7 +290,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::PlayersAlive);
@@ -301,7 +301,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::FinalScore);
@@ -320,7 +320,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         TextStyle {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 38.0,
-                            color: Color::ORANGE_RED,
+                            color: css::ORANGE_RED.into(),
                         },
                     ));
                 });

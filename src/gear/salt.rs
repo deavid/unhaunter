@@ -219,11 +219,11 @@ pub fn salty_trace_system(
         if salty_trace_timer.0.elapsed_secs() > OPACITY_FADE_START {
             let fade_progress =
                 (salty_trace_timer.0.elapsed_secs() - OPACITY_FADE_START) / OPACITY_FADE_DURATION;
-            map_color.color.set_a(1.0 - fade_progress); // Linear fade
+            map_color.color.set_alpha(1.0 - fade_progress); // Linear fade
         }
 
         // --- Despawn ---
-        if salty_trace_timer.0.finished() && map_color.color.a() == 0.0 {
+        if salty_trace_timer.0.finished() && map_color.color.alpha() == 0.0 {
             commands.entity(entity).despawn();
         }
     }

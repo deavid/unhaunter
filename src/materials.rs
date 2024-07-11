@@ -1,10 +1,11 @@
 //! A shader and a material that uses it.
 
 use bevy::{
+    color::palettes::css,
     prelude::*,
     reflect::TypePath,
     render::{
-        mesh::MeshVertexBufferLayout,
+        mesh::MeshVertexBufferLayoutRef,
         render_resource::{
             AsBindGroup, BlendComponent, BlendFactor, BlendOperation, BlendState,
             RenderPipelineDescriptor, ShaderRef, ShaderType, SpecializedMeshPipelineError,
@@ -40,7 +41,7 @@ fn setup(
         // transform: Transform::from_translation(position.extend(10.0)),
         material: materials1.add(CustomMaterial1 {
             data: CustomMaterial1Data {
-                color: Color::RED,
+                color: css::RED.into(),
                 gamma: 10.0,
                 gbl: 5.0,
                 gtl: 5.0,
@@ -61,7 +62,7 @@ fn setup(
         // transform: Transform::from_translation(position.extend(10.0)),
         material: materials1.add(CustomMaterial1 {
             data: CustomMaterial1Data {
-                color: Color::RED,
+                color: css::RED.into(),
                 gamma: 5.0,
                 gbl: 5.0,
                 gtl: 5.0,
@@ -81,8 +82,8 @@ fn setup(
 }
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
 pub struct CustomMaterial1Data {
-    pub color: Color,
-    pub ambient_color: Color,
+    pub color: LinearRgba,
+    pub ambient_color: LinearRgba,
     pub gamma: f32,
     pub gtl: f32,
     pub gtr: f32,
@@ -98,15 +99,15 @@ pub struct CustomMaterial1Data {
 impl CustomMaterial1Data {
     pub fn delta(&self, other: &Self) -> f32 {
         let mut delta = 0.0;
-        let color1 = self.color.as_rgba_f32();
-        let color2 = other.color.as_rgba_f32();
+        let color1 = self.color.to_f32_array();
+        let color2 = other.color.to_f32_array();
 
         delta += (color1[0] - color2[0]).abs();
         delta += (color1[1] - color2[1]).abs();
         delta += (color1[2] - color2[2]).abs();
 
-        let acolor1 = self.ambient_color.as_rgba_f32();
-        let acolor2 = other.ambient_color.as_rgba_f32();
+        let acolor1 = self.ambient_color.to_f32_array();
+        let acolor2 = other.ambient_color.to_f32_array();
 
         delta += (acolor1[0] - acolor2[0]).abs();
         delta += (acolor1[1] - acolor2[1]).abs();
@@ -131,8 +132,8 @@ impl CustomMaterial1Data {
 impl Default for CustomMaterial1Data {
     fn default() -> Self {
         Self {
-            color: Color::WHITE,
-            ambient_color: Color::BLACK.with_a(0.0),
+            color: Color::WHITE.into(),
+            ambient_color: Color::BLACK.with_alpha(0.0).into(),
             gamma: 1.0,
             gtl: 2.0,
             gtr: 1.0,
@@ -175,7 +176,7 @@ impl Material2d for CustomMaterial1 {
     }
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayout,
+        _layout: &MeshVertexBufferLayoutRef,
         _key: Material2dKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         if let Some(fragment) = &mut descriptor.fragment {
@@ -196,7 +197,7 @@ pub struct CustomMaterial2 {
     // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
     // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
     #[uniform(0)]
-    color: Color,
+    color: LinearRgba,
     // Images can be bound as textures in shaders. If the Image's sampler is also needed, just
     // add the sampler attribute with a different binding index.
     #[texture(1)]
@@ -224,7 +225,7 @@ impl Material2d for CustomMaterial2 {
     }
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,
-        _layout: &MeshVertexBufferLayout,
+        _layout: &MeshVertexBufferLayoutRef,
         _key: Material2dKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
         if let Some(fragment) = &mut descriptor.fragment {
@@ -242,7 +243,7 @@ pub struct UIPanelMaterial {
     // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
     // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
     #[uniform(0)]
-    pub color: Color,
+    pub color: LinearRgba,
 }
 
 // All functions on `UiMaterial` have default impls. You only need to implement the

@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use bevy::{prelude::*, utils::hashbrown::HashMap};
+use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
 use rand::Rng;
 
 use crate::{
@@ -107,7 +107,7 @@ impl GearUsable for RepellentFlask {
             .insert(pos)
             .insert(GameSprite)
             .insert(MapColor {
-                color: Color::YELLOW.with_a(0.3).with_b(0.02),
+                color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
             })
             .insert(Repellent::new(liquid_content));
     }
@@ -181,7 +181,9 @@ pub fn repellent_update(
             continue;
         }
         let rev_factor = 1.01 - rep.life_factor();
-        mapcolor.color.set_a(rep.life_factor().sqrt() / 4.0 + 0.01);
+        mapcolor
+            .color
+            .set_alpha(rep.life_factor().sqrt() / 4.0 + 0.01);
 
         let bpos = r_pos.to_board_position();
         let mut total_force = board::Direction::zero();

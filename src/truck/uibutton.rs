@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use std::ops::Mul;
 
 use crate::{
     colors,
@@ -69,7 +68,7 @@ impl TruckUIButton {
         }
     }
     pub fn border_color(&self, interaction: Interaction) -> Color {
-        match self.class {
+        let color = match self.class {
             TruckButtonType::Evidence(_) => match interaction {
                 Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
                 Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
@@ -90,22 +89,19 @@ impl TruckUIButton {
                 Interaction::Hovered => colors::BUTTON_END_MISSION_TXTCOLOR,
                 Interaction::None => colors::BUTTON_END_MISSION_FGCOLOR,
             },
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.05 } else { 1.0 })
-                .as_rgba_f32(),
-        )
+        };
+        let alpha_disabled = if self.disabled { 0.05 } else { 1.0 };
+        color.with_alpha(color.alpha() * alpha_disabled)
     }
     pub fn background_color(&self, interaction: Interaction) -> Color {
-        match self.class {
+        let color = match self.class {
             TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
                 TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
                 TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
             TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_a(0.0),
+                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_alpha(0.0),
                 TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
                 TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
@@ -119,34 +115,28 @@ impl TruckUIButton {
                 Interaction::Hovered => colors::BUTTON_END_MISSION_BGCOLOR,
                 Interaction::None => colors::BUTTON_END_MISSION_BGCOLOR,
             },
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.05 } else { 1.0 })
-                .as_rgba_f32(),
-        )
+        };
+        let alpha_disabled = if self.disabled { 0.05 } else { 1.0 };
+        color.with_alpha(color.alpha() * alpha_disabled)
     }
 
     pub fn text_color(&self, _interaction: Interaction) -> Color {
-        match self.class {
+        let color = match self.class {
             TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Pressed => Color::BLACK,
                 _ => colors::TRUCKUI_TEXT_COLOR,
             },
             TruckButtonType::Ghost(_) => match self.status {
                 TruckButtonState::Pressed => Color::BLACK,
-                _ => colors::TRUCKUI_TEXT_COLOR.with_a(0.5),
+                _ => colors::TRUCKUI_TEXT_COLOR.with_alpha(0.5),
             },
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => {
                 colors::BUTTON_EXIT_TRUCK_TXTCOLOR
             }
             TruckButtonType::EndMission => colors::BUTTON_END_MISSION_TXTCOLOR,
-        }
-        .mul(
-            Color::WHITE
-                .with_a(if self.disabled { 0.1 } else { 1.0 })
-                .as_rgba_f32(),
-        )
+        };
+        let alpha_disabled = if self.disabled { 0.1 } else { 1.0 };
+        color.with_alpha(color.alpha() * alpha_disabled)
     }
 }
 

@@ -101,11 +101,14 @@ impl TruckTab {
     }
     pub fn text_color(&self) -> Color {
         match self.state {
-            TabState::Selected => colors::TRUCKUI_BGCOLOR.with_a(1.0),
-            TabState::Pressed => colors::TRUCKUI_BGCOLOR.with_a(0.8),
-            TabState::Hover => colors::TRUCKUI_ACCENT2_COLOR.with_a(0.6),
-            TabState::Default => colors::TRUCKUI_ACCENT_COLOR.with_s(0.1).with_a(0.6),
-            TabState::Disabled => colors::INVENTORY_STATS_COLOR.with_a(0.05),
+            TabState::Selected => colors::TRUCKUI_BGCOLOR.with_alpha(1.0),
+            TabState::Pressed => colors::TRUCKUI_BGCOLOR.with_alpha(0.8),
+            TabState::Hover => colors::TRUCKUI_ACCENT2_COLOR.with_alpha(0.6),
+            TabState::Default => Hsla::from(colors::TRUCKUI_ACCENT_COLOR)
+                .with_saturation(0.1)
+                .with_alpha(0.6)
+                .into(),
+            TabState::Disabled => colors::INVENTORY_STATS_COLOR.with_alpha(0.05),
         }
     }
     pub fn bg_color(&self) -> Color {
@@ -113,8 +116,8 @@ impl TruckTab {
             TabState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
             TabState::Selected => colors::TRUCKUI_ACCENT_COLOR,
             TabState::Hover => colors::TRUCKUI_BGCOLOR,
-            TabState::Default => colors::TRUCKUI_BGCOLOR.with_a(0.7),
-            TabState::Disabled => colors::TRUCKUI_BGCOLOR.with_a(0.5),
+            TabState::Default => colors::TRUCKUI_BGCOLOR.with_alpha(0.7),
+            TabState::Disabled => colors::TRUCKUI_BGCOLOR.with_alpha(0.5),
         }
     }
     pub fn font_size(&self) -> f32 {
@@ -142,7 +145,7 @@ pub fn setup_ui(
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
 
     let panel_material = materials.add(UIPanelMaterial {
-        color: colors::TRUCKUI_PANEL_BGCOLOR,
+        color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
     });
 
     let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
@@ -191,7 +194,7 @@ pub fn setup_ui(
             let truck_tab = TruckTab::from_tab(tab, &difficulty);
             let txt_fg = truck_tab.text_color();
             let tab_bg = materials.add(UIPanelMaterial {
-                color: truck_tab.bg_color(),
+                color: truck_tab.bg_color().into(),
             });
 
             let text = TextBundle::from_section(
@@ -529,7 +532,7 @@ pub fn update_tab_interactions(
         text.sections[0].style.color = tt.text_color();
         text.sections[0].style.font_size = tt.font_size();
         let mat = materials.get_mut(panmat).unwrap();
-        mat.color = tt.bg_color();
+        mat.color = tt.bg_color().into();
     }
     if let Some(cnt) = new_selected_cnt {
         for (mut style, tc) in &mut qc {

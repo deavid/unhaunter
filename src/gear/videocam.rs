@@ -16,7 +16,7 @@ impl Videocam {
     }
     pub fn color(&self) -> Color {
         // Green-Cyan (for NightVision)
-        Color::rgb(0.01, 1.00, 0.60)
+        Color::srgb(0.01, 1.00, 0.60)
     }
 }
 

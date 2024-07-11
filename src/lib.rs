@@ -65,7 +65,7 @@ pub fn app_run() {
     }))
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
-    .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
+    .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
     .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(

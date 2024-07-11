@@ -1098,20 +1098,20 @@ pub fn compute_color_exposure(
 ) -> Color {
     let exp = rel_exposure.powf(gamma.recip()) + dither;
     let dst_color: Color = if exp < 1.0 {
-        Color::Rgba {
-            red: src_color.r() * exp,
-            green: src_color.g() * exp,
-            blue: src_color.b() * exp,
-            alpha: src_color.a(),
-        }
+        Color::Srgba(Srgba {
+            red: src_color.to_srgba().red * exp,
+            green: src_color.to_srgba().green * exp,
+            blue: src_color.to_srgba().blue * exp,
+            alpha: src_color.to_srgba().alpha,
+        })
     } else {
         let rexp = exp.recip();
-        Color::Rgba {
-            red: 1.0 - ((1.0 - src_color.r()) * rexp),
-            green: 1.0 - ((1.0 - src_color.g()) * rexp),
-            blue: 1.0 - ((1.0 - src_color.b()) * rexp),
-            alpha: src_color.a(),
-        }
+        Color::Srgba(Srgba {
+            red: 1.0 - ((1.0 - src_color.to_srgba().red) * rexp),
+            green: 1.0 - ((1.0 - src_color.to_srgba().green) * rexp),
+            blue: 1.0 - ((1.0 - src_color.to_srgba().blue) * rexp),
+            alpha: src_color.to_srgba().alpha,
+        })
     };
     dst_color
 }

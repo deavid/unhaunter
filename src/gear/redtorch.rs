@@ -16,7 +16,7 @@ impl RedTorch {
     }
     pub fn color(&self) -> Color {
         // Red
-        Color::rgb(1.00, 0.1, 0.02)
+        Color::srgb(1.00, 0.1, 0.02)
     }
 }
 

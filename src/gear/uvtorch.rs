@@ -16,7 +16,7 @@ impl UVTorch {
     }
     pub fn color(&self) -> Color {
         // Violet
-        Color::rgb(0.40, 0.01, 1.00)
+        Color::srgb(0.40, 0.01, 1.00)
     }
 }
 

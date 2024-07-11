@@ -1,4 +1,5 @@
 use bevy::app::AppExit;
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 
 use crate::platform;
@@ -7,8 +8,8 @@ use crate::root;
 use crate::platform::plt::IS_WASM;
 use crate::platform::plt::UI_SCALE;
 
-const MENU_ITEM_COLOR_OFF: Color = Color::GRAY;
-const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
+const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
+const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
@@ -195,12 +196,12 @@ pub fn manage_title_song(
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
-    let main_color = Color::Rgba {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
+    });
 
     commands
         .spawn(NodeBundle {
@@ -412,7 +413,7 @@ pub fn menu_event(
             }            
             MenuID::_Options => {}
             MenuID::Quit => {
-                exit.send(AppExit);
+                exit.send(AppExit::Success);
             }
         }
     }

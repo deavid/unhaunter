@@ -61,6 +61,7 @@ pub fn setup_loadout_ui(
             texture: handles.images.gear.clone(),
             flip_x: false,
             flip_y: false,
+            ..default()
         },
         texture_atlas: TextureAtlas {
             index: g as usize,
@@ -77,7 +78,7 @@ pub fn setup_loadout_ui(
     let equipment_def = || equipment(GearSpriteID::IonMeterOff);
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| MaterialNodeBundle {
         material: materials.add(UIPanelMaterial {
-            color: colors::TRUCKUI_BGCOLOR,
+            color: colors::TRUCKUI_BGCOLOR.into(),
         }),
 
         style: Style {
@@ -165,7 +166,7 @@ pub fn setup_loadout_ui(
         .with_children(|p| {
             p.spawn(MaterialNodeBundle {
                 material: materials.add(UIPanelMaterial {
-                    color: colors::TRUCKUI_BGCOLOR,
+                    color: colors::TRUCKUI_BGCOLOR.into(),
                 }),
                 style: Style {
                     justify_content: JustifyContent::Center,
@@ -249,7 +250,7 @@ pub fn setup_loadout_ui(
                     TextStyle {
                         font: handles.fonts.titillium.w400_regular.clone(),
                         font_size: 22.0 * UI_SCALE,
-                        color: colors::TRUCKUI_TEXT_COLOR.with_a(0.7),
+                        color: colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7),
                     },
                 )
                 .with_style(Style {
@@ -298,8 +299,8 @@ pub fn update_loadout_buttons(
             Interaction::Hovered => 0.5,
             Interaction::None => 0.01,
         };
-        border.0 = colors::TRUCKUI_ACCENT_COLOR.with_a(bdalpha);
-        bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_a(bgalpha);
+        border.0 = colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha);
+        bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha);
         if *int == Interaction::Pressed {
             ev_clk.send(EventButtonClicked(lbut.clone()));
         }

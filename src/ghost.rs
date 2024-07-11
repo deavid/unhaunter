@@ -12,6 +12,7 @@ use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
 use crate::{gear, summary, utils};
 
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
@@ -312,14 +313,14 @@ pub fn ghost_movement(
                     .entity(breach)
                     .insert(FadeOut::new(5.0))
                     .insert(MapColor {
-                        color: Color::WHITE.with_a(1.0),
+                        color: Color::WHITE.with_alpha(1.0),
                     });
             }
             commands
                 .entity(entity)
                 .insert(FadeOut::new(5.0))
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(1.0),
+                    color: Color::WHITE.with_alpha(1.0),
                 });
         }
     }
@@ -574,7 +575,7 @@ fn spawn_salty_trace(
             transform: Transform::from_translation(pos.to_screen_coord())
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             sprite: Sprite {
-                color: Color::DARK_GRAY.with_a(0.5),
+                color: css::DARK_GRAY.with_alpha(0.5).into(),
                 custom_size: Some(Vec2::new(8.0, 8.0)),
                 ..default()
             },
@@ -585,7 +586,7 @@ fn spawn_salty_trace(
         .insert(UVReactive(1.0))
         .insert(SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)))
         .insert(MapColor {
-            color: Color::DARK_GRAY.with_a(0.5),
+            color: css::DARK_GRAY.with_alpha(0.5).into(),
         })
         .insert(GameSprite);
 }
@@ -609,7 +610,7 @@ pub fn ghost_fade_out_system(
         fade_out.timer.tick(time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
         // Fade out the sprite
-        map_color.color.set_a(rem_f);
+        map_color.color.set_alpha(rem_f);
 
         // Emit smoke particles while fading
         if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
@@ -634,7 +635,7 @@ pub fn ghost_fade_out_system(
                     dz: 0.0,
                 })
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(0.20),
+                    color: Color::WHITE.with_alpha(0.20),
                 })
                 .insert(SmokeParticleTimer(Timer::from_seconds(
                     5.0,

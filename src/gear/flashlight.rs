@@ -62,7 +62,7 @@ impl Flashlight {
     }
     pub fn color(&self) -> Color {
         // Beige
-        Color::rgb(0.96, 0.92, 0.82)
+        Color::srgb(0.96, 0.92, 0.82)
     }
 }
 
