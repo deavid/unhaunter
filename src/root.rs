@@ -3,6 +3,7 @@ use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
     #[default]
+    Loading,
     MainMenu,
     InGame,
     Summary,
@@ -351,11 +352,18 @@ pub struct Maps {
     pub maps: Vec<Map>,
 }
 
+pub fn finish_loading(mut next_state: ResMut<NextState<State>>) {
+    next_state.set(State::MainMenu);
+}
+
 pub fn app_setup(app: &mut App) {
     app.init_state::<State>()
         .init_state::<GameState>()
         .init_resource::<Maps>()
-        .add_systems(Startup, (load_assets, arch::init_maps));
+        .add_systems(
+            Startup,
+            (load_assets, arch::init_maps, finish_loading).chain(),
+        );
 }
 
 #[cfg(not(target_arch = "wasm32"))]

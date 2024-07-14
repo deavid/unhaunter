@@ -33,7 +33,7 @@ normalize-path = "0.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_framepace = "0.17"
-bevy_dylib = "0.14"
+# bevy_dylib = "0.14"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
 
