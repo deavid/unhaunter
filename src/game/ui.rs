@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::view::RenderLayers};
+use bevy::{color::palettes::css, prelude::*, render::view::RenderLayers};
 
 use crate::{
     behavior::Behavior,
@@ -91,7 +91,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     commands
         .spawn(NodeBundle {
-            background_color: Color::NONE.into(),
+            background_color: css::BLACK.with_alpha(0.0).into(),
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -104,14 +104,16 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         .insert(DamageBackground::new(4.0));
     commands
         .spawn(ImageBundle {
-            background_color: Color::BLACK.into(),
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 position_type: PositionType::Absolute,
                 ..default()
             },
-            image: handles.images.vignette.clone().into(),
+            image: UiImage {
+                color: css::BLACK.with_alpha(0.0).into(),
+                ..handles.images.vignette.clone().into()
+            },
             ..default()
         })
         .insert(GameUI)
@@ -475,7 +477,8 @@ pub fn toggle_held_object_ui(
                         text.sections[0].style.color = colors::INVENTORY_STATS_COLOR;
                     } else {
                         text.sections[0].value = "[Grab]: -".into();
-                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
+                        text.sections[0].style.color =
+                            colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
                     }
                 }
             }

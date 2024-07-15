@@ -1039,7 +1039,11 @@ fn recover_sanity(
 pub fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
-    mut qb: Query<(&mut BackgroundColor, &DamageBackground)>,
+    mut qb: Query<(
+        Option<&mut UiImage>,
+        &mut BackgroundColor,
+        &DamageBackground,
+    )>,
 ) {
     for player in &qp {
         if player.id != gc.player_id {
@@ -1047,7 +1051,7 @@ pub fn visual_health(
         }
         let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
         let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
-        for (mut background, dmg) in &mut qb {
+        for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
             let rhealth = (1.0 - health).powf(dmg.exp);
             let crazyness = crazyness.powf(dmg.exp);
             let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
@@ -1056,10 +1060,15 @@ pub fn visual_health(
             let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
             let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
 
-            let old_color = background.0;
+            let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
             let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
             if old_color != new_color {
-                background.0 = new_color;
+                dbg!(&new_color);
+                if let Some(uiimage) = o_uiimage.as_mut() {
+                    uiimage.color = new_color;
+                } else {
+                    bgcolor.0 = new_color;
+                }
             }
         }
     }
