@@ -1063,7 +1063,6 @@ pub fn visual_health(
             let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
             let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
             if old_color != new_color {
-                dbg!(&new_color);
                 if let Some(uiimage) = o_uiimage.as_mut() {
                     uiimage.color = new_color;
                 } else {
