@@ -59,9 +59,5 @@ opt-level = 3
 name = "unhaunter_game"
 path = "src/bin/unhaunter.rs"
 
-[[bin]]
-name = "materials"
-path = "src/materials.rs"
-
 [lib]
 crate-type = ["cdylib", "rlib"]

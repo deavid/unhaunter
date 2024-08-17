@@ -1,7 +1,6 @@
 //! A shader and a material that uses it.
 
 use bevy::{
-    color::palettes::css,
     prelude::*,
     reflect::TypePath,
     render::{
@@ -11,75 +10,9 @@ use bevy::{
             RenderPipelineDescriptor, ShaderRef, ShaderType, SpecializedMeshPipelineError,
         },
     },
-    sprite::{Material2d, Material2dKey, Material2dPlugin, MaterialMesh2dBundle},
+    sprite::{Material2d, Material2dKey},
 };
 
-#[allow(dead_code)]
-fn main() {
-    App::new()
-        .add_plugins((
-            DefaultPlugins,
-            Material2dPlugin::<CustomMaterial1>::default(),
-            Material2dPlugin::<CustomMaterial2>::default(),
-        ))
-        .add_systems(Startup, setup)
-        .run();
-}
-
-// Spawn an entity using `CustomMaterial`.
-fn setup(
-    mut commands: Commands,
-    mut materials1: ResMut<Assets<CustomMaterial1>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    asset_server: Res<AssetServer>,
-) {
-    let size = Vec2::new(128.0, 128.0);
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(Rectangle::new(size.x, size.y)))
-            .into(),
-        // transform: Transform::from_translation(position.extend(10.0)),
-        material: materials1.add(CustomMaterial1 {
-            data: CustomMaterial1Data {
-                color: css::RED.into(),
-                gamma: 10.0,
-                gbl: 5.0,
-                gtl: 5.0,
-                gbr: 0.1,
-                gtr: 1.0,
-                ..Default::default()
-            },
-            color_texture: asset_server.load("img/light_x4.png"),
-        }),
-        transform: Transform::from_xyz(-25.0, 0.0, 0.0),
-        ..Default::default()
-    });
-
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(Rectangle::new(size.x, size.y)))
-            .into(),
-        // transform: Transform::from_translation(position.extend(10.0)),
-        material: materials1.add(CustomMaterial1 {
-            data: CustomMaterial1Data {
-                color: css::RED.into(),
-                gamma: 5.0,
-                gbl: 5.0,
-                gtl: 5.0,
-                gbr: 0.1,
-                gtr: 1.0,
-                ..Default::default()
-            },
-            color_texture: asset_server.load("img/light_x4.png"),
-        }),
-        transform: Transform::from_xyz(25.0, 0.0, 0.01),
-        ..Default::default()
-    });
-
-    commands.spawn(Camera2dBundle {
-        ..Default::default()
-    });
-}
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
 pub struct CustomMaterial1Data {
     pub color: LinearRgba,
