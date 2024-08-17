@@ -56,16 +56,12 @@ pub fn setup_loadout_ui(
         },
         ..default()
     };
-    let equipment = |g: GearSpriteID| AtlasImageBundle {
+    let equipment = || ImageBundle {
         image: UiImage {
             texture: handles.images.gear.clone(),
             flip_x: false,
             flip_y: false,
             ..default()
-        },
-        texture_atlas: TextureAtlas {
-            index: g as usize,
-            layout: handles.images.gear_atlas.clone(),
         },
         style: Style {
             width: Val::Px(64.0 * UI_SCALE),
@@ -75,7 +71,11 @@ pub fn setup_loadout_ui(
         },
         ..default()
     };
-    let equipment_def = || equipment(GearSpriteID::IonMeterOff);
+    let equipment_atlas = |g: GearSpriteID| TextureAtlas {
+        index: g as usize,
+        layout: handles.images.gear_atlas.clone(),
+    };
+    let equipment_atlas_def = || equipment_atlas(GearSpriteID::IonMeterOff);
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| MaterialNodeBundle {
         material: materials.add(UIPanelMaterial {
             color: colors::TRUCKUI_BGCOLOR.into(),
@@ -120,7 +120,8 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_left()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
+                        p.spawn(equipment())
+                            .insert(equipment_atlas_def())
                             .insert(playergear::Inventory::new_left());
                     });
             });
@@ -128,7 +129,8 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_right()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
+                        p.spawn(equipment())
+                            .insert(equipment_atlas_def())
                             .insert(playergear::Inventory::new_right());
                     });
             });
@@ -139,7 +141,8 @@ pub fn setup_loadout_ui(
                             playergear::InventoryNext::new(i),
                         ))
                         .with_children(|p| {
-                            p.spawn(equipment_def())
+                            p.spawn(equipment())
+                                .insert(equipment_atlas_def())
                                 .insert(playergear::InventoryNext::new(i));
                         });
                 }
@@ -191,7 +194,8 @@ pub fn setup_loadout_ui(
                     p.spawn(button())
                         .insert(LoadoutButton::Van(gear.clone()))
                         .with_children(|p| {
-                            p.spawn(equipment(gear.get_sprite_idx()));
+                            p.spawn(equipment())
+                                .insert(equipment_atlas(gear.get_sprite_idx()));
                         });
                 }
             });

@@ -1144,12 +1144,8 @@ pub fn deploy_gear(
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
             if is_valid_tile && !is_obstructed {
                 let scoord = player_pos.to_screen_coord();
-                let gear_sprite = SpriteSheetBundle {
+                let gear_sprite = SpriteBundle {
                     texture: handles.images.gear.clone(),
-                    atlas: TextureAtlas {
-                        layout: handles.images.gear_atlas.clone(),
-                        index: player_gear.right_hand.get_sprite_idx() as usize,
-                    },
                     transform: Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
                         .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Initial scaling factor
                     ..Default::default()
@@ -1157,6 +1153,10 @@ pub fn deploy_gear(
 
                 commands
                     .spawn(gear_sprite)
+                    .insert(TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                    })
                     .insert(deployed_gear)
                     .insert(*player_pos)
                     .insert(behavior::component::FloorItemCollidable)

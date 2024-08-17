@@ -406,19 +406,19 @@ pub fn load_level(
 
     // Spawn Player 1
     commands
-        .spawn(SpriteSheetBundle {
+        .spawn(SpriteBundle {
             texture: handles.images.character1.clone(),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
                 ..default()
             },
-            atlas: TextureAtlas {
-                layout: handles.images.character1_atlas.clone(),
-                ..Default::default()
-            },
             transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             ..default()
+        })
+        .insert(TextureAtlas {
+            layout: handles.images.character1_atlas.clone(),
+            ..Default::default()
         })
         .insert(GameSprite)
         .insert(difficulty.0.player_gear.clone())

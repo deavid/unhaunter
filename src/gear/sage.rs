@@ -97,7 +97,7 @@ impl GearUsable for SageBundleData {
                     .insert(GameSprite)
                     .insert(pos)
                     .insert(MapColor {
-                        color: Color::WHITE.with_alpha(0.00).into(),
+                        color: Color::WHITE.with_alpha(0.00),
                     })
                     .insert(SmokeParticleTimer(Timer::from_seconds(
                         5.0,
