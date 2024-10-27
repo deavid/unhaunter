@@ -5,31 +5,34 @@ use bevy::prelude::*;
 
 pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAssets) {
     let title = "Paranormal Investigator Needed!";
-    let subtitle = "Reports of unsettling activity... restless spirits... your expertise is required to investigate and expel the ghosts haunting these locations.";
+    let subtitle = "
+Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.
+What will you find? How to do a good job as a P.I.? Here are the main clues!
+".trim();
     let grid = vec![
         (
             &handles.images.manual_investigate,
-            "Explore the location, search for clues, and use your equipment to detect paranormal activity."
+            "1. Explore the location and use your equipment (EMF, etc) to detect paranormal activity."
         ),
         (
             &handles.images.manual_locate_ghost,
-            "Find the ghost's breach, a subtle dust cloud that marks its presence.",
+            "2. Find the breach, which allows the ghost to haunt this location.",
         ),
         (
             &handles.images.manual_identify_ghost,
-            "Gather evidence using your equipment and record your findings in the truck journal to identify the ghost type.",
+            "3. Record your findings in the truck journal page to identify the ghost type.",
         ),
         (
             &handles.images.manual_craft_repellent,
-            "Once you've identified the ghost, craft a specialized repellent in the truck.",
+            "4. Once you know which ghost is, craft a repellent in the truck for that particular ghost type.",
         ),
         (
             &handles.images.manual_expel_ghost,
-            "Confront the ghost and use the repellent to banish it from the location.",
+            "5. Confront the ghost and use the repellent to banish it from the location.",
         ),
         (
             &handles.images.manual_end_mission,
-            "Return to the truck and click 'End Mission' to complete the investigation and receive your score.",
+            "6. Return to the truck and click 'End Mission' to complete the investigation and receive your score.",
         ),
     ];
 
