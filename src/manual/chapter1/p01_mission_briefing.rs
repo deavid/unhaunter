@@ -13,7 +13,7 @@ pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAsset
         ),
         (
             &handles.images.manual_locate_ghost,
-          "Find the ghost's breach, a subtle dust cloud that marks its presence.",
+            "Find the ghost's breach, a subtle dust cloud that marks its presence.",
         ),
         (
             &handles.images.manual_identify_ghost,
