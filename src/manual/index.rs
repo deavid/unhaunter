@@ -40,7 +40,7 @@ pub fn draw_manual_ui(
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(10.0)),
+                padding: UiRect::all(Val::Px(2.0)),
                 ..default()
             },
             ..default()
@@ -52,10 +52,11 @@ pub fn draw_manual_ui(
                 .spawn(NodeBundle {
                     style: Style {
                         width: Val::Percent(100.0),
-                        height: Val::Percent(90.0),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
+                        flex_grow: 1.0,
+                        flex_basis: Val::Percent(100.0),
                         ..default()
                     },
                     ..default()
@@ -70,11 +71,13 @@ pub fn draw_manual_ui(
                 .spawn(NodeBundle {
                     style: Style {
                         width: Val::Percent(90.0),
-                        height: Val::Percent(10.0),
+                        height: Val::Percent(5.0),
                         flex_direction: FlexDirection::Row,
                         justify_content: JustifyContent::SpaceBetween,
                         align_items: AlignItems::Center,
                         margin: UiRect::top(Val::Percent(3.0)),
+                        flex_grow: 0.0,
+                        flex_basis: Val::Percent(5.0),
                         ..default()
                     },
                     ..default()

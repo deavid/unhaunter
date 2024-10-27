@@ -1,4 +1,4 @@
-use crate::manual::utils::{grid_img_text, header};
+use crate::manual::utils::{grid_img_text2, header, summary_text};
 
 use crate::root::GameAssets;
 use bevy::prelude::*;
@@ -12,7 +12,7 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
     let grid = vec![
         (
             &handles.images.manual_investigate,
-            "1. Explore the location and use your equipment (EMF, etc) to detect paranormal activity."
+            "1. Explore the location and use your equipment (Thermometer, etc) to detect paranormal activity."
         ),
         (
             &handles.images.manual_locate_ghost,
@@ -20,7 +20,7 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
         ),
         (
             &handles.images.manual_identify_ghost,
-            "3. Record your findings in the truck journal page to identify the ghost type.",
+            "3. Different ghosts leave different evidence. Recording your findings in the truck journal page helps you identify the ghost type.",
         ),
         (
             &handles.images.manual_craft_repellent,
@@ -35,8 +35,11 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
             "6. Return to the truck and click 'End Mission' to complete the investigation and receive your score.",
         ),
     ];
+    let summary = "Your goal is to identify and banish the ghost. By exploring, locating the breach, gathering evidence, and using the truck's equipment, you'll craft the right tool for the job. More details on each step are provided in the following pages.";
 
     header(parent, handles, title, subtitle);
 
-    grid_img_text(parent, &handles.fonts.chakra.w400_regular, (3, 2), grid);
+    grid_img_text2(parent, &handles.fonts.chakra.w400_regular, (3, 2), grid);
+
+    summary_text(parent, handles, summary);
 }
