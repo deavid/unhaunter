@@ -1,16 +1,19 @@
-//! Truck UI Module
-//! --------------
+//! ## Truck UI Module
 //!
-//! This module defines the structure, layout, and behavior of the in-game truck UI, which serves as the player's
-//! base of operations. It includes:
+//! This module defines the structure, layout, and behavior of the in-game truck
+//! UI, which serves as the player's base of operations. It includes:
+//!
 //! * UI elements for managing player gear (loadout).
+//!
 //! * A journal for reviewing evidence and guessing the ghost type.
+//!
 //! * Displays for monitoring player sanity and sensor readings.
+//!
 //! * Buttons for crafting ghost repellents, exiting the truck, and ending the mission.
 //!
-//! The truck UI provides a centralized interface for players to interact with the game's mechanics,
-//! track their progress, and make strategic decisions outside of the main exploration and investigation gameplay.
-
+//! The truck UI provides a centralized interface for players to interact with the
+//! game's mechanics, track their progress, and make strategic decisions outside of
+//! the main exploration and investigation gameplay.
 pub mod activity;
 pub mod journal;
 pub mod journalui;
@@ -21,12 +24,11 @@ pub mod truckgear;
 pub mod ui;
 pub mod uibutton;
 
-use bevy::prelude::*;
-
 use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
 use crate::{ghost_definitions::GhostType, root};
+use bevy::prelude::*;
 
 #[derive(Component, Debug)]
 pub struct TruckUI;
@@ -37,7 +39,6 @@ pub enum TruckUIEvent {
     ExitTruck,
     CraftRepellent,
 }
-
 #[derive(Component, Debug)]
 pub struct TruckUIGhostGuess;
 

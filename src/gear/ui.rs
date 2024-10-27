@@ -5,7 +5,6 @@ use crate::game::GameConfig;
 use crate::platform::plt::UI_SCALE;
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
-
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 
@@ -53,9 +52,8 @@ pub fn update_gear_ui(
                 }
             }
             for (inv, mut utai) in qin.iter_mut() {
-                // There are 2 possible "None" here, the outside Option::None for
-                // when the idx is out of bounds and the inner Gear::None when a
-                // slot is empty.
+                // There are 2 possible "None" here, the outside Option::None for when the idx is
+                // out of bounds and the inner Gear::None when a slot is empty.
                 let next = if let Some(idx) = inv.idx {
                     playergear.get_next(idx).unwrap_or_default()
                 } else {
@@ -79,7 +77,6 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
             flip_y: false,
             ..default()
         },
-
         style: Style {
             width: Val::Px(80.0 * UI_SCALE),
             margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
@@ -92,7 +89,6 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
         layout: handles.images.gear_atlas.clone(),
     })
     .insert(playergear::Inventory::new_left());
-
     p.spawn(
         TextBundle::from_section(
             "[TAB]: T.Aux",
@@ -194,7 +190,6 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 Val::Px(4.0 * UI_SCALE),
                 Val::Px(-16.0 * UI_SCALE),
             ),
-
             flex_grow: 1.0,
             ..default()
         });

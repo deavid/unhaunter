@@ -1,9 +1,5 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
-
-use bevy::prelude::*;
-use rand::Rng;
-
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::{
     board::{self, Position},
@@ -12,6 +8,8 @@ use crate::{
     maplight::MapColor,
     utils::format_time,
 };
+use bevy::prelude::*;
+use rand::Rng;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -85,6 +83,7 @@ impl GearUsable for SageBundleData {
                 pos.z += 0.2;
                 pos.x += rng.gen_range(-0.2..0.2);
                 pos.y += rng.gen_range(-0.2..0.2);
+
                 // Spawn smoke particle
                 gs.commands
                     .spawn(SpriteBundle {
@@ -110,7 +109,8 @@ impl GearUsable for SageBundleData {
 
     fn get_sprite_idx(&self) -> GearSpriteID {
         if self.consumed {
-            return GearSpriteID::SageBundle4; // Burned out
+            // Burned out
+            return GearSpriteID::SageBundle4;
         }
         if !self.is_active {
             return GearSpriteID::SageBundle0;
@@ -125,7 +125,9 @@ impl GearUsable for SageBundleData {
         if remaining_time > 0.0 {
             return GearSpriteID::SageBundle3;
         }
-        GearSpriteID::SageBundle4 // Burned out
+
+        // Burned out
+        GearSpriteID::SageBundle4
     }
 
     fn _box_clone(&self) -> Box<dyn GearUsable> {
@@ -191,7 +193,6 @@ pub fn sage_smoke_system(
         position.z += 0.3 * dt / (1.0 + elap.powi(2));
         position.x += dir.dx * dt;
         position.y += dir.dy * dt;
-
         transform.scale.x += 0.1 * dt;
         transform.scale.y += 0.1 * dt;
 

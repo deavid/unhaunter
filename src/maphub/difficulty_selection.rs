@@ -1,17 +1,16 @@
-use bevy::prelude::*;
-
+use super::MapHubState;
 use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::game::level::LoadLevelEvent;
 use crate::platform::plt::UI_SCALE;
 use crate::root;
+use bevy::prelude::*;
 
-use super::MapHubState;
-use crate::maphub::map_selection::MapSelectedEvent; // Add MapSelectedEvent
+// Add MapSelectedEvent
+use crate::maphub::map_selection::MapSelectedEvent;
 
 #[derive(Component, Debug)]
 pub struct DifficultySelectionUI;
-
 #[derive(Component, Debug)]
 pub struct DifficultyDescriptionUI;
 
@@ -23,7 +22,8 @@ pub struct DifficultySelectionItem {
 #[derive(Resource, Debug, Default)]
 pub struct DifficultySelectionState {
     pub selected_difficulty: Difficulty,
-    pub selected_map_idx: usize, // Add this to store the selected map index
+    // Add this to store the selected map index
+    pub selected_map_idx: usize,
 }
 
 // New event for confirming difficulty selection
@@ -38,12 +38,14 @@ pub fn app_setup(app: &mut App) {
             (keyboard, handle_difficulty_selection, update_item_colors)
                 .run_if(in_state(MapHubState::DifficultySelection)),
         )
-        .add_event::<DifficultyConfirmedEvent>(); // Register the new event
+        // Register the new event
+        .add_event::<DifficultyConfirmedEvent>();
 }
 
 pub fn setup_systems(
     mut commands: Commands,
-    mut ev_map_selected: EventReader<MapSelectedEvent>, // Access MapSelectedEvent
+    // Access MapSelectedEvent
+    mut ev_map_selected: EventReader<MapSelectedEvent>,
     handles: Res<root::GameAssets>,
 ) {
     // Create the UI for the difficulty selection screen
@@ -56,7 +58,6 @@ pub fn setup_systems(
     if let Some(event) = ev_map_selected.read().next() {
         difficulty_selection_state.selected_map_idx = event.map_idx;
     }
-
     commands.insert_resource(difficulty_selection_state);
 }
 
@@ -155,7 +156,6 @@ pub fn update_item_colors(
                 let name = &dif.difficulty_name;
                 let description = &dif.difficulty_description;
                 let score_mult = dif.difficulty_score_multiplier;
-
                 let text = [
                     format!("Difficulty <{name}>: {description}"),
                     format!("Score Bonus: {score_mult:.2}x"),
@@ -168,14 +168,12 @@ pub fn update_item_colors(
 
 pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
-
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
     });
-
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -232,7 +230,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                 },
                 ..default()
             });
-
             parent
                 .spawn(NodeBundle {
                     style: Style {
@@ -264,6 +261,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                         },
                         ..default()
                     });
+
                     // Difficulty buttons in a 3-column grid
                     parent
                         .spawn(NodeBundle {
@@ -273,7 +271,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                 justify_content: JustifyContent::SpaceEvenly,
                                 align_items: AlignItems::Center,
                                 display: Display::Grid,
-                                grid_template_columns: RepeatedGridTrack::flex(4, 1.0), // 4 equal columns
+                                // 4 equal columns
+                                grid_template_columns: RepeatedGridTrack::flex(4, 1.0),
                                 grid_auto_rows: GridTrack::auto(),
                                 row_gap: Val::Px(10.0),
                                 column_gap: Val::Px(20.0),
@@ -296,7 +295,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                             margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                             ..default()
                                         },
-                                        background_color: Color::NONE.into(), // Remove background color
+                                        // Remove background color
+                                        background_color: Color::NONE.into(),
                                         ..default()
                                     })
                                     .insert(DifficultySelectionItem { difficulty })
@@ -305,7 +305,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                             difficulty.difficulty_name(),
                                             TextStyle {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 28.0 * UI_SCALE, // Reduced font size
+                                                // Reduced font size
+                                                font_size: 28.0 * UI_SCALE,
                                                 color: colors::MENU_ITEM_COLOR_OFF,
                                             },
                                         ));
@@ -320,31 +321,15 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                         },
                         ..default()
                     });
-                    // parent
-                    //     .spawn(ButtonBundle {
-                    //         style: Style {
-                    //             min_height: Val::Px(30.0),
-                    //             border: UiRect::all(Val::Px(0.9)),
-                    //             align_content: AlignContent::Center,
-                    //             justify_content: JustifyContent::Center,
-                    //             flex_direction: FlexDirection::Column,
-                    //             align_items: AlignItems::Center,
-                    //             margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                    //             ..default()
-                    //         },
-                    //         background_color: Color::NONE.into(), // Remove background color
-                    //         ..default()
-                    //     })
-                    //     .with_children(|btn| {
-                    //         btn.spawn(TextBundle::from_section(
-                    //             "Go Back",
-                    //             TextStyle {
-                    //                 font: handles.fonts.londrina.w300_light.clone(),
-                    //                 font_size: 38.0,
-                    //                 color: colors::MENU_ITEM_COLOR_OFF, // Default text color
-                    //             },
-                    //         ));
-                    //     });
+                    // parent .spawn(ButtonBundle { style: Style { min_height: Val::Px(30.0), border:
+                    // UiRect::all(Val::Px(0.9)), align_content: AlignContent::Center,
+                    // justify_content: JustifyContent::Center, flex_direction: FlexDirection::Column,
+                    // align_items: AlignItems::Center, margin:
+                    // UiRect::all(Val::Percent(MARGIN_PERCENT)), ..default() }, background_color:
+                    // Color::NONE.into(), // Remove background color ..default() })
+                    // .with_children(|btn| { btn.spawn(TextBundle::from_section( "Go Back", TextStyle
+                    // { font: handles.fonts.londrina.w300_light.clone(), font_size: 38.0, color:
+                    // colors::MENU_ITEM_COLOR_OFF, // Default text color }, )); });
                 });
             parent.spawn(NodeBundle {
                 style: Style {

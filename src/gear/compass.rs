@@ -1,6 +1,5 @@
-use bevy::prelude::*;
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Compass {
@@ -18,6 +17,7 @@ impl GearUsable for Compass {
     fn get_display_name(&self) -> &'static str {
         "Compass"
     }
+
     fn get_description(&self) -> &'static str {
         "Measures the Earth's magnetic field, and sometimes the ghost."
     }

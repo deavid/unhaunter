@@ -70,7 +70,6 @@ pub struct TitilliumWebAssets {
     pub w600_semibold: Handle<Font>,
     pub w700_bold: Handle<Font>,
     pub w900_black: Handle<Font>,
-
     pub w200i_extralight: Handle<Font>,
     pub w300i_light: Handle<Font>,
     pub w400i_regular: Handle<Font>,
@@ -87,7 +86,6 @@ pub struct VictorMonoAssets {
     pub w500_medium: Handle<Font>,
     pub w600_semibold: Handle<Font>,
     pub w700_bold: Handle<Font>,
-
     pub w100i_thin: Handle<Font>,
     pub w200i_extralight: Handle<Font>,
     pub w300i_light: Handle<Font>,
@@ -188,7 +186,6 @@ impl From<QuadCC> for Mesh {
         let right_x = quad.size.x - quad.center.x;
         let bottom_y = quad.center.y - quad.size.y;
         let top_y = quad.center.y;
-
         let (u_left, u_right) = if quad.flip { (1.0, 0.0) } else { (0.0, 1.0) };
         let vertices = [
             ([left_x, bottom_y, 0.0], [0.0, 0.0, 1.0], [u_left, 1.0]),
@@ -196,13 +193,10 @@ impl From<QuadCC> for Mesh {
             ([right_x, top_y, 0.0], [0.0, 0.0, 1.0], [u_right, 0.0]),
             ([right_x, bottom_y, 0.0], [0.0, 0.0, 1.0], [u_right, 1.0]),
         ];
-
         let indices = bevy::render::mesh::Indices::U32(vec![0, 2, 1, 0, 3, 2]);
-
         let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
         let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
         let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();
-
         let mut mesh = Mesh::new(
             bevy::render::render_resource::PrimitiveTopology::TriangleList,
             RenderAssetUsages::all(),
@@ -273,7 +267,6 @@ pub fn load_assets(
                 w400_regular: server.load("fonts/overlock/Overlock-Regular.ttf"),
                 w700_bold: server.load("fonts/overlock/Overlock-Bold.ttf"),
                 w900_black: server.load("fonts/overlock/Overlock-Black.ttf"),
-
                 w400i_regular: server.load("fonts/overlock/Overlock-Italic.ttf"),
                 w700i_bold: server.load("fonts/overlock/Overlock-BoldItalic.ttf"),
                 w900i_black: server.load("fonts/overlock/Overlock-BlackItalic.ttf"),
@@ -284,7 +277,6 @@ pub fn load_assets(
                 w500_medium: server.load("fonts/chakra_petch/ChakraPetch-Medium.ttf"),
                 w600_semibold: server.load("fonts/chakra_petch/ChakraPetch-SemiBold.ttf"),
                 w700_bold: server.load("fonts/chakra_petch/ChakraPetch-Bold.ttf"),
-
                 w300i_light: server.load("fonts/chakra_petch/ChakraPetch-LightItalic.ttf"),
                 w400i_regular: server.load("fonts/chakra_petch/ChakraPetch-Italic.ttf"),
                 w500i_medium: server.load("fonts/chakra_petch/ChakraPetch-MediumItalic.ttf"),
@@ -298,7 +290,6 @@ pub fn load_assets(
                 w600_semibold: server.load("fonts/titillium_web/TitilliumWeb-SemiBold.ttf"),
                 w700_bold: server.load("fonts/titillium_web/TitilliumWeb-Bold.ttf"),
                 w900_black: server.load("fonts/titillium_web/TitilliumWeb-Black.ttf"),
-
                 w200i_extralight: server
                     .load("fonts/titillium_web/TitilliumWeb-ExtraLightItalic.ttf"),
                 w300i_light: server.load("fonts/titillium_web/TitilliumWeb-LightItalic.ttf"),
@@ -314,7 +305,6 @@ pub fn load_assets(
                 w500_medium: server.load("fonts/victor_mono/static/VictorMono-Medium.ttf"),
                 w600_semibold: server.load("fonts/victor_mono/static/VictorMono-SemiBold.ttf"),
                 w700_bold: server.load("fonts/victor_mono/static/VictorMono-Bold.ttf"),
-
                 w100i_thin: server.load("fonts/victor_mono/static/VictorMono-ThinItalic.ttf"),
                 w200i_extralight: server
                     .load("fonts/victor_mono/static/VictorMono-ExtraLightItalic.ttf"),
@@ -370,11 +360,11 @@ pub fn app_setup(app: &mut App) {
 mod arch {
     use super::*;
     use crate::tiledmap::naive_tmx_loader;
-
     use glob::Pattern;
     use walkdir::WalkDir;
 
-    /// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their paths.
+    /// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their
+    /// paths.
     pub fn find_tmx_files() -> Vec<String> {
         let mut paths = Vec::new();
         let pattern = Pattern::new("*.tmx").unwrap();
@@ -387,6 +377,7 @@ mod arch {
             };
             let path = entry.path();
             info!("Found {:?}", path);
+
             // Check if the path matches the "*.tmx" pattern and is a file
             if path.is_file() && pattern.matches_path(path) {
                 // Convert the path to a String and store it in the vector
@@ -432,6 +423,7 @@ mod arch {
 #[cfg(target_arch = "wasm32")]
 mod arch {
     use super::*;
+
     pub fn find_tmx_files() -> Vec<(String, String)> {
         // WASM does not support scanning folders it seems...
         vec![
@@ -457,6 +449,7 @@ mod arch {
             ),
         ]
     }
+
     pub fn init_maps(mut maps: ResMut<Maps>) {
         // Scan for maps:
         let tmx_files = find_tmx_files();

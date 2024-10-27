@@ -1,10 +1,8 @@
+use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::board::Position;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
-
-use crate::board::Position;
-
-use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Sequence)]
 pub enum FlashlightStatus {
@@ -60,6 +58,7 @@ impl Flashlight {
         };
         pow * bat
     }
+
     pub fn color(&self) -> Color {
         // Beige
         Color::srgb(0.96, 0.92, 0.82)
@@ -80,7 +79,6 @@ impl GearUsable for Flashlight {
         }
         self.inner_temp += self.power() / 10000.0;
         self.inner_temp /= 1.0006;
-
         const HS_MASS: f32 = 200.0;
         self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
         if self.heatsink_temp > 1.0 && self.status == FlashlightStatus::High {
@@ -91,6 +89,7 @@ impl GearUsable for Flashlight {
             gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4, pos);
         }
     }
+
     fn get_sprite_idx(&self) -> GearSpriteID {
         if self.rand == 0 {
             match self.status {
@@ -126,7 +125,6 @@ impl GearUsable for Flashlight {
             ""
         };
         let heat_temp = 15.0 + self.heatsink_temp * 70.0;
-
         format!(
             "{name}: {on_s}  {overheat}\nBattery:   {:>3.0}% {heat_temp:>5.1}ºC",
             self.battery_level * 100.0

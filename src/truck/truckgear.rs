@@ -1,6 +1,5 @@
-use bevy::prelude::*;
-
 use crate::gear::Gear;
+use bevy::prelude::*;
 
 #[derive(Debug, Resource, Clone)]
 pub struct TruckGear {
@@ -10,6 +9,7 @@ pub struct TruckGear {
 impl TruckGear {
     pub fn new() -> Self {
         const ENABLE_INCOMPLETE: bool = false;
+
         use crate::gear::compass::Compass;
         use crate::gear::emfmeter::EMFMeter;
         use crate::gear::estaticmeter::EStaticMeter;
@@ -57,7 +57,6 @@ impl TruckGear {
             ];
             inventory.append(&mut incomplete);
         }
-
         Self { inventory }
     }
 }

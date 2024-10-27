@@ -1,11 +1,9 @@
-use bevy::prelude::*;
-
+use super::TruckUIEvent;
 use crate::{
     colors,
     ghost_definitions::{self},
 };
-
-use super::TruckUIEvent;
+use bevy::prelude::*;
 
 /// Represents the type of a button in the truck UI.
 #[derive(Debug, PartialEq, Eq)]
@@ -40,7 +38,8 @@ pub enum TruckButtonState {
     Discard,
 }
 
-/// Represents a button in the truck UI, handling its state, type, and visual appearance.
+/// Represents a button in the truck UI, handling its state, type, and visual
+/// appearance.
 #[derive(Component, Debug)]
 pub struct TruckUIButton {
     /// The current state of the button.
@@ -67,6 +66,7 @@ impl TruckUIButton {
             TruckButtonType::EndMission => Some(TruckUIEvent::EndMission),
         }
     }
+
     pub fn border_color(&self, interaction: Interaction) -> Color {
         let color = match self.class {
             TruckButtonType::Evidence(_) => match interaction {
@@ -93,6 +93,7 @@ impl TruckUIButton {
         let alpha_disabled = if self.disabled { 0.05 } else { 1.0 };
         color.with_alpha(color.alpha() * alpha_disabled)
     }
+
     pub fn background_color(&self, interaction: Interaction) -> Color {
         let color = match self.class {
             TruckButtonType::Evidence(_) => match self.status {

@@ -1,5 +1,4 @@
 //! A shader and a material that uses it.
-
 use bevy::{
     prelude::*,
     reflect::TypePath,
@@ -34,28 +33,22 @@ impl CustomMaterial1Data {
         let mut delta = 0.0;
         let color1 = self.color.to_f32_array();
         let color2 = other.color.to_f32_array();
-
         delta += (color1[0] - color2[0]).abs();
         delta += (color1[1] - color2[1]).abs();
         delta += (color1[2] - color2[2]).abs();
-
         let acolor1 = self.ambient_color.to_f32_array();
         let acolor2 = other.ambient_color.to_f32_array();
-
         delta += (acolor1[0] - acolor2[0]).abs();
         delta += (acolor1[1] - acolor2[1]).abs();
         delta += (acolor1[2] - acolor2[2]).abs();
-
         delta += (self.gamma - other.gamma).abs();
         delta += (self.gtl - other.gtl).abs();
         delta += (self.gtr - other.gtr).abs();
         delta += (self.gbl - other.gbl).abs();
         delta += (self.gbr - other.gbr).abs();
-
         delta += (self.sheet_rows as f32 - other.sheet_rows as f32).abs();
         delta += (self.sheet_cols as f32 - other.sheet_cols as f32).abs();
         delta += (self.sheet_idx as f32 - other.sheet_idx as f32).abs();
-
         delta *= color1[3] + color2[3] + 0.01;
         delta += (color1[3] - color2[3]).abs() * 15.0;
         delta
@@ -83,12 +76,13 @@ impl Default for CustomMaterial1Data {
 
 #[derive(AsBindGroup, TypePath, Debug, Clone, Component, Asset)]
 pub struct CustomMaterial1 {
-    // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
-    // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
+    // Uniform bindings must implement `ShaderType`, which will be used to convert the
+    // value to its shader-compatible equivalent. Most core math types already
+    // implement `ShaderType`.
     #[uniform(0)]
     pub data: CustomMaterial1Data,
-    // Images can be bound as textures in shaders. If the Image's sampler is also needed, just
-    // add the sampler attribute with a different binding index.
+    // Images can be bound as textures in shaders. If the Image's sampler is also
+    // needed, just add the sampler attribute with a different binding index.
     #[texture(1)]
     #[sampler(2)]
     color_texture: Handle<Image>,
@@ -107,6 +101,7 @@ impl Material2d for CustomMaterial1 {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material1.wgsl".into()
     }
+
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayoutRef,
@@ -118,21 +113,20 @@ impl Material2d for CustomMaterial1 {
                 // target_state.blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
             }
         }
-
         Ok(())
     }
 }
 
 // -- additive material example --
-
 #[derive(AsBindGroup, TypePath, Debug, Clone, Asset)]
 pub struct CustomMaterial2 {
-    // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
-    // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
+    // Uniform bindings must implement `ShaderType`, which will be used to convert the
+    // value to its shader-compatible equivalent. Most core math types already
+    // implement `ShaderType`.
     #[uniform(0)]
     color: LinearRgba,
-    // Images can be bound as textures in shaders. If the Image's sampler is also needed, just
-    // add the sampler attribute with a different binding index.
+    // Images can be bound as textures in shaders. If the Image's sampler is also
+    // needed, just add the sampler attribute with a different binding index.
     #[texture(1)]
     #[sampler(2)]
     color_texture: Handle<Image>,
@@ -144,7 +138,6 @@ const BLEND_ADD: BlendState = BlendState {
         dst_factor: BlendFactor::One,
         operation: BlendOperation::Add,
     },
-
     alpha: BlendComponent {
         src_factor: BlendFactor::SrcAlpha,
         dst_factor: BlendFactor::One,
@@ -156,6 +149,7 @@ impl Material2d for CustomMaterial2 {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material2.wgsl".into()
     }
+
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayoutRef,
@@ -166,21 +160,21 @@ impl Material2d for CustomMaterial2 {
                 target_state.blend = Some(BLEND_ADD);
             }
         }
-
         Ok(())
     }
 }
 
 #[derive(AsBindGroup, Asset, TypePath, Debug, Clone)]
 pub struct UIPanelMaterial {
-    // Uniform bindings must implement `ShaderType`, which will be used to convert the value to
-    // its shader-compatible equivalent. Most core math types already implement `ShaderType`.
+    // Uniform bindings must implement `ShaderType`, which will be used to convert the
+    // value to its shader-compatible equivalent. Most core math types already
+    // implement `ShaderType`.
     #[uniform(0)]
     pub color: LinearRgba,
 }
 
-// All functions on `UiMaterial` have default impls. You only need to implement the
-// functions that are relevant for your material.
+// All functions on `UiMaterial` have default impls. You only need to implement
+// the functions that are relevant for your material.
 impl UiMaterial for UIPanelMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/uipanel_material.wgsl".into()

@@ -1,6 +1,5 @@
-use bevy::prelude::*;
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Videocam {
@@ -14,6 +13,7 @@ impl Videocam {
             true => 12.0,
         }
     }
+
     pub fn color(&self) -> Color {
         // Green-Cyan (for NightVision)
         Color::srgb(0.01, 1.00, 0.60)

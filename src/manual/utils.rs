@@ -1,6 +1,5 @@
-use bevy::prelude::*;
-
 use crate::platform::plt::UI_SCALE;
+use bevy::prelude::*;
 
 pub fn image_text(
     parent: &mut ChildBuilder<'_>,

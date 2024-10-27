@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::game::evidence::EvidenceStatus;
@@ -18,6 +16,7 @@ use crate::{
     player::PlayerSprite,
     root,
 };
+use bevy::prelude::*;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {
@@ -28,7 +27,6 @@ pub enum LoadoutButton {
 
 #[derive(Debug, Event, Clone)]
 pub struct EventButtonClicked(LoadoutButton);
-
 #[derive(Debug, Component, Clone)]
 pub struct GearHelp;
 
@@ -47,7 +45,6 @@ pub fn setup_loadout_ui(
             align_content: AlignContent::Center,
             align_items: AlignItems::Center,
             align_self: AlignSelf::Center,
-
             border: UiRect::all(Val::Px(2.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(3.0 * UI_SCALE)),
             max_width: Val::Px(70.0 * UI_SCALE),
@@ -80,17 +77,14 @@ pub fn setup_loadout_ui(
         material: materials.add(UIPanelMaterial {
             color: colors::TRUCKUI_BGCOLOR.into(),
         }),
-
         style: Style {
             padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
             max_height: Val::Px(100.0 * UI_SCALE),
-
             ..default()
         },
         ..default()
     };
-
     let left_side = |p: &mut ChildBuilder| {
         p.spawn(
             TextBundle::from_section(
@@ -247,7 +241,6 @@ pub fn setup_loadout_ui(
                     ..default()
                 }),
             );
-
             p.spawn(
                 TextBundle::from_section(
                     "Select ...",
@@ -290,7 +283,6 @@ pub fn update_loadout_buttons(
 ) {
     let mut changed = false;
     let mut elem = None;
-
     for (int, lbut, mut border, mut bg) in &mut qbut {
         changed = true;
         let bgalpha = match int {
@@ -321,7 +313,6 @@ pub fn update_loadout_buttons(
     else {
         return;
     };
-
     let gear = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => p_gear.get_hand(&inv.hand),
@@ -388,7 +379,6 @@ pub fn button_clicked(
     else {
         return;
     };
-
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
             p_gear.take_hand(&inv.hand);

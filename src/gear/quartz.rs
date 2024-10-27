@@ -1,10 +1,8 @@
 //! This module defines the `QuartzStoneData` struct and its associated logic,
 //! representing the Quartz Stone consumable item in the game.
-
-use bevy::prelude::*;
-
 use super::{playergear::PlayerGear, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::{board::Position, ghost::GhostSprite, player::DeployedGearData};
+use bevy::prelude::*;
 
 const MAX_CRACKS: u8 = 4;
 
@@ -51,6 +49,7 @@ impl GearUsable for QuartzStoneData {
             && self.cracks <= MAX_CRACKS
         {
             self.energy_absorbed = 0.0;
+
             // Increment cracks
             self.cracks += 1;
 
@@ -65,7 +64,8 @@ impl GearUsable for QuartzStoneData {
             1 => GearSpriteID::QuartzStone1,
             2 => GearSpriteID::QuartzStone2,
             3 => GearSpriteID::QuartzStone3,
-            _ => GearSpriteID::QuartzStone4, // Shattered
+            // Shattered
+            _ => GearSpriteID::QuartzStone4,
         }
     }
 
@@ -97,7 +97,6 @@ pub fn aux_quartz_update(
         * dt
         * dist_adj_recip.clamp(0.0, 1.0)
         * stone_health.clamp(0.0, 1.0).sqrt();
-
     if ghost_sprite.hunt_target {
         let str = (str * 4.0).min(ghost_sprite.hunting);
         ghost_sprite.hunting -= str;
@@ -109,8 +108,8 @@ pub fn aux_quartz_update(
     }
     const RESTORE_SPEED: f32 = 0.3;
     qz_data.energy_absorbed -= (RESTORE_SPEED * dt).min(qz_data.energy_absorbed);
-    // TODO: Spwan here a red particle from the ghost that travels to the quartz
-    // .. stone to show the energy of the ghost being drawn.
+    // TODO: Spwan here a red particle from the ghost that travels to the quartz ..
+    // stone to show the energy of the ghost being drawn.
 }
 
 pub fn update_quartz_and_ghost(
@@ -120,7 +119,6 @@ pub fn update_quartz_and_ghost(
     time: Res<Time>,
 ) {
     let dt = time.delta_seconds();
-
     for (gear_pos, mut playergear) in q_gear1.iter_mut() {
         for (gear, _) in playergear.as_vec_mut().into_iter() {
             if let GearKind::QuartzStone(ref mut qs) = gear.kind {

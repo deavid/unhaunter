@@ -1,6 +1,5 @@
-use bevy::prelude::*;
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct RedTorch {
@@ -14,6 +13,7 @@ impl RedTorch {
             true => 5.0,
         }
     }
+
     pub fn color(&self) -> Color {
         // Red
         Color::srgb(1.00, 0.1, 0.02)

@@ -1,12 +1,9 @@
-use bevy::prelude::*;
-
-use crate::root::GameAssets;
-
 use super::{chapter1, ManualPage};
+use crate::root::GameAssets;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct ManualUI;
-
 #[derive(Component)]
 pub struct PageContent;
 
@@ -107,6 +104,7 @@ pub fn draw_manual_ui(
                                 },
                             ));
                         });
+
                     // Close Button
                     buttons
                         .spawn(ButtonBundle {
@@ -131,6 +129,7 @@ pub fn draw_manual_ui(
                                 },
                             ));
                         });
+
                     // Next Button
                     buttons
                         .spawn(ButtonBundle {

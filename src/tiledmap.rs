@@ -1,8 +1,8 @@
-//! Functionality to load Tiled maps (tilesets and tilemaps) into Bevy for Unhaunter.
+//! Functionality to load Tiled maps (tilesets and tilemaps) into Bevy for
+//! Unhaunter.
 //!
-//! Most of the classes here are almost a redefinition (for now) of the tiled library.
-//! Currently serve as an example on how to load/store data.
-
+//! Most of the classes here are almost a redefinition (for now) of the tiled
+//! library. Currently serve as an example on how to load/store data.
 use std::path::{Path, PathBuf};
 use std::{fmt::Debug, slice::Iter};
 
@@ -44,7 +44,8 @@ impl Debug for MapTile {
 
 /// Mainly used to customize the Debug, this is the list of tiles inside a layer.
 ///
-/// The debug skips most of the data and ensures it is written in a single compact line.
+/// The debug skips most of the data and ensures it is written in a single compact
+/// line.
 #[derive(Clone)]
 pub struct MapTileList {
     pub v: Vec<MapTile>,
@@ -77,8 +78,8 @@ pub struct MapLayer {
     pub data: MapLayerType,
 }
 
-/// Iterator for layers. This iterator will search recursively for layers of
-/// type `Tiles` and return them iteratively.
+/// Iterator for layers. This iterator will search recursively for layers of type
+/// `Tiles` and return them iteratively.
 ///
 /// Mostly used to convert a recursive search into a linear one.
 pub struct IterMapLayerGroup<'a> {
@@ -127,13 +128,11 @@ impl MapLayerGroup {
 }
 
 // ----------- Load functions -------------------
-
 /// Entry point for loading tiled maps.
 ///
-/// Example:
-///     let mut loader = tiled::Loader::new();
-///     let map = loader.load_tmx_map("assets/maps/map_house1_3x.tmx").unwrap();
-///     let map_layers = load_tile_layer_iter(map.layers());
+/// Example: let mut loader = tiled::Loader::new(); let map =
+/// loader.load_tmx_map("assets/maps/map_house1_3x.tmx").unwrap(); let map_layers =
+/// load_tile_layer_iter(map.layers());
 pub fn load_tile_layer_iter<'a>(
     layer_iter: impl ExactSizeIterator<Item = tiled::Layer<'a>>,
 ) -> Vec<MapLayer> {
@@ -152,7 +151,6 @@ pub fn load_tile_layer_iter<'a>(
             opacity: layer.opacity,
             data: load_tile_layer(layer),
         };
-
         ret.push(map_layer);
     }
     ret
@@ -176,11 +174,9 @@ fn load_tile_group_layer(layer: tiled::GroupLayer) -> MapLayerGroup {
 
 fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
     let mut ret = vec![];
-
     for y in 0..layer.height().unwrap() as i32 {
         for x in 0..layer.width().unwrap() as i32 {
             let maybe_tile = layer.get_tile(x, y);
-
             if let Some(tile) = maybe_tile {
                 let t = MapTile {
                     pos: Pos::new(x, y),
@@ -196,7 +192,6 @@ fn load_tile_layer_tiles(layer: tiled::TileLayer) -> MapTileList {
 }
 
 // ------------ Bevy map loading utils --------------------
-
 use crate::materials::CustomMaterial1;
 use bevy::{prelude::*, utils::HashMap};
 use std::sync::Arc;
@@ -278,6 +273,7 @@ mod arch {
             }
         }
     }
+
     pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
         let mut loader =
             tiled::Loader::<tiled::DefaultResourceCache, MemoryReader>::with_cache_and_reader(
@@ -291,6 +287,7 @@ mod arch {
 /// Helps trimming the extra assets/ folder for Bevy
 pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
     use normalize_path::NormalizePath;
+
     img_path
         .strip_prefix("assets/")
         .unwrap_or(img_path)
@@ -310,16 +307,19 @@ pub fn bevy_load_map(
 
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {
-        // If an image is included, this is a tilemap. If no image is included this is a sprite collection.
-        // Sprite collections are not supported right now.
+        // If an image is included, this is a tilemap. If no image is included this is a
+        // sprite collection. Sprite collections are not supported right now.
         let data = if let Some(image) = &tileset.image {
             let img_src = resolve_tiled_image_path(&image.source);
-            // FIXME: When the images are loaded onto the GPU it seems that we need at least 1 pixel of empty space
-            // .. so that the GPU can sample surrounding pixels properly.
-            // .. This contrasts with how Tiled works, as it assumes a perfect packing if possible.
+
+            // FIXME: When the images are loaded onto the GPU it seems that we need at least 1
+            // pixel of empty space .. so that the GPU can sample surrounding pixels properly.
+            // .. This contrasts with how Tiled works, as it assumes a perfect packing if
+            // possible.
             const MARGIN: u32 = 1;
-            // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and add a 2px margin. Recreating
-            // .. the texture on the fly.
+
+            // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and
+            // add a 2px margin. Recreating .. the texture on the fly.
             let texture: Handle<Image> = asset_server.load(img_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlasLayout::from_grid(
@@ -338,7 +338,6 @@ pub fn bevy_load_map(
             cmat.data.sheet_idx = 0;
             cmat.data.sprite_width = tileset.tile_width as f32 + tileset.spacing as f32;
             cmat.data.sprite_height = tileset.tile_height as f32 + tileset.spacing as f32;
-
             let atlas1_handle = texture_atlases.add(atlas1);
             AtlasData::Sheet((atlas1_handle.clone(), cmat))
         } else {
@@ -350,12 +349,12 @@ pub fn bevy_load_map(
                     dbg!(&img_src);
                     let img_handle: Handle<Image> = asset_server.load(img_src);
                     let cmat = CustomMaterial1::from_texture(img_handle.clone());
-
                     images.push((img_handle, cmat));
                 }
             }
             AtlasData::Tiles(images)
         };
+
         // NOTE: tile.offset_x/y is used when drawing, instead we want the center point.
         let anchor_bottom_px = tileset.properties.get("Anchor::bottom_px").and_then(|x| {
             if let tiled::PropertyValue::IntValue(n) = x {
@@ -364,53 +363,50 @@ pub fn bevy_load_map(
                 None
             }
         });
-
         let y_anchor: f32 = if let Some(n) = anchor_bottom_px {
             // find the fraction from the total image:
             let f = *n as f32 / (tileset.tile_height + tileset.spacing) as f32;
+
             // from the center:
             f - 0.5
         } else {
             -0.25
         };
-
         let mts = MapTileSet {
             tileset: tileset.clone(),
             data,
             y_anchor,
         };
+
         // Store the tileset in memory in case we need to do anything with it later on.
         if tilesetdb.db.insert(tileset.name.to_string(), mts).is_some() {
-            eprintln!("ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice", tileset.name.to_string());
+            eprintln!(
+                "ERROR: Already existing tileset loaded with name {:?} - make sure you don't have the same tileset loaded twice",
+                tileset.name.to_string()
+            );
             // panic!();
         }
     }
-
     let map_layers = load_tile_layer_iter(map.layers());
     let grp = MapLayerGroup { layers: map_layers };
-
     let layers: Vec<(usize, MapLayer)> = grp
         .iter()
         .filter(|x| x.visible)
         .enumerate()
         .map(|(n, l)| (n, l.clone()))
         .collect();
-
     (map, layers)
-
     // let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
     // bevy_load_layers(&layers, tile_size, &mut tilesetdb)
 }
 
-/// Loads a TMX as text file and inspects the first lines to obtain class and display_name.
+/// Loads a TMX as text file and inspects the first lines to obtain class and
+/// display_name.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn naive_tmx_loader(path: &str) -> anyhow::Result<(Option<String>, Option<String>)> {
     use std::io::BufRead as _;
-    // <map version="1.10" tiledversion="1.10.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="18" nextobjectid="15">
-    //     <properties>
-    //      <property name="display_name" value="123 Acorn Lane Street House"/>
-    //     </properties>
 
+    // ` <map version="1.10" tiledversion="1.10.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="18" nextobjectid="15"> <properties> <property name="display_name" value="123 Acorn Lane Street House"/> </properties>`
     let file = std::fs::File::open(path)?;
     let reader = std::io::BufReader::new(file);
     let mut class: Option<String> = None;

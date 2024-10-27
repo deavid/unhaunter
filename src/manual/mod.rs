@@ -2,15 +2,13 @@ pub mod chapter1;
 pub mod index;
 pub mod utils;
 
-use bevy::prelude::*;
-
-use enum_iterator::Sequence;
-use index::{ManualUI, PageContent};
-
 use crate::{
     difficulty::CurrentDifficulty,
     root::{self, GameAssets},
 };
+use bevy::prelude::*;
+use enum_iterator::Sequence;
+use index::{ManualUI, PageContent};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
 pub enum ManualPage {
@@ -42,11 +40,11 @@ impl ManualPageRange {
             .enumerate()
             .find_map(|(n, v)| if *v == exit_page { Some(n) } else { None })
             .unwrap();
-
         if entry_idx > exit_idx {
-            panic!("Invalid ManualPageRange: entry_page must come before or be the same as exit_page in the enum sequence.");
+            panic!(
+                "Invalid ManualPageRange: entry_page must come before or be the same as exit_page in the enum sequence."
+            );
         }
-
         Self {
             entry_page,
             exit_page,
@@ -61,13 +59,12 @@ fn manual_system(
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut next_state: ResMut<NextState<root::State>>,
     mut game_next_state: ResMut<NextState<root::GameState>>,
-    text_query: Query<&Text>, // Query for Text components
+    // Query for Text components
+    text_query: Query<&Text>,
     mut button_query: Query<(&Children, &mut Visibility), With<Button>>,
 ) {
-    // Store the manual UI entity ID
-    // let mut manual_ui_entity = None;
-
-    // Handle button clicks
+    // Store the manual UI entity ID let mut manual_ui_entity = None; Handle button
+    // clicks
     for (interaction, children) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
             for child in children.iter() {
@@ -75,11 +72,11 @@ fn manual_system(
                     if text.sections[0].value == "Previous" {
                         *current_page = current_page.previous().unwrap_or(*current_page);
                         info!("Current page: {:?}", *current_page);
-                    // Use previous() from Sequence
+                        // Use previous() from Sequence
                     } else if text.sections[0].value == "Next" {
                         *current_page = current_page.next().unwrap_or(*current_page);
                         info!("Current page: {:?}", *current_page);
-                    // Use next() from Sequence
+                        // Use next() from Sequence
                     } else if text.sections[0].value == "Close" {
                         // Transition back to the appropriate state
                         if difficulty.0.manual_pages.entry_page == *current_page {
@@ -113,7 +110,6 @@ fn manual_system(
                     && *current_page == ManualPage::first().unwrap();
                 let is_last = text.sections[0].value == "Next"
                     && *current_page == ManualPage::last().unwrap();
-
                 *visibility = if is_first || is_last {
                     Visibility::Hidden
                 } else {
@@ -123,7 +119,6 @@ fn manual_system(
         }
     }
 }
-
 #[derive(Component)]
 pub struct ManualCamera;
 
@@ -149,7 +144,8 @@ fn redraw_manual_ui_system(
     handles: Res<GameAssets>,
 ) {
     if !current_page.is_changed() {
-        return; // Only redraw if the page has changed
+        // Only redraw if the page has changed
+        return;
     }
 
     // Get the ManualUI entity
@@ -202,7 +198,8 @@ pub fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             redraw_manual_ui_system
-                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))) // Add run_if condition here
+                // Add run_if condition here
+                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual)))
                 .after(manual_system),
         )
         .insert_resource(ManualPage::default());

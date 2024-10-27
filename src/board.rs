@@ -1,6 +1,12 @@
 use std::f32::consts::PI;
-// use std::time::Duration;
 
+// use std::time::Duration;
+use crate::{
+    behavior::{self, Behavior, SpriteCVOKey},
+    ghost_definitions::Evidence,
+    maplight,
+    materials::CustomMaterial1,
+};
 use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
@@ -10,25 +16,19 @@ use fastapprox::faster;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    behavior::{self, Behavior, SpriteCVOKey},
-    ghost_definitions::Evidence,
-    maplight,
-    materials::CustomMaterial1,
-};
-
 /// Represents the logical position of an object on the game board.
 ///
-/// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical coordinate system,
-/// as well as a `global_z` value for fine-tuning the object's vertical position in the isometric view.
+/// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical
+/// coordinate system, as well as a `global_z` value for fine-tuning the object's
+/// vertical position in the isometric view.
 ///
-/// The `to_screen_coord` method converts the logical position to screen coordinates,
-/// applying the isometric perspective transformation.
-/// This transformation is necessary to display the 3D game world in a 2D isometric view.
+/// The `to_screen_coord` method converts the logical position to screen
+/// coordinates, applying the isometric perspective transformation. This
+/// transformation is necessary to display the 3D game world in a 2D isometric view.
 ///
-/// Other systems, such as the `apply_perspective` system, use the `Position` component
-/// to update the `Transform` component of the object's sprite,
-/// ensuring that the sprite is rendered at the correct position in the isometric view.
+/// Other systems, such as the `apply_perspective` system, use the `Position`
+/// component to update the `Transform` component of the object's sprite, ensuring
+/// that the sprite is rendered at the correct position in the isometric view.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct Position {
     pub x: f32,
@@ -86,6 +86,7 @@ impl Direction {
             dz: self.dz / dst,
         }
     }
+
     pub fn to_screen_coord(self) -> Vec3 {
         let x =
             self.dx * PERSPECTIVE_X[0] + self.dy * PERSPECTIVE_Y[0] + self.dz * PERSPECTIVE_Z[0];
@@ -153,15 +154,10 @@ impl PartialEq for Position {
     }
 }
 
-// old perspective (9x20cm)
-// const SUBTL: f32 = 9.0;
-
-// new perspective (3x20cm)
+// old perspective (9x20cm) const SUBTL: f32 = 9.0; new perspective (3x20cm)
 const SUBTL: f32 = 3.0;
 
-// new perspective (3x20cm) - reduced
-// const SUBTL: f32 = 2.5;
-
+// new perspective (3x20cm) - reduced const SUBTL: f32 = 2.5;
 const PERSPECTIVE_X: [f32; 3] = [4.0 * SUBTL, -2.0 * SUBTL, 0.0001];
 const PERSPECTIVE_Y: [f32; 3] = [4.0 * SUBTL, 2.0 * SUBTL, -0.0001];
 const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
@@ -175,46 +171,57 @@ impl Position {
             global_z: 0 as f32,
         }
     }
+
     pub fn into_global_z(mut self, global_z: f32) -> Self {
         self.global_z = global_z;
         self
     }
+
     pub fn to_vec3(self) -> Vec3 {
         Vec3::new(self.x, self.y, self.z)
     }
+
     pub fn to_screen_coord(self) -> Vec3 {
         let x = self.x * PERSPECTIVE_X[0] + self.y * PERSPECTIVE_Y[0] + self.z * PERSPECTIVE_Z[0];
         let y = self.x * PERSPECTIVE_X[1] + self.y * PERSPECTIVE_Y[1] + self.z * PERSPECTIVE_Z[1];
         let z = self.x * PERSPECTIVE_X[2] + self.y * PERSPECTIVE_Y[2] + self.z * PERSPECTIVE_Z[2];
         Vec3::new(x, y, z + self.global_z)
     }
+
     pub fn same_x(&self, other: &Self) -> bool {
         (self.x - other.x).abs() < EPSILON
     }
+
     pub fn same_y(&self, other: &Self) -> bool {
         (self.y - other.y).abs() < EPSILON
     }
+
     pub fn same_z(&self, other: &Self) -> bool {
         (self.z - other.z).abs() < EPSILON
     }
+
     pub fn same_xy(&self, other: &Self) -> bool {
         self.same_x(other) || self.same_y(other)
     }
+
     pub fn distance(&self, other: &Self) -> f32 {
         self.distance2(other).sqrt()
     }
+
     pub fn distance2(&self, other: &Self) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         let dz = self.z - other.z;
         dx * dx + dy * dy + dz * dz
     }
+
     pub fn distance_taxicab(&self, other: &Self) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         let dz = self.z - other.z;
         dx.abs() + dy.abs() + dz.abs()
     }
+
     pub fn to_board_position(self) -> BoardPosition {
         BoardPosition {
             x: self.x.round() as i64,
@@ -222,8 +229,10 @@ impl Position {
             z: 0,
         }
     }
+
     pub fn rotate_by_dir(&self, dir: &Direction) -> Self {
         let dir = dir.normalized();
+
         // CAUTION: This is not possible with a single vector. Most likely wrong.
         let x_axis = Direction {
             dx: dir.dx,
@@ -240,7 +249,6 @@ impl Position {
             dy: dir.dz,
             dz: dir.dx,
         };
-
         Self {
             x: self.x * x_axis.dx + self.y * y_axis.dx + self.z * z_axis.dx,
             y: self.x * x_axis.dy + self.y * y_axis.dy + self.z * z_axis.dy,
@@ -248,6 +256,7 @@ impl Position {
             global_z: self.global_z,
         }
     }
+
     pub fn unrotate_by_dir(&self, dir: &Direction) -> Self {
         // ... probably wrong...
         let dir = Direction {
@@ -257,6 +266,7 @@ impl Position {
         };
         self.rotate_by_dir(&dir)
     }
+
     pub fn delta(self, rhs: Position) -> Direction {
         Direction {
             dx: self.x - rhs.x,
@@ -291,6 +301,7 @@ impl std::ops::Sub for &Position {
         }
     }
 }
+
 #[derive(Component, Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct BoardPosition {
     pub x: i64,
@@ -307,6 +318,7 @@ impl BoardPosition {
             global_z: 0.0,
         }
     }
+
     pub fn to_position_center(&self) -> Position {
         Position {
             x: self.x as f32 + 0.5,
@@ -315,6 +327,7 @@ impl BoardPosition {
             global_z: 0.0,
         }
     }
+
     pub fn left(&self) -> Self {
         Self {
             x: self.x - 1,
@@ -322,6 +335,7 @@ impl BoardPosition {
             z: self.z,
         }
     }
+
     pub fn right(&self) -> Self {
         Self {
             x: self.x + 1,
@@ -329,6 +343,7 @@ impl BoardPosition {
             z: self.z,
         }
     }
+
     pub fn top(&self) -> Self {
         Self {
             x: self.x,
@@ -336,6 +351,7 @@ impl BoardPosition {
             z: self.z,
         }
     }
+
     pub fn bottom(&self) -> Self {
         Self {
             x: self.x,
@@ -343,6 +359,7 @@ impl BoardPosition {
             z: self.z,
         }
     }
+
     pub fn xy_neighbors_buf(&self, dist: u32, out: &mut Vec<BoardPosition>) {
         out.clear();
         let dist = dist as i64;
@@ -357,6 +374,7 @@ impl BoardPosition {
             }
         }
     }
+
     pub fn xy_neighbors_buf_clamped(
         &self,
         dist: u32,
@@ -379,16 +397,17 @@ impl BoardPosition {
             }
         }
     }
+
     pub fn xy_neighbors(&self, dist: u32) -> Vec<BoardPosition> {
         let mut ret: Vec<BoardPosition> = Vec::with_capacity((dist * dist * 4 + dist * 8) as usize);
         self.xy_neighbors_buf(dist, &mut ret);
         ret
     }
+
     pub fn distance(&self, other: &Self) -> f32 {
         let dx = self.x as f32 - other.x as f32;
         let dy = self.y as f32 - other.y as f32;
         let dz = self.z as f32 - other.z as f32;
-
         (dx.powi(2) + dy.powi(2) + dz.powi(2)).sqrt()
     }
 
@@ -403,7 +422,6 @@ impl BoardPosition {
         let sdx = self.x as f32 - shadow.x as f32;
         let sdy = self.y as f32 - shadow.y as f32;
         let sm = (sdx.powi(2) + sdy.powi(2)).sqrt();
-
         let tdx = self.x as f32 - tile.x as f32;
         let tdy = self.y as f32 - tile.y as f32;
         let tm = (tdx.powi(2) + tdy.powi(2)).sqrt();
@@ -412,13 +430,14 @@ impl BoardPosition {
         let tdx = tdx * sm / tm;
         let tdy = tdy * sm / tm;
 
-        // The output of this function is the proximity scaled to the shadow point.
-        // Where 0 .. 0.5 is full coverage, 1.0 is half coverage, and anything larger is no coverage.
-
+        // The output of this function is the proximity scaled to the shadow point. Where
+        // 0 .. 0.5 is full coverage, 1.0 is half coverage, and anything larger is no
+        // coverage.
         let dx = tdx - sdx;
         let dy = tdy - sdy;
         (dx.powi(2) + dy.powi(2)).sqrt()
     }
+
     pub fn mini_hash(&self) -> f32 {
         let h: i64 = ((self.x + 41) % 61 + (self.y * 13 + 47) % 67 + (self.z * 29 + 59) % 79) % 109;
         h as f32 / 109.0
@@ -436,46 +455,61 @@ pub enum Bdl {
     Mmb(MaterialMesh2dBundle<CustomMaterial1>),
     Sb(SpriteBundle),
 }
+
 #[derive(Clone)]
 pub struct MapTileComponents {
     pub bundle: Bdl,
     pub behavior: Behavior,
 }
 
-/// The `SpriteDB` resource stores a database of pre-built Bevy components and sprites for map tiles.
+/// The `SpriteDB` resource stores a database of pre-built Bevy components and
+/// sprites for map tiles.
 ///
 /// This resource optimizes map loading and manipulation by:
-/// * Pre-building Bevy components for each tile type, avoiding redundant entity creation during map loading.
+///
+/// * Pre-building Bevy components for each tile type, avoiding redundant entity
+///   creation during map loading.
+///
 /// * Providing efficient lookup of tile components based on their unique identifiers.
-/// * Indexing tiles based on their visual characteristics (class, variant, orientation) for quick access
-///   during interaction events.
+///
+/// * Indexing tiles based on their visual characteristics (class, variant,
+///   orientation) for quick access during interaction events.
 #[derive(Clone, Default, Resource)]
 pub struct SpriteDB {
-    /// Maps a unique tile identifier (tileset name + tile UID) to its pre-built Bevy components,
-    /// including the `Bdl` (bundle) and the `Behavior`.
-    /// This enables efficient lookup of components during map loading and interaction events.
+    /// Maps a unique tile identifier (tileset name + tile UID) to its pre-built Bevy
+    /// components, including the `Bdl` (bundle) and the `Behavior`. This enables
+    /// efficient lookup of components during map loading and interaction events.
     pub map_tile: HashMap<(String, u32), MapTileComponents>,
     /// Indexes tile identifiers based on their visual characteristics:
+    ///
     /// * `class`: The type of tile (e.g., "Door", "Wall").
+    ///
     /// * `variant`:  A specific variation of the tile type (e.g., "wooden", "brick").
+    ///
     /// * `orientation`: The direction the tile is facing (e.g., "XAxis", "YAxis").
     ///
-    /// This index allows for quick retrieval of tiles that share the same sprite, which is useful
-    /// when updating the state of interactive objects that have multiple instances in the map.
-    /// For example, when the player opens a door, all other doors of the same type can be updated efficiently.
+    /// This index allows for quick retrieval of tiles that share the same sprite,
+    /// which is useful when updating the state of interactive objects that have
+    /// multiple instances in the map. For example, when the player opens a door, all
+    /// other doors of the same type can be updated efficiently.
     pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
 }
 
-/// The `RoomDB` resource manages room-related data, including room boundaries and states.
+/// The `RoomDB` resource manages room-related data, including room boundaries and
+/// states.
 #[derive(Clone, Default, Resource)]
 pub struct RoomDB {
-    /// Maps each board position to the name of the room it belongs to.
-    /// This defines the boundaries of each room in the game world.
+    /// Maps each board position to the name of the room it belongs to. This defines
+    /// the boundaries of each room in the game world.
     pub room_tiles: HashMap<BoardPosition, String>,
-    /// Tracks the current state of each room, using the room name as the key.
-    /// The exact nature of the room state is not explicitly defined but could include things like:
+    /// Tracks the current state of each room, using the room name as the key. The
+    /// exact nature of the room state is not explicitly defined but could include
+    /// things like:
+    ///
     /// * Lighting conditions (lit/unlit).
+    ///
     /// * Presence of specific objects or entities.
+    ///
     /// * Temperature or other environmental factors.
     pub room_state: HashMap<String, behavior::State>,
 }
@@ -556,7 +590,7 @@ pub struct CollisionFieldData {
 
 #[derive(Clone, Debug)]
 pub struct LightFieldSector {
-    // field: Vec<Vec<Vec<Option<Box<LightFieldData>>>>>,
+    // field: Vec<Vec<Vec<Option<Box`<LightFieldData>`>>>>,
     field: Vec<LightFieldData>,
     min_x: i64,
     min_y: i64,
@@ -565,7 +599,9 @@ pub struct LightFieldSector {
     sz_y: usize,
     _sz_z: usize,
 }
-// FIXME: This has exactly the same computation as HashMap, at least for the part that it matters.
+
+// FIXME: This has exactly the same computation as HashMap, at least for the part
+// that it matters.
 impl LightFieldSector {
     pub fn new(min_x: i64, min_y: i64, min_z: i64, max_x: i64, max_y: i64, max_z: i64) -> Self {
         let sz_x = (max_x - min_x + 1).max(0) as usize;
@@ -588,14 +624,16 @@ impl LightFieldSector {
     fn vec_coord(&self, x: i64, y: i64, _z: i64) -> usize {
         let x = x - self.min_x;
         let y = y - self.min_y;
-        // let z = z - self.min_z;
-        // These are purposefully allowing overflow and clamping to an out of bounds value.
+
+        // let z = z - self.min_z; These are purposefully allowing overflow and clamping
+        // to an out of bounds value.
         let x = (x as usize).min(self.sz_x);
         let y = (y as usize).min(self.sz_y);
+
         // let z = (z as usize).min(self.sz_z);
-
-        x + y * self.sz_x // + z * self.sz_x * self.sz_y
-
+        //
+        // * z * self.sz_x * self.sz_y
+        x + y * self.sz_x
         // (x & 0xF) | ((y & 0xF) << 4) | ((x & 0xFFFFF0) << 4) | ((y & 0xFFFFF0) << 8)
     }
 
@@ -603,9 +641,11 @@ impl LightFieldSector {
         let xyz = self.vec_coord(x, y, z);
         self.field.get_mut(xyz)
     }
+
     pub fn get_pos(&self, p: &BoardPosition) -> Option<&LightFieldData> {
         self.get(p.x, p.y, p.z)
     }
+
     pub fn get_mut_pos(&mut self, p: &BoardPosition) -> Option<&mut LightFieldData> {
         self.get_mut(p.x, p.y, p.z)
     }
@@ -617,13 +657,10 @@ impl LightFieldSector {
     }
 
     /// get_pos_unchecked: Does not seem to be any faster.
-    // #[inline]
-    // pub unsafe fn get_pos_unchecked(&self, p: &BoardPosition) -> &LightFieldData {
-    //     // let xyz = self.vec_coord(p.x, p.y, p.z);
-    //     let xyz = (p.x - self.min_x) as usize + (p.y - self.min_y) as usize * self.sz_x;
-    //     self.field.get_unchecked(xyz)
-    // }
-
+    // #[inline] pub unsafe fn get_pos_unchecked(&self, p: &BoardPosition) ->
+    // &LightFieldData { // let xyz = self.vec_coord(p.x, p.y, p.z); let xyz = (p.x -
+    // self.min_x) as usize + (p.y - self.min_y) as usize * self.sz_x;
+    // self.field.get_unchecked(xyz) }
     pub fn insert(&mut self, x: i64, y: i64, z: i64, lfd: LightFieldData) {
         let xyz = self.vec_coord(x, y, z);
         self.field[xyz] = lfd;
@@ -640,6 +677,7 @@ struct CachedBoardPos {
 impl CachedBoardPos {
     const CENTER: i64 = 32;
     const SZ: usize = (Self::CENTER * 2 + 1) as usize;
+
     /// Perimeter of the circle for indexing.
     const TAU_I: usize = 48 * 2;
 
@@ -664,16 +702,15 @@ impl CachedBoardPos {
             }
         }
     }
+
     fn compute_angle(&mut self) {
         for (x, xv) in self.angle.iter_mut().enumerate() {
             for (y, yv) in xv.iter_mut().enumerate() {
                 let x: f32 = x as f32 - Self::CENTER as f32;
                 let y: f32 = y as f32 - Self::CENTER as f32;
                 let dist: f32 = (x * x + y * y).sqrt();
-
                 let x = x / dist;
                 let y = y / dist;
-
                 let angle = x.acos() * y.signum() * Self::TAU_I as f32 / PI / 2.0;
                 let angle_i = (angle.round() as i64).rem_euclid(Self::TAU_I as i64);
                 *yv = angle_i as usize;
@@ -685,14 +722,12 @@ impl CachedBoardPos {
                 v.push(self.angle[x as usize][y as usize]);
             }
         }
-
         for (x, xv) in self.angle_range.iter_mut().enumerate() {
             for (y, yv) in xv.iter_mut().enumerate() {
                 let orig_angle = self.angle[x][y];
-                // if angle < Self::TAU_I / 4 || angle > Self::TAU_I - Self::TAU_I / 4 {
-                //     // Angles closer to zero need correction to avoid looking on the wrong place
 
-                // }
+                // if angle < Self::TAU_I / 4 || angle > Self::TAU_I - Self::TAU_I / 4 { // Angles
+                // closer to zero need correction to avoid looking on the wrong place }
                 let mut min_angle: i64 = 0;
                 let mut max_angle: i64 = 0;
                 let x: f32 = x as f32 - Self::CENTER as f32;
@@ -721,21 +756,27 @@ impl CachedBoardPos {
             }
         }
     }
+
     fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
+
         // self.dist[x][y]
         unsafe { *self.dist.get_unchecked(x).get_unchecked(y) }
     }
+
     fn bpos_angle(&self, s: &BoardPosition, d: &BoardPosition) -> usize {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
+
         // self.angle[x][y]
         unsafe { *self.angle.get_unchecked(x).get_unchecked(y) }
     }
+
     fn bpos_angle_range(&self, s: &BoardPosition, d: &BoardPosition) -> (i64, i64) {
         let x = (d.x - s.x + Self::CENTER) as usize;
         let y = (d.y - s.y + Self::CENTER) as usize;
+
         // self.angle_range[x][y]
         unsafe { *self.angle_range.get_unchecked(x).get_unchecked(y) }
     }
@@ -744,13 +785,14 @@ impl CachedBoardPos {
 pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
-
     qt: Query<(&Position, &Behavior)>,
 ) {
     let mut rng = rand::thread_rng();
-    // Here we will recreate the field (if needed? - not sure how to detect that)
-    // ... maybe add a timer since last update.
+
+    // Here we will recreate the field (if needed? - not sure how to detect that) ...
+    // maybe add a timer since last update.
     let mut bdr = BoardDataToRebuild::default();
+
     // Merge all the incoming events into a single one.
     for b in ev_bdr.read() {
         if b.collision {
@@ -782,11 +824,14 @@ pub fn boardfield_update(
             bf.collision_field.insert(pos, colfd);
         }
     }
+
     // Create temperature field - only missing data
     let valid_k: Vec<_> = bf.collision_field.keys().cloned().collect();
     let ambient_temp = bf.ambient_temp;
     let mut added_temps: Vec<BoardPosition> = vec![];
-    // Randomize initial temperatures so the player cannot exploit the fact that the data is "flat" at the beginning
+
+    // Randomize initial temperatures so the player cannot exploit the fact that the
+    // data is "flat" at the beginning
     for pos in valid_k.into_iter() {
         let missing = bf.temperature_field.get(&pos).is_none();
         if missing {
@@ -795,6 +840,7 @@ pub fn boardfield_update(
             bf.temperature_field.insert(pos, ambient);
         }
     }
+
     // Smoothen after first initialization so it is not as jumpy.
     for _ in 0..16 {
         for pos in added_temps.iter() {
@@ -829,15 +875,13 @@ pub fn boardfield_update(
             }
         }
     }
-
     if bdr.lighting {
-        // Rebuild lighting field since it has changed
-        // info!("Lighting rebuild");
+        // Rebuild lighting field since it has changed info!("Lighting rebuild");
         let build_start_time = Instant::now();
         let cbp = CachedBoardPos::new();
-
         bf.exposure_lux = 1.0;
         bf.light_field.clear();
+
         // Dividing by 4 so later we don't get an overflow if there's no map.
         let first_p = qt
             .iter()
@@ -871,24 +915,21 @@ pub fn boardfield_update(
             };
             bf.light_field.insert(pos, lightdata);
         }
-        // info!(
-        //     "Collecting time: {:?} - sz: {}",
-        //     build_start_time.elapsed(),
-        //     bf.light_field.len()
-        // );
+
+        // info!( "Collecting time: {:?} - sz: {}", build_start_time.elapsed(),
+        // bf.light_field.len() );
         let mut lfs = LightFieldSector::new(min_x, min_y, min_z, max_x, max_y, max_z);
         for (k, v) in bf.light_field.iter() {
             lfs.insert(k.x, k.y, k.z, v.clone());
         }
-
         let mut nbors_buf = Vec::with_capacity(52 * 52);
 
-        // let mut lfs_clone_time_total = Duration::ZERO;
-        // let mut shadows_time_total = Duration::ZERO;
-        // let mut store_lfs_time_total = Duration::ZERO;
+        // let mut lfs_clone_time_total = Duration::ZERO; let mut shadows_time_total =
+        // Duration::ZERO; let mut store_lfs_time_total = Duration::ZERO;
         for step in 0..3 {
             // let lfs_clone_time = Instant::now();
             let src_lfs = lfs.clone();
+
             // lfs_clone_time_total += lfs_clone_time.elapsed();
             let size = match step {
                 0 => 26,
@@ -903,13 +944,11 @@ pub fn boardfield_update(
                         let Some(src) = src_lfs.get(x, y, z) else {
                             continue;
                         };
-                        // if src.transmissivity < 0.5 && step > 0 && size > 1 {
-                        //     // Reduce light spread through walls
-                        //     // FIXME: If the light is on the wall, this breaks (and this is possible since the wall is really 1/3rd of the tile)
-                        //     continue;
-                        // }
-                        let root_pos = BoardPosition { x, y, z };
 
+                        // if src.transmissivity < 0.5 && step > 0 && size > 1 { // Reduce light spread
+                        // through walls // FIXME: If the light is on the wall, this breaks (and this is
+                        // possible since the wall is really 1/3rd of the tile) continue; }
+                        let root_pos = BoardPosition { x, y, z };
                         let mut src_lux = src.lux;
                         let min_lux = match step {
                             0 => 0.001,
@@ -929,6 +968,7 @@ pub fn boardfield_update(
                         if src_lux > max_lux {
                             continue;
                         }
+
                         // Optimize next steps by only looking to harsh differences.
                         root_pos.xy_neighbors_buf_clamped(
                             1,
@@ -939,7 +979,6 @@ pub fn boardfield_update(
                             max_y,
                         );
                         let nbors = &nbors_buf;
-
                         if step > 0 {
                             let ldata_iter = nbors.iter().filter_map(|b| {
                                 lfs.get_pos(b).map(|l| {
@@ -955,12 +994,14 @@ pub fn boardfield_update(
                                 min_lux = min_lux.min(lux);
                                 min_trans = min_trans.min(trans);
                             }
+
                             // For smoothing steps only:
                             if *min_trans > 0.7 && src_lux / (*min_lux + 0.0001) < 1.9 {
                                 // If there are no walls nearby, we don't reflect light.
                                 continue;
                             }
                         }
+
                         // This controls how harsh is the light
                         if step > 0 {
                             src_lux /= 5.5;
@@ -968,8 +1009,7 @@ pub fn boardfield_update(
                             src_lux /= 1.01;
                         }
 
-                        // let shadows_time = Instant::now();
-                        // This takes time to process:
+                        // let shadows_time = Instant::now(); This takes time to process:
                         root_pos.xy_neighbors_buf_clamped(
                             size,
                             &mut nbors_buf,
@@ -983,6 +1023,7 @@ pub fn boardfield_update(
                         // reset the light value for this light, so we don't count double.
                         lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
                         let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
+
                         // Compute shadows
                         for pillar_pos in nbors.iter() {
                             // 60% of the time spent in compute shadows is obtaining this:
@@ -990,9 +1031,7 @@ pub fn boardfield_update(
                                 continue;
                             };
 
-                            // let lf = unsafe { lfs.get_pos_unchecked(pillar_pos) };
-                            // t_x += lf.lux;
-                            // continue;
+                            // let lf = unsafe { lfs.get_pos_unchecked(pillar_pos) }; t_x += lf.lux; continue;
                             let consider_opaque = lf.transmissivity < 0.5;
                             if !consider_opaque {
                                 continue;
@@ -1008,37 +1047,29 @@ pub fn boardfield_update(
                             }
                         }
 
-                        // shadows_time_total += shadows_time.elapsed();
-                        // FIXME: Possibly we want to smooth shadow_dist here - a convolution with a gaussian or similar
-                        // where we preserve the high values but smooth the transition to low ones.
-
+                        // shadows_time_total += shadows_time.elapsed(); FIXME: Possibly we want to smooth
+                        // shadow_dist here - a convolution with a gaussian or similar where we preserve
+                        // the high values but smooth the transition to low ones.
                         if src.transmissivity < 0.5 {
                             // Reduce light spread through walls
                             shadow_dist.iter_mut().for_each(|x| *x = 0.0);
                         }
-                        // let size = shadow_dist
-                        //     .iter()
-                        //     .map(|d| (d + 1.5).round() as u32)
-                        //     .max()
-                        //     .unwrap()
-                        //     .min(size);
-                        // let nbors = root_pos.xy_neighbors(size);
-                        let light_height = 4.0;
-                        // let mut total_lux = 0.1;
-                        // for neighbor in nbors.iter() {
-                        //     let dist = cbp.bpos_dist(&root_pos, neighbor);
-                        //     let dist2 = dist + light_height;
-                        //     let angle = cbp.bpos_angle(&root_pos, neighbor);
-                        //     let sd = shadow_dist[angle];
-                        //     let f = (faster::tanh(sd - dist - 0.5) + 1.0) / 2.0;
-                        //     total_lux += f / dist2 / dist2;
-                        // }
-                        // let store_lfs_time = Instant::now();
 
+                        // let size = shadow_dist .iter() .map(|d| (d + 1.5).round() as u32) .max()
+                        // .unwrap() .min(size); let nbors = root_pos.xy_neighbors(size);
+                        let light_height = 4.0;
+
+                        // let mut total_lux = 0.1; for neighbor in nbors.iter() { let dist =
+                        // cbp.bpos_dist(&root_pos, neighbor); let dist2 = dist + light_height; let angle
+                        // = cbp.bpos_angle(&root_pos, neighbor); let sd = shadow_dist[angle]; let f =
+                        // (faster::tanh(sd - dist - 0.5) + 1.0) / 2.0; total_lux += f / dist2 / dist2; }
+                        // let store_lfs_time = Instant::now();
                         let total_lux = 2.0;
+
                         // new shadow method
                         for neighbor in nbors.iter() {
                             let dist = cbp.bpos_dist(&root_pos, neighbor);
+
                             // let dist = root_pos.fast_distance_xy(neighbor);
                             let dist2 = dist + light_height;
                             let angle = cbp.bpos_angle(&root_pos, neighbor);
@@ -1047,10 +1078,12 @@ pub fn boardfield_update(
                             if dist - 3.0 < sd {
                                 // FIXME: f here controls the bleed through walls.
                                 if let Some(lf) = lfs.get_mut_pos(neighbor) {
-                                    const BLEED_TILES: f32 = 0.8; // 0.5 is too low, it creates un-evenness.
+                                    // 0.5 is too low, it creates un-evenness.
+                                    const BLEED_TILES: f32 = 0.8;
                                     let f = (faster::tanh((sd - dist - 0.5) * BLEED_TILES.recip())
                                         + 1.0)
                                         / 2.0;
+
                                     // let f = 1.0;
                                     lf.lux += lux_add * f;
                                 }
@@ -1060,12 +1093,8 @@ pub fn boardfield_update(
                     }
                 }
             }
-            // info!(
-            //     "Light step {}: {:?}; per size: {:?}",
-            //     step,
-            //     step_time.elapsed(),
-            //     step_time.elapsed() / size
-            // );
+            // info!( "Light step {}: {:?}; per size: {:?}", step, step_time.elapsed(),
+            // step_time.elapsed() / size );
         }
         for (k, v) in bf.light_field.iter_mut() {
             v.lux = lfs.get_pos(k).unwrap().lux;
@@ -1079,10 +1108,8 @@ pub fn boardfield_update(
         let avg_lux = total_lux / bf.light_field.len() as f32;
         bf.exposure_lux = (avg_lux + 2.0) / 2.0;
 
-        // dbg!(lfs_clone_time_total);
-        // dbg!(shadows_time_total);
+        // dbg!(lfs_clone_time_total); dbg!(shadows_time_total);
         // dbg!(store_lfs_time_total);
-
         info!(
             "Lighting rebuild - complete: {:?}",
             build_start_time.elapsed()
