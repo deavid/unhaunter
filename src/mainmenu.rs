@@ -10,6 +10,7 @@ use crate::platform::plt::UI_SCALE;
 
 const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
 const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
+const MUSIC_VOLUME: f32 = 0.00002; // Usual value is 0.2
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
@@ -185,7 +186,7 @@ pub fn manage_title_song(
             source: asset_server.load("music/unhaunter_intro.ogg"),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.2),
+                volume: bevy::audio::Volume::new(MUSIC_VOLUME),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
@@ -301,7 +302,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             },
                         ))
                         .insert(MenuItem::new(MenuID::Manual));
-                    
                     // parent
                     //     .spawn(TextBundle::from_section(
                     //         "Options",
@@ -341,7 +341,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     font_size: 20.0 * UI_SCALE,
                     color: MENU_ITEM_COLOR_OFF,
                 },
-            ).with_style( Style { 
+            ).with_style( Style {
                 padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
                 align_content: AlignContent::Center,
                 align_self: AlignSelf::Center,
@@ -352,16 +352,12 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 flex_basis: Val::Px(35.0 * UI_SCALE),
                 max_height: Val::Px(35.0 * UI_SCALE),
                 ..default()}));
-        
         });
 
     info!("Main menu loaded");
 }
 
-pub fn item_logic(
-    mut q: Query<(&mut MenuItem, &mut Text)>,
-    qmenu: Query<&Menu>,
-) {
+pub fn item_logic(mut q: Query<(&mut MenuItem, &mut Text)>, qmenu: Query<&Menu>) {
     for (mut mitem, mut text) in q.iter_mut() {
         for menu in qmenu.iter() {
             mitem.highlighted = menu.selected == mitem.identifier;
@@ -410,7 +406,7 @@ pub fn menu_event(
             MenuID::Manual => {
                 // Transition to the Manual state
                 next_state.set(root::State::Manual);
-            }            
+            }
             MenuID::_Options => {}
             MenuID::Quit => {
                 exit.send(AppExit::Success);

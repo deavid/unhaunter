@@ -1,5 +1,6 @@
 pub mod chapter1;
 pub mod index;
+pub mod utils;
 
 use bevy::prelude::*;
 
