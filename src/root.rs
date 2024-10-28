@@ -137,6 +137,13 @@ pub struct ImageAssets {
     pub manual_activate_equipment: Handle<Image>,
     pub manual_switch_item: Handle<Image>,
     pub manual_quick_evidence: Handle<Image>,
+    // Chapter 1: Page 3:
+    pub manual_emf_reader: Handle<Image>,
+    pub manual_thermometer: Handle<Image>,
+    pub manual_truck_sanity: Handle<Image>,
+    pub manual_ghost_attack: Handle<Image>,
+    pub manual_truck_journal: Handle<Image>,
+    pub manual_truck_exterior: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -265,6 +272,13 @@ pub fn load_assets(
             manual_activate_equipment: server.load("manual/images/chapter1/activate_equipment.png"),
             manual_switch_item: server.load("manual/images/chapter1/switch_item.png"),
             manual_quick_evidence: server.load("manual/images/chapter1/quick_evidence.png"),
+            // Chapter 1: Page 3:
+            manual_emf_reader: server.load("manual/images/chapter1/emf_reader.png"),
+            manual_thermometer: server.load("manual/images/chapter1/thermometer.png"),
+            manual_truck_sanity: server.load("manual/images/chapter1/truck_sanity.png"),
+            manual_ghost_attack: server.load("manual/images/chapter1/ghost_attack.png"),
+            manual_truck_journal: server.load("manual/images/chapter1/identify_ghost.png"),
+            manual_truck_exterior: server.load("manual/images/chapter1/truck_exterior.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {
