@@ -1,3 +1,4 @@
+use crate::colors;
 use crate::platform::plt::UI_SCALE;
 use crate::root::GameAssets;
 
@@ -80,10 +81,22 @@ pub fn grid_img_text(
 
 pub fn grid_img_text2(
     parent: &mut ChildBuilder<'_>,
-    font: &Handle<Font>,
+    regular_font: &Handle<Font>,
+    bold_font: &Handle<Font>,
     colxrow: (u16, u16),
     contents: Vec<(&Handle<Image>, impl Into<String>)>,
 ) {
+    let style_regular = TextStyle {
+        font: regular_font.clone(),
+        font_size: 16.0 * UI_SCALE,
+        color: colors::DIALOG_TEXT_COLOR,
+    };
+    let style_bold = TextStyle {
+        font: bold_font.clone(),
+        font_size: 16.0 * UI_SCALE,
+        color: colors::DIALOG_BOLD_TEXT_COLOR,
+    };
+
     let mut rows = vec![];
 
     for _ in 0..colxrow.1 {
@@ -132,21 +145,16 @@ pub fn grid_img_text2(
                     });
                 }
                 for (_img, text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
-                    parent.spawn(
-                        TextBundle::from_section(
-                            text,
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 16.0 * UI_SCALE,
-                                color: Color::WHITE,
-                            },
-                        )
-                        .with_style(Style {
-                            flex_grow: 0.1,
-                            margin: UiRect::all(Val::Px(4.0)),
-                            ..Default::default()
-                        }),
-                    );
+                    let mut text_sections = vec![];
+                    for (n, subtext) in text.split('*').enumerate() {
+                        let style = if n % 2 == 0 {
+                            style_regular.clone()
+                        } else {
+                            style_bold.clone()
+                        };
+                        text_sections.push(TextSection::new(subtext, style));
+                    }
+                    parent.spawn(TextBundle::from_sections(text_sections));
                 }
             }
         });

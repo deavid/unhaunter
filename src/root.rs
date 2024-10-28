@@ -123,12 +123,19 @@ pub struct ImageAssets {
     pub gear_atlas: Handle<TextureAtlasLayout>,
     pub vignette: Handle<Image>,
     // --- Manual Images ---
+    // Chapter 1: Page 1:
     pub manual_investigate: Handle<Image>,
     pub manual_locate_ghost: Handle<Image>,
     pub manual_identify_ghost: Handle<Image>,
     pub manual_craft_repellent: Handle<Image>,
     pub manual_expel_ghost: Handle<Image>,
     pub manual_end_mission: Handle<Image>,
+    // Chapter 1: Page 2:
+    pub manual_movement_wasd: Handle<Image>,
+    pub manual_interacting_objects: Handle<Image>,
+    pub manual_flashlight: Handle<Image>,
+    pub manual_activate_equipment: Handle<Image>,
+    pub manual_switch_item: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -242,12 +249,20 @@ pub fn load_assets(
             )),
             vignette: server.load("img/vignette.png"),
             // --- Manual Images ---
+            // Chapter 1: Page 1:
             manual_investigate: server.load("manual/images/chapter1/investigate.png"),
             manual_locate_ghost: server.load("manual/images/chapter1/locate_ghost.png"),
             manual_identify_ghost: server.load("manual/images/chapter1/identify_ghost.png"),
             manual_craft_repellent: server.load("manual/images/chapter1/craft_repellent.png"),
             manual_expel_ghost: server.load("manual/images/chapter1/expel_ghost.png"),
             manual_end_mission: server.load("manual/images/chapter1/end_mission.png"),
+            // Chapter 1: Page 2:
+            manual_movement_wasd: server.load("manual/images/chapter1/movement_wasd.png"),
+            manual_interacting_objects: server
+                .load("manual/images/chapter1/interacting_objects.png"),
+            manual_flashlight: server.load("manual/images/chapter1/flashlight.png"),
+            manual_activate_equipment: server.load("manual/images/chapter1/activate_equipment.png"),
+            manual_switch_item: server.load("manual/images/chapter1/switch_item.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

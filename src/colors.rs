@@ -19,5 +19,6 @@ pub const BUTTON_END_MISSION_BGCOLOR: Color = Color::srgba(0.224, 0.129, 0.122, 
 pub const BUTTON_END_MISSION_FGCOLOR: Color = Color::srgba(0.388, 0.200, 0.169, 1.0);
 pub const BUTTON_END_MISSION_TXTCOLOR: Color = Color::srgba(0.851, 0.522, 0.275, 1.0);
 pub const DIALOG_TEXT_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.7);
+pub const DIALOG_BOLD_TEXT_COLOR: Color = Color::srgba(0.0, 0.8, 1.0, 0.9);
 pub const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 pub const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
