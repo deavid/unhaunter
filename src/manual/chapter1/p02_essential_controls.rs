@@ -29,10 +29,10 @@ pub fn draw_essential_controls_page(parent: &mut ChildBuilder, handles: &GameAss
             &handles.images.manual_switch_item,
             "*5. Inventory Cycling (Right Hand):* Press *[Q]* to cycle through the items stored in your right hand's inventory slots. Quickly switch between essential tools.",
         ),
-        // TODO: [F] and [G] keys are to be explained in chapter2. In there we should also explain [T] Swap hands, and the hiding mechanic. [C] Change evidence.
+        // TODO: [F] and [G] keys are to be explained in chapter2. In there we should also explain [T] Swap hands, and the hiding mechanic. 
         (
-            &handles.images.manual_end_mission,
-            "*6. Item Interaction (Grab/Drop/Move):* Use *[F]* to grab/pick up and *[G]* to drop/deploy items. Interact with objects to gather evidence, create distractions, or defend yourself.",
+            &handles.images.manual_quick_evidence,
+            "*6.  Quick Evidence:* Press *[C]* to mark the current evidence type displayed by the equipment in your right hand. Quickly tag the evidence you've found without needing to return to the truck.",
         ),
     ];
     let summary = "These controls are essential for navigating the haunted locations, gathering evidence, and ultimately expelling the ghost. Experiment with your equipment and learn how to use your environment for a successful investigation.";

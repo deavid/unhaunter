@@ -136,6 +136,7 @@ pub struct ImageAssets {
     pub manual_flashlight: Handle<Image>,
     pub manual_activate_equipment: Handle<Image>,
     pub manual_switch_item: Handle<Image>,
+    pub manual_quick_evidence: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -263,6 +264,7 @@ pub fn load_assets(
             manual_flashlight: server.load("manual/images/chapter1/flashlight.png"),
             manual_activate_equipment: server.load("manual/images/chapter1/activate_equipment.png"),
             manual_switch_item: server.load("manual/images/chapter1/switch_item.png"),
+            manual_quick_evidence: server.load("manual/images/chapter1/quick_evidence.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

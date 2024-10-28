@@ -54,11 +54,11 @@ impl ManualPageRange {
 
 fn manual_system(
     mut current_page: ResMut<ManualPage>,
-    difficulty: Res<CurrentDifficulty>,
+    // difficulty: Res<CurrentDifficulty>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut next_state: ResMut<NextState<root::State>>,
-    mut game_next_state: ResMut<NextState<root::GameState>>,
+    // mut game_next_state: ResMut<NextState<root::GameState>>,
     // Query for Text components
     text_query: Query<&Text>,
     mut button_query: Query<(&Children, &mut Visibility), With<Button>>,
@@ -79,11 +79,14 @@ fn manual_system(
                         // Use next() from Sequence
                     } else if text.sections[0].value == "Close" {
                         // Transition back to the appropriate state
-                        if difficulty.0.manual_pages.entry_page == *current_page {
-                            next_state.set(root::State::MainMenu);
-                        } else {
-                            game_next_state.set(root::GameState::None);
-                        }
+                        next_state.set(root::State::MainMenu);
+                        // FIXME: The following code is wrong. We should store where to go back in some place that is deterministic.
+                        // ...    Also this needs to happen for Keyboard [ESC] too.
+                        // if difficulty.0.manual_pages.entry_page == *current_page {
+                        //     next_state.set(root::State::MainMenu);
+                        // } else {
+                        //     game_next_state.set(root::GameState::None);
+                        // }
                     }
                 }
             }
