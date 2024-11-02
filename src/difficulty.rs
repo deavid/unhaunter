@@ -16,7 +16,7 @@
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
-    manual::{ManualPage, ManualPageRange},
+    manual::ManualChapter,
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
@@ -784,12 +784,10 @@ impl Difficulty {
         }
     }
 
-    pub fn manual_page_range(&self) -> ManualPageRange {
+    pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
         match self {
-            Difficulty::NoviceInvestigator => {
-                ManualPageRange::new(ManualPage::MissionBriefing, ManualPage::ExpellingGhost)
-            }
-            _ => ManualPageRange::new(ManualPage::MissionBriefing, ManualPage::MissionBriefing),
+            Difficulty::NoviceInvestigator => Some(ManualChapter::Chapter1),
+            _ => None,
         }
     }
 
@@ -828,7 +826,7 @@ impl Difficulty {
             difficulty_name: self.difficulty_name().to_owned(),
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
-            manual_pages: self.manual_page_range(),
+            tutorial_chapter: self.tutorial_chapter(),
         }
     }
 }
@@ -875,7 +873,7 @@ pub struct DifficultyStruct {
     pub difficulty_description: String,
     pub difficulty_score_multiplier: f64,
     /// The range of manual pages associated with this difficulty.
-    pub manual_pages: ManualPageRange,
+    pub tutorial_chapter: Option<ManualChapter>,
 }
 
 #[derive(Debug, Resource, Clone)]

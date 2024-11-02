@@ -9,8 +9,14 @@ use crate::{
 };
 use bevy::prelude::*;
 use enum_iterator::Sequence;
-use user_manual_ui::{PageContent, UserManualUI};
 pub use preplay_manual_ui::preplay_manual_system;
+use user_manual_ui::{PageContent, UserManualUI};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManualChapter {
+    Chapter1,
+    // Chapter2, // Add more chapters as needed
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
 pub enum ManualPage {
@@ -20,38 +26,6 @@ pub enum ManualPage {
     EMFAndThermometer,
     TruckJournal,
     ExpellingGhost,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ManualPageRange {
-    pub entry_page: ManualPage,
-    pub exit_page: ManualPage,
-}
-
-impl ManualPageRange {
-    pub fn new(entry_page: ManualPage, exit_page: ManualPage) -> Self {
-        // Ensure entry_page comes before or is the same as exit_page in the enum sequence
-        let all_pages: Vec<ManualPage> = enum_iterator::all::<ManualPage>().collect();
-        let entry_idx = all_pages
-            .iter()
-            .enumerate()
-            .find_map(|(n, v)| if *v == entry_page { Some(n) } else { None })
-            .unwrap();
-        let exit_idx = all_pages
-            .iter()
-            .enumerate()
-            .find_map(|(n, v)| if *v == exit_page { Some(n) } else { None })
-            .unwrap();
-        if entry_idx > exit_idx {
-            panic!(
-                "Invalid ManualPageRange: entry_page must come before or be the same as exit_page in the enum sequence."
-            );
-        }
-        Self {
-            entry_page,
-            exit_page,
-        }
-    }
 }
 
 fn user_manual_system(
@@ -127,9 +101,13 @@ fn user_manual_system(
 #[derive(Component)]
 pub struct ManualCamera;
 
-pub fn setup(mut commands: Commands, handles: Res<GameAssets>, difficulty: Res<CurrentDifficulty>) {
+pub fn setup(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    _difficulty: Res<CurrentDifficulty>,
+) {
     // Set the initial page based on the difficulty
-    let initial_page = difficulty.0.manual_pages.entry_page;
+    let initial_page = ManualPage::default();
     commands.insert_resource(initial_page);
 
     // Spawn the 2D camera for the manual UI
