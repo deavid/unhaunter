@@ -2,6 +2,7 @@ use super::MapHubState;
 use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::game::level::LoadLevelEvent;
+use crate::manual::preplay_manual_ui::start_preplay_manual_system;
 use crate::platform::plt::UI_SCALE;
 use crate::root;
 use bevy::prelude::*;
@@ -75,6 +76,7 @@ pub fn handle_difficulty_selection(
     difficulty_selection_state: Res<DifficultySelectionState>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
     maps: Res<root::Maps>,
+    // mut next_game_state: ResMut<NextState<root::GameState>>,
 ) {
     for _ in ev_difficulty_confirmed.read() {
         // Set the selected difficulty in the CurrentDifficulty resource
@@ -89,6 +91,10 @@ pub fn handle_difficulty_selection(
 
         // Send the LoadLevelEvent to trigger map loading
         ev_load_level.send(LoadLevelEvent { map_filepath });
+
+        // Transition to the pre-play manual if necessary
+        // start_preplay_manual_system(difficulty, next_game_state);
+
         next_state.set(MapHubState::None);
     }
 }

@@ -175,20 +175,18 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(root::GameState::Manual), cleanup)
         .add_systems(
             Update,
-            user_manual_system
-                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))),
+            user_manual_system.run_if(in_state(root::State::Manual)),
         )
         .add_systems(
             Update,
             // FIXME: This Run-if is wrong, needs fixing.
-            preplay_manual_system
-                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))),
+            preplay_manual_system.run_if(in_state(root::GameState::Manual)),
         )
         .add_systems(
             Update,
             redraw_manual_ui_system
                 // Add run_if condition here
-                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual)))
+                .run_if(in_state(root::State::Manual))
                 .after(user_manual_system),
         )
         .insert_resource(ManualPage::default());

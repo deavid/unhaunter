@@ -9,7 +9,7 @@ use crate::{
 use bevy::prelude::*;
 use enum_iterator::Sequence as _;
 
-use super::user_manual_ui::PageContent;
+use super::{user_manual_ui::PageContent, ManualCamera, ManualChapter};
 
 /// Marker component for the pre-play manual UI.
 #[derive(Component)]
@@ -224,5 +224,56 @@ pub fn draw_manual_page(parent: &mut ChildBuilder, handles: &GameAssets, current
             chapter1::p02_essential_controls::draw_essential_controls_page(parent, handles)
         }
         _ => {} // Add more pages as needed
+    }
+}
+
+pub fn setup_preplay_ui(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    let initial_page = match difficulty.0.tutorial_chapter {
+        Some(ManualChapter::Chapter1) => ManualPage::MissionBriefing, // First page of Chapter 1
+        _ => ManualPage::MissionBriefing, // Default to the first page, for when calling from the main menu
+    };
+
+    commands.insert_resource(initial_page); //Update initial page
+    commands
+        .spawn(Camera2dBundle::default()) //Respawning the camera just in case - not ideal
+        .insert(ManualCamera);
+
+    //Draw the PrePlay UI.
+    draw_manual_ui(&mut commands, handles, &initial_page);
+
+    //Create the timer to enable using on other systems since commands cannot be accessed from there directly.
+    commands.spawn(PrePlayManualTimer(Timer::from_seconds(
+        30.0,
+        TimerMode::Once,
+    )));
+}
+
+pub fn cleanup_preplay_ui(
+    mut commands: Commands,
+    q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
+    q_camera: Query<Entity, With<ManualCamera>>,
+) {
+    // Despawn the manual UI
+    for entity in q_manual_ui.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    // Despawn the manual camera
+    for entity in q_camera.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
+pub fn start_preplay_manual_system(
+    difficulty: Res<CurrentDifficulty>,
+    mut next_game_state: ResMut<NextState<root::GameState>>, 
+) {
+    // Check if a tutorial chapter is assigned for the current difficulty.
+    if difficulty.0.tutorial_chapter.is_some() {
+        next_game_state.set(root::GameState::Manual); 
     }
 }
