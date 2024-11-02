@@ -3,7 +3,8 @@ use crate::root::GameAssets;
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct ManualUI;
+pub struct UserManualUI;
+
 #[derive(Component)]
 pub struct PageContent;
 
@@ -45,7 +46,7 @@ pub fn draw_manual_ui(
             },
             ..default()
         })
-        .insert(ManualUI)
+        .insert(UserManualUI)
         .with_children(|parent| {
             // Page Content Container
             parent

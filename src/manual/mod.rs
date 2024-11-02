@@ -1,5 +1,6 @@
 pub mod chapter1;
-pub mod index;
+pub mod preplay_manual_ui;
+pub mod user_manual_ui;
 pub mod utils;
 
 use crate::{
@@ -8,7 +9,8 @@ use crate::{
 };
 use bevy::prelude::*;
 use enum_iterator::Sequence;
-use index::{ManualUI, PageContent};
+use user_manual_ui::{PageContent, UserManualUI};
+pub use preplay_manual_ui::preplay_manual_system;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
 pub enum ManualPage {
@@ -52,7 +54,7 @@ impl ManualPageRange {
     }
 }
 
-fn manual_system(
+fn user_manual_system(
     mut current_page: ResMut<ManualPage>,
     // difficulty: Res<CurrentDifficulty>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -136,13 +138,13 @@ pub fn setup(mut commands: Commands, handles: Res<GameAssets>, difficulty: Res<C
         .insert(ManualCamera);
 
     // Draw the manual UI
-    index::draw_manual_ui(&mut commands, handles, &initial_page);
+    user_manual_ui::draw_manual_ui(&mut commands, handles, &initial_page);
 }
 
 fn redraw_manual_ui_system(
     mut commands: Commands,
     current_page: Res<ManualPage>,
-    q_manual_ui: Query<Entity, With<ManualUI>>,
+    q_manual_ui: Query<Entity, With<UserManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
     handles: Res<GameAssets>,
 ) {
@@ -168,13 +170,13 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            index::draw_manual_page(parent, &handles, *current_page);
+            user_manual_ui::draw_manual_page(parent, &handles, *current_page);
         });
 }
 
 pub fn cleanup(
     mut commands: Commands,
-    q_manual_ui: Query<Entity, With<index::ManualUI>>,
+    q_manual_ui: Query<Entity, With<user_manual_ui::UserManualUI>>,
     q_camera: Query<Entity, With<ManualCamera>>,
 ) {
     // Despawn the manual UI
@@ -195,7 +197,13 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(root::GameState::Manual), cleanup)
         .add_systems(
             Update,
-            manual_system
+            user_manual_system
+                .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))),
+        )
+        .add_systems(
+            Update,
+            // FIXME: This Run-if is wrong, needs fixing.
+            preplay_manual_system
                 .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual))),
         )
         .add_systems(
@@ -203,7 +211,7 @@ pub fn app_setup(app: &mut App) {
             redraw_manual_ui_system
                 // Add run_if condition here
                 .run_if(in_state(root::State::Manual).or_else(in_state(root::GameState::Manual)))
-                .after(manual_system),
+                .after(user_manual_system),
         )
         .insert_resource(ManualPage::default());
 }
