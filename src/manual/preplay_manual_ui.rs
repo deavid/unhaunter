@@ -3,13 +3,13 @@
 
 use crate::{
     difficulty::CurrentDifficulty,
-    manual::{chapter1, ManualPage},
+    manual::ManualPage,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
 use enum_iterator::Sequence as _;
 
-use super::{user_manual_ui::PageContent, ManualCamera, ManualChapter};
+use super::{user_manual_ui::PageContent, utils::draw_page_content, ManualCamera, ManualChapter};
 
 /// Marker component for the pre-play manual UI.
 #[derive(Component)]
@@ -137,7 +137,7 @@ pub fn draw_manual_ui(
                     ..default()
                 })
                 .insert(PageContent)
-                .with_children(|content| draw_manual_page(content, &handles, *current_page));
+                .with_children(|content| draw_page_content(content, &handles, *current_page));
 
             // Navigation Buttons
             parent
@@ -215,18 +215,6 @@ pub fn draw_manual_ui(
         });
 }
 
-pub fn draw_manual_page(parent: &mut ChildBuilder, handles: &GameAssets, current_page: ManualPage) {
-    match current_page {
-        ManualPage::EMFAndThermometer => {
-            chapter1::p01_mission_briefing::draw_mission_briefing_page(parent, handles)
-        }
-        ManualPage::EssentialControls => {
-            chapter1::p02_essential_controls::draw_essential_controls_page(parent, handles)
-        }
-        _ => {} // Add more pages as needed
-    }
-}
-
 pub fn setup_preplay_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
@@ -270,10 +258,10 @@ pub fn cleanup_preplay_ui(
 
 pub fn start_preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<root::GameState>>, 
+    mut next_game_state: ResMut<NextState<root::GameState>>,
 ) {
     // Check if a tutorial chapter is assigned for the current difficulty.
     if difficulty.0.tutorial_chapter.is_some() {
-        next_game_state.set(root::GameState::Manual); 
+        next_game_state.set(root::GameState::Manual);
     }
 }

@@ -1,8 +1,18 @@
+//! This module provides utility functions for creating and managing the UI elements
+//! of the in-game manual in Unhaunter.  It includes functions for drawing common
+//! UI components such as headers, grids, text sections, buttons, and other elements.
+//! These functions are designed to be shared between different manual modes (user-requested
+//! and pre-play tutorial) to promote code reuse and maintain consistency across the
+//! manual's interface.  The functions utilize Bevy's UI system to create the
+//! visual elements of the manual efficiently.
+
 use crate::colors;
 use crate::platform::plt::UI_SCALE;
 use crate::root::GameAssets;
 
 use bevy::prelude::*;
+
+use super::{chapter1, ManualPage};
 
 pub fn image_text(
     parent: &mut ChildBuilder<'_>,
@@ -245,4 +255,29 @@ pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: im
                 },
             ));
         });
+}
+
+pub fn draw_page_content(
+    parent: &mut ChildBuilder,
+    handles: &GameAssets,
+    current_page: ManualPage,
+) {
+    // Draw page-specific content
+    match current_page {
+        ManualPage::MissionBriefing => {
+            chapter1::p01_mission_briefing::draw_mission_briefing_page(parent, handles)
+        }
+        ManualPage::EssentialControls => {
+            chapter1::p02_essential_controls::draw_essential_controls_page(parent, handles)
+        }
+        ManualPage::EMFAndThermometer => {
+            chapter1::p03_emf_and_thermometer::draw_emf_and_thermometer_page(parent, handles)
+        }
+        ManualPage::TruckJournal => {
+            chapter1::p04_truck_journal::draw_truck_journal_page(parent, handles)
+        }
+        ManualPage::ExpellingGhost => {
+            chapter1::p05_expelling_ghost::draw_expelling_ghost_page(parent, handles)
+        }
+    }
 }

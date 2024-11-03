@@ -1,4 +1,4 @@
-use super::{chapter1, ManualPage};
+use super::{utils::draw_page_content, ManualPage};
 use crate::root::GameAssets;
 use bevy::prelude::*;
 
@@ -7,27 +7,6 @@ pub struct UserManualUI;
 
 #[derive(Component)]
 pub struct PageContent;
-
-pub fn draw_manual_page(parent: &mut ChildBuilder, handles: &GameAssets, current_page: ManualPage) {
-    // Draw page-specific content
-    match current_page {
-        ManualPage::MissionBriefing => {
-            chapter1::p01_mission_briefing::draw_mission_briefing_page(parent, handles)
-        }
-        ManualPage::EssentialControls => {
-            chapter1::p02_essential_controls::draw_essential_controls_page(parent, handles)
-        }
-        ManualPage::EMFAndThermometer => {
-            chapter1::p03_emf_and_thermometer::draw_emf_and_thermometer_page(parent, handles)
-        }
-        ManualPage::TruckJournal => {
-            chapter1::p04_truck_journal::draw_truck_journal_page(parent, handles)
-        }
-        ManualPage::ExpellingGhost => {
-            chapter1::p05_expelling_ghost::draw_expelling_ghost_page(parent, handles)
-        }
-    }
-}
 
 pub fn draw_manual_ui(
     commands: &mut Commands,
@@ -64,7 +43,7 @@ pub fn draw_manual_ui(
                 })
                 .insert(PageContent)
                 .with_children(|content| {
-                    draw_manual_page(content, &handles, *current_page);
+                    draw_page_content(content, &handles, *current_page);
                 });
 
             // Navigation Buttons

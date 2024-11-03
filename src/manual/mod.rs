@@ -11,6 +11,7 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 pub use preplay_manual_ui::preplay_manual_system;
 use user_manual_ui::{PageContent, UserManualUI};
+use utils::draw_page_content;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ManualChapter {
@@ -148,7 +149,7 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            user_manual_ui::draw_manual_page(parent, &handles, *current_page);
+            draw_page_content(parent, &handles, *current_page);
         });
 }
 

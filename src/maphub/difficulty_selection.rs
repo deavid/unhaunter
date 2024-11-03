@@ -2,7 +2,6 @@ use super::MapHubState;
 use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::game::level::LoadLevelEvent;
-use crate::manual::preplay_manual_ui::start_preplay_manual_system;
 use crate::platform::plt::UI_SCALE;
 use crate::root;
 use bevy::prelude::*;
