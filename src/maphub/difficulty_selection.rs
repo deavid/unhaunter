@@ -2,6 +2,7 @@ use super::MapHubState;
 use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::game::level::LoadLevelEvent;
+use crate::manual::preplay_manual_ui::start_preplay_manual_system;
 use crate::platform::plt::UI_SCALE;
 use crate::root;
 use bevy::prelude::*;
@@ -70,32 +71,34 @@ pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<Difficul
 // Handle the DifficultyConfirmedEvent
 pub fn handle_difficulty_selection(
     mut ev_difficulty_confirmed: EventReader<DifficultyConfirmedEvent>,
-    mut next_state: ResMut<NextState<MapHubState>>,
+    mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
     maps: Res<root::Maps>,
-    // mut next_game_state: ResMut<NextState<root::GameState>>,
+    next_state: ResMut<NextState<root::State>>,
 ) {
-    for _ in ev_difficulty_confirmed.read() {
-        // Set the selected difficulty in the CurrentDifficulty resource
-        difficulty.0 = difficulty_selection_state
-            .selected_difficulty
-            .create_difficulty_struct();
-
-        // Get the selected map's filepath
-        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
-            .path
-            .clone();
-
-        // Send the LoadLevelEvent to trigger map loading
-        ev_load_level.send(LoadLevelEvent { map_filepath });
-
-        // Transition to the pre-play manual if necessary
-        // start_preplay_manual_system(difficulty, next_game_state);
-
-        next_state.set(MapHubState::None);
+    if ev_difficulty_confirmed.read().next().is_none() {
+        return;
     }
+    // Set the selected difficulty in the CurrentDifficulty resource
+    difficulty.0 = difficulty_selection_state
+        .selected_difficulty
+        .create_difficulty_struct();
+
+    // Get the selected map's filepath
+    // FIXME: Move this map loading stage elsewhere, should happen after reading the manual
+    // let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+    //     .path
+    //     .clone();
+
+    // Send the LoadLevelEvent to trigger map loading
+    // ev_load_level.send(LoadLevelEvent { map_filepath });
+
+    // Transition to the pre-play manual if necessary
+    start_preplay_manual_system(difficulty.into(), next_state);
+
+    next_hub_state.set(MapHubState::None);
 }
 
 pub fn keyboard(

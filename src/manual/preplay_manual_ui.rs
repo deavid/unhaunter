@@ -9,7 +9,10 @@ use crate::{
 use bevy::prelude::*;
 use enum_iterator::Sequence as _;
 
-use super::{user_manual_ui::PageContent, utils::draw_page_content, ManualCamera, ManualChapter};
+use super::{user_manual_ui::PageContent, utils::draw_page_content, ManualChapter};
+
+#[derive(Component)]
+pub struct ManualCamera;
 
 /// Marker component for the pre-play manual UI.
 #[derive(Component)]
@@ -31,13 +34,13 @@ pub fn preplay_manual_system(
     mut timers: Query<&mut PrePlayManualTimer>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut timer = timers.get_single_mut().unwrap(); // Safe because we check for emptiness earlier
-
-    // Tick the timer and handle automatic page advancement
-    timer.0.tick(time.delta());
-    if timer.0.finished() && *current_page != ManualPage::last().unwrap() {
-        *current_page = current_page.next().unwrap_or(*current_page);
-        timer.0.reset();
+    if let Ok(mut timer) = timers.get_single_mut() {
+        // Tick the timer and handle automatic page advancement
+        timer.0.tick(time.delta());
+        if timer.0.finished() && *current_page != ManualPage::last().unwrap() {
+            *current_page = current_page.next().unwrap_or(*current_page);
+            timer.0.reset();
+        }
     }
 
     // Update button visibility based on timer and current page
@@ -258,10 +261,86 @@ pub fn cleanup_preplay_ui(
 
 pub fn start_preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<root::GameState>>,
+    mut next_game_state: ResMut<NextState<root::State>>,
 ) {
     // Check if a tutorial chapter is assigned for the current difficulty.
     if difficulty.0.tutorial_chapter.is_some() {
-        next_game_state.set(root::GameState::Manual);
+        next_game_state.set(root::State::PreplayManual);
     }
+}
+
+pub fn setup(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    _difficulty: Res<CurrentDifficulty>,
+) {
+    // Set the initial page based on the difficulty
+    let initial_page = ManualPage::default();
+    commands.insert_resource(initial_page);
+
+    // Spawn the 2D camera for the manual UI
+    commands
+        .spawn(Camera2dBundle::default())
+        .insert(ManualCamera);
+
+    // Draw the manual UI
+    draw_manual_ui(&mut commands, handles, &initial_page);
+}
+
+fn redraw_manual_ui_system(
+    mut commands: Commands,
+    current_page: Res<ManualPage>,
+    q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
+    q_page_content: Query<Entity, With<PageContent>>,
+    handles: Res<GameAssets>,
+) {
+    if !current_page.is_changed() {
+        // Only redraw if the page has changed
+        return;
+    }
+
+    // Get the ManualUI entity
+    let Ok(_) = q_manual_ui.get_single() else {
+        return;
+    };
+
+    // Get the PageContent entity
+    let Ok(page_content_entity) = q_page_content.get_single() else {
+        return;
+    };
+
+    // Despawn the existing page content
+    commands.entity(page_content_entity).despawn_descendants();
+
+    // Redraw the page content
+    commands
+        .entity(page_content_entity)
+        .with_children(|parent| {
+            draw_page_content(parent, &handles, *current_page);
+        });
+}
+
+pub fn cleanup(
+    mut commands: Commands,
+    q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
+    q_camera: Query<Entity, With<ManualCamera>>,
+) {
+    // Despawn the manual UI
+    for entity in q_manual_ui.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    // Despawn the manual camera
+    for entity in q_camera.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(root::State::PreplayManual), setup)
+        .add_systems(OnExit(root::State::PreplayManual), cleanup)
+        .add_systems(
+            Update,
+            preplay_manual_system.run_if(in_state(root::State::PreplayManual)),
+        );
 }

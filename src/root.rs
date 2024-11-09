@@ -8,7 +8,8 @@ pub enum State {
     InGame,
     Summary,
     MapHub,
-    Manual,
+    UserManual,
+    PreplayManual,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
@@ -18,7 +19,6 @@ pub enum GameState {
     Truck,
     Pause,
     NpcHelp,
-    Manual,
 }
 
 #[derive(Debug, Clone)]

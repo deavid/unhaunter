@@ -380,7 +380,7 @@ pub fn menu_event(
             }
             MenuID::Manual => {
                 // Transition to the Manual state
-                next_state.set(root::State::Manual);
+                next_state.set(root::State::UserManual);
             }
             MenuID::_Options => {}
             MenuID::Quit => {
