@@ -280,9 +280,19 @@ pub fn cleanup_preplay_ui(
 pub fn start_preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
     mut next_game_state: ResMut<NextState<root::State>>,
+    difficulty_selection_state: Res<DifficultySelectionState>, // To access the selected map
+    maps: Res<root::Maps>,
+    mut ev_load_level: EventWriter<LoadLevelEvent>,
 ) {
-    // Check if a tutorial chapter is assigned for the current difficulty.
-    if difficulty.0.tutorial_chapter.is_some() {
+    if difficulty.0.tutorial_chapter.is_none() {
+        // No tutorial, start game immediately
+        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+            .path
+            .clone();
+        ev_load_level.send(LoadLevelEvent { map_filepath });
+        next_game_state.set(root::State::InGame);
+    } else {
+        // Tutorial exists, transition to PreplayManual state
         next_game_state.set(root::State::PreplayManual);
     }
 }
