@@ -1,5 +1,5 @@
-mod difficulty_selection;
-mod map_selection;
+pub mod difficulty_selection;
+pub mod map_selection;
 
 use crate::mainmenu::MCamera;
 use crate::root::State;

@@ -3,7 +3,9 @@
 
 use crate::{
     difficulty::CurrentDifficulty,
+    game::level::LoadLevelEvent,
     manual::ManualPage,
+    maphub::difficulty_selection::DifficultySelectionState, // Import for map filepath
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
@@ -14,13 +16,8 @@ use super::{user_manual_ui::PageContent, utils::draw_page_content, ManualChapter
 #[derive(Component)]
 pub struct ManualCamera;
 
-/// Marker component for the pre-play manual UI.
 #[derive(Component)]
 pub struct PrePlayManualUI;
-
-/// Component to store a timer for automatic page advancement in the pre-play manual.
-#[derive(Component)]
-pub struct PrePlayManualTimer(Timer);
 
 /// System for handling user interaction and page navigation within the pre-play manual.
 #[allow(clippy::too_many_arguments)]
@@ -29,72 +26,50 @@ pub fn preplay_manual_system(
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut next_state: ResMut<NextState<root::State>>,
     mut text_query: Query<&mut Text>,
-    mut button_query: Query<(&Children, &mut Visibility), With<Button>>,
-    time: Res<Time>,
-    mut timers: Query<&mut PrePlayManualTimer>,
+    mut ev_load_level: EventWriter<LoadLevelEvent>,
     difficulty: Res<CurrentDifficulty>,
+    difficulty_selection_state: Res<DifficultySelectionState>,
+    maps: Res<root::Maps>,
 ) {
-    if let Ok(mut timer) = timers.get_single_mut() {
-        // Tick the timer and handle automatic page advancement
-        timer.0.tick(time.delta());
-        if timer.0.finished() && *current_page != ManualPage::last().unwrap() {
-            *current_page = current_page.next().unwrap_or(*current_page);
-            timer.0.reset();
-        }
-    }
-
-    // Update button visibility based on timer and current page
-    for (children, mut visibility) in &mut button_query {
-        for &child in children {
-            if let Ok(text) = text_query.get(child) {
-                match text.sections[0].value.as_str() {
-                    "Previous" => {
-                        *visibility = Visibility::Visible; // Always visible
-                    }
-                    "Next" => {
-                        *visibility = if *current_page == ManualPage::last().unwrap() {
-                            Visibility::Hidden // Hide on the last page
-                        } else {
-                            Visibility::Visible // Visible otherwise
-                        };
-                    }
-                    _ => {} // Keep other buttons visible
-                }
-            }
-        }
-    }
-
     // --- Interaction Handling ---
     for (interaction, children) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
             for &child in children.iter() {
-                if let Ok(text) = text_query.get_mut(child) {
+                if let Ok(mut text) = text_query.get_mut(child) {
                     match text.sections[0].value.as_str() {
                         "Previous" => {
-                            if *current_page == ManualPage::first().unwrap()
-                                && difficulty.0.tutorial_chapter.is_some()
-                            {
-                                // If on the first page of tutorial -> quit and go back to difficulty menu
+                            if *current_page == ManualPage::first().unwrap() {
+                                // If on the first page -> quit and go back to difficulty menu
                                 next_state.set(root::State::MapHub);
                             } else {
                                 // Otherwise go back one page
                                 *current_page = current_page.previous().unwrap_or(*current_page);
-
-                                // Pause and Reset Timer if available
                             }
                         }
 
-                        "Next" => {
-                            if *current_page == ManualPage::last().unwrap()
-                                && difficulty.0.tutorial_chapter.is_some()
-                            {
-                                // If last page of tutorial go into the game.
-                                next_state.set(root::State::InGame); // Set to the playing game mode
+                        "Continue" => {
+                            // Renamed "Next" to "Continue"
+                            if difficulty.0.tutorial_chapter.is_some() {
+                                if *current_page == ManualPage::last().unwrap() {
+                                    // Last page of tutorial, start game
+                                    let map_filepath = maps.maps
+                                        [difficulty_selection_state.selected_map_idx]
+                                        .path
+                                        .clone();
+                                    ev_load_level.send(LoadLevelEvent { map_filepath });
+                                    next_state.set(root::State::InGame);
+                                } else {
+                                    // Not last page, advance to the next page
+                                    *current_page = current_page.next().unwrap_or(*current_page);
+                                }
                             } else {
-                                // Otherwise go next page
-                                *current_page = current_page.next().unwrap_or(*current_page);
-
-                                // Pause and Reset Timer if available
+                                // No tutorial chapter, start game directly
+                                let map_filepath = maps.maps
+                                    [difficulty_selection_state.selected_map_idx]
+                                    .path
+                                    .clone();
+                                ev_load_level.send(LoadLevelEvent { map_filepath });
+                                next_state.set(root::State::InGame);
                             }
                         }
                         &_ => {}
@@ -235,12 +210,6 @@ pub fn setup_preplay_ui(
 
     //Draw the PrePlay UI.
     draw_manual_ui(&mut commands, handles, &initial_page);
-
-    //Create the timer to enable using on other systems since commands cannot be accessed from there directly.
-    commands.spawn(PrePlayManualTimer(Timer::from_seconds(
-        30.0,
-        TimerMode::Once,
-    )));
 }
 
 pub fn cleanup_preplay_ui(
@@ -267,24 +236,6 @@ pub fn start_preplay_manual_system(
     if difficulty.0.tutorial_chapter.is_some() {
         next_game_state.set(root::State::PreplayManual);
     }
-}
-
-pub fn setup(
-    mut commands: Commands,
-    handles: Res<GameAssets>,
-    _difficulty: Res<CurrentDifficulty>,
-) {
-    // Set the initial page based on the difficulty
-    let initial_page = ManualPage::default();
-    commands.insert_resource(initial_page);
-
-    // Spawn the 2D camera for the manual UI
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(ManualCamera);
-
-    // Draw the manual UI
-    draw_manual_ui(&mut commands, handles, &initial_page);
 }
 
 fn redraw_manual_ui_system(
@@ -320,27 +271,13 @@ fn redraw_manual_ui_system(
         });
 }
 
-pub fn cleanup(
-    mut commands: Commands,
-    q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
-    q_camera: Query<Entity, With<ManualCamera>>,
-) {
-    // Despawn the manual UI
-    for entity in q_manual_ui.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
-
-    // Despawn the manual camera
-    for entity in q_camera.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
-}
-
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::State::PreplayManual), setup)
-        .add_systems(OnExit(root::State::PreplayManual), cleanup)
+    app.add_systems(OnEnter(root::State::PreplayManual), setup_preplay_ui)
+        .add_systems(OnExit(root::State::PreplayManual), cleanup_preplay_ui)
         .add_systems(
             Update,
-            preplay_manual_system.run_if(in_state(root::State::PreplayManual)),
+            (preplay_manual_system, redraw_manual_ui_system)
+                .chain()
+                .run_if(in_state(root::State::PreplayManual)),
         );
 }
