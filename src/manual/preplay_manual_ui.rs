@@ -19,61 +19,66 @@ pub struct ManualCamera;
 #[derive(Component)]
 pub struct PrePlayManualUI;
 
-/// System for handling user interaction and page navigation within the pre-play manual.
-#[allow(clippy::too_many_arguments)]
+#[derive(Component, Clone)]
+pub struct Input {
+    pub keys: Vec<KeyCode>,
+}
+
+impl Input {
+    pub fn from_keys(keys: impl IntoIterator<Item = KeyCode>) -> Self {
+        Self {
+            keys: keys.into_iter().collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Event)]
+pub struct ManualEvent {
+    pub action: ManualButtonAction,
+}
+
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManualButtonAction {
+    Previous,
+    Continue,
+}
+
+#[allow(clippy::too_many_arguments)] // Allow many arguments for now
 pub fn preplay_manual_system(
     mut current_page: ResMut<ManualPage>,
-    mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
-    mut next_state: ResMut<NextState<root::State>>,
-    mut text_query: Query<&mut Text>,
-    mut ev_load_level: EventWriter<LoadLevelEvent>,
+    mut ev_level: EventWriter<LoadLevelEvent>,
     difficulty: Res<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<root::Maps>,
+    mut next_state: ResMut<NextState<root::State>>,
+    mut evr_manual_button: EventReader<ManualEvent>,
 ) {
-    // --- Interaction Handling ---
-    for (interaction, children) in &mut interaction_query {
-        if *interaction == Interaction::Pressed {
-            for &child in children.iter() {
-                if let Ok(mut text) = text_query.get_mut(child) {
-                    match text.sections[0].value.as_str() {
-                        "Previous" => {
-                            if *current_page == ManualPage::first().unwrap() {
-                                // If on the first page -> quit and go back to difficulty menu
-                                next_state.set(root::State::MapHub);
-                            } else {
-                                // Otherwise go back one page
-                                *current_page = current_page.previous().unwrap_or(*current_page);
-                            }
-                        }
-
-                        "Continue" => {
-                            // Renamed "Next" to "Continue"
-                            if difficulty.0.tutorial_chapter.is_some() {
-                                if *current_page == ManualPage::last().unwrap() {
-                                    // Last page of tutorial, start game
-                                    let map_filepath = maps.maps
-                                        [difficulty_selection_state.selected_map_idx]
-                                        .path
-                                        .clone();
-                                    ev_load_level.send(LoadLevelEvent { map_filepath });
-                                    next_state.set(root::State::InGame);
-                                } else {
-                                    // Not last page, advance to the next page
-                                    *current_page = current_page.next().unwrap_or(*current_page);
-                                }
-                            } else {
-                                // No tutorial chapter, start game directly
-                                let map_filepath = maps.maps
-                                    [difficulty_selection_state.selected_map_idx]
-                                    .path
-                                    .clone();
-                                ev_load_level.send(LoadLevelEvent { map_filepath });
-                                next_state.set(root::State::InGame);
-                            }
-                        }
-                        &_ => {}
+    for ev in evr_manual_button.read() {
+        match ev.action {
+            ManualButtonAction::Previous => {
+                if *current_page == ManualPage::first().unwrap() {
+                    next_state.set(root::State::MapHub);
+                } else {
+                    *current_page = current_page.previous().unwrap_or(*current_page);
+                }
+            }
+            ManualButtonAction::Continue => {
+                if difficulty.0.tutorial_chapter.is_some() {
+                    if *current_page == ManualPage::last().unwrap() {
+                        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+                            .path
+                            .clone();
+                        ev_level.send(LoadLevelEvent { map_filepath });
+                        next_state.set(root::State::InGame);
+                    } else {
+                        *current_page = current_page.next().unwrap_or(*current_page);
                     }
+                } else {
+                    let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+                        .path
+                        .clone();
+                    ev_level.send(LoadLevelEvent { map_filepath });
+                    next_state.set(root::State::InGame);
                 }
             }
         }
@@ -162,9 +167,11 @@ pub fn draw_manual_ui(
                                     color: Color::WHITE,
                                 },
                             ));
-                        });
+                        })
+                        .insert(ManualButtonAction::Previous)
+                        .insert(Input::from_keys([KeyCode::Escape])); // <-- Key binding
 
-                    // Next Button
+                    // Continue Button
                     buttons
                         .spawn(ButtonBundle {
                             style: Style {
@@ -181,16 +188,60 @@ pub fn draw_manual_ui(
                         })
                         .with_children(|button| {
                             button.spawn(TextBundle::from_section(
-                                "Next",
+                                "Continue",
                                 TextStyle {
                                     font: handles.fonts.londrina.w300_light.clone(),
                                     font_size: 30.0,
                                     color: Color::WHITE,
                                 },
                             ));
-                        });
+                        })
+                        .insert(ManualButtonAction::Continue)
+                        .insert(Input::from_keys([
+                            KeyCode::Space,
+                            KeyCode::ArrowRight,
+                            KeyCode::Enter,
+                            KeyCode::KeyE,
+                        ])); // <-- Key bindings
                 });
         });
+}
+
+pub fn manual_button_system(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &Children,
+            Option<&Input>,
+            Option<&ManualButtonAction>,
+        ), // Add ManualButtonAction
+        (Changed<Interaction>, With<Button>),
+    >,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut manual_events: EventWriter<ManualEvent>,
+) {
+    for (interaction, _, maybe_input, maybe_action) in &mut interaction_query {
+        // Removed unused children and text_query
+
+        // --- Mouse Click Handling ---
+        if *interaction == Interaction::Pressed {
+            if let Some(action) = maybe_action {
+                // Directly use the ManualButtonAction component if present
+                manual_events.send(ManualEvent { action: *action });
+            }
+        }
+
+        // --- Keyboard Input Handling ---
+        if let Some(input) = maybe_input {
+            for key in &input.keys {
+                if keyboard_input.just_pressed(*key) {
+                    if let Some(action) = maybe_action {
+                        manual_events.send(ManualEvent { action: *action });
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn setup_preplay_ui(
@@ -276,8 +327,13 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(root::State::PreplayManual), cleanup_preplay_ui)
         .add_systems(
             Update,
-            (preplay_manual_system, redraw_manual_ui_system)
+            (
+                manual_button_system,
+                preplay_manual_system,
+                redraw_manual_ui_system,
+            )
                 .chain()
                 .run_if(in_state(root::State::PreplayManual)),
-        );
+        )
+        .add_event::<ManualEvent>();
 }
