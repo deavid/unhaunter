@@ -5,7 +5,7 @@ use crate::{
     difficulty::CurrentDifficulty,
     game::level::LoadLevelEvent,
     manual::ManualPage,
-    maphub::difficulty_selection::DifficultySelectionState, // Import for map filepath
+    maphub::difficulty_selection::DifficultySelectionState,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
@@ -43,7 +43,7 @@ pub enum ManualButtonAction {
     Continue,
 }
 
-#[allow(clippy::too_many_arguments)] // Allow many arguments for now
+#[allow(clippy::too_many_arguments)]
 pub fn preplay_manual_system(
     mut current_page: ResMut<ManualPage>,
     mut ev_level: EventWriter<LoadLevelEvent>,
@@ -214,15 +214,13 @@ pub fn manual_button_system(
             &Children,
             Option<&Input>,
             Option<&ManualButtonAction>,
-        ), // Add ManualButtonAction
-        (Changed<Interaction>, With<Button>),
+        ),
+        With<Button>,
     >,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut manual_events: EventWriter<ManualEvent>,
 ) {
     for (interaction, _, maybe_input, maybe_action) in &mut interaction_query {
-        // Removed unused children and text_query
-
         // --- Mouse Click Handling ---
         if *interaction == Interaction::Pressed {
             if let Some(action) = maybe_action {
@@ -254,9 +252,9 @@ pub fn setup_preplay_ui(
         _ => ManualPage::MissionBriefing, // Default to the first page, for when calling from the main menu
     };
 
-    commands.insert_resource(initial_page); //Update initial page
+    commands.insert_resource(initial_page); // Update initial page
     commands
-        .spawn(Camera2dBundle::default()) //Respawning the camera just in case - not ideal
+        .spawn(Camera2dBundle::default())
         .insert(ManualCamera);
 
     //Draw the PrePlay UI.
