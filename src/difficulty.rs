@@ -16,7 +16,7 @@
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
-    manual::ManualChapter,
+    manual::{chapter1, ManualChapter},
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
@@ -786,7 +786,10 @@ impl Difficulty {
 
     pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
         match self {
-            Difficulty::NoviceInvestigator => Some(ManualChapter::Chapter1),
+            // FIXME: This creates a new chapter struct; it might be correct
+            // but it is not the same entity in memory as the chapter for the
+            // full manual.
+            Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
             _ => None,
         }
     }

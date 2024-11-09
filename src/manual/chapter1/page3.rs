@@ -1,9 +1,10 @@
 use crate::manual::utils::{grid_img_text2, header, summary_text};
 
+use crate::manual::ManualPageData;
 use crate::root::GameAssets;
 use bevy::prelude::*;
 
-pub fn draw_emf_and_thermometer_page(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
     let title = "The Truck: Your Ghost Hunting HQ";
     let subtitle = "
 Gather evidence, analyze your findings, and prepare for the unknown. 
@@ -48,4 +49,12 @@ Gather evidence, analyze your findings, and prepare for the unknown.
     );
 
     summary_text(parent, handles, summary);
+}
+
+pub fn create_manual_page() -> ManualPageData {
+    ManualPageData {
+        title: "The Truck: Your Ghost Hunting HQ".into(),
+        subtitle: "Gather evidence, analyze your findings, and prepare for the unknown.".into(),
+        draw_fn: draw,
+    }
 }

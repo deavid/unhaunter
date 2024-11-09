@@ -1,9 +1,10 @@
 use crate::manual::utils::{grid_img_text2, header, summary_text};
 
+use crate::manual::ManualPageData;
 use crate::root::GameAssets;
 use bevy::prelude::*;
 
-pub fn draw_mission_briefing_page(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
     let title = "Paranormal Investigator Needed!";
     let subtitle = "
 Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.
@@ -48,4 +49,13 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
     );
 
     summary_text(parent, handles, summary);
+}
+
+pub fn create_manual_page() -> ManualPageData {
+    ManualPageData {
+        title: "Paranormal Investigator Needed!".into(),
+        subtitle: "Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.
+What will you find? How to do a good job as a P.I.? Here are the main clues!".into(),
+        draw_fn: draw,
+    }
 }

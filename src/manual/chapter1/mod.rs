@@ -1,5 +1,16 @@
-pub mod p01_mission_briefing;
-pub mod p02_essential_controls;
-pub mod p03_emf_and_thermometer;
-pub mod p04_truck_journal;
-pub mod p05_expelling_ghost;
+use super::ManualChapter;
+
+pub mod page1;
+pub mod page2;
+pub mod page3;
+
+pub fn create_manual_chapter() -> ManualChapter {
+    ManualChapter {
+        name: "Chapter 1: Getting Started".into(),
+        pages: vec![
+            page1::create_manual_page(),
+            page2::create_manual_page(),
+            page3::create_manual_page(),
+        ],
+    }
+}

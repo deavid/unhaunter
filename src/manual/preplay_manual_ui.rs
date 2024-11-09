@@ -4,14 +4,14 @@
 use crate::{
     difficulty::CurrentDifficulty,
     game::level::LoadLevelEvent,
-    manual::ManualPage,
+    manual::ManualPageObsolete,
     maphub::difficulty_selection::DifficultySelectionState,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
 use enum_iterator::Sequence as _;
 
-use super::{user_manual_ui::PageContent, utils::draw_page_content, ManualChapter};
+use super::{user_manual_ui::PageContent, utils::draw_page_content_obsolete, ManualChapter};
 
 #[derive(Component)]
 pub struct ManualCamera;
@@ -45,7 +45,7 @@ pub enum ManualButtonAction {
 
 #[allow(clippy::too_many_arguments)]
 pub fn preplay_manual_system(
-    mut current_page: ResMut<ManualPage>,
+    mut current_page: ResMut<ManualPageObsolete>,
     mut ev_level: EventWriter<LoadLevelEvent>,
     difficulty: Res<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
@@ -56,7 +56,7 @@ pub fn preplay_manual_system(
     for ev in evr_manual_button.read() {
         match ev.action {
             ManualButtonAction::Previous => {
-                if *current_page == ManualPage::first().unwrap() {
+                if *current_page == ManualPageObsolete::first().unwrap() {
                     next_state.set(root::State::MapHub);
                 } else {
                     *current_page = current_page.previous().unwrap_or(*current_page);
@@ -64,7 +64,7 @@ pub fn preplay_manual_system(
             }
             ManualButtonAction::Continue => {
                 if difficulty.0.tutorial_chapter.is_some() {
-                    if *current_page == ManualPage::last().unwrap() {
+                    if *current_page == ManualPageObsolete::last().unwrap() {
                         let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
                             .path
                             .clone();
@@ -89,7 +89,7 @@ pub fn preplay_manual_system(
 pub fn draw_manual_ui(
     commands: &mut Commands,
     handles: Res<GameAssets>,
-    current_page: &ManualPage,
+    current_page: &ManualPageObsolete,
 ) {
     commands
         .spawn(NodeBundle {
@@ -120,7 +120,9 @@ pub fn draw_manual_ui(
                     ..default()
                 })
                 .insert(PageContent)
-                .with_children(|content| draw_page_content(content, &handles, *current_page));
+                .with_children(|content| {
+                    draw_page_content_obsolete(content, &handles, *current_page)
+                });
 
             // Navigation Buttons
             parent
@@ -247,10 +249,14 @@ pub fn setup_preplay_ui(
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let initial_page = match difficulty.0.tutorial_chapter {
-        Some(ManualChapter::Chapter1) => ManualPage::MissionBriefing, // First page of Chapter 1
-        _ => ManualPage::MissionBriefing, // Default to the first page, for when calling from the main menu
-    };
+    // FIXME: The ManualChapter Enum has been changed into a struct, this code
+    // tries to locate an initial page, but the pages are now into the chapter
+    // itself.
+    // let initial_page = match difficulty.0.tutorial_chapter {
+    //     Some(ManualChapter::Chapter1) => ManualPageObsolete::MissionBriefing, // First page of Chapter 1
+    //     _ => ManualPageObsolete::MissionBriefing, // Default to the first page, for when calling from the main menu
+    // };
+    let initial_page = ManualPageObsolete::MissionBriefing;
 
     commands.insert_resource(initial_page); // Update initial page
     commands
@@ -299,7 +305,7 @@ pub fn start_preplay_manual_system(
 
 fn redraw_manual_ui_system(
     mut commands: Commands,
-    current_page: Res<ManualPage>,
+    current_page: Res<ManualPageObsolete>,
     q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
     handles: Res<GameAssets>,
@@ -326,7 +332,7 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_page_content(parent, &handles, *current_page);
+            draw_page_content_obsolete(parent, &handles, *current_page);
         });
 }
 

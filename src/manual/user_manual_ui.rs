@@ -1,4 +1,4 @@
-use super::{utils::draw_page_content, ManualPage};
+use super::{utils::draw_page_content_obsolete, ManualPageObsolete};
 use crate::{
     difficulty::CurrentDifficulty,
     root::{self, GameAssets},
@@ -15,7 +15,7 @@ pub struct PageContent;
 pub fn draw_manual_ui(
     commands: &mut Commands,
     handles: Res<GameAssets>,
-    current_page: &ManualPage,
+    current_page: &ManualPageObsolete,
 ) {
     commands
         .spawn(NodeBundle {
@@ -47,7 +47,7 @@ pub fn draw_manual_ui(
                 })
                 .insert(PageContent)
                 .with_children(|content| {
-                    draw_page_content(content, &handles, *current_page);
+                    draw_page_content_obsolete(content, &handles, *current_page);
                 });
 
             // Navigation Buttons
@@ -146,7 +146,7 @@ pub fn draw_manual_ui(
 }
 
 pub fn user_manual_system(
-    mut current_page: ResMut<ManualPage>,
+    mut current_page: ResMut<ManualPageObsolete>,
     // difficulty: Res<CurrentDifficulty>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
@@ -196,9 +196,9 @@ pub fn user_manual_system(
         for child in children.iter() {
             if let Ok(text) = text_query.get(*child) {
                 let is_first = text.sections[0].value == "Previous"
-                    && *current_page == ManualPage::first().unwrap();
+                    && *current_page == ManualPageObsolete::first().unwrap();
                 let is_last = text.sections[0].value == "Next"
-                    && *current_page == ManualPage::last().unwrap();
+                    && *current_page == ManualPageObsolete::last().unwrap();
                 *visibility = if is_first || is_last {
                     Visibility::Hidden
                 } else {
@@ -218,7 +218,7 @@ pub fn setup(
     _difficulty: Res<CurrentDifficulty>,
 ) {
     // Set the initial page based on the difficulty
-    let initial_page = ManualPage::default();
+    let initial_page = ManualPageObsolete::default();
     commands.insert_resource(initial_page);
 
     // Spawn the 2D camera for the manual UI
@@ -232,7 +232,7 @@ pub fn setup(
 
 fn redraw_manual_ui_system(
     mut commands: Commands,
-    current_page: Res<ManualPage>,
+    current_page: Res<ManualPageObsolete>,
     q_manual_ui: Query<Entity, With<UserManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
     handles: Res<GameAssets>,
@@ -259,7 +259,7 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_page_content(parent, &handles, *current_page);
+            draw_page_content_obsolete(parent, &handles, *current_page);
         });
 }
 
@@ -293,5 +293,5 @@ pub fn app_setup(app: &mut App) {
                 .run_if(in_state(root::State::UserManual))
                 .after(user_manual_system),
         )
-        .insert_resource(ManualPage::default());
+        .insert_resource(ManualPageObsolete::default());
 }

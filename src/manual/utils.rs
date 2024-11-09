@@ -12,7 +12,7 @@ use crate::root::GameAssets;
 
 use bevy::prelude::*;
 
-use super::{chapter1, ManualPage};
+use super::{chapter1, chapter2, ManualPageObsolete};
 
 pub fn image_text(
     parent: &mut ChildBuilder<'_>,
@@ -257,27 +257,18 @@ pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: im
         });
 }
 
-pub fn draw_page_content(
+// FIXME: This function has been replaced by "draw_manual_page" in mod.rs
+pub fn draw_page_content_obsolete(
     parent: &mut ChildBuilder,
     handles: &GameAssets,
-    current_page: ManualPage,
+    current_page: ManualPageObsolete,
 ) {
     // Draw page-specific content
     match current_page {
-        ManualPage::MissionBriefing => {
-            chapter1::p01_mission_briefing::draw_mission_briefing_page(parent, handles)
-        }
-        ManualPage::EssentialControls => {
-            chapter1::p02_essential_controls::draw_essential_controls_page(parent, handles)
-        }
-        ManualPage::EMFAndThermometer => {
-            chapter1::p03_emf_and_thermometer::draw_emf_and_thermometer_page(parent, handles)
-        }
-        ManualPage::TruckJournal => {
-            chapter1::p04_truck_journal::draw_truck_journal_page(parent, handles)
-        }
-        ManualPage::ExpellingGhost => {
-            chapter1::p05_expelling_ghost::draw_expelling_ghost_page(parent, handles)
-        }
+        ManualPageObsolete::MissionBriefing => chapter1::page1::draw(parent, handles),
+        ManualPageObsolete::EssentialControls => chapter1::page2::draw(parent, handles),
+        ManualPageObsolete::EMFAndThermometer => chapter1::page3::draw(parent, handles),
+        ManualPageObsolete::TruckJournal => chapter2::page1::draw(parent, handles),
+        ManualPageObsolete::ExpellingGhost => chapter2::page2::draw(parent, handles),
     }
 }
