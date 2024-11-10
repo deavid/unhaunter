@@ -51,15 +51,41 @@ pub fn create_manual() -> Manual {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Resource, Default)]
 pub struct CurrentManualPage(pub usize, pub usize); // Chapter index, Page Index
 
-//Generic Manual page drawing function
 pub fn draw_manual_page(
     parent: &mut ChildBuilder,
     handles: &GameAssets,
     manual: &Manual,
     current_page: &CurrentManualPage,
 ) {
-    let page_data = &manual.chapters[current_page.0].pages[current_page.1];
-    (page_data.draw_fn)(parent, handles);
+    let mut chapter_index = current_page.0;
+    let mut page_index = current_page.1;
+
+    // --- Chapter Bounds Check ---
+    let chapter_count = manual.chapters.len();
+    if chapter_index >= chapter_count {
+        warn!(
+            "Chapter index out of bounds: {} (max: {})",
+            chapter_index,
+            chapter_count - 1
+        );
+        chapter_index = chapter_count - 1;
+    }
+    let chapter = &manual.chapters[chapter_index];
+
+    // --- Page Bounds Check ---
+    let page_count = chapter.pages.len();
+    if page_index >= page_count {
+        warn!(
+            "Page index out of bounds: {} (max: {})",
+            page_index,
+            page_count - 1
+        );
+        page_index = page_count - 1;
+    }
+    let page = &chapter.pages[page_index];
+
+    // --- Draw the Page ---
+    (page.draw_fn)(parent, handles);
 }
 
 // Update ManualPage enum and its methods (see next step)

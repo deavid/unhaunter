@@ -1,10 +1,15 @@
-use super::{utils::draw_page_content_obsolete, ManualPageObsolete};
+use super::{
+    draw_manual_page, utils::draw_page_content_obsolete, CurrentManualPage, Manual,
+    ManualPageObsolete,
+};
 use crate::{
     difficulty::CurrentDifficulty,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
-use enum_iterator::Sequence as _;
+
+#[derive(Component)]
+pub struct ManualCamera;
 
 #[derive(Component)]
 pub struct UserManualUI;
@@ -146,59 +151,73 @@ pub fn draw_manual_ui(
 }
 
 pub fn user_manual_system(
-    mut current_page: ResMut<ManualPageObsolete>,
-    // difficulty: Res<CurrentDifficulty>,
+    mut current_manual_page: ResMut<CurrentManualPage>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut next_state: ResMut<NextState<root::State>>,
-    // mut game_next_state: ResMut<NextState<root::GameState>>,
-    // Query for Text components
     text_query: Query<&Text>,
     mut button_query: Query<(&Children, &mut Visibility), With<Button>>,
+    manuals: Res<Manual>,
 ) {
-    // Store the manual UI entity ID let mut manual_ui_entity = None; Handle button
-    // clicks
     for (interaction, children) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
             for child in children.iter() {
                 if let Ok(text) = text_query.get(*child) {
-                    if text.sections[0].value == "Previous" {
-                        *current_page = current_page.previous().unwrap_or(*current_page);
-                        info!("Current page: {:?}", *current_page);
-                        // Use previous() from Sequence
-                    } else if text.sections[0].value == "Next" {
-                        *current_page = current_page.next().unwrap_or(*current_page);
-                        info!("Current page: {:?}", *current_page);
-                        // Use next() from Sequence
-                    } else if text.sections[0].value == "Close" {
-                        // Transition back to the appropriate state
-                        next_state.set(root::State::MainMenu);
+                    match text.sections[0].value.as_str() {
+                        "Previous" => {
+                            if current_manual_page.1 > 0 {
+                                // Go to the previous page in the chapter
+                                current_manual_page.1 -= 1;
+                            } else {
+                                warn!(
+                                    "We're at the first page of chapter {}",
+                                    current_manual_page.0
+                                );
+                            }
+                        }
+                        "Next" => {
+                            let current_chapter_size =
+                                manuals.chapters[current_manual_page.0].pages.len();
+                            if current_manual_page.1 + 1 < current_chapter_size {
+                                // Go to the next page of the chapter
+                                current_manual_page.1 += 1;
+                            } else {
+                                warn!(
+                                    "We're at the last page of chapter {}",
+                                    current_manual_page.0
+                                );
+                            }
+                        }
+                        "Close" => next_state.set(root::State::MainMenu),
+                        _ => (),
                     }
                 }
             }
         }
     }
 
-    // Handle left/right arrow keys and ESC key
     if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-        *current_page = current_page.previous().unwrap_or(*current_page);
-        info!("Current page: {:?}", *current_page);
+        if current_manual_page.1 > 0 {
+            current_manual_page.1 -= 1; // Go to the previous page in the chapter
+        }
     } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-        *current_page = current_page.next().unwrap_or(*current_page);
-        info!("Current page: {:?}", *current_page);
+        let current_chapter_size = manuals.chapters[current_manual_page.0].pages.len();
+        if current_manual_page.1 + 1 < current_chapter_size {
+            current_manual_page.1 += 1; // Go to the next page of the chapter
+        }
     } else if keyboard_input.just_pressed(KeyCode::Escape) {
-        // Transition back to the main menu when ESC is pressed
         next_state.set(root::State::MainMenu);
     }
 
-    // Update button visibility based on current page
     for (children, mut visibility) in &mut button_query {
         for child in children.iter() {
             if let Ok(text) = text_query.get(*child) {
-                let is_first = text.sections[0].value == "Previous"
-                    && *current_page == ManualPageObsolete::first().unwrap();
+                let is_first = text.sections[0].value == "Previous" && current_manual_page.1 == 0;
+                let current_chapter_size = manuals.chapters[current_manual_page.0].pages.len();
+
                 let is_last = text.sections[0].value == "Next"
-                    && *current_page == ManualPageObsolete::last().unwrap();
+                    && current_manual_page.1 + 1 == current_chapter_size;
+
                 *visibility = if is_first || is_last {
                     Visibility::Hidden
                 } else {
@@ -208,9 +227,6 @@ pub fn user_manual_system(
         }
     }
 }
-
-#[derive(Component)]
-pub struct ManualCamera;
 
 pub fn setup(
     mut commands: Commands,
@@ -232,16 +248,12 @@ pub fn setup(
 
 fn redraw_manual_ui_system(
     mut commands: Commands,
-    current_page: Res<ManualPageObsolete>,
+    current_manual_page: Res<CurrentManualPage>,
     q_manual_ui: Query<Entity, With<UserManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
     handles: Res<GameAssets>,
+    manuals: Res<Manual>,
 ) {
-    if !current_page.is_changed() {
-        // Only redraw if the page has changed
-        return;
-    }
-
     // Get the ManualUI entity
     let Ok(_) = q_manual_ui.get_single() else {
         return;
@@ -255,11 +267,11 @@ fn redraw_manual_ui_system(
     // Despawn the existing page content
     commands.entity(page_content_entity).despawn_descendants();
 
-    // Redraw the page content
+    // Redraw the page content, changed "draw_page_content_obsolete"
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_page_content_obsolete(parent, &handles, *current_page);
+            draw_manual_page(parent, &handles, &manuals, &current_manual_page);
         });
 }
 
@@ -284,14 +296,9 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(root::State::UserManual), cleanup)
         .add_systems(
             Update,
-            user_manual_system.run_if(in_state(root::State::UserManual)),
+            (user_manual_system, redraw_manual_ui_system)
+                .chain()
+                .run_if(in_state(root::State::UserManual)),
         )
-        .add_systems(
-            Update,
-            redraw_manual_ui_system
-                // Add run_if condition here
-                .run_if(in_state(root::State::UserManual))
-                .after(user_manual_system),
-        )
-        .insert_resource(ManualPageObsolete::default());
+        .insert_resource(CurrentManualPage::default());
 }
