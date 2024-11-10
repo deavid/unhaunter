@@ -4,17 +4,19 @@
 use crate::{
     difficulty::CurrentDifficulty,
     game::level::LoadLevelEvent,
-    manual::ManualPageObsolete,
-    maphub::difficulty_selection::DifficultySelectionState,
+    manual::{CurrentManualPage, Manual},
+    maphub::{difficulty_selection::DifficultySelectionState, MapHubState},
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
-use enum_iterator::Sequence as _;
 
-use super::{user_manual_ui::PageContent, utils::draw_page_content_obsolete, ManualChapter};
+use super::draw_manual_page;
 
 #[derive(Component)]
 pub struct ManualCamera;
+
+#[derive(Component)]
+pub struct PageContent;
 
 #[derive(Component)]
 pub struct PrePlayManualUI;
@@ -32,52 +34,60 @@ impl Input {
     }
 }
 
-#[derive(Debug, Clone, Copy, Event)]
-pub struct ManualEvent {
-    pub action: ManualButtonAction,
-}
-
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ManualButtonAction {
-    Previous,
+pub enum PreplayManualNavigationAction {
     Continue,
+    Previous,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[derive(Debug, Clone, Copy, Event)]
+pub struct PreplayManualNavigationEvent {
+    pub action: PreplayManualNavigationAction,
+}
+
+// System for handling user interaction and page navigation within the pre-play manual.
 pub fn preplay_manual_system(
-    mut current_page: ResMut<ManualPageObsolete>,
-    mut ev_level: EventWriter<LoadLevelEvent>,
+    mut evr_manual_button: EventReader<PreplayManualNavigationEvent>,
+    mut current_manual_page: ResMut<CurrentManualPage>,
     difficulty: Res<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<root::Maps>,
     mut next_state: ResMut<NextState<root::State>>,
-    mut evr_manual_button: EventReader<ManualEvent>,
+    mut ev_load_level: EventWriter<LoadLevelEvent>,
 ) {
     for ev in evr_manual_button.read() {
         match ev.action {
-            ManualButtonAction::Previous => {
-                if *current_page == ManualPageObsolete::first().unwrap() {
-                    next_state.set(root::State::MapHub);
+            PreplayManualNavigationAction::Previous => {
+                if current_manual_page.1 > 0 {
+                    current_manual_page.1 -= 1; // Go to previous page
                 } else {
-                    *current_page = current_page.previous().unwrap_or(*current_page);
+                    // Return to map/difficulty selection
+                    next_state.set(root::State::MapHub);
                 }
             }
-            ManualButtonAction::Continue => {
+
+            PreplayManualNavigationAction::Continue => {
                 if difficulty.0.tutorial_chapter.is_some() {
-                    if *current_page == ManualPageObsolete::last().unwrap() {
+                    let chapter = difficulty.0.tutorial_chapter.as_ref().unwrap();
+                    let current_chapter_size = chapter.pages.len();
+
+                    if current_manual_page.1 + 1 < current_chapter_size {
+                        current_manual_page.1 += 1;
+                    } else {
+                        // Last page, start game
                         let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
                             .path
                             .clone();
-                        ev_level.send(LoadLevelEvent { map_filepath });
+                        ev_load_level.send(LoadLevelEvent { map_filepath });
                         next_state.set(root::State::InGame);
-                    } else {
-                        *current_page = current_page.next().unwrap_or(*current_page);
                     }
                 } else {
+                    // No tutorial chapter, start game immediately.
                     let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
                         .path
                         .clone();
-                    ev_level.send(LoadLevelEvent { map_filepath });
+
+                    ev_load_level.send(LoadLevelEvent { map_filepath });
                     next_state.set(root::State::InGame);
                 }
             }
@@ -85,12 +95,142 @@ pub fn preplay_manual_system(
     }
 }
 
-/// Draws the pre-play manual UI, which guides the player through a tutorial.
-pub fn draw_manual_ui(
-    commands: &mut Commands,
-    handles: Res<GameAssets>,
-    current_page: &ManualPageObsolete,
+fn manual_button_system(
+    mut interaction_query: Query<
+        (
+            Ref<Interaction>,
+            Option<&Input>,
+            Option<&PreplayManualNavigationAction>,
+        ),
+        With<Button>,
+    >,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut manual_events: EventWriter<PreplayManualNavigationEvent>,
 ) {
+    for (interaction, maybe_input, maybe_action) in &mut interaction_query {
+        if interaction.is_changed() && *interaction == Interaction::Pressed {
+            if let Some(action) = maybe_action {
+                manual_events.send(PreplayManualNavigationEvent { action: *action });
+            }
+        }
+
+        // --- Keyboard input handling ---
+        if let Some(input) = maybe_input {
+            for key in &input.keys {
+                if keyboard_input.just_pressed(*key) {
+                    if let Some(action) = maybe_action {
+                        manual_events.send(PreplayManualNavigationEvent { action: *action });
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Draws the pre-play manual UI, which guides the player through a tutorial.
+pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
+    let button_text_style = TextStyle {
+        font: handles.fonts.londrina.w300_light.clone(),
+        font_size: 30.0,
+        color: Color::WHITE,
+    };
+
+    let prev_button = |button: &mut ChildBuilder| {
+        button.spawn(TextBundle::from_section(
+            "Previous",
+            button_text_style.clone(),
+        ));
+    };
+    let continue_button = |button: &mut ChildBuilder| {
+        button.spawn(TextBundle::from_section(
+            "Continue",
+            button_text_style.clone(),
+        ));
+    };
+    let nav_buttons = |buttons: &mut ChildBuilder| {
+        // Previous button
+        buttons
+            .spawn(ButtonBundle {
+                style: Style {
+                    width: Val::Percent(30.0),
+                    height: Val::Percent(100.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(5.0)),
+
+                    ..default()
+                },
+
+                background_color: Color::BLACK.with_alpha(0.2).into(),
+
+                ..default()
+            })
+            .with_children(prev_button)
+            .insert(PreplayManualNavigationAction::Previous)
+            .insert(Input::from_keys([KeyCode::Escape, KeyCode::ArrowLeft]));
+
+        // Continue Button
+        buttons
+            .spawn(ButtonBundle {
+                style: Style {
+                    width: Val::Percent(30.0),
+                    height: Val::Percent(100.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+
+                background_color: Color::BLACK.with_alpha(0.2).into(),
+                ..default()
+            })
+            .with_children(continue_button)
+            .insert(PreplayManualNavigationAction::Continue)
+            .insert(Input::from_keys([
+                KeyCode::Space,
+                KeyCode::ArrowRight,
+                KeyCode::Enter,
+                KeyCode::KeyE,
+            ]));
+    };
+    let page_content = |parent: &mut ChildBuilder| {
+        // Page Content Container - Now Empty, content will be added later
+        parent
+            .spawn(NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
+                    flex_grow: 1.0,
+                    flex_basis: Val::Percent(100.0),
+                    ..default()
+                },
+                ..default()
+            })
+            .insert(PageContent);
+
+        // Navigation Buttons
+        parent
+            .spawn(NodeBundle {
+                style: Style {
+                    width: Val::Percent(90.0),
+                    height: Val::Percent(5.0),
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::SpaceBetween,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::top(Val::Percent(3.0)),
+                    flex_grow: 0.0,
+                    flex_basis: Val::Percent(5.0),
+
+                    ..default()
+                },
+
+                ..default()
+            })
+            .with_children(nav_buttons);
+    };
+
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -104,167 +244,29 @@ pub fn draw_manual_ui(
             ..default()
         })
         .insert(PrePlayManualUI)
-        .with_children(|parent| {
-            // Page Content Container
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-                        flex_grow: 1.0,
-                        flex_basis: Val::Percent(100.0),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(PageContent)
-                .with_children(|content| {
-                    draw_page_content_obsolete(content, &handles, *current_page)
-                });
-
-            // Navigation Buttons
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(90.0),
-                        height: Val::Percent(5.0),
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::SpaceBetween,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::top(Val::Percent(3.0)),
-                        flex_grow: 0.0,
-                        flex_basis: Val::Percent(5.0),
-
-                        ..default()
-                    },
-
-                    ..default()
-                })
-                .with_children(|buttons| {
-                    // Previous Button
-                    buttons
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Px(5.0)),
-
-                                ..default()
-                            },
-
-                            background_color: Color::BLACK.with_alpha(0.2).into(),
-
-                            ..default()
-                        })
-                        .with_children(|button| {
-                            button.spawn(TextBundle::from_section(
-                                "Previous",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        })
-                        .insert(ManualButtonAction::Previous)
-                        .insert(Input::from_keys([KeyCode::Escape])); // <-- Key binding
-
-                    // Continue Button
-                    buttons
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Px(5.0)),
-                                ..default()
-                            },
-
-                            background_color: Color::BLACK.with_alpha(0.2).into(),
-                            ..default()
-                        })
-                        .with_children(|button| {
-                            button.spawn(TextBundle::from_section(
-                                "Continue",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        })
-                        .insert(ManualButtonAction::Continue)
-                        .insert(Input::from_keys([
-                            KeyCode::Space,
-                            KeyCode::ArrowRight,
-                            KeyCode::Enter,
-                            KeyCode::KeyE,
-                        ])); // <-- Key bindings
-                });
-        });
-}
-
-pub fn manual_button_system(
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &Children,
-            Option<&Input>,
-            Option<&ManualButtonAction>,
-        ),
-        With<Button>,
-    >,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut manual_events: EventWriter<ManualEvent>,
-) {
-    for (interaction, _, maybe_input, maybe_action) in &mut interaction_query {
-        // --- Mouse Click Handling ---
-        if *interaction == Interaction::Pressed {
-            if let Some(action) = maybe_action {
-                // Directly use the ManualButtonAction component if present
-                manual_events.send(ManualEvent { action: *action });
-            }
-        }
-
-        // --- Keyboard Input Handling ---
-        if let Some(input) = maybe_input {
-            for key in &input.keys {
-                if keyboard_input.just_pressed(*key) {
-                    if let Some(action) = maybe_action {
-                        manual_events.send(ManualEvent { action: *action });
-                    }
-                }
-            }
-        }
-    }
+        .with_children(page_content);
 }
 
 pub fn setup_preplay_ui(
     mut commands: Commands,
+    manual: Res<Manual>,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    // FIXME: The ManualChapter Enum has been changed into a struct, this code
-    // tries to locate an initial page, but the pages are now into the chapter
-    // itself.
-    // let initial_page = match difficulty.0.tutorial_chapter {
-    //     Some(ManualChapter::Chapter1) => ManualPageObsolete::MissionBriefing, // First page of Chapter 1
-    //     _ => ManualPageObsolete::MissionBriefing, // Default to the first page, for when calling from the main menu
-    // };
-    let initial_page = ManualPageObsolete::MissionBriefing;
-
-    commands.insert_resource(initial_page); // Update initial page
+    commands.insert_resource(CurrentManualPage(
+        difficulty
+            .0
+            .tutorial_chapter
+            .as_ref()
+            .map(|x| x.index(&manual))
+            .unwrap_or_default(),
+        0,
+    ));
     commands
         .spawn(Camera2dBundle::default())
         .insert(ManualCamera);
 
-    //Draw the PrePlay UI.
-    draw_manual_ui(&mut commands, handles, &initial_page);
+    draw_manual_ui(&mut commands, handles);
 }
 
 pub fn cleanup_preplay_ui(
@@ -272,12 +274,10 @@ pub fn cleanup_preplay_ui(
     q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
     q_camera: Query<Entity, With<ManualCamera>>,
 ) {
-    // Despawn the manual UI
     for entity in q_manual_ui.iter() {
         commands.entity(entity).despawn_recursive();
     }
 
-    // Despawn the manual camera
     for entity in q_camera.iter() {
         commands.entity(entity).despawn_recursive();
     }
@@ -286,35 +286,30 @@ pub fn cleanup_preplay_ui(
 pub fn start_preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
     mut next_game_state: ResMut<NextState<root::State>>,
-    difficulty_selection_state: Res<DifficultySelectionState>, // To access the selected map
+    difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<root::Maps>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
 ) {
     if difficulty.0.tutorial_chapter.is_none() {
-        // No tutorial, start game immediately
         let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
             .path
             .clone();
+
         ev_load_level.send(LoadLevelEvent { map_filepath });
         next_game_state.set(root::State::InGame);
     } else {
-        // Tutorial exists, transition to PreplayManual state
         next_game_state.set(root::State::PreplayManual);
     }
 }
 
 fn redraw_manual_ui_system(
     mut commands: Commands,
-    current_page: Res<ManualPageObsolete>,
+    current_manual_page: Res<CurrentManualPage>,
     q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
     handles: Res<GameAssets>,
+    manuals: Res<Manual>,
 ) {
-    if !current_page.is_changed() {
-        // Only redraw if the page has changed
-        return;
-    }
-
     // Get the ManualUI entity
     let Ok(_) = q_manual_ui.get_single() else {
         return;
@@ -332,7 +327,7 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_page_content_obsolete(parent, &handles, *current_page);
+            draw_manual_page(parent, &handles, &manuals, &current_manual_page);
         });
 }
 
@@ -349,5 +344,5 @@ pub fn app_setup(app: &mut App) {
                 .chain()
                 .run_if(in_state(root::State::PreplayManual)),
         )
-        .add_event::<ManualEvent>();
+        .add_event::<PreplayManualNavigationEvent>(); //Add event
 }

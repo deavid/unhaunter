@@ -160,11 +160,14 @@ pub fn draw_manual_ui(
 pub fn user_manual_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut ev_navigation: EventWriter<ManualNavigationEvent>,
-    mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<
+        (Ref<Interaction>, &Children),
+        (Changed<Interaction>, With<Button>),
+    >,
     text_query: Query<&Text>,
 ) {
     for (interaction, children) in &mut interaction_query {
-        if *interaction == Interaction::Pressed {
+        if interaction.is_changed() && *interaction == Interaction::Pressed {
             for child in children.iter() {
                 if let Ok(text) = text_query.get(*child) {
                     match text.sections[0].value.as_str() {

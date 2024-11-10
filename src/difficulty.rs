@@ -16,7 +16,7 @@
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
-    manual::{chapter1, ManualChapter},
+    manual::{chapter1, chapter2, ManualChapter},
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
@@ -790,6 +790,7 @@ impl Difficulty {
             // but it is not the same entity in memory as the chapter for the
             // full manual.
             Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
+            Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
             _ => None,
         }
     }
