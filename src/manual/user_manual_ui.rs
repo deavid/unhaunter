@@ -1,11 +1,5 @@
-use super::{
-    draw_manual_page, utils::draw_page_content_obsolete, CurrentManualPage, Manual,
-    ManualPageObsolete,
-};
-use crate::{
-    difficulty::CurrentDifficulty,
-    root::{self, GameAssets},
-};
+use super::{draw_manual_page, CurrentManualPage, Manual};
+use crate::root::{self, GameAssets};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -24,11 +18,7 @@ pub enum ManualNavigationEvent {
     Close,
 }
 
-pub fn draw_manual_ui(
-    commands: &mut Commands,
-    handles: Res<GameAssets>,
-    current_page: &ManualPageObsolete,
-) {
+pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -57,10 +47,7 @@ pub fn draw_manual_ui(
                     },
                     ..default()
                 })
-                .insert(PageContent)
-                .with_children(|content| {
-                    draw_page_content_obsolete(content, &handles, *current_page);
-                });
+                .insert(PageContent);
 
             // Navigation Buttons
             parent
@@ -196,22 +183,14 @@ pub fn user_manual_system(
     }
 }
 
-pub fn setup(
-    mut commands: Commands,
-    handles: Res<GameAssets>,
-    _difficulty: Res<CurrentDifficulty>,
-) {
-    // Set the initial page based on the difficulty
-    let initial_page = ManualPageObsolete::default();
-    commands.insert_resource(initial_page);
-
+pub fn setup(mut commands: Commands, handles: Res<GameAssets>) {
     // Spawn the 2D camera for the manual UI
     commands
         .spawn(Camera2dBundle::default())
         .insert(ManualCamera);
 
     // Draw the manual UI
-    draw_manual_ui(&mut commands, handles, &initial_page);
+    draw_manual_ui(&mut commands, handles);
 }
 
 fn redraw_manual_ui_system(

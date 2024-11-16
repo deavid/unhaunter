@@ -5,21 +5,9 @@ pub mod user_manual_ui;
 pub mod utils;
 
 use bevy::prelude::*;
-use enum_iterator::Sequence;
 pub use preplay_manual_ui::preplay_manual_system;
 
 use crate::root::GameAssets;
-
-// TODO: Remove ManualPageObsolete
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Resource, Default)]
-pub enum ManualPageObsolete {
-    #[default]
-    MissionBriefing,
-    EssentialControls,
-    EMFAndThermometer,
-    TruckJournal,
-    ExpellingGhost,
-}
 
 #[derive(Debug, Clone)]
 pub struct ManualPageData {

@@ -12,8 +12,6 @@ use crate::root::GameAssets;
 
 use bevy::prelude::*;
 
-use super::{chapter1, chapter2, ManualPageObsolete};
-
 pub fn image_text(
     parent: &mut ChildBuilder<'_>,
     image: &Handle<Image>,
@@ -255,20 +253,4 @@ pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: im
                 },
             ));
         });
-}
-
-// FIXME: This function has been replaced by "draw_manual_page" in mod.rs
-pub fn draw_page_content_obsolete(
-    parent: &mut ChildBuilder,
-    handles: &GameAssets,
-    current_page: ManualPageObsolete,
-) {
-    // Draw page-specific content
-    match current_page {
-        ManualPageObsolete::MissionBriefing => chapter1::page1::draw(parent, handles),
-        ManualPageObsolete::EssentialControls => chapter1::page2::draw(parent, handles),
-        ManualPageObsolete::EMFAndThermometer => chapter1::page3::draw(parent, handles),
-        ManualPageObsolete::TruckJournal => chapter2::page1::draw(parent, handles),
-        ManualPageObsolete::ExpellingGhost => chapter2::page2::draw(parent, handles),
-    }
 }

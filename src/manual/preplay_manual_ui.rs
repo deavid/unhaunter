@@ -5,7 +5,7 @@ use crate::{
     difficulty::CurrentDifficulty,
     game::level::LoadLevelEvent,
     manual::{CurrentManualPage, Manual},
-    maphub::{difficulty_selection::DifficultySelectionState, MapHubState},
+    maphub::difficulty_selection::DifficultySelectionState,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
