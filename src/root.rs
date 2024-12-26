@@ -144,6 +144,19 @@ pub struct ImageAssets {
     pub manual_ghost_attack: Handle<Image>,
     pub manual_truck_journal: Handle<Image>,
     pub manual_truck_exterior: Handle<Image>,
+    // --- Chapter 2 images ---
+    pub manual_quick_change: Handle<Image>,
+    pub manual_uv_ghost: Handle<Image>,
+    pub manual_uv_object: Handle<Image>,
+    pub manual_torch_tab: Handle<Image>,
+    pub manual_inventory_slots: Handle<Image>,
+    pub manual_inventory_all: Handle<Image>,
+    pub manual_ghost_red: Handle<Image>,
+    pub manual_ghost_roar: Handle<Image>,
+    pub manual_hide_table: Handle<Image>,
+    pub manual_truck_loadout: Handle<Image>,
+    pub manual_truck_endmission: Handle<Image>,
+    pub manual_truck_refuge: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -236,6 +249,11 @@ pub fn load_assets(
     server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    let ch1 = "manual/images/chapter1";
+    let ch2 = "manual/images/chapter2";
+    let ch1 = |path: &str| -> Handle<Image> { server.load(format!("{ch1}/{path}")) };
+    let ch2 = |path: &str| -> Handle<Image> { server.load(format!("{ch2}/{path}")) };
+
     commands.insert_resource(GameAssets {
         images: ImageAssets {
             title: server.load("img/title.png"),
@@ -258,27 +276,39 @@ pub fn load_assets(
             vignette: server.load("img/vignette.png"),
             // --- Manual Images ---
             // Chapter 1: Page 1:
-            manual_investigate: server.load("manual/images/chapter1/investigate.png"),
-            manual_locate_ghost: server.load("manual/images/chapter1/locate_ghost.png"),
-            manual_identify_ghost: server.load("manual/images/chapter1/identify_ghost.png"),
-            manual_craft_repellent: server.load("manual/images/chapter1/craft_repellent.png"),
-            manual_expel_ghost: server.load("manual/images/chapter1/expel_ghost.png"),
-            manual_end_mission: server.load("manual/images/chapter1/end_mission.png"),
+            manual_investigate: ch1("investigate.png"),
+            manual_locate_ghost: ch1("locate_ghost.png"),
+            manual_identify_ghost: ch1("identify_ghost.png"),
+            manual_craft_repellent: ch1("craft_repellent.png"),
+            manual_expel_ghost: ch1("expel_ghost.png"),
+            manual_end_mission: ch1("end_mission.png"),
             // Chapter 1: Page 2:
-            manual_movement_wasd: server.load("manual/images/chapter1/movement_wasd.png"),
-            manual_interacting_objects: server
-                .load("manual/images/chapter1/interacting_objects.png"),
-            manual_flashlight: server.load("manual/images/chapter1/flashlight.png"),
-            manual_activate_equipment: server.load("manual/images/chapter1/activate_equipment.png"),
-            manual_switch_item: server.load("manual/images/chapter1/switch_item.png"),
-            manual_quick_evidence: server.load("manual/images/chapter1/quick_evidence.png"),
+            manual_movement_wasd: ch1("movement_wasd.png"),
+            manual_interacting_objects: ch1("interacting_objects.png"),
+            manual_flashlight: ch1("flashlight.png"),
+            manual_activate_equipment: ch1("activate_equipment.png"),
+            manual_switch_item: ch1("switch_item.png"),
+            manual_quick_evidence: ch1("quick_evidence.png"),
             // Chapter 1: Page 3:
-            manual_emf_reader: server.load("manual/images/chapter1/emf_reader.png"),
-            manual_thermometer: server.load("manual/images/chapter1/thermometer.png"),
-            manual_truck_sanity: server.load("manual/images/chapter1/truck_sanity.png"),
-            manual_ghost_attack: server.load("manual/images/chapter1/ghost_attack.png"),
-            manual_truck_journal: server.load("manual/images/chapter1/identify_ghost.png"),
-            manual_truck_exterior: server.load("manual/images/chapter1/truck_exterior.png"),
+            manual_emf_reader: ch1("emf_reader.png"),
+            manual_thermometer: ch1("thermometer.png"),
+            manual_truck_sanity: ch1("truck_sanity.png"),
+            manual_ghost_attack: ch1("ghost_attack.png"),
+            manual_truck_journal: ch1("identify_ghost.png"),
+            manual_truck_exterior: ch1("truck_exterior.png"),
+            // -- Chapter 2 images --
+            manual_quick_change: ch2("quick_change.png"),
+            manual_uv_ghost: ch2("uv_ghost.png"),
+            manual_uv_object: ch2("uv_object.png"),
+            manual_torch_tab: ch2("torch_tab.png"),
+            manual_inventory_slots: ch2("inventory_slots.png"),
+            manual_inventory_all: ch2("inventory_all.png"),
+            manual_ghost_red: ch2("ghost_red.png"),
+            manual_ghost_roar: ch2("ghost_roar.png"),
+            manual_hide_table: ch2("hide_table.png"),
+            manual_truck_loadout: ch2("truck_loadout.png"),
+            manual_truck_endmission: ch2("truck_endmission.png"),
+            manual_truck_refuge: ch2("truck_refuge.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {
