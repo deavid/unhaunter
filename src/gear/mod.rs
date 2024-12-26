@@ -457,7 +457,7 @@ pub struct GearStuff<'w, 's> {
     pub difficulty: Res<'w, CurrentDifficulty>,
 }
 
-impl<'w, 's> GearStuff<'w, 's> {
+impl GearStuff<'_, '_> {
     /// Plays a sound effect using the specified file path and volume from the given
     /// position.
     pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {

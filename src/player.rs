@@ -498,7 +498,7 @@ pub struct CollisionHandler<'w> {
     bf: Res<'w, board::BoardData>,
 }
 
-impl<'w> CollisionHandler<'w> {
+impl CollisionHandler<'_> {
     const ENABLE_COLLISION: bool = true;
     const PILLAR_SZ: f32 = 0.3;
     const PLAYER_SZ: f32 = 0.5;
@@ -570,7 +570,7 @@ pub struct InteractiveStuff<'w, 's> {
     pub game_next_state: ResMut<'w, NextState<root::GameState>>,
 }
 
-impl<'w, 's> InteractiveStuff<'w, 's> {
+impl InteractiveStuff<'_, '_> {
     /// Executes an interaction with an interactive object.
     ///
     /// This method determines the object's new state based on the type of interaction,
