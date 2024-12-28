@@ -1,5 +1,6 @@
 pub mod chapter1;
 pub mod chapter2;
+pub mod chapter3;
 pub mod preplay_manual_ui;
 pub mod user_manual_ui;
 pub mod utils;
@@ -46,6 +47,7 @@ pub fn create_manual() -> Manual {
         chapters: vec![
             chapter1::create_manual_chapter(),
             chapter2::create_manual_chapter(),
+            chapter3::create_manual_chapter(),
         ],
     }
 }

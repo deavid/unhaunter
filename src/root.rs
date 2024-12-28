@@ -157,6 +157,12 @@ pub struct ImageAssets {
     pub manual_truck_loadout: Handle<Image>,
     pub manual_truck_endmission: Handle<Image>,
     pub manual_truck_refuge: Handle<Image>,
+    // -- Chapter 3 Images
+    pub manual_recorder_evp: Handle<Image>,
+    pub manual_geiger_counter: Handle<Image>,
+    pub manual_locating_ghost: Handle<Image>,
+    pub manual_sanity_management: Handle<Image>,
+    pub manual_emf_fluctuations: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -251,8 +257,10 @@ pub fn load_assets(
 ) {
     let ch1 = "manual/images/chapter1";
     let ch2 = "manual/images/chapter2";
+    let ch3 = "manual/images/chapter3";
     let ch1 = |path: &str| -> Handle<Image> { server.load(format!("{ch1}/{path}")) };
     let ch2 = |path: &str| -> Handle<Image> { server.load(format!("{ch2}/{path}")) };
+    let ch3 = |path: &str| -> Handle<Image> { server.load(format!("{ch3}/{path}")) };
 
     commands.insert_resource(GameAssets {
         images: ImageAssets {
@@ -309,6 +317,12 @@ pub fn load_assets(
             manual_truck_loadout: ch2("truck_loadout.png"),
             manual_truck_endmission: ch2("truck_endmission.png"),
             manual_truck_refuge: ch2("truck_refuge.png"),
+            // -- Chapter 3 images --
+            manual_recorder_evp: ch3("recorder_evp.png"),
+            manual_geiger_counter: ch3("geiger_counter.png"),
+            manual_locating_ghost: ch2("ghost_red.png"),
+            manual_sanity_management: ch3("sanity_management.png"),
+            manual_emf_fluctuations: ch1("emf_reader.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

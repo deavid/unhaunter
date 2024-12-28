@@ -16,7 +16,7 @@
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
-    manual::{chapter1, chapter2, ManualChapter},
+    manual::{chapter1, chapter2, chapter3, ManualChapter},
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
@@ -592,16 +592,14 @@ impl Difficulty {
     }
 
     pub fn player_gear(&self) -> PlayerGear {
-        let flashlight: Gear = crate::gear::flashlight::Flashlight::default().into();
-        let emfmeter: Gear = crate::gear::emfmeter::EMFMeter::default().into();
-        let thermometer: Gear = crate::gear::thermometer::Thermometer::default().into();
-        let uvtorch: Gear = crate::gear::uvtorch::UVTorch::default().into();
-        let videocam: Gear = crate::gear::videocam::Videocam::default().into();
-        // let geigercounter: Gear =
-        // crate::gear::geigercounter::GeigerCounter::default().into(); let recorder: Gear
-        // = crate::gear::recorder::Recorder::default().into(); let redtorch: Gear =
-        // crate::gear::redtorch::RedTorch::default().into(); let videocam: Gear =
-        // crate::gear::videocam::Videocam::default().into();
+        use crate::gear::prelude::*;
+
+        let flashlight: Gear = Flashlight::default().into();
+        let emfmeter: Gear = EMFMeter::default().into();
+        let thermometer: Gear = Thermometer::default().into();
+        let uvtorch: Gear = UVTorch::default().into();
+        let videocam: Gear = Videocam::default().into();
+
         match self {
             Difficulty::NoviceInvestigator => PlayerGear {
                 left_hand: flashlight.clone(),
@@ -850,11 +848,9 @@ impl Difficulty {
 
     pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
         match self {
-            // FIXME: This creates a new chapter struct; it might be correct
-            // but it is not the same entity in memory as the chapter for the
-            // full manual.
             Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
             Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
+            Difficulty::SeniorInvestigator => Some(chapter3::create_manual_chapter()),
             _ => None,
         }
     }
