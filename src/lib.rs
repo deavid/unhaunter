@@ -24,6 +24,7 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
+pub mod ghost_setfinder;
 
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},

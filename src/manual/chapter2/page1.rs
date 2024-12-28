@@ -4,32 +4,32 @@ use crate::root::GameAssets;
 use bevy::prelude::*;
 
 pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
-    let title = "Mastering Inventory and UV";
+    let title = "Mastering UV and Night Vision Camera";
     let subtitle = "Understanding gear and seeing the invisible.";
     let grid = vec![
         (
-            &handles.images.manual_quick_change,
-            "*1. Quick Switch:* Use *[Q]* to quickly cycle through the gear available in your right hand."
+            &handles.images.manual_uv_breach,
+            "*1. Breach under UV:* The breach always glows golden under UV Light, making it easier to spot.",
         ),
         (
             &handles.images.manual_uv_ghost,
-            "*2. UV Ectoplasm:* Some ghosts emit a greenish glow under UV light, which is a strong piece of evidence.",
+            "*2. UV Ectoplasm:* Some ghosts emit a greenish glow under UV light, which is evidence for *UV Ectoplasm*.",
         ),
         (
             &handles.images.manual_uv_object,
             "*3. Ghost Influence:* Certain objects emit a green glow under UV light. Ghosts are naturally attracted to these.",
         ),
         (
-            &handles.images.manual_torch_tab,
-            "*4. Left Hand:* Use *[TAB]* to quickly toggle your left-hand equipment (mostly the flashlight) on or off.",
+            &handles.images.manual_left_hand_videocam,
+            "*4. Left Hand:* The Videocam can be used with *[TAB]* too if it's placed on the left hand slot."
         ),
         (
-            &handles.images.manual_inventory_slots,
-            "*5. Limited Storage:* You have two slots for the items you equip on your hands, plus two more slots to keep some useful gear ready in your backpack.",
+            &handles.images.manual_floating_orbs,
+            "*5. Floating Orbs:* If you see that the breach glows bright white under Night Vision means that this ghost has *Floating Orbs* as evidence.",
         ),
         (
-            &handles.images.manual_inventory_all,
-            "*6. Be organized!*: Plan which items to keep available, as some can be placed around to assist in your investigation.",
+            &handles.images.manual_truck_refuge,
+            "*6. Truck as Refuge:* Remember to return to the truck to prepare your investigation, rest and recover. *Sanity* and *Health* are recovered while on the truck.",
         ),
     ];
 

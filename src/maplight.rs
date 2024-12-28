@@ -289,6 +289,7 @@ pub fn apply_lighting(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
+    let mut rng = rand::thread_rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();
@@ -404,7 +405,7 @@ pub fn apply_lighting(
         .iter()
         .map(|x| x.2 / (player_pos.distance2(x.0) + 1.0))
         .sum();
-    cursor_exp += fl_total_power.sqrt() / 4.0;
+    cursor_exp += fl_total_power.sqrt() * 2.0;
     assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see
@@ -433,7 +434,7 @@ pub fn apply_lighting(
     #[cfg(target_arch = "wasm32")]
     const VSMALL_PRIME: usize = 97;
     const BIG_PRIME: usize = 95629;
-    let mask: usize = rand::thread_rng().gen();
+    let mask: usize = rng.gen();
     let lf = &bf.light_field;
 
     // let start = Instant::now();
@@ -757,14 +758,23 @@ pub fn apply_lighting(
                 ld.infrared * 3.0
             } else {
                 0.0
-            };
+            } + ld.ultraviolet;
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
             opacity = opacity.sqrt();
             let l = dst_color.luminance();
-
+            let rnd_f = rng.gen_range(-1.0..1.0_f32).powi(3);
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
+
             dst_color = dst_color.with_luminance(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
+            let lin_dst_color = dst_color.to_linear();
+
+            dst_color = lin_dst_color
+                .with_green(
+                    lin_dst_color.green + ld.ultraviolet * 10.0 * (1.3 - osc1 + rnd_f / 14.0),
+                )
+                .with_red(lin_dst_color.red + ld.ultraviolet * 11.0 * (1.4 - osc1 + rnd_f / 24.0))
+                .into();
         }
         let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
         if sprite_type == SpriteType::Other {

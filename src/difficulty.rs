@@ -596,7 +596,7 @@ impl Difficulty {
         let emfmeter: Gear = crate::gear::emfmeter::EMFMeter::default().into();
         let thermometer: Gear = crate::gear::thermometer::Thermometer::default().into();
         let uvtorch: Gear = crate::gear::uvtorch::UVTorch::default().into();
-
+        let videocam: Gear = crate::gear::videocam::Videocam::default().into();
         // let geigercounter: Gear =
         // crate::gear::geigercounter::GeigerCounter::default().into(); let recorder: Gear
         // = crate::gear::recorder::Recorder::default().into(); let redtorch: Gear =
@@ -610,7 +610,7 @@ impl Difficulty {
                 held_item: None,
             },
             Difficulty::AdeptInvestigator => PlayerGear {
-                left_hand: flashlight.clone(),
+                left_hand: videocam.clone(),
                 right_hand: uvtorch.clone(),
                 inventory: vec![thermometer.clone(), emfmeter.clone()],
                 held_item: None,
@@ -626,10 +626,10 @@ impl Difficulty {
 
     pub fn ghost_set(&self) -> GhostSet {
         match self {
-            Difficulty::NoviceInvestigator => GhostSet::TempEMF,
-            Difficulty::AdeptInvestigator => GhostSet::TempEMFUV,
-            Difficulty::SeniorInvestigator => GhostSet::Fifth,
-            Difficulty::ExpertInvestigator => GhostSet::Half,
+            Difficulty::NoviceInvestigator => GhostSet::TmpEMF,
+            Difficulty::AdeptInvestigator => GhostSet::TmpEMFUVOrbs,
+            Difficulty::SeniorInvestigator => GhostSet::TmpEMFUVOrbsEVPCPM,
+            Difficulty::ExpertInvestigator => GhostSet::Twenty,
             _ => GhostSet::All,
         }
     }

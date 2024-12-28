@@ -22,15 +22,15 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
         ),
         (
             &handles.images.manual_truck_loadout,
-            "*4. Select Your Equipment:* You can select which equipment you want to take with you from the \"Loadout\" tab of the truck before starting the investigation.",
+            "*4. Select Your Equipment:* You can select which equipment you want to take with you from the *Loadout* tab of the truck before starting the investigation.",
+        ),
+        (
+            &handles.images.manual_inventory_all,
+            "*5. Be organized!*: The spots in your inventory are for the Left Hand *[TAB]*, Right Hand *[R]*, and two extra backpack slots *[Q]*.",
         ),
         (
             &handles.images.manual_truck_endmission,
-             "*5. End Mission:* When you are sure that you have expelled all of the ghosts, click \"End Mission\" on the truck to receive your score.",
-        ),
-        (
-            &handles.images.manual_truck_refuge,
-            "*6. Truck as Refuge:* Remember to return to the truck to prepare your investigation, rest and recover.",
+             "*6. End Mission:* When you are sure that you have expelled all of the ghosts, click \"End Mission\" on the truck to receive your score.",
         ),
     ];
 

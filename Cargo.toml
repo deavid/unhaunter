@@ -30,6 +30,7 @@ thiserror = "1.0"
 tiled = { version = "0.12", features = ["wasm"] }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
+itertools = "0.13.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_framepace = "0.17"
@@ -47,12 +48,6 @@ opt-level = 3
 
 # These optimizations for release are trying to target mostly WASM
 [profile.release]
-debug = false
-strip = "debuginfo"
-debug-assertions = false
-overflow-checks = false
-lto = true
-codegen-units = 1
 opt-level = 3
 
 [[bin]]

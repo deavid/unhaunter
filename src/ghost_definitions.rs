@@ -288,10 +288,10 @@ impl Display for GhostType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GhostSet {
-    TempEMF,
-    TempEMFUV,
-    Fifth,
-    Half,
+    TmpEMF,
+    TmpEMFUVOrbs,
+    TmpEMFUVOrbsEVPCPM,
+    Twenty,
     #[default]
     All,
 }
@@ -301,10 +301,17 @@ impl GhostSet {
         use GhostType::*;
 
         match self {
-            Self::TempEMF => vec![LadyInWhite, BrownLady],
-            Self::TempEMFUV => vec![Kappa, Tengu, Curupira],
-            Self::Fifth => GhostType::all().step_by(5).collect(),
-            Self::Half => GhostType::all().step_by(2).collect(),
+            Self::TmpEMF => vec![LadyInWhite, BrownLady],
+            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa],
+            Self::TmpEMFUVOrbsEVPCPM => vec![
+                Bugbear, Morag, Barghest, Boggart, Obayifo, WillOWisp, LaLlorona, Widow,
+                Leprechaun, Brume,
+            ],
+            Self::Twenty => vec![
+                Curupira, LaLlorona, Phooka, Obayifo, Maresca, Dybbuk, Caoilte, Orla, Jorogumo,
+                Mider, Wisp, Cairbre, Ceara, Widow, BeanSidhe, Bugbear, Dullahan, Domovoi,
+                Muirgheas, Namahage,
+            ],
             Self::All => GhostType::all().collect(),
         }
     }
