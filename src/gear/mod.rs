@@ -33,6 +33,7 @@ pub mod thermometer;
 pub mod ui;
 pub mod uvtorch;
 pub mod videocam;
+pub mod prelude;
 
 use self::compass::Compass;
 use self::emfmeter::EMFMeter;

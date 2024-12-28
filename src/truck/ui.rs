@@ -279,7 +279,7 @@ pub fn setup_ui(
         };
         p.spawn(base_node.clone())
             .insert(TabContents::Loadout)
-            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles, &mut materials));
+            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles, &mut materials, &difficulty));
         p.spawn(base_node.clone())
             .insert(TabContents::Journal)
             .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));

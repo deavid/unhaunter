@@ -634,6 +634,70 @@ impl Difficulty {
         }
     }
 
+    pub fn truck_gear(&self) -> Vec<Gear> {
+        use crate::gear::prelude::*;
+
+        let mut gear = Vec::new();
+
+        match self {
+            Difficulty::NoviceInvestigator => {
+                gear.push(Flashlight::default().into());
+                gear.push(Thermometer::default().into());
+                gear.push(EMFMeter::default().into());
+            }
+            Difficulty::AdeptInvestigator => {
+                gear.extend(Self::NoviceInvestigator.truck_gear());
+                gear.push(UVTorch::default().into());
+                gear.push(Videocam::default().into());
+            }
+            Difficulty::SeniorInvestigator => {
+                gear.extend(Self::AdeptInvestigator.truck_gear());
+                gear.push(Recorder::default().into());
+                gear.push(GeigerCounter::default().into());
+            }
+            Difficulty::ExpertInvestigator => {
+                gear.extend(Self::SeniorInvestigator.truck_gear());
+                gear.push(SpiritBox::default().into());
+                gear.push(RedTorch::default().into());
+            }
+            Difficulty::AdeptSpecialist => {
+                gear.extend(Self::ExpertInvestigator.truck_gear());
+                gear.push(SaltData::default().into());
+            }
+            Difficulty::LeadSpecialist => {
+                gear.extend(Self::AdeptSpecialist.truck_gear());
+                gear.push(QuartzStoneData::default().into());
+            }
+            Difficulty::ExpertSpecialist => {
+                gear.extend(Self::LeadSpecialist.truck_gear());
+                gear.push(SageBundleData::default().into());
+            }
+            Difficulty::MasterSpecialist => {
+                gear.extend(Self::ExpertSpecialist.truck_gear());
+            }
+            _ => {
+                gear = Self::MasterSpecialist.truck_gear();
+            }
+        }
+
+        // This is for debugging purposes, to add gear that isn't functional yet.
+        const ENABLE_INCOMPLETE: bool = false;
+        if ENABLE_INCOMPLETE {
+            let mut incomplete: Vec<Gear> = vec![
+                // Incomplete equipment:
+                IonMeter::default().into(),
+                ThermalImager::default().into(),
+                Photocam::default().into(),
+                Compass::default().into(),
+                EStaticMeter::default().into(),
+                MotionSensor::default().into(),
+            ];
+            gear.append(&mut incomplete);
+        }
+
+        gear
+    }
+
     // --- UI and Scoring ---
     /// Returns the display name for the difficulty level.
     pub fn difficulty_name(&self) -> &'static str {
@@ -831,6 +895,7 @@ impl Difficulty {
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
             tutorial_chapter: self.tutorial_chapter(),
+            truck_gear: self.truck_gear(),
         }
     }
 }
@@ -878,6 +943,7 @@ pub struct DifficultyStruct {
     pub difficulty_score_multiplier: f64,
     /// The range of manual pages associated with this difficulty.
     pub tutorial_chapter: Option<ManualChapter>,
+    pub truck_gear: Vec<Gear>,
 }
 
 #[derive(Debug, Resource, Clone)]

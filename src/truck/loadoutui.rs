@@ -1,5 +1,6 @@
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::{Gear, GearKind};
 use crate::ghost_definitions::Evidence;
@@ -34,6 +35,7 @@ pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
     handles: &root::GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
+    difficulty: &CurrentDifficulty,
 ) {
     let button = || ButtonBundle {
         background_color: colors::TRUCKUI_ACCENT2_COLOR.into(),
@@ -183,7 +185,7 @@ pub fn setup_loadout_ui(
                 ..default()
             })
             .with_children(|p| {
-                let tg = truckgear::TruckGear::new();
+                let tg = truckgear::TruckGear::from_difficulty(&difficulty.0);
                 for gear in &tg.inventory {
                     p.spawn(button())
                         .insert(LoadoutButton::Van(gear.clone()))
