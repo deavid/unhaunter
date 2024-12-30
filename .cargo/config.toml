@@ -1,11 +1,5 @@
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
-debug = false
-strip = "debuginfo"
-debug-assertions = false
-overflow-checks = false
-lto = true
-codegen-units = 1
 
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64"))']
 rustflags = ["-C", "target-feature=+sse2,+sse3,+sse4.1,+ssse3,+avx,+avx2"]

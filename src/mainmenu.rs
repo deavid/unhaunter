@@ -10,7 +10,7 @@ const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
 const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 
 // Usual value is 0.2
-const MUSIC_VOLUME: f32 = 0.00002;
+const MUSIC_VOLUME: f32 = 0.2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {

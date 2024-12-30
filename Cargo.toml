@@ -49,6 +49,12 @@ opt-level = 3
 # These optimizations for release are trying to target mostly WASM
 [profile.release]
 opt-level = 3
+debug = false
+strip = "debuginfo"
+debug-assertions = false
+overflow-checks = false
+lto = true
+codegen-units = 1
 
 [[bin]]
 name = "unhaunter_game"
