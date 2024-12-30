@@ -661,14 +661,14 @@ impl Difficulty {
             Difficulty::AdeptSpecialist => {
                 gear.extend(Self::ExpertInvestigator.truck_gear());
                 gear.push(SaltData::default().into());
+                gear.push(QuartzStoneData::default().into());
+                gear.push(SageBundleData::default().into());
             }
             Difficulty::LeadSpecialist => {
                 gear.extend(Self::AdeptSpecialist.truck_gear());
-                gear.push(QuartzStoneData::default().into());
             }
             Difficulty::ExpertSpecialist => {
                 gear.extend(Self::LeadSpecialist.truck_gear());
-                gear.push(SageBundleData::default().into());
             }
             Difficulty::MasterSpecialist => {
                 gear.extend(Self::ExpertSpecialist.truck_gear());
@@ -847,12 +847,13 @@ impl Difficulty {
     }
 
     pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
-        use crate::manual::{chapter1, chapter2, chapter3, chapter4};
+        use crate::manual::{chapter1, chapter2, chapter3, chapter4, chapter5};
         match self {
             Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
             Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
             Difficulty::SeniorInvestigator => Some(chapter3::create_manual_chapter()),
             Difficulty::ExpertInvestigator => Some(chapter4::create_manual_chapter()),
+            Difficulty::AdeptSpecialist => Some(chapter5::create_manual_chapter()),
             _ => None,
         }
     }

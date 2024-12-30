@@ -6,6 +6,7 @@ pub mod chapter1;
 pub mod chapter2;
 pub mod chapter3;
 pub mod chapter4;
+pub mod chapter5;
 
 use bevy::prelude::*;
 pub use preplay_manual_ui::preplay_manual_system;
@@ -51,6 +52,7 @@ pub fn create_manual() -> Manual {
             chapter2::create_manual_chapter(),
             chapter3::create_manual_chapter(),
             chapter4::create_manual_chapter(),
+            chapter5::create_manual_chapter(),
         ],
     }
 }
@@ -94,8 +96,6 @@ pub fn draw_manual_page(
     // --- Draw the Page ---
     (page.draw_fn)(parent, handles);
 }
-
-// Update ManualPage enum and its methods (see next step)
 
 pub fn app_setup(app: &mut App) {
     user_manual_ui::app_setup(app);

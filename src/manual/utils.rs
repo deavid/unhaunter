@@ -128,6 +128,8 @@ pub fn grid_img_text2(
                 overflow: Overflow::clip(),
                 flex_grow: 1.0,
                 flex_basis: Val::Percent(90.0),
+                justify_content: JustifyContent::Center,
+                align_content: AlignContent::Center,
                 ..default()
             },
             ..default()
@@ -138,7 +140,11 @@ pub fn grid_img_text2(
             let rows = colxrow.1;
             let cols = colxrow.0;
             for row in 0..rows {
-                for (img, _text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
+                for (img, text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
+                    if text == "N/A" {
+                        parent.spawn(NodeBundle::default());
+                        continue;
+                    }
                     parent.spawn(ImageBundle {
                         style: Style {
                             // max_width: Val::Percent(100.0),
@@ -153,6 +159,10 @@ pub fn grid_img_text2(
                     });
                 }
                 for (_img, text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
+                    if text == "N/A" {
+                        parent.spawn(NodeBundle::default());
+                        continue;
+                    }
                     let mut text_sections = vec![];
                     for (n, subtext) in text.split('*').enumerate() {
                         let style = if n % 2 == 0 {
