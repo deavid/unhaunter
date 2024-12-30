@@ -1,8 +1,4 @@
-use std::ops::{Add, Mul};
-
-use bevy::{prelude::*, utils::hashbrown::HashMap};
-use rand::Rng;
-
+use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use crate::{
     board::{self, BoardPosition, Position},
     difficulty::CurrentDifficulty,
@@ -11,8 +7,9 @@ use crate::{
     ghost_definitions::GhostType,
     maplight::MapColor,
 };
-
-use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
+use rand::Rng;
+use std::ops::{Add, Mul};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct RepellentFlask {
@@ -65,6 +62,7 @@ impl GearUsable for RepellentFlask {
     fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
+
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, ep: &EquipmentPosition) {
         if !self.active {
             return;
@@ -86,7 +84,6 @@ impl GearUsable for RepellentFlask {
         };
         let mut pos = *pos;
         pos.z += 0.2;
-
         let mut rng = rand::thread_rng();
         let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
             0.1
@@ -95,7 +92,6 @@ impl GearUsable for RepellentFlask {
         };
         pos.x += rng.gen_range(-spread..spread);
         pos.y += rng.gen_range(-spread..spread);
-
         gs.commands
             .spawn(SpriteBundle {
                 sprite: Sprite {
@@ -107,7 +103,7 @@ impl GearUsable for RepellentFlask {
             .insert(pos)
             .insert(GameSprite)
             .insert(MapColor {
-                color: Color::YELLOW.with_a(0.3).with_b(0.02),
+                color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
             })
             .insert(Repellent::new(liquid_content));
     }
@@ -115,11 +111,13 @@ impl GearUsable for RepellentFlask {
 
 impl RepellentFlask {
     const MAX_QTY: i32 = 400;
+
     pub fn fill_liquid(&mut self, ghost_type: GhostType) {
         self.liquid_content = Some(ghost_type);
         self.active = false;
         self.qty = Self::MAX_QTY;
     }
+
     pub fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
         !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
     }
@@ -140,6 +138,7 @@ pub struct Repellent {
 
 impl Repellent {
     const MAX_LIFE: i32 = 1500;
+
     pub fn new(class: GhostType) -> Self {
         Self {
             class,
@@ -181,8 +180,9 @@ pub fn repellent_update(
             continue;
         }
         let rev_factor = 1.01 - rep.life_factor();
-        mapcolor.color.set_a(rep.life_factor().sqrt() / 4.0 + 0.01);
-
+        mapcolor
+            .color
+            .set_alpha(rep.life_factor().sqrt() / 4.0 + 0.01);
         let bpos = r_pos.to_board_position();
         let mut total_force = board::Direction::zero();
         for nb in bpos.xy_neighbors(3) {
@@ -191,18 +191,15 @@ pub fn repellent_update(
             let exponent = -0.5 * dist2;
             let gauss = exponent.exp();
             let vector = r_pos.delta(npos);
-
             let psi = *pressure.entry(nb).or_default();
-
             let mut vector_scaled = vector.normalized().mul(psi * gauss);
             vector_scaled.dz = 0.0;
             total_force = total_force + vector_scaled;
         }
-        // total_force = total_force.normalized().mul(total_force.distance().sqrt());
 
+        // total_force = total_force.normalized().mul(total_force.distance().sqrt());
         const PRESSURE_FORCE_SCALE: f32 = 1e-4;
         rep.dir = rep.dir.add(total_force.mul(PRESSURE_FORCE_SCALE)).mul(0.97);
-
         r_pos.x += rng.gen_range(-SPREAD..SPREAD) * rev_factor
             + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT)
             + rep.dir.dx;
@@ -212,9 +209,7 @@ pub fn repellent_update(
         r_pos.z += (rng.gen_range(-SPREAD..SPREAD) * rev_factor
             + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT))
             / 10.0;
-
         r_pos.z = (r_pos.z * 100.0 + 0.5 * rep.life_factor()) / 101.0;
-
         for (g_pos, mut ghost) in &mut qgs {
             let dist = g_pos.distance(&r_pos);
             if dist < 1.5 {

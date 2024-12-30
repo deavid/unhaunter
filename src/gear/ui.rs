@@ -5,7 +5,7 @@ use crate::game::GameConfig;
 use crate::platform::plt::UI_SCALE;
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
-
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 
 pub fn keyboard_gear(
@@ -52,9 +52,8 @@ pub fn update_gear_ui(
                 }
             }
             for (inv, mut utai) in qin.iter_mut() {
-                // There are 2 possible "None" here, the outside Option::None for
-                // when the idx is out of bounds and the inner Gear::None when a
-                // slot is empty.
+                // There are 2 possible "None" here, the outside Option::None for when the idx is
+                // out of bounds and the inner Gear::None when a slot is empty.
                 let next = if let Some(idx) = inv.idx {
                     playergear.get_next(idx).unwrap_or_default()
                 } else {
@@ -71,15 +70,12 @@ pub fn update_gear_ui(
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     // Leftmost side panel - inventory
-    p.spawn(AtlasImageBundle {
+    p.spawn(ImageBundle {
         image: UiImage {
             texture: handles.images.gear.clone(),
             flip_x: false,
             flip_y: false,
-        },
-        texture_atlas: TextureAtlas {
-            index: GearSpriteID::Flashlight2 as usize,
-            layout: handles.images.gear_atlas.clone(),
+            ..default()
         },
         style: Style {
             width: Val::Px(80.0 * UI_SCALE),
@@ -88,8 +84,11 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
         },
         ..default()
     })
+    .insert(TextureAtlas {
+        index: GearSpriteID::Flashlight2 as usize,
+        layout: handles.images.gear_atlas.clone(),
+    })
     .insert(playergear::Inventory::new_left());
-
     p.spawn(
         TextBundle::from_section(
             "[TAB]: T.Aux",
@@ -129,17 +128,13 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         ..default()
     })
     .with_children(|p| {
-        p.spawn(AtlasImageBundle {
+        p.spawn(ImageBundle {
             image: UiImage {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
                 flip_y: false,
+                color: css::GRAY.with_luminance(0.8).with_alpha(0.8).into(),
             },
-            texture_atlas: TextureAtlas {
-                index: GearSpriteID::Flashlight2 as usize,
-                layout: handles.images.gear_atlas.clone(),
-            },
-            background_color: Color::GRAY.with_l(0.8).with_a(0.8).into(),
             style: Style {
                 flex_grow: 0.0,
                 flex_shrink: 0.0,
@@ -155,16 +150,17 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             },
             ..default()
         })
+        .insert(TextureAtlas {
+            index: GearSpriteID::Flashlight2 as usize,
+            layout: handles.images.gear_atlas.clone(),
+        })
         .insert(playergear::InventoryNext::non_empty());
-        p.spawn(AtlasImageBundle {
+        p.spawn(ImageBundle {
             image: UiImage {
                 texture: handles.images.gear.clone(),
                 flip_x: false,
                 flip_y: false,
-            },
-            texture_atlas: TextureAtlas {
-                index: GearSpriteID::IonMeter2 as usize,
-                layout: handles.images.gear_atlas.clone(),
+                ..default()
             },
             style: Style {
                 margin: UiRect::left(Val::Px(-8.0)),
@@ -172,6 +168,10 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 ..default()
             },
             ..default()
+        })
+        .insert(TextureAtlas {
+            index: GearSpriteID::IonMeter2 as usize,
+            layout: handles.images.gear_atlas.clone(),
         })
         .insert(playergear::Inventory::new_right());
         let text_bundle = TextBundle::from_section(
@@ -190,7 +190,6 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 Val::Px(4.0 * UI_SCALE),
                 Val::Px(-16.0 * UI_SCALE),
             ),
-
             flex_grow: 1.0,
             ..default()
         });

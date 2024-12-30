@@ -1,35 +1,36 @@
 // src/difficulty.rs
-
-//! Difficulty Module
-//! -------------------
+//! ## Difficulty Module
 //!
-//! This module defines the difficulty system for the Unhaunter game, enabling customization
-//! of various gameplay parameters to provide a range of challenges for players.
+//! This module defines the difficulty system for the Unhaunter game, enabling
+//! customization of various gameplay parameters to provide a range of challenges
+//! for players.
 //!
-//! The `Difficulty` enum represents the different difficulty levels, each with a unique name
-//! and associated settings.  The `DifficultyStruct` struct holds the concrete values
-//! for a specific difficulty level, which are assembled using methods within the `Difficulty` enum.
+//! The `Difficulty` enum represents the different difficulty levels, each with a
+//! unique name and associated settings.  The `DifficultyStruct` struct holds the
+//! concrete values for a specific difficulty level, which are assembled using
+//! methods within the `Difficulty` enum.
 //!
-//! By defining these settings directly within the `Difficulty` enum, you can fine-tune
-//! the game experience for each difficulty level, providing a tailored challenge for players.
-
-use bevy::prelude::Resource;
-use enum_iterator::{all, Sequence};
-use serde::{Deserialize, Serialize};
-
+//! By defining these settings directly within the `Difficulty` enum, you can
+//! fine-tune the game experience for each difficulty level, providing a tailored
+//! challenge for players.
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
+    manual::ManualChapter,
     truck::ui::TabContents,
 };
+use bevy::prelude::Resource;
+use enum_iterator::{all, Sequence};
+use serde::{Deserialize, Serialize};
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
 /// Each variant corresponds to a specific difficulty preset with unique settings,
 /// ranging from `Apprentice` (easiest) to `Legend` (hardest).
 ///
-/// These difficulty levels impact various gameplay parameters, including ghost behavior,
-/// environment conditions, player attributes, and general gameplay mechanics.
+/// These difficulty levels impact various gameplay parameters, including ghost
+/// behavior, environment conditions, player attributes, and general gameplay
+/// mechanics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
 pub enum Difficulty {
     #[default]
@@ -57,18 +58,19 @@ impl Difficulty {
         all()
     }
 
-    /// Returns the next difficulty level, wrapping around to the beginning if at the end.
+    /// Returns the next difficulty level, wrapping around to the beginning if at the
+    /// end.
     pub fn next(&self) -> Self {
         enum_iterator::next_cycle(self)
     }
 
-    /// Returns the previous difficulty level, wrapping around to the end if at the beginning.
+    /// Returns the previous difficulty level, wrapping around to the end if at the
+    /// beginning.
     pub fn prev(&self) -> Self {
         enum_iterator::previous_cycle(self)
     }
 
     // --- Ghost Behavior ---
-
     /// Returns the ghost's movement speed multiplier.
     ///
     /// A higher value indicates a faster ghost.
@@ -98,10 +100,10 @@ impl Difficulty {
     /// A higher value means the ghost becomes enraged more quickly.
     pub fn ghost_rage_likelihood(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.1,
-            Difficulty::AdeptInvestigator => 0.2,
-            Difficulty::SeniorInvestigator => 0.4,
-            Difficulty::ExpertInvestigator => 0.8,
+            Difficulty::NoviceInvestigator => 1.0,
+            Difficulty::AdeptInvestigator => 1.0,
+            Difficulty::SeniorInvestigator => 1.0,
+            Difficulty::ExpertInvestigator => 1.0,
             Difficulty::AdeptSpecialist => 1.0,
             Difficulty::LeadSpecialist => 1.2,
             Difficulty::ExpertSpecialist => 1.4,
@@ -122,10 +124,10 @@ impl Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     pub fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.5,
-            Difficulty::AdeptInvestigator => 0.7,
-            Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::ExpertInvestigator => 1.1,
+            Difficulty::NoviceInvestigator => 0.2,
+            Difficulty::AdeptInvestigator => 0.4,
+            Difficulty::SeniorInvestigator => 0.8,
+            Difficulty::ExpertInvestigator => 1.0,
             Difficulty::AdeptSpecialist => 1.2,
             Difficulty::LeadSpecialist => 1.25,
             Difficulty::ExpertSpecialist => 1.3,
@@ -141,7 +143,8 @@ impl Difficulty {
         }
     }
 
-    /// Returns the multiplier for how often the ghost interacts with objects or triggers events.
+    /// Returns the multiplier for how often the ghost interacts with objects or
+    /// triggers events.
     ///
     /// A higher value leads to more frequent paranormal activity.
     pub fn ghost_interaction_frequency(&self) -> f32 {
@@ -215,8 +218,8 @@ impl Difficulty {
 
     /// Returns the ghost's attraction factor to its breach (spawn point).
     ///
-    /// A higher value means the ghost tends to stay closer to its breach,
-    /// while a lower value allows the ghost to roam more freely.
+    /// A higher value means the ghost tends to stay closer to its breach, while a
+    /// lower value allows the ghost to roam more freely.
     pub fn ghost_attraction_to_breach(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => 10.0,
@@ -261,8 +264,8 @@ impl Difficulty {
         }
     }
 
-    /// Returns the rate at which the ghost's anger increases when an attractive
-    /// object is removed from the location.
+    /// Returns the rate at which the ghost's anger increases when an attractive object
+    /// is removed from the location.
     pub fn attractive_removal_anger_rate(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => 0.02,
@@ -285,7 +288,6 @@ impl Difficulty {
     }
 
     // --- Environment ---
-
     /// Returns the base ambient temperature of the location.
     pub fn ambient_temperature(&self) -> f32 {
         match self {
@@ -308,8 +310,8 @@ impl Difficulty {
         }
     }
 
-    /// Returns the multiplier for how quickly temperature changes
-    /// propagate through the environment.
+    /// Returns the multiplier for how quickly temperature changes propagate through
+    /// the environment.
     pub fn temperature_spread_speed(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => 3.0,
@@ -382,8 +384,8 @@ impl Difficulty {
 
     /// Returns the gamma correction value for the game environment.
     ///
-    /// Higher values make the lighting appear harsher and less realistic,
-    /// potentially highlighting details but creating a less atmospheric look.
+    /// Higher values make the lighting appear harsher and less realistic, potentially
+    /// highlighting details but creating a less atmospheric look.
     pub fn environment_gamma(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => 2.5,
@@ -406,7 +408,6 @@ impl Difficulty {
     }
 
     // --- Player ---
-
     /// Returns the player's starting sanity level.
     pub fn starting_sanity(&self) -> f32 {
         match self {
@@ -524,7 +525,6 @@ impl Difficulty {
     }
 
     // --- Evidence Gathering ---
-
     /// Returns the multiplier for the clarity or intensity of evidence manifestations.
     ///
     /// A higher value makes evidence more visible or noticeable.
@@ -574,9 +574,8 @@ impl Difficulty {
     }
 
     // --- Gameplay ---
-
-    /// Returns a boolean value indicating whether the van UI automatically opens
-    /// at the beginning of a mission.
+    /// Returns a boolean value indicating whether the van UI automatically opens at
+    /// the beginning of a mission.
     pub fn van_auto_open(&self) -> bool {
         !matches!(
             self,
@@ -593,17 +592,13 @@ impl Difficulty {
     }
 
     pub fn player_gear(&self) -> PlayerGear {
-        let flashlight: Gear = crate::gear::flashlight::Flashlight::default().into();
+        use crate::gear::prelude::*;
 
-        let emfmeter: Gear = crate::gear::emfmeter::EMFMeter::default().into();
-        let thermometer: Gear = crate::gear::thermometer::Thermometer::default().into();
-
-        let uvtorch: Gear = crate::gear::uvtorch::UVTorch::default().into();
-
-        // let geigercounter: Gear = crate::gear::geigercounter::GeigerCounter::default().into();
-        // let recorder: Gear = crate::gear::recorder::Recorder::default().into();
-        // let redtorch: Gear = crate::gear::redtorch::RedTorch::default().into();
-        // let videocam: Gear = crate::gear::videocam::Videocam::default().into();
+        let flashlight: Gear = Flashlight::default().into();
+        let emfmeter: Gear = EMFMeter::default().into();
+        let thermometer: Gear = Thermometer::default().into();
+        let uvtorch: Gear = UVTorch::default().into();
+        let videocam: Gear = Videocam::default().into();
 
         match self {
             Difficulty::NoviceInvestigator => PlayerGear {
@@ -613,7 +608,7 @@ impl Difficulty {
                 held_item: None,
             },
             Difficulty::AdeptInvestigator => PlayerGear {
-                left_hand: flashlight.clone(),
+                left_hand: videocam.clone(),
                 right_hand: uvtorch.clone(),
                 inventory: vec![thermometer.clone(), emfmeter.clone()],
                 held_item: None,
@@ -629,16 +624,79 @@ impl Difficulty {
 
     pub fn ghost_set(&self) -> GhostSet {
         match self {
-            Difficulty::NoviceInvestigator => GhostSet::TempEMF,
-            Difficulty::AdeptInvestigator => GhostSet::TempEMFUV,
-            Difficulty::SeniorInvestigator => GhostSet::Fifth,
-            Difficulty::ExpertInvestigator => GhostSet::Half,
+            Difficulty::NoviceInvestigator => GhostSet::TmpEMF,
+            Difficulty::AdeptInvestigator => GhostSet::TmpEMFUVOrbs,
+            Difficulty::SeniorInvestigator => GhostSet::TmpEMFUVOrbsEVPCPM,
+            Difficulty::ExpertInvestigator => GhostSet::Twenty,
             _ => GhostSet::All,
         }
     }
 
-    // --- UI and Scoring ---
+    pub fn truck_gear(&self) -> Vec<Gear> {
+        use crate::gear::prelude::*;
 
+        let mut gear = Vec::new();
+
+        match self {
+            Difficulty::NoviceInvestigator => {
+                gear.push(Flashlight::default().into());
+                gear.push(Thermometer::default().into());
+                gear.push(EMFMeter::default().into());
+            }
+            Difficulty::AdeptInvestigator => {
+                gear.extend(Self::NoviceInvestigator.truck_gear());
+                gear.push(UVTorch::default().into());
+                gear.push(Videocam::default().into());
+            }
+            Difficulty::SeniorInvestigator => {
+                gear.extend(Self::AdeptInvestigator.truck_gear());
+                gear.push(Recorder::default().into());
+                gear.push(GeigerCounter::default().into());
+            }
+            Difficulty::ExpertInvestigator => {
+                gear.extend(Self::SeniorInvestigator.truck_gear());
+                gear.push(SpiritBox::default().into());
+                gear.push(RedTorch::default().into());
+            }
+            Difficulty::AdeptSpecialist => {
+                gear.extend(Self::ExpertInvestigator.truck_gear());
+                gear.push(SaltData::default().into());
+                gear.push(QuartzStoneData::default().into());
+                gear.push(SageBundleData::default().into());
+            }
+            Difficulty::LeadSpecialist => {
+                gear.extend(Self::AdeptSpecialist.truck_gear());
+            }
+            Difficulty::ExpertSpecialist => {
+                gear.extend(Self::LeadSpecialist.truck_gear());
+            }
+            Difficulty::MasterSpecialist => {
+                gear.extend(Self::ExpertSpecialist.truck_gear());
+            }
+            _ => {
+                gear = Self::MasterSpecialist.truck_gear();
+            }
+        }
+
+        // This is for debugging purposes, to add gear that isn't functional yet.
+        const ENABLE_INCOMPLETE: bool = false;
+        if ENABLE_INCOMPLETE {
+            let mut incomplete: Vec<Gear> = vec![
+                // Incomplete equipment:
+                IonMeter::default().into(),
+                ThermalImager::default().into(),
+                Photocam::default().into(),
+                Compass::default().into(),
+                EStaticMeter::default().into(),
+                MotionSensor::default().into(),
+            ];
+            gear.append(&mut incomplete);
+        }
+
+        gear
+    }
+
+    // --- UI and Scoring ---
     /// Returns the display name for the difficulty level.
     pub fn difficulty_name(&self) -> &'static str {
         match self {
@@ -668,104 +726,105 @@ impl Difficulty {
                 For those new to the paranormal.
                 Friendly ghosts, minimal equipment, no risk of attacks. 
                 Focus on mastering the basics with Thermometer and EMF Reader. (2/44 Ghosts)"
-            }
+            },
             Difficulty::AdeptInvestigator => {
                 "
                 You've handled a few cases.
                 Friendly ghosts, low risk, limited equipment.
                 Add the UV Torch to your arsenal and learn to interpret its readings. (3/44 Ghosts)"
-            }
+            },
             Difficulty::SeniorInvestigator => {
                 "
                 You're becoming familiar with the unseen.
                 Access to standard equipment, low risk.
                 Time to face a wider variety of ghosts and hone your investigative skills. (9/44 Ghosts)"
-            }
+            },
             Difficulty::ExpertInvestigator => {
                 "
                 Your mind is strong, but the darkness lingers.
                 Full equipment, low risk, slower sanity drain.
                 Delve deeper into the mysteries and uncover the truth. (22/44 Ghosts)"
-            }
+            },
             Difficulty::AdeptSpecialist => {
                 "
                 The veil thins, and the dangers increase.
                 Average sanity drain, risk of ghostly attacks, haunted objects begin to manifest.
                 Prepare for a true challenge. (All 44 Ghosts)"
-            }
+            },
             Difficulty::LeadSpecialist => {
                 "
                 Your senses are tested, shadows play tricks.
                 The unseen becomes harder to perceive, testing your observation skills and your courage.
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::ExpertSpecialist => {
                 "
                 The line blurs between the real and the spectral.
                 Ghostly apparitions become more vivid, blurring the lines between sanity and madness.
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::MasterSpecialist => {
                 "
                 You walk a tightrope between worlds.
                 The spirit realm intrudes upon reality, challenging your perception and your resolve. 
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::InitiateOccultist => {
                 "
                 The whispers of the ancients call to you.
                 You arrive with a touch of madness, embracing the unknown. 
                 Sanity drains faster, the unseen beckons. (All 44 Ghosts)"
-            }
+            },
             Difficulty::AdeptOccultist => {
                 "
                 Ancient knowledge grants power, but at a cost.
                 You start with a significant sanity deficit.
                 Tread carefully, for the abyss gazes also into you. (All 44 Ghosts)"
-            }
+            },
             Difficulty::ExpertOccultist => {
                 "
                 The whispers become screams, sanity teeters on the edge. 
                 You begin deeply affected by the spirit world.  
                 Only the most experienced should venture here. (All 44 Ghosts)"
-            }
+            },
             Difficulty::MasterOccultist => {
                 "
                 Embrace the madness, for it holds the key. 
                 Your sanity is a fragile thread, but your understanding of the paranormal is unmatched. 
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::AdeptGuardian => {
                 "
                 You stand as a shield against the darkness, but it takes its toll.
                 Face relentless attacks, but your equipment is more attuned to the unseen. 
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::LeadGuardian => {
                 "
                 The spirits sense your strength and respond in kind.
                 Prepare for intense confrontations, for your presence draws them out. 
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::ExpertGuardian => {
                 "
                 Your spirit shines brightly, a beacon in the night.
                 The darkness seeks to extinguish your light, but your determination is unyielding.
                 (All 44 Ghosts)"
-            }
+            },
             Difficulty::MasterGuardian => {
                 "
                 You are a master of both worlds, walking the path between. 
                 Face the ultimate challenges, for the fate of reality rests in your hands. 
                 (All 44 Ghosts)"
-            }
+            },
         }
     }
 
-    /// Returns the score multiplier for the end-of-mission summary,
-    /// based on the chosen difficulty level.
+    /// Returns the score multiplier for the end-of-mission summary, based on the
+    /// chosen difficulty level.
     ///
-    /// Higher values reward players more for completing missions on harder difficulties.
+    /// Higher values reward players more for completing missions on harder
+    /// difficulties.
     pub fn difficulty_score_multiplier(&self) -> f64 {
         match self {
             Difficulty::NoviceInvestigator => 1.0,
@@ -784,6 +843,18 @@ impl Difficulty {
             Difficulty::LeadGuardian => 4.8,
             Difficulty::ExpertGuardian => 5.1,
             Difficulty::MasterGuardian => 6.0,
+        }
+    }
+
+    pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
+        use crate::manual::{chapter1, chapter2, chapter3, chapter4, chapter5};
+        match self {
+            Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
+            Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
+            Difficulty::SeniorInvestigator => Some(chapter3::create_manual_chapter()),
+            Difficulty::ExpertInvestigator => Some(chapter4::create_manual_chapter()),
+            Difficulty::AdeptSpecialist => Some(chapter5::create_manual_chapter()),
+            _ => None,
         }
     }
 
@@ -822,6 +893,8 @@ impl Difficulty {
             difficulty_name: self.difficulty_name().to_owned(),
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
+            tutorial_chapter: self.tutorial_chapter(),
+            truck_gear: self.truck_gear(),
         }
     }
 }
@@ -837,39 +910,39 @@ pub struct DifficultyStruct {
     pub ghost_hunt_duration: f32,
     pub ghost_hunt_cooldown: f32,
     pub ghost_attraction_to_breach: f32,
-    /// The radius around the ghost's breach within which a Repulsive object can provoke a hunt.
+    /// The radius around the ghost's breach within which a Repulsive object can
+    /// provoke a hunt.
     pub hunt_provocation_radius: f32,
-    /// The rate at which the ghost's anger increases when an Attractive object is removed from the location.
+    /// The rate at which the ghost's anger increases when an Attractive object is
+    /// removed from the location.
     pub attractive_removal_anger_rate: f32,
-
     // --- Environment ---
     pub ambient_temperature: f32,
     pub temperature_spread_speed: f32,
     pub light_heat: f32,
     pub darkness_intensity: f32,
     pub environment_gamma: f32,
-
     // --- Player ---
     pub starting_sanity: f32,
     pub sanity_drain_rate: f32,
     pub health_drain_rate: f32,
     pub health_recovery_rate: f32,
     pub player_speed: f32,
-
     // --- Evidence Gathering ---
     pub evidence_visibility: f32,
     pub equipment_sensitivity: f32,
-
     // --- Gameplay ---
     pub van_auto_open: bool,
     pub default_van_tab: TabContents,
     pub player_gear: PlayerGear,
     pub ghost_set: GhostSet,
-
     // --- UI and Scoring ---
     pub difficulty_name: String,
     pub difficulty_description: String,
     pub difficulty_score_multiplier: f64,
+    /// The range of manual pages associated with this difficulty.
+    pub tutorial_chapter: Option<ManualChapter>,
+    pub truck_gear: Vec<Gear>,
 }
 
 #[derive(Debug, Resource, Clone)]

@@ -21,6 +21,7 @@ impl Evidence {
     pub fn all() -> enum_iterator::All<Evidence> {
         all::<Evidence>()
     }
+
     pub fn name(&self) -> &'static str {
         match self {
             Evidence::FreezingTemp => "Freezing Temps",
@@ -33,18 +34,25 @@ impl Evidence {
             Evidence::CPM500 => "500+ cpm",
         }
     }
+
     pub fn help_text(&self) -> &'static str {
         match self {
-            Evidence::FreezingTemp => "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
+            Evidence
+            ::FreezingTemp => "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
             Evidence::FloatingOrbs => "Check if the breach lights up under Night vision.\nLights need to be off.",
             Evidence::UVEctoplasm => "Check if the ghost turns green under UV.\nLights need to be off.",
-            Evidence::EMFLevel5 => "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading.",
-            Evidence::EVPRecording => "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear.",
-            Evidence::SpiritBox => "Some ghosts talk trough the SpiritBox.\nIf you hear the ghost talking through it, mark this evidence.",
+            Evidence
+            ::EMFLevel5 => "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading.",
+            Evidence
+            ::EVPRecording => "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear.",
+            Evidence
+            ::SpiritBox => "Some ghosts talk trough the SpiritBox.\nIf you hear the ghost talking through it, mark this evidence.",
             Evidence::RLPresence => "Some ghosts glow orange under red light.\nLights need to be off.",
-            Evidence::CPM500 => "Some ghosts are radioactive and will register above than 500cpm.\nIt takes time for the Geiger counter to settle into a value.",
+            Evidence
+            ::CPM500 => "Some ghosts are radioactive and will register above than 500cpm.\nIt takes time for the Geiger counter to settle into a value.",
         }
     }
+
     pub fn from_bits(bits: u8) -> HashSet<Evidence> {
         let mut evidences = HashSet::new();
         let mut mask = 1;
@@ -151,6 +159,7 @@ impl GhostType {
     pub fn all() -> enum_iterator::All<GhostType> {
         all::<GhostType>()
     }
+
     pub fn name(&self) -> &'static str {
         match self {
             GhostType::BeanSidhe => "Bean Sidhe",
@@ -203,62 +212,70 @@ impl GhostType {
     #[rustfmt::skip]
     pub fn evidences(&self) -> HashSet<Evidence> {
         use GhostType::*;
-        // Order of evidence: (From right to left) 
-        // - FreezingTemp, 1   0000 0001
-        // - FloatingOrbs, 2   0000 0010
-        // - UVEctoplasm,  3   0000 0100
-        // - EMFLevel5,    4   0000 1000
-        // - EVPRecording, 5   0001 0000
-        // - SpiritBox,    6   0010 0000
-        // - RLPresence,   7   0100 0000
-        // - CPM500,       8   1000 0000
 
+        // Order of evidence: (From right to left)
+        //
+        // * FreezingTemp, 1   0000 0001
+        //
+        // * FloatingOrbs, 2   0000 0010
+        //
+        // * UVEctoplasm,  3   0000 0100
+        //
+        // * EMFLevel5,    4   0000 1000
+        //
+        // * EVPRecording, 5   0001 0000
+        //
+        // * SpiritBox,    6   0010 0000
+        //
+        // * RLPresence,   7   0100 0000
+        //
+        // * CPM500,       8   1000 0000
         match self {
             // -------------------------------   87654321
-            BeanSidhe =>   Evidence::from_bits(0b00011111),
-            Dullahan =>    Evidence::from_bits(0b01101101),
-            Leprechaun =>  Evidence::from_bits(0b00110111),
-            Barghest =>    Evidence::from_bits(0b00111011),
-            WillOWisp =>   Evidence::from_bits(0b00111101),
-            Widow =>       Evidence::from_bits(0b00111110),
-            HobsTally =>   Evidence::from_bits(0b01001111),
-            Ghoul =>       Evidence::from_bits(0b01010111),
-            Afrit =>       Evidence::from_bits(0b01011011),
-            Domovoi =>     Evidence::from_bits(0b01011101),
-            Ghostlight =>  Evidence::from_bits(0b01011110),
-            Kappa =>       Evidence::from_bits(0b11100101),
-            Tengu =>       Evidence::from_bits(0b01101011),
-            LaLlorona =>   Evidence::from_bits(0b10111100),
-            Curupira =>    Evidence::from_bits(0b01101110),
-            Dybbuk =>      Evidence::from_bits(0b01110011),
-            Phooka =>      Evidence::from_bits(0b01110101),
-            Wisp =>        Evidence::from_bits(0b01110110),
-            GrayMan =>     Evidence::from_bits(0b01111001),
+            BeanSidhe => Evidence::from_bits(0b00011111),
+            Dullahan => Evidence::from_bits(0b01101101),
+            Leprechaun => Evidence::from_bits(0b00110111),
+            Barghest => Evidence::from_bits(0b00111011),
+            WillOWisp => Evidence::from_bits(0b00111101),
+            Widow => Evidence::from_bits(0b00111110),
+            HobsTally => Evidence::from_bits(0b01001111),
+            Ghoul => Evidence::from_bits(0b01010111),
+            Afrit => Evidence::from_bits(0b01011011),
+            Domovoi => Evidence::from_bits(0b01011101),
+            Ghostlight => Evidence::from_bits(0b01011110),
+            Kappa => Evidence::from_bits(0b11100101),
+            Tengu => Evidence::from_bits(0b01101011),
+            LaLlorona => Evidence::from_bits(0b10111100),
+            Curupira => Evidence::from_bits(0b01101110),
+            Dybbuk => Evidence::from_bits(0b01110011),
+            Phooka => Evidence::from_bits(0b01110101),
+            Wisp => Evidence::from_bits(0b01110110),
+            GrayMan => Evidence::from_bits(0b01111001),
             LadyInWhite => Evidence::from_bits(0b11110001),
-            Maresca =>     Evidence::from_bits(0b10001111),
+            Maresca => Evidence::from_bits(0b10001111),
             Gashadokuro => Evidence::from_bits(0b10010111),
-            Jorogumo =>    Evidence::from_bits(0b10011011),
-            Namahage =>    Evidence::from_bits(0b10011101),
-            Tsuchinoko =>  Evidence::from_bits(0b10011110),
-            Obayifo =>     Evidence::from_bits(0b10100111),
-            Brume =>       Evidence::from_bits(0b10101110),
-            Bugbear =>     Evidence::from_bits(0b10101101),
-            Boggart =>     Evidence::from_bits(0b10110011),
-            GreyLady =>    Evidence::from_bits(0b10110101),
-            OldNan =>      Evidence::from_bits(0b10110110),
-            BrownLady =>   Evidence::from_bits(0b11111000),
-            Morag =>       Evidence::from_bits(0b10111010),
-            Fionnuala =>   Evidence::from_bits(0b11000111),
-            Ailill =>      Evidence::from_bits(0b11001101),
-            Cairbre =>     Evidence::from_bits(0b11010011),
-            Oonagh =>      Evidence::from_bits(0b11010110),
-            Mider =>       Evidence::from_bits(0b11011010),
-            Orla =>        Evidence::from_bits(0b11100011),
-            Finvarra =>    Evidence::from_bits(0b11100110),
-            Caoilte =>     Evidence::from_bits(0b11101010),
-            Ceara =>       Evidence::from_bits(0b11101100),
-            Muirgheas =>   Evidence::from_bits(0b11110010),
-            Domovoy =>     Evidence::from_bits(0b11110100),
+            Jorogumo => Evidence::from_bits(0b10011011),
+            Namahage => Evidence::from_bits(0b10011101),
+            Tsuchinoko => Evidence::from_bits(0b10011110),
+            Obayifo => Evidence::from_bits(0b10100111),
+            Brume => Evidence::from_bits(0b10101110),
+            Bugbear => Evidence::from_bits(0b10101101),
+            Boggart => Evidence::from_bits(0b10110011),
+            GreyLady => Evidence::from_bits(0b10110101),
+            OldNan => Evidence::from_bits(0b10110110),
+            BrownLady => Evidence::from_bits(0b11111000),
+            Morag => Evidence::from_bits(0b10111010),
+            Fionnuala => Evidence::from_bits(0b11000111),
+            Ailill => Evidence::from_bits(0b11001101),
+            Cairbre => Evidence::from_bits(0b11010011),
+            Oonagh => Evidence::from_bits(0b11010110),
+            Mider => Evidence::from_bits(0b11011010),
+            Orla => Evidence::from_bits(0b11100011),
+            Finvarra => Evidence::from_bits(0b11100110),
+            Caoilte => Evidence::from_bits(0b11101010),
+            Ceara => Evidence::from_bits(0b11101100),
+            Muirgheas => Evidence::from_bits(0b11110010),
+            Domovoy => Evidence::from_bits(0b11110100),
         }
     }
 }
@@ -271,10 +288,10 @@ impl Display for GhostType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GhostSet {
-    TempEMF,
-    TempEMFUV,
-    Fifth,
-    Half,
+    TmpEMF,
+    TmpEMFUVOrbs,
+    TmpEMFUVOrbsEVPCPM,
+    Twenty,
     #[default]
     All,
 }
@@ -282,11 +299,19 @@ pub enum GhostSet {
 impl GhostSet {
     pub fn as_vec(&self) -> Vec<GhostType> {
         use GhostType::*;
+
         match self {
-            Self::TempEMF => vec![LadyInWhite, BrownLady],
-            Self::TempEMFUV => vec![Kappa, Tengu, Curupira],
-            Self::Fifth => GhostType::all().step_by(5).collect(),
-            Self::Half => GhostType::all().step_by(2).collect(),
+            Self::TmpEMF => vec![LadyInWhite, BrownLady],
+            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa],
+            Self::TmpEMFUVOrbsEVPCPM => vec![
+                Bugbear, Morag, Barghest, Boggart, Obayifo, WillOWisp, LaLlorona, Widow,
+                Leprechaun, Brume,
+            ],
+            Self::Twenty => vec![
+                Curupira, LaLlorona, Phooka, Obayifo, Maresca, Dybbuk, Caoilte, Orla, Jorogumo,
+                Mider, Wisp, Cairbre, Ceara, Widow, BeanSidhe, Bugbear, Dullahan, Domovoi,
+                Muirgheas, Namahage,
+            ],
             Self::All => GhostType::all().collect(),
         }
     }
@@ -294,9 +319,9 @@ impl GhostSet {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use bevy::utils::HashMap;
 
-    use super::*;
     #[test]
     fn test_generate_evidence_combinations() {
         for i in 0..256 {
@@ -356,7 +381,9 @@ mod tests {
                 *evidence_count.entry(evidence).or_insert(0) += 1;
             }
         }
-        // Assuming a balanced distribution, each evidence should be used roughly the same number of times.
+
+        // Assuming a balanced distribution, each evidence should be used roughly the same
+        // number of times.
         let avg_use = evidence_count.values().sum::<usize>() / evidence_count.len();
         for (&evidence, &count) in &evidence_count {
             println!("Evidence {:?} used {} times", evidence, count);

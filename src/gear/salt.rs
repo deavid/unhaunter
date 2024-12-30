@@ -1,12 +1,9 @@
 //! This module defines the `SaltData` struct and its associated logic,
 //! representing the Salt consumable item in the game.
-
+use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use crate::{board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor};
 use bevy::prelude::*;
 use rand::Rng as _;
-
-use crate::{board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor};
-
-use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 
 /// Data structure for the Salt consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -68,7 +65,6 @@ impl GearUsable for SaltData {
                 .insert(GameSprite)
                 .insert(*pos)
                 .id();
-
             gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
         }
     }
@@ -79,7 +75,8 @@ impl GearUsable for SaltData {
             3 => GearSpriteID::Salt3,
             2 => GearSpriteID::Salt2,
             1 => GearSpriteID::Salt1,
-            _ => GearSpriteID::Salt0, // Empty
+            // Empty
+            _ => GearSpriteID::Salt0,
         }
     }
 
@@ -110,8 +107,10 @@ pub struct SaltParticleTimer(Timer);
 pub fn salt_pile_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut ghosts: Query<(&mut GhostSprite, &Position)>, // Retrieve Ghost Position
-    mut salt_piles: Query<(Entity, &Position), With<SaltPile>>, // Retrieve SaltPile Position
+    // Retrieve Ghost Position
+    mut ghosts: Query<(&mut GhostSprite, &Position)>,
+    // Retrieve SaltPile Position
+    mut salt_piles: Query<(Entity, &Position), With<SaltPile>>,
 ) {
     for (mut ghost, ghost_position) in ghosts.iter_mut() {
         for (salt_pile_entity, salt_pile_position) in salt_piles.iter_mut() {
@@ -126,12 +125,12 @@ pub fn salt_pile_system(
 
                 // Spawn salt particles
                 for _ in 0..5 {
-                    let mut particle_position = *salt_pile_position; // Copy the salt pile's position
+                    // Copy the salt pile's position
+                    let mut particle_position = *salt_pile_position;
 
                     // Add a random offset to the particle position
                     particle_position.x += rand::thread_rng().gen_range(-0.2..0.2);
                     particle_position.y += rand::thread_rng().gen_range(-0.2..0.2);
-
                     let _salt_particle_entity = commands
                         .spawn(SpriteBundle {
                             texture: asset_server.load("img/salt_particle.png"),
@@ -144,7 +143,8 @@ pub fn salt_pile_system(
                             ),
                             ..default()
                         })
-                        .insert(particle_position) // Insert the modified Position
+                        // Insert the modified Position
+                        .insert(particle_position)
                         .insert(GameSprite)
                         .insert(SaltParticle)
                         .insert(SaltParticleTimer(Timer::from_seconds(
@@ -174,6 +174,7 @@ pub fn salt_particle_system(
             commands.entity(entity).despawn();
             continue;
         }
+
         // Apply fade-out effect
         transform.scale.x /= 1.05_f32.powf(dt);
         transform.scale.y /= 1.05_f32.powf(dt);
@@ -208,22 +209,26 @@ pub fn salty_trace_system(
     for (entity, mut map_color, mut uv_reactive, mut salty_trace_timer) in salty_traces.iter_mut() {
         salty_trace_timer.0.tick(time.delta());
 
-        // --- UV Reactivity Fading ---
-        const UV_FADE_DURATION: f32 = 180.0; // 3 minutes in seconds
+        // --- UV Reactivity Fading --- 3 minutes in seconds
+        const UV_FADE_DURATION: f32 = 180.0;
         uv_reactive.0 =
             (2.0 - salty_trace_timer.0.elapsed_secs() / UV_FADE_DURATION).clamp(0.0, 1.0);
 
-        // --- Opacity Fading ---
-        const OPACITY_FADE_START: f32 = UV_FADE_DURATION; // Start fading opacity after UV glow fades
-        const OPACITY_FADE_DURATION: f32 = 300.0; // 5 minutes in seconds
+        // --- Opacity Fading --- Start fading opacity after UV glow fades
+        const OPACITY_FADE_START: f32 = UV_FADE_DURATION;
+
+        // 5 minutes in seconds
+        const OPACITY_FADE_DURATION: f32 = 300.0;
         if salty_trace_timer.0.elapsed_secs() > OPACITY_FADE_START {
             let fade_progress =
                 (salty_trace_timer.0.elapsed_secs() - OPACITY_FADE_START) / OPACITY_FADE_DURATION;
-            map_color.color.set_a(1.0 - fade_progress); // Linear fade
+
+            // Linear fade
+            map_color.color.set_alpha(1.0 - fade_progress);
         }
 
         // --- Despawn ---
-        if salty_trace_timer.0.finished() && map_color.color.a() == 0.0 {
+        if salty_trace_timer.0.finished() && map_color.color.alpha() == 0.0 {
             commands.entity(entity).despawn();
         }
     }

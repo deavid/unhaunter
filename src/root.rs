@@ -3,10 +3,13 @@ use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
     #[default]
+    Loading,
     MainMenu,
     InGame,
     Summary,
     MapHub,
+    UserManual,
+    PreplayManual,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
@@ -67,7 +70,6 @@ pub struct TitilliumWebAssets {
     pub w600_semibold: Handle<Font>,
     pub w700_bold: Handle<Font>,
     pub w900_black: Handle<Font>,
-
     pub w200i_extralight: Handle<Font>,
     pub w300i_light: Handle<Font>,
     pub w400i_regular: Handle<Font>,
@@ -84,7 +86,6 @@ pub struct VictorMonoAssets {
     pub w500_medium: Handle<Font>,
     pub w600_semibold: Handle<Font>,
     pub w700_bold: Handle<Font>,
-
     pub w100i_thin: Handle<Font>,
     pub w200i_extralight: Handle<Font>,
     pub w300i_light: Handle<Font>,
@@ -121,6 +122,56 @@ pub struct ImageAssets {
     pub character1_atlas: Handle<TextureAtlasLayout>,
     pub gear_atlas: Handle<TextureAtlasLayout>,
     pub vignette: Handle<Image>,
+    // --- Manual Images ---
+    // Chapter 1: Page 1:
+    pub manual_investigate: Handle<Image>,
+    pub manual_locate_ghost: Handle<Image>,
+    pub manual_identify_ghost: Handle<Image>,
+    pub manual_craft_repellent: Handle<Image>,
+    pub manual_expel_ghost: Handle<Image>,
+    pub manual_end_mission: Handle<Image>,
+    // Chapter 1: Page 2:
+    pub manual_movement_wasd: Handle<Image>,
+    pub manual_interacting_objects: Handle<Image>,
+    pub manual_flashlight: Handle<Image>,
+    pub manual_activate_equipment: Handle<Image>,
+    pub manual_switch_item: Handle<Image>,
+    pub manual_quick_evidence: Handle<Image>,
+    // Chapter 1: Page 3:
+    pub manual_emf_reader: Handle<Image>,
+    pub manual_thermometer: Handle<Image>,
+    pub manual_truck_sanity: Handle<Image>,
+    pub manual_ghost_attack: Handle<Image>,
+    pub manual_truck_journal: Handle<Image>,
+    pub manual_truck_exterior: Handle<Image>,
+    // --- Chapter 2 images ---
+    pub manual_left_hand_videocam: Handle<Image>,
+    pub manual_uv_ghost: Handle<Image>,
+    pub manual_uv_object: Handle<Image>,
+    pub manual_uv_breach: Handle<Image>,
+    pub manual_floating_orbs: Handle<Image>,
+    pub manual_inventory_all: Handle<Image>,
+    pub manual_ghost_red: Handle<Image>,
+    pub manual_ghost_roar: Handle<Image>,
+    pub manual_hide_table: Handle<Image>,
+    pub manual_truck_loadout: Handle<Image>,
+    pub manual_truck_endmission: Handle<Image>,
+    pub manual_truck_refuge: Handle<Image>,
+    // -- Chapter 3 Images
+    pub manual_recorder_evp: Handle<Image>,
+    pub manual_geiger_counter: Handle<Image>,
+    pub manual_locating_ghost: Handle<Image>,
+    pub manual_sanity_management: Handle<Image>,
+    pub manual_emf_fluctuations: Handle<Image>,
+    // -- Chapter 4 Images
+    pub manual_object_interaction: Handle<Image>,
+    pub manual_object_interaction_2: Handle<Image>,
+    pub manual_spirit_box: Handle<Image>,
+    pub manual_red_torch: Handle<Image>,
+    // -- Chapter 5 Images
+    pub manual_salt: Handle<Image>,
+    pub manual_quartz: Handle<Image>,
+    pub manual_sage: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -178,7 +229,6 @@ impl From<QuadCC> for Mesh {
         let right_x = quad.size.x - quad.center.x;
         let bottom_y = quad.center.y - quad.size.y;
         let top_y = quad.center.y;
-
         let (u_left, u_right) = if quad.flip { (1.0, 0.0) } else { (0.0, 1.0) };
         let vertices = [
             ([left_x, bottom_y, 0.0], [0.0, 0.0, 1.0], [u_left, 1.0]),
@@ -186,13 +236,10 @@ impl From<QuadCC> for Mesh {
             ([right_x, top_y, 0.0], [0.0, 0.0, 1.0], [u_right, 0.0]),
             ([right_x, bottom_y, 0.0], [0.0, 0.0, 1.0], [u_right, 1.0]),
         ];
-
         let indices = bevy::render::mesh::Indices::U32(vec![0, 2, 1, 0, 3, 2]);
-
         let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
         let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
         let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();
-
         let mut mesh = Mesh::new(
             bevy::render::render_resource::PrimitiveTopology::TriangleList,
             RenderAssetUsages::all(),
@@ -217,26 +264,87 @@ pub fn load_assets(
     server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    let ch1 = "manual/images/chapter1";
+    let ch2 = "manual/images/chapter2";
+    let ch3 = "manual/images/chapter3";
+    let ch4 = "manual/images/chapter4";
+    let ch5 = "manual/images/chapter5";
+    let ch1 = |path: &str| -> Handle<Image> { server.load(format!("{ch1}/{path}")) };
+    let ch2 = |path: &str| -> Handle<Image> { server.load(format!("{ch2}/{path}")) };
+    let ch3 = |path: &str| -> Handle<Image> { server.load(format!("{ch3}/{path}")) };
+    let ch4 = |path: &str| -> Handle<Image> { server.load(format!("{ch4}/{path}")) };
+    let ch5 = |path: &str| -> Handle<Image> { server.load(format!("{ch5}/{path}")) };
+
     commands.insert_resource(GameAssets {
         images: ImageAssets {
             title: server.load("img/title.png"),
             character1: server.load("img/characters-model1-demo.png"),
             gear: server.load("img/gear_spritesheetA_48x48.png"),
             character1_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
-                Vec2::new(32.0 * 2.0, 32.0 * 2.0),
+                UVec2::new(32 * 2, 32 * 2),
                 16,
                 4,
-                Some(Vec2::new(0.0, 0.0)),
-                Some(Vec2::new(0.0, 0.0)),
+                Some(UVec2::new(0, 0)),
+                Some(UVec2::new(0, 0)),
             )),
             gear_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
-                Vec2::new(48.0 * 2.0, 48.0 * 2.0),
+                UVec2::new(48 * 2, 48 * 2),
                 10,
                 10,
-                Some(Vec2::new(0.0, 0.0)),
-                Some(Vec2::new(0.0, 0.0)),
+                Some(UVec2::new(0, 0)),
+                Some(UVec2::new(0, 0)),
             )),
             vignette: server.load("img/vignette.png"),
+            // --- Manual Images ---
+            // Chapter 1: Page 1:
+            manual_investigate: ch1("investigate.png"),
+            manual_locate_ghost: ch1("locate_ghost.png"),
+            manual_identify_ghost: ch1("identify_ghost.png"),
+            manual_craft_repellent: ch1("craft_repellent.png"),
+            manual_expel_ghost: ch1("expel_ghost.png"),
+            manual_end_mission: ch1("end_mission.png"),
+            // Chapter 1: Page 2:
+            manual_movement_wasd: ch1("movement_wasd.png"),
+            manual_interacting_objects: ch1("interacting_objects.png"),
+            manual_flashlight: ch1("flashlight.png"),
+            manual_activate_equipment: ch1("activate_equipment.png"),
+            manual_switch_item: ch1("switch_item.png"),
+            manual_quick_evidence: ch1("quick_evidence.png"),
+            // Chapter 1: Page 3:
+            manual_emf_reader: ch1("emf_reader.png"),
+            manual_thermometer: ch1("thermometer.png"),
+            manual_truck_sanity: ch1("truck_sanity.png"),
+            manual_ghost_attack: ch1("ghost_attack.png"),
+            manual_truck_journal: ch1("identify_ghost.png"),
+            manual_truck_exterior: ch1("truck_exterior.png"),
+            // -- Chapter 2 images --
+            manual_left_hand_videocam: ch2("left_hand_videocam.png"),
+            manual_uv_ghost: ch2("uv_ghost.png"),
+            manual_uv_object: ch2("uv_object.png"),
+            manual_uv_breach: ch2("uv_breach.png"),
+            manual_floating_orbs: ch2("floating_orbs.png"),
+            manual_inventory_all: ch2("inventory_all.png"),
+            manual_ghost_red: ch2("ghost_red.png"),
+            manual_ghost_roar: ch2("ghost_roar.png"),
+            manual_hide_table: ch2("hide_table.png"),
+            manual_truck_loadout: ch2("truck_loadout.png"),
+            manual_truck_endmission: ch2("truck_endmission.png"),
+            manual_truck_refuge: ch2("truck_refuge.png"),
+            // -- Chapter 3 images --
+            manual_recorder_evp: ch3("recorder_evp.png"),
+            manual_geiger_counter: ch3("geiger_counter.png"),
+            manual_locating_ghost: ch2("ghost_red.png"),
+            manual_sanity_management: ch3("sanity_management.png"),
+            manual_emf_fluctuations: ch1("emf_reader.png"),
+            // -- Chapter 4 images --
+            manual_object_interaction: ch4("object_interaction.png"),
+            manual_object_interaction_2: ch4("object_interaction_2.png"),
+            manual_spirit_box: ch4("spirit_box.png"),
+            manual_red_torch: ch4("red_torch.png"),
+            // -- Chapter 5 images --
+            manual_salt: ch5("salt.png"),
+            manual_quartz: ch5("quartz.png"),
+            manual_sage: ch5("sage.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {
@@ -256,7 +364,6 @@ pub fn load_assets(
                 w400_regular: server.load("fonts/overlock/Overlock-Regular.ttf"),
                 w700_bold: server.load("fonts/overlock/Overlock-Bold.ttf"),
                 w900_black: server.load("fonts/overlock/Overlock-Black.ttf"),
-
                 w400i_regular: server.load("fonts/overlock/Overlock-Italic.ttf"),
                 w700i_bold: server.load("fonts/overlock/Overlock-BoldItalic.ttf"),
                 w900i_black: server.load("fonts/overlock/Overlock-BlackItalic.ttf"),
@@ -267,7 +374,6 @@ pub fn load_assets(
                 w500_medium: server.load("fonts/chakra_petch/ChakraPetch-Medium.ttf"),
                 w600_semibold: server.load("fonts/chakra_petch/ChakraPetch-SemiBold.ttf"),
                 w700_bold: server.load("fonts/chakra_petch/ChakraPetch-Bold.ttf"),
-
                 w300i_light: server.load("fonts/chakra_petch/ChakraPetch-LightItalic.ttf"),
                 w400i_regular: server.load("fonts/chakra_petch/ChakraPetch-Italic.ttf"),
                 w500i_medium: server.load("fonts/chakra_petch/ChakraPetch-MediumItalic.ttf"),
@@ -281,7 +387,6 @@ pub fn load_assets(
                 w600_semibold: server.load("fonts/titillium_web/TitilliumWeb-SemiBold.ttf"),
                 w700_bold: server.load("fonts/titillium_web/TitilliumWeb-Bold.ttf"),
                 w900_black: server.load("fonts/titillium_web/TitilliumWeb-Black.ttf"),
-
                 w200i_extralight: server
                     .load("fonts/titillium_web/TitilliumWeb-ExtraLightItalic.ttf"),
                 w300i_light: server.load("fonts/titillium_web/TitilliumWeb-LightItalic.ttf"),
@@ -297,7 +402,6 @@ pub fn load_assets(
                 w500_medium: server.load("fonts/victor_mono/static/VictorMono-Medium.ttf"),
                 w600_semibold: server.load("fonts/victor_mono/static/VictorMono-SemiBold.ttf"),
                 w700_bold: server.load("fonts/victor_mono/static/VictorMono-Bold.ttf"),
-
                 w100i_thin: server.load("fonts/victor_mono/static/VictorMono-ThinItalic.ttf"),
                 w200i_extralight: server
                     .load("fonts/victor_mono/static/VictorMono-ExtraLightItalic.ttf"),
@@ -335,22 +439,29 @@ pub struct Maps {
     pub maps: Vec<Map>,
 }
 
+pub fn finish_loading(mut next_state: ResMut<NextState<State>>) {
+    next_state.set(State::MainMenu);
+}
+
 pub fn app_setup(app: &mut App) {
     app.init_state::<State>()
         .init_state::<GameState>()
         .init_resource::<Maps>()
-        .add_systems(Startup, (load_assets, arch::init_maps));
+        .add_systems(
+            Startup,
+            (load_assets, arch::init_maps, finish_loading).chain(),
+        );
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 mod arch {
     use super::*;
     use crate::tiledmap::naive_tmx_loader;
-
     use glob::Pattern;
     use walkdir::WalkDir;
 
-    /// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their paths.
+    /// Scans the "assets/maps/" directory for files matching "*.tmx" and returns their
+    /// paths.
     pub fn find_tmx_files() -> Vec<String> {
         let mut paths = Vec::new();
         let pattern = Pattern::new("*.tmx").unwrap();
@@ -363,6 +474,7 @@ mod arch {
             };
             let path = entry.path();
             info!("Found {:?}", path);
+
             // Check if the path matches the "*.tmx" pattern and is a file
             if path.is_file() && pattern.matches_path(path) {
                 // Convert the path to a String and store it in the vector
@@ -408,6 +520,7 @@ mod arch {
 #[cfg(target_arch = "wasm32")]
 mod arch {
     use super::*;
+
     pub fn find_tmx_files() -> Vec<(String, String)> {
         // WASM does not support scanning folders it seems...
         vec![
@@ -433,6 +546,7 @@ mod arch {
             ),
         ]
     }
+
     pub fn init_maps(mut maps: ResMut<Maps>) {
         // Scan for maps:
         let tmx_files = find_tmx_files();

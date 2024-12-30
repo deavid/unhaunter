@@ -1,9 +1,7 @@
+use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::{board::Position, difficulty::CurrentDifficulty, ghost_definitions::Evidence};
 use bevy::prelude::*;
 use rand::Rng;
-
-use crate::{board::Position, difficulty::CurrentDifficulty, ghost_definitions::Evidence};
-
-use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -52,8 +50,10 @@ impl GearUsable for Thermometer {
         };
         format!("{name}: {on_s}\n{msg}")
     }
+
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify + distintive icons.
+        // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify +
+        // distintive icons.
         let mut rng = rand::thread_rng();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
@@ -70,6 +70,7 @@ impl GearUsable for Thermometer {
         };
         let temp_reading = temperature;
         let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
+
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.temp_l2.len();
         self.temp_l2[n] = (self.temp_l2[n] * air_mass + self.temp_l1) / (air_mass + 1.0);
@@ -80,6 +81,7 @@ impl GearUsable for Thermometer {
             self.temp = (avg_temp * 5.0).round() / 5.0;
         }
     }
+
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
         self.enabled = !self.enabled;
     }
@@ -100,7 +102,8 @@ pub fn temperature_update(
     roomdb: Res<crate::board::RoomDB>,
     qt: Query<(&Position, &crate::behavior::Behavior)>,
     qg: Query<(&crate::ghost::GhostSprite, &Position)>,
-    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    // Access the difficulty settings
+    difficulty: Res<CurrentDifficulty>,
 ) {
     let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {
@@ -112,10 +115,8 @@ pub fn temperature_update(
         let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
         let t_out = h_out * k * 0.5 * difficulty.0.light_heat;
-
         bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
     }
-
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
@@ -133,10 +134,11 @@ pub fn temperature_update(
             });
         }
     }
+
     use rand::rngs::SmallRng;
     use rand::SeedableRng;
-    let mut rng = SmallRng::from_entropy();
 
+    let mut rng = SmallRng::from_entropy();
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
         .iter()
@@ -148,13 +150,13 @@ pub fn temperature_update(
             }
         })
         .collect();
-
     const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
     const INSIDE_CONDUCTIVITY: f32 = 50.0;
-    const OTHER_CONDUCTIVITY: f32 = 2.0; // Closed Doors
+
+    // Closed Doors
+    const OTHER_CONDUCTIVITY: f32 = 2.0;
     const WALL_CONDUCTIVITY: f32 = 0.1;
     let smooth: f32 = 4.0 / difficulty.0.temperature_spread_speed;
-
     for (p, temp) in old_temps.into_iter() {
         let free = bf
             .collision_field
@@ -175,7 +177,6 @@ pub fn temperature_update(
         let neighbors = [p.left(), p.right(), p.top(), p.bottom()];
         let n_idx = rng.gen_range(0..neighbors.len());
         let neigh = neighbors[n_idx].clone();
-
         let neigh_free = bf
             .collision_field
             .get(&neigh)
@@ -190,16 +191,11 @@ pub fn temperature_update(
         if nis_outside {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
-
         let neigh_temp = bf.temperature_field.get(&neigh).copied().unwrap_or(ambient);
-
         let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
-
         let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
-
         let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
         let new_temp2 = temp - new_temp1 + neigh_temp;
-
         bf.temperature_field.entry(p).and_modify(|x| *x = new_temp1);
         bf.temperature_field
             .entry(neigh)

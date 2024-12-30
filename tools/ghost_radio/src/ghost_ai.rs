@@ -1,8 +1,6 @@
 // tools/ghost_radio/src/ghost_ai.rs
-
-use std::collections::HashMap;
-
 use crate::data::{EmotionalSignature, GhostResponse, PlayerPhrase};
+use std::collections::HashMap;
 
 pub fn score_responses(
     player_phrase: &PlayerPhrase,
@@ -10,7 +8,6 @@ pub fn score_responses(
     ghost_mood: &EmotionalSignature,
 ) -> HashMap<String, f32> {
     let mut scores = HashMap::new();
-
     for (key, response) in ghost_responses {
         let speech_act_score = if response.for_speech_acts.contains(&player_phrase.speech_act) {
             1.0
@@ -41,7 +38,6 @@ pub fn cosine_similarity(v1: &[String], v2: &[String]) -> f32 {
     // Create sets of the unique elements in each vector
     let mut set1: std::collections::HashSet<_> = v1.iter().cloned().collect();
     let mut set2: std::collections::HashSet<_> = v2.iter().cloned().collect();
-
     for v in v1 {
         if v.contains(':') {
             for sv in v.split(':') {

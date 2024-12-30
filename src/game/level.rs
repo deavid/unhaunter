@@ -1,16 +1,22 @@
-//! Level Management Module
-//! -------------------------
+//! ## Level Management Module
 //!
 //! This module handles the loading and management of game levels, including:
-//! * Loading TMX map data.
-//! * Spawning Bevy entities for map tiles, players, ghosts, and other game objects.
-//! * Initializing entity components based on TMX data and game logic.
-//! * Managing room-related events and states, such as lighting conditions and interactive object behavior.
-//! * Handling interactions between the player and interactive objects in the game world.
 //!
-//! This module provides the core functionality for setting up and managing the interactive environment
-//! that the player explores and investigates.
-
+//! * Loading TMX map data.
+//!
+//! * Spawning Bevy entities for map tiles, players, ghosts, and other game objects.
+//!
+//! * Initializing entity components based on TMX data and game logic.
+//!
+//! * Managing room-related events and states, such as lighting conditions and
+//!   interactive object behavior.
+//!
+//! * Handling interactions between the player and interactive objects in the game
+//!   world.
+//!
+//! This module provides the core functionality for setting up and managing the
+//! interactive environment that the player explores and investigates.
+use super::{GCameraArena, GameConfig, GameSprite};
 use crate::behavior::component::RoomState;
 use crate::behavior::Behavior;
 use crate::board::{self, Bdl, BoardDataToRebuild, MapTileComponents, Position, SpriteDB};
@@ -28,24 +34,25 @@ use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 
-use super::{GCameraArena, GameConfig, GameSprite};
-
-/// Event triggered when the player enters a new room or when a significant room-related change occurs.
+/// Event triggered when the player enters a new room or when a significant
+/// room-related change occurs.
 ///
-/// This event is used to trigger actions like opening the van UI or updating the state of interactive objects
-/// based on the room's current state.
+/// This event is used to trigger actions like opening the van UI or updating the
+/// state of interactive objects based on the room's current state.
 #[derive(Clone, Debug, Default, Event)]
 pub struct RoomChangedEvent {
     /// Set to `true` if the event is triggered during level initialization.
     pub initialize: bool,
-    /// Set to `true` if the van UI should be opened automatically (e.g., when the player returns to the starting area).
+    /// Set to `true` if the van UI should be opened automatically (e.g., when the
+    /// player returns to the starting area).
     pub open_van: bool,
 }
 
 impl RoomChangedEvent {
     /// Creates a new `RoomChangedEvent` specifically for level initialization.
     ///
-    /// The `initialize` flag is set to `true`, and the `open_van` flag is set based on the given value.
+    /// The `initialize` flag is set to `true`, and the `open_van` flag is set based on
+    /// the given value.
     pub fn init(open_van: bool) -> Self {
         Self {
             initialize: true,
@@ -56,8 +63,8 @@ impl RoomChangedEvent {
 
 /// Event triggered to load a new level from a TMX map file.
 ///
-/// This event initiates the level loading process, despawning existing entities, loading map data,
-/// and spawning new entities based on the TMX file.
+/// This event initiates the level loading process, despawning existing entities,
+/// loading map data, and spawning new entities based on the TMX file.
 #[derive(Debug, Clone, Event)]
 pub struct LoadLevelEvent {
     /// The file path to the TMX map file to be loaded.
@@ -66,9 +73,10 @@ pub struct LoadLevelEvent {
 
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
-/// This function despawns existing game entities, loads the specified TMX map, creates Bevy entities
-/// for map tiles, players, ghosts, and other objects, initializes their components, and sets up game-related
-/// resources, such as `BoardData`, `SpriteDB`, and `RoomDB`.
+/// This function despawns existing game entities, loads the specified TMX map,
+/// creates Bevy entities for map tiles, players, ghosts, and other objects,
+/// initializes their components, and sets up game-related resources, such as
+/// `BoardData`, `SpriteDB`, and `RoomDB`.
 #[allow(clippy::too_many_arguments)]
 pub fn load_level(
     mut ev: EventReader<LoadLevelEvent>,
@@ -92,6 +100,7 @@ pub fn load_level(
     let Some(load_event) = ev_iter.next() else {
         return;
     };
+
     // Consume all events, just in case to prevent double loading.
     let _ = ev_iter.count();
 
@@ -99,11 +108,11 @@ pub fn load_level(
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
+
     // Despawn ambient sounds just in case.
     for gs in qgs2.iter() {
         commands.entity(gs).despawn_recursive();
     }
-
     bf.ambient_temp = difficulty.0.ambient_temperature;
 
     // Remove all pre-existing data for environment
@@ -111,7 +120,6 @@ pub fn load_level(
     bf.sound_field.clear();
     roomdb.room_state.clear();
     roomdb.room_tiles.clear();
-
     commands
         .spawn(AudioBundle {
             source: asset_server.load("sounds/background-noise-house-1.ogg"),
@@ -173,7 +181,6 @@ pub fn load_level(
             class: SoundType::Insane,
         });
     commands.init_resource::<board::BoardData>();
-
     info!("Load Level: {}", &load_event.map_filepath);
     app_next_state.set(root::State::InGame);
 
@@ -187,7 +194,6 @@ pub fn load_level(
     let mut player_spawn_points: Vec<board::Position> = vec![];
     let mut ghost_spawn_points: Vec<board::Position> = vec![];
     let mut van_entry_points: Vec<board::Position> = vec![];
-
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     sdb.clear();
 
@@ -211,8 +217,8 @@ pub fn load_level(
                         .entry(tset_name.to_string())
                         .or_insert_with(|| {
                             let sprite_size = Vec2::new(
-                                tatlas.size.x / cmat.data.sheet_cols as f32 * 1.005,
-                                tatlas.size.y / cmat.data.sheet_rows as f32 * 1.005,
+                                tatlas.size.x as f32 / cmat.data.sheet_cols as f32 * 1.005,
+                                tatlas.size.y as f32 / cmat.data.sheet_rows as f32 * 1.005,
                             );
                             let sprite_anchor = Vec2::new(
                                 sprite_size.x / 2.0,
@@ -222,10 +228,10 @@ pub fn load_level(
                             meshes.add(base_quad)
                         })
                         .clone();
-
                     cmat.data.sheet_idx = tileuid;
+
                     // Set alpha initially transparent to all materials so they will appear slowly.
-                    cmat.data.color.set_a(0.0);
+                    cmat.data.color.set_alpha(0.0);
                     cmat.data.gamma = 0.1;
                     cmat.data.gbl = 0.1;
                     cmat.data.gbr = 0.1;
@@ -252,21 +258,19 @@ pub fn load_level(
                     ..default()
                 }),
             };
-
             let key_tuid = behavior.key_tuid();
             sdb.cvo_idx
                 .entry(behavior.key_cvo())
                 .or_default()
                 .push(key_tuid.clone());
-
             let mt = MapTileComponents { bundle, behavior };
             sdb.map_tile.insert(key_tuid, mt);
         }
     }
-    // ----
 
-    // We will need a 2nd pass load to sync some data
-    // ----
+    // ---
+    //
+    // ## We will need a 2nd pass load to sync some data
     let mut c: f32 = 0.0;
     let mut movable_objects: Vec<Entity> = Vec::new();
     for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
@@ -282,6 +286,7 @@ pub fn load_level(
                 .map_tile
                 .get(&(tile.tileset.clone(), tile.tileuid))
                 .expect("Map references non-existent tileset+tileuid");
+
             // Spawn the base entity
             let mut entity = match &mt.bundle {
                 Bdl::Mmb(b) => {
@@ -289,9 +294,8 @@ pub fn load_level(
                     if tile.flip_x {
                         b.transform.scale.x = -1.0;
                     }
-                    let mat = materials1.get(b.material).unwrap().clone();
+                    let mat = materials1.get(&b.material).unwrap().clone();
                     let mat = materials1.add(mat);
-
                     b.material = mat;
                     commands.spawn(b)
                 }
@@ -303,14 +307,12 @@ pub fn load_level(
                     commands.spawn(b.clone())
                 }
             };
-
             let mut pos = board::Position {
                 x: tile.pos.x as f32,
                 y: -tile.pos.y as f32,
                 z: 0.0,
                 global_z: 0.0,
             };
-
             c += 0.000000001;
             pos.global_z = f32::from(mt.behavior.p.display.global_z) + c;
             let new_pos = Position {
@@ -341,13 +343,11 @@ pub fn load_level(
 
             // --- Check if Object is Movable ---
             if mt.behavior.p.object.movable {
-                // FIXME: It does not check if the item is in a valid room, since the rooms are still being constructed
-                // .. at this point. This is something to fix later on.
-
+                // FIXME: It does not check if the item is in a valid room, since the rooms are
+                // still being constructed .. at this point. This is something to fix later on.
                 // --- Collect Movable Objects ---
                 movable_objects.push(entity.id());
             }
-
             entity
                 .insert(beh)
                 .insert(GameSprite)
@@ -358,15 +358,18 @@ pub fn load_level(
 
     use rand::seq::SliceRandom;
     use rand::thread_rng;
+
     let mut rng = thread_rng();
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
-        warn!("Map '{}' has less than 3 movable objects in rooms. Ghost influence system might not work as intended.", load_event.map_filepath);
+        warn!(
+            "Map '{}' has less than 3 movable objects in rooms. Ghost influence system might not work as intended.",
+            load_event.map_filepath
+        );
     }
 
     // --- Random Property Assignment ---
-
     if !movable_objects.is_empty() {
         // Shuffle the movable objects to ensure random selection
         movable_objects.shuffle(&mut rng);
@@ -389,14 +392,14 @@ pub fn load_level(
             });
         }
     }
-
     player_spawn_points.shuffle(&mut thread_rng());
     if player_spawn_points.is_empty() {
-        error!("No player spawn points found!! - that will probably not display the map because the player will be out of bounds");
+        error!(
+            "No player spawn points found!! - that will probably not display the map because the player will be out of bounds"
+        );
     }
     let player_position = player_spawn_points.pop().unwrap();
     let player_scoord = player_position.to_screen_coord();
-
     let dist_to_van = van_entry_points
         .iter()
         .map(|v| OrderedFloat(v.distance(&player_position)))
@@ -406,19 +409,19 @@ pub fn load_level(
 
     // Spawn Player 1
     commands
-        .spawn(SpriteSheetBundle {
+        .spawn(SpriteBundle {
             texture: handles.images.character1.clone(),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
                 ..default()
             },
-            atlas: TextureAtlas {
-                layout: handles.images.character1_atlas.clone(),
-                ..Default::default()
-            },
             transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             ..default()
+        })
+        .insert(TextureAtlas {
+            layout: handles.images.character1_atlas.clone(),
+            ..Default::default()
         })
         .insert(GameSprite)
         .insert(difficulty.0.player_gear.clone())
@@ -431,30 +434,20 @@ pub fn load_level(
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ));
 
-    // Spawn Player 2
-    // commands
-    //     .spawn(SpriteSheetBundle {
-    //         texture_atlas: handles.images.character1.clone(),
-    //         sprite: TextureAtlasSprite {
-    //             anchor: TileSprite::Character.anchor(&tb),
-    //             ..Default::default()
-    //         },
-    //         ..default()
-    //     })
-    //     .insert(GameSprite)
-    //     .insert(PlayerSprite::new(2))
-    //     .insert(board::Direction::default())
-    //     .insert(Position::new_i64(1, 0, 0).into_global_z(0.0005))
-    //     .insert(AnimationTimer::from_range(
-    //         Timer::from_seconds(0.20, TimerMode::Repeating),
-    //         OldCharacterAnimation::Walking.animation_range(),
-    //     ));
+    // Spawn Player 2 commands .spawn(SpriteSheetBundle { texture_atlas:
+    // handles.images.character1.clone(), sprite: TextureAtlasSprite { anchor:
+    // TileSprite::Character.anchor(&tb), ..Default::default() }, ..default() })
+    // .insert(GameSprite) .insert(PlayerSprite::new(2))
+    // .insert(board::Direction::default()) .insert(Position::new_i64(1, 0,
+    // 0).into_global_z(0.0005)) .insert(AnimationTimer::from_range(
+    // Timer::from_seconds(0.20, TimerMode::Repeating),
+    // OldCharacterAnimation::Walking.animation_range(), ));
     bf.evidences.clear();
-
     ghost_spawn_points.shuffle(&mut thread_rng());
-
     if ghost_spawn_points.is_empty() {
-        error!("No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds");
+        error!(
+            "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
+        );
     }
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
     let possible_ghost_types: Vec<_> = difficulty.0.ghost_set.as_vec();
@@ -471,7 +464,7 @@ pub fn load_level(
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
@@ -481,14 +474,13 @@ pub fn load_level(
         .insert(GhostBreach)
         .insert(ghost_spawn)
         .id();
-
     commands
         .spawn(SpriteBundle {
             texture: asset_server.load("img/ghost.png"),
             transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
             sprite: Sprite {
                 anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
                 ..default()
             },
             ..default()
@@ -497,16 +489,20 @@ pub fn load_level(
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
-
     let open_van: bool = dist_to_van < 4.0 && difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
 }
 
-/// Handles `RoomChangedEvent` events, updating interactive object states and room data.
+/// Handles `RoomChangedEvent` events, updating interactive object states and room
+/// data.
 ///
 /// This system is responsible for:
+///
 /// * Updating the state of interactive objects based on the current room's state.
-/// * Triggering the opening of the van UI when appropriate (e.g., when the player enters the starting area).
+///
+/// * Triggering the opening of the van UI when appropriate (e.g., when the player
+///   enters the starting area).
+///
 /// * Updating the game's collision and lighting data after room-related changes.
 pub fn roomchanged_event(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
@@ -520,7 +516,6 @@ pub fn roomchanged_event(
     let Some(ev) = ev_room.read().next() else {
         return;
     };
-
     for (entity, item_pos, behavior, room_state) in interactables.iter() {
         let changed = interactive_stuff.execute_interaction(
             entity,
@@ -530,7 +525,6 @@ pub fn roomchanged_event(
             Some(room_state),
             InteractionExecutionType::ReadRoomState,
         );
-
         if changed {
             // dbg!(&behavior);
         }
@@ -539,7 +533,6 @@ pub fn roomchanged_event(
         lighting: true,
         collision: true,
     });
-
     if ev.open_van {
         interactive_stuff
             .game_next_state

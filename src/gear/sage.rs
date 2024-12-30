@@ -1,9 +1,5 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
-
-use bevy::prelude::*;
-use rand::Rng;
-
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::{
     board::{self, Position},
@@ -12,6 +8,8 @@ use crate::{
     maplight::MapColor,
     utils::format_time,
 };
+use bevy::prelude::*;
+use rand::Rng;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -85,6 +83,7 @@ impl GearUsable for SageBundleData {
                 pos.z += 0.2;
                 pos.x += rng.gen_range(-0.2..0.2);
                 pos.y += rng.gen_range(-0.2..0.2);
+
                 // Spawn smoke particle
                 gs.commands
                     .spawn(SpriteBundle {
@@ -97,7 +96,7 @@ impl GearUsable for SageBundleData {
                     .insert(GameSprite)
                     .insert(pos)
                     .insert(MapColor {
-                        color: Color::WHITE.with_a(0.00),
+                        color: Color::WHITE.with_alpha(0.00),
                     })
                     .insert(SmokeParticleTimer(Timer::from_seconds(
                         5.0,
@@ -110,7 +109,8 @@ impl GearUsable for SageBundleData {
 
     fn get_sprite_idx(&self) -> GearSpriteID {
         if self.consumed {
-            return GearSpriteID::SageBundle4; // Burned out
+            // Burned out
+            return GearSpriteID::SageBundle4;
         }
         if !self.is_active {
             return GearSpriteID::SageBundle0;
@@ -125,7 +125,9 @@ impl GearUsable for SageBundleData {
         if remaining_time > 0.0 {
             return GearSpriteID::SageBundle3;
         }
-        GearSpriteID::SageBundle4 // Burned out
+
+        // Burned out
+        GearSpriteID::SageBundle4
     }
 
     fn _box_clone(&self) -> Box<dyn GearUsable> {
@@ -185,13 +187,12 @@ pub fn sage_smoke_system(
             .clamp(0.0, 1.0)
             .min((rem / 2.0 - 0.01).clamp(0.0, 1.0)))
         .powf(2.0);
-        map_color.color.set_a(a * 0.4);
+        map_color.color.set_alpha(a * 0.4);
 
         // Make particles float upwards
         position.z += 0.3 * dt / (1.0 + elap.powi(2));
         position.x += dir.dx * dt;
         position.y += dir.dy * dt;
-
         transform.scale.x += 0.1 * dt;
         transform.scale.y += 0.1 * dt;
 

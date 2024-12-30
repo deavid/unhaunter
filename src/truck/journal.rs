@@ -1,14 +1,12 @@
-use bevy::{prelude::*, utils::HashSet};
-
-use crate::game::GameConfig;
-use crate::gear::playergear::PlayerGear;
-use crate::ghost_definitions::Evidence;
-use crate::player::PlayerSprite;
-
 use super::{
     uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
     GhostGuess, TruckUIEvent, TruckUIGhostGuess,
 };
+use crate::game::GameConfig;
+use crate::gear::playergear::PlayerGear;
+use crate::ghost_definitions::Evidence;
+use crate::player::PlayerSprite;
+use bevy::{prelude::*, utils::HashSet};
 
 #[allow(clippy::type_complexity)]
 pub fn button_system(
@@ -46,7 +44,6 @@ pub fn button_system(
                 }
             }
         }
-
         if tui_button.disabled {
             continue;
         }
@@ -79,7 +76,6 @@ pub fn button_system(
             }
         }
     }
-
     let mut ghost_selected = None;
     for (interaction, mut color, mut border_color, children, mut tui_button) in
         &mut interaction_query
@@ -87,7 +83,6 @@ pub fn button_system(
         let pressed = tui_button.status == TruckButtonState::Pressed;
         if let TruckButtonType::CraftRepellent = tui_button.class {
             let mut disabled = gg.ghost_type.is_none();
-
             for (player, gear) in q_gear.iter_mut() {
                 if player.id == gc.player_id {
                     if let Some(ghost_type) = gg.ghost_type {
@@ -113,7 +108,6 @@ pub fn button_system(
             let missing_ev_count = ghost_ev.intersection(&selected_evidences_missing).count();
             tui_button.disabled =
                 selected_ev_count < selected_evidences_found.len() || missing_ev_count > 0;
-
             if let Some(ghost) = new_ghost_selected.as_ref() {
                 let is_this_ghost = gh == *ghost;
                 if !is_this_ghost && pressed {
