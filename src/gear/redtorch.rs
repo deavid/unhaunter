@@ -10,13 +10,13 @@ impl RedTorch {
     pub fn power(&self) -> f32 {
         match self.enabled {
             false => 0.0,
-            true => 5.0,
+            true => 1.5,
         }
     }
 
     pub fn color(&self) -> Color {
         // Red
-        Color::srgb(1.00, 0.1, 0.02)
+        Color::srgb(0.25, 0.10, 0.07)
     }
 }
 

@@ -398,12 +398,21 @@ pub fn apply_lighting(
     cursor_exp /= exp_count;
     cursor_exp = (cursor_exp / center_exp).powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
-    // account for the eye seeing the flashlight on. TODO: Account this from the
-    // player's perspective as the payer torch might be off but someother player might
-    // have it on.
+    // Account for the eye seeing the flashlight on.
+    // TODO: Account this from the player's perspective as the payer torch might
+    // be off but someother player might have it on.
     let fl_total_power: f32 = flashlights
         .iter()
-        .map(|x| x.2 / (player_pos.distance2(x.0) + 1.0))
+        .map(|x| {
+            let mut power = x.2;
+            power *= match x.4 {
+                LightType::Visible => 1.0,
+                LightType::Red => 0.003,
+                LightType::InfraRedNV => 3.0,
+                LightType::UltraViolet => 0.5,
+            };
+            power / (player_pos.distance2(x.0) + 1.0)
+        })
         .sum();
     cursor_exp += fl_total_power.sqrt() * 2.0;
     assert!(cursor_exp.is_normal());
@@ -480,7 +489,7 @@ pub fn apply_lighting(
                 let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
                 let flvis = flvismap.get(bpos).copied().unwrap_or_default();
-                let fl = flpower / (dist * dist + FL_MIN_DST) * flvis;
+                let fl = flpower / (dist + FL_MIN_DST) * flvis;
                 let flsrgba = flcolor.to_srgba();
                 lux_fl[0] += fl * flsrgba.red;
                 lux_fl[1] += fl * flsrgba.green;
@@ -520,9 +529,9 @@ pub fn apply_lighting(
         let rgbl = (r + g + b) / 3.0 + 1.0;
         g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
         b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
-        b += light_data.red * rep_charge * 2.3 * rgbl;
+        b += light_data.red * rep_charge * 0.01 * rgbl;
         r /= 1.0
-            + light_data.red * rep_charge * 5.0 * rgbl
+            + light_data.red * rep_charge * 50.0 * rgbl
             + light_data.ultraviolet * att_charge * 12.0 * rgbl;
         g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
         b /= 1.0
@@ -734,15 +743,18 @@ pub fn apply_lighting(
                     0.0
                 };
                 let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    ld.red * 6.0 * difficulty.0.evidence_visibility.sqrt()
+                    (ld.red * 32.0 * difficulty.0.evidence_visibility.sqrt()).clamp(0.0, 1.5)
                 } else {
                     0.0
                 };
-                opacity = opacity * ld.visible + orig_opacity * (1.0 - ld.visible);
+                let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
+                let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
+                    .clamp(0.001, 0.999);
+                opacity = opacity * f + orig_opacity * (1.0 - f);
                 let srgba = dst_color.with_luminance(l * ld.visible).to_srgba();
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl)
-                    .with_green(g * ld.visible + e_uv + e_rl / 2.0)
+                    .with_red(r * ld.visible + e_rl + e_infra / 3.0)
+                    .with_green(g * ld.visible + e_uv + e_rl / 2.0 + e_infra)
                     .into();
             }
             smooth = 1.0;

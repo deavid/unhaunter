@@ -163,6 +163,11 @@ pub struct ImageAssets {
     pub manual_locating_ghost: Handle<Image>,
     pub manual_sanity_management: Handle<Image>,
     pub manual_emf_fluctuations: Handle<Image>,
+    // -- Chapter 4 Images
+    pub manual_object_interaction: Handle<Image>,
+    pub manual_object_interaction_2: Handle<Image>,
+    pub manual_spirit_box: Handle<Image>,
+    pub manual_red_torch: Handle<Image>,
 }
 
 #[derive(Debug, Clone)]
@@ -258,9 +263,11 @@ pub fn load_assets(
     let ch1 = "manual/images/chapter1";
     let ch2 = "manual/images/chapter2";
     let ch3 = "manual/images/chapter3";
+    let ch4 = "manual/images/chapter4";
     let ch1 = |path: &str| -> Handle<Image> { server.load(format!("{ch1}/{path}")) };
     let ch2 = |path: &str| -> Handle<Image> { server.load(format!("{ch2}/{path}")) };
     let ch3 = |path: &str| -> Handle<Image> { server.load(format!("{ch3}/{path}")) };
+    let ch4 = |path: &str| -> Handle<Image> { server.load(format!("{ch4}/{path}")) };
 
     commands.insert_resource(GameAssets {
         images: ImageAssets {
@@ -323,6 +330,11 @@ pub fn load_assets(
             manual_locating_ghost: ch2("ghost_red.png"),
             manual_sanity_management: ch3("sanity_management.png"),
             manual_emf_fluctuations: ch1("emf_reader.png"),
+            // -- Chapter 4 images --
+            manual_object_interaction: ch4("object_interaction.png"),
+            manual_object_interaction_2: ch4("object_interaction_2.png"),
+            manual_spirit_box: ch4("spirit_box.png"),
+            manual_red_torch: ch4("red_torch.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

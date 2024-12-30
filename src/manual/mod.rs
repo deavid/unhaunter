@@ -1,9 +1,11 @@
-pub mod chapter1;
-pub mod chapter2;
-pub mod chapter3;
 pub mod preplay_manual_ui;
 pub mod user_manual_ui;
 pub mod utils;
+
+pub mod chapter1;
+pub mod chapter2;
+pub mod chapter3;
+pub mod chapter4;
 
 use bevy::prelude::*;
 pub use preplay_manual_ui::preplay_manual_system;
@@ -48,6 +50,7 @@ pub fn create_manual() -> Manual {
             chapter1::create_manual_chapter(),
             chapter2::create_manual_chapter(),
             chapter3::create_manual_chapter(),
+            chapter4::create_manual_chapter(),
         ],
     }
 }

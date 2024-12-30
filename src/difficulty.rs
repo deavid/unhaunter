@@ -16,7 +16,7 @@
 use crate::{
     gear::{playergear::PlayerGear, Gear},
     ghost_definitions::GhostSet,
-    manual::{chapter1, chapter2, chapter3, ManualChapter},
+    manual::ManualChapter,
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
@@ -847,10 +847,12 @@ impl Difficulty {
     }
 
     pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
+        use crate::manual::{chapter1, chapter2, chapter3, chapter4};
         match self {
             Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
             Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
             Difficulty::SeniorInvestigator => Some(chapter3::create_manual_chapter()),
+            Difficulty::ExpertInvestigator => Some(chapter4::create_manual_chapter()),
             _ => None,
         }
     }

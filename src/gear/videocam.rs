@@ -10,13 +10,13 @@ impl Videocam {
     pub fn power(&self) -> f32 {
         match self.enabled {
             false => 0.0,
-            true => 12.0,
+            true => 35.0,
         }
     }
 
     pub fn color(&self) -> Color {
         // Green-Cyan (for NightVision)
-        Color::srgb(0.01, 1.00, 0.60)
+        Color::srgb(0.01, 1.00, 0.70)
     }
 }
 
