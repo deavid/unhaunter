@@ -9,6 +9,7 @@ mod ghost;
 mod ghost_definitions;
 mod ghost_events;
 mod mainmenu;
+pub mod manual;
 pub mod maphub;
 mod maplight;
 mod materials;
@@ -23,8 +24,7 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
-
-use std::time::Duration;
+pub mod ghost_setfinder;
 
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
@@ -35,6 +35,7 @@ use bevy::{
 use materials::{CustomMaterial1, UIPanelMaterial};
 use object_interaction::ObjectInteractionConfig;
 use platform::plt;
+use std::time::Duration;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 const FPS_DEBUG: bool = false;
@@ -64,19 +65,17 @@ pub fn app_run() {
     }))
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
-    .insert_resource(ClearColor(Color::rgb(0.04, 0.08, 0.14)))
+    .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
     .init_resource::<tiledmap::MapTileSetDb>()
     .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
     )))
     .init_resource::<ObjectInteractionConfig>();
-
     if FPS_DEBUG {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
             .add_plugins(LogDiagnosticsPlugin::default());
     }
-
     arch_setup::app_setup(&mut app);
     root::app_setup(&mut app);
     gear::app_setup(&mut app);
@@ -93,7 +92,7 @@ pub fn app_run() {
     npchelp::app_setup(&mut app);
     systems::object_charge::app_setup(&mut app);
     maphub::app_setup(&mut app);
-
+    manual::app_setup(&mut app);
     app.run();
 }
 
@@ -104,10 +103,10 @@ mod arch_setup {
     fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
         settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
     }
+
     pub fn app_setup(app: &mut App) {
         app.add_plugins(bevy_framepace::FramepacePlugin)
             .add_systems(Startup, set_fps_limiter);
-
         if FPS_DEBUG {
             app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
         }
@@ -117,5 +116,6 @@ mod arch_setup {
 #[cfg(target_arch = "wasm32")]
 mod arch_setup {
     use super::*;
+
     pub fn app_setup(_app: &mut App) {}
 }

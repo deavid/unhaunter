@@ -1,5 +1,3 @@
-use bevy::{prelude::*, render::view::RenderLayers};
-
 use crate::{
     behavior::Behavior,
     colors,
@@ -9,10 +7,10 @@ use crate::{
     player::PlayerSprite,
     root,
 };
+use bevy::{color::palettes::css, prelude::*, render::view::RenderLayers};
 
 #[derive(Component)]
 pub struct GCameraUI;
-
 #[derive(Component, Debug)]
 pub struct GameUI;
 
@@ -33,10 +31,8 @@ impl DamageBackground {
         Self { exp }
     }
 }
-
 #[derive(Component, Debug)]
 pub struct HeldObjectUI;
-
 #[derive(Component, Debug)]
 pub struct RightSideGearUI;
 
@@ -45,6 +41,7 @@ pub fn setup(mut commands: Commands, qc2: Query<Entity, With<GCameraUI>>) {
     for cam in qc2.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // 2D orthographic camera - UI
     let cam = Camera2dBundle {
         camera_2d: Camera2d,
@@ -70,6 +67,7 @@ pub fn cleanup(
     for cam in qc2.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // Despawn game UI if not used
     for gui in qg.iter() {
         commands.entity(gui).despawn_recursive();
@@ -91,7 +89,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     commands
         .spawn(NodeBundle {
-            background_color: Color::NONE.into(),
+            background_color: css::BLACK.with_alpha(0.0).into(),
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -104,21 +102,23 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         .insert(DamageBackground::new(4.0));
     commands
         .spawn(ImageBundle {
-            background_color: Color::BLACK.into(),
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 position_type: PositionType::Absolute,
                 ..default()
             },
-            image: handles.images.vignette.clone().into(),
+            image: UiImage {
+                color: css::BLACK.with_alpha(0.0).into(),
+                ..handles.images.vignette.clone().into()
+            },
             ..default()
         })
         .insert(GameUI)
         .insert(DamageBackground::new(0.7));
+
     // Spawn game UI
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
-
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let text_bundle = TextBundle::from_section(
@@ -142,19 +142,13 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ),
             ..default()
         });
-
         p.spawn(text_bundle);
     };
-
     let evidence = |p: Cb| evidence::setup_ui_evidence(p, &handles);
-
     let inv_left = |p: Cb| gear::ui::setup_ui_gear_inv_left(p, &handles);
     let inv_right = |p: Cb| gear::ui::setup_ui_gear_inv_right(p, &handles);
-
     let bottom_panel = |p: Cb| {
-        // Split for the bottom side in three regions
-
-        // Leftmost side - Inventory left
+        // Split for the bottom side in three regions Leftmost side - Inventory left
         p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
             background_color: BackgroundColor(colors::PANEL_BGCOLOR),
@@ -165,8 +159,10 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 flex_shrink: 0.0,
                 width: Val::Px(100.0 * UI_SCALE),
                 max_width: Val::Percent(20.0),
-                align_items: AlignItems::Center, // Vertical alignment
-                align_content: AlignContent::Start, // Horizontal alignment - start from the left.
+                // Vertical alignment
+                align_items: AlignItems::Center,
+                // Horizontal alignment - start from the left.
+                align_content: AlignContent::Start,
                 flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
@@ -238,7 +234,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             })
             .insert(RightSideGearUI)
             .with_children(inv_right);
-
             p.spawn(NodeBundle {
                 border_color: colors::DEBUG_BCOLOR,
                 style: Style {
@@ -246,22 +241,22 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     padding: UiRect::all(Val::Px(1.0)),
                     flex_grow: 1.0,
                     flex_direction: FlexDirection::Column,
-                    display: Display::None, // Initially hidden
+                    // Initially hidden
+                    display: Display::None,
                     ..Default::default()
                 },
-                visibility: Visibility::Hidden, // Initially hidden
+                // Initially hidden
+                visibility: Visibility::Hidden,
                 ..Default::default()
             })
             .insert(HeldObjectUI)
             .with_children(|parent| setup_ui_held_object(parent, &handles));
         });
     };
-
     let game_ui = |p: Cb| {
         // Top row (Game title)
         p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
-
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
@@ -308,7 +303,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         // Bottom side - inventory and stats
         p.spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
-            background_color: BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.4)),
+            background_color: BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.4)),
             style: Style {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
@@ -327,7 +322,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     commands
         .spawn(NodeBundle {
             border_color: colors::DEBUG_BCOLOR,
-
             style: Style {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -341,11 +335,11 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         })
         .insert(GameUI)
         .with_children(game_ui);
-
     info!("Game UI loaded");
 }
 
-/// Sets up the UI elements for displaying information about the map item being held by the player.
+/// Sets up the UI elements for displaying information about the map item being
+/// held by the player.
 fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
     parent
         .spawn(TextBundle::from_section(
@@ -382,7 +376,8 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
                 },
             },
             TextSection {
-                value: "[Grab]: Move Object".into(), // Placeholder (will be dynamic)
+                // Placeholder (will be dynamic)
+                value: "[Grab]: Move Object".into(),
                 style: TextStyle {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 16.0 * UI_SCALE,
@@ -395,9 +390,10 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
 
 /// Manages the UI for the "Visual Holding" system.
 ///
-/// This system dynamically shows or hides the UI elements related to holding objects.  
-/// It displays the held object's name and provides instructions for dropping or moving the object.
-/// When the player is not holding an object, the UI reverts to displaying the player's gear information.
+/// This system dynamically shows or hides the UI elements related to holding
+/// objects.It displays the held object's name and provides instructions for
+/// dropping or moving the object. When the player is not holding an object, the UI
+/// reverts to displaying the player's gear information.
 #[allow(clippy::type_complexity)]
 pub fn toggle_held_object_ui(
     mut held_object_ui: Query<
@@ -423,7 +419,6 @@ pub fn toggle_held_object_ui(
         } else {
             Visibility::Hidden
         };
-
         style.display = if is_holding_object {
             Display::Flex
         } else {
@@ -475,7 +470,8 @@ pub fn toggle_held_object_ui(
                         text.sections[0].style.color = colors::INVENTORY_STATS_COLOR;
                     } else {
                         text.sections[0].value = "[Grab]: -".into();
-                        text.sections[0].style.color = colors::INVENTORY_STATS_COLOR.with_a(0.3);
+                        text.sections[0].style.color =
+                            colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
                     }
                 }
             }

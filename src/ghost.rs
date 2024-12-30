@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use crate::board::{self, BoardPosition, Position};
 use crate::components::ghost_influence::GhostInfluence;
 use crate::components::ghost_influence::InfluenceType;
@@ -11,10 +9,11 @@ use crate::maplight::MapColor;
 use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
 use crate::{gear, summary, utils};
-
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
+use std::time::Duration;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
@@ -29,28 +28,33 @@ pub struct GhostSprite {
     pub class: GhostType,
     /// The ghost's designated spawn point (breach) on the game board.
     pub spawn_point: BoardPosition,
-    /// The ghost's current target location in the game world. `None` if the ghost is wandering aimlessly.
+    /// The ghost's current target location in the game world. `None` if the ghost is
+    /// wandering aimlessly.
     pub target_point: Option<Position>,
     /// Number of times the ghost has been hit with the correct type of repellent.
     pub repellent_hits: i64,
     /// Number of times the ghost has been hit with an incorrect type of repellent.
     pub repellent_misses: i64,
-    /// Number of times the ghost has been hit with the correct type of repellent - in current frame.
+    /// Number of times the ghost has been hit with the correct type of repellent - in
+    /// current frame.
     pub repellent_hits_frame: f32,
-    /// Number of times the ghost has been hit with an incorrect type of repellent - in current frame.
+    /// Number of times the ghost has been hit with an incorrect type of repellent - in
+    /// current frame.
     pub repellent_misses_frame: f32,
     /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
-    /// The ghost's current rage level, which influences its hunting behavior.
-    /// Higher rage increases the likelihood of a hunt.
+    /// The ghost's current rage level, which influences its hunting behavior. Higher
+    /// rage increases the likelihood of a hunt.
     pub rage: f32,
-    /// The ghost's hunting state. A value greater than 0 indicates that the ghost is actively hunting a player.
+    /// The ghost's hunting state. A value greater than 0 indicates that the ghost is
+    /// actively hunting a player.
     pub hunting: f32,
     /// Flag indicating whether the ghost is currently targeting a player during a hunt.
     pub hunt_target: bool,
     /// Time in seconds since the ghost started its current hunt.
     pub hunt_time_secs: f32,
-    /// The ghost's current warping intensity, which affects its movement speed. Higher values result in faster warping.
+    /// The ghost's current warping intensity, which affects its movement speed. Higher
+    /// values result in faster warping.
     pub warp: f32,
     /// The ghost got hit by sage, and it will be calm for a while.
     pub calm_time_secs: f32,
@@ -82,9 +86,11 @@ impl FadeOut {
 pub struct GhostBreach;
 
 impl GhostSprite {
-    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn point.
+    /// Creates a new `GhostSprite` with a random `GhostType` and the specified spawn
+    /// point.
     ///
-    /// The ghost's initial mood, hunting state, and other attributes are set to default values.
+    /// The ghost's initial mood, hunting state, and other attributes are set to
+    /// default values.
     pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
         let mut rng = rand::thread_rng();
         let idx = rng.gen_range(0..ghost_types.len());
@@ -113,7 +119,7 @@ impl GhostSprite {
         }
     }
 
-    ///  Sets the `breach_id` field, associating the ghost with its visual breach effect.
+    /// Sets the `breach_id` field, associating the ghost with its visual breach effect.
     pub fn with_breachid(self, breach_id: Entity) -> Self {
         Self {
             breach_id: Some(breach_id),
@@ -122,10 +128,11 @@ impl GhostSprite {
     }
 }
 
-/// Updates the ghost's position based on its target location, hunting state, and warping intensity.
+/// Updates the ghost's position based on its target location, hunting state, and
+/// warping intensity.
 ///
-/// This system handles the ghost's movement logic, ensuring it navigates the game world according to its
-/// current state and objectives.
+/// This system handles the ghost's movement logic, ensuring it navigates the game
+/// world according to its current state and objectives.
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn ghost_movement(
     mut q: Query<
@@ -169,7 +176,6 @@ pub fn ghost_movement(
             }
             delta.dx *= ghost.warp + 1.0;
             delta.dy *= ghost.warp + 1.0;
-
             let mut finalize = false;
             if ghost.hunt_target {
                 if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
@@ -219,7 +225,6 @@ pub fn ghost_movement(
                     let idx = rng.gen_range(0..player_pos_l.len());
                     let (ppos, h) = player_pos_l[idx];
                     let search_radius = if h.is_some() { 2.0 } else { 1.0 };
-
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
                     old_target.x += rng.gen_range(-search_radius..search_radius);
                     old_target.y += rng.gen_range(-search_radius..search_radius);
@@ -229,13 +234,11 @@ pub fn ghost_movement(
                         *ppos
                     };
                     ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
-
                     let mut rng = rand::thread_rng();
                     let random_offset = Vec2::new(
                         rng.gen_range(-search_radius..search_radius),
                         rng.gen_range(-search_radius..search_radius),
                     );
-
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
                     hunt = true;
@@ -256,15 +259,14 @@ pub fn ghost_movement(
                     let dd = (dx * dx + dy * dy).sqrt() / dist;
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
-
                     let score = 1.0
                         + calculate_destination_score(target_point, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach;
                     potential_destinations.push((score, target_point));
                 }
 
-                // --- Select Destination with Highest Score ---
-                let mut best_destination = ghost.spawn_point.to_position(); // Default to spawn point
+                // --- Select Destination with Highest Score --- Default to spawn point
+                let mut best_destination = ghost.spawn_point.to_position();
                 let mut best_score = f32::MIN;
                 for (score, point) in potential_destinations {
                     if score > best_score {
@@ -272,10 +274,8 @@ pub fn ghost_movement(
                         best_destination = point;
                     }
                 }
-
                 target_point = best_destination;
             }
-
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
             if dstroom.is_some()
@@ -293,7 +293,6 @@ pub fn ghost_movement(
                 } else if ghost.hunt_target {
                     warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
                 }
-
                 ghost.target_point = Some(target_point);
                 ghost.hunt_target = hunt;
             } else if ghost
@@ -312,14 +311,14 @@ pub fn ghost_movement(
                     .entity(breach)
                     .insert(FadeOut::new(5.0))
                     .insert(MapColor {
-                        color: Color::WHITE.with_a(1.0),
+                        color: Color::WHITE.with_alpha(1.0),
                     });
             }
             commands
                 .entity(entity)
                 .insert(FadeOut::new(5.0))
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(1.0),
+                    color: Color::WHITE.with_alpha(1.0),
                 });
         }
     }
@@ -369,10 +368,12 @@ impl RoarType {
     }
 }
 
-/// Manages the ghost's rage level, hunting behavior, and player interactions during a hunt.
+/// Manages the ghost's rage level, hunting behavior, and player interactions
+/// during a hunt.
 ///
-/// This system updates the ghost's rage based on player proximity, sanity, and sound levels.
-/// It triggers hunts when rage exceeds a threshold and handles player damage during hunts.
+/// This system updates the ghost's rage based on player proximity, sanity, and
+/// sound levels. It triggers hunts when rage exceeds a threshold and handles
+/// player damage during hunts.
 #[allow(clippy::too_many_arguments)]
 fn ghost_enrage(
     time: Res<Time>,
@@ -386,18 +387,15 @@ fn ghost_enrage(
 ) {
     timer.tick(time.delta());
     let dt = time.delta_seconds();
-
     for (mut ghost, ghost_position) in &mut qg {
         // --- Salty Trace Spawning Logic ---
         if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
             // Only spawn traces when NOT hunting and salty effect is active
             ghost.salty_effect_timer.tick(time.delta());
             ghost.salty_trace_spawn_timer.tick(time.delta());
-
             if ghost.salty_trace_spawn_timer.just_finished() {
                 if rand::thread_rng().gen_bool(0.5) {
-                    // 50% chance to spawn
-                    // --- Find Valid Floor Tile ---
+                    // 50% chance to spawn --- Find Valid Floor Tile ---
                     let ghost_board_position = ghost_position.to_board_position();
                     let mut valid_tile = None;
                     for nearby_tile in ghost_board_position.xy_neighbors(1) {
@@ -420,7 +418,6 @@ fn ghost_enrage(
             }
         }
     }
-
     *last_roar += dt;
     let mut should_roar = RoarType::None;
     let mut roar_time = 3.0;
@@ -428,6 +425,7 @@ fn ghost_enrage(
         if ghost.calm_time_secs > 0.0 {
             ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
         }
+
         // Calm ghost when players are far away
         let min_player_dist = qp
             .iter()
@@ -436,14 +434,15 @@ fn ghost_enrage(
             .unwrap_or(OrderedFloat(1000.0))
             .into_inner()
             .clamp(1.0, 1000.0);
+
         // Reduce ghost rage as player is further away
         ghost.rage -= dt * min_player_dist.sqrt() / 10.0;
         if !ghost.hunt_target {
             // Reduce ghost hunting when player is away
             ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
         }
-        // ---
 
+        // ---
         if ghost.hunt_target {
             let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
@@ -490,7 +489,6 @@ fn ghost_enrage(
         if ghost.hunting < 0.0 {
             ghost.hunting = 0.0;
         }
-
         avg_angry.push_len(angry, dt);
         if timer.just_finished() && DEBUG_HUNTS {
             dbg!(ghost.calm_time_secs, ghost.rage);
@@ -525,8 +523,8 @@ fn ghost_enrage(
     }
 }
 
-/// Calculates the desirability score of a potential destination point for the ghost,
-/// considering the influence of nearby charged objects.
+/// Calculates the desirability score of a potential destination point for the
+/// ghost, considering the influence of nearby charged objects.
 fn calculate_destination_score(
     potential_destination: Position,
     object_query: &Query<(&Position, &GhostInfluence)>,
@@ -546,13 +544,13 @@ fn calculate_destination_score(
                     / (distance + 1.0);
             }
             InfluenceType::Repulsive => {
-                // Subtract from score for Repulsive objects, weighted by repulsive_influence_multiplier
+                // Subtract from score for Repulsive objects, weighted by
+                // repulsive_influence_multiplier
                 score -= config.repulsive_influence_multiplier * ghost_influence.charge_value
                     / (distance + 1.0);
             }
         }
     }
-
     score
 }
 
@@ -563,18 +561,18 @@ fn spawn_salty_trace(
     tile_position: BoardPosition,
 ) {
     use crate::gear::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+
     let mut pos = tile_position.to_position();
     let mut rng = rand::thread_rng();
     pos.x += rng.gen_range(-0.2..0.2);
     pos.y += rng.gen_range(-0.2..0.2);
-
     commands
         .spawn(SpriteBundle {
             texture: asset_server.load("img/salt_particle.png"),
             transform: Transform::from_translation(pos.to_screen_coord())
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
             sprite: Sprite {
-                color: Color::DARK_GRAY.with_a(0.5),
+                color: css::DARK_GRAY.with_alpha(0.5).into(),
                 custom_size: Some(Vec2::new(8.0, 8.0)),
                 ..default()
             },
@@ -585,7 +583,7 @@ fn spawn_salty_trace(
         .insert(UVReactive(1.0))
         .insert(SaltyTraceTimer(Timer::from_seconds(600.0, TimerMode::Once)))
         .insert(MapColor {
-            color: Color::DARK_GRAY.with_a(0.5),
+            color: css::DARK_GRAY.with_alpha(0.5).into(),
         })
         .insert(GameSprite);
 }
@@ -608,8 +606,9 @@ pub fn ghost_fade_out_system(
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
         fade_out.timer.tick(time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
+
         // Fade out the sprite
-        map_color.color.set_a(rem_f);
+        map_color.color.set_alpha(rem_f);
 
         // Emit smoke particles while fading
         if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
@@ -634,7 +633,7 @@ pub fn ghost_fade_out_system(
                     dz: 0.0,
                 })
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(0.20),
+                    color: Color::WHITE.with_alpha(0.20),
                 })
                 .insert(SmokeParticleTimer(Timer::from_seconds(
                     5.0,
@@ -651,6 +650,7 @@ pub fn ghost_fade_out_system(
             } else if fade_out.timer.finished() {
                 // Play the second roar at a lower volume
                 gs.play_audio(RoarType::Full.get_sound(), 0.2, position);
+
                 // Despawn the entity
                 commands.entity(entity).despawn();
             }

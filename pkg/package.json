@@ -1,7 +1,8 @@
 {
   "name": "unhaunter",
+  "type": "module",
   "description": "2D isometric Game about investigating paranormal hauntings",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -12,7 +13,7 @@
     "unhaunter.js",
     "unhaunter.d.ts"
   ],
-  "module": "unhaunter.js",
+  "main": "unhaunter.js",
   "types": "unhaunter.d.ts",
   "sideEffects": [
     "./snippets/*"

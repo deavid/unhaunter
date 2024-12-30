@@ -1,5 +1,5 @@
-//! This module defines systems related to managing the charge levels of objects that influence ghost behavior.
-
+//! This module defines systems related to managing the charge levels of objects
+//! that influence ghost behavior.
 use crate::board::Position;
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use crate::difficulty::CurrentDifficulty;
@@ -10,11 +10,15 @@ use bevy::utils::HashSet;
 
 /// System to accumulate charge on objects over time.
 fn accumulate_charge(
-    config: Res<ObjectInteractionConfig>, // Access the object interaction configuration
-    time: Res<Time>,                      // Access the time resource
-    mut query: Query<&mut GhostInfluence>, // Query for mutable GhostInfluence components
+    // Access the object interaction configuration
+    config: Res<ObjectInteractionConfig>,
+    // Access the time resource
+    time: Res<Time>,
+    // Query for mutable GhostInfluence components
+    mut query: Query<&mut GhostInfluence>,
 ) {
-    let delta_time = time.delta_seconds(); // Get the time elapsed since the last frame
+    // Get the time elapsed since the last frame
+    let delta_time = time.delta_seconds();
 
     // Iterate through entities with GhostInfluence
     for mut ghost_influence in &mut query {
@@ -33,14 +37,22 @@ struct WithinDischargeRange;
 /// System to check ghost proximity to objects
 #[allow(clippy::too_many_arguments)]
 fn check_ghost_proximity(
-    config: Res<ObjectInteractionConfig>, // Access the object interaction configuration
-    mut ghost_query: Query<(&Position, &mut GhostSprite)>, // Query for the ghost's position
-    object_query: Query<(Entity, &Position, &GhostInfluence)>, // Query for object positions and GhostInfluence
-    mut removed_attractive_objects: Local<HashSet<Entity>>, // FIXME: This parameter would not reset between missions.
-    mut commands: Commands, // Access commands to add/remove components
-    roomdb: Res<crate::board::RoomDB>, // Access the room database
-    time: Res<Time>,        // Access the time resource
-    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    // Access the object interaction configuration
+    config: Res<ObjectInteractionConfig>,
+    // Query for the ghost's position
+    mut ghost_query: Query<(&Position, &mut GhostSprite)>,
+    // Query for object positions and GhostInfluence
+    object_query: Query<(Entity, &Position, &GhostInfluence)>,
+    // FIXME: This parameter would not reset between missions.
+    mut removed_attractive_objects: Local<HashSet<Entity>>,
+    // Access commands to add/remove components
+    mut commands: Commands,
+    // Access the room database
+    roomdb: Res<crate::board::RoomDB>,
+    // Access the time resource
+    time: Res<Time>,
+    // Access the difficulty settings
+    difficulty: Res<CurrentDifficulty>,
 ) {
     // Get ghost position and breach position
     let Ok((ghost_position, mut ghost_sprite)) = ghost_query.get_single_mut() else {
@@ -102,14 +114,15 @@ fn check_ghost_proximity(
     }
 }
 
-/// System to discharge objects within the ghost's range based on their influence type.
+/// System to discharge objects within the ghost's range based on their influence
+/// type.
 fn discharge_objects(
     config: Res<ObjectInteractionConfig>,
     time: Res<Time>,
-    mut query: Query<&mut GhostInfluence, With<WithinDischargeRange>>, // Query for mutable GhostInfluence components of objects within discharge range
+    // Query for mutable GhostInfluence components of objects within discharge range
+    mut query: Query<&mut GhostInfluence, With<WithinDischargeRange>>,
 ) {
     let delta_time = time.delta_seconds();
-
     for mut ghost_influence in &mut query {
         match ghost_influence.influence_type {
             InfluenceType::Attractive => {

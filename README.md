@@ -223,7 +223,6 @@ Install deps
 Run with:
  
 ```bash 
-   cargo run --target wasm32-unknown-unknown --release
    wasm-pack build --release --target web
 ```
  

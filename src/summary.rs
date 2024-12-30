@@ -1,12 +1,10 @@
-use bevy::prelude::*;
-
 use crate::{
     difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
 };
+use bevy::{color::palettes::css, prelude::*};
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;
-
 #[derive(Debug, Component, Clone)]
 pub struct SummaryUI;
 
@@ -42,6 +40,7 @@ impl SummaryData {
             ..default()
         }
     }
+
     pub fn calculate_score(&self) -> i64 {
         let mut score = (250.0 * self.ghosts_unhaunted as f64)
             / (1.0 + self.repellent_used_amt as f64)
@@ -52,7 +51,6 @@ impl SummaryData {
 
         // Apply difficulty multiplier
         score *= self.difficulty.0.difficulty_score_multiplier;
-
         if self.player_count == self.alive_count {
             // Apply time bonus multiplier
             score *= 1.0 + 360.0 / (60.0 + self.time_taken_secs as f64);
@@ -81,6 +79,7 @@ pub fn cleanup(
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // Despawn UI if not used
     for ui_entity in qu.iter() {
         commands.entity(ui_entity).despawn_recursive();
@@ -100,7 +99,6 @@ pub fn update_time(
     }
     sd.difficulty = difficulty.clone();
     sd.time_taken_secs += time.delta_seconds();
-
     let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
     let player_count = qp.iter().count();
     let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
@@ -131,17 +129,18 @@ pub fn keyboard(
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
-    let main_color = Color::Rgba {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
-
+    });
     commands
         .spawn(NodeBundle {
             style: Style {
-                //    align_self: AlignSelf::Center,
+                // ```
+                // align_self: AlignSelf::Center,
+                // ```
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
@@ -152,10 +151,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     top: Val::Percent(5.0),
                     bottom: Val::Percent(5.0),
                 },
-
                 ..default()
             },
-
             ..default()
         })
         .insert(SummaryUI)
@@ -171,7 +168,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         align_items: AlignItems::FlexStart,
                         ..default()
                     },
-
                     ..default()
                 })
                 .with_children(|parent| {
@@ -196,10 +192,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     height: Val::Percent(20.0),
                     ..default()
                 },
-
                 ..default()
             });
-
             parent
                 .spawn(NodeBundle {
                     style: Style {
@@ -208,7 +202,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         justify_content: JustifyContent::SpaceEvenly,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
-
                         ..default()
                     },
                     background_color: main_color.into(),
@@ -230,7 +223,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::GhostList);
@@ -240,17 +233,15 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             height: Val::Percent(10.0),
                             ..default()
                         },
-
                         ..default()
                     });
-
                     parent
                         .spawn(TextBundle::from_section(
                             "Time taken: 00.00.00",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::TimeTaken);
@@ -260,7 +251,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::AvgSanity);
@@ -270,7 +261,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::GhostUnhaunted);
@@ -280,7 +271,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::RepellentUsed);
@@ -290,29 +281,26 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::PlayersAlive);
-
                     parent
                         .spawn(TextBundle::from_section(
                             "Final Score: 0",
                             TextStyle {
                                 font: handles.fonts.londrina.w300_light.clone(),
                                 font_size: 38.0,
-                                color: Color::GRAY,
+                                color: css::GRAY.into(),
                             },
                         ))
                         .insert(SummaryUIType::FinalScore);
-
                     parent.spawn(NodeBundle {
                         style: Style {
                             width: Val::Percent(100.0),
                             height: Val::Percent(20.0),
                             ..default()
                         },
-
                         ..default()
                     });
                     parent.spawn(TextBundle::from_section(
@@ -320,7 +308,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         TextStyle {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 38.0,
-                            color: Color::ORANGE_RED,
+                            color: css::ORANGE_RED.into(),
                         },
                     ));
                 });
@@ -330,7 +318,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     height: Val::Percent(20.0),
                     ..default()
                 },
-
                 ..default()
             });
         });
@@ -350,7 +337,6 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
                         .join(", ")
                 )
             }
-
             SummaryUIType::TimeTaken => {
                 text.sections[0].value =
                     format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))

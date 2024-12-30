@@ -1,11 +1,8 @@
-use std::mem::swap;
-
+use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::{board::Position, ghost_definitions::Evidence};
 use bevy::prelude::*;
 use rand::Rng;
-
-use crate::{board::Position, ghost_definitions::Evidence};
-
-use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use std::mem::swap;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -90,6 +87,7 @@ impl GearUsable for Recorder {
         if self.sound_l.len() < 120 {
             self.sound_l.push(sound_reading);
         }
+
         // Double noise reduction to remove any noise from measurement.
         let n = self.frame_counter as usize % self.sound_l.len();
         if self.enabled {
@@ -106,7 +104,6 @@ impl GearUsable for Recorder {
                 self.amt_recorded = 0.0;
             }
         }
-
         if self.display_secs_since_last_update > 0.1 {
             self.display_secs_since_last_update = 0.0;
             let sum_snd: f32 = self.sound_l.iter().sum();
@@ -147,12 +144,10 @@ pub fn sound_update(
 ) {
     let mut rng = rand::thread_rng();
     let gn = rng.gen_range(0..30_u32);
-
     if gn == 0 {
         // Ghost talk once in a while
         for (_, pos) in qg.iter() {
             let bpos = pos.to_board_position();
-
             for _ in 0..16 {
                 let mut v = Vec2::new(rng.gen_range(-2.0..2.0), rng.gen_range(-2.0..2.0));
                 let l = v.length();
@@ -173,7 +168,6 @@ pub fn sound_update(
             }
         }
     }
-
     let map_pos = bf.sound_field.keys().cloned().collect::<Vec<_>>();
     for mpos in map_pos.into_iter() {
         let Some(s_v) = bf.sound_field.get_mut(&mpos) else {
@@ -202,7 +196,6 @@ pub fn sound_update(
                 global_z: 0.0,
             };
             let bn_p = n_p.to_board_position();
-
             if roomdb.room_tiles.get(&bn_p).is_some() && v.length() > 0.00002 {
                 bf.sound_field.entry(bn_p).or_default().push(v);
             }

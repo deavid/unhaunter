@@ -1,9 +1,7 @@
+use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::{board::Position, ghost_definitions::Evidence};
 use bevy::prelude::*;
 use rand::Rng as _;
-
-use crate::{board::Position, ghost_definitions::Evidence};
-
-use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Debug, Clone, Default)]
 pub enum EMFLevel {
@@ -99,6 +97,7 @@ impl GearUsable for EMFMeter {
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
         self.enabled = !self.enabled;
     }
+
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, ep: &EquipmentPosition) {
         let mut rng = rand::thread_rng();
         self.frame_counter += 1;
@@ -121,10 +120,8 @@ impl GearUsable for EMFMeter {
             .unwrap_or_default();
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
-
         let temp_reading = temperature / 10.0 + sound_reading;
         let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
-
         if self.temp_l2.len() < 2 {
             self.temp_l2.push(temp_reading);
         }
@@ -136,7 +133,6 @@ impl GearUsable for EMFMeter {
         if self.temp_l2.len() < 40 {
             self.temp_l2.push(self.temp_l1);
         }
-
         let sec = gs.time.elapsed_seconds();
         if self.last_meter_update_secs + 0.5 < sec {
             self.last_meter_update_secs = sec;
@@ -172,6 +168,7 @@ impl GearUsable for EMFMeter {
             }
         }
     }
+
     fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }

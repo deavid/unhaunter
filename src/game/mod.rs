@@ -9,7 +9,6 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 
 #[derive(Component)]
 pub struct GCameraArena;
-
 #[derive(Component, Debug)]
 pub struct GameSprite;
 
@@ -58,6 +57,7 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // 2D orthographic camera - Arena
     let mut cam = Camera2dBundle::default();
     cam.projection.scaling_mode = ScalingMode::FixedVertical(200.0);
@@ -77,10 +77,12 @@ pub fn cleanup(
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // Despawn game sprites if not used
     for gs in qgs.iter() {
         commands.entity(gs).despawn_recursive();
     }
+
     // Despawn game sound
     for gs in qs.iter() {
         commands.entity(gs).despawn_recursive();
@@ -114,6 +116,7 @@ pub fn keyboard(
             if player.id != gc.player_id {
                 continue;
             }
+
             // Camera movement
             let mut ref_point = p_transform.translation;
             let sc_dir = p_dir.to_screen_coord();
@@ -129,7 +132,7 @@ pub fn keyboard(
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED * dt;
         }
-        const DEBUG_CAMERA: bool = false;
+        const DEBUG_CAMERA: bool = true;
         if in_game && DEBUG_CAMERA {
             if keyboard_input.pressed(KeyCode::ArrowRight) {
                 transform.translation.x += 2.0 * dt;
@@ -160,7 +163,6 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnEnter(root::State::InGame), setup)
         .add_systems(OnExit(root::State::InGame), cleanup)
         .add_systems(Update, keyboard.before(player::keyboard_player));
-
     level::app_setup(app);
     ui::app_setup(app);
     evidence::app_setup(app);

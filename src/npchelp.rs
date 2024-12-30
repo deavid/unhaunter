@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 use crate::{
     behavior::{
         component::{Interactive, NpcHelpDialog},
@@ -13,10 +11,10 @@ use crate::{
     player::PlayerSprite,
     root,
 };
+use bevy::prelude::*;
 
 #[derive(Debug, Component)]
 pub struct NpcUI;
-
 #[derive(Debug, Component)]
 pub struct NpcDialogText;
 
@@ -71,7 +69,6 @@ pub fn setup_ui(
     commands
         .spawn(NodeBundle {
             background_color: colors::TRUCKUI_BGCOLOR.into(),
-
             style: Style {
                 position_type: PositionType::Absolute,
                 min_width: Val::Percent(50.0),
@@ -91,9 +88,8 @@ pub fn setup_ui(
             parent
                 .spawn(MaterialNodeBundle {
                     material: materials.add(UIPanelMaterial {
-                        color: colors::TRUCKUI_PANEL_BGCOLOR,
+                        color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
                     }),
-
                     style: Style {
                         border: UiRect::all(Val::Px(1.0)),
                         padding: UiRect::all(Val::Px(1.0)),
@@ -120,9 +116,7 @@ pub fn setup_ui(
                         height: Val::Px(40.0 * UI_SCALE),
                         ..default()
                     });
-
                     mid_blk.spawn(title);
-
                     mid_blk.spawn(NodeBundle {
                         border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
                         style: Style {
@@ -132,7 +126,6 @@ pub fn setup_ui(
                         },
                         ..default()
                     });
-
                     mid_blk
                         .spawn(
                             TextBundle::from_section(
@@ -150,7 +143,6 @@ pub fn setup_ui(
                             }),
                         )
                         .insert(NpcDialogText);
-
                     mid_blk.spawn(NodeBundle {
                         style: Style {
                             flex_grow: 1.0,
@@ -158,7 +150,6 @@ pub fn setup_ui(
                         },
                         ..default()
                     });
-
                     mid_blk.spawn(
                         TextBundle::from_section(
                             "Close: [ESC] or [E]",
@@ -181,7 +172,7 @@ pub fn setup_ui(
                         .with_text_justify(JustifyText::Right),
                     );
 
-                    // ----
+                    // ---
                     mid_blk.spawn(NodeBundle {
                         style: Style {
                             justify_content: JustifyContent::FlexStart,
@@ -194,7 +185,6 @@ pub fn setup_ui(
                     });
                 });
         });
-
     // ---
 }
 
@@ -246,7 +236,6 @@ pub fn auto_call_npchelp(
         return;
     }
     let dt = time.delta_seconds();
-
     for (entity, item_pos, _, _, mut npc) in interactables.iter_mut() {
         if npc.seen {
             continue;

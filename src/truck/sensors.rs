@@ -1,7 +1,6 @@
-use bevy::prelude::*;
-
 use crate::platform::plt::UI_SCALE;
 use crate::{colors, root};
+use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
@@ -19,8 +18,8 @@ pub fn setup_sensors_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         height: Val::Px(40.0 * UI_SCALE),
         ..default()
     });
-
     p.spawn(title);
+
     // Sensors contents
     p.spawn(NodeBundle {
         border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
@@ -40,9 +39,7 @@ pub fn setup_sensors_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         },
     );
     sensor1.style.margin = TEXT_MARGIN;
-
     p.spawn(sensor1);
-
     p.spawn(NodeBundle {
         style: Style {
             justify_content: JustifyContent::FlexStart,

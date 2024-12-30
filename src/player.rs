@@ -1,11 +1,15 @@
-//! Player Module
-//! -------------
+//! ## Player Module
 //!
-//! This module defines the player character and its interactions with the game world, including:
+//! This module defines the player character and its interactions with the game
+//! world, including:
+//!
 //! * The `PlayerSprite` component, which stores player attributes, controls, and state.
-//! * Systems for handling player input, movement, collisions, interactions with objects, and sanity changes.
-//! * Data structures and enums for managing player controls, animations, and held objects.
-
+//!
+//! * Systems for handling player input, movement, collisions, interactions with
+//!   objects, and sanity changes.
+//!
+//! * Data structures and enums for managing player controls, animations, and held
+//!   objects.
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::{self, Behavior};
 use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
@@ -18,6 +22,7 @@ use crate::gear::{self, GearUsable as _};
 use crate::maplight::MapColor;
 use crate::npchelp::NpcHelpEvent;
 use crate::{maplight, root, utils};
+use bevy::color::palettes::css;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -28,8 +33,6 @@ const USE_ARROW_KEYS: bool = false;
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGear {
-    /// The entity ID of the player who deployed the gear.
-    pub player_entity: Entity,
     /// The direction the gear is facing.
     pub direction: board::Direction,
 }
@@ -45,7 +48,8 @@ const DEBUG_PLAYER: bool = false;
 
 /// Represents a player character in the game world.
 ///
-/// This component stores the player's attributes, control scheme, sanity level, health, and mean sound exposure.
+/// This component stores the player's attributes, control scheme, sanity level,
+/// health, and mean sound exposure.
 #[derive(Component, Debug)]
 pub struct PlayerSprite {
     /// The unique identifier for the player (e.g., Player 1, Player 2).
@@ -54,7 +58,8 @@ pub struct PlayerSprite {
     pub controls: ControlKeys,
     /// The player's accumulated "craziness" level. Higher craziness reduces sanity.
     pub crazyness: f32,
-    /// The average sound level the player has been exposed to, used for sanity calculations.
+    /// The average sound level the player has been exposed to, used for sanity
+    /// calculations.
     pub mean_sound: f32,
     /// The player's current health. A value of 0 indicates the player is incapacitated.
     pub health: f32,
@@ -102,7 +107,8 @@ impl PlayerSprite {
         }
     }
 
-    /// Calculates the player's current sanity level based on their accumulated craziness.
+    /// Calculates the player's current sanity level based on their accumulated
+    /// craziness.
     pub fn sanity(&self) -> f32 {
         const LINEAR: f32 = 30.0;
         const SCALE: f32 = 100.0;
@@ -121,7 +127,6 @@ pub struct ControlKeys {
     pub left: KeyCode,
     /// Key for moving right.
     pub right: KeyCode,
-
     /// Key for interacting with objects (doors, switches, etc.).
     pub activate: KeyCode,
     /// Key for grabbing objects.
@@ -142,8 +147,9 @@ pub struct ControlKeys {
 
 /// System for handling player movement, interaction, and collision.
 ///
-/// This system processes player input, updates the player's position and direction,
-/// handles interactions with interactive objects, and manages collisions with the environment.
+/// This system processes player input, updates the player's position and
+/// direction, handles interactions with interactive objects, and manages
+/// collisions with the environment.
 impl ControlKeys {
     pub const WASD: Self = ControlKeys {
         up: KeyCode::KeyW,
@@ -229,7 +235,8 @@ pub fn keyboard_player(
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut ev_npc: EventWriter<NpcHelpEvent>,
-    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    // Access the difficulty settings
+    difficulty: Res<CurrentDifficulty>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -242,13 +249,11 @@ pub fn keyboard_player(
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
-
         let mut d = board::Direction {
             dx: 0.0,
             dy: 0.0,
             dz: 0.0,
         };
-
         if keyboard_input.pressed(player.controls.up) {
             d.dy += 1.0;
         }
@@ -261,18 +266,15 @@ pub fn keyboard_player(
         if keyboard_input.pressed(player.controls.right) {
             d.dx += 1.0;
         }
-
         d = d.normalized();
         let col_delta_n = (col_delta * 100.0).clamp_length_max(1.0);
         let col_dotp = (d.dx * col_delta_n.x + d.dy * col_delta_n.y).clamp(0.0, 1.0);
         d.dx -= col_delta_n.x * col_dotp;
         d.dy -= col_delta_n.y * col_dotp;
-
         let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
 
-        // d.dx /= 1.5; // Compensate for the projection
-
-        // --- Speed Penalty Based on Held Object Weight ---
+        // d.dx /= 1.5; // Compensate for the projection --- Speed Penalty Based on Held
+        // Object Weight ---
         let speed_penalty = if player_gear.held_item.is_some() {
             0.5
         } else {
@@ -280,7 +282,6 @@ pub fn keyboard_player(
         };
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;
-
         let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
         if dir_dist > DIR_MAX {
             dir.dx *= DIR_MAX / dir_dist;
@@ -298,8 +299,8 @@ pub fn keyboard_player(
                 CharacterAnimation::from_dir(dscreen.x / 2000.0, dscreen.y / 1000.0).to_vec(),
             );
 
-            // Check if the Hiding component is present
-            continue; // Skip movement input handling if hiding
+            // Check if the Hiding component is present Skip movement input handling if hiding
+            continue;
         }
 
         // Apply speed penalty
@@ -310,13 +311,14 @@ pub fn keyboard_player(
         let dscreen = delta.to_screen_coord();
         anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
 
-        // ----
+        // ---
         if keyboard_input.just_pressed(player.controls.activate) {
             // let d = dir.normalized();
             let mut max_dist = 1.4;
             let mut selected_entity = None;
             for (entity, item_pos, interactive, behavior, _) in interactables.iter() {
                 let cp_delta = interactive.control_point_delta(behavior);
+
                 // let old_dist = pos.delta(*item_pos);
                 let item_pos = Position {
                     x: item_pos.x + cp_delta.x,
@@ -325,9 +327,10 @@ pub fn keyboard_player(
                     global_z: item_pos.global_z,
                 };
                 let new_dist = pos.delta(item_pos);
-                // let new_dist_norm = new_dist.normalized();
-                // let dot_p = (new_dist_norm.dx * -d.dx + new_dist_norm.dy * -d.dy).clamp(0.0, 1.0);
-                // let dref = new_dist + (&d * (new_dist.distance().min(1.0) * dot_p));
+
+                // let new_dist_norm = new_dist.normalized(); let dot_p = (new_dist_norm.dx *
+                // -d.dx + new_dist_norm.dy * -d.dy).clamp(0.0, 1.0); let dref = new_dist + (&d *
+                // (new_dist.distance().min(1.0) * dot_p));
                 let dref = new_dist;
                 let dist = dref.distance();
                 if dist < max_dist {
@@ -342,7 +345,6 @@ pub fn keyboard_player(
                     if behavior.is_npc() {
                         ev_npc.send(NpcHelpEvent::new(entity));
                     }
-
                     if interactive_stuff.execute_interaction(
                         entity,
                         item_pos,
@@ -395,6 +397,7 @@ impl CharacterAnimationDirection {
             _ => Self::EE,
         }
     }
+
     fn to_delta_idx(self) -> usize {
         match self {
             Self::NN => 0,
@@ -441,6 +444,7 @@ impl CharacterAnimation {
         let dir = CharacterAnimationDirection::from_dir(dx, dy);
         Self { state, dir }
     }
+
     pub fn to_vec(self) -> Vec<usize> {
         let i = self.state.to_delta_idx() + self.dir.to_delta_idx();
         vec![i, i + 4, i + 8, i + 12]
@@ -450,7 +454,7 @@ impl CharacterAnimation {
 #[derive(Component)]
 pub struct AnimationTimer {
     timer: Timer,
-    // range: RangeInclusive<usize>,
+    // range: RangeInclusive`<usize>`,
     frames: Vec<usize>,
     idx: usize,
 }
@@ -464,9 +468,11 @@ impl AnimationTimer {
             idx: 0,
         }
     }
+
     pub fn set_range<I: IntoIterator<Item = usize>>(&mut self, range: I) {
         self.frames = range.into_iter().collect();
     }
+
     pub fn tick(&mut self, delta: Duration) -> Option<usize> {
         self.timer.tick(delta);
         if !self.timer.just_finished() {
@@ -492,7 +498,7 @@ pub struct CollisionHandler<'w> {
     bf: Res<'w, board::BoardData>,
 }
 
-impl<'w> CollisionHandler<'w> {
+impl CollisionHandler<'_> {
     const ENABLE_COLLISION: bool = true;
     const PILLAR_SZ: f32 = 0.3;
     const PLAYER_SZ: f32 = 0.5;
@@ -532,24 +538,30 @@ impl<'w> CollisionHandler<'w> {
     }
 }
 
-/// The `InteractiveStuff` system handles interactions between the player and interactive objects
-/// in the game world, such as doors, switches, lamps, and the van entry.
+/// The `InteractiveStuff` system handles interactions between the player and
+/// interactive objects in the game world, such as doors, switches, lamps, and the
+/// van entry.
 ///
 /// This system centralizes the logic for:
-///  * Changing the state of interactive objects based on player interaction or room state.
-///  * Playing appropriate sound effects for different interactions.
-///  * Triggering transitions to the truck UI when the player enters the van.
 ///
+/// * Changing the state of interactive objects based on player interaction or room
+///   state.
+///
+/// * Playing appropriate sound effects for different interactions.
+///
+/// * Triggering transitions to the truck UI when the player enters the van.
 #[derive(SystemParam)]
 pub struct InteractiveStuff<'w, 's> {
-    /// Database of sprites for map tiles. Used to retrieve alternative sprites for interactive objects.
+    /// Database of sprites for map tiles. Used to retrieve alternative sprites for
+    /// interactive objects.
     pub bf: Res<'w, board::SpriteDB>,
-    /// Used to spawn sound effects and potentially other entities related to interactions.
+    /// Used to spawn sound effects and potentially other entities related to
+    /// interactions.
     pub commands: Commands<'w, 's>,
     /// Access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
-    /// Access to the materials used for rendering map tiles. Used to update tile visuals
-    /// when object states change.
+    /// Access to the materials used for rendering map tiles. Used to update tile
+    /// visuals when object states change.
     pub materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
@@ -558,24 +570,32 @@ pub struct InteractiveStuff<'w, 's> {
     pub game_next_state: ResMut<'w, NextState<root::GameState>>,
 }
 
-impl<'w, 's> InteractiveStuff<'w, 's> {
+impl InteractiveStuff<'_, '_> {
     /// Executes an interaction with an interactive object.
     ///
-    /// This method determines the object's new state based on the type of interaction, updates its `Behavior` component,
-    /// plays the corresponding sound effect, and updates the room state if applicable.
+    /// This method determines the object's new state based on the type of interaction,
+    /// updates its `Behavior` component, plays the corresponding sound effect, and
+    /// updates the room state if applicable.
     ///
     /// # Parameters:
     ///
     /// * `entity`: The entity of the interactive object.
+    ///
     /// * `item_pos`: The position of the interactive object in the game world.
+    ///
     /// * `interactive`: The `Interactive` component of the object, if present.
+    ///
     /// * `behavior`: The `Behavior` component of the object.
+    ///
     /// * `room_state`: The `RoomState` component of the object, if present.
-    /// * `ietype`: The type of interaction being executed (`ChangeState` or `ReadRoomState`).
+    ///
+    /// * `ietype`: The type of interaction being executed (`ChangeState` or
+    ///   `ReadRoomState`).
     ///
     /// # Returns:
     ///
-    /// `true` if the interaction resulted in a change to the object's state, `false` otherwise.
+    /// `true` if the interaction resulted in a change to the object's state, `false`
+    /// otherwise.
     pub fn execute_interaction(
         &mut self,
         entity: Entity,
@@ -615,7 +635,6 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
             }
             let mut e_commands = self.commands.get_entity(entity).unwrap();
             let other = self.bf.map_tile.get(other_tuid).unwrap();
-
             let mut beh = other.behavior.clone();
             beh.flip(behavior.p.flip);
 
@@ -632,8 +651,8 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     .get(&item_roombpos)
                     .cloned()
                     .unwrap_or_default();
-                // dbg!(&room_state, &item_roombpos);
-                // dbg!(&room_name);
+
+                // dbg!(&room_state, &item_roombpos); dbg!(&room_name);
                 match ietype {
                     InteractionExecutionType::ChangeState => {
                         if let Some(main_room_state) = self.roomdb.room_state.get_mut(&room_name) {
@@ -649,19 +668,16 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     }
                 }
             }
-
             match other.bundle.clone() {
                 Bdl::Mmb(b) => {
-                    let mat = self.materials1.get(b.material).unwrap().clone();
+                    let mat = self.materials1.get(&b.material).unwrap().clone();
                     let mat = self.materials1.add(mat);
-
                     e_commands.insert(mat);
                 }
                 Bdl::Sb(b) => {
                     e_commands.insert(b);
                 }
             };
-
             e_commands.insert(beh);
             if ietype == InteractionExecutionType::ChangeState {
                 if let Some(interactive) = interactive {
@@ -679,7 +695,6 @@ impl<'w, 's> InteractiveStuff<'w, 's> {
                     });
                 }
             }
-
             return true;
         }
         false
@@ -700,14 +715,16 @@ pub struct Hiding {
 
 /// Allows the player to pick up a pickable object from the environment.
 ///
-/// This system checks if the player is pressing the 'grab' key and if there is a pickable object within reach.
-/// If so, the object is visually attached to the player, and the player's right-hand gear is disabled.
-/// Only one object can be held at a time.
+/// This system checks if the player is pressing the 'grab' key and if there is a
+/// pickable object within reach. If so, the object is visually attached to the
+/// player, and the player's right-hand gear is disabled. Only one object can be
+/// held at a time.
 pub fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
     deployables: Query<(Entity, &Position), With<DeployedGear>>,
-    pickables: Query<(Entity, &Position, &Behavior)>, // Query for all entities with Behavior
+    // Query for all entities with Behavior
+    pickables: Query<(Entity, &Position, &Behavior)>,
     mut gs: gear::GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
@@ -723,7 +740,8 @@ pub fn grab_object(
             // Find a pickable object near the player
             if let Some((object_entity, _, _)) = pickables
                 .iter()
-                .filter(|(_, _, behavior)| behavior.p.object.pickable) // Filter for pickable objects
+                // Filter for pickable objects
+                .filter(|(_, _, behavior)| behavior.p.object.pickable)
                 .find(|(_, object_pos, _)| player_pos.distance(object_pos) < 1.0)
             {
                 // Set the held object in the player's gear
@@ -740,12 +758,14 @@ pub fn grab_object(
 
 /// Allows the player to release a held object back into the environment.
 ///
-/// This system checks if the player is pressing the 'drop' key and if they are currently holding an object.
-/// It then determines if the target tile (the player's current position) is a valid drop location
-/// (an empty floor tile and not obstructed by other objects).
+/// This system checks if the player is pressing the 'drop' key and if they are
+/// currently holding an object. It then determines if the target tile (the
+/// player's current position) is a valid drop location (an empty floor tile and
+/// not obstructed by other objects).
 ///
-/// If the drop is valid, the object is placed at the target tile.
-/// If the drop is invalid, an "invalid drop" sound effect is played, and the object is not dropped.
+/// If the drop is valid, the object is placed at the target tile. If the drop is
+/// invalid, an "invalid drop" sound effect is played, and the object is not
+/// dropped.
 #[allow(clippy::type_complexity)]
 pub fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -771,12 +791,14 @@ pub fn drop_object(
                     .get(&target_tile)
                     .map(|col| col.player_free)
                     .unwrap_or(false);
+
                 // Check for object obstruction
                 let is_obstructed = objects.iter().any(|(entity, object_pos)| {
                     // Skip checking the held object itself
                     if entity == held_object.entity {
                         return false;
                     }
+
                     // **Collision Check:**
                     target_tile.to_position().distance(object_pos) < 0.5
                 });
@@ -797,8 +819,7 @@ pub fn drop_object(
                         player_gear.held_item = Some(held_object);
                     }
                 } else {
-                    // --- Invalid Drop Handling ---
-                    // Play "Invalid Drop" sound effect
+                    // --- Invalid Drop Handling --- Play "Invalid Drop" sound effect
                     gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
 
                     // Put the object back in the player's gear
@@ -811,9 +832,11 @@ pub fn drop_object(
 
 /// Allows the player to hide in a designated hiding spot.
 ///
-/// This system checks if the player is pressing the 'activate' key and is near a valid hiding spot.
-/// If so, the player character enters the hiding spot, becoming partially hidden. A visual overlay is added to the hiding spot to indicate the player's presence.
-/// Note that the player's transparency while hiding is not yet fully implemented.
+/// This system checks if the player is pressing the 'activate' key and is near a
+/// valid hiding spot. If so, the player character enters the hiding spot, becoming
+/// partially hidden. A visual overlay is added to the hiding spot to indicate the
+/// player's presence. Note that the player's transparency while hiding is not yet
+/// fully implemented.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn hide_player(
     mut commands: Commands,
@@ -833,22 +856,21 @@ pub fn hide_player(
         let timer = hold_timers
             .entry(player_entity)
             .or_insert_with(|| Timer::from_seconds(0.3, TimerMode::Once));
-
         if keyboard_input.pressed(player.controls.activate) {
             if player_gear.held_item.is_some() {
                 // Player cannot hide while carrying furniture.
                 continue;
             }
-            // Using 'activate' for hiding
-            // Find a hiding spot near the player
+
+            // Using 'activate' for hiding Find a hiding spot near the player
             if let Some((hiding_spot_entity, hiding_spot_pos, _)) = hiding_spots
                 .iter()
-                .filter(|(_, _, behavior)| behavior.p.object.hidingspot) // Manually filter for hiding spots
+                // Manually filter for hiding spots
+                .filter(|(_, _, behavior)| behavior.p.object.hidingspot)
                 .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.0)
             {
                 // Key is held down, tick the timer
                 timer.tick(time.delta());
-
                 if !timer.finished() {
                     continue;
                 }
@@ -861,9 +883,8 @@ pub fn hide_player(
                         hiding_spot: hiding_spot_entity,
                     })
                     .insert(MapColor {
-                        color: Color::DARK_GRAY.with_a(0.5),
+                        color: css::DARK_GRAY.with_alpha(0.5).into(),
                     });
-
                 player_pos.x = (player_pos.x + hiding_spot_pos.x) / 2.0;
                 player_pos.y = (player_pos.y + hiding_spot_pos.y) / 2.0;
 
@@ -875,9 +896,10 @@ pub fn hide_player(
                     parent.spawn(SpriteBundle {
                         texture: asset_server.load("img/hiding_overlay.png"),
                         transform: Transform::from_xyz(0.0, 0.0, 0.02)
-                            .with_scale(Vec3::new(0.20, 0.20, 0.20)), // Position relative to parent
+                            // Position relative to parent
+                            .with_scale(Vec3::new(0.20, 0.20, 0.20)),
                         sprite: Sprite {
-                            color: Color::WHITE.with_a(0.4),
+                            color: css::WHITE.with_alpha(0.4).into(),
                             ..default()
                         },
                         ..default()
@@ -892,8 +914,9 @@ pub fn hide_player(
 
 /// Allows the player to leave a hiding spot.
 ///
-/// This system checks if the player is pressing the 'activate' key and is currently hiding.
-/// If so, the player character exits the hiding spot, their visibility is restored, and the visual overlay is removed from the hiding spot.
+/// This system checks if the player is pressing the 'activate' key and is
+/// currently hiding. If so, the player character exits the hiding spot, their
+/// visibility is restored, and the visual overlay is removed from the hiding spot.
 pub fn unhide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -907,13 +930,11 @@ pub fn unhide_player(
 ) {
     for (player_entity, player, _, _visibility, hiding) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.activate) {
-            // Using 'activate' for unhiding
-            // Remove the Hiding component
+            // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 
-            // Reset player sprite animation
-            // TODO: Define default animation
-            // For now, let's just set it back to the standing animation (index 32)
+            // Reset player sprite animation TODO: Define default animation For now, let's
+            // just set it back to the standing animation (index 32)
             commands
                 .entity(player_entity)
                 .insert(AnimationTimer::from_range(
@@ -921,17 +942,12 @@ pub fn unhide_player(
                     vec![32],
                 ))
                 .insert(MapColor {
-                    color: Color::WHITE.with_a(1.0),
+                    color: Color::WHITE.with_alpha(1.0),
                 });
 
-            // Reset player position
-            // TODO: Consider using the hiding spot's position
-            // For now, let's just leave the position as is.
-
-            // Reset player visibility
-            // *visibility = Visibility::Visible;
-
-            // --- Remove Visual Overlay ---
+            // Reset player position TODO: Consider using the hiding spot's position For now,
+            // let's just leave the position as is. Reset player visibility *visibility =
+            // Visibility::Visible; --- Remove Visual Overlay ---
             commands.entity(hiding.hiding_spot).despawn_descendants();
         }
     }
@@ -944,10 +960,10 @@ fn lose_sanity(
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
     roomdb: Res<board::RoomDB>,
-    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    // Access the difficulty settings
+    difficulty: Res<CurrentDifficulty>,
 ) {
     timer.tick(time.delta());
-
     let dt = time.delta_seconds();
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
@@ -971,7 +987,6 @@ fn lose_sanity(
                 * 10.0;
         }
         const MASS: f32 = 10.0;
-
         if roomdb.room_tiles.contains_key(&bpos) {
             mean_sound.0 =
                 ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
@@ -1012,20 +1027,21 @@ fn recover_sanity(
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
     mut timer: Local<utils::PrintingTimer>,
-    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    // Access the difficulty settings
+    difficulty: Res<CurrentDifficulty>,
 ) {
     // Current player recovers sanity while in the truck.
     let dt = time.delta_seconds();
     timer.tick(time.delta());
-
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
-            // --- Gradual Health Recovery ---
-            const HEALTH_RECOVERY_RATE: f32 = 2.0; // Health points recovered per second
-
+            // --- Gradual Health Recovery --- Health points recovered per second
+            const HEALTH_RECOVERY_RATE: f32 = 2.0;
             if ps.health < 100.0 {
                 ps.health += HEALTH_RECOVERY_RATE * dt;
-                ps.health = ps.health.min(100.0); // Clamp health to a maximum of 100%
+
+                // Clamp health to a maximum of 100%
+                ps.health = ps.health.min(100.0);
             }
             if ps.sanity() < difficulty.0.starting_sanity {
                 ps.crazyness /= 1.07_f32.powf(dt);
@@ -1040,7 +1056,11 @@ fn recover_sanity(
 pub fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
-    mut qb: Query<(&mut BackgroundColor, &DamageBackground)>,
+    mut qb: Query<(
+        Option<&mut UiImage>,
+        &mut BackgroundColor,
+        &DamageBackground,
+    )>,
 ) {
     for player in &qp {
         if player.id != gc.player_id {
@@ -1048,19 +1068,22 @@ pub fn visual_health(
         }
         let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
         let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
-        for (mut background, dmg) in &mut qb {
+        for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {
             let rhealth = (1.0 - health).powf(dmg.exp);
             let crazyness = crazyness.powf(dmg.exp);
             let alpha = ((rhealth * 10.0).clamp(0.0, 0.3) + rhealth.powi(2) * 0.7 + crazyness)
                 .clamp(0.0, 1.0);
             let rhealth2 = (1.0 - alpha * 0.9).clamp(0.0001, 1.0);
             let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
-            let dst_color = Color::rgba(red, 0.0, 0.0, alpha);
-
-            let old_color = background.0;
+            let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
+            let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
             let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
             if old_color != new_color {
-                background.0 = new_color;
+                if let Some(uiimage) = o_uiimage.as_mut() {
+                    uiimage.color = new_color;
+                } else {
+                    bgcolor.0 = new_color;
+                }
             }
         }
     }
@@ -1068,11 +1091,11 @@ pub fn visual_health(
 
 /// Updates the position of the player's held object to match the player's position.
 ///
-/// This system ensures that the held object visually follows the player when they move.
-/// It also slightly elevates the object's Z position to create a visual indication
-/// that the object is being held. Additionally, it plays a scraping sound effect
-/// when the player moves while holding a movable object, with a cooldown to prevent
-/// the sound from playing too frequently.
+/// This system ensures that the held object visually follows the player when they
+/// move. It also slightly elevates the object's Z position to create a visual
+/// indication that the object is being held. Additionally, it plays a scraping
+/// sound effect when the player moves while holding a movable object, with a
+/// cooldown to prevent the sound from playing too frequently.
 #[allow(clippy::type_complexity)]
 pub fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
@@ -1081,7 +1104,6 @@ pub fn update_held_object_position(
     mut last_sound_time: Local<f32>,
 ) {
     let current_time = gs.time.elapsed_seconds();
-
     for (player_pos, player_gear, direction) in players.iter() {
         if let Some(held_object) = &player_gear.held_item {
             if let Ok((mut object_pos, behavior)) = objects.get_mut(held_object.entity) {
@@ -1094,8 +1116,8 @@ pub fn update_held_object_position(
 
                 // --- Play Scraping Sound if Object is Movable and Player is Moving ---
                 if behavior.p.object.movable
-                   && direction.distance() > 75.0 // Player is moving
-                   && current_time - *last_sound_time > 2.0
+                // Player is moving
+                && direction.distance() > 75.0 && current_time - *last_sound_time > 2.0
                 // Sound cooldown
                 {
                     // Play "Move" sound effect
@@ -1109,30 +1131,22 @@ pub fn update_held_object_position(
     }
 }
 
-/// System for deploying a piece of gear from the player's right hand into the game world.
+/// System for deploying a piece of gear from the player's right hand into the game
+/// world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(
-        Entity,
-        &mut PlayerGear,
-        &Position,
-        &PlayerSprite,
-        &board::Direction,
-    )>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
     mut gs: gear::GearStuff,
     handles: Res<root::GameAssets>,
 ) {
-    for (player_entity, mut player_gear, player_pos, player, dir) in players.iter_mut() {
+    for (mut player_gear, player_pos, player, dir) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)
             && player_gear.right_hand.kind.is_some()
             && player_gear.held_item.is_none()
         {
-            let deployed_gear = DeployedGear {
-                player_entity, // Temporary placeholder for player entity
-                direction: *dir,
-            };
+            let deployed_gear = DeployedGear { direction: *dir };
             let target_tile = player_pos.to_board_position();
             let is_valid_tile = gs
                 .bf
@@ -1140,25 +1154,24 @@ pub fn deploy_gear(
                 .get(&target_tile)
                 .map(|col| col.player_free)
                 .unwrap_or(false);
-
             let is_obstructed = q_collidable
                 .iter()
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
             if is_valid_tile && !is_obstructed {
                 let scoord = player_pos.to_screen_coord();
-                let gear_sprite = SpriteSheetBundle {
+                let gear_sprite = SpriteBundle {
                     texture: handles.images.gear.clone(),
-                    atlas: TextureAtlas {
-                        layout: handles.images.gear_atlas.clone(),
-                        index: player_gear.right_hand.get_sprite_idx() as usize,
-                    },
                     transform: Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
-                        .with_scale(Vec3::new(0.25, 0.25, 0.25)), // Initial scaling factor
+                        // Initial scaling factor
+                        .with_scale(Vec3::new(0.25, 0.25, 0.25)),
                     ..Default::default()
                 };
-
                 commands
                     .spawn(gear_sprite)
+                    .insert(TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                    })
                     .insert(deployed_gear)
                     .insert(*player_pos)
                     .insert(behavior::component::FloorItemCollidable)
@@ -1167,6 +1180,7 @@ pub fn deploy_gear(
                         gear: player_gear.right_hand.take(),
                     });
                 player_gear.cycle();
+
                 // Play "Drop Item" sound effect (reused for gear deployment)
                 gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);
             } else {
@@ -1186,11 +1200,11 @@ pub fn retrieve_gear(
     mut gs: gear::GearStuff,
 ) {
     // FIXME: This code, along with grabbing items are in conflict. It will be
-    // possible for a player to grab equipment from the floor and a location
-    // item at the same time if they are close enough for a well placed player.
-    // This needs to be solved, likely by handling the keypress event in
-    // one single system, then routing the remaining stuff to do via an Event
-    // to the system that handles that exact thing.
+    // possible for a player to grab equipment from the floor and a location item at
+    // the same time if they are close enough for a well placed player. This needs to
+    // be solved, likely by handling the keypress event in one single system, then
+    // routing the remaining stuff to do via an Event to the system that handles that
+    // exact thing.
     for (player_pos, player, mut player_gear) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.grab) {
             // Find the closest deployed gear
@@ -1233,6 +1247,7 @@ pub fn retrieve_gear(
                     // Now the right hand is free, proceed with retrieval
                     player_gear.right_hand = deployed_gear_data.gear.clone();
                     commands.entity(closest_gear_entity).despawn();
+
                     // Play "Grab Item" sound effect (reused for gear retrieval)
                     gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
                 }

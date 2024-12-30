@@ -1,9 +1,8 @@
-use bevy::prelude::*;
-
 use crate::colors;
 use crate::platform::plt::UI_SCALE;
 use crate::root::Maps;
 use crate::{maphub::MapHubState, root};
+use bevy::prelude::*;
 
 #[derive(Component, Debug)]
 pub struct MapSelectionUI;
@@ -42,7 +41,6 @@ pub fn setup_systems(mut commands: Commands, maps: Res<Maps>, handles: Res<root:
     commands
         .spawn(MapSelectionItem { map_idx: 0 })
         .insert(MapSelectionUI);
-
     commands.init_resource::<MapSelectionState>();
 }
 
@@ -61,7 +59,6 @@ pub fn keyboard(
     mut ev_map_selected: EventWriter<MapSelectedEvent>,
 ) {
     let map_count = maps.maps.len();
-
     if keyboard_input.just_pressed(KeyCode::ArrowUp) {
         if map_selection_state.selected_map_idx == 0 {
             // If we are at "Go Back", wrap to the last map
@@ -70,8 +67,9 @@ pub fn keyboard(
             map_selection_state.selected_map_idx -= 1;
         }
     } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+        // Wrap around, including "Go Back"
         map_selection_state.selected_map_idx =
-            (map_selection_state.selected_map_idx + 1) % (map_count + 1); // Wrap around, including "Go Back"
+            (map_selection_state.selected_map_idx + 1) % (map_count + 1);
     } else if keyboard_input.just_pressed(KeyCode::Enter) {
         if map_selection_state.selected_map_idx < map_count {
             // Send the MapSelectedEvent only if a map is selected
@@ -120,18 +118,18 @@ pub fn update_item_colors(
 
 pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
-
-    let main_color = Color::Rgba {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
-
+    });
     commands
         .spawn(NodeBundle {
             style: Style {
-                //    align_self: AlignSelf::Center,
+                // ```
+                // align_self: AlignSelf::Center,
+                // ```
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
@@ -142,10 +140,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                     top: Val::Percent(5.0),
                     bottom: Val::Percent(5.0),
                 },
-
                 ..default()
             },
-
             ..default()
         })
         .insert(MapSelectionUI)
@@ -161,7 +157,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                         align_items: AlignItems::FlexStart,
                         ..default()
                     },
-
                     ..default()
                 })
                 .with_children(|parent| {
@@ -186,10 +181,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                     height: Val::Percent(20.0),
                     ..default()
                 },
-
                 ..default()
             });
-
             parent
                 .spawn(NodeBundle {
                     style: Style {
@@ -198,7 +191,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                         justify_content: JustifyContent::SpaceEvenly,
                         align_items: AlignItems::Center,
                         flex_direction: FlexDirection::Column,
-
                         ..default()
                     },
                     background_color: main_color.into(),
@@ -220,7 +212,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             height: Val::Percent(10.0),
                             ..default()
                         },
-
                         ..default()
                     });
                     parent
@@ -272,7 +263,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             height: Val::Percent(10.0),
                             ..default()
                         },
-
                         ..default()
                     });
                     parent
@@ -292,7 +282,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                         })
                         .insert(MapSelectionItem {
                             map_idx: maps.maps.len(),
-                        }) // Set map_idx to map_count for "Go Back"
+                            // Set map_idx to map_count for "Go Back"
+                        })
                         .with_children(|btn| {
                             btn.spawn(TextBundle::from_section(
                                 "Go Back",
@@ -310,7 +301,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                     height: Val::Percent(20.0),
                     ..default()
                 },
-
                 ..default()
             });
         });

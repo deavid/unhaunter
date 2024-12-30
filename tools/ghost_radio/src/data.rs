@@ -1,5 +1,4 @@
 // tools/ghost_radio/src/data.rs
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -8,7 +7,7 @@ pub struct PlayerPhrase {
     pub speech_act: String,
     pub semantic_tags: Vec<String>,
     pub emotional_signature: EmotionalSignature,
-    // pub contextual_tags: Vec<String>, // To be added at runtime
+    // pub contextual_tags: Vec`<String>`, // To be added at runtime
 }
 
 #[derive(Debug, Serialize, Deserialize)]

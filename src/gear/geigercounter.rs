@@ -1,9 +1,7 @@
+use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::{board::Position, ghost_definitions::Evidence};
 use bevy::prelude::*;
 use rand::Rng as _;
-
-use crate::{board::Position, ghost_definitions::Evidence};
-
-use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct GeigerCounter {
@@ -34,6 +32,7 @@ impl GearUsable for GeigerCounter {
     fn get_display_name(&self) -> &'static str {
         "Geiger Counter"
     }
+
     fn get_description(&self) -> &'static str {
         "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."
     }
@@ -98,17 +97,16 @@ impl GearUsable for GeigerCounter {
             self.sound_a2 /= 1.01;
         }
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
-
         if gs.time.elapsed_seconds() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
             self.last_sound_time_secs = gs.time.elapsed_seconds() + rng.gen_range(0.01..0.02);
             gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
         }
-
         if self.display_secs_since_last_update > 0.5 {
             self.display_secs_since_last_update = 0.0;
             self.sound_display = self.sound_a2;
         }
     }
+
     fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }

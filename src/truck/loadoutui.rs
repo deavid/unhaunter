@@ -1,7 +1,6 @@
-use bevy::prelude::*;
-
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::{Gear, GearKind};
 use crate::ghost_definitions::Evidence;
@@ -18,6 +17,7 @@ use crate::{
     player::PlayerSprite,
     root,
 };
+use bevy::prelude::*;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {
@@ -28,7 +28,6 @@ pub enum LoadoutButton {
 
 #[derive(Debug, Event, Clone)]
 pub struct EventButtonClicked(LoadoutButton);
-
 #[derive(Debug, Component, Clone)]
 pub struct GearHelp;
 
@@ -36,6 +35,7 @@ pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
     handles: &root::GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
+    difficulty: &CurrentDifficulty,
 ) {
     let button = || ButtonBundle {
         background_color: colors::TRUCKUI_ACCENT2_COLOR.into(),
@@ -47,7 +47,6 @@ pub fn setup_loadout_ui(
             align_content: AlignContent::Center,
             align_items: AlignItems::Center,
             align_self: AlignSelf::Center,
-
             border: UiRect::all(Val::Px(2.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(3.0 * UI_SCALE)),
             max_width: Val::Px(70.0 * UI_SCALE),
@@ -56,15 +55,12 @@ pub fn setup_loadout_ui(
         },
         ..default()
     };
-    let equipment = |g: GearSpriteID| AtlasImageBundle {
+    let equipment = || ImageBundle {
         image: UiImage {
             texture: handles.images.gear.clone(),
             flip_x: false,
             flip_y: false,
-        },
-        texture_atlas: TextureAtlas {
-            index: g as usize,
-            layout: handles.images.gear_atlas.clone(),
+            ..default()
         },
         style: Style {
             width: Val::Px(64.0 * UI_SCALE),
@@ -74,22 +70,23 @@ pub fn setup_loadout_ui(
         },
         ..default()
     };
-    let equipment_def = || equipment(GearSpriteID::IonMeterOff);
+    let equipment_atlas = |g: GearSpriteID| TextureAtlas {
+        index: g as usize,
+        layout: handles.images.gear_atlas.clone(),
+    };
+    let equipment_atlas_def = || equipment_atlas(GearSpriteID::IonMeterOff);
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| MaterialNodeBundle {
         material: materials.add(UIPanelMaterial {
-            color: colors::TRUCKUI_BGCOLOR,
+            color: colors::TRUCKUI_BGCOLOR.into(),
         }),
-
         style: Style {
             padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
             max_height: Val::Px(100.0 * UI_SCALE),
-
             ..default()
         },
         ..default()
     };
-
     let left_side = |p: &mut ChildBuilder| {
         p.spawn(
             TextBundle::from_section(
@@ -119,7 +116,8 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_left()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
+                        p.spawn(equipment())
+                            .insert(equipment_atlas_def())
                             .insert(playergear::Inventory::new_left());
                     });
             });
@@ -127,7 +125,8 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_right()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
+                        p.spawn(equipment())
+                            .insert(equipment_atlas_def())
                             .insert(playergear::Inventory::new_right());
                     });
             });
@@ -138,7 +137,8 @@ pub fn setup_loadout_ui(
                             playergear::InventoryNext::new(i),
                         ))
                         .with_children(|p| {
-                            p.spawn(equipment_def())
+                            p.spawn(equipment())
+                                .insert(equipment_atlas_def())
                                 .insert(playergear::InventoryNext::new(i));
                         });
                 }
@@ -165,7 +165,7 @@ pub fn setup_loadout_ui(
         .with_children(|p| {
             p.spawn(MaterialNodeBundle {
                 material: materials.add(UIPanelMaterial {
-                    color: colors::TRUCKUI_BGCOLOR,
+                    color: colors::TRUCKUI_BGCOLOR.into(),
                 }),
                 style: Style {
                     justify_content: JustifyContent::Center,
@@ -185,12 +185,13 @@ pub fn setup_loadout_ui(
                 ..default()
             })
             .with_children(|p| {
-                let tg = truckgear::TruckGear::new();
+                let tg = truckgear::TruckGear::from_difficulty(&difficulty.0);
                 for gear in &tg.inventory {
                     p.spawn(button())
                         .insert(LoadoutButton::Van(gear.clone()))
                         .with_children(|p| {
-                            p.spawn(equipment(gear.get_sprite_idx()));
+                            p.spawn(equipment())
+                                .insert(equipment_atlas(gear.get_sprite_idx()));
                         });
                 }
             });
@@ -242,14 +243,13 @@ pub fn setup_loadout_ui(
                     ..default()
                 }),
             );
-
             p.spawn(
                 TextBundle::from_section(
                     "Select ...",
                     TextStyle {
                         font: handles.fonts.titillium.w400_regular.clone(),
                         font_size: 22.0 * UI_SCALE,
-                        color: colors::TRUCKUI_TEXT_COLOR.with_a(0.7),
+                        color: colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7),
                     },
                 )
                 .with_style(Style {
@@ -285,7 +285,6 @@ pub fn update_loadout_buttons(
 ) {
     let mut changed = false;
     let mut elem = None;
-
     for (int, lbut, mut border, mut bg) in &mut qbut {
         changed = true;
         let bgalpha = match int {
@@ -298,8 +297,8 @@ pub fn update_loadout_buttons(
             Interaction::Hovered => 0.5,
             Interaction::None => 0.01,
         };
-        border.0 = colors::TRUCKUI_ACCENT_COLOR.with_a(bdalpha);
-        bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_a(bgalpha);
+        border.0 = colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha);
+        bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha);
         if *int == Interaction::Pressed {
             ev_clk.send(EventButtonClicked(lbut.clone()));
         }
@@ -316,7 +315,6 @@ pub fn update_loadout_buttons(
     else {
         return;
     };
-
     let gear = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => p_gear.get_hand(&inv.hand),
@@ -383,7 +381,6 @@ pub fn button_clicked(
     else {
         return;
     };
-
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
             p_gear.take_hand(&inv.hand);

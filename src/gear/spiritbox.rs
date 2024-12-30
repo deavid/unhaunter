@@ -1,9 +1,7 @@
+use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::{board::Position, ghost_definitions::Evidence};
 use bevy::prelude::*;
 use rand::Rng;
-
-use crate::{board::Position, ghost_definitions::Evidence};
-
-use super::{on_off, playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct SpiritBox {
@@ -58,6 +56,7 @@ impl GearUsable for SpiritBox {
     fn _box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
+
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         let sec = gs.time.elapsed_seconds();
         let delta = sec - self.last_change_secs;
@@ -92,7 +91,6 @@ impl GearUsable for SpiritBox {
             } else {
                 99
             };
-
             self.ghost_answer = true;
             match r {
                 0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, &pos),

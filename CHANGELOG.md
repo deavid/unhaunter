@@ -1,3 +1,32 @@
+### Version 0.2.4 - 2024-12-30
+
+**Features:**
+
+* **Manual with 5 chapters!**
+  * Created a whole manual with 5 chapters to ease in new people into the game.
+  * Each chapter is linked to a difficulty to help people read the critical things on the game.
+* **Ghost Rage adjusted:**
+    * Ghosts now get angrier with more aggressive actions.
+    * Ghost hunting duration is no longer increased by the anger.
+    * A new cool-down logic for hunting has been implemented on top of the ghost rage.
+        
+**Changes:**
+
+* **Gear:**
+  * Added support to use different gears in the truck depending on the chosen difficulty. 
+  * Adjusted `EMF` meter sensibility to adapt to the difficulty.
+  * Improved `Red Torch` and `Video Cam` lighting.
+* **UI:**
+  * Refactored code to support tutorial mode and normal user manual.
+  * Minor UI fixes.
+* **Upgraded:**
+  * Bevy 0.14
+  * Tiled 0.12
+
+**Fixes:**
+* Fixed a small bug that was making the light levels to be too low.
+* Code has been cleaned and commented, improving overall quality.
+
 ### Version 0.2.3 - 2024-06-23
 
 **Features:**

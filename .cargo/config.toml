@@ -1,6 +1,15 @@
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
 
+[target.'cfg(any(target_arch = "x86", target_arch = "x86_64"))']
+rustflags = ["-C", "target-feature=+sse2,+sse3,+sse4.1,+ssse3,+avx,+avx2"]
+# rustflags = ["-C", "target-feature=+sse2,+sse3,+sse4.1,+ssse3,+avx,+avx2,+avx512f,+avx512bw,+avx512vl"]
+# rustflags = ["-Ctarget-cpu=native"]
+
+[target.'cfg(target_arch = "aarch64")']
+rustflags = ["-C", "target-feature=+neon"]
+#rustflags = ["-C", "target-feature=+neon,+sve,+sve2"]
+
 
 # Use Mold Linker for faster builds (only gains ~1 second when dynamic linking is enabled)
 # [target.x86_64-unknown-linux-gnu]

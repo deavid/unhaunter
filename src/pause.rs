@@ -3,16 +3,15 @@ use crate::{
     materials::{self, UIPanelMaterial},
     root,
 };
-
 use bevy::prelude::*;
 
 #[derive(Debug, Component)]
 pub struct PauseUI;
 
-const PAUSEUI_BGCOLOR: Color = Color::rgba(0.082, 0.094, 0.118, 0.6);
-const PAUSEUI_PANEL_BGCOLOR: Color = Color::rgba(0.106, 0.129, 0.157, 0.8);
-const PAUSEUI_ACCENT_COLOR: Color = Color::rgba(0.290, 0.596, 0.706, 1.0);
-const PAUSEUI_TEXT_COLOR: Color = Color::rgba(0.7, 0.82, 0.85, 1.0);
+const PAUSEUI_BGCOLOR: Color = Color::srgba(0.082, 0.094, 0.118, 0.6);
+const PAUSEUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);
+const PAUSEUI_ACCENT_COLOR: Color = Color::srgba(0.290, 0.596, 0.706, 1.0);
+const PAUSEUI_TEXT_COLOR: Color = Color::srgba(0.7, 0.82, 0.85, 1.0);
 
 pub fn keyboard(
     game_state: Res<State<root::GameState>>,
@@ -53,7 +52,6 @@ pub fn setup_ui(
     commands
         .spawn(NodeBundle {
             background_color: PAUSEUI_BGCOLOR.into(),
-
             style: Style {
                 position_type: PositionType::Absolute,
                 min_width: Val::Percent(50.0),
@@ -73,9 +71,8 @@ pub fn setup_ui(
             parent
                 .spawn(MaterialNodeBundle {
                     material: materials.add(UIPanelMaterial {
-                        color: PAUSEUI_PANEL_BGCOLOR,
+                        color: PAUSEUI_PANEL_BGCOLOR.into(),
                     }),
-
                     style: Style {
                         border: UiRect::all(Val::Px(1.0)),
                         padding: UiRect::all(Val::Px(1.0)),
@@ -102,9 +99,7 @@ pub fn setup_ui(
                         height: Val::Px(40.0 * UI_SCALE),
                         ..default()
                     });
-
                     mid_blk.spawn(title);
-
                     mid_blk.spawn(NodeBundle {
                         border_color: PAUSEUI_ACCENT_COLOR.into(),
                         style: Style {
@@ -114,7 +109,6 @@ pub fn setup_ui(
                         },
                         ..default()
                     });
-
                     mid_blk.spawn(
                         TextBundle::from_section(
                             "The game is paused. Hit [ESC] again to resume or [Q] to Quit.",
@@ -130,7 +124,7 @@ pub fn setup_ui(
                         }),
                     );
 
-                    // ----
+                    // ---
                     mid_blk.spawn(NodeBundle {
                         style: Style {
                             justify_content: JustifyContent::FlexStart,
@@ -143,7 +137,6 @@ pub fn setup_ui(
                     });
                 });
         });
-
     // ---
 }
 

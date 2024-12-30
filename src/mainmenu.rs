@@ -1,19 +1,22 @@
-use bevy::app::AppExit;
-use bevy::prelude::*;
-
 use crate::platform;
-use crate::root;
-
 use crate::platform::plt::IS_WASM;
 use crate::platform::plt::UI_SCALE;
+use crate::root;
+use bevy::app::AppExit;
+use bevy::color::palettes::css;
+use bevy::prelude::*;
 
-const MENU_ITEM_COLOR_OFF: Color = Color::GRAY;
-const MENU_ITEM_COLOR_ON: Color = Color::ORANGE_RED;
+const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
+const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
+
+// Usual value is 0.2
+const MUSIC_VOLUME: f32 = 0.2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
     MapHub,
     _Options,
+    Manual,
     Quit,
 }
 
@@ -23,8 +26,6 @@ pub struct MenuEvent(pub MenuID);
 #[derive(Component)]
 pub struct Menu {
     pub selected: MenuID,
-    pub map_idx: usize,
-    pub map_len: usize,
 }
 
 impl Menu {
@@ -32,11 +33,13 @@ impl Menu {
         if IS_WASM {
             &[
                 MenuID::MapHub,
+                MenuID::Manual,
                 // MenuID::Options,
             ]
         } else {
             &[
                 MenuID::MapHub,
+                MenuID::Manual,
                 // MenuID::Options,
                 MenuID::Quit,
             ]
@@ -49,26 +52,23 @@ impl Menu {
                 return n as i64;
             }
         }
+
         // We return zero for error which is the first item.
         error!("invalid item for item_idx - first item is assumed");
         0
     }
+
     pub fn idx_to_item(idx: i64) -> MenuID {
         let idx = idx.rem_euclid(Menu::items().len() as i64);
         Menu::items()[idx as usize]
     }
+
     pub fn next_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() + 1);
     }
+
     pub fn previous_item(&mut self) {
         self.selected = Menu::idx_to_item(self.item_idx() - 1);
-    }
-    pub fn with_len(map_len: usize) -> Self {
-        let map_len = map_len.max(1); // Ensure that it is at least 1.
-        Self {
-            map_len,
-            ..default()
-        }
     }
 }
 
@@ -76,8 +76,6 @@ impl Default for Menu {
     fn default() -> Self {
         Self {
             selected: MenuID::MapHub,
-            map_idx: 0,
-            map_len: 1,
         }
     }
 }
@@ -96,10 +94,8 @@ impl MenuItem {
         }
     }
 }
-
 #[derive(Component, Debug)]
 pub struct MCamera;
-
 #[derive(Component, Debug)]
 pub struct MenuUI;
 
@@ -138,6 +134,7 @@ pub fn cleanup(
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
+
     // Despawn menu UI if not used
     for ui_entity in qm.iter() {
         commands.entity(ui_entity).despawn_recursive();
@@ -158,9 +155,7 @@ pub fn despawn_sound(mut commands: Commands, qs: Query<(Entity, &AudioSink, &Men
                 (vol * STEPS + DESIRED_VOLUME) / (STEPS + 1.0)
             }
         };
-
         sink.set_volume(v);
-
         if v < 0.001 {
             commands.entity(entity).despawn_recursive();
             dbg!("Song despawned");
@@ -181,7 +176,8 @@ pub fn manage_title_song(
     if let Ok(mut menusound) = q_sound.get_single_mut() {
         // If the song should be despawned and it exists, despawn it
         if !should_play_song && !menusound.despawn {
-            menusound.despawn = true; // Trigger fade-out and despawn
+            // Trigger fade-out and despawn
+            menusound.despawn = true;
         } else if should_play_song && menusound.despawn {
             // Song should be playing but is marked for despawn, so reset it
             menusound.despawn = false;
@@ -192,7 +188,7 @@ pub fn manage_title_song(
             source: asset_server.load("music/unhaunter_intro.ogg"),
             settings: PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.2),
+                volume: bevy::audio::Volume::new(MUSIC_VOLUME),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
@@ -202,142 +198,124 @@ pub fn manage_title_song(
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Res<root::Maps>) {
-    let main_color = Color::Rgba {
+pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+    let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
         blue: 0.2,
         alpha: 0.05,
-    };
-
-    commands
-        .spawn(NodeBundle {
+    });
+    commands.spawn(NodeBundle {
+        style: Style {
+            // ```
+            // align_self: AlignSelf::Center,
+            // ```
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect {
+                left: Val::Percent(10.0 * UI_SCALE),
+                right: Val::Percent(10.0 * UI_SCALE),
+                top: Val::Percent(5.0 * UI_SCALE),
+                bottom: Val::Percent(5.0 * UI_SCALE),
+            },
+            flex_grow: 1.0,
+            ..default()
+        },
+        ..default()
+    }).insert(MenuUI).with_children(|parent| {
+        parent.spawn(NodeBundle {
             style: Style {
-                //    align_self: AlignSelf::Center,
                 width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+                height: Val::Percent(20.0),
+                min_width: Val::Px(0.0),
+                min_height: Val::Px(64.0 * UI_SCALE),
                 justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect {
-                    left: Val::Percent(10.0 * UI_SCALE),
-                    right: Val::Percent(10.0 * UI_SCALE),
-                    top: Val::Percent(5.0 * UI_SCALE),
-                    bottom: Val::Percent(5.0 * UI_SCALE),
+                align_items: AlignItems::FlexStart,
+                ..default()
+            },
+            ..default()
+        }).with_children(|parent| {
+            // logo
+            parent.spawn(ImageBundle {
+                style: Style {
+                    aspect_ratio: Some(130.0 / 17.0),
+                    width: Val::Percent(80.0),
+                    height: Val::Auto,
+                    max_width: Val::Percent(80.0),
+                    max_height: Val::Percent(100.0),
+                    flex_shrink: 1.0,
+                    ..default()
                 },
+                image: handles.images.title.clone().into(),
+                ..default()
+            });
+        });
+        parent.spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0 * UI_SCALE),
+                ..default()
+            },
+            ..default()
+        });
+        parent.spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(60.0),
+                justify_content: JustifyContent::SpaceEvenly,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            background_color: main_color.into(),
+            ..default()
+        }).insert(Menu::default()).with_children(|parent| {
+            // text
+            parent.spawn(TextBundle::from_section("New Game", TextStyle {
+                font: handles.fonts.londrina.w300_light.clone(),
+                font_size: 38.0 * UI_SCALE,
+                color: MENU_ITEM_COLOR_OFF,
+            })).insert(MenuItem::new(MenuID::MapHub));
+            parent.spawn(TextBundle::from_section("Manual", TextStyle {
+                font: handles.fonts.londrina.w300_light.clone(),
+                font_size: 38.0 * UI_SCALE,
+                color: MENU_ITEM_COLOR_OFF,
+            })).insert(MenuItem::new(MenuID::Manual));
+
+            // parent .spawn(TextBundle::from_section( "Options", TextStyle { font:
+            // handles.fonts.londrina.w300_light.clone(), font_size: 38.0 * UI_SCALE, color:
+            // MENU_ITEM_COLOR_OFF, }, )) .insert(MenuItem::new(MenuID::Options));
+            if !IS_WASM {
+                parent.spawn(TextBundle::from_section("Quit", TextStyle {
+                    font: handles.fonts.londrina.w300_light.clone(),
+                    font_size: 38.0 * UI_SCALE,
+                    color: MENU_ITEM_COLOR_OFF,
+                })).insert(MenuItem::new(MenuID::Quit));
+            }
+        });
+        parent.spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                min_height: Val::Percent(20.0 * UI_SCALE),
                 flex_grow: 1.0,
                 ..default()
             },
             ..default()
-        })
-        .insert(MenuUI)
-        .with_children(|parent| {
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(20.0),
-                        min_width: Val::Px(0.0),
-                        min_height: Val::Px(64.0 * UI_SCALE),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::FlexStart,
-                        ..default()
-                    },
-
-                    ..default()
-                })
-                .with_children(|parent| {
-                    // logo
-                    parent.spawn(ImageBundle {
-                        style: Style {
-                            aspect_ratio: Some(130.0 / 17.0),
-                            width: Val::Percent(80.0),
-                            height: Val::Auto,
-                            max_width: Val::Percent(80.0),
-                            max_height: Val::Percent(100.0),
-                            flex_shrink: 1.0,
-                            ..default()
-                        },
-                        image: handles.images.title.clone().into(),
-                        ..default()
-                    });
-                });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0 * UI_SCALE),
-                    ..default()
-                },
-
-                ..default()
-            });
-
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(60.0),
-                        justify_content: JustifyContent::SpaceEvenly,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-
-                        ..default()
-                    },
-                    background_color: main_color.into(),
-                    ..default()
-                })
-                .insert(Menu::with_len(maps.maps.len()))
-                .with_children(|parent| {
-                    // text
-                    parent
-                        .spawn(TextBundle::from_section(
-                            "New Game",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * UI_SCALE,
-                                color: MENU_ITEM_COLOR_OFF,
-                            },
-                        ))
-                        .insert(MenuItem::new(MenuID::MapHub));
-                    // parent
-                    //     .spawn(TextBundle::from_section(
-                    //         "Options",
-                    //         TextStyle {
-                    //             font: handles.fonts.londrina.w300_light.clone(),
-                    //             font_size: 38.0 * UI_SCALE,
-                    //             color: MENU_ITEM_COLOR_OFF,
-                    //         },
-                    //     ))
-                    //     .insert(MenuItem::new(MenuID::Options));
-                    if !IS_WASM {
-                        parent
-                            .spawn(TextBundle::from_section(
-                                "Quit",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 38.0 * UI_SCALE,
-                                    color: MENU_ITEM_COLOR_OFF,
-                                },
-                            ))
-                            .insert(MenuItem::new(MenuID::Quit));
-                    }
-                });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    min_height: Val::Percent(20.0 * UI_SCALE),
-                    flex_grow: 1.0,
-                    ..default()
-                },
-                ..default()
-            });
-            parent.spawn(TextBundle::from_section(
-                format!("Unhaunter {}    -   [Arrow Up]/[Arrow Down]: Change menu item   -    [Enter]: Select current item   -   [ESC] Go Back   -   Game Controls: [WASD] [TAB] [Q] [E] [R] [T] [F] [G]", platform::VERSION),
+        });
+        parent.spawn(
+            TextBundle::from_section(
+                format!(
+                    "Unhaunter {}    -   [Arrow Up]/[Arrow Down]: Change menu item   -    [Enter]: Select current item   -   [ESC] Go Back   -   Game Controls: [WASD] [TAB] [Q] [E] [R] [T] [F] [G]",
+                    platform::VERSION
+                ),
                 TextStyle {
                     font: handles.fonts.titillium.w300_light.clone(),
                     font_size: 20.0 * UI_SCALE,
                     color: MENU_ITEM_COLOR_OFF,
                 },
-            ).with_style( Style { 
+            ).with_style(Style {
                 padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
                 align_content: AlignContent::Center,
                 align_self: AlignSelf::Center,
@@ -347,17 +325,14 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>, maps: Re
                 flex_shrink: 0.0,
                 flex_basis: Val::Px(35.0 * UI_SCALE),
                 max_height: Val::Px(35.0 * UI_SCALE),
-                ..default()}));
-        
-        });
-
+                ..default()
+            }),
+        );
+    });
     info!("Main menu loaded");
 }
 
-pub fn item_logic(
-    mut q: Query<(&mut MenuItem, &mut Text)>,
-    qmenu: Query<&Menu>,
-) {
+pub fn item_logic(mut q: Query<(&mut MenuItem, &mut Text)>, qmenu: Query<&Menu>) {
     for (mut mitem, mut text) in q.iter_mut() {
         for menu in qmenu.iter() {
             mitem.highlighted = menu.selected == mitem.identifier;
@@ -403,9 +378,13 @@ pub fn menu_event(
                 // Transition to the Map Hub state
                 next_state.set(root::State::MapHub);
             }
+            MenuID::Manual => {
+                // Transition to the Manual state
+                next_state.set(root::State::UserManual);
+            }
             MenuID::_Options => {}
             MenuID::Quit => {
-                exit.send(AppExit);
+                exit.send(AppExit::Success);
             }
         }
     }

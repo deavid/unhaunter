@@ -1,15 +1,17 @@
-//! Gear Module
-//! -----------
+//! ## Gear Module
 //!
 //! This module defines the gear system for the game, including:
+//!
 //! * Different types of gear available to the player.
+//!
 //! * A common interface for interacting with gear (`GearUsable` trait).
+//!
 //! * Functions for updating gear state based on player actions and game conditions.
+//!
 //! * Visual representations of gear using sprites and animations.
 //!
-//! The gear system allows players to equip and use various tools to investigate paranormal activity,
-//! gather evidence, and ultimately banish ghosts.
-
+//! The gear system allows players to equip and use various tools to investigate
+//! paranormal activity, gather evidence, and ultimately banish ghosts.
 pub mod compass;
 pub mod emfmeter;
 pub mod estaticmeter;
@@ -31,8 +33,7 @@ pub mod thermometer;
 pub mod ui;
 pub mod uvtorch;
 pub mod videocam;
-
-use std::mem::swap;
+pub mod prelude;
 
 use self::compass::Compass;
 use self::emfmeter::EMFMeter;
@@ -42,6 +43,7 @@ use self::geigercounter::GeigerCounter;
 use self::ionmeter::IonMeter;
 use self::motionsensor::MotionSensor;
 use self::photocam::Photocam;
+use self::playergear::{EquipmentPosition, PlayerGear};
 use self::quartz::QuartzStoneData;
 use self::recorder::Recorder;
 use self::redtorch::RedTorch;
@@ -53,8 +55,6 @@ use self::thermalimager::ThermalImager;
 use self::thermometer::Thermometer;
 use self::uvtorch::UVTorch;
 use self::videocam::Videocam;
-
-use self::playergear::{EquipmentPosition, PlayerGear};
 use crate::board::{self, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::GameConfig;
@@ -62,94 +62,78 @@ use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use crate::summary;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use std::mem::swap;
 
 /// Unique identifiers for different gear sprites.
 ///
-/// Each variant represents a specific sprite or animation frame for a piece of gear.
-/// The values are used to index into the gear spritesheet.
+/// Each variant represents a specific sprite or animation frame for a piece of
+/// gear. The values are used to index into the gear spritesheet.
 #[allow(dead_code)]
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum GearSpriteID {
     ThermometerOff = 0,
     ThermometerOn,
-
     ThermalImagerOff,
     ThermalImagerOn,
-
     EMFMeterOff = 10,
     EMFMeter0,
     EMFMeter1,
     EMFMeter2,
     EMFMeter3,
     EMFMeter4,
-
     RecorderOff = 20,
     Recorder1,
     Recorder2,
     Recorder3,
     Recorder4,
-
     FlashlightOff = 30,
     Flashlight1,
     Flashlight2,
     Flashlight3,
-
     GeigerOff,
     GeigerOn,
     GeigerTick,
-
     RedTorchOff = 40,
     RedTorchOn,
-
     UVTorchOff,
     UVTorchOn,
-
     Photocam,
     PhotocamFlash1,
     PhotocamFlash2,
-
     IonMeterOff = 50,
     IonMeter0,
     IonMeter1,
     IonMeter2,
-
     SpiritBoxOff,
     SpiritBoxScan1,
     SpiritBoxScan2,
     SpiritBoxScan3,
     SpiritBoxAns1,
     SpiritBoxAns2,
-
     RepelentFlaskEmpty = 60,
     RepelentFlaskFull,
-
     // Quartz Stone
     QuartzStone0 = 65,
     QuartzStone1,
     QuartzStone2,
     QuartzStone3,
     QuartzStone4,
-
     // Salt
     Salt4 = 75,
     Salt3,
     Salt2,
     Salt1,
     Salt0,
-
     Compass = 80,
-
     // Sage Bundle
     SageBundle0 = 85,
     SageBundle1,
     SageBundle2,
     SageBundle3,
     SageBundle4,
-
     EStaticMeter = 90,
     Videocam,
     MotionSensor,
-
     #[default]
     None,
 }
@@ -245,6 +229,7 @@ impl GearUsable for Gear {
             GearKind::None => "",
         }
     }
+
     fn get_description(&self) -> &'static str {
         match &self.kind {
             GearKind::Thermometer(x) => x.get_description(),
@@ -269,6 +254,7 @@ impl GearUsable for Gear {
             GearKind::None => "",
         }
     }
+
     fn get_status(&self) -> String {
         match &self.kind {
             GearKind::Thermometer(x) => x.get_status(),
@@ -297,7 +283,6 @@ impl GearUsable for Gear {
     fn set_trigger(&mut self, gs: &mut GearStuff) {
         let sound_file = "sounds/switch-on-1.ogg";
         gs.play_audio_nopos(sound_file.into(), 0.6);
-
         let ni = |s| warn!("Trigger not implemented for {:?}", s);
         match &mut self.kind {
             GearKind::Thermometer(x) => x.set_trigger(gs),
@@ -347,10 +332,12 @@ impl GearUsable for Gear {
             GearKind::None => GearSpriteID::None,
         }
     }
+
     fn _box_clone(&self) -> Box<dyn GearUsable> {
         // FIXME: This is not used at all.
         Box::new(self.clone())
     }
+
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
         match &mut self.kind {
             GearKind::Thermometer(x) => x.update(gs, pos, ep),
@@ -385,28 +372,38 @@ pub fn on_off(s: bool) -> &'static str {
     }
 }
 
-/// Provides a common interface for all gear types, enabling consistent interactions.
+/// Provides a common interface for all gear types, enabling consistent
+/// interactions.
 pub trait GearUsable: std::fmt::Debug + Sync + Send {
     /// Returns the display name of the gear (e.g., "EMF Reader").
     fn get_display_name(&self) -> &'static str;
+
     /// Returns a brief description of the gear's functionality.
     fn get_description(&self) -> &'static str;
-    /// Returns a string representing the current status of the gear (e.g., "ON", "OFF", "Reading: 5.0 mG").
+
+    /// Returns a string representing the current status of the gear (e.g., "ON",
+    /// "OFF", "Reading: 5.0 mG").
     fn get_status(&self) -> String;
+
     /// Triggers the gear's primary action (e.g., turn on/off, take a reading).
     fn set_trigger(&mut self, gs: &mut GearStuff);
-    /// Updates the gear's internal state based on time, player actions, or game conditions.
+
+    /// Updates the gear's internal state based on time, player actions, or game
+    /// conditions.
     fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
+
     /// Returns the `GearSpriteID` for the gear's current state.
     fn get_sprite_idx(&self) -> GearSpriteID;
+
     /// Creates a boxed clone of the `GearUsable` object. (Unused for now)
     fn _box_clone(&self) -> Box<dyn GearUsable>;
 }
 
 /// System for updating the internal state of all gear carried by the player.
 ///
-/// This system iterates through the player's gear and calls the `update` method for each piece of gear,
-/// allowing gear to update their state based on time, player actions, or environmental conditions.
+/// This system iterates through the player's gear and calls the `update` method
+/// for each piece of gear, allowing gear to update their state based on time,
+/// player actions, or environmental conditions.
 pub fn update_playerheld_gear_data(
     mut q_gear: Query<(&Position, &mut PlayerGear)>,
     mut gs: GearStuff,
@@ -430,7 +427,8 @@ pub fn update_deployed_gear_data(
     }
 }
 
-/// System for updating the sprites of deployed gear to reflect their internal state.
+/// System for updating the sprites of deployed gear to reflect their internal
+/// state.
 pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut TextureAtlas, &DeployedGearData)>) {
     for (mut texture_atlas, gear_data) in q_gear.iter_mut() {
         let new_index = gear_data.gear.get_sprite_idx() as usize;
@@ -443,7 +441,8 @@ pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut TextureAtlas, &Deplo
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]
 pub struct GearStuff<'w, 's> {
-    /// Access to the game's board data, including collision, lighting, and temperature fields.
+    /// Access to the game's board data, including collision, lighting, and temperature
+    /// fields.
     pub bf: ResMut<'w, board::BoardData>,
     /// Access to summary data, which tracks game progress and statistics.
     pub summary: ResMut<'w, summary::SummaryData>,
@@ -459,8 +458,9 @@ pub struct GearStuff<'w, 's> {
     pub difficulty: Res<'w, CurrentDifficulty>,
 }
 
-impl<'w, 's> GearStuff<'w, 's> {
-    /// Plays a sound effect using the specified file path and volume from the given position.
+impl GearStuff<'_, '_> {
+    /// Plays a sound effect using the specified file path and volume from the given
+    /// position.
     pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
         // Create a SoundEvent with the required data
         let sound_event = SoundEvent {
@@ -468,6 +468,7 @@ impl<'w, 's> GearStuff<'w, 's> {
             volume,
             position: Some(*position),
         };
+
         // Send the SoundEvent to be handled by the sound playback system
         self.sound_events.send(sound_event);
     }
@@ -480,12 +481,14 @@ impl<'w, 's> GearStuff<'w, 's> {
             volume,
             position: None,
         };
+
         // Send the SoundEvent to be handled by the sound playback system
         self.sound_events.send(sound_event);
     }
 }
 
-/// Represents an event to play a sound effect at a specific location in the game world.
+/// Represents an event to play a sound effect at a specific location in the game
+/// world.
 ///
 /// This event is used to trigger the playback of a sound with volume adjusted
 /// based on the distance to the player's position.
@@ -493,13 +496,15 @@ impl<'w, 's> GearStuff<'w, 's> {
 pub struct SoundEvent {
     /// The path to the sound file to be played.
     pub sound_file: String,
-    /// The initial volume of the sound effect (this will be adjusted based on distance).
+    /// The initial volume of the sound effect (this will be adjusted based on
+    /// distance).
     pub volume: f32,
     /// The position in the game world where the sound is originating from.
     pub position: Option<Position>,
 }
 
-/// System to handle the SoundEvent, playing the sound with volume adjusted by distance.
+/// System to handle the SoundEvent, playing the sound with volume adjusted by
+/// distance.
 pub fn sound_playback_system(
     mut sound_events: EventReader<SoundEvent>,
     asset_server: Res<AssetServer>,
@@ -515,6 +520,7 @@ pub fn sound_playback_system(
         let adjusted_volume = match sound_event.position {
             Some(position) => {
                 const MIN_DIST: f32 = 25.0;
+
                 // Calculate distance from player to sound source
                 let distance2 = player_position.distance2(&position) + MIN_DIST;
                 let distance = distance2.powf(0.7) + MIN_DIST;

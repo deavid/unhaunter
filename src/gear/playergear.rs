@@ -1,6 +1,5 @@
-use crate::{ghost_definitions::GhostType, player::HeldObject};
-
 use super::{Gear, GearKind};
+use crate::{ghost_definitions::GhostType, player::HeldObject};
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
@@ -19,6 +18,7 @@ impl InventoryNext {
     pub fn new(idx: usize) -> Self {
         Self { idx: Some(idx) }
     }
+
     pub fn non_empty() -> Self {
         Self { idx: None }
     }
@@ -33,6 +33,7 @@ impl Inventory {
     pub fn new_left() -> Self {
         Inventory { hand: Hand::Left }
     }
+
     pub fn new_right() -> Self {
         Inventory { hand: Hand::Right }
     }
@@ -42,9 +43,9 @@ impl Inventory {
 pub enum EquipmentPosition {
     Hand(Hand),
     Stowed,
-    Deployed, // Van,
+    // Van,
+    Deployed,
 }
-
 #[derive(Component, Debug, Clone)]
 pub struct InventoryStats;
 
@@ -67,6 +68,7 @@ impl PlayerGear {
         }
         ret
     }
+
     pub fn as_vec_mut(&mut self) -> Vec<(&mut Gear, EquipmentPosition)> {
         let mut ret = vec![
             (&mut self.left_hand, EquipmentPosition::Hand(Hand::Left)),
@@ -77,6 +79,7 @@ impl PlayerGear {
         }
         ret
     }
+
     pub fn append(&mut self, ngear: Gear) {
         for (pgear, _hand) in self.as_vec_mut() {
             if matches!(pgear.kind, GearKind::None) {
@@ -85,56 +88,39 @@ impl PlayerGear {
             }
         }
     }
-    pub fn new() -> Self {
-        // use super::compass::Compass;
-        // use super::emfmeter::EMFMeter;
-        // use super::estaticmeter::EStaticMeter;
-        use super::flashlight::Flashlight;
-        // use super::geigercounter::GeigerCounter;
-        // use super::ionmeter::IonMeter;
-        // use super::motionsensor::MotionSensor;
-        // use super::photocam::Photocam;
-        // use super::recorder::Recorder;
-        // use super::redtorch::RedTorch;
-        // use super::spiritbox::SpiritBox;
-        // use super::thermalimager::ThermalImager;
-        // use super::repellentflask::RepellentFlask;
-        // use super::thermometer::Thermometer;
-        // use super::uvtorch::UVTorch;
-        // use super::videocam::Videocam;
 
+    pub fn new() -> Self {
+        // use super::compass::Compass; use super::emfmeter::EMFMeter; use
+        // super::estaticmeter::EStaticMeter;
+        use super::flashlight::Flashlight;
+
+        // use super::geigercounter::GeigerCounter; use super::ionmeter::IonMeter; use
+        // super::motionsensor::MotionSensor; use super::photocam::Photocam; use
+        // super::recorder::Recorder; use super::redtorch::RedTorch; use
+        // super::spiritbox::SpiritBox; use super::thermalimager::ThermalImager; use
+        // super::repellentflask::RepellentFlask; use super::thermometer::Thermometer; use
+        // super::uvtorch::UVTorch; use super::videocam::Videocam;
         Self {
             left_hand: Flashlight::default().into(),
             right_hand: Gear::none(),
             inventory: vec![
                 Gear::none(),
-                Gear::none(),
-                // Default equipment:
-                // Thermometer::default().into()
-                // EMFMeter::default().into(),
-                // UVTorch::default().into(),
-                // SpiritBox::default().into(),
-                // Recorder::default().into(),
-                // Videocam::default().into(),
-                // RedTorch::default().into(),
-                // GeigerCounter::default().into(),
-                // RepellentFlask::default().into(),
-
-                // Incomplete equipment:
-                // IonMeter::default().into(),
-                // ThermalImager::default().into(),
-                // Photocam::default().into(),
-                // Compass::default().into(),
-                // EStaticMeter::default().into(),
-                // MotionSensor::default().into(),
+                // Default equipment: Thermometer::default().into() EMFMeter::default().into(),
+                // UVTorch::default().into(), SpiritBox::default().into(),
+                Gear::none(), // Recorder::default().into(), Videocam::default().into(),
+                              // RedTorch::default().into(), GeigerCounter::default().into(),
+                              // RepellentFlask::default().into(), Incomplete equipment:
+                              // IonMeter::default().into(), ThermalImager::default().into(),
+                              // Photocam::default().into(), Compass::default().into(),
+                              // EStaticMeter::default().into(), MotionSensor::default().into(),
             ],
             held_item: None,
         }
     }
 
-    /// Returns the nth next item in the inventory. If out of bounds, returns
-    /// None. This is different from Some(Gear::None) which means that the slot
-    /// exists but it is empty.
+    /// Returns the nth next item in the inventory. If out of bounds, returns None.
+    /// This is different from Some(Gear::None) which means that the slot exists but it
+    /// is empty.
     pub fn get_next(&self, idx: usize) -> Option<Gear> {
         self.inventory.get(idx).cloned()
     }
@@ -171,15 +157,18 @@ impl PlayerGear {
         }
         self.inventory[last_idx] = old_right;
     }
+
     pub fn swap(&mut self) {
         std::mem::swap(&mut self.right_hand, &mut self.left_hand);
     }
+
     pub fn get_hand(&self, hand: &Hand) -> Gear {
         match hand {
             Hand::Left => self.left_hand.clone(),
             Hand::Right => self.right_hand.clone(),
         }
     }
+
     pub fn take_hand(&mut self, hand: &Hand) -> Gear {
         let mut ret = Gear::none();
         std::mem::swap(
@@ -191,6 +180,7 @@ impl PlayerGear {
         );
         ret
     }
+
     pub fn craft_repellent(&mut self, ghost_type: GhostType) {
         use super::repellentflask::RepellentFlask;
 
@@ -206,7 +196,6 @@ impl PlayerGear {
         }
 
         // Assume that one always exists. Retrieve the &mut reference:
-
         let mut inventory = self.as_vec_mut();
         let Some(flask) = inventory
             .iter_mut()
@@ -215,7 +204,6 @@ impl PlayerGear {
             error!("Flask not found??");
             return;
         };
-
         if let GearKind::RepellentFlask(ref mut flask) = flask.0.kind {
             flask.fill_liquid(ghost_type);
         }
@@ -240,7 +228,6 @@ impl PlayerGear {
             error!("Flask not found??");
             return false;
         };
-
         if let GearKind::RepellentFlask(flask) = &flask.0.kind {
             flask.can_fill_liquid(ghost_type)
         } else {

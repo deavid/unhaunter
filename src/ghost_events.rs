@@ -1,11 +1,9 @@
 // src/ghost_events.rs
-
-use bevy::prelude::*;
-use rand::Rng;
-
 use crate::difficulty::CurrentDifficulty;
 use crate::game::level::InteractionExecutionType;
 use crate::{behavior, board, ghost, player};
+use bevy::prelude::*;
+use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub enum GhostEvent {
@@ -41,6 +39,7 @@ pub fn trigger_ghost_events(
 ) {
     let mut rng = rand::thread_rng();
     let roomdb = interactive_stuff.roomdb.clone();
+
     // Iterate through players inside the house
     for (player_pos, _player) in q_player.iter().filter(|(pos, _)| {
         let bpos = pos.to_board_position();
@@ -90,17 +89,20 @@ pub fn trigger_ghost_events(
 
                         // Retrieve the door's Behavior component
                         if let Ok((_, door_position, behavior)) = q_doors.get(door_to_slam) {
-                            // FIXME: This is not correct! We're using a player interaction function
-                            // for a ghost event, which leads to awkward workarounds and potential bugs.
-                            // We should create a separate mechanism for handling ghost events.
+                            // FIXME: This is not correct! We're using a player interaction function for a
+                            // ghost event, which leads to awkward workarounds and potential bugs. We should
+                            // create a separate mechanism for handling ghost events.
                             dbg!(interactive_stuff.execute_interaction(
                                 door_to_slam,
-                                door_position, // Pass the door's position
-                                None,          // No interactive component needed
+                                // Pass the door's position
+                                door_position,
+                                // No interactive component needed
+                                None,
                                 behavior,
                                 None,
                                 InteractionExecutionType::ChangeState,
                             ));
+
                             // Play door slam sound effect
                             commands.spawn(AudioBundle {
                                 source: asset_server.load("sounds/door-close.ogg"),
@@ -111,7 +113,6 @@ pub fn trigger_ghost_events(
                                 collision: true,
                             });
                         }
-
                         warn!("Slamming door: {:?}", door_to_slam);
                     }
                 }

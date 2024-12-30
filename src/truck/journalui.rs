@@ -1,9 +1,7 @@
-use bevy::prelude::*;
-
-use crate::{colors, difficulty::CurrentDifficulty, ghost_definitions, root};
-
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
 use crate::platform::plt::UI_SCALE;
+use crate::{colors, difficulty::CurrentDifficulty, ghost_definitions, root};
+use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const MARGIN: UiRect = UiRect::percent(
@@ -19,7 +17,6 @@ pub fn setup_journal_ui(
     difficulty: &CurrentDifficulty,
 ) {
     // Journal contents
-
     p.spawn(
         TextBundle::from_section(
             "Select evidence:",
@@ -39,8 +36,7 @@ pub fn setup_journal_ui(
     p.spawn(NodeBundle {
         style: Style {
             justify_content: JustifyContent::FlexStart,
-            // flex_direction: FlexDirection::Row,
-            // flex_wrap: FlexWrap::Wrap,
+            // flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap,
             row_gap: Val::Px(4.0 * UI_SCALE),
             column_gap: Val::Px(4.0 * UI_SCALE),
             display: Display::Grid,
@@ -51,7 +47,6 @@ pub fn setup_journal_ui(
                 GridTrack::auto(),
             ],
             grid_template_rows: vec![GridTrack::auto(), GridTrack::auto()],
-
             ..default()
         },
         ..default()
@@ -87,6 +82,7 @@ pub fn setup_journal_ui(
                 });
         }
     });
+
     // ---- Ghost guess
     p.spawn(NodeBundle {
         style: Style {
@@ -123,8 +119,7 @@ pub fn setup_journal_ui(
     p.spawn(NodeBundle {
         style: Style {
             justify_content: JustifyContent::FlexStart,
-            // row_gap: Val::Px(4.0),
-            // column_gap: Val::Px(4.0),
+            // row_gap: Val::Px(4.0), column_gap: Val::Px(4.0),
             display: Display::Grid,
             grid_template_columns: vec![
                 GridTrack::auto(),
@@ -175,6 +170,7 @@ pub fn setup_journal_ui(
                 });
         }
     });
+
     // --- Ghost selected
     p.spawn(NodeBundle {
         style: Style {
@@ -187,7 +183,6 @@ pub fn setup_journal_ui(
             flex_shrink: 0.0,
             ..default()
         },
-
         ..default()
     })
     .with_children(|guess| {
