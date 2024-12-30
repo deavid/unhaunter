@@ -26,7 +26,7 @@ Bevy builds and also in WASM by storing in the browser.
 
 Candidate crates of interest:
 
-- https://crates.io/crates/bevy-persistent
+- https://crates.io/crates/bevy-persistent (already in Cargo.toml)
 - https://crates.io/crates/bevy_pkv
 
 
@@ -70,3 +70,10 @@ problem here is that there are players that prefer that WASD map to screen
 space instead of map space.
 
 This probably means another two options to add.
+
+# Tiled Map loads need WASM support
+
+Currently the tiled maps in WASM are baked in binary in a bad way. We need to
+implement a custom asset loader for these so it works in WASM in a natural way.
+
+Otherwise we need to constantly update these manually.
