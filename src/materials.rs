@@ -9,7 +9,7 @@ use bevy::{
             RenderPipelineDescriptor, ShaderRef, ShaderType, SpecializedMeshPipelineError,
         },
     },
-    sprite::{Material2d, Material2dKey},
+    sprite::{AlphaMode2d, Material2d, Material2dKey},
 };
 
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
@@ -100,6 +100,10 @@ impl CustomMaterial1 {
 impl Material2d for CustomMaterial1 {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material1.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 
     fn specialize(
