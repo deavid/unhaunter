@@ -15,40 +15,59 @@ use bevy::prelude::*;
 pub struct EvidenceUI;
 
 pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
-    let text_bundle = TextBundle::from_sections([TextSection {
-        value: "Freezing temps:".into(),
-        style: TextStyle {
-            font: handles.fonts.chakra.w400_regular.clone(),
-            font_size: 22.0 * UI_SCALE,
-            color: colors::INVENTORY_STATS_COLOR.with_alpha(1.0),
-        },
-    }, TextSection {
-        value: " [+] Evidence Found\n".into(),
-        style: TextStyle {
-            font: handles.fonts.victormono.w600_semibold.clone(),
-            font_size: 20.0 * UI_SCALE,
-            color: css::GREEN.with_alpha(0.4).into(),
-        },
-    }, TextSection {
-        value: "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.".into(),
-        style: TextStyle {
-            font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 20.0 * UI_SCALE,
-            color: colors::INVENTORY_STATS_COLOR,
-        },
-    }]);
-    parent.spawn(text_bundle).insert(EvidenceUI);
+    parent
+        .spawn((
+            Text::new(""),
+             TextFont {
+                    font: handles.fonts.chakra.w400_regular.clone(),
+                    font_size: 22.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                 },
+             TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
+            TextLayout::default(),
+             Node::default(),
+            EvidenceUI,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn(TextSpan::new("Freezing temps:"))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w400_regular.clone(),
+                    font_size: 22.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                 })
+                .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)));
+            parent
+                .spawn(TextSpan::new(" [+] Evidence Found\n"))
+                .insert(TextFont {
+                    font: handles.fonts.victormono.w600_semibold.clone(),
+                    font_size: 20.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(css::GREEN.with_alpha(0.4).into()));
+            parent
+                .spawn(TextSpan::new(
+                    "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
+                ))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w300_light.clone(),
+                    font_size: 20.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                 })
+                .insert(TextColor(colors::INVENTORY_STATS_COLOR));
+        });
 }
 
 pub fn update_evidence_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    mut qs: Query<&mut Text, With<EvidenceUI>>,
+    mut qs: Query<Entity, With<EvidenceUI>>,
     interaction_query: Query<&TruckUIButton, With<Button>>,
+    mut writer: TextUiWriter,
 ) {
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
-            for mut txt in qs.iter_mut() {
+            for txt_entity in qs.iter_mut() {
                 let o_evidence = Evidence::try_from(&playergear.right_hand.kind).ok();
                 let ev_state = match o_evidence {
                     Some(ev) => interaction_query
@@ -59,15 +78,25 @@ pub fn update_evidence_ui(
                     None => TruckButtonState::Off,
                 };
                 let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
-                if txt.sections[0].value != status.title {
-                    txt.sections[0].value = status.title;
+                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 0)
+                {
+                    if *text != status.title {
+                        *text = status.title;
+                    }
                 }
-                if txt.sections[1].value != status.status {
-                    txt.sections[1].value = status.status;
-                    txt.sections[1].style.color = status.status_color;
+                if let Some((_entity, _depth, mut text, _font, mut color)) =
+                    writer.get(txt_entity, 1)
+                {
+                    if *text != status.status {
+                        *text = status.status;
+                        *color = TextColor(status.status_color);
+                    }
                 }
-                if txt.sections[2].value != status.help_text {
-                    txt.sections[2].value = status.help_text;
+                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 2)
+                {
+                    if *text != status.help_text {
+                        *text = status.help_text;
+                    }
                 }
             }
         }
@@ -140,11 +169,11 @@ pub fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
         update_evidence_ui
-            .run_if(in_state(root::GameState::None).and_then(in_state(root::State::InGame))),
+            .run_if(in_state(root::GameState::None).and(in_state(root::State::InGame))),
     )
     .add_systems(
         Update,
         keyboard_evidence
-            .run_if(in_state(root::GameState::None).and_then(in_state(root::State::InGame))),
+            .run_if(in_state(root::GameState::None).and(in_state(root::State::InGame))),
     );
 }

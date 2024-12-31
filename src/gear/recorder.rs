@@ -69,7 +69,7 @@ impl GearUsable for Recorder {
 
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         let mut rng = rand::thread_rng();
-        self.display_secs_since_last_update += gs.time.delta_seconds();
+        self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.5;
@@ -97,9 +97,9 @@ impl GearUsable for Recorder {
             self.evp_recorded_count = 0;
         }
         if self.sound > 1.0 && self.enabled && gs.bf.evidences.contains(&Evidence::EVPRecording) {
-            self.amt_recorded += self.sound * gs.time.delta_seconds();
+            self.amt_recorded += self.sound * gs.time.delta_secs();
             if self.amt_recorded > 200.0 {
-                self.evp_recorded_time_secs = gs.time.elapsed_seconds();
+                self.evp_recorded_time_secs = gs.time.elapsed_secs();
                 self.evp_recorded_count += 1;
                 self.amt_recorded = 0.0;
             }
@@ -112,7 +112,7 @@ impl GearUsable for Recorder {
             if gs.bf.evidences.contains(&Evidence::EVPRecording) {
                 self.sound_l.iter_mut().for_each(|x| *x /= 1.2);
                 self.evp_recorded_display =
-                    (gs.time.elapsed_seconds() - self.evp_recorded_time_secs) < 2.0;
+                    (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;
             } else {
                 self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
             }

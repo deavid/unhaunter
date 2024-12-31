@@ -50,89 +50,76 @@ pub fn setup_ui(
         MARGIN_PERCENT,
     );
     commands
-        .spawn(NodeBundle {
-            background_color: PAUSEUI_BGCOLOR.into(),
-            style: Style {
-                position_type: PositionType::Absolute,
-                min_width: Val::Percent(50.0),
-                min_height: Val::Percent(30.0),
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Row,
-                column_gap: Val::Percent(MARGIN_PERCENT),
-                padding: MARGIN,
-                margin: MARGIN,
-                ..default()
-            },
+        .spawn(Node {
+            position_type: PositionType::Absolute,
+            min_width: Val::Percent(50.0),
+            min_height: Val::Percent(30.0),
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Percent(MARGIN_PERCENT),
+            padding: MARGIN,
+            margin: MARGIN,
             ..default()
         })
+        .insert(BackgroundColor(PAUSEUI_BGCOLOR.into()))
         .insert(PauseUI)
         .with_children(|parent| {
             // Mid content
             parent
-                .spawn(MaterialNodeBundle {
-                    material: materials.add(UIPanelMaterial {
-                        color: PAUSEUI_PANEL_BGCOLOR.into(),
-                    }),
-                    style: Style {
-                        border: UiRect::all(Val::Px(1.0)),
-                        padding: UiRect::all(Val::Px(1.0)),
-                        min_width: Val::Px(10.0),
-                        min_height: Val::Px(10.0),
+                .spawn(MaterialNode(materials.add(UIPanelMaterial {
+                    color: PAUSEUI_PANEL_BGCOLOR.into(),
+                })))
+                .insert(Node {
+                    border: UiRect::all(Val::Px(1.0)),
+                    padding: UiRect::all(Val::Px(1.0)),
+                    min_width: Val::Px(10.0),
+                    min_height: Val::Px(10.0),
+                    justify_content: JustifyContent::FlexStart,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Percent(MARGIN_PERCENT),
+                    flex_grow: 1.0,
+                    ..default()
+                })
+                .insert(BorderColor(PAUSEUI_ACCENT_COLOR.into()))
+                .with_children(|mid_blk| {
+                    mid_blk
+                        .spawn(Text::new("Pause"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 35.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(PAUSEUI_ACCENT_COLOR))
+                        .insert(Node {
+                            height: Val::Px(40.0 * UI_SCALE),
+                            ..default()
+                        });
+                    mid_blk.spawn(Node {
+                        border: UiRect::top(Val::Px(1.50)),
+                        height: Val::Px(0.0),
+                        ..default()
+                    });
+                    mid_blk
+                        .spawn(Text::new(
+                            "The game is paused. Hit [ESC] again to resume or [Q] to Quit.",
+                        ))
+                        .insert(TextFont {
+                            font: handles.fonts.chakra.w300_light.clone(),
+                            font_size: 25.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(PAUSEUI_TEXT_COLOR))
+                        .insert(Node {
+                            margin: UiRect::all(Val::Px(4.0)),
+                            ..default()
+                        });
+
+                    // ---
+                    mid_blk.spawn(Node {
                         justify_content: JustifyContent::FlexStart,
                         flex_direction: FlexDirection::Column,
                         row_gap: Val::Percent(MARGIN_PERCENT),
                         flex_grow: 1.0,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|mid_blk| {
-                    let title = TextBundle::from_section(
-                        "Pause",
-                        TextStyle {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 35.0 * UI_SCALE,
-                            color: PAUSEUI_ACCENT_COLOR,
-                        },
-                    )
-                    .with_style(Style {
-                        height: Val::Px(40.0 * UI_SCALE),
-                        ..default()
-                    });
-                    mid_blk.spawn(title);
-                    mid_blk.spawn(NodeBundle {
-                        border_color: PAUSEUI_ACCENT_COLOR.into(),
-                        style: Style {
-                            border: UiRect::top(Val::Px(1.50)),
-                            height: Val::Px(0.0),
-                            ..default()
-                        },
-                        ..default()
-                    });
-                    mid_blk.spawn(
-                        TextBundle::from_section(
-                            "The game is paused. Hit [ESC] again to resume or [Q] to Quit.",
-                            TextStyle {
-                                font: handles.fonts.chakra.w300_light.clone(),
-                                font_size: 25.0 * UI_SCALE,
-                                color: PAUSEUI_TEXT_COLOR,
-                            },
-                        )
-                        .with_style(Style {
-                            margin: UiRect::all(Val::Px(4.0)),
-                            ..default()
-                        }),
-                    );
-
-                    // ---
-                    mid_blk.spawn(NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::FlexStart,
-                            flex_direction: FlexDirection::Column,
-                            row_gap: Val::Percent(MARGIN_PERCENT),
-                            flex_grow: 1.0,
-                            ..default()
-                        },
                         ..default()
                     });
                 });

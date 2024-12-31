@@ -118,7 +118,7 @@ pub fn update_quartz_and_ghost(
     mut q_ghost: Query<(&Position, &mut GhostSprite)>,
     time: Res<Time>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (gear_pos, mut playergear) in q_gear1.iter_mut() {
         for (gear, _) in playergear.as_vec_mut().into_iter() {
             if let GearKind::QuartzStone(ref mut qs) = gear.kind {

@@ -58,7 +58,7 @@ impl GearUsable for SpiritBox {
     }
 
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let sec = gs.time.elapsed_seconds();
+        let sec = gs.time.elapsed_secs();
         let delta = sec - self.last_change_secs;
         self.mode_frame = (sec * 4.0).round() as u32;
         if !self.enabled {

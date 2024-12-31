@@ -55,12 +55,14 @@ impl GearUsable for SaltData {
             // Spawn salt pile entity
             let _salt_pile_entity = gs
                 .commands
-                .spawn(SpriteBundle {
-                    texture: gs.asset_server.load("img/salt_pile.png"),
-                    transform: Transform::from_translation(pos.to_screen_coord())
-                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+                .spawn(Sprite {
+                    image: gs.asset_server.load("img/salt_pile.png"),
                     ..default()
                 })
+                .insert(
+                    Transform::from_translation(pos.to_screen_coord())
+                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+                )
                 .insert(SaltPile)
                 .insert(GameSprite)
                 .insert(*pos)
@@ -132,17 +134,14 @@ pub fn salt_pile_system(
                     particle_position.x += rand::thread_rng().gen_range(-0.2..0.2);
                     particle_position.y += rand::thread_rng().gen_range(-0.2..0.2);
                     let _salt_particle_entity = commands
-                        .spawn(SpriteBundle {
-                            texture: asset_server.load("img/salt_particle.png"),
-                            sprite: Sprite {
-                                custom_size: Some(Vec2::new(4.0, 4.0)),
-                                ..default()
-                            },
-                            transform: Transform::from_translation(
-                                particle_position.to_screen_coord(),
-                            ),
+                        .spawn(Sprite {
+                            image: asset_server.load("img/salt_particle.png"),
+                            custom_size: Some(Vec2::new(4.0, 4.0)),
                             ..default()
                         })
+                        .insert(Transform::from_translation(
+                            particle_position.to_screen_coord(),
+                        ))
                         // Insert the modified Position
                         .insert(particle_position)
                         .insert(GameSprite)
@@ -167,7 +166,7 @@ pub fn salt_particle_system(
     time: Res<Time>,
     mut salt_particles: Query<(Entity, &mut Transform, &mut SaltParticleTimer)>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (entity, mut transform, mut salt_particle_timer) in salt_particles.iter_mut() {
         salt_particle_timer.0.tick(time.delta());
         if salt_particle_timer.0.just_finished() {

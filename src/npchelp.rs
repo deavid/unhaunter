@@ -67,99 +67,83 @@ pub fn setup_ui(
         MARGIN_PERCENT,
     );
     commands
-        .spawn(NodeBundle {
-            background_color: colors::TRUCKUI_BGCOLOR.into(),
-            style: Style {
-                position_type: PositionType::Absolute,
-                min_width: Val::Percent(50.0),
-                min_height: Val::Percent(30.0),
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Row,
-                column_gap: Val::Percent(MARGIN_PERCENT),
-                padding: MARGIN,
-                margin: MARGIN,
-                ..default()
-            },
+        .spawn(Node {
+            position_type: PositionType::Absolute,
+            min_width: Val::Percent(50.0),
+            min_height: Val::Percent(30.0),
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Percent(MARGIN_PERCENT),
+            padding: MARGIN,
+            margin: MARGIN,
             ..default()
         })
+        .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR.into()))
         .insert(NpcUI)
         .with_children(|parent| {
             // Mid content
             parent
-                .spawn(MaterialNodeBundle {
-                    material: materials.add(UIPanelMaterial {
-                        color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
-                    }),
-                    style: Style {
-                        border: UiRect::all(Val::Px(1.0)),
-                        padding: UiRect::all(Val::Px(1.0)),
-                        min_width: Val::Px(10.0),
-                        min_height: Val::Px(10.0),
-                        justify_content: JustifyContent::FlexStart,
-                        flex_direction: FlexDirection::Column,
-                        row_gap: Val::Percent(MARGIN_PERCENT),
-                        flex_grow: 1.0,
-                        ..default()
-                    },
+                .spawn(MaterialNode(materials.add(UIPanelMaterial {
+                    color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
+                })))
+                .insert(Node {
+                    border: UiRect::all(Val::Px(1.0)),
+                    padding: UiRect::all(Val::Px(1.0)),
+                    min_width: Val::Px(10.0),
+                    min_height: Val::Px(10.0),
+                    justify_content: JustifyContent::FlexStart,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Percent(MARGIN_PERCENT),
+                    flex_grow: 1.0,
                     ..default()
                 })
                 .with_children(|mid_blk| {
-                    let title = TextBundle::from_section(
-                        "Stranger says:",
-                        TextStyle {
+                    mid_blk
+                        .spawn(Text::new("Stranger says:"))
+                        .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 35.0 * UI_SCALE,
-                            color: colors::TRUCKUI_ACCENT_COLOR,
-                        },
-                    )
-                    .with_style(Style {
-                        height: Val::Px(40.0 * UI_SCALE),
-                        ..default()
-                    });
-                    mid_blk.spawn(title);
-                    mid_blk.spawn(NodeBundle {
-                        border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-                        style: Style {
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(colors::TRUCKUI_ACCENT_COLOR))
+                        .insert(Node {
+                            height: Val::Px(40.0 * UI_SCALE),
+                            ..default()
+                        });
+                    mid_blk
+                        .spawn(Node {
                             border: UiRect::top(Val::Px(1.50)),
                             height: Val::Px(0.0),
                             ..default()
-                        },
+                        })
+                        .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+                    mid_blk
+                        .spawn(Text::new(npcdata.dialog.clone()))
+                        .insert(TextFont {
+                            font: handles.fonts.syne.w400_regular.clone(),
+                            font_size: 21.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(colors::DIALOG_TEXT_COLOR))
+                        .insert(Node {
+                            margin: UiRect::all(Val::Px(8.0 * UI_SCALE)),
+                            max_width: Val::Vw(50.0),
+                            ..default()
+                        })
+                        .insert(NpcDialogText);
+                    mid_blk.spawn(Node {
+                        flex_grow: 1.0,
                         ..default()
                     });
                     mid_blk
-                        .spawn(
-                            TextBundle::from_section(
-                                npcdata.dialog.clone(),
-                                TextStyle {
-                                    font: handles.fonts.syne.w400_regular.clone(),
-                                    font_size: 21.0 * UI_SCALE,
-                                    color: colors::DIALOG_TEXT_COLOR,
-                                },
-                            )
-                            .with_style(Style {
-                                margin: UiRect::all(Val::Px(8.0 * UI_SCALE)),
-                                max_width: Val::Vw(50.0),
-                                ..default()
-                            }),
-                        )
-                        .insert(NpcDialogText);
-                    mid_blk.spawn(NodeBundle {
-                        style: Style {
-                            flex_grow: 1.0,
-                            ..default()
-                        },
-                        ..default()
-                    });
-                    mid_blk.spawn(
-                        TextBundle::from_section(
-                            "Close: [ESC] or [E]",
-                            TextStyle {
-                                font: handles.fonts.chakra.w300_light.clone(),
-                                font_size: 25.0 * UI_SCALE,
-                                color: colors::TRUCKUI_TEXT_COLOR,
-                            },
-                        )
-                        .with_style(Style {
+                        .spawn(Text::new("Close: [ESC] or [E]"))
+                        .insert(TextFont {
+                            font: handles.fonts.chakra.w300_light.clone(),
+                            font_size: 25.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))
+                        .insert(Node {
                             margin: UiRect::all(Val::Px(4.0)),
                             align_content: AlignContent::End,
                             align_items: AlignItems::End,
@@ -168,19 +152,14 @@ pub fn setup_ui(
                             justify_items: JustifyItems::End,
                             justify_self: JustifySelf::End,
                             ..default()
-                        })
-                        .with_text_justify(JustifyText::Right),
-                    );
+                        });
 
                     // ---
-                    mid_blk.spawn(NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::FlexStart,
-                            flex_direction: FlexDirection::Column,
-                            row_gap: Val::Percent(MARGIN_PERCENT),
-                            flex_grow: 1.0,
-                            ..default()
-                        },
+                    mid_blk.spawn(Node {
+                        justify_content: JustifyContent::FlexStart,
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Percent(MARGIN_PERCENT),
+                        flex_grow: 1.0,
                         ..default()
                     });
                 });
@@ -235,7 +214,7 @@ pub fn auto_call_npchelp(
         // If the player is walking fast, do not trigger auto-help.
         return;
     }
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (entity, item_pos, _, _, mut npc) in interactables.iter_mut() {
         if npc.seen {
             continue;

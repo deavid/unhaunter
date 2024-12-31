@@ -21,6 +21,7 @@ pub mod ionmeter;
 pub mod motionsensor;
 pub mod photocam;
 pub mod playergear;
+pub mod prelude;
 pub mod quartz;
 pub mod recorder;
 pub mod redtorch;
@@ -33,7 +34,6 @@ pub mod thermometer;
 pub mod ui;
 pub mod uvtorch;
 pub mod videocam;
-pub mod prelude;
 
 use self::compass::Compass;
 use self::emfmeter::EMFMeter;
@@ -429,11 +429,13 @@ pub fn update_deployed_gear_data(
 
 /// System for updating the sprites of deployed gear to reflect their internal
 /// state.
-pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut TextureAtlas, &DeployedGearData)>) {
-    for (mut texture_atlas, gear_data) in q_gear.iter_mut() {
+pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearData)>) {
+    for (mut sprite, gear_data) in q_gear.iter_mut() {
         let new_index = gear_data.gear.get_sprite_idx() as usize;
-        if texture_atlas.index != new_index {
-            texture_atlas.index = new_index;
+        if let Some(ref mut texture_atlas) = &mut sprite.texture_atlas {
+            if texture_atlas.index != new_index {
+                texture_atlas.index = new_index;
+            }
         }
     }
 }
@@ -534,17 +536,18 @@ pub fn sound_playback_system(
         };
 
         // Spawn an AudioBundle with the adjusted volume
-        commands.spawn(AudioBundle {
-            source: asset_server.load(sound_event.sound_file.clone()),
-            settings: PlaybackSettings {
+        commands
+            .spawn(AudioPlayer::<AudioSource>(
+                asset_server.load(sound_event.sound_file.clone()),
+            ))
+            .insert(PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
                 volume: bevy::audio::Volume::new(adjusted_volume),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
                 spatial_scale: None,
-            },
-        });
+            });
     }
 }
 

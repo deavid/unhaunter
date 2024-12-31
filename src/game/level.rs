@@ -121,61 +121,59 @@ pub fn load_level(
     roomdb.room_state.clear();
     roomdb.room_tiles.clear();
     commands
-        .spawn(AudioBundle {
-            source: asset_server.load("sounds/background-noise-house-1.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.00001),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
+        .spawn(AudioPlayer::new(
+            asset_server.load("sounds/background-noise-house-1.ogg"),
+        ))
+        .insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Loop,
+            volume: bevy::audio::Volume::new(0.00001),
+            speed: 1.0,
+            paused: false,
+            spatial: false,
+            spatial_scale: None,
         })
         .insert(GameSound {
             class: SoundType::BackgroundHouse,
         });
     commands
-        .spawn(AudioBundle {
-            source: asset_server.load("sounds/ambient-clean.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.00001),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
+        .spawn(AudioPlayer::new(
+            asset_server.load("sounds/ambient-clean.ogg"),
+        ))
+        .insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Loop,
+            volume: bevy::audio::Volume::new(0.00001),
+            speed: 1.0,
+            paused: false,
+            spatial: false,
+            spatial_scale: None,
         })
         .insert(GameSound {
             class: SoundType::BackgroundStreet,
         });
     commands
-        .spawn(AudioBundle {
-            source: asset_server.load("sounds/heartbeat-1.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.00001),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
+        .spawn(AudioPlayer::new(
+            asset_server.load("sounds/heartbeat-1.ogg"),
+        ))
+        .insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Loop,
+            volume: bevy::audio::Volume::new(0.00001),
+            speed: 1.0,
+            paused: false,
+            spatial: false,
+            spatial_scale: None,
         })
         .insert(GameSound {
             class: SoundType::HeartBeat,
         });
     commands
-        .spawn(AudioBundle {
-            source: asset_server.load("sounds/insane-1.ogg"),
-            settings: PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(0.00001),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            },
+        .spawn(AudioPlayer::new(asset_server.load("sounds/insane-1.ogg")))
+        .insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Loop,
+            volume: bevy::audio::Volume::new(0.00001),
+            speed: 1.0,
+            paused: false,
+            spatial: false,
+            spatial_scale: None,
         })
         .insert(GameSound {
             class: SoundType::Insane,
@@ -241,15 +239,15 @@ pub fn load_level(
                     let transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
                     Bdl::Mmb(MaterialMesh2dBundle {
                         mesh: mesh_handle.into(),
-                        material: mat.clone(),
+                        material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
                         ..Default::default()
                     })
                 }
                 AtlasData::Tiles(v_img) => Bdl::Sb(SpriteBundle {
-                    texture: v_img[tileuid as usize].0.clone(),
                     sprite: Sprite {
+                        image: v_img[tileuid as usize].0.clone(),
                         anchor,
                         ..default()
                     },
@@ -296,7 +294,7 @@ pub fn load_level(
                     }
                     let mat = materials1.get(&b.material).unwrap().clone();
                     let mat = materials1.add(mat);
-                    b.material = mat;
+                    b.material = MeshMaterial2d(mat);
                     commands.spawn(b)
                 }
                 Bdl::Sb(b) => {
@@ -409,20 +407,19 @@ pub fn load_level(
 
     // Spawn Player 1
     commands
-        .spawn(SpriteBundle {
-            texture: handles.images.character1.clone(),
-            sprite: Sprite {
-                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                ..default()
-            },
-            transform: Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
-                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+        .spawn(Sprite {
+            image: handles.images.character1.clone(),
+            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            texture_atlas: Some(TextureAtlas {
+                layout: handles.images.character1_atlas.clone(),
+                ..Default::default()
+            }),
             ..default()
         })
-        .insert(TextureAtlas {
-            layout: handles.images.character1_atlas.clone(),
-            ..Default::default()
-        })
+        .insert(
+            Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+        )
         .insert(GameSprite)
         .insert(difficulty.0.player_gear.clone())
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
@@ -459,32 +456,26 @@ pub fn load_level(
     bf.breach_pos = ghost_spawn;
     commands.insert_resource(summary::SummaryData::new(ghost_types, difficulty.clone()));
     let breach_id = commands
-        .spawn(SpriteBundle {
-            texture: asset_server.load("img/breach.png"),
-            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
-            sprite: Sprite {
-                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
-                ..default()
-            },
+        .spawn(Sprite {
+            image: asset_server.load("img/breach.png"),
+            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
+        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Breach)
         .insert(GhostBreach)
         .insert(ghost_spawn)
         .id();
     commands
-        .spawn(SpriteBundle {
-            texture: asset_server.load("img/ghost.png"),
-            transform: Transform::from_xyz(-1000.0, -1000.0, -1000.0),
-            sprite: Sprite {
-                anchor: Anchor::Custom(handles.anchors.grid1x1x4),
-                color: Color::srgba(0.0, 0.0, 0.0, 0.0),
-                ..default()
-            },
+        .spawn(Sprite {
+            image: asset_server.load("img/ghost.png"),
+            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
+        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))

@@ -11,7 +11,7 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.14"
+bevy = "0.15"
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -22,7 +22,7 @@ clap = "4.4"
 fastapprox = "0.3"
 anyhow = "1.0"
 ordered-float = { version = "4.2", features = ["serde"] }
-bevy-persistent = { version = "0.6", features = ["all"] }
+bevy-persistent = { version = "0.7", features = ["all"] }
 hierarchical_pathfinding = "0.5"
 walkdir = "2.5"
 glob = "0.3"
@@ -33,7 +33,7 @@ normalize-path = "0.2"
 itertools = "0.13.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-bevy_framepace = "0.17"
+bevy_framepace = "0.18"
 # bevy_dylib = "0.14"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]

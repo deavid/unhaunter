@@ -154,7 +154,7 @@ pub fn ghost_movement(
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut rng = rand::thread_rng();
-    let dt = time.delta_seconds() * 60.0;
+    let dt = time.delta_secs() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
@@ -178,7 +178,7 @@ pub fn ghost_movement(
             delta.dy *= ghost.warp + 1.0;
             let mut finalize = false;
             if ghost.hunt_target {
-                if time.elapsed_seconds() - ghost.hunt_time_secs > 1.0 {
+                if time.elapsed_secs() - ghost.hunt_time_secs > 1.0 {
                     if dlen < 4.0 {
                         delta.dx /= (dlen + 1.5) / 4.0;
                         delta.dy /= (dlen + 1.5) / 4.0;
@@ -287,7 +287,7 @@ pub fn ghost_movement(
             {
                 if hunt {
                     if !ghost.hunt_target {
-                        ghost.hunt_time_secs = time.elapsed_seconds();
+                        ghost.hunt_time_secs = time.elapsed_secs();
                         warn!("Hunting player for {:.1}s", ghost.hunting);
                     }
                 } else if ghost.hunt_target {
@@ -386,7 +386,7 @@ fn ghost_enrage(
     difficulty: Res<CurrentDifficulty>,
 ) {
     timer.tick(time.delta());
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (mut ghost, ghost_position) in &mut qg {
         // --- Salty Trace Spawning Logic ---
         if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
@@ -444,7 +444,7 @@ fn ghost_enrage(
 
         // ---
         if ghost.hunt_target {
-            let ghost_strength = (time.elapsed_seconds() - ghost.hunt_time_secs).clamp(0.0, 2.0);
+            let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
                 let dist2 = gpos.distance2(ppos) + 2.0;
                 let dmg = dist2.recip() * difficulty.0.health_drain_rate;
@@ -567,17 +567,15 @@ fn spawn_salty_trace(
     pos.x += rng.gen_range(-0.2..0.2);
     pos.y += rng.gen_range(-0.2..0.2);
     commands
-        .spawn(SpriteBundle {
-            texture: asset_server.load("img/salt_particle.png"),
-            transform: Transform::from_translation(pos.to_screen_coord())
-                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
-            sprite: Sprite {
-                color: css::DARK_GRAY.with_alpha(0.5).into(),
-                custom_size: Some(Vec2::new(8.0, 8.0)),
-                ..default()
-            },
+        .spawn(Sprite {
+            image: asset_server.load("img/salt_particle.png"),
+            color: css::DARK_GRAY.with_alpha(0.5).into(),
+            custom_size: Some(Vec2::new(8.0, 8.0)),
             ..default()
         })
+        .insert(
+            Transform::from_translation(pos.to_screen_coord()).with_scale(Vec3::new(0.5, 0.5, 0.5)),
+        )
         .insert(pos)
         .insert(SaltyTrace)
         .insert(UVReactive(1.0))
@@ -614,16 +612,15 @@ pub fn ghost_fade_out_system(
         if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
             let pos = *position;
             commands
-                .spawn(SpriteBundle {
-                    texture: asset_server.load("img/smoke.png"),
-                    transform: Transform::from_translation(pos.to_screen_coord())
-                        .with_scale(Vec3::new(0.2, 0.2, 0.2)),
-                    sprite: Sprite {
-                        color: Color::NONE,
-                        ..default()
-                    },
+                .spawn(Sprite {
+                    image: asset_server.load("img/smoke.png"),
+                    color: Color::NONE,
                     ..default()
                 })
+                .insert(
+                    Transform::from_translation(pos.to_screen_coord())
+                        .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                )
                 .insert(SageSmokeParticle)
                 .insert(GameSprite)
                 .insert(pos)

@@ -137,14 +137,15 @@ pub fn setup_ui(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    // Load Truck UI
-    const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
+    const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
         MARGIN_PERCENT,
         MARGIN_PERCENT,
     );
+
+    // Load Truck UI
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
@@ -152,9 +153,9 @@ pub fn setup_ui(
     let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
     let left_column = |p: Cb| {
         // Top Left - Sanity
-        p.spawn(MaterialNodeBundle {
-            material: panel_material.clone(),
-            style: Style {
+        p.spawn((
+            MaterialNode(panel_material.clone()),
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::left(Val::Percent(MARGIN_PERCENT)),
                 margin: MARGIN,
@@ -165,14 +166,13 @@ pub fn setup_ui(
                 flex_grow: 1.0,
                 ..default()
             },
-            ..default()
-        })
+        ))
         .with_children(|p| sanity::setup_sanity_ui(p, &handles));
 
         // Bottom Left - Sensors
-        p.spawn(MaterialNodeBundle {
-            material: panel_material.clone(),
-            style: Style {
+        p.spawn((
+            MaterialNode(panel_material.clone()),
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::left(Val::Percent(MARGIN_PERCENT)),
                 margin: MARGIN,
@@ -183,8 +183,7 @@ pub fn setup_ui(
                 flex_grow: 1.0,
                 ..default()
             },
-            ..default()
-        })
+        ))
         .with_children(sensors);
     };
     let mid_column = |p: Cb| {
@@ -194,21 +193,23 @@ pub fn setup_ui(
             let tab_bg = materials.add(UIPanelMaterial {
                 color: truck_tab.bg_color().into(),
             });
-            let text = TextBundle::from_section(
-                &truck_tab.tabname,
-                TextStyle {
+            let text = (
+                Text::new(&truck_tab.tabname),
+                TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 35.0 * UI_SCALE,
-                    color: txt_fg,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
-            )
-            .with_style(Style {
-                flex_grow: 0.5,
-                ..default()
-            });
-            p.spawn(MaterialNodeBundle {
-                material: tab_bg,
-                style: Style {
+                TextColor(txt_fg),
+                TextLayout::default(),
+                Node {
+                    flex_grow: 0.5,
+                    ..default()
+                },
+            );
+            p.spawn((
+                MaterialNode(tab_bg),
+                Node {
                     padding: UiRect::new(
                         Val::Px(10.0 * UI_SCALE),
                         Val::Px(30.0 * UI_SCALE),
@@ -224,17 +225,13 @@ pub fn setup_ui(
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                ..default()
-            })
-            .insert(Interaction::None)
-            .insert(truck_tab)
+                Interaction::None,
+                truck_tab,
+            ))
             .with_children(|p| {
-                p.spawn(NodeBundle {
-                    style: Style {
-                        flex_grow: 0.5,
-                        flex_shrink: 1.0,
-                        ..default()
-                    },
+                p.spawn(Node {
+                    flex_grow: 0.5,
+                    flex_shrink: 1.0,
                     ..default()
                 });
                 p.spawn(text);
@@ -242,12 +239,9 @@ pub fn setup_ui(
         };
 
         // Tab titles:
-        p.spawn(NodeBundle {
-            style: Style {
-                margin: UiRect::all(Val::ZERO),
-                padding: UiRect::all(Val::ZERO),
-                ..default()
-            },
+        p.spawn(Node {
+            margin: UiRect::all(Val::ZERO),
+            padding: UiRect::all(Val::ZERO),
             ..default()
         })
         .with_children(|p| {
@@ -256,51 +250,43 @@ pub fn setup_ui(
             title_tab(p, TabContents::CameraFeed);
             title_tab(p, TabContents::Journal);
         });
-        p.spawn(NodeBundle {
-            border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-            style: Style {
-                margin: UiRect::top(Val::Px(-4.1)),
-                padding: UiRect::all(Val::ZERO),
-                border: UiRect::all(Val::Px(1.50)),
-                ..default()
-            },
+        p.spawn(Node {
+            margin: UiRect::top(Val::Px(-4.1)),
+            padding: UiRect::all(Val::ZERO),
+            border: UiRect::all(Val::Px(1.50)),
             ..default()
-        });
-        let base_node = NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Percent(MARGIN_PERCENT),
-                flex_grow: 1.0,
-                flex_shrink: 0.0,
-                ..default()
-            },
+        })
+        .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+
+        let base_node = Node {
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Percent(MARGIN_PERCENT),
+            flex_grow: 1.0,
+            flex_shrink: 0.0,
             ..default()
         };
-        p.spawn(base_node.clone())
-            .insert(TabContents::Loadout)
-            .with_children(|p| loadoutui::setup_loadout_ui(p, &handles, &mut materials, &difficulty));
-        p.spawn(base_node.clone())
-            .insert(TabContents::Journal)
+        p.spawn((base_node.clone(), TabContents::Loadout))
+            .with_children(|p| {
+                loadoutui::setup_loadout_ui(p, &handles, &mut materials, &difficulty)
+            });
+        p.spawn((base_node.clone(), TabContents::Journal))
             .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));
 
         // ---
-        p.spawn(NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Percent(MARGIN_PERCENT),
-                flex_grow: 1.0,
-                ..default()
-            },
+        p.spawn(Node {
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Percent(MARGIN_PERCENT),
+            flex_grow: 1.0,
             ..default()
         });
     };
     let right_column = |p: Cb| {
         // Top Right - Activity
-        p.spawn(MaterialNodeBundle {
-            material: panel_material.clone(),
-            style: Style {
+        p.spawn((
+            MaterialNode(panel_material.clone()),
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
                 margin: MARGIN,
@@ -311,14 +297,12 @@ pub fn setup_ui(
                 flex_grow: 1.0,
                 ..default()
             },
-            ..default()
-        })
+        ))
         .with_children(|p| activity::setup_activity_ui(p, &handles));
 
         // Bottom Right - 2 buttons - Exit Truck + End mission.
-        p.spawn(NodeBundle {
-            border_color: colors::DEBUG_BCOLOR,
-            style: Style {
+        p.spawn((
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
                 margin: MARGIN,
@@ -331,65 +315,70 @@ pub fn setup_ui(
                 flex_grow: 0.01,
                 ..default()
             },
-            ..default()
-        })
+            colors::DEBUG_BCOLOR,
+        ))
         .with_children(|buttons| {
             buttons
-                .spawn(ButtonBundle {
-                    style: Style {
-                        min_height: Val::Px(60.0 * UI_SCALE),
-                        border: MARGIN,
-                        align_content: AlignContent::Center,
-                        justify_content: JustifyContent::Center,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::bottom(Val::Percent(MARGIN_PERCENT)),
-                        ..default()
-                    },
+                .spawn(Button)
+                .insert(Node {
+                    min_height: Val::Px(60.0 * UI_SCALE),
+                    border: MARGIN,
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::bottom(Val::Percent(MARGIN_PERCENT)),
                     ..default()
                 })
+                .insert(BackgroundColor(Color::NONE.into()))
+                .insert(BorderColor(Color::NONE.into()))
+                .insert(Interaction::None)
                 .insert(TruckButtonType::ExitTruck.into_component())
                 .with_children(|btn| {
-                    btn.spawn(TextBundle::from_section(
-                        "Exit Truck",
-                        TextStyle {
+                    btn.spawn((
+                        Text::new("Exit Truck"),
+                        TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
                             font_size: 35.0 * UI_SCALE,
-                            ..default()
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
+                        TextColor(colors::BUTTON_EXIT_TRUCK_TXTCOLOR),
+                        TextLayout::default(),
                     ));
                 });
             buttons
-                .spawn(ButtonBundle {
-                    style: Style {
-                        min_height: Val::Px(60.0 * UI_SCALE),
-                        align_content: AlignContent::Center,
-                        justify_content: JustifyContent::Center,
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        border: MARGIN,
-                        ..default()
-                    },
+                .spawn(Button)
+                .insert(Node {
+                    min_height: Val::Px(60.0 * UI_SCALE),
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    border: MARGIN,
                     ..default()
                 })
+                .insert(BackgroundColor(Color::NONE.into()))
+                .insert(BorderColor(Color::NONE.into()))
+                .insert(Interaction::None)
                 .insert(TruckButtonType::EndMission.into_component())
                 .with_children(|btn| {
-                    btn.spawn(TextBundle::from_section(
-                        "End Mission",
-                        TextStyle {
+                    btn.spawn((
+                        Text::new("End Mission"),
+                        TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
                             font_size: 35.0 * UI_SCALE,
-                            ..default()
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
+                        TextColor(colors::BUTTON_END_MISSION_TXTCOLOR),
+                        TextLayout::default(),
                     ));
                 });
         });
     };
     let truck_ui = |p: Cb| {
         // Left column
-        p.spawn(NodeBundle {
-            border_color: colors::DEBUG_BCOLOR,
-            style: Style {
+        p.spawn((
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 justify_content: JustifyContent::FlexStart,
                 flex_direction: FlexDirection::Column,
@@ -399,14 +388,14 @@ pub fn setup_ui(
                 flex_grow: 0.4,
                 ..default()
             },
-            ..default()
-        })
+            colors::DEBUG_BCOLOR,
+        ))
         .with_children(left_column);
 
         // Mid content
-        p.spawn(MaterialNodeBundle {
-            material: panel_material.clone(),
-            style: Style {
+        p.spawn((
+            MaterialNode(panel_material.clone()),
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 padding: UiRect::all(Val::Px(1.0)),
                 min_width: Val::Px(10.0),
@@ -419,14 +408,12 @@ pub fn setup_ui(
                 flex_shrink: 0.0,
                 ..default()
             },
-            ..default()
-        })
+        ))
         .with_children(mid_column);
 
         // Right column
-        p.spawn(NodeBundle {
-            border_color: colors::DEBUG_BCOLOR,
-            style: Style {
+        p.spawn((
+            Node {
                 border: UiRect::all(Val::Px(1.0)),
                 min_width: Val::Px(10.0),
                 min_height: Val::Px(10.0),
@@ -436,14 +423,13 @@ pub fn setup_ui(
                 flex_grow: 0.4,
                 ..default()
             },
-            ..default()
-        })
+            colors::DEBUG_BCOLOR,
+        ))
         .with_children(right_column);
     };
     commands
-        .spawn(NodeBundle {
-            background_color: colors::TRUCKUI_BGCOLOR.into(),
-            style: Style {
+        .spawn((
+            Node {
                 position_type: PositionType::Absolute,
                 top: Val::Px(0.0),
                 left: Val::Px(0.0),
@@ -456,9 +442,9 @@ pub fn setup_ui(
                 margin: MARGIN,
                 ..default()
             },
-            visibility: Visibility::Hidden,
-            ..default()
-        })
+            Visibility::Hidden,
+            BackgroundColor(colors::TRUCKUI_BGCOLOR),
+        ))
         .insert(TruckUI)
         .with_children(truck_ui);
     // ---
@@ -479,10 +465,10 @@ pub fn update_tab_interactions(
         Ref<Interaction>,
         &mut TruckTab,
         &Children,
-        &Handle<UIPanelMaterial>,
+        &MaterialNode<UIPanelMaterial>,
     )>,
-    mut qc: Query<(&mut Style, &TabContents)>,
-    mut text_query: Query<&mut Text>,
+    mut qc: Query<(&mut Node, &TabContents)>,
+    mut text_query: Query<(&mut TextColor, &mut TextFont)>,
 ) {
     let mut new_selected_cnt = None;
     let mut changed = 0;
@@ -520,9 +506,9 @@ pub fn update_tab_interactions(
         } else {
             tt.update_from_interaction(&int);
         }
-        let mut text = text_query.get_mut(children[1]).unwrap();
-        text.sections[0].style.color = tt.text_color();
-        text.sections[0].style.font_size = tt.font_size();
+        let (mut textcolor, mut textfont) = text_query.get_mut(children[1]).unwrap();
+        textcolor.0 = tt.text_color();
+        textfont.font_size = tt.font_size();
         let mat = materials.get_mut(panmat).unwrap();
         mat.color = tt.bg_color().into();
     }

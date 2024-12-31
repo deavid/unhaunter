@@ -37,78 +37,78 @@ pub fn setup_loadout_ui(
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
 ) {
-    let button = || ButtonBundle {
-        background_color: colors::TRUCKUI_ACCENT2_COLOR.into(),
-        border_color: colors::TRUCKUI_ACCENT_COLOR.into(),
-        style: Style {
-            justify_content: JustifyContent::Center,
-            justify_items: JustifyItems::Center,
-            justify_self: JustifySelf::Center,
-            align_content: AlignContent::Center,
-            align_items: AlignItems::Center,
-            align_self: AlignSelf::Center,
-            border: UiRect::all(Val::Px(2.0 * UI_SCALE)),
-            margin: UiRect::all(Val::Px(3.0 * UI_SCALE)),
-            max_width: Val::Px(70.0 * UI_SCALE),
-            max_height: Val::Px(74.0 * UI_SCALE),
-            ..default()
-        },
-        ..default()
-    };
-    let equipment = || ImageBundle {
-        image: UiImage {
-            texture: handles.images.gear.clone(),
-            flip_x: false,
-            flip_y: false,
-            ..default()
-        },
-        style: Style {
-            width: Val::Px(64.0 * UI_SCALE),
-            height: Val::Px(64.0 * UI_SCALE),
-            margin: UiRect::all(Val::Px(-4.0)),
-            ..default()
-        },
-        ..default()
-    };
-    let equipment_atlas = |g: GearSpriteID| TextureAtlas {
-        index: g as usize,
-        layout: handles.images.gear_atlas.clone(),
-    };
-    let equipment_atlas_def = || equipment_atlas(GearSpriteID::IonMeterOff);
-    let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| MaterialNodeBundle {
-        material: materials.add(UIPanelMaterial {
-            color: colors::TRUCKUI_BGCOLOR.into(),
-        }),
-        style: Style {
-            padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
-            margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
-            max_height: Val::Px(100.0 * UI_SCALE),
-            ..default()
-        },
-        ..default()
-    };
-    let left_side = |p: &mut ChildBuilder| {
-        p.spawn(
-            TextBundle::from_section(
-                "Player Inventory:",
-                TextStyle {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0 * UI_SCALE,
-                    color: colors::TRUCKUI_TEXT_COLOR,
-                },
-            )
-            .with_style(Style {
-                margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
-                ..default()
-            }),
-        );
-        p.spawn(NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                flex_direction: FlexDirection::Row,
-                flex_grow: 0.04,
+    let button = || {
+        (
+            Button,
+            BackgroundColor(colors::TRUCKUI_ACCENT2_COLOR.into()),
+            BorderColor(colors::TRUCKUI_ACCENT_COLOR.into()),
+            Node {
+                justify_content: JustifyContent::Center,
+                justify_items: JustifyItems::Center,
+                justify_self: JustifySelf::Center,
+                align_content: AlignContent::Center,
+                align_items: AlignItems::Center,
+                align_self: AlignSelf::Center,
+                border: UiRect::all(Val::Px(2.0 * UI_SCALE)),
+                margin: UiRect::all(Val::Px(3.0 * UI_SCALE)),
+                max_width: Val::Px(70.0 * UI_SCALE),
+                max_height: Val::Px(74.0 * UI_SCALE),
                 ..default()
             },
+        )
+    };
+    let equipment = |g: GearSpriteID| {
+        (
+            ImageNode {
+                image: handles.images.gear.clone().into(),
+                texture_atlas: Some(TextureAtlas {
+                    index: g as usize,
+                    layout: handles.images.gear_atlas.clone(),
+                }),
+                ..default()
+            },
+            Node {
+                width: Val::Px(64.0 * UI_SCALE),
+                height: Val::Px(64.0 * UI_SCALE),
+                margin: UiRect::all(Val::Px(-4.0)),
+                ..default()
+            },
+        )
+    };
+    let equipment_def = || equipment(GearSpriteID::IonMeterOff);
+
+    let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| {
+        (
+            MaterialNode(materials.add(UIPanelMaterial {
+                color: colors::TRUCKUI_BGCOLOR.into(),
+            })),
+            Node {
+                padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
+                margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
+                max_height: Val::Px(100.0 * UI_SCALE),
+                ..default()
+            },
+        )
+    };
+    let left_side = |p: &mut ChildBuilder| {
+        p.spawn((
+            Text::new("Player Inventory:"),
+            TextFont {
+                font: handles.fonts.chakra.w300_light.clone(),
+                font_size: 25.0 * UI_SCALE,
+                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            },
+            TextColor(colors::TRUCKUI_TEXT_COLOR),
+            TextLayout::default(),
+            Node {
+                margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
+                ..default()
+            },
+        ));
+        p.spawn(Node {
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Row,
+            flex_grow: 0.04,
             ..default()
         })
         .with_children(|p| {
@@ -116,8 +116,7 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_left()))
                     .with_children(|p| {
-                        p.spawn(equipment())
-                            .insert(equipment_atlas_def())
+                        p.spawn(equipment_def())
                             .insert(playergear::Inventory::new_left());
                     });
             });
@@ -125,8 +124,7 @@ pub fn setup_loadout_ui(
                 p.spawn(button())
                     .insert(LoadoutButton::Inventory(playergear::Inventory::new_right()))
                     .with_children(|p| {
-                        p.spawn(equipment())
-                            .insert(equipment_atlas_def())
+                        p.spawn(equipment_def())
                             .insert(playergear::Inventory::new_right());
                     });
             });
@@ -137,37 +135,32 @@ pub fn setup_loadout_ui(
                             playergear::InventoryNext::new(i),
                         ))
                         .with_children(|p| {
-                            p.spawn(equipment())
-                                .insert(equipment_atlas_def())
+                            p.spawn(equipment_def())
                                 .insert(playergear::InventoryNext::new(i));
                         });
                 }
             });
         });
-        p.spawn(
-            TextBundle::from_section(
-                "Van Inventory:",
-                TextStyle {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0 * UI_SCALE,
-                    color: colors::TRUCKUI_TEXT_COLOR,
-                },
-            )
-            .with_style(Style {
+        p.spawn((
+            Text::new("Van Inventory:"),
+            TextFont {
+                font: handles.fonts.chakra.w300_light.clone(),
+                font_size: 25.0 * UI_SCALE,
+                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            },
+            TextColor(colors::TRUCKUI_TEXT_COLOR),
+            TextLayout::default(),
+            Node {
                 margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                 ..default()
-            }),
-        );
-        p.spawn(NodeBundle {
-            style: Style { ..default() },
-            ..default()
-        })
-        .with_children(|p| {
-            p.spawn(MaterialNodeBundle {
-                material: materials.add(UIPanelMaterial {
+            },
+        ));
+        p.spawn(Node { ..default() }).with_children(|p| {
+            p.spawn((
+                MaterialNode(materials.add(UIPanelMaterial {
                     color: colors::TRUCKUI_BGCOLOR.into(),
-                }),
-                style: Style {
+                })),
+                Node {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     display: Display::Grid,
@@ -182,77 +175,66 @@ pub fn setup_loadout_ui(
                     margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
                     ..default()
                 },
-                ..default()
-            })
+            ))
             .with_children(|p| {
                 let tg = truckgear::TruckGear::from_difficulty(&difficulty.0);
                 for gear in &tg.inventory {
                     p.spawn(button())
                         .insert(LoadoutButton::Van(gear.clone()))
                         .with_children(|p| {
-                            p.spawn(equipment())
-                                .insert(equipment_atlas(gear.get_sprite_idx()));
+                            p.spawn(equipment(gear.get_sprite_idx()));
                         });
                 }
             });
         });
     };
-    p.spawn(NodeBundle {
-        style: Style {
-            flex_direction: FlexDirection::Row,
-            ..default()
-        },
+    p.spawn(Node {
+        flex_direction: FlexDirection::Row,
         ..default()
     })
     .with_children(|p| {
-        p.spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                flex_basis: Val::Percent(60.0),
-                flex_grow: 1.0,
-                flex_shrink: 0.0,
-                min_width: Val::Px(350.0 * UI_SCALE),
-                ..default()
-            },
+        p.spawn(Node {
+            flex_direction: FlexDirection::Column,
+            flex_basis: Val::Percent(60.0),
+            flex_grow: 1.0,
+            flex_shrink: 0.0,
+            min_width: Val::Px(350.0 * UI_SCALE),
             ..default()
         })
         .with_children(left_side);
-        p.spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                flex_basis: Val::Percent(40.0),
-                flex_grow: 0.0,
-                flex_shrink: 1.0,
-                ..default()
-            },
+        p.spawn(Node {
+            flex_direction: FlexDirection::Column,
+            flex_basis: Val::Percent(40.0),
+            flex_grow: 0.0,
+            flex_shrink: 1.0,
             ..default()
         })
         .with_children(|p| {
             // ---- Right side of the window ----
-            p.spawn(
-                TextBundle::from_section(
-                    "Help and Item description:",
-                    TextStyle {
-                        font: handles.fonts.chakra.w300_light.clone(),
-                        font_size: 25.0 * UI_SCALE,
-                        color: colors::TRUCKUI_TEXT_COLOR,
-                    },
-                )
-                .with_style(Style {
+            p.spawn((
+                Text::new("Help and Item description:"),
+                TextFont {
+                    font: handles.fonts.chakra.w300_light.clone(),
+                    font_size: 25.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                },
+                TextColor(colors::TRUCKUI_TEXT_COLOR),
+                TextLayout::default(),
+                Node {
                     margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     ..default()
-                }),
-            );
-            p.spawn(
-                TextBundle::from_section(
-                    "Select ...",
-                    TextStyle {
-                        font: handles.fonts.titillium.w400_regular.clone(),
-                        font_size: 22.0 * UI_SCALE,
-                        color: colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7),
-                    },
-                )
-                .with_style(Style {
+                },
+            ));
+            p.spawn((
+                Text::new("Select ..."),
+                TextFont {
+                    font: handles.fonts.titillium.w400_regular.clone(),
+                    font_size: 22.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                },
+                TextColor(colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7)),
+                TextLayout::default(),
+                Node {
                     margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     flex_grow: 0.0,
                     flex_shrink: 0.0,
@@ -260,9 +242,9 @@ pub fn setup_loadout_ui(
                     height: Val::Px(220.0 * UI_SCALE),
                     overflow: Overflow::visible(),
                     ..default()
-                }),
-            )
-            .insert(GearHelp);
+                },
+                GearHelp,
+            ));
         });
     });
 }
@@ -360,8 +342,8 @@ pub fn update_loadout_buttons(
         )
     };
     for mut text in &mut qh {
-        if help_text != text.sections[0].value {
-            text.sections[0].value.clone_from(&help_text);
+        if help_text != text.0 {
+            text.0.clone_from(&help_text);
         }
     }
 }

@@ -21,7 +21,7 @@ pub fn button_system(
         With<Button>,
     >,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
-    mut text_query: Query<&mut Text>,
+    mut q_textcolor: Query<&mut TextColor>,
     mut gg: ResMut<GhostGuess>,
     mut ev_truckui: EventWriter<TruckUIEvent>,
     gc: Res<GameConfig>,
@@ -124,10 +124,10 @@ pub fn button_system(
         } else {
             *interaction
         };
-        let mut text = text_query.get_mut(children[0]).unwrap();
+        let mut textcolor = q_textcolor.get_mut(children[0]).unwrap();
         border_color.0 = tui_button.border_color(interaction);
         *color = tui_button.background_color(interaction).into();
-        text.sections[0].style.color = tui_button.text_color(interaction);
+        textcolor.0 = tui_button.text_color(interaction);
     }
     gg.ghost_type = ghost_selected;
 }
@@ -140,7 +140,7 @@ pub fn ghost_guess_system(
         return;
     }
     for mut text in guess_query.iter_mut() {
-        text.sections[0].value = match gg.ghost_type.as_ref() {
+        text.0 = match gg.ghost_type.as_ref() {
             Some(gn) => gn.name().to_owned(),
             None => "-- Unknown --".to_string(),
         };

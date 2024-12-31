@@ -133,7 +133,7 @@ impl GearUsable for EMFMeter {
         if self.temp_l2.len() < 40 {
             self.temp_l2.push(self.temp_l1);
         }
-        let sec = gs.time.elapsed_seconds();
+        let sec = gs.time.elapsed_secs();
         if self.last_meter_update_secs + 0.5 < sec {
             self.last_meter_update_secs = sec;
             let sum_temp: f32 = self.temp_l2.iter().sum();

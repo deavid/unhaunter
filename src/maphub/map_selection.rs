@@ -94,23 +94,20 @@ pub fn keyboard(
 pub fn update_item_colors(
     mut q_items: Query<(&MapSelectionItem, &Children)>,
     map_selection_state: Res<MapSelectionState>,
-    mut q_text: Query<&mut Text>,
+    mut q_textcolor: Query<&mut TextColor>,
 ) {
     // Iterate through all map items
     for (map_item, children) in q_items.iter_mut() {
         // Get the text child of the button
-        if let Ok(mut text) = q_text.get_mut(children[0]) {
-            // Iterate through text sections
-            for section in text.sections.iter_mut() {
-                // Set the text color based on whether the item is selected
-                let new_color = if map_item.map_idx == map_selection_state.selected_map_idx {
-                    colors::MENU_ITEM_COLOR_ON
-                } else {
-                    colors::MENU_ITEM_COLOR_OFF
-                };
-                if new_color != section.style.color {
-                    section.style.color = new_color;
-                }
+        if let Ok(mut textcolor) = q_textcolor.get_mut(children[0]) {
+            // Set the text color based on whether the item is selected
+            let new_color = if map_item.map_idx == map_selection_state.selected_map_idx {
+                colors::MENU_ITEM_COLOR_ON
+            } else {
+                colors::MENU_ITEM_COLOR_OFF
+            };
+            if new_color != textcolor.0 {
+                textcolor.0 = new_color;
             }
         }
     }
@@ -125,44 +122,40 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
         alpha: 0.05,
     });
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                // ```
-                // align_self: AlignSelf::Center,
-                // ```
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect {
-                    left: Val::Percent(10.0),
-                    right: Val::Percent(10.0),
-                    top: Val::Percent(5.0),
-                    bottom: Val::Percent(5.0),
-                },
-                ..default()
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect {
+                left: Val::Percent(10.0),
+                right: Val::Percent(10.0),
+                top: Val::Percent(5.0),
+                bottom: Val::Percent(5.0),
             },
+            flex_grow: 1.0,
             ..default()
         })
         .insert(MapSelectionUI)
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(20.0),
-                        min_width: Val::Px(0.0),
-                        min_height: Val::Px(64.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::FlexStart,
-                        ..default()
-                    },
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(20.0),
+                    min_width: Val::Px(0.0),
+                    min_height: Val::Px(64.0 * UI_SCALE),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexStart,
                     ..default()
                 })
                 .with_children(|parent| {
                     // logo
-                    parent.spawn(ImageBundle {
-                        style: Style {
+                    parent
+                        .spawn(ImageNode {
+                            image: handles.images.title.clone().into(),
+                            ..default()
+                        })
+                        .insert(Node {
                             aspect_ratio: Some(130.0 / 17.0),
                             width: Val::Percent(80.0),
                             height: Val::Auto,
@@ -170,137 +163,122 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             max_height: Val::Percent(100.0),
                             flex_shrink: 1.0,
                             ..default()
-                        },
-                        image: handles.images.title.clone().into(),
-                        ..default()
-                    });
+                        });
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0),
                 ..default()
             });
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(60.0),
-                        justify_content: JustifyContent::SpaceEvenly,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-                        ..default()
-                    },
-                    background_color: main_color.into(),
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(60.0),
+                    justify_content: JustifyContent::SpaceEvenly,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 })
+                .insert(BackgroundColor(main_color.into()))
                 .with_children(|parent| {
                     // text
-                    parent.spawn(TextBundle::from_section(
-                        "Map Hub - Select Map",
-                        TextStyle {
+                    parent
+                        .spawn(Text::new("Map Hub - Select Map"))
+                        .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: Color::WHITE,
-                        },
-                    ));
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(10.0),
-                            ..default()
-                        },
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(10.0),
                         ..default()
                     });
                     parent
-                        .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(80.0),
-                                justify_content: JustifyContent::SpaceEvenly,
-                                align_items: AlignItems::Center,
-                                flex_direction: FlexDirection::Column,
-                                ..default()
-                            },
-                            background_color: main_color.into(),
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(80.0),
+                            justify_content: JustifyContent::SpaceEvenly,
+                            align_items: AlignItems::Center,
+                            flex_direction: FlexDirection::Column,
+                            display: Display::Grid,
+                            // 4 equal columns
+                            grid_template_columns: vec![
+                                GridTrack::flex(1.0),
+                                GridTrack::flex(1.0),
+                                GridTrack::flex(1.0),
+                                GridTrack::flex(1.0),
+                            ],
+                            grid_auto_rows: GridTrack::auto(),
+                            row_gap: Val::Px(10.0 * UI_SCALE),
+                            column_gap: Val::Px(20.0 * UI_SCALE),
                             ..default()
                         })
+                        .insert(BackgroundColor(main_color.into()))
                         .with_children(|parent| {
                             for (i, map) in maps.maps.iter().enumerate() {
                                 parent
-                                    .spawn(ButtonBundle {
-                                        style: Style {
-                                            min_height: Val::Px(30.0),
-                                            border: UiRect::all(Val::Px(0.9)),
-                                            align_content: AlignContent::Center,
-                                            justify_content: JustifyContent::Center,
-                                            flex_direction: FlexDirection::Column,
-                                            align_items: AlignItems::Center,
-                                            margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                                            ..default()
-                                        },
-                                        background_color: Color::NONE.into(),
+                                    .spawn(Button)
+                                    .insert(Node {
+                                        min_height: Val::Px(30.0 * UI_SCALE),
+                                        border: UiRect::all(Val::Px(0.9 * UI_SCALE)),
+                                        align_content: AlignContent::Center,
+                                        justify_content: JustifyContent::Center,
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Center,
+                                        margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     })
+                                    .insert(BackgroundColor(Color::NONE.into()))
                                     .insert(MapSelectionItem { map_idx: i })
                                     .with_children(|btn| {
-                                        btn.spawn(TextBundle::from_section(
-                                            map.name.clone(),
-                                            TextStyle {
+                                        btn.spawn(Text::new(map.name.clone()))
+                                            .insert(TextFont {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 32.0,
-                                                color: colors::MENU_ITEM_COLOR_OFF,
-                                            },
-                                        ));
+                                                font_size: 32.0 * UI_SCALE,
+                                                font_smoothing:
+                                                    bevy::text::FontSmoothing::AntiAliased,
+                                            })
+                                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));
                                     });
                             }
                         });
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(10.0),
-                            ..default()
-                        },
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(10.0),
                         ..default()
                     });
                     parent
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                min_height: Val::Px(30.0),
-                                border: UiRect::all(Val::Px(0.9)),
-                                align_content: AlignContent::Center,
-                                justify_content: JustifyContent::Center,
-                                flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                                ..default()
-                            },
-                            background_color: Color::NONE.into(),
+                        .spawn(Button)
+                        .insert(Node {
+                            min_height: Val::Px(30.0 * UI_SCALE),
+                            border: UiRect::all(Val::Px(0.9 * UI_SCALE)),
+                            align_content: AlignContent::Center,
+                            justify_content: JustifyContent::Center,
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::Center,
+                            margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                             ..default()
                         })
+                        .insert(BackgroundColor(Color::NONE.into()))
                         .insert(MapSelectionItem {
                             map_idx: maps.maps.len(),
                             // Set map_idx to map_count for "Go Back"
                         })
                         .with_children(|btn| {
-                            btn.spawn(TextBundle::from_section(
-                                "Go Back",
-                                TextStyle {
+                            btn.spawn(Text::new("Go Back"))
+                                .insert(TextFont {
                                     font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 38.0,
-                                    color: colors::MENU_ITEM_COLOR_OFF,
-                                },
-                            ));
+                                    font_size: 38.0 * UI_SCALE,
+                                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                })
+                                .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));
                         });
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0),
                 ..default()
             });
         });

@@ -101,17 +101,18 @@ pub fn truckui_event_handle(
                     if player.id == gc.player_id {
                         if let Some(ghost_type) = gg.ghost_type {
                             gear.craft_repellent(ghost_type);
-                            commands.spawn(AudioBundle {
-                                source: asset_server.load("sounds/effects-dingdingding.ogg"),
-                                settings: PlaybackSettings {
+                            commands
+                                .spawn(AudioPlayer::new(
+                                    asset_server.load("sounds/effects-dingdingding.ogg"),
+                                ))
+                                .insert(PlaybackSettings {
                                     mode: bevy::audio::PlaybackMode::Despawn,
                                     volume: bevy::audio::Volume::new(1.0),
                                     speed: 1.0,
                                     paused: false,
                                     spatial: false,
                                     spatial_scale: None,
-                                },
-                            });
+                                });
                         }
                     }
                 }

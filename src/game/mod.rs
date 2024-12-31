@@ -59,10 +59,13 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     }
 
     // 2D orthographic camera - Arena
-    let mut cam = Camera2dBundle::default();
-    cam.projection.scaling_mode = ScalingMode::FixedVertical(200.0);
+    let mut projection = OrthographicProjection::default_2d();
+    projection.scaling_mode = ScalingMode::FixedVertical {
+        viewport_height: 200.0,
+    };
     commands
-        .spawn(cam)
+        .spawn(Camera2d)
+        .insert(projection)
         .insert(GCameraArena)
         .insert(RenderLayers::from_layers(&[0, 1]));
 }
@@ -107,7 +110,7 @@ pub fn keyboard(
     if *game_state.get() == root::GameState::Pause {
         return;
     }
-    let dt = time.delta_seconds() * 60.0;
+    let dt = time.delta_secs() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
         game_next_state.set(root::GameState::Pause);
     }

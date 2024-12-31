@@ -1,5 +1,8 @@
 use super::{draw_manual_page, CurrentManualPage, Manual};
-use crate::root::{self, GameAssets};
+use crate::{
+    platform::plt::UI_SCALE,
+    root::{self, GameAssets},
+};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -17,131 +20,116 @@ pub enum ManualNavigationEvent {
     PreviousPage,
     Close,
 }
-
 pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
+    let button_text_style = TextFont {
+        font: handles.fonts.londrina.w300_light.clone(),
+        font_size: 30.0 * UI_SCALE,
+        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+    };
+
+    let prev_button = |button: &mut ChildBuilder| {
+        button
+            .spawn(Text::new("Previous"))
+            .insert(button_text_style.clone())
+            .insert(TextColor(Color::WHITE));
+    };
+    let continue_button = |button: &mut ChildBuilder| {
+        button
+            .spawn(Text::new("Close"))
+            .insert(button_text_style.clone())
+            .insert(TextColor(Color::WHITE));
+    };
+    let next_button = |button: &mut ChildBuilder| {
+        button
+            .spawn(Text::new("Next"))
+            .insert(button_text_style.clone())
+            .insert(TextColor(Color::WHITE));
+    };
+
+    let nav_buttons = |buttons: &mut ChildBuilder| {
+        // Previous button
+        buttons
+            .spawn(Button)
+            .insert(Node {
+                width: Val::Percent(30.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(2.0)),
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(5.0)),
                 ..default()
-            },
+            })
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .with_children(prev_button);
+
+        // Close Button
+        buttons
+            .spawn(Button)
+            .insert(Node {
+                width: Val::Percent(30.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(5.0)),
+                ..default()
+            })
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .with_children(continue_button);
+
+        // Next Button
+        buttons
+            .spawn(Button)
+            .insert(Node {
+                width: Val::Percent(30.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(5.0)),
+                ..default()
+            })
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .with_children(next_button);
+    };
+    let page_content = |parent: &mut ChildBuilder| {
+        // Page Content Container
+        parent
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                flex_grow: 1.0,
+                flex_basis: Val::Percent(100.0),
+                ..default()
+            })
+            .insert(PageContent);
+
+        // Navigation Buttons
+        parent
+            .spawn(Node {
+                width: Val::Percent(90.0),
+                height: Val::Percent(5.0),
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::SpaceBetween,
+                align_items: AlignItems::Center,
+                margin: UiRect::top(Val::Percent(3.0)),
+                flex_grow: 0.0,
+                flex_basis: Val::Percent(5.0),
+                ..default()
+            })
+            .with_children(nav_buttons);
+    };
+
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(Val::Px(2.0)),
             ..default()
         })
         .insert(UserManualUI)
-        .with_children(|parent| {
-            // Page Content Container
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-                        flex_grow: 1.0,
-                        flex_basis: Val::Percent(100.0),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(PageContent);
-
-            // Navigation Buttons
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(90.0),
-                        height: Val::Percent(5.0),
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::SpaceBetween,
-                        align_items: AlignItems::Center,
-                        margin: UiRect::top(Val::Percent(3.0)),
-                        flex_grow: 0.0,
-                        flex_basis: Val::Percent(5.0),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|buttons| {
-                    // Previous Button
-                    buttons
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Px(5.0)),
-                                ..default()
-                            },
-                            background_color: Color::BLACK.with_alpha(0.2).into(),
-                            ..default()
-                        })
-                        .with_children(|button| {
-                            button.spawn(TextBundle::from_section(
-                                "Previous",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        });
-
-                    // Close Button
-                    buttons
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Px(5.0)),
-                                ..default()
-                            },
-                            background_color: Color::BLACK.with_alpha(0.2).into(),
-                            ..default()
-                        })
-                        .with_children(|button| {
-                            button.spawn(TextBundle::from_section(
-                                "Close",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        });
-
-                    // Next Button
-                    buttons
-                        .spawn(ButtonBundle {
-                            style: Style {
-                                width: Val::Percent(30.0),
-                                height: Val::Percent(100.0),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                margin: UiRect::all(Val::Px(5.0)),
-                                ..default()
-                            },
-                            background_color: Color::BLACK.with_alpha(0.2).into(),
-                            ..default()
-                        })
-                        .with_children(|button| {
-                            button.spawn(TextBundle::from_section(
-                                "Next",
-                                TextStyle {
-                                    font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        });
-                });
-        });
+        .with_children(page_content);
 }
 
 pub fn user_manual_system(
@@ -157,7 +145,7 @@ pub fn user_manual_system(
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             for child in children.iter() {
                 if let Ok(text) = text_query.get(*child) {
-                    match text.sections[0].value.as_str() {
+                    match text.0.as_str() {
                         "Previous" => {
                             ev_navigation.send(ManualNavigationEvent::PreviousPage);
                         }
@@ -185,9 +173,7 @@ pub fn user_manual_system(
 
 pub fn setup(mut commands: Commands, handles: Res<GameAssets>) {
     // Spawn the 2D camera for the manual UI
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(ManualCamera);
+    commands.spawn(Camera2d::default()).insert(ManualCamera);
 
     // Draw the manual UI
     draw_manual_ui(&mut commands, handles);
@@ -269,11 +255,11 @@ fn update_navigation_button_visibility(
     for (children, mut visibility) in &mut button_query {
         for child in children.iter() {
             if let Ok(text) = text_query.get(*child) {
-                let is_first = text.sections[0].value == "Previous"
+                let is_first = text.0 == "Previous"
                     && current_manual_page.1 == 0
                     && current_manual_page.0 == 0;
                 let current_chapter_size = manuals.chapters[current_manual_page.0].pages.len();
-                let is_last = text.sections[0].value == "Next"
+                let is_last = text.0 == "Next"
                     && current_manual_page.1 + 1 == current_chapter_size
                     && current_manual_page.0 + 1 == manuals.chapters.len();
 

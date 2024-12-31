@@ -19,37 +19,34 @@ pub fn image_text(
     text: impl Into<String>,
 ) {
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                justify_content: JustifyContent::FlexStart,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                flex_grow: 0.2,
-                ..default()
-            },
+        .spawn(Node {
+            justify_content: JustifyContent::FlexStart,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            flex_grow: 0.2,
             ..default()
         })
         .with_children(|parent| {
-            parent.spawn(ImageBundle {
-                style: Style {
+            parent
+                .spawn(ImageNode {
+                    image: image.clone().into(),
+                    ..default()
+                })
+                .insert(Node {
                     width: Val::Percent(100.0),
-                    // max_height: Val::Percent(90.0),
                     margin: UiRect::bottom(Val::Px(2.0)),
                     aspect_ratio: Some(16.0 / 9.0),
                     flex_grow: 0.5,
                     ..default()
-                },
-                image: image.clone().into(),
-                ..default()
-            });
-            parent.spawn(TextBundle::from_section(
-                text,
-                TextStyle {
+                });
+            parent
+                .spawn(Text::new(text))
+                .insert(TextFont {
                     font: font.clone(),
                     font_size: 18.0 * UI_SCALE,
-                    color: Color::WHITE,
-                },
-            ));
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(Color::WHITE));
         });
 }
 
@@ -61,23 +58,16 @@ pub fn grid_img_text(
 ) {
     // Gameplay Loop Section (3x2 Grid)
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                // Occupy full width
-                width: Val::Percent(100.0),
-                display: Display::Grid,
-                grid_template_columns: RepeatedGridTrack::percent(
-                    colxrow.0,
-                    99.0 / colxrow.0 as f32,
-                ),
-                grid_template_rows: RepeatedGridTrack::flex(colxrow.1, 1.0),
-                column_gap: Val::Percent(0.5),
-                row_gap: Val::Percent(0.5),
-                padding: UiRect::all(Val::Percent(0.5)),
-                flex_grow: 1.0,
-                flex_basis: Val::Percent(90.0),
-                ..default()
-            },
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            display: Display::Grid,
+            grid_template_columns: RepeatedGridTrack::percent(colxrow.0, 99.0 / colxrow.0 as f32),
+            grid_template_rows: RepeatedGridTrack::flex(colxrow.1, 1.0),
+            column_gap: Val::Percent(0.5),
+            row_gap: Val::Percent(0.5),
+            padding: UiRect::all(Val::Percent(0.5)),
+            flex_grow: 1.0,
+            flex_basis: Val::Percent(90.0),
             ..default()
         })
         .with_children(|parent| {
@@ -94,16 +84,18 @@ pub fn grid_img_text2(
     colxrow: (u16, u16),
     contents: Vec<(&Handle<Image>, impl Into<String>)>,
 ) {
-    let style_regular = TextStyle {
+    let font_regular = TextFont {
         font: regular_font.clone(),
         font_size: 16.0 * UI_SCALE,
-        color: colors::DIALOG_TEXT_COLOR,
+        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
-    let style_bold = TextStyle {
+    let font_bold = TextFont {
         font: bold_font.clone(),
         font_size: 16.0 * UI_SCALE,
-        color: colors::DIALOG_BOLD_TEXT_COLOR,
+        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
+    let color_regular = TextColor(colors::DIALOG_TEXT_COLOR);
+    let color_bold = TextColor(colors::DIALOG_TEXT_COLOR);
 
     let mut rows = vec![];
 
@@ -113,25 +105,19 @@ pub fn grid_img_text2(
     }
 
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(96.0),
-                display: Display::Grid,
-                grid_template_columns: RepeatedGridTrack::percent(
-                    colxrow.0,
-                    99.0 / colxrow.0 as f32,
-                ),
-                grid_template_rows: rows,
-                column_gap: Val::Percent(0.5),
-                row_gap: Val::Percent(0.2),
-                padding: UiRect::all(Val::Percent(0.2)),
-                overflow: Overflow::clip(),
-                flex_grow: 1.0,
-                flex_basis: Val::Percent(90.0),
-                justify_content: JustifyContent::Center,
-                align_content: AlignContent::Center,
-                ..default()
-            },
+        .spawn(Node {
+            width: Val::Percent(96.0),
+            display: Display::Grid,
+            grid_template_columns: RepeatedGridTrack::percent(colxrow.0, 99.0 / colxrow.0 as f32),
+            grid_template_rows: rows,
+            column_gap: Val::Percent(0.5),
+            row_gap: Val::Percent(0.2),
+            padding: UiRect::all(Val::Percent(0.2)),
+            overflow: Overflow::clip(),
+            flex_grow: 1.0,
+            flex_basis: Val::Percent(90.0),
+            justify_content: JustifyContent::Center,
+            align_content: AlignContent::Center,
             ..default()
         })
         .with_children(|parent| {
@@ -142,37 +128,36 @@ pub fn grid_img_text2(
             for row in 0..rows {
                 for (img, text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
                     if text == "N/A" {
-                        parent.spawn(NodeBundle::default());
+                        parent.spawn(Node::default());
                         continue;
                     }
-                    parent.spawn(ImageBundle {
-                        style: Style {
-                            // max_width: Val::Percent(100.0),
+                    parent
+                        .spawn(ImageNode {
+                            image: (*img).clone().into(),
+                            ..default()
+                        })
+                        .insert(Node {
                             max_height: Val::Percent(100.0),
                             margin: UiRect::bottom(Val::Px(2.0)),
                             aspect_ratio: Some(21.0 / 9.0),
                             flex_grow: 1.0,
                             ..default()
-                        },
-                        image: (*img).clone().into(),
-                        ..default()
-                    });
+                        });
                 }
                 for (_img, text) in &contents[(row * cols) as usize..(row * cols + cols) as usize] {
                     if text == "N/A" {
-                        parent.spawn(NodeBundle::default());
+                        parent.spawn(Node::default());
                         continue;
                     }
-                    let mut text_sections = vec![];
+                    let mut layout = parent.spawn((TextLayout::default(),));
                     for (n, subtext) in text.split('*').enumerate() {
-                        let style = if n % 2 == 0 {
-                            style_regular.clone()
+                        let (font, color) = if n % 2 == 0 {
+                            (font_regular.clone(), color_regular.clone())
                         } else {
-                            style_bold.clone()
+                            (font_bold.clone(), color_bold.clone())
                         };
-                        text_sections.push(TextSection::new(subtext, style));
+                        layout.with_child((TextSpan::new(subtext), font, color));
                     }
-                    parent.spawn(TextBundle::from_sections(text_sections));
                 }
             }
         });
@@ -185,82 +170,68 @@ pub fn header(
     subtitle: impl Into<String>,
 ) {
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                // Occupy full width
-                width: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                ..default()
-            },
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
             ..default()
         })
         .with_children(|parent| {
             // Headline
-            parent.spawn(TextBundle::from_section(
-                title,
-                TextStyle {
+            parent
+                .spawn(Text::new(title))
+                .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 32.0 * UI_SCALE,
-                    color: Color::WHITE,
-                },
-            ));
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(Color::WHITE));
 
             // Premise Text
-            parent.spawn(TextBundle::from_section(
-                subtitle,
-                TextStyle {
+            parent
+                .spawn(Text::new(subtitle))
+                .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 18.0 * UI_SCALE,
-                    color: Color::WHITE,
-                },
-            ));
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(Color::WHITE));
         });
-    parent.spawn(NodeBundle {
-        style: Style {
-            flex_grow: 0.2,
-            flex_basis: Val::Px(10.0),
-            ..default()
-        },
+    parent.spawn(Node {
+        flex_grow: 0.2,
+        flex_basis: Val::Px(10.0),
         ..default()
     });
 }
 
 pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: impl Into<String>) {
-    parent.spawn(NodeBundle {
-        style: Style {
-            flex_grow: 0.2,
-            flex_basis: Val::Px(0.0),
-            ..default()
-        },
+    parent.spawn(Node {
+        flex_grow: 0.2,
+        flex_basis: Val::Px(0.0),
         ..default()
     });
 
     parent
-        .spawn(NodeBundle {
-            style: Style {
-                // Occupy full width
-                width: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                margin: UiRect::all(Val::Percent(0.5)),
-                flex_grow: 0.0,
-                flex_basis: Val::Percent(1.0),
-                ..default()
-            },
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            margin: UiRect::all(Val::Percent(0.5)),
+            flex_grow: 0.0,
+            flex_basis: Val::Percent(1.0),
             ..default()
         })
         .with_children(|parent| {
             // Summary Text
-            parent.spawn(TextBundle::from_section(
-                summary,
-                TextStyle {
+            parent
+                .spawn(Text::new(summary))
+                .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 18.0 * UI_SCALE,
-                    color: Color::WHITE,
-                },
-            ));
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(Color::WHITE));
         });
 }

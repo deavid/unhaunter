@@ -132,6 +132,7 @@ pub fn keyboard(
 pub fn update_item_colors(
     mut q_items: Query<(&DifficultySelectionItem, &Children)>,
     difficulty_selection_state: Res<DifficultySelectionState>,
+    mut q_textcolor: Query<&mut TextColor>,
     mut q_text: Query<&mut Text>,
     q_desc: Query<Entity, With<DifficultyDescriptionUI>>,
 ) {
@@ -140,32 +141,28 @@ pub fn update_item_colors(
     }
     let sel_difficulty = difficulty_selection_state.selected_difficulty;
     for (difficulty_item, children) in q_items.iter_mut() {
-        if let Ok(mut text) = q_text.get_mut(children[0]) {
-            for section in text.sections.iter_mut() {
-                let new_color = if difficulty_item.difficulty == sel_difficulty {
-                    colors::MENU_ITEM_COLOR_ON
-                } else {
-                    colors::MENU_ITEM_COLOR_OFF
-                };
-                if new_color != section.style.color {
-                    section.style.color = new_color;
-                }
+        if let Ok(mut textcolor) = q_textcolor.get_mut(children[0]) {
+            let new_color = if difficulty_item.difficulty == sel_difficulty {
+                colors::MENU_ITEM_COLOR_ON
+            } else {
+                colors::MENU_ITEM_COLOR_OFF
+            };
+            if new_color != textcolor.0 {
+                textcolor.0 = new_color;
             }
         }
     }
     let dif = sel_difficulty.create_difficulty_struct();
     for entity in q_desc.iter() {
         if let Ok(mut text) = q_text.get_mut(entity) {
-            for section in text.sections.iter_mut() {
-                let name = &dif.difficulty_name;
-                let description = &dif.difficulty_description;
-                let score_mult = dif.difficulty_score_multiplier;
-                let text = [
-                    format!("Difficulty <{name}>: {description}"),
-                    format!("Score Bonus: {score_mult:.2}x"),
-                ];
-                section.value = text.join("\n");
-            }
+            let name = &dif.difficulty_name;
+            let description = &dif.difficulty_description;
+            let score_mult = dif.difficulty_score_multiplier;
+            let new_text = [
+                format!("Difficulty <{name}>: {description}"),
+                format!("Score Bonus: {score_mult:.2}x"),
+            ];
+            text.0 = new_text.join("\n");
         }
     }
 }
@@ -179,41 +176,41 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
         alpha: 0.05,
     });
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect {
-                    left: Val::Percent(10.0),
-                    right: Val::Percent(10.0),
-                    top: Val::Percent(5.0),
-                    bottom: Val::Percent(5.0),
-                },
-                ..default()
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect {
+                left: Val::Percent(10.0),
+                right: Val::Percent(10.0),
+                top: Val::Percent(5.0),
+                bottom: Val::Percent(5.0),
             },
+            flex_grow: 1.0,
             ..default()
         })
+        .insert(BackgroundColor(main_color.into()))
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(20.0),
-                        min_width: Val::Px(0.0),
-                        min_height: Val::Px(64.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::FlexStart,
-                        ..default()
-                    },
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(20.0),
+                    min_width: Val::Px(0.0),
+                    min_height: Val::Px(64.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexStart,
                     ..default()
                 })
                 .with_children(|parent| {
                     // logo
-                    parent.spawn(ImageBundle {
-                        style: Style {
+                    parent
+                        .spawn(ImageNode {
+                            image: handles.images.title.clone().into(),
+                            ..default()
+                        })
+                        .insert(Node {
                             aspect_ratio: Some(130.0 / 17.0),
                             width: Val::Percent(80.0),
                             height: Val::Auto,
@@ -221,151 +218,109 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                             max_height: Val::Percent(100.0),
                             flex_shrink: 1.0,
                             ..default()
-                        },
-                        image: handles.images.title.clone().into(),
-                        ..default()
-                    });
+                        });
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0),
                 ..default()
             });
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(60.0),
-                        justify_content: JustifyContent::SpaceEvenly,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-                        ..default()
-                    },
-                    background_color: main_color.into(),
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(60.0),
+                    justify_content: JustifyContent::SpaceEvenly,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 })
+                .insert(BackgroundColor(main_color.into()))
                 .with_children(|parent| {
                     // text
-                    parent.spawn(TextBundle::from_section(
-                        "Map Hub - Select Difficulty",
-                        TextStyle {
+                    parent
+                        .spawn(Text::new("Map Hub - Select Difficulty"))
+                        .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: Color::WHITE,
-                        },
-                    ));
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(10.0),
-                            ..default()
-                        },
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(10.0),
                         ..default()
                     });
 
                     // Difficulty buttons in a 3-column grid
                     parent
-                        .spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(100.0),
-                                height: Val::Percent(80.0),
-                                justify_content: JustifyContent::SpaceEvenly,
-                                align_items: AlignItems::Center,
-                                display: Display::Grid,
-                                // 4 equal columns
-                                grid_template_columns: RepeatedGridTrack::flex(4, 1.0),
-                                grid_auto_rows: GridTrack::auto(),
-                                row_gap: Val::Px(10.0),
-                                column_gap: Val::Px(20.0),
-                                ..default()
-                            },
-                            background_color: main_color.into(),
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(80.0),
+                            justify_content: JustifyContent::SpaceEvenly,
+                            align_items: AlignItems::Center,
+                            display: Display::Grid,
+                            // 4 equal columns
+                            grid_template_columns: RepeatedGridTrack::flex(4, 1.0),
+                            grid_auto_rows: GridTrack::auto(),
+                            row_gap: Val::Px(10.0 * UI_SCALE),
+                            column_gap: Val::Px(20.0 * UI_SCALE),
                             ..default()
                         })
+                        .insert(BackgroundColor(main_color.into()))
                         .with_children(|parent| {
                             for difficulty in Difficulty::all() {
                                 parent
-                                    .spawn(ButtonBundle {
-                                        style: Style {
-                                            min_height: Val::Px(30.0),
-                                            border: UiRect::all(Val::Px(0.9)),
-                                            align_content: AlignContent::Center,
-                                            justify_content: JustifyContent::Center,
-                                            flex_direction: FlexDirection::Column,
-                                            align_items: AlignItems::Center,
-                                            margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                                            ..default()
-                                        },
-                                        // Remove background color
-                                        background_color: Color::NONE.into(),
+                                    .spawn(Button)
+                                    .insert(Node {
+                                        min_height: Val::Px(30.0 * UI_SCALE),
+                                        border: UiRect::all(Val::Px(0.9 * UI_SCALE)),
+                                        align_content: AlignContent::Center,
+                                        justify_content: JustifyContent::Center,
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Center,
+                                        margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     })
+                                    .insert(BackgroundColor(Color::NONE.into()))
                                     .insert(DifficultySelectionItem { difficulty })
                                     .with_children(|btn| {
-                                        btn.spawn(TextBundle::from_section(
-                                            difficulty.difficulty_name(),
-                                            TextStyle {
+                                        btn.spawn(Text::new(difficulty.difficulty_name()))
+                                            .insert(TextFont {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                // Reduced font size
                                                 font_size: 28.0 * UI_SCALE,
-                                                color: colors::MENU_ITEM_COLOR_OFF,
-                                            },
-                                        ));
+                                                font_smoothing:
+                                                    bevy::text::FontSmoothing::AntiAliased,
+                                            })
+                                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));
                                     });
                             }
                         });
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(10.0),
-                            ..default()
-                        },
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(10.0),
                         ..default()
                     });
-                    // parent .spawn(ButtonBundle { style: Style { min_height: Val::Px(30.0), border:
-                    // UiRect::all(Val::Px(0.9)), align_content: AlignContent::Center,
-                    // justify_content: JustifyContent::Center, flex_direction: FlexDirection::Column,
-                    // align_items: AlignItems::Center, margin:
-                    // UiRect::all(Val::Percent(MARGIN_PERCENT)), ..default() }, background_color:
-                    // Color::NONE.into(), // Remove background color ..default() })
-                    // .with_children(|btn| { btn.spawn(TextBundle::from_section( "Go Back", TextStyle
-                    // { font: handles.fonts.londrina.w300_light.clone(), font_size: 38.0, color:
-                    // colors::MENU_ITEM_COLOR_OFF, // Default text color }, )); });
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
-                ..default()
-            });
             parent
-                .spawn(
-                    TextBundle::from_section(
-                        "Difficulty <>: Description",
-                        TextStyle {
-                            font: handles.fonts.titillium.w300_light.clone(),
-                            font_size: 26.0 * UI_SCALE,
-                            color: colors::MENU_ITEM_COLOR_OFF,
-                        },
-                    )
-                    .with_style(Style {
-                        padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
-                        align_content: AlignContent::Center,
-                        align_self: AlignSelf::Center,
-                        justify_content: JustifyContent::Center,
-                        justify_self: JustifySelf::Center,
-                        flex_grow: 0.0,
-                        flex_shrink: 0.0,
-                        flex_basis: Val::Px(155.0 * UI_SCALE),
-                        max_height: Val::Px(155.0 * UI_SCALE),
-                        ..default()
-                    }),
-                )
+                .spawn(Text::new("Difficulty <>: Description"))
+                .insert(TextFont {
+                    font: handles.fonts.titillium.w300_light.clone(),
+                    font_size: 26.0 * UI_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
+                .insert(Node {
+                    padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
+                    align_content: AlignContent::Center,
+                    align_self: AlignSelf::Center,
+                    justify_content: JustifyContent::Center,
+                    justify_self: JustifySelf::Center,
+                    flex_grow: 0.0,
+                    flex_shrink: 0.0,
+                    flex_basis: Val::Px(155.0 * UI_SCALE),
+                    max_height: Val::Px(155.0 * UI_SCALE),
+                    ..default()
+                })
                 .insert(DifficultyDescriptionUI);
         });
     info!("MapHub - Difficulty menu loaded");

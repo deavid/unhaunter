@@ -23,7 +23,7 @@ pub fn app_setup(app: &mut App) {
 
 pub fn setup_systems(mut commands: Commands, mut next_state: ResMut<NextState<MapHubState>>) {
     // Create a new camera for the Map Hub UI
-    commands.spawn(Camera2dBundle::default()).insert(MCamera);
+    commands.spawn(Camera2d).insert(MCamera);
 
     // Transition to the map selection screen
     next_state.set(MapHubState::MapSelection);

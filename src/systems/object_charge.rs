@@ -18,7 +18,7 @@ fn accumulate_charge(
     mut query: Query<&mut GhostInfluence>,
 ) {
     // Get the time elapsed since the last frame
-    let delta_time = time.delta_seconds();
+    let delta_time = time.delta_secs();
 
     // Iterate through entities with GhostInfluence
     for mut ghost_influence in &mut query {
@@ -108,7 +108,7 @@ fn check_ghost_proximity(
     }
 
     // --- Increase Anger for Removed Attractive Objects ---
-    let delta_time = time.delta_seconds();
+    let delta_time = time.delta_secs();
     for _ in removed_attractive_objects.iter() {
         ghost_sprite.rage += difficulty.0.attractive_removal_anger_rate * delta_time;
     }
@@ -122,7 +122,7 @@ fn discharge_objects(
     // Query for mutable GhostInfluence components of objects within discharge range
     mut query: Query<&mut GhostInfluence, With<WithinDischargeRange>>,
 ) {
-    let delta_time = time.delta_seconds();
+    let delta_time = time.delta_secs();
     for mut ghost_influence in &mut query {
         match ghost_influence.influence_type {
             InfluenceType::Attractive => {

@@ -6,6 +6,7 @@ use crate::{
     game::level::LoadLevelEvent,
     manual::{CurrentManualPage, Manual},
     maphub::difficulty_selection::DifficultySelectionState,
+    platform::plt::UI_SCALE,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
@@ -129,61 +130,53 @@ fn manual_button_system(
 
 /// Draws the pre-play manual UI, which guides the player through a tutorial.
 pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
-    let button_text_style = TextStyle {
+    let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
-        font_size: 30.0,
-        color: Color::WHITE,
+        font_size: 30.0 * UI_SCALE,
+        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
 
     let prev_button = |button: &mut ChildBuilder| {
-        button.spawn(TextBundle::from_section(
-            "Previous",
-            button_text_style.clone(),
-        ));
+        button
+            .spawn(Text::new("Previous"))
+            .insert(button_text_style.clone())
+            .insert(TextColor(Color::WHITE));
     };
     let continue_button = |button: &mut ChildBuilder| {
-        button.spawn(TextBundle::from_section(
-            "Continue",
-            button_text_style.clone(),
-        ));
+        button
+            .spawn(Text::new("Continue"))
+            .insert(button_text_style.clone())
+            .insert(TextColor(Color::WHITE));
     };
     let nav_buttons = |buttons: &mut ChildBuilder| {
         // Previous button
         buttons
-            .spawn(ButtonBundle {
-                style: Style {
-                    width: Val::Percent(30.0),
-                    height: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::all(Val::Px(5.0)),
-
-                    ..default()
-                },
-
-                background_color: Color::BLACK.with_alpha(0.2).into(),
-
+            .spawn(Button)
+            .insert(Node {
+                width: Val::Percent(30.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
             .with_children(prev_button)
             .insert(PreplayManualNavigationAction::Previous)
             .insert(Input::from_keys([KeyCode::Escape, KeyCode::ArrowLeft]));
 
         // Continue Button
         buttons
-            .spawn(ButtonBundle {
-                style: Style {
-                    width: Val::Percent(30.0),
-                    height: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::all(Val::Px(5.0)),
-                    ..default()
-                },
-
-                background_color: Color::BLACK.with_alpha(0.2).into(),
+            .spawn(Button)
+            .insert(Node {
+                width: Val::Percent(30.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
             .with_children(continue_button)
             .insert(PreplayManualNavigationAction::Continue)
             .insert(Input::from_keys([
@@ -196,51 +189,40 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let page_content = |parent: &mut ChildBuilder| {
         // Page Content Container - Now Empty, content will be added later
         parent
-            .spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    flex_grow: 1.0,
-                    flex_basis: Val::Percent(100.0),
-                    ..default()
-                },
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                flex_grow: 1.0,
+                flex_basis: Val::Percent(100.0),
                 ..default()
             })
             .insert(PageContent);
 
         // Navigation Buttons
         parent
-            .spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(90.0),
-                    height: Val::Percent(5.0),
-                    flex_direction: FlexDirection::Row,
-                    justify_content: JustifyContent::SpaceBetween,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::top(Val::Percent(3.0)),
-                    flex_grow: 0.0,
-                    flex_basis: Val::Percent(5.0),
-
-                    ..default()
-                },
-
+            .spawn(Node {
+                width: Val::Percent(90.0),
+                height: Val::Percent(5.0),
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::SpaceBetween,
+                align_items: AlignItems::Center,
+                margin: UiRect::top(Val::Percent(3.0)),
+                flex_grow: 0.0,
+                flex_basis: Val::Percent(5.0),
                 ..default()
             })
             .with_children(nav_buttons);
     };
 
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(2.0)),
-                ..default()
-            },
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(Val::Px(2.0)),
             ..default()
         })
         .insert(PrePlayManualUI)
@@ -262,9 +244,7 @@ pub fn setup_preplay_ui(
             .unwrap_or_default(),
         0,
     ));
-    commands
-        .spawn(Camera2dBundle::default())
-        .insert(ManualCamera);
+    commands.spawn(Camera2d::default()).insert(ManualCamera);
 
     draw_manual_ui(&mut commands, handles);
 }

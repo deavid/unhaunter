@@ -1,5 +1,6 @@
 use crate::{
-    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
+    difficulty::CurrentDifficulty, ghost_definitions::GhostType, platform::plt::UI_SCALE,
+    player::PlayerSprite, root, utils,
 };
 use bevy::{color::palettes::css, prelude::*};
 
@@ -65,7 +66,7 @@ impl SummaryData {
 
 pub fn setup(mut commands: Commands) {
     // ui camera
-    let cam = Camera2dBundle::default();
+    let cam = Camera2d::default();
     commands.spawn(cam).insert(SCamera);
     info!("Summary camera setup");
 }
@@ -98,7 +99,7 @@ pub fn update_time(
         return;
     }
     sd.difficulty = difficulty.clone();
-    sd.time_taken_secs += time.delta_seconds();
+    sd.time_taken_secs += time.delta_secs();
     let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
     let player_count = qp.iter().count();
     let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
@@ -127,7 +128,6 @@ pub fn keyboard(
         app_next_state.set(root::State::MainMenu);
     }
 }
-
 pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
@@ -136,44 +136,41 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         alpha: 0.05,
     });
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                // ```
-                // align_self: AlignSelf::Center,
-                // ```
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect {
-                    left: Val::Percent(10.0),
-                    right: Val::Percent(10.0),
-                    top: Val::Percent(5.0),
-                    bottom: Val::Percent(5.0),
-                },
-                ..default()
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect {
+                left: Val::Percent(10.0),
+                right: Val::Percent(10.0),
+                top: Val::Percent(5.0),
+                bottom: Val::Percent(5.0),
             },
+            flex_grow: 1.0,
             ..default()
         })
+        .insert(BackgroundColor(main_color.into()))
         .insert(SummaryUI)
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(20.0),
-                        min_width: Val::Px(0.0),
-                        min_height: Val::Px(64.0),
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::FlexStart,
-                        ..default()
-                    },
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(20.0),
+                    min_width: Val::Px(0.0),
+                    min_height: Val::Px(64.0 * UI_SCALE),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexStart,
                     ..default()
                 })
                 .with_children(|parent| {
                     // logo
-                    parent.spawn(ImageBundle {
-                        style: Style {
+                    parent
+                        .spawn(ImageNode {
+                            image: handles.images.title.clone().into(),
+                            ..default()
+                        })
+                        .insert(Node {
                             aspect_ratio: Some(130.0 / 17.0),
                             width: Val::Percent(80.0),
                             height: Val::Auto,
@@ -181,143 +178,118 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             max_height: Val::Percent(100.0),
                             flex_shrink: 1.0,
                             ..default()
-                        },
-                        image: handles.images.title.clone().into(),
-                        ..default()
-                    });
+                        });
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0),
                 ..default()
             });
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(60.0),
-                        justify_content: JustifyContent::SpaceEvenly,
-                        align_items: AlignItems::Center,
-                        flex_direction: FlexDirection::Column,
-                        ..default()
-                    },
-                    background_color: main_color.into(),
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(60.0),
+                    justify_content: JustifyContent::SpaceEvenly,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 })
+                .insert(BackgroundColor(main_color.into()))
                 .with_children(|parent| {
                     // text
-                    parent.spawn(TextBundle::from_section(
-                        "Summary",
-                        TextStyle {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: Color::WHITE,
-                        },
-                    ));
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Ghost list",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Summary"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+                    parent
+                        .spawn(Text::new("Ghost list"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::GhostList);
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(10.0),
-                            ..default()
-                        },
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(10.0),
                         ..default()
                     });
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Time taken: 00.00.00",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Time taken: 00.00.00"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::TimeTaken);
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Average Sanity: 00",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Average Sanity: 00"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::AvgSanity);
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Ghosts unhaunted: 0/1",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Ghosts unhaunted: 0/1"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::GhostUnhaunted);
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Repellent charges used: 0",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Repellent charges used: 0"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::RepellentUsed);
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Players Alive: 0/0",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Players Alive: 0/0"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::PlayersAlive);
                     parent
-                        .spawn(TextBundle::from_section(
-                            "Final Score: 0",
-                            TextStyle {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0,
-                                color: css::GRAY.into(),
-                            },
-                        ))
+                        .spawn(Text::new("Final Score: 0"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::FinalScore);
-                    parent.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(20.0),
-                            ..default()
-                        },
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(20.0),
                         ..default()
                     });
-                    parent.spawn(TextBundle::from_section(
-                        "[ - Press enter to continue - ]",
-                        TextStyle {
+                    parent
+                        .spawn(Text::new("[ - Press enter to continue - ]"))
+                        .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0,
-                            color: css::ORANGE_RED.into(),
-                        },
-                    ));
+                            font_size: 38.0 * UI_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::ORANGE_RED.into()));
                 });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    ..default()
-                },
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(20.0),
                 ..default()
             });
         });
@@ -328,7 +300,7 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
     for (sui, mut text) in &mut qui {
         match &sui {
             SummaryUIType::GhostList => {
-                text.sections[0].value = format!(
+                text.0 = format!(
                     "Ghost: {}",
                     rsd.ghost_types
                         .iter()
@@ -338,30 +310,25 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
                 )
             }
             SummaryUIType::TimeTaken => {
-                text.sections[0].value =
-                    format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))
+                text.0 = format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))
             }
             SummaryUIType::AvgSanity => {
-                text.sections[0].value = format!("Average Sanity: {:.1}%", rsd.average_sanity)
+                text.0 = format!("Average Sanity: {:.1}%", rsd.average_sanity)
             }
             SummaryUIType::GhostUnhaunted => {
-                text.sections[0].value = format!(
+                text.0 = format!(
                     "Ghosts unhaunted: {}/{}",
                     rsd.ghosts_unhaunted,
                     rsd.ghost_types.len()
                 )
             }
             SummaryUIType::PlayersAlive => {
-                text.sections[0].value =
-                    format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
+                text.0 = format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
             }
             SummaryUIType::RepellentUsed => {
-                text.sections[0].value =
-                    format!("Repellent charges used: {}", rsd.repellent_used_amt)
+                text.0 = format!("Repellent charges used: {}", rsd.repellent_used_amt)
             }
-            SummaryUIType::FinalScore => {
-                text.sections[0].value = format!("Final Score: {}", rsd.final_score)
-            }
+            SummaryUIType::FinalScore => text.0 = format!("Final Score: {}", rsd.final_score),
         }
     }
 }

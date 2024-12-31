@@ -104,10 +104,10 @@ pub fn trigger_ghost_events(
                             ));
 
                             // Play door slam sound effect
-                            commands.spawn(AudioBundle {
-                                source: asset_server.load("sounds/door-close.ogg"),
-                                settings: PlaybackSettings::default(),
-                            });
+                            commands
+                                .spawn(AudioPlayer::new(asset_server.load("sounds/door-close.ogg")))
+                                .insert(PlaybackSettings::default());
+
                             ev_bdr.send(board::BoardDataToRebuild {
                                 lighting: true,
                                 collision: true,

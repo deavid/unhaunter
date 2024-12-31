@@ -54,7 +54,7 @@ impl GearUsable for GeigerCounter {
 
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         let mut rng = rand::thread_rng();
-        self.display_secs_since_last_update += gs.time.delta_seconds();
+        self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.5;
@@ -97,8 +97,8 @@ impl GearUsable for GeigerCounter {
             self.sound_a2 /= 1.01;
         }
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
-        if gs.time.elapsed_seconds() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
-            self.last_sound_time_secs = gs.time.elapsed_seconds() + rng.gen_range(0.01..0.02);
+        if gs.time.elapsed_secs() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
+            self.last_sound_time_secs = gs.time.elapsed_secs() + rng.gen_range(0.01..0.02);
             gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
         }
         if self.display_secs_since_last_update > 0.5 {

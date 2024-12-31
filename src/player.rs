@@ -244,7 +244,7 @@ pub fn keyboard_player(
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
-    let dt = time.delta_seconds() * 60.0;
+    let dt = time.delta_secs() * 60.0;
     for (mut pos, mut dir, player, mut anim, player_gear, hiding) in players.iter_mut() {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
@@ -483,10 +483,12 @@ impl AnimationTimer {
     }
 }
 
-pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut TextureAtlas)>) {
-    for (mut anim, mut texture_atlas) in query.iter_mut() {
+pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut Sprite)>) {
+    for (mut anim, mut sprite) in query.iter_mut() {
         if let Some(idx) = anim.tick(time.delta()) {
-            texture_atlas.index = idx;
+            if let Some(texture_atlas) = sprite.texture_atlas.as_mut() {
+                texture_atlas.index = idx;
+            }
         }
     }
 }
@@ -614,17 +616,18 @@ impl InteractiveStuff<'_, '_> {
             }
             if let Some(interactive) = interactive {
                 let sound_file = interactive.sound_for_moving_into_state(behavior);
-                self.commands.spawn(AudioBundle {
-                    source: self.asset_server.load(sound_file),
-                    settings: PlaybackSettings {
+                self.commands
+                    .spawn(AudioPlayer::<AudioSource>(
+                        self.asset_server.load(sound_file),
+                    ))
+                    .insert(PlaybackSettings {
                         mode: bevy::audio::PlaybackMode::Despawn,
                         volume: bevy::audio::Volume::new(1.0),
                         speed: 1.0,
                         paused: false,
                         spatial: false,
                         spatial_scale: None,
-                    },
-                });
+                    });
             }
             self.game_next_state.set(root::GameState::Truck);
             return false;
@@ -672,7 +675,7 @@ impl InteractiveStuff<'_, '_> {
                 Bdl::Mmb(b) => {
                     let mat = self.materials1.get(&b.material).unwrap().clone();
                     let mat = self.materials1.add(mat);
-                    e_commands.insert(mat);
+                    e_commands.insert(MeshMaterial2d(mat));
                 }
                 Bdl::Sb(b) => {
                     e_commands.insert(b);
@@ -682,17 +685,18 @@ impl InteractiveStuff<'_, '_> {
             if ietype == InteractionExecutionType::ChangeState {
                 if let Some(interactive) = interactive {
                     let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
-                    self.commands.spawn(AudioBundle {
-                        source: self.asset_server.load(sound_file),
-                        settings: PlaybackSettings {
+                    self.commands
+                        .spawn(AudioPlayer::<AudioSource>(
+                            self.asset_server.load(sound_file),
+                        ))
+                        .insert(PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
                             volume: bevy::audio::Volume::new(1.0),
                             speed: 1.0,
                             paused: false,
                             spatial: false,
                             spatial_scale: None,
-                        },
-                    });
+                        });
                 }
             }
             return true;
@@ -893,17 +897,17 @@ pub fn hide_player(
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
-                    parent.spawn(SpriteBundle {
-                        texture: asset_server.load("img/hiding_overlay.png"),
-                        transform: Transform::from_xyz(0.0, 0.0, 0.02)
-                            // Position relative to parent
-                            .with_scale(Vec3::new(0.20, 0.20, 0.20)),
-                        sprite: Sprite {
+                    parent
+                        .spawn(Sprite {
+                            image: asset_server.load("img/hiding_overlay.png"),
                             color: css::WHITE.with_alpha(0.4).into(),
                             ..default()
-                        },
-                        ..default()
-                    });
+                        })
+                        .insert(
+                            // Position relative to parent
+                            Transform::from_xyz(0.0, 0.0, 0.02)
+                                .with_scale(Vec3::new(0.20, 0.20, 0.20)),
+                        );
                 });
             }
         } else {
@@ -964,7 +968,7 @@ fn lose_sanity(
     difficulty: Res<CurrentDifficulty>,
 ) {
     timer.tick(time.delta());
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
         let lux = bf
@@ -1031,7 +1035,7 @@ fn recover_sanity(
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Current player recovers sanity while in the truck.
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     timer.tick(time.delta());
     for mut ps in &mut qp {
         if ps.id == gc.player_id {
@@ -1057,7 +1061,7 @@ pub fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
     mut qb: Query<(
-        Option<&mut UiImage>,
+        Option<&mut ImageNode>,
         &mut BackgroundColor,
         &DamageBackground,
     )>,
@@ -1103,7 +1107,7 @@ pub fn update_held_object_position(
     mut gs: gear::GearStuff,
     mut last_sound_time: Local<f32>,
 ) {
-    let current_time = gs.time.elapsed_seconds();
+    let current_time = gs.time.elapsed_secs();
     for (player_pos, player_gear, direction) in players.iter() {
         if let Some(held_object) = &player_gear.held_item {
             if let Ok((mut object_pos, behavior)) = objects.get_mut(held_object.entity) {
@@ -1159,19 +1163,21 @@ pub fn deploy_gear(
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);
             if is_valid_tile && !is_obstructed {
                 let scoord = player_pos.to_screen_coord();
-                let gear_sprite = SpriteBundle {
-                    texture: handles.images.gear.clone(),
-                    transform: Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
-                        // Initial scaling factor
-                        .with_scale(Vec3::new(0.25, 0.25, 0.25)),
+                let gear_sprite = Sprite {
+                    image: handles.images.gear.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                    }),
                     ..Default::default()
                 };
                 commands
                     .spawn(gear_sprite)
-                    .insert(TextureAtlas {
-                        layout: handles.images.gear_atlas.clone(),
-                        index: player_gear.right_hand.get_sprite_idx() as usize,
-                    })
+                    .insert(
+                        // Initial scaling factor
+                        Transform::from_xyz(scoord.x, scoord.y, scoord.z + 0.01)
+                            .with_scale(Vec3::new(0.25, 0.25, 0.25)),
+                    )
                     .insert(deployed_gear)
                     .insert(*player_pos)
                     .insert(behavior::component::FloorItemCollidable)

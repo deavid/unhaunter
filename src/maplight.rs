@@ -248,7 +248,7 @@ pub fn apply_lighting(
     mut qt2: Query<
         (
             &board::Position,
-            &Handle<CustomMaterial1>,
+            &MeshMaterial2d<CustomMaterial1>,
             &Behavior,
             &mut Visibility,
             Option<&GhostInfluence>,
@@ -307,7 +307,7 @@ pub fn apply_lighting(
     let mut exp_count: f32 = 0.1;
     let mut flashlights = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
-    let elapsed = time.elapsed_seconds();
+    let elapsed = time.elapsed_secs();
 
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
@@ -830,7 +830,7 @@ pub fn mark_for_update(
         }
         player_pos = *pos;
     }
-    let now = time.elapsed_seconds();
+    let now = time.elapsed_secs();
 
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};

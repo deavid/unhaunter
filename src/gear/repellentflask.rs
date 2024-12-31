@@ -93,11 +93,8 @@ impl GearUsable for RepellentFlask {
         pos.x += rng.gen_range(-spread..spread);
         pos.y += rng.gen_range(-spread..spread);
         gs.commands
-            .spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::NONE,
-                    ..default()
-                },
+            .spawn(Sprite {
+                color: Color::NONE,
                 ..default()
             })
             .insert(pos)

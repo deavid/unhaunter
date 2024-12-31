@@ -86,12 +86,14 @@ impl GearUsable for SageBundleData {
 
                 // Spawn smoke particle
                 gs.commands
-                    .spawn(SpriteBundle {
-                        texture: gs.asset_server.load("img/smoke.png"),
-                        transform: Transform::from_translation(pos.to_screen_coord())
-                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                    .spawn(Sprite {
+                        image: gs.asset_server.load("img/smoke.png"),
                         ..default()
                     })
+                    .insert(
+                        Transform::from_translation(pos.to_screen_coord())
+                            .with_scale(Vec3::new(0.2, 0.2, 0.2)),
+                    )
                     .insert(SageSmokeParticle)
                     .insert(GameSprite)
                     .insert(pos)
@@ -167,7 +169,7 @@ pub fn sage_smoke_system(
     >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = time.delta_secs();
     for (entity, mut position, mut transform, mut smoke_particle, mut map_color, o_dir) in
         smoke_particles.iter_mut()
     {
