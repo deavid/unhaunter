@@ -1,4 +1,4 @@
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::{
     materials::{self, UIPanelMaterial},
     root,
@@ -61,7 +61,7 @@ pub fn setup_ui(
             margin: MARGIN,
             ..default()
         })
-        .insert(BackgroundColor(PAUSEUI_BGCOLOR.into()))
+        .insert(BackgroundColor(PAUSEUI_BGCOLOR))
         .insert(PauseUI)
         .with_children(|parent| {
             // Mid content
@@ -80,13 +80,13 @@ pub fn setup_ui(
                     flex_grow: 1.0,
                     ..default()
                 })
-                .insert(BorderColor(PAUSEUI_ACCENT_COLOR.into()))
+                .insert(BorderColor(PAUSEUI_ACCENT_COLOR))
                 .with_children(|mid_blk| {
                     mid_blk
                         .spawn(Text::new("Pause"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 35.0 * UI_SCALE,
+                            font_size: 35.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(PAUSEUI_ACCENT_COLOR))
@@ -105,7 +105,7 @@ pub fn setup_ui(
                         ))
                         .insert(TextFont {
                             font: handles.fonts.chakra.w300_light.clone(),
-                            font_size: 25.0 * UI_SCALE,
+                            font_size: 25.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(PAUSEUI_TEXT_COLOR))

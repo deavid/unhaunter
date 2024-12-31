@@ -1,5 +1,5 @@
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::{colors, difficulty::CurrentDifficulty, ghost_definitions, root};
 use bevy::prelude::*;
 
@@ -22,7 +22,7 @@ pub fn setup_journal_ui(
         TextColor(colors::TRUCKUI_TEXT_COLOR),
         TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 25.0 * UI_SCALE,
+            font_size: 25.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         },
         Node {
@@ -63,8 +63,8 @@ pub fn setup_journal_ui(
                     padding: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     ..default()
                 })
-                .insert(BackgroundColor(Color::NONE.into()))
-                .insert(BorderColor(Color::NONE.into()))
+                .insert(BackgroundColor(Color::NONE))
+                .insert(BorderColor(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::Evidence(evidence).into_component())
                 .with_children(|btn| {
@@ -72,7 +72,7 @@ pub fn setup_journal_ui(
                         Text::new(evidence.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0 * UI_SCALE,
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -98,7 +98,7 @@ pub fn setup_journal_ui(
             Text::new("Possible ghost with the selected evidence:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0 * UI_SCALE,
+                font_size: 25.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -126,7 +126,7 @@ pub fn setup_journal_ui(
         flex_grow: 1.0,
         ..default()
     })
-    .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR.into()))
+    .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
     .with_children(|ghost_selection| {
         for ghost_type in difficulty.0.ghost_set.as_vec() {
             ghost_selection
@@ -142,8 +142,8 @@ pub fn setup_journal_ui(
                     align_items: AlignItems::Center,
                     ..default()
                 })
-                .insert(BackgroundColor(Color::NONE.into()))
-                .insert(BorderColor(Color::NONE.into()))
+                .insert(BackgroundColor(Color::NONE))
+                .insert(BorderColor(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::Ghost(ghost_type).into_component())
                 .with_children(|btn| {
@@ -151,7 +151,7 @@ pub fn setup_journal_ui(
                         Text::new(ghost_type.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0 * UI_SCALE,
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -176,7 +176,7 @@ pub fn setup_journal_ui(
             Text::new("With the above evidence we believe the ghost is:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0 * UI_SCALE,
+                font_size: 25.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -190,7 +190,7 @@ pub fn setup_journal_ui(
             Text::new("-- Unknown --"),
             TextFont {
                 font: handles.fonts.titillium.w600_semibold.clone(),
-                font_size: 28.0 * UI_SCALE,
+                font_size: 28.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -204,7 +204,7 @@ pub fn setup_journal_ui(
                 justify_content: JustifyContent::Center,
                 ..default()
             })
-            .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR.into()))
+            .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
             .with_children(|node| {
                 node.spawn(ghost_guess).insert(TruckUIGhostGuess);
             });
@@ -222,8 +222,8 @@ pub fn setup_journal_ui(
             margin: MARGIN,
             ..default()
         })
-        .insert(BackgroundColor(Color::NONE.into()))
-        .insert(BorderColor(Color::NONE.into()))
+        .insert(BackgroundColor(Color::NONE))
+        .insert(BorderColor(Color::NONE))
         .insert(Interaction::None)
         .insert(TruckButtonType::CraftRepellent.into_component())
         .with_children(|btn| {
@@ -231,7 +231,7 @@ pub fn setup_journal_ui(
                 Text::new("Craft Unhaunter™ Ghost Repellent"),
                 TextFont {
                     font: handles.fonts.titillium.w600_semibold.clone(),
-                    font_size: 32.0 * UI_SCALE,
+                    font_size: 32.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),

@@ -1,6 +1,6 @@
 use super::{draw_manual_page, CurrentManualPage, Manual};
 use crate::{
-    platform::plt::UI_SCALE,
+    platform::plt::FONT_SCALE,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
@@ -23,7 +23,7 @@ pub enum ManualNavigationEvent {
 pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
-        font_size: 30.0 * UI_SCALE,
+        font_size: 30.0 * FONT_SCALE,
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
 
@@ -58,7 +58,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
-            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(prev_button);
 
         // Close Button
@@ -72,7 +72,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
-            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(continue_button);
 
         // Next Button
@@ -86,7 +86,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
-            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(next_button);
     };
     let page_content = |parent: &mut ChildBuilder| {
@@ -173,7 +173,7 @@ pub fn user_manual_system(
 
 pub fn setup(mut commands: Commands, handles: Res<GameAssets>) {
     // Spawn the 2D camera for the manual UI
-    commands.spawn(Camera2d::default()).insert(ManualCamera);
+    commands.spawn(Camera2d).insert(ManualCamera);
 
     // Draw the manual UI
     draw_manual_ui(&mut commands, handles);

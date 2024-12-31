@@ -3,14 +3,12 @@ use crate::{
     colors,
     game::evidence,
     gear::{self, playergear::PlayerGear},
-    platform::plt::UI_SCALE,
+    platform::plt::{FONT_SCALE, UI_SCALE},
     player::PlayerSprite,
     root,
 };
-use bevy::{color::palettes::css, prelude::*, render::view::RenderLayers};
+use bevy::{color::palettes::css, prelude::*};
 
-#[derive(Component)]
-pub struct GCameraUI;
 #[derive(Component, Debug)]
 pub struct GameUI;
 
@@ -36,30 +34,7 @@ pub struct HeldObjectUI;
 #[derive(Component, Debug)]
 pub struct RightSideGearUI;
 
-pub fn setup(mut commands: Commands, qc2: Query<Entity, With<GCameraUI>>) {
-    // Despawn old camera if exists
-    for cam in qc2.iter() {
-        commands.entity(cam).despawn_recursive();
-    }
-
-    // 2D orthographic camera - UI
-    let cam = Camera2d { ..default() };
-    commands
-        .spawn(cam)
-        .insert(GCameraUI)
-        .insert(RenderLayers::from_layers(&[2, 3]));
-}
-
-pub fn cleanup(
-    mut commands: Commands,
-    qc2: Query<Entity, With<GCameraUI>>,
-    qg: Query<Entity, With<GameUI>>,
-) {
-    // Despawn old camera if exists
-    for cam in qc2.iter() {
-        commands.entity(cam).despawn_recursive();
-    }
-
+pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used
     for gui in qg.iter() {
         commands.entity(gui).despawn_recursive();
@@ -91,7 +66,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         .insert(DamageBackground::new(4.0));
     commands
         .spawn(ImageNode {
-            image: handles.images.vignette.clone().into(),
+            image: handles.images.vignette.clone(),
             ..default()
         })
         .insert(Node {
@@ -112,7 +87,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
         ))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * UI_SCALE,
+            font_size: 16.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -150,7 +125,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(inv_left);
 
         // Left side
@@ -164,7 +139,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(key_legend);
 
         // Mid side
@@ -176,7 +151,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(evidence);
 
         // Right side
@@ -191,7 +166,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(|p| {
             p.spawn(Node {
                 align_items: AlignItems::Start,
@@ -213,7 +188,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 ..Default::default()
             })
             .insert(colors::DEBUG_BCOLOR)
-            .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+            .insert(BackgroundColor(colors::PANEL_BGCOLOR))
             .insert(HeldObjectUI)
             .with_children(|parent| setup_ui_held_object(parent, &handles));
         });
@@ -234,7 +209,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             // logo
             parent
                 .spawn(ImageNode {
-                    image: handles.images.title.clone().into(),
+                    image: handles.images.title.clone(),
                     ..default()
                 })
                 .insert(Node {
@@ -269,7 +244,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(bottom_panel);
     };
 
@@ -297,7 +272,7 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
         .spawn(Text::new("Object Name"))
         .insert(TextFont {
             font: handles.fonts.victormono.w600_semibold.clone(),
-            font_size: 20.0 * UI_SCALE,
+            font_size: 20.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -308,7 +283,7 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
         .spawn(Text::new("Object Description"))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * UI_SCALE,
+            font_size: 16.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -319,7 +294,7 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
         .spawn(Text::new("[Drop]: Drop Object\n[Grab]: Move Object"))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * UI_SCALE,
+            font_size: 16.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -417,8 +392,7 @@ pub fn toggle_held_object_ui(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::State::InGame), setup)
-        .add_systems(OnEnter(root::State::InGame), setup_ui)
+    app.add_systems(OnEnter(root::State::InGame), setup_ui)
         .add_systems(OnExit(root::State::InGame), cleanup)
         .add_systems(OnEnter(root::GameState::None), resume)
         .add_systems(OnExit(root::GameState::None), pause)

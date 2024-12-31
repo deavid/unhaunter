@@ -2,7 +2,7 @@ use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGe
 use super::{GearSpriteID, GearStuff, GearUsable};
 use crate::colors;
 use crate::game::GameConfig;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{UI_SCALE, FONT_SCALE};
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
 use bevy::prelude::*;
@@ -71,7 +71,7 @@ pub fn update_gear_ui(
 pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     // Leftmost side panel - inventory
     p.spawn(ImageNode {
-        image: handles.images.gear.clone().into(),
+        image: handles.images.gear.clone(),
         texture_atlas: Some(TextureAtlas {
             index: GearSpriteID::Flashlight2 as usize,
             layout: handles.images.gear_atlas.clone(),
@@ -87,7 +87,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     p.spawn(Text::new("[TAB]: T.Aux"))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * UI_SCALE,
+            font_size: 16.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -117,7 +117,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
     })
     .with_children(|p| {
         p.spawn(ImageNode {
-            image: handles.images.gear.clone().into(),
+            image: handles.images.gear.clone(),
             texture_atlas: Some(TextureAtlas {
                 index: GearSpriteID::Flashlight2 as usize,
                 layout: handles.images.gear_atlas.clone(),
@@ -139,7 +139,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         })
         .insert(playergear::InventoryNext::non_empty());
         p.spawn(ImageNode {
-            image: handles.images.gear.clone().into(),
+            image: handles.images.gear.clone(),
             texture_atlas: Some(TextureAtlas {
                 index: GearSpriteID::IonMeter2 as usize,
                 layout: handles.images.gear_atlas.clone(),
@@ -155,7 +155,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         p.spawn(Text::new("-"))
             .insert(TextFont {
                 font: handles.fonts.victormono.w600_semibold.clone(),
-                font_size: 18.0 * UI_SCALE,
+                font_size: 18.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             })
             .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -178,7 +178,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
     ))
     .insert(TextFont {
         font: handles.fonts.chakra.w300_light.clone(),
-        font_size: 16.0 * UI_SCALE,
+        font_size: 16.0 * FONT_SCALE,
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     })
     .insert(TextColor(colors::INVENTORY_STATS_COLOR))

@@ -7,7 +7,7 @@
 //! visual elements of the manual efficiently.
 
 use crate::colors;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::FONT_SCALE;
 use crate::root::GameAssets;
 
 use bevy::prelude::*;
@@ -29,7 +29,7 @@ pub fn image_text(
         .with_children(|parent| {
             parent
                 .spawn(ImageNode {
-                    image: image.clone().into(),
+                    image: image.clone(),
                     ..default()
                 })
                 .insert(Node {
@@ -43,7 +43,7 @@ pub fn image_text(
                 .spawn(Text::new(text))
                 .insert(TextFont {
                     font: font.clone(),
-                    font_size: 18.0 * UI_SCALE,
+                    font_size: 18.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(Color::WHITE));
@@ -86,12 +86,12 @@ pub fn grid_img_text2(
 ) {
     let font_regular = TextFont {
         font: regular_font.clone(),
-        font_size: 16.0 * UI_SCALE,
+        font_size: 16.0 * FONT_SCALE,
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
     let font_bold = TextFont {
         font: bold_font.clone(),
-        font_size: 16.0 * UI_SCALE,
+        font_size: 16.0 * FONT_SCALE,
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
     let color_regular = TextColor(colors::DIALOG_TEXT_COLOR);
@@ -133,7 +133,7 @@ pub fn grid_img_text2(
                     }
                     parent
                         .spawn(ImageNode {
-                            image: (*img).clone().into(),
+                            image: (*img).clone(),
                             ..default()
                         })
                         .insert(Node {
@@ -152,9 +152,9 @@ pub fn grid_img_text2(
                     let mut layout = parent.spawn((TextLayout::default(),));
                     for (n, subtext) in text.split('*').enumerate() {
                         let (font, color) = if n % 2 == 0 {
-                            (font_regular.clone(), color_regular.clone())
+                            (font_regular.clone(), color_regular)
                         } else {
-                            (font_bold.clone(), color_bold.clone())
+                            (font_bold.clone(), color_bold)
                         };
                         layout.with_child((TextSpan::new(subtext), font, color));
                     }
@@ -183,7 +183,7 @@ pub fn header(
                 .spawn(Text::new(title))
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 32.0 * UI_SCALE,
+                    font_size: 32.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(Color::WHITE));
@@ -193,7 +193,7 @@ pub fn header(
                 .spawn(Text::new(subtitle))
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 18.0 * UI_SCALE,
+                    font_size: 18.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(Color::WHITE));
@@ -229,7 +229,7 @@ pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: im
                 .spawn(Text::new(summary))
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 18.0 * UI_SCALE,
+                    font_size: 18.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(Color::WHITE));

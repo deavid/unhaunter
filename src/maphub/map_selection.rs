@@ -1,5 +1,5 @@
 use crate::colors;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::root::Maps;
 use crate::{maphub::MapHubState, root};
 use bevy::prelude::*;
@@ -152,7 +152,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                     // logo
                     parent
                         .spawn(ImageNode {
-                            image: handles.images.title.clone().into(),
+                            image: handles.images.title.clone(),
                             ..default()
                         })
                         .insert(Node {
@@ -179,14 +179,14 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                     flex_direction: FlexDirection::Column,
                     ..default()
                 })
-                .insert(BackgroundColor(main_color.into()))
+                .insert(BackgroundColor(main_color))
                 .with_children(|parent| {
                     // text
                     parent
                         .spawn(Text::new("Map Hub - Select Map"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -215,7 +215,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             column_gap: Val::Px(20.0 * UI_SCALE),
                             ..default()
                         })
-                        .insert(BackgroundColor(main_color.into()))
+                        .insert(BackgroundColor(main_color))
                         .with_children(|parent| {
                             for (i, map) in maps.maps.iter().enumerate() {
                                 parent
@@ -230,13 +230,13 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                                         margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     })
-                                    .insert(BackgroundColor(Color::NONE.into()))
+                                    .insert(BackgroundColor(Color::NONE))
                                     .insert(MapSelectionItem { map_idx: i })
                                     .with_children(|btn| {
                                         btn.spawn(Text::new(map.name.clone()))
                                             .insert(TextFont {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 32.0 * UI_SCALE,
+                                                font_size: 32.0 * FONT_SCALE,
                                                 font_smoothing:
                                                     bevy::text::FontSmoothing::AntiAliased,
                                             })
@@ -261,7 +261,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                             ..default()
                         })
-                        .insert(BackgroundColor(Color::NONE.into()))
+                        .insert(BackgroundColor(Color::NONE))
                         .insert(MapSelectionItem {
                             map_idx: maps.maps.len(),
                             // Set map_idx to map_count for "Go Back"
@@ -270,7 +270,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             btn.spawn(Text::new("Go Back"))
                                 .insert(TextFont {
                                     font: handles.fonts.londrina.w300_light.clone(),
-                                    font_size: 38.0 * UI_SCALE,
+                                    font_size: 38.0 * FONT_SCALE,
                                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                                 })
                                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));

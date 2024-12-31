@@ -1,7 +1,7 @@
 use crate::colors;
 use crate::platform;
 use crate::platform::plt::IS_WASM;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::root;
 use bevy::app::AppExit;
 use bevy::color::palettes::css;
@@ -121,8 +121,7 @@ pub fn app_setup(app: &mut App) {
 
 pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     // ui camera
-    let cam = Camera2d::default();
-    commands.spawn(cam).insert(MCamera);
+    commands.spawn(Camera2d).insert(MCamera);
     info!("Main menu camera setup");
 }
 
@@ -223,7 +222,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             flex_grow: 1.0,
             ..default()
         })
-        .insert(BackgroundColor(main_color.into()))
+        .insert(BackgroundColor(main_color))
         .insert(MenuUI)
         .with_children(|parent| {
             parent
@@ -239,7 +238,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 .with_children(|parent| {
                     // logo
                     parent.spawn(ImageNode {
-                        image: handles.images.title.clone().into(),
+                        image: handles.images.title.clone(),
                         ..default()
                     }).insert(Node {
                         aspect_ratio: Some(130.0 / 17.0),
@@ -265,7 +264,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     flex_direction: FlexDirection::Column,
                     ..default()
                 })
-                .insert(BackgroundColor(main_color.into()))
+                .insert(BackgroundColor(main_color))
                 .insert(Menu::default())
                 .with_children(|parent| {
                     // text
@@ -273,7 +272,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("New Game"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
@@ -282,7 +281,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Manual"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
@@ -293,7 +292,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                             .spawn(Text::new("Quit"))
                             .insert(TextFont {
                                 font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * UI_SCALE,
+                                font_size: 38.0 * FONT_SCALE,
                                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                             })
                             .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
@@ -313,7 +312,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 )))
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),
-                    font_size: 20.0 * UI_SCALE,
+                    font_size: 20.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))

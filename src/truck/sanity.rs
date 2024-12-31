@@ -1,4 +1,4 @@
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{UI_SCALE, FONT_SCALE};
 use crate::{colors, game::GameConfig, player::PlayerSprite, root};
 use bevy::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn setup_sanity_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         Text::new("Sanity"),
         TextFont {
             font: handles.fonts.londrina.w300_light.clone(),
-            font_size: 35.0 * UI_SCALE,
+            font_size: 35.0 * FONT_SCALE,
             ..default()
         },
         TextColor(colors::TRUCKUI_ACCENT_COLOR),
@@ -35,7 +35,7 @@ pub fn setup_sanity_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
         Text::new("Player 1: 90% Sanity"),
         TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 25.0 * UI_SCALE,
+            font_size: 25.0 * FONT_SCALE,
             ..default()
         },
         TextColor(colors::TRUCKUI_TEXT_COLOR),

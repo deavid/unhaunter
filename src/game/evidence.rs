@@ -1,5 +1,5 @@
 use super::GameConfig;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::FONT_SCALE;
 use crate::{
     colors,
     gear::playergear::PlayerGear,
@@ -20,7 +20,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
             Text::new(""),
              TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0 * UI_SCALE,
+                    font_size: 22.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                  },
              TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
@@ -33,7 +33,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 .spawn(TextSpan::new("Freezing temps:"))
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0 * UI_SCALE,
+                    font_size: 22.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                  })
                 .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)));
@@ -41,7 +41,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 .spawn(TextSpan::new(" [+] Evidence Found\n"))
                 .insert(TextFont {
                     font: handles.fonts.victormono.w600_semibold.clone(),
-                    font_size: 20.0 * UI_SCALE,
+                    font_size: 20.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(css::GREEN.with_alpha(0.4).into()));
@@ -51,7 +51,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 ))
                 .insert(TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 20.0 * UI_SCALE,
+                    font_size: 20.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                  })
                 .insert(TextColor(colors::INVENTORY_STATS_COLOR));

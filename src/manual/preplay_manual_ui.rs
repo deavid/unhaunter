@@ -6,7 +6,7 @@ use crate::{
     game::level::LoadLevelEvent,
     manual::{CurrentManualPage, Manual},
     maphub::difficulty_selection::DifficultySelectionState,
-    platform::plt::UI_SCALE,
+    platform::plt::FONT_SCALE,
     root::{self, GameAssets},
 };
 use bevy::prelude::*;
@@ -132,7 +132,7 @@ fn manual_button_system(
 pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
-        font_size: 30.0 * UI_SCALE,
+        font_size: 30.0 * FONT_SCALE,
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
 
@@ -160,7 +160,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
-            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(prev_button)
             .insert(PreplayManualNavigationAction::Previous)
             .insert(Input::from_keys([KeyCode::Escape, KeyCode::ArrowLeft]));
@@ -176,7 +176,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             })
-            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2).into()))
+            .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(continue_button)
             .insert(PreplayManualNavigationAction::Continue)
             .insert(Input::from_keys([
@@ -244,7 +244,7 @@ pub fn setup_preplay_ui(
             .unwrap_or_default(),
         0,
     ));
-    commands.spawn(Camera2d::default()).insert(ManualCamera);
+    commands.spawn(Camera2d).insert(ManualCamera);
 
     draw_manual_ui(&mut commands, handles);
 }

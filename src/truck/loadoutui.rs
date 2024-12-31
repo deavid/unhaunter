@@ -4,7 +4,7 @@ use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::{Gear, GearKind};
 use crate::ghost_definitions::Evidence;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::{
     colors,
     game::GameConfig,
@@ -40,8 +40,8 @@ pub fn setup_loadout_ui(
     let button = || {
         (
             Button,
-            BackgroundColor(colors::TRUCKUI_ACCENT2_COLOR.into()),
-            BorderColor(colors::TRUCKUI_ACCENT_COLOR.into()),
+            BackgroundColor(colors::TRUCKUI_ACCENT2_COLOR),
+            BorderColor(colors::TRUCKUI_ACCENT_COLOR),
             Node {
                 justify_content: JustifyContent::Center,
                 justify_items: JustifyItems::Center,
@@ -60,7 +60,7 @@ pub fn setup_loadout_ui(
     let equipment = |g: GearSpriteID| {
         (
             ImageNode {
-                image: handles.images.gear.clone().into(),
+                image: handles.images.gear.clone(),
                 texture_atlas: Some(TextureAtlas {
                     index: g as usize,
                     layout: handles.images.gear_atlas.clone(),
@@ -95,7 +95,7 @@ pub fn setup_loadout_ui(
             Text::new("Player Inventory:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0 * UI_SCALE,
+                font_size: 25.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -145,7 +145,7 @@ pub fn setup_loadout_ui(
             Text::new("Van Inventory:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
-                font_size: 25.0 * UI_SCALE,
+                font_size: 25.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -215,7 +215,7 @@ pub fn setup_loadout_ui(
                 Text::new("Help and Item description:"),
                 TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 25.0 * UI_SCALE,
+                    font_size: 25.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -229,7 +229,7 @@ pub fn setup_loadout_ui(
                 Text::new("Select ..."),
                 TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
-                    font_size: 22.0 * UI_SCALE,
+                    font_size: 22.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7)),

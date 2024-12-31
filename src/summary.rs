@@ -1,6 +1,9 @@
 use crate::{
-    difficulty::CurrentDifficulty, ghost_definitions::GhostType, platform::plt::UI_SCALE,
-    player::PlayerSprite, root, utils,
+    difficulty::CurrentDifficulty,
+    ghost_definitions::GhostType,
+    platform::plt::{FONT_SCALE, UI_SCALE},
+    player::PlayerSprite,
+    root, utils,
 };
 use bevy::{color::palettes::css, prelude::*};
 
@@ -66,8 +69,7 @@ impl SummaryData {
 
 pub fn setup(mut commands: Commands) {
     // ui camera
-    let cam = Camera2d::default();
-    commands.spawn(cam).insert(SCamera);
+    commands.spawn(Camera2d).insert(SCamera);
     info!("Summary camera setup");
 }
 
@@ -150,7 +152,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             flex_grow: 1.0,
             ..default()
         })
-        .insert(BackgroundColor(main_color.into()))
+        .insert(BackgroundColor(main_color))
         .insert(SummaryUI)
         .with_children(|parent| {
             parent
@@ -167,7 +169,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     // logo
                     parent
                         .spawn(ImageNode {
-                            image: handles.images.title.clone().into(),
+                            image: handles.images.title.clone(),
                             ..default()
                         })
                         .insert(Node {
@@ -194,14 +196,14 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                     flex_direction: FlexDirection::Column,
                     ..default()
                 })
-                .insert(BackgroundColor(main_color.into()))
+                .insert(BackgroundColor(main_color))
                 .with_children(|parent| {
                     // text
                     parent
                         .spawn(Text::new("Summary"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -209,7 +211,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Ghost list"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -223,7 +225,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Time taken: 00.00.00"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -232,7 +234,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Average Sanity: 00"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -241,7 +243,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Ghosts unhaunted: 0/1"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -250,7 +252,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Repellent charges used: 0"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -259,7 +261,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Players Alive: 0/0"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -268,7 +270,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("Final Score: 0"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -282,7 +284,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .spawn(Text::new("[ - Press enter to continue - ]"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::ORANGE_RED.into()));

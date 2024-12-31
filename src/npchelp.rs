@@ -7,7 +7,7 @@ use crate::{
     colors,
     game::GameConfig,
     materials::{self, UIPanelMaterial},
-    platform::plt::UI_SCALE,
+    platform::plt::{FONT_SCALE, UI_SCALE},
     player::PlayerSprite,
     root,
 };
@@ -78,7 +78,7 @@ pub fn setup_ui(
             margin: MARGIN,
             ..default()
         })
-        .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR.into()))
+        .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
         .insert(NpcUI)
         .with_children(|parent| {
             // Mid content
@@ -102,7 +102,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Stranger says:"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 35.0 * UI_SCALE,
+                            font_size: 35.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(colors::TRUCKUI_ACCENT_COLOR))
@@ -121,7 +121,7 @@ pub fn setup_ui(
                         .spawn(Text::new(npcdata.dialog.clone()))
                         .insert(TextFont {
                             font: handles.fonts.syne.w400_regular.clone(),
-                            font_size: 21.0 * UI_SCALE,
+                            font_size: 21.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(colors::DIALOG_TEXT_COLOR))
@@ -139,7 +139,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Close: [ESC] or [E]"))
                         .insert(TextFont {
                             font: handles.fonts.chakra.w300_light.clone(),
-                            font_size: 25.0 * UI_SCALE,
+                            font_size: 25.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))

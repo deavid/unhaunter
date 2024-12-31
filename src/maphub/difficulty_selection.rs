@@ -3,7 +3,7 @@ use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::game::level::LoadLevelEvent;
 use crate::manual::preplay_manual_ui::start_preplay_manual_system;
-use crate::platform::plt::UI_SCALE;
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::root;
 use bevy::prelude::*;
 
@@ -190,7 +190,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
             flex_grow: 1.0,
             ..default()
         })
-        .insert(BackgroundColor(main_color.into()))
+        .insert(BackgroundColor(main_color))
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
             parent
@@ -207,7 +207,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                     // logo
                     parent
                         .spawn(ImageNode {
-                            image: handles.images.title.clone().into(),
+                            image: handles.images.title.clone(),
                             ..default()
                         })
                         .insert(Node {
@@ -234,14 +234,14 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                     flex_direction: FlexDirection::Column,
                     ..default()
                 })
-                .insert(BackgroundColor(main_color.into()))
+                .insert(BackgroundColor(main_color))
                 .with_children(|parent| {
                     // text
                     parent
                         .spawn(Text::new("Map Hub - Select Difficulty"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * UI_SCALE,
+                            font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -266,7 +266,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                             column_gap: Val::Px(20.0 * UI_SCALE),
                             ..default()
                         })
-                        .insert(BackgroundColor(main_color.into()))
+                        .insert(BackgroundColor(main_color))
                         .with_children(|parent| {
                             for difficulty in Difficulty::all() {
                                 parent
@@ -281,13 +281,13 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                                         margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     })
-                                    .insert(BackgroundColor(Color::NONE.into()))
+                                    .insert(BackgroundColor(Color::NONE))
                                     .insert(DifficultySelectionItem { difficulty })
                                     .with_children(|btn| {
                                         btn.spawn(Text::new(difficulty.difficulty_name()))
                                             .insert(TextFont {
                                                 font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 28.0 * UI_SCALE,
+                                                font_size: 28.0 * FONT_SCALE,
                                                 font_smoothing:
                                                     bevy::text::FontSmoothing::AntiAliased,
                                             })
@@ -305,7 +305,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                 .spawn(Text::new("Difficulty <>: Description"))
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),
-                    font_size: 26.0 * UI_SCALE,
+                    font_size: 26.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))

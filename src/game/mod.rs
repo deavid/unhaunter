@@ -4,7 +4,6 @@ pub mod ui;
 
 use crate::player::{self, PlayerSprite};
 use crate::{board, root};
-use bevy::render::view::RenderLayers;
 use bevy::{prelude::*, render::camera::ScalingMode};
 
 #[derive(Component)]
@@ -66,8 +65,7 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     commands
         .spawn(Camera2d)
         .insert(projection)
-        .insert(GCameraArena)
-        .insert(RenderLayers::from_layers(&[0, 1]));
+        .insert(GCameraArena);
 }
 
 pub fn cleanup(
