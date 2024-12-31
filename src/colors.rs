@@ -4,8 +4,8 @@ use bevy::{
 };
 
 pub const DEBUG_BCOLOR: BorderColor = BorderColor(Color::srgba(0.0, 1.0, 1.0, 0.0003));
-pub const INVENTORY_STATS_COLOR: Color = Color::srgba(0.7, 0.7, 0.7, 0.6);
-pub const PANEL_BGCOLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.3);
+pub const INVENTORY_STATS_COLOR: Color = Color::srgba(0.7, 0.7, 0.7, 0.9);
+pub const PANEL_BGCOLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.5);
 pub const TRUCKUI_BGCOLOR: Color = Color::srgba(0.082, 0.094, 0.118, 0.6);
 pub const TRUCKUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);
 pub const TRUCKUI_ACCENT_COLOR: Color = Color::srgba(0.290, 0.596, 0.706, 1.0);

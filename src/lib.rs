@@ -8,6 +8,7 @@ mod gear;
 mod ghost;
 mod ghost_definitions;
 mod ghost_events;
+pub mod ghost_setfinder;
 mod mainmenu;
 pub mod manual;
 pub mod maphub;
@@ -24,7 +25,6 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
-pub mod ghost_setfinder;
 
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},

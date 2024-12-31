@@ -17,15 +17,15 @@ pub struct EvidenceUI;
 pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
         .spawn((
-            Text::new(""),
-             TextFont {
-                    font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                 },
-             TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
+            Text::default(),
+            TextFont {
+                font: handles.fonts.chakra.w400_regular.clone(),
+                font_size: 22.0 * FONT_SCALE,
+                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            },
+            TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
             TextLayout::default(),
-             Node::default(),
+            Node::default(),
             EvidenceUI,
         ))
         .with_children(|parent| {
@@ -44,7 +44,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                     font_size: 20.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
-                .insert(TextColor(css::GREEN.with_alpha(0.4).into()));
+                .insert(TextColor(css::GREEN.with_alpha(1.0).into()));
             parent
                 .spawn(TextSpan::new(
                     "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
@@ -78,21 +78,21 @@ pub fn update_evidence_ui(
                     None => TruckButtonState::Off,
                 };
                 let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
-                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 0)
+                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 1)
                 {
                     if *text != status.title {
                         *text = status.title;
                     }
                 }
                 if let Some((_entity, _depth, mut text, _font, mut color)) =
-                    writer.get(txt_entity, 1)
+                    writer.get(txt_entity, 2)
                 {
                     if *text != status.status {
                         *text = status.status;
                         *color = TextColor(status.status_color);
                     }
                 }
-                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 2)
+                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 3)
                 {
                     if *text != status.help_text {
                         *text = status.help_text;
@@ -152,9 +152,9 @@ impl EvidenceStatus {
         }
         .into();
         let status_color: Color = match ev_state {
-            TruckButtonState::Off => colors::INVENTORY_STATS_COLOR,
-            TruckButtonState::Pressed => css::GREEN.with_alpha(0.4).into(),
-            TruckButtonState::Discard => css::RED.with_alpha(0.4).into(),
+            TruckButtonState::Off => colors::INVENTORY_STATS_COLOR.with_alpha(1.0),
+            TruckButtonState::Pressed => css::GREEN.with_alpha(1.0).into(),
+            TruckButtonState::Discard => css::RED.with_alpha(0.8).into(),
         };
         Self {
             title,
