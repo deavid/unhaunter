@@ -203,13 +203,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps
                             align_items: AlignItems::Center,
                             flex_direction: FlexDirection::Column,
                             display: Display::Grid,
-                            // 4 equal columns
-                            grid_template_columns: vec![
-                                GridTrack::flex(1.0),
-                                GridTrack::flex(1.0),
-                                GridTrack::flex(1.0),
-                                GridTrack::flex(1.0),
-                            ],
+                            // 1 columns
+                            grid_template_columns: vec![GridTrack::flex(1.0)],
                             grid_auto_rows: GridTrack::auto(),
                             row_gap: Val::Px(10.0 * UI_SCALE),
                             column_gap: Val::Px(20.0 * UI_SCALE),
