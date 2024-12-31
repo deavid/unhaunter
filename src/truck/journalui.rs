@@ -72,7 +72,7 @@ pub fn setup_journal_ui(
                         Text::new(evidence.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0 * FONT_SCALE,
+                            font_size: 16.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -151,7 +151,7 @@ pub fn setup_journal_ui(
                         Text::new(ghost_type.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 22.0 * FONT_SCALE,
+                            font_size: 16.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -190,7 +190,7 @@ pub fn setup_journal_ui(
             Text::new("-- Unknown --"),
             TextFont {
                 font: handles.fonts.titillium.w600_semibold.clone(),
-                font_size: 28.0 * FONT_SCALE,
+                font_size: 20.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -214,12 +214,14 @@ pub fn setup_journal_ui(
     p.spawn(Button)
         .insert(Node {
             min_width: Val::Px(0.0),
+            // FIXME: This needs to be more automatic, will fail on small windows.
+            max_width: Val::Percent(60.0),
             min_height: Val::Px(30.0 * UI_SCALE),
             border: MARGIN,
+            margin: UiRect::all(Val::Px(30.0 * UI_SCALE)).with_left(Val::Percent(20.0)),
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
-            margin: MARGIN,
             ..default()
         })
         .insert(BackgroundColor(Color::NONE))
@@ -231,11 +233,20 @@ pub fn setup_journal_ui(
                 Text::new("Craft Unhaunter™ Ghost Repellent"),
                 TextFont {
                     font: handles.fonts.titillium.w600_semibold.clone(),
-                    font_size: 32.0 * FONT_SCALE,
+                    font_size: 23.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),
                 TextLayout::default(),
+                Node {
+                    margin: UiRect::px(
+                        5.0 * UI_SCALE,
+                        5.0 * UI_SCALE,
+                        20.0 * UI_SCALE,
+                        20.0 * UI_SCALE,
+                    ),
+                    ..default()
+                },
             ));
         });
 }

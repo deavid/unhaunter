@@ -229,7 +229,7 @@ pub fn setup_loadout_ui(
                 Text::new("Select ..."),
                 TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
-                    font_size: 22.0 * FONT_SCALE,
+                    font_size: 16.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7)),

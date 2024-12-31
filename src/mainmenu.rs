@@ -312,7 +312,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                 )))
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),
-                    font_size: 20.0 * FONT_SCALE,
+                    font_size: 14.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))

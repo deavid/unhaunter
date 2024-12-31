@@ -305,7 +305,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
                 .spawn(Text::new("Difficulty <>: Description"))
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),
-                    font_size: 26.0 * FONT_SCALE,
+                    font_size: 19.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))

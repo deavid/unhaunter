@@ -124,8 +124,8 @@ impl TruckTab {
 
     pub fn font_size(&self) -> f32 {
         match self.state {
-            TabState::Selected => 35.0 * UI_SCALE,
-            _ => 24.0 * UI_SCALE,
+            TabState::Selected => 35.0 * FONT_SCALE,
+            _ => 24.0 * FONT_SCALE,
         }
     }
 }
@@ -339,7 +339,7 @@ pub fn setup_ui(
                         Text::new("Exit Truck"),
                         TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
-                            font_size: 35.0 * FONT_SCALE,
+                            font_size: 25.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::BUTTON_EXIT_TRUCK_TXTCOLOR),
@@ -366,7 +366,7 @@ pub fn setup_ui(
                         Text::new("End Mission"),
                         TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
-                            font_size: 35.0 * FONT_SCALE,
+                            font_size: 25.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::BUTTON_END_MISSION_TXTCOLOR),
