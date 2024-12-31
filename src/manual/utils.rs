@@ -95,7 +95,7 @@ pub fn grid_img_text2(
         font_smoothing: bevy::text::FontSmoothing::AntiAliased,
     };
     let color_regular = TextColor(colors::DIALOG_TEXT_COLOR);
-    let color_bold = TextColor(colors::DIALOG_TEXT_COLOR);
+    let color_bold = TextColor(colors::DIALOG_BOLD_TEXT_COLOR);
 
     let mut rows = vec![];
 
@@ -149,7 +149,7 @@ pub fn grid_img_text2(
                         parent.spawn(Node::default());
                         continue;
                     }
-                    let mut layout = parent.spawn((TextLayout::default(),));
+                    let mut layout = parent.spawn((TextLayout::default(), Text::default()));
                     for (n, subtext) in text.split('*').enumerate() {
                         let (font, color) = if n % 2 == 0 {
                             (font_regular.clone(), color_regular)
