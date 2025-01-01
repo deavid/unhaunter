@@ -19,7 +19,9 @@
 use super::{GCameraArena, GameConfig, GameSprite};
 use crate::behavior::component::RoomState;
 use crate::behavior::Behavior;
-use crate::board::{self, Bdl, BoardDataToRebuild, MapTileComponents, Position, SpriteDB};
+use crate::board::{
+    self, BoardDataToRebuild, MapTileComponents, Position, SpriteDB, TileSpriteBundle,
+};
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
@@ -30,7 +32,7 @@ use crate::root::{self, QuadCC};
 use crate::tiledmap::{AtlasData, MapLayerType};
 use crate::{behavior, summary, tiledmap};
 use bevy::prelude::*;
-use bevy::sprite::{Anchor, MaterialMesh2dBundle};
+use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 
@@ -198,7 +200,6 @@ pub fn load_level(
     // Load the tileset sprites first:
     for (tset_name, tileset) in tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
-            let anchor = Anchor::Custom(Vec2::new(0.0, tileset.y_anchor));
             let sprite_config =
                 behavior::SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
             let behavior = behavior::Behavior::from_config(sprite_config);
@@ -207,6 +208,8 @@ pub fn load_level(
             } else {
                 Visibility::Inherited
             };
+            let transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
+
             let bundle = match &tileset.data {
                 AtlasData::Sheet((handle, cmat)) => {
                     let mut cmat = cmat.clone();
@@ -236,25 +239,41 @@ pub fn load_level(
                     cmat.data.gtl = 0.1;
                     cmat.data.gtr = 0.1;
                     let mat = materials1.add(cmat);
-                    let transform = Transform::from_xyz(-10000.0, -10000.0, -1000.0);
-                    Bdl::Mmb(MaterialMesh2dBundle {
-                        mesh: mesh_handle.into(),
+
+                    TileSpriteBundle {
+                        mesh: board::PreMesh::Mesh(mesh_handle.into()),
                         material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
-                        ..Default::default()
-                    })
+                    }
                 }
-                AtlasData::Tiles(v_img) => Bdl::Sb(SpriteBundle {
-                    sprite: Sprite {
-                        image: v_img[tileuid as usize].0.clone(),
-                        anchor,
-                        ..default()
-                    },
-                    visibility,
-                    transform: Transform::from_xyz(-10000.0, -10000.0, -1000.0),
-                    ..default()
-                }),
+                AtlasData::Tiles(v_img) => {
+                    let (image_handle, mut cmat) = v_img[tileuid as usize].clone();
+                    cmat.data.sheet_cols = 1;
+                    cmat.data.sheet_rows = 1;
+                    cmat.data.sheet_idx = 0;
+
+                    // Set alpha initially transparent to all materials so they will appear slowly.
+                    cmat.data.color.set_alpha(0.0);
+                    cmat.data.gamma = 0.1;
+                    cmat.data.gbl = 0.1;
+                    cmat.data.gbr = 0.1;
+                    cmat.data.gtl = 0.1;
+                    cmat.data.gtr = 0.1;
+                    let mat = materials1.add(cmat);
+
+                    let sprite_anchor = Vec2::new(1.0 / 2.0, 0.5 - tileset.y_anchor);
+
+                    TileSpriteBundle {
+                        mesh: board::PreMesh::Image {
+                            sprite_anchor,
+                            image_handle,
+                        },
+                        material: MeshMaterial2d(mat.clone()),
+                        transform,
+                        visibility,
+                    }
+                }
             };
             let key_tuid = behavior.key_tuid();
             sdb.cvo_idx
@@ -286,24 +305,15 @@ pub fn load_level(
                 .expect("Map references non-existent tileset+tileuid");
 
             // Spawn the base entity
-            let mut entity = match &mt.bundle {
-                Bdl::Mmb(b) => {
-                    let mut b = b.clone();
-                    if tile.flip_x {
-                        b.transform.scale.x = -1.0;
-                    }
-                    let mat = materials1.get(&b.material).unwrap().clone();
-                    let mat = materials1.add(mat);
-                    b.material = MeshMaterial2d(mat);
-                    commands.spawn(b)
+            let mut entity = {
+                let mut b = mt.bundle.clone();
+                if tile.flip_x {
+                    b.transform.scale.x = -1.0;
                 }
-                Bdl::Sb(b) => {
-                    let mut b = b.clone();
-                    if tile.flip_x {
-                        b.transform.scale.x = -1.0;
-                    }
-                    commands.spawn(b.clone())
-                }
+                let mat = materials1.get(&b.material).unwrap().clone();
+                let mat = materials1.add(mat);
+                b.material = MeshMaterial2d(mat);
+                commands.spawn(b)
             };
             let mut pos = board::Position {
                 x: tile.pos.x as f32,
@@ -547,9 +557,50 @@ pub enum InteractionExecutionType {
     ReadRoomState,
 }
 
+fn process_pre_meshes(
+    mut commands: Commands,
+    query: Query<(Entity, &board::PreMesh)>,
+    images: Res<Assets<Image>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    for (entity, pre_mesh) in query.iter() {
+        match pre_mesh {
+            board::PreMesh::Mesh(mesh2d) => {
+                commands
+                    .entity(entity)
+                    .insert(mesh2d.clone())
+                    .remove::<board::PreMesh>();
+            }
+            board::PreMesh::Image {
+                sprite_anchor,
+                image_handle,
+            } => {
+                if let Some(image) = images.get(image_handle) {
+                    let sz = image.texture_descriptor.size;
+                    println!("Physical image size: {} x {}", sz.width, sz.height);
+                    let sprite_size = Vec2::new(sz.width as f32, sz.height as f32);
+                    let sprite_anchor = Vec2::new(
+                        sprite_size.x * sprite_anchor.x,
+                        sprite_size.y * sprite_anchor.y,
+                    );
+                    let base_quad = Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
+                    let mesh_handle = meshes.add(base_quad);
+                    let mesh2d = Mesh2d::from(mesh_handle);
+                    commands
+                        .entity(entity)
+                        .insert(mesh2d)
+                        .remove::<board::PreMesh>();
+                    println!("Processed entity: {:?}", entity);
+                }
+            }
+        }
+    }
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_event::<RoomChangedEvent>()
         .add_event::<LoadLevelEvent>()
         .add_systems(Update, roomchanged_event)
-        .add_systems(PostUpdate, load_level);
+        .add_systems(PostUpdate, load_level)
+        .add_systems(Update, process_pre_meshes);
 }

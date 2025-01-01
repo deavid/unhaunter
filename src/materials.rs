@@ -49,7 +49,7 @@ impl CustomMaterial1Data {
         delta += (self.sheet_rows as f32 - other.sheet_rows as f32).abs();
         delta += (self.sheet_cols as f32 - other.sheet_cols as f32).abs();
         delta += (self.sheet_idx as f32 - other.sheet_idx as f32).abs();
-        delta *= color1[3] + color2[3] + 0.01;
+        delta *= color1[3] + color2[3] + 0.1;
         delta += (color1[3] - color2[3]).abs() * 15.0;
         delta
     }

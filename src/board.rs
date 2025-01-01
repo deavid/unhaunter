@@ -9,7 +9,6 @@ use crate::{
 };
 use bevy::{
     prelude::*,
-    sprite::MaterialMesh2dBundle,
     utils::{HashMap, HashSet, Instant},
 };
 use fastapprox::faster;
@@ -450,15 +449,26 @@ pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
     }
 }
 
-#[derive(Clone)]
-pub enum Bdl {
-    Mmb(MaterialMesh2dBundle<CustomMaterial1>),
-    Sb(SpriteBundle),
+#[derive(Component, Clone)]
+pub enum PreMesh {
+    Mesh(Mesh2d),
+    Image {
+        sprite_anchor: Vec2,
+        image_handle: Handle<Image>,
+    },
+}
+
+#[derive(Bundle, Clone)]
+pub struct TileSpriteBundle {
+    pub mesh: PreMesh,
+    pub material: MeshMaterial2d<CustomMaterial1>,
+    pub transform: Transform,
+    pub visibility: Visibility,
 }
 
 #[derive(Clone)]
 pub struct MapTileComponents {
-    pub bundle: Bdl,
+    pub bundle: TileSpriteBundle,
     pub behavior: Behavior,
 }
 
@@ -1124,20 +1134,21 @@ pub fn compute_color_exposure(
     src_color: Color,
 ) -> Color {
     let exp = rel_exposure.powf(gamma.recip()) + dither;
+    let src_srgba = src_color.to_srgba();
     let dst_color: Color = if exp < 1.0 {
         Color::Srgba(Srgba {
-            red: src_color.to_srgba().red * exp,
-            green: src_color.to_srgba().green * exp,
-            blue: src_color.to_srgba().blue * exp,
-            alpha: src_color.to_srgba().alpha,
+            red: src_srgba.red * exp,
+            green: src_srgba.green * exp,
+            blue: src_srgba.blue * exp,
+            alpha: src_srgba.alpha,
         })
     } else {
         let rexp = exp.recip();
         Color::Srgba(Srgba {
-            red: 1.0 - ((1.0 - src_color.to_srgba().red) * rexp),
-            green: 1.0 - ((1.0 - src_color.to_srgba().green) * rexp),
-            blue: 1.0 - ((1.0 - src_color.to_srgba().blue) * rexp),
-            alpha: src_color.to_srgba().alpha,
+            red: 1.0 - ((1.0 - src_srgba.red) * rexp),
+            green: 1.0 - ((1.0 - src_srgba.green) * rexp),
+            blue: 1.0 - ((1.0 - src_srgba.blue) * rexp),
+            alpha: src_srgba.alpha,
         })
     };
     dst_color

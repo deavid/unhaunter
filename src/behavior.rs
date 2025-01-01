@@ -190,6 +190,8 @@ pub enum Util {
 pub struct Display {
     pub disable: bool,
     pub global_z: NotNan<f32>,
+    /// Used to partially make transparent big objects when the player walks behind them
+    pub auto_hide: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -790,6 +792,7 @@ impl SpriteConfig {
             }
             Class::Van => {
                 p.display.global_z = (0.000050).try_into().unwrap();
+                p.display.auto_hide = true;
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();

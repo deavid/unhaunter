@@ -408,7 +408,7 @@ pub fn apply_lighting(
             power *= match x.4 {
                 LightType::Visible => 1.0,
                 LightType::Red => 0.003,
-                LightType::InfraRedNV => 3.0,
+                LightType::InfraRedNV => 0.5,
                 LightType::UltraViolet => 0.5,
             };
             power / (player_pos.distance2(x.0) + 1.0)
@@ -455,6 +455,18 @@ pub fn apply_lighting(
 
         // if min_threshold > 4.5 { continue; }
         let mut opacity: f32 = 1.0;
+        if behavior.p.display.auto_hide {
+            // Make big objects semitransparent when the player is behind them
+            const MAX_DIST: f32 = 8.0;
+            let dist = pos.distance(&player_pos);
+            if dist < MAX_DIST {
+                let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
+                if delta_z > 0.0 {
+                    opacity = 0.1;
+                }
+            }
+        }
+
         let bpos = pos.to_board_position();
         let bpos_tr = bpos.bottom();
         let bpos_bl = bpos.top();
@@ -489,7 +501,7 @@ pub fn apply_lighting(
                 let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
                 let flvis = flvismap.get(bpos).copied().unwrap_or_default();
-                let fl = flpower / (dist + FL_MIN_DST) * flvis;
+                let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
                 let flsrgba = flcolor.to_srgba();
                 lux_fl[0] += fl * flsrgba.red;
                 lux_fl[1] += fl * flsrgba.green;
@@ -540,18 +552,14 @@ pub fn apply_lighting(
         if behavior.p.movement.walkable {
             lightdata_map.insert(bpos.clone(), light_data);
         }
-        let max_color = r.max(g).max(b).max(0.01) + 0.01;
-        let src_color = Color::srgb(r / max_color, g / max_color, b / max_color);
-        let mut l = src_color.luminance().max(0.0001).powf(1.8);
-        l /= 1.0
-            + (light_data.infrared * 2.0 + light_data.red + light_data.ultraviolet)
-                * (att_charge + rep_charge)
-                * 10.0;
-        let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0) / l;
-        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c) / l;
-        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c) / l;
-        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c) / l;
-        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c) / l;
+        let max_color = r.max(g).max(b).max(0.005);
+        let src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
+
+        let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
+        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
+        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
+        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
+        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
         match behavior.obsolete_occlusion_type() {
             Orientation::None => {}
             Orientation::XAxis => {
@@ -569,26 +577,23 @@ pub fn apply_lighting(
                 lux_bl = lux_c;
             }
         }
-        let mut dst_color = {
-            let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            board::compute_color_exposure(lux_c, r, dark_gamma, src_color)
-        };
-        dst_color.set_alpha(opacity.clamp(0.6, 1.0));
         opacity = opacity
             .min(vf.visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
             .clamp(0.0, 1.0);
         let mut new_mat = materials1.get(mat).unwrap().clone();
         let orig_mat = new_mat.clone();
 
-        // <- remove brightness calculation for main tile.
-        let mut dst_color = src_color;
-        let src_a = new_mat.data.color.alpha();
+        // remove brightness calculation for main tile:
+        let mut dst_color = src_color_base;
+
         let opacity = opacity.clamp(0.000, 1.0);
-        const A_DELTA: f32 = 0.05;
-        let new_a = if (src_a - opacity).abs() < A_DELTA {
+        const A_DELTA: f32 = 0.02;
+        let f = 0.5;
+        let next_a = opacity * f + new_mat.data.color.alpha() * (1.0 - f);
+        let new_a = if (next_a - opacity).abs() < A_DELTA {
             opacity
         } else {
-            src_a - A_DELTA * (src_a - opacity).signum()
+            next_a - A_DELTA * (next_a - opacity).signum()
         };
         dst_color.set_alpha(new_a);
 
@@ -612,8 +617,7 @@ pub fn apply_lighting(
         );
         new_mat.data.ambient_color = dark.with_alpha(0.0).into();
 
-        // const A_SOFT: f32 = 1.0; dst_color.set_a((opacity.clamp(0.000, 1.0) + src_a *
-        // A_SOFT) / (1.0 + A_SOFT)); Convert both colors to LinearRgba for multiplication
+        // Convert both colors to LinearRgba for multiplication
         let linear_dst_color = LinearRgba::from(dst_color);
         let linear_dark2_color = LinearRgba::from(dark2);
 
@@ -621,20 +625,27 @@ pub fn apply_lighting(
         let new_color = linear_dst_color.to_vec4() * linear_dark2_color.to_vec4();
 
         // Convert back to Color
-        new_mat.data.color = Srgba::from_vec4(new_color).into();
+        let new_color = LinearRgba::from_vec4(new_color);
+
+        let src_a = new_mat.data.color.alpha();
+
+        new_mat.data.color = new_color;
+        // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
+
         const BRIGHTNESS: f32 = 1.01;
-        let tint_comp = (new_mat.data.color.luminance() + 0.01).recip() + exp_color;
-        let smooth_f: f32 = new_mat.data.color.alpha().sqrt() * 10.0 + 0.0001;
+        let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
+        let smooth_f: f32 = src_a + 0.0000001 + 0.3;
         let gamma_mean = |a: f32, b: f32| {
             (a * smooth_f
                 + f_gamma(
                     b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
-                        + (tint_comp - 1.0 + cold_f * 2.0 + (exp_color * 2.0).powi(2))
+                        + (tint_comp + cold_f * 2.0 + (exp_color * 2.0).powi(2))
                             / (10.0 + exposure + b),
                 )
                 + exp_color / 40.0)
                 / (1.0 + smooth_f)
         };
+        // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
         lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
         new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
         new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
@@ -651,7 +662,7 @@ pub fn apply_lighting(
                 }
             }
         }
-        let invisible = new_mat.data.color.alpha() < 0.01 || behavior.p.display.disable;
+        let invisible = new_mat.data.color.alpha() < 0.005 || behavior.p.display.disable;
         let new_vis = if invisible {
             Visibility::Hidden
         } else {
@@ -660,7 +671,7 @@ pub fn apply_lighting(
         *vis = new_vis;
         let delta = orig_mat.data.delta(&new_mat.data);
         let thr = if IS_WASM { 0.2 } else { 0.02 };
-        if !invisible && delta > thr + min_threshold {
+        if behavior.p.display.auto_hide || delta > thr + min_threshold {
             let mat = materials1.get_mut(mat).unwrap();
             mat.data = new_mat.data;
             // change_count += 1;
@@ -668,7 +679,7 @@ pub fn apply_lighting(
     }
 
     // Light ilumination for sprites on map that aren't part of the map (player,
-    // ghost, van, ghost breach)
+    // ghost, ghost breach)
     for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
@@ -790,6 +801,8 @@ pub fn apply_lighting(
         }
         let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
         if sprite_type == SpriteType::Other {
+            // Old code to make the van semitransparent when the player walked behind, no longer in use
+            // because the Van is no longer a sprite - now it works as a regular tile.
             const MAX_DIST: f32 = 8.0;
             let dist = pos.distance(&player_pos);
             if dist < MAX_DIST {
@@ -838,14 +851,20 @@ pub fn mark_for_update(
     let mut small_rng = SmallRng::from_entropy();
     for (pos, vis, mut upd) in qt2.iter_mut() {
         let r: f32 = small_rng.gen_range(0.0..1.01);
+        let k: f32 = if IS_WASM { 0.5 } else { 2.0 };
         let dst = pos.distance_taxicab(&player_pos);
-        let min_dst = 5.0
+        let r2: f32 = small_rng.gen_range(0.05..1.0)
+            * k.recip()
+            * dst
+            * if vis == Visibility::Hidden { 2.0 } else { 1.0 };
+
+        let min_dst = 3.0
             + if vis == Visibility::Hidden {
-                r.powi(10) * 20.0
+                r.powi(10) * 20.0 * k
             } else {
-                r.powi(10) * 100.0
+                r.powi(10) * 100.0 * k
             };
-        if dst < min_dst {
+        if dst < min_dst || now - upd.last_update > r2.max(0.3) {
             upd.last_update = now;
         }
     }

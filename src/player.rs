@@ -12,7 +12,7 @@
 //!   objects.
 use crate::behavior::component::{Interactive, RoomState};
 use crate::behavior::{self, Behavior};
-use crate::board::{self, Bdl, BoardData, BoardPosition, Position};
+use crate::board::{self, BoardData, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game;
 use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
@@ -671,16 +671,11 @@ impl InteractiveStuff<'_, '_> {
                     }
                 }
             }
-            match other.bundle.clone() {
-                Bdl::Mmb(b) => {
-                    let mat = self.materials1.get(&b.material).unwrap().clone();
-                    let mat = self.materials1.add(mat);
-                    e_commands.insert(MeshMaterial2d(mat));
-                }
-                Bdl::Sb(b) => {
-                    e_commands.insert(b);
-                }
-            };
+            let b = other.bundle.clone();
+            let mat = self.materials1.get(&b.material).unwrap().clone();
+            let mat = self.materials1.add(mat);
+            e_commands.insert(MeshMaterial2d(mat));
+
             e_commands.insert(beh);
             if ietype == InteractionExecutionType::ChangeState {
                 if let Some(interactive) = interactive {

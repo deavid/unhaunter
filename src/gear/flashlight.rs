@@ -52,9 +52,9 @@ impl Flashlight {
         let bat = self.battery_level.sqrt() + 0.02;
         let pow = match self.status {
             FlashlightStatus::Off => 0.0,
-            FlashlightStatus::Low => 2.0,
-            FlashlightStatus::Mid => 6.0,
-            FlashlightStatus::High => 10.0,
+            FlashlightStatus::Low => 4.0,
+            FlashlightStatus::Mid => 16.0,
+            FlashlightStatus::High => 64.0,
         };
         pow * bat
     }
@@ -71,6 +71,8 @@ impl GearUsable for Flashlight {
         self.frame_counter %= 210;
         if self.frame_counter % 5 == 0 {
             self.rand = rand::thread_rng().gen_range(0..12);
+            const HS_MASS: f32 = 2.0;
+            self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
         }
         self.battery_level -= self.power() / 500000.0;
         if self.battery_level < 0.0 {
@@ -78,15 +80,10 @@ impl GearUsable for Flashlight {
             self.status = FlashlightStatus::Off;
         }
         self.inner_temp += self.power() / 10000.0;
-        self.inner_temp /= 1.0006;
-        const HS_MASS: f32 = 200.0;
-        self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
-        if self.heatsink_temp > 1.0 && self.status == FlashlightStatus::High {
-            self.status = FlashlightStatus::Mid;
-            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4, pos);
-        } else if self.heatsink_temp > 1.2 && self.status == FlashlightStatus::Mid {
-            self.status = FlashlightStatus::Low;
-            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.4, pos);
+        self.inner_temp /= 1.0016;
+        if self.inner_temp > 1.0 && self.status != FlashlightStatus::Off {
+            self.status = FlashlightStatus::Off;
+            gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
         }
     }
 
