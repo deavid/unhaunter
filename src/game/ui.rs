@@ -61,6 +61,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(ZIndex(-5))
         .insert(BackgroundColor(css::BLACK.with_alpha(0.0).into()))
         .insert(GameUI)
         .insert(DamageBackground::new(4.0));
@@ -75,6 +76,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(ZIndex(-4))
         .insert(GameUI)
         .insert(DamageBackground::new(0.7));
 
