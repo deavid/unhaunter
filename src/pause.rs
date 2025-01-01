@@ -70,7 +70,6 @@ pub fn setup_ui(
                     color: PAUSEUI_PANEL_BGCOLOR.into(),
                 })))
                 .insert(Node {
-                    border: UiRect::all(Val::Px(1.0)),
                     padding: UiRect::all(Val::Px(1.0)),
                     min_width: Val::Px(10.0),
                     min_height: Val::Px(10.0),
@@ -80,7 +79,6 @@ pub fn setup_ui(
                     flex_grow: 1.0,
                     ..default()
                 })
-                .insert(BorderColor(PAUSEUI_ACCENT_COLOR))
                 .with_children(|mid_blk| {
                     mid_blk
                         .spawn(Text::new("Pause"))
