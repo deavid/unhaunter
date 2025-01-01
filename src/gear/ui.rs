@@ -2,7 +2,7 @@ use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGe
 use super::{GearSpriteID, GearStuff, GearUsable};
 use crate::colors;
 use crate::game::GameConfig;
-use crate::platform::plt::{UI_SCALE, FONT_SCALE};
+use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
 use bevy::prelude::*;
@@ -31,18 +31,17 @@ pub fn keyboard_gear(
 pub fn update_gear_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    mut qi: Query<(&Inventory, &mut Sprite), Without<InventoryNext>>,
+    mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
     mut qs: Query<&mut Text, With<InventoryStats>>,
-    mut qin: Query<(&InventoryNext, &mut Sprite), Without<Inventory>>,
+    mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
 ) {
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
-            for (inv, mut utai) in qi.iter_mut() {
+            for (inv, mut imgnode) in qi.iter_mut() {
                 let gear = playergear.get_hand(&inv.hand);
                 let idx = gear.get_sprite_idx() as usize;
-
-                if utai.texture_atlas.as_ref().unwrap().index != idx {
-                    utai.texture_atlas.as_mut().unwrap().index = idx;
+                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
+                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
                 }
             }
             let right_hand_status = playergear.right_hand.get_status();
@@ -51,7 +50,7 @@ pub fn update_gear_ui(
                     txt.0.clone_from(&right_hand_status);
                 }
             }
-            for (inv, mut utai) in qin.iter_mut() {
+            for (inv, mut imgnode) in qin.iter_mut() {
                 // There are 2 possible "None" here, the outside Option::None for when the idx is
                 // out of bounds and the inner Gear::None when a slot is empty.
                 let next = if let Some(idx) = inv.idx {
@@ -60,8 +59,8 @@ pub fn update_gear_ui(
                     playergear.get_next_non_empty().unwrap_or_default()
                 };
                 let idx = next.get_sprite_idx() as usize;
-                if utai.texture_atlas.as_ref().unwrap().index != idx {
-                    utai.texture_atlas.as_mut().unwrap().index = idx;
+                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
+                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
                 }
             }
         }
