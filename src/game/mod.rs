@@ -164,7 +164,10 @@ pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
         .add_systems(OnEnter(root::State::InGame), setup)
         .add_systems(OnExit(root::State::InGame), cleanup)
-        .add_systems(Update, keyboard.before(player::keyboard_player));
+        .add_systems(
+            Update,
+            keyboard.before(player::systems::keyboard::keyboard_player),
+        );
     level::app_setup(app);
     ui::app_setup(app);
     evidence::app_setup(app);

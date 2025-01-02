@@ -1,0 +1,16 @@
+use crate::board::{self};
+use crate::gear::{self};
+use bevy::prelude::*;
+
+/// Represents a piece of gear deployed in the game world.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGear {
+    /// The direction the gear is facing.
+    pub direction: board::Direction,
+}
+
+/// Component to store the GearKind of a deployed gear entity.
+#[derive(Component, Debug, Clone)]
+pub struct DeployedGearData {
+    pub gear: gear::Gear,
+}
