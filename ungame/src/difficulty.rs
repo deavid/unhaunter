@@ -14,7 +14,7 @@
 //! fine-tune the game experience for each difficulty level, providing a tailored
 //! challenge for players.
 use crate::{
-    gear::{playergear::PlayerGear, Gear},
+    gear::{ext::types::gear::Gear, playergear::PlayerGear},
     ghost_definitions::GhostSet,
     manual::ManualChapter,
     truck::ui::TabContents,

@@ -1,8 +1,9 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::types::evidence::Evidence;
 
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
-use crate::{difficulty::CurrentDifficulty, ghost_definitions, root};
+use crate::{difficulty::CurrentDifficulty, root};
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -50,7 +51,7 @@ pub fn setup_journal_ui(
         ..default()
     })
     .with_children(|evblock| {
-        for evidence in ghost_definitions::Evidence::all() {
+        for evidence in Evidence::all() {
             evblock
                 .spawn(Button)
                 .insert(Node {

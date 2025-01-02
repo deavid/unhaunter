@@ -15,20 +15,20 @@
 use uncore::components::game::{GameSound, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::platform::plt::IS_WASM;
+use uncore::resources::boarddata::BoardData;
+use uncore::types::board::fielddata::CollisionFieldData;
+use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
 
+use crate::gear::ext::types::gearkind::GearKind;
+use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
     behavior::{Behavior, Orientation},
-    board::{self, BoardPosition, CollisionFieldData, Direction, Position},
+    board::{self, BoardPosition, Direction, Position},
     difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
-    gear::{
-        playergear::{EquipmentPosition, PlayerGear},
-        salt::UVReactive,
-        GearKind,
-    },
+    gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
-    ghost_definitions::Evidence,
     materials::CustomMaterial1,
     player::{self, DeployedGear, DeployedGearData},
     utils,
@@ -37,95 +37,11 @@ use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use rand::Rng as _;
 use std::collections::VecDeque;
 
+pub use uncore::types::board::light::{LightData, LightType};
+
 #[derive(Debug, Clone, Copy, PartialEq, Component, Default)]
 pub struct MapColor {
     pub color: Color,
-}
-
-/// Represents different types of light in the game.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LightType {
-    /// Standard visible light.
-    Visible,
-    /// Red light, often used for night vision or specific ghost interactions.
-    Red,
-    /// Infrared light used for night vision cameras.
-    InfraRedNV,
-    /// Ultraviolet light, used to reveal evidence or trigger ghost reactions.
-    UltraViolet,
-}
-
-/// Stores the intensity of different light types at a specific location.
-///
-/// This data structure is used to represent the combined light levels from various
-/// sources, such as ambient light, flashlights, and ghost effects.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct LightData {
-    /// Intensity of visible light.
-    visible: f32,
-    /// Intensity of red light.
-    red: f32,
-    /// Intensity of infrared light.
-    infrared: f32,
-    /// Intensity of ultraviolet light.
-    ultraviolet: f32,
-}
-
-impl LightData {
-    pub const UNIT_VISIBLE: Self = Self {
-        visible: 1.0,
-        red: 0.0,
-        infrared: 0.0,
-        ultraviolet: 0.0,
-    };
-
-    pub fn from_type(light_type: LightType, strength: f32) -> Self {
-        match light_type {
-            LightType::Visible => Self {
-                visible: strength,
-                ..default()
-            },
-            LightType::Red => Self {
-                red: strength,
-                ..default()
-            },
-            LightType::InfraRedNV => Self {
-                infrared: strength,
-                ..default()
-            },
-            LightType::UltraViolet => Self {
-                ultraviolet: strength,
-                ..default()
-            },
-        }
-    }
-
-    pub fn add(&self, other: &Self) -> Self {
-        Self {
-            visible: self.visible + other.visible,
-            red: self.red + other.red,
-            infrared: self.infrared + other.infrared,
-            ultraviolet: self.ultraviolet + other.ultraviolet,
-        }
-    }
-
-    pub fn magnitude(&self) -> f32 {
-        let sq_m = self.visible.powi(2)
-            + self.red.powi(2)
-            + self.infrared.powi(2)
-            + self.ultraviolet.powi(2);
-        sq_m.sqrt()
-    }
-
-    pub fn normalize(&self) -> Self {
-        let mag = self.magnitude() + 1.0;
-        Self {
-            visible: self.visible / mag,
-            red: self.red / mag,
-            infrared: self.infrared / mag,
-            ultraviolet: self.ultraviolet / mag,
-        }
-    }
 }
 
 /// Computes the player's visibility field, determining which areas of the map are
@@ -206,7 +122,7 @@ pub fn compute_visibility(
 /// System to calculate the player's visibility field and update VisibilityData.
 fn player_visibility_system(
     mut vf: ResMut<board::VisibilityData>,
-    bf: Res<board::BoardData>,
+    bf: Res<BoardData>,
     gc: Res<game::GameConfig>,
     qp: Query<(&board::Position, &player::PlayerSprite)>,
     mut roomdb: ResMut<board::RoomDB>,
@@ -266,7 +182,7 @@ pub fn apply_lighting(
         &PlayerGear,
     )>,
     q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
-    mut bf: ResMut<board::BoardData>,
+    mut bf: ResMut<BoardData>,
     vf: Res<board::VisibilityData>,
     gc: Res<game::GameConfig>,
     time: Res<Time>,

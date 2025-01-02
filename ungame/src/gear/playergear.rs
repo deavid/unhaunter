@@ -1,13 +1,10 @@
-use super::{Gear, GearKind};
-use crate::{ghost_definitions::GhostType, player::HeldObject};
-use bevy::prelude::*;
-use enum_iterator::Sequence;
+pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence)]
-pub enum Hand {
-    Left,
-    Right,
-}
+use super::ext::types::{gear::Gear, gearkind::GearKind};
+use uncore::components::player::HeldObject;
+use uncore::types::ghost_type::GhostType;
+
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone)]
 pub struct InventoryNext {
@@ -39,13 +36,6 @@ impl Inventory {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EquipmentPosition {
-    Hand(Hand),
-    Stowed,
-    // Van,
-    Deployed,
-}
 #[derive(Component, Debug, Clone)]
 pub struct InventoryStats;
 
@@ -90,30 +80,11 @@ impl PlayerGear {
     }
 
     pub fn new() -> Self {
-        // use super::compass::Compass; use super::emfmeter::EMFMeter; use
-        // super::estaticmeter::EStaticMeter;
-        use super::flashlight::Flashlight;
-
-        // use super::geigercounter::GeigerCounter; use super::ionmeter::IonMeter; use
-        // super::motionsensor::MotionSensor; use super::photocam::Photocam; use
-        // super::recorder::Recorder; use super::redtorch::RedTorch; use
-        // super::spiritbox::SpiritBox; use super::thermalimager::ThermalImager; use
-        // super::repellentflask::RepellentFlask; use super::thermometer::Thermometer; use
-        // super::uvtorch::UVTorch; use super::videocam::Videocam;
+        use super::prelude::Flashlight;
         Self {
             left_hand: Flashlight::default().into(),
             right_hand: Gear::none(),
-            inventory: vec![
-                Gear::none(),
-                // Default equipment: Thermometer::default().into() EMFMeter::default().into(),
-                // UVTorch::default().into(), SpiritBox::default().into(),
-                Gear::none(), // Recorder::default().into(), Videocam::default().into(),
-                              // RedTorch::default().into(), GeigerCounter::default().into(),
-                              // RepellentFlask::default().into(), Incomplete equipment:
-                              // IonMeter::default().into(), ThermalImager::default().into(),
-                              // Photocam::default().into(), Compass::default().into(),
-                              // EStaticMeter::default().into(), MotionSensor::default().into(),
-            ],
+            inventory: vec![Gear::none(), Gear::none()],
             held_item: None,
         }
     }
@@ -182,7 +153,7 @@ impl PlayerGear {
     }
 
     pub fn craft_repellent(&mut self, ghost_type: GhostType) {
-        use super::repellentflask::RepellentFlask;
+        use super::prelude::RepellentFlask;
 
         // Check if the repellent exists in inventory, if not, create it:
         let flask_exists = self

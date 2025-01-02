@@ -1,5 +1,5 @@
-use crate::board::{self};
-use crate::gear::{self};
+use crate::board;
+use crate::gear::ext::types::gear::Gear;
 use bevy::prelude::*;
 
 /// Represents a piece of gear deployed in the game world.
@@ -12,5 +12,5 @@ pub struct DeployedGear {
 /// Component to store the GearKind of a deployed gear entity.
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGearData {
-    pub gear: gear::Gear,
+    pub gear: Gear,
 }

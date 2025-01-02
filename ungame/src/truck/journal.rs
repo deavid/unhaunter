@@ -4,9 +4,9 @@ use super::{
 };
 use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
-use crate::ghost_definitions::Evidence;
 use crate::player::PlayerSprite;
 use bevy::{prelude::*, utils::HashSet};
+use uncore::types::evidence::Evidence;
 
 #[allow(clippy::type_complexity)]
 pub fn button_system(

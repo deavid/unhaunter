@@ -21,7 +21,8 @@ mod summary;
 pub mod systems;
 mod tiledmap;
 mod truck;
-mod utils;
+
+use uncore::utils; // FIXME: Delete this.
 
 use uncore::platform::plt;
 

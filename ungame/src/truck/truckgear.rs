@@ -1,4 +1,4 @@
-use crate::{difficulty::DifficultyStruct, gear::Gear};
+use crate::{difficulty::DifficultyStruct, gear::ext::types::gear::Gear};
 use bevy::prelude::*;
 
 #[derive(Debug, Resource, Clone)]

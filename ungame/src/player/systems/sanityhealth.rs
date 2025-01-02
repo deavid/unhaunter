@@ -1,6 +1,7 @@
 use uncore::components::game_ui::DamageBackground;
+use uncore::resources::boarddata::BoardData;
 
-use crate::board::{self, BoardData, Position};
+use crate::board::{self, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::GameConfig;
 use crate::player::{PlayerSprite, DEBUG_PLAYER};

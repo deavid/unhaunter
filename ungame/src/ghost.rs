@@ -1,14 +1,16 @@
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::resources::boarddata::BoardData;
 
 use crate::board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
-use crate::gear::sage::{SageSmokeParticle, SmokeParticleTimer};
+use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::ghost_definitions::GhostType;
 use crate::maplight::MapColor;
 use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
-use crate::{gear, summary, utils};
+use crate::{summary, utils};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
@@ -146,7 +148,7 @@ pub fn ghost_movement(
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
-    bf: Res<crate::board::BoardData>,
+    bf: Res<BoardData>,
     mut commands: Commands,
     time: Res<Time>,
     config: Res<ObjectInteractionConfig>,
@@ -381,7 +383,7 @@ fn ghost_enrage(
     mut avg_angry: Local<utils::MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position), Without<FadeOut>>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -560,7 +562,7 @@ fn spawn_salty_trace(
     asset_server: &Res<AssetServer>,
     tile_position: BoardPosition,
 ) {
-    use crate::gear::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+    use crate::gear::ext::types::items::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 
     let mut pos = tile_position.to_position();
     let mut rng = rand::thread_rng();
@@ -598,7 +600,7 @@ pub fn ghost_fade_out_system(
         &Position,
         Option<&GhostSprite>,
     )>,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
 ) {
     let mut rng = rand::thread_rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {

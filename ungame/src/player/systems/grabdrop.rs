@@ -2,8 +2,10 @@ use uncore::components::game::GameSprite;
 
 use crate::behavior::{self, Behavior};
 use crate::board::{self, Position};
+use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use crate::gear::ext::types::gear::Gear;
+use crate::gear::ext::types::traits::GearUsable;
 use crate::gear::playergear::PlayerGear;
-use crate::gear::{self, GearUsable as _};
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
 use crate::root;
 
@@ -21,7 +23,7 @@ pub fn grab_object(
     deployables: Query<(Entity, &Position), With<DeployedGear>>,
     // Query for all entities with Behavior
     pickables: Query<(Entity, &Position, &Behavior)>,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.grab) && player_gear.held_item.is_none() {
@@ -73,7 +75,7 @@ pub fn drop_object(
             With<behavior::component::FloorItemCollidable>,
         ),
     >,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop) {
@@ -139,7 +141,7 @@ pub fn drop_object(
 pub fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
     players: Query<(&Position, &PlayerGear, &board::Direction), With<PlayerSprite>>,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
     mut last_sound_time: Local<f32>,
 ) {
     let current_time = gs.time.elapsed_secs();
@@ -177,7 +179,7 @@ pub fn deploy_gear(
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
     handles: Res<root::GameAssets>,
 ) {
     for (mut player_gear, player_pos, player, dir) in players.iter_mut() {
@@ -238,7 +240,7 @@ pub fn retrieve_gear(
     mut players: Query<(&Position, &PlayerSprite, &mut PlayerGear)>,
     q_deployed: Query<(Entity, &Position, &DeployedGearData)>,
     mut commands: Commands,
-    mut gs: gear::GearStuff,
+    mut gs: GearStuff,
 ) {
     // FIXME: This code, along with grabbing items are in conflict. It will be
     // possible for a player to grab equipment from the floor and a location item at
@@ -275,7 +277,7 @@ pub fn retrieve_gear(
                             .position(|gear| gear.kind.is_none())
                         {
                             // Move right-hand gear to the empty slot
-                            player_gear.inventory[empty_slot_index] = gear::Gear {
+                            player_gear.inventory[empty_slot_index] = Gear {
                                 kind: player_gear.right_hand.kind.clone(),
                             };
                         } else {

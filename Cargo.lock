@@ -4656,7 +4656,11 @@ name = "uncore"
 version = "0.2.5-dev"
 dependencies = [
  "bevy",
+ "enum-iterator",
+ "fastapprox",
+ "rand",
  "serde",
+ "thiserror 2.0.9",
 ]
 
 [[package]]
@@ -4683,7 +4687,23 @@ dependencies = [
  "thiserror 2.0.9",
  "tiled",
  "uncore",
+ "ungear",
+ "unstd",
  "walkdir",
+]
+
+[[package]]
+name = "ungear"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "fastapprox",
+ "rand",
+ "serde",
+ "thiserror 2.0.9",
+ "uncore",
+ "unstd",
 ]
 
 [[package]]
@@ -4761,6 +4781,19 @@ name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
+
+[[package]]
+name = "unstd"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "fastapprox",
+ "rand",
+ "serde",
+ "thiserror 2.0.9",
+ "uncore",
+]
 
 [[package]]
 name = "utf8parse"

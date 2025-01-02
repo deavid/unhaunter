@@ -19,6 +19,7 @@
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::resources::boarddata::BoardData;
 use uncore::types::game::SoundType;
 
 use super::roomchanged::RoomChangedEvent;
@@ -47,7 +48,7 @@ pub fn load_level_handler(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut bf: ResMut<board::BoardData>,
+    mut bf: ResMut<BoardData>,
     mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
@@ -143,7 +144,7 @@ pub fn load_level_handler(
         .insert(GameSound {
             class: SoundType::Insane,
         });
-    commands.init_resource::<board::BoardData>();
+    commands.init_resource::<BoardData>();
     info!("Load Level: {}", &load_event.map_filepath);
     app_next_state.set(root::State::InGame);
 

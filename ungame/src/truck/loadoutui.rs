@@ -1,18 +1,19 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::types::evidence::Evidence;
 
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
-use crate::gear::{Gear, GearKind};
-use crate::ghost_definitions::Evidence;
+use crate::gear::ext::types::gear::Gear;
+use crate::gear::ext::types::gearkind::GearKind;
+use crate::gear::ext::types::traits::GearUsable as _;
 use crate::{
     game::GameConfig,
     gear::{
-        self,
         playergear::{self, PlayerGear},
-        GearSpriteID, GearUsable,
+        GearSpriteID,
     },
     materials::UIPanelMaterial,
     player::PlayerSprite,
@@ -24,7 +25,7 @@ use bevy::prelude::*;
 pub enum LoadoutButton {
     Inventory(playergear::Inventory),
     InventoryNext(playergear::InventoryNext),
-    Van(gear::Gear),
+    Van(Gear),
 }
 
 #[derive(Debug, Event, Clone)]

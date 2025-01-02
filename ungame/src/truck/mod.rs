@@ -30,17 +30,8 @@ use crate::player::PlayerSprite;
 use crate::{ghost_definitions::GhostType, root};
 use bevy::prelude::*;
 
-#[derive(Component, Debug)]
-pub struct TruckUI;
-
-#[derive(Clone, Debug, Event, PartialEq, Eq)]
-pub enum TruckUIEvent {
-    EndMission,
-    ExitTruck,
-    CraftRepellent,
-}
-#[derive(Component, Debug)]
-pub struct TruckUIGhostGuess;
+pub use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
+pub use uncore::events::truck::TruckUIEvent;
 
 #[derive(Debug, Resource, Default)]
 pub struct GhostGuess {

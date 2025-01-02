@@ -3,8 +3,8 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use uncore::types::evidence::Evidence;
 
-use crate::ghost_definitions::Evidence;
 use crate::ghost_definitions::GhostType;
 
 const MAX_COMBO: usize = 1024 * 1024;
