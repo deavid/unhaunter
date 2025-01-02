@@ -1,0 +1,12 @@
+[package]
+name = "uncore"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+serde = { workspace = true }

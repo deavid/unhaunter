@@ -4652,13 +4652,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
 
 [[package]]
-name = "unhaunter"
+name = "uncore"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "serde",
+]
+
+[[package]]
+name = "ungame"
 version = "0.2.5-dev"
 dependencies = [
  "anyhow",
  "bevy",
  "bevy-persistent",
- "bevy_dylib",
  "bevy_framepace",
  "clap",
  "enum-iterator",
@@ -4675,7 +4682,17 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.9",
  "tiled",
+ "uncore",
  "walkdir",
+]
+
+[[package]]
+name = "unhaunter"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "bevy_dylib",
+ "ungame",
  "wasm-bindgen",
 ]
 

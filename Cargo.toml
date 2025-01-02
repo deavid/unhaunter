@@ -1,16 +1,16 @@
-workspace = { members = ["tools/ghost_radio"] }
-[package]
-name = "unhaunter"
+[workspace]
+members = ["ungame", "tools/ghost_radio", "uncore"]
+resolver = "2"
+
+[workspace.package]
 version = "0.2.5-dev"
 edition = "2021"
-default-run = "unhaunter_game"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"
 license = "Apache-2.0"
+authors = ["David Martínez Martí <deavidsedice@gmail.com>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
+[workspace.dependencies]
 bevy = "0.15"
 rand = { version = "0.8", features = ["small_rng"] }
 enum-iterator = "2.0"
@@ -31,12 +31,34 @@ tiled = { version = "0.13", features = ["wasm"] }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
 itertools = "0.14.0"
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
 
-# [target.'cfg(target_arch = "wasm32")'.dependencies]
+[package]
+name = "unhaunter"
+default-run = "unhaunter_game"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+ungame = { path = "ungame" }
+wasm-bindgen = { workspace = true }
+bevy = { workspace = true }
+
+[[bin]]
+name = "unhaunter_game"
+path = "src/bin/unhaunter.rs"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy_dylib = { workspace = true }
 
 [profile.dev]
 opt-level = "z"
@@ -56,10 +78,3 @@ debug-assertions = false
 overflow-checks = false
 lto = true
 codegen-units = 1
-
-[[bin]]
-name = "unhaunter_game"
-path = "src/bin/unhaunter.rs"
-
-[lib]
-crate-type = ["cdylib", "rlib"]

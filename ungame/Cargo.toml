@@ -1,0 +1,36 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package]
+name = "ungame"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+
+bevy = { workspace = true }
+rand = { workspace = true }
+enum-iterator = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+image = { workspace = true }
+regex = { workspace = true }
+clap = { workspace = true }
+fastapprox = { workspace = true }
+anyhow = { workspace = true }
+ordered-float = { workspace = true }
+bevy-persistent = { workspace = true }
+hierarchical_pathfinding = { workspace = true }
+walkdir = { workspace = true }
+glob = { workspace = true }
+thiserror = { workspace = true }
+tiled = { workspace = true }
+normalize-path = { workspace = true }
+itertools = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy_framepace = { workspace = true }

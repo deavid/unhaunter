@@ -16,12 +16,11 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
+use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+
 use super::roomchanged::RoomChangedEvent;
 use super::GameSprite;
-use crate::board::{
-    self, MapTileComponents, Position, SpriteDB, TileSpriteBundle,
-};
-use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
+use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
 use crate::ghost::{GhostBreach, GhostSprite};
