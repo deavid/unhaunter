@@ -1,5 +1,6 @@
 pub mod evidence;
 pub mod level;
+pub mod roomchanged;
 pub mod ui;
 
 use crate::player::{self, PlayerSprite};
@@ -167,4 +168,5 @@ pub fn app_setup(app: &mut App) {
     level::app_setup(app);
     ui::app_setup(app);
     evidence::app_setup(app);
+    roomchanged::app_setup(app);
 }

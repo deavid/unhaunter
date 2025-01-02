@@ -1,6 +1,6 @@
 // src/ghost_events.rs
 use crate::difficulty::CurrentDifficulty;
-use crate::game::level::InteractionExecutionType;
+use crate::game::roomchanged::InteractionExecutionType;
 use crate::{behavior, board, ghost, player};
 use bevy::prelude::*;
 use rand::Rng;

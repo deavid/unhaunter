@@ -16,18 +16,17 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
-use super::{GCameraArena, GameConfig, GameSprite};
-use crate::behavior::component::RoomState;
-use crate::behavior::Behavior;
+use super::roomchanged::RoomChangedEvent;
+use super::GameSprite;
 use crate::board::{
-    self, BoardDataToRebuild, MapTileComponents, Position, SpriteDB, TileSpriteBundle,
+    self, MapTileComponents, Position, SpriteDB, TileSpriteBundle,
 };
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::materials::CustomMaterial1;
-use crate::player::{AnimationTimer, CharacterAnimation, InteractiveStuff, PlayerSprite};
+use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
 use crate::root::{self, QuadCC};
 use crate::tiledmap::{AtlasData, MapLayerType};
 use crate::{behavior, summary, tiledmap};
@@ -35,33 +34,6 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
-
-/// Event triggered when the player enters a new room or when a significant
-/// room-related change occurs.
-///
-/// This event is used to trigger actions like opening the van UI or updating the
-/// state of interactive objects based on the room's current state.
-#[derive(Clone, Debug, Default, Event)]
-pub struct RoomChangedEvent {
-    /// Set to `true` if the event is triggered during level initialization.
-    pub initialize: bool,
-    /// Set to `true` if the van UI should be opened automatically (e.g., when the
-    /// player returns to the starting area).
-    pub open_van: bool,
-}
-
-impl RoomChangedEvent {
-    /// Creates a new `RoomChangedEvent` specifically for level initialization.
-    ///
-    /// The `initialize` flag is set to `true`, and the `open_van` flag is set based on
-    /// the given value.
-    pub fn init(open_van: bool) -> Self {
-        Self {
-            initialize: true,
-            open_van,
-        }
-    }
-}
 
 /// Event triggered to load a new level from a TMX map file.
 ///
@@ -494,69 +466,6 @@ pub fn load_level(
     ev_room.send(RoomChangedEvent::init(open_van));
 }
 
-/// Handles `RoomChangedEvent` events, updating interactive object states and room
-/// data.
-///
-/// This system is responsible for:
-///
-/// * Updating the state of interactive objects based on the current room's state.
-///
-/// * Triggering the opening of the van UI when appropriate (e.g., when the player
-///   enters the starting area).
-///
-/// * Updating the game's collision and lighting data after room-related changes.
-pub fn roomchanged_event(
-    mut ev_bdr: EventWriter<BoardDataToRebuild>,
-    mut ev_room: EventReader<RoomChangedEvent>,
-    mut interactive_stuff: InteractiveStuff,
-    interactables: Query<(Entity, &board::Position, &Behavior, &RoomState), Without<PlayerSprite>>,
-    gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform), Without<GCameraArena>>,
-    mut camera: Query<&mut Transform, With<GCameraArena>>,
-) {
-    let Some(ev) = ev_room.read().next() else {
-        return;
-    };
-    for (entity, item_pos, behavior, room_state) in interactables.iter() {
-        let changed = interactive_stuff.execute_interaction(
-            entity,
-            item_pos,
-            None,
-            behavior,
-            Some(room_state),
-            InteractionExecutionType::ReadRoomState,
-        );
-        if changed {
-            // dbg!(&behavior);
-        }
-    }
-    ev_bdr.send(BoardDataToRebuild {
-        lighting: true,
-        collision: true,
-    });
-    if ev.open_van {
-        interactive_stuff
-            .game_next_state
-            .set(root::GameState::Truck);
-    }
-    if ev.initialize {
-        for (player, p_transform) in pc.iter() {
-            if player.id != gc.player_id {
-                continue;
-            }
-            for mut cam_trans in camera.iter_mut() {
-                cam_trans.translation = p_transform.translation;
-            }
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum InteractionExecutionType {
-    ChangeState,
-    ReadRoomState,
-}
-
 fn process_pre_meshes(
     mut commands: Commands,
     query: Query<(Entity, &board::PreMesh)>,
@@ -598,9 +507,7 @@ fn process_pre_meshes(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_event::<RoomChangedEvent>()
-        .add_event::<LoadLevelEvent>()
-        .add_systems(Update, roomchanged_event)
+    app.add_event::<LoadLevelEvent>()
         .add_systems(PostUpdate, load_level)
         .add_systems(Update, process_pre_meshes);
 }

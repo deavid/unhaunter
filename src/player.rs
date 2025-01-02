@@ -15,7 +15,7 @@ use crate::behavior::{self, Behavior};
 use crate::board::{self, BoardData, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game;
-use crate::game::level::{InteractionExecutionType, RoomChangedEvent};
+use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use crate::game::{ui::DamageBackground, GameConfig};
 use crate::gear::playergear::PlayerGear;
 use crate::gear::{self, GearUsable as _};
