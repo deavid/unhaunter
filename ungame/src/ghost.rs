@@ -1,8 +1,8 @@
+use uncore::components::game::GameSprite;
 use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
 
 use crate::board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
-use crate::game::GameSprite;
 use crate::gear::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::ghost_definitions::GhostType;
 use crate::maplight::MapColor;

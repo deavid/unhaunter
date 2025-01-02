@@ -1,8 +1,9 @@
+use uncore::components::game::GameSprite;
+
 use super::{playergear::EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use crate::{
     board::{self, BoardPosition, Position},
     difficulty::CurrentDifficulty,
-    game::GameSprite,
     ghost::GhostSprite,
     ghost_definitions::GhostType,
     maplight::MapColor,

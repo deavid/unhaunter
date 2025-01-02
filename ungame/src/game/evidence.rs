@@ -1,3 +1,5 @@
+use uncore::components::game::ui::EvidenceUI;
+
 use super::GameConfig;
 use crate::platform::plt::FONT_SCALE;
 use crate::{
@@ -10,9 +12,6 @@ use crate::{
 };
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-
-#[derive(Component, Debug)]
-pub struct EvidenceUI;
 
 pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent

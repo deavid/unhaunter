@@ -1,3 +1,7 @@
+use uncore::components::game::ui::{
+    DamageBackground, ElementObjectUI, GameUI, HeldObjectUI, RightSideGearUI,
+};
+
 use crate::{
     behavior::Behavior,
     colors,
@@ -8,31 +12,6 @@ use crate::{
     root,
 };
 use bevy::{color::palettes::css, prelude::*};
-
-#[derive(Component, Debug)]
-pub struct GameUI;
-
-#[derive(Component, Debug, PartialEq, Eq)]
-pub enum ElementObjectUI {
-    Name,
-    Description,
-    Grab,
-}
-
-#[derive(Component, Debug)]
-pub struct DamageBackground {
-    pub exp: f32,
-}
-
-impl DamageBackground {
-    pub fn new(exp: f32) -> Self {
-        Self { exp }
-    }
-}
-#[derive(Component, Debug)]
-pub struct HeldObjectUI;
-#[derive(Component, Debug)]
-pub struct RightSideGearUI;
 
 pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used

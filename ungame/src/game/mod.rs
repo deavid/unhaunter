@@ -3,32 +3,13 @@ pub mod level;
 pub mod roomchanged;
 pub mod ui;
 
+use uncore::components::game::{GCameraArena, GameSound, GameSprite};
+
 use crate::player::{self, PlayerSprite};
 use crate::{board, root};
-use bevy::{prelude::*, render::camera::ScalingMode};
 
-#[derive(Component)]
-pub struct GCameraArena;
-#[derive(Component, Debug)]
-pub struct GameSprite;
-
-#[derive(Component, Debug, Default)]
-pub struct MapUpdate {
-    pub last_update: f32,
-}
-
-#[derive(Component, Debug)]
-pub struct GameSound {
-    pub class: SoundType,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum SoundType {
-    BackgroundHouse,
-    BackgroundStreet,
-    HeartBeat,
-    Insane,
-}
+use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 
 /// Resource to know basic stuff of the game.
 #[derive(Debug, Resource)]

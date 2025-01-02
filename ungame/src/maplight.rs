@@ -12,13 +12,15 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
+use uncore::components::game::{GameSound, MapUpdate};
 use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::types::game::SoundType;
 
 use crate::{
     behavior::{Behavior, Orientation},
     board::{self, BoardPosition, CollisionFieldData, Direction, Position},
     difficulty::CurrentDifficulty,
-    game::{self, GameConfig, GameSound, MapUpdate, SoundType, SpriteType},
+    game::{self, GameConfig, SpriteType},
     gear::{
         playergear::{EquipmentPosition, PlayerGear},
         salt::UVReactive,

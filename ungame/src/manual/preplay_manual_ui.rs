@@ -1,9 +1,9 @@
 //! This module implements the UI and systems for the pre-play manual,
 //! which is shown as a tutorial before starting a new game on certain difficulty levels.
+use uncore::events::loadlevel::LoadLevelEvent;
 
 use crate::{
     difficulty::CurrentDifficulty,
-    game::level::LoadLevelEvent,
     manual::{CurrentManualPage, Manual},
     maphub::difficulty_selection::DifficultySelectionState,
     platform::plt::FONT_SCALE,

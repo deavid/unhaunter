@@ -1,7 +1,9 @@
 //! This module defines the `SaltData` struct and its associated logic,
 //! representing the Salt consumable item in the game.
+use uncore::components::game::GameSprite;
+
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::{board::Position, game::GameSprite, ghost::GhostSprite, maplight::MapColor};
+use crate::{board::Position, ghost::GhostSprite, maplight::MapColor};
 use bevy::prelude::*;
 use rand::Rng as _;
 

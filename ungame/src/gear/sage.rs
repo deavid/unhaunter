@@ -1,13 +1,15 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
+use uncore::components::game::GameSprite;
+
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::{
     board::{self, Position},
-    game::GameSprite,
     ghost::GhostSprite,
     maplight::MapColor,
     utils::format_time,
 };
+
 use bevy::prelude::*;
 use rand::Rng;
 

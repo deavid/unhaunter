@@ -16,13 +16,15 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
+use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::types::game::SoundType;
 
 use super::roomchanged::RoomChangedEvent;
-use super::GameSprite;
 use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::difficulty::CurrentDifficulty;
-use crate::game::{GameSound, MapUpdate, SoundType, SpriteType};
+use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
@@ -34,16 +36,6 @@ use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 
-/// Event triggered to load a new level from a TMX map file.
-///
-/// This event initiates the level loading process, despawning existing entities,
-/// loading map data, and spawning new entities based on the TMX file.
-#[derive(Debug, Clone, Event)]
-pub struct LoadLevelEvent {
-    /// The file path to the TMX map file to be loaded.
-    pub map_filepath: String,
-}
-
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
 /// This function despawns existing game entities, loads the specified TMX map,
@@ -51,7 +43,7 @@ pub struct LoadLevelEvent {
 /// initializes their components, and sets up game-related resources, such as
 /// `BoardData`, `SpriteDB`, and `RoomDB`.
 #[allow(clippy::too_many_arguments)]
-pub fn load_level(
+pub fn load_level_handler(
     mut ev: EventReader<LoadLevelEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -507,6 +499,6 @@ fn process_pre_meshes(
 
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
-        .add_systems(PostUpdate, load_level)
+        .add_systems(PostUpdate, load_level_handler)
         .add_systems(Update, process_pre_meshes);
 }

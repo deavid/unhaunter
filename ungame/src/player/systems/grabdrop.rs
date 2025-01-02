@@ -1,6 +1,7 @@
+use uncore::components::game::GameSprite;
+
 use crate::behavior::{self, Behavior};
 use crate::board::{self, Position};
-use crate::game::GameSprite;
 use crate::gear::playergear::PlayerGear;
 use crate::gear::{self, GearUsable as _};
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
@@ -125,9 +126,7 @@ pub fn drop_object(
     }
 }
 
-
 // --- GEAR ----
-
 
 /// Updates the position of the player's held object to match the player's position.
 ///
