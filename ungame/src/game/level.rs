@@ -17,7 +17,7 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
-use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::types::game::SoundType;
 

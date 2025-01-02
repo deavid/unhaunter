@@ -1,10 +1,10 @@
+use uncore::colors;
 use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use super::MapHubState;
-use crate::colors;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::manual::preplay_manual_ui::start_preplay_manual_system;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::root;
 use bevy::prelude::*;
 

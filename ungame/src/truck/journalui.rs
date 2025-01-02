@@ -1,6 +1,8 @@
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
-use crate::{colors, difficulty::CurrentDifficulty, ghost_definitions, root};
+use crate::{difficulty::CurrentDifficulty, ghost_definitions, root};
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;

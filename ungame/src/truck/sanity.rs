@@ -1,5 +1,7 @@
-use crate::platform::plt::{UI_SCALE, FONT_SCALE};
-use crate::{colors, game::GameConfig, player::PlayerSprite, root};
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
+use crate::{game::GameConfig, player::PlayerSprite, root};
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;

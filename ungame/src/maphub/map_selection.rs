@@ -1,5 +1,6 @@
-use crate::colors;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::root::Maps;
 use crate::{maphub::MapHubState, root};
 use bevy::prelude::*;

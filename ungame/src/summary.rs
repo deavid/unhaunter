@@ -1,9 +1,7 @@
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::{
-    difficulty::CurrentDifficulty,
-    ghost_definitions::GhostType,
-    platform::plt::{FONT_SCALE, UI_SCALE},
-    player::PlayerSprite,
-    root, utils,
+    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
 };
 use bevy::{color::palettes::css, prelude::*};
 

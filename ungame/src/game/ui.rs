@@ -1,13 +1,13 @@
-use uncore::components::game::ui::{
+use uncore::colors;
+use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, GameUI, HeldObjectUI, RightSideGearUI,
 };
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
     behavior::Behavior,
-    colors,
     game::evidence,
     gear::{self, playergear::PlayerGear},
-    platform::plt::{FONT_SCALE, UI_SCALE},
     player::PlayerSprite,
     root,
 };

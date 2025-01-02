@@ -1,8 +1,7 @@
+use uncore::platform::plt::FONT_SCALE;
+
 use super::{draw_manual_page, CurrentManualPage, Manual};
-use crate::{
-    platform::plt::FONT_SCALE,
-    root::{self, GameAssets},
-};
+use crate::root::{self, GameAssets};
 use bevy::prelude::*;
 
 #[derive(Component)]

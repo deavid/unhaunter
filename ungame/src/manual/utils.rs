@@ -5,9 +5,9 @@
 //! and pre-play tutorial) to promote code reuse and maintain consistency across the
 //! manual's interface.  The functions utilize Bevy's UI system to create the
 //! visual elements of the manual efficiently.
+use uncore::colors;
+use uncore::platform::plt::FONT_SCALE;
 
-use crate::colors;
-use crate::platform::plt::FONT_SCALE;
 use crate::root::GameAssets;
 
 use bevy::prelude::*;

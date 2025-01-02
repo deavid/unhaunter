@@ -1,9 +1,9 @@
-use uncore::components::game::ui::EvidenceUI;
+use uncore::colors;
+use uncore::components::game_ui::EvidenceUI;
+use uncore::platform::plt::FONT_SCALE;
 
 use super::GameConfig;
-use crate::platform::plt::FONT_SCALE;
 use crate::{
-    colors,
     gear::playergear::PlayerGear,
     ghost_definitions::Evidence,
     player::PlayerSprite,

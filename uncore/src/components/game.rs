@@ -2,8 +2,6 @@ use bevy::prelude::*;
 
 use crate::types::game::SoundType;
 
-pub mod ui;
-
 #[derive(Component)]
 pub struct GCameraArena;
 #[derive(Component, Debug)]

@@ -1,6 +1,7 @@
-use crate::colors;
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::difficulty::CurrentDifficulty;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use crate::{materials::UIPanelMaterial, root};

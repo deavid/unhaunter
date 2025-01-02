@@ -1,5 +1,5 @@
 use uncore::components::game::GameSprite;
-use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 
 use crate::board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;

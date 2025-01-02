@@ -1,7 +1,6 @@
-use crate::colors;
-use crate::platform;
-use crate::platform::plt::IS_WASM;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, IS_WASM, UI_SCALE, VERSION};
+
 use crate::root;
 use bevy::app::AppExit;
 use bevy::color::palettes::css;
@@ -287,7 +286,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
                         .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
                         .insert(MenuItem::new(MenuID::Manual));
 
-                    if !platform::plt::IS_WASM {
+                    if !IS_WASM {
                         parent
                             .spawn(Text::new("Quit"))
                             .insert(TextFont {
@@ -308,7 +307,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
             parent
                 .spawn(Text::new(format!(
                     "Unhaunter {}    -   [Arrow Up]/[Arrow Down]: Change menu item   -    [Enter]: Select current item   -   [ESC] Go Back   -   Game Controls: [WASD] [TAB] [Q] [E] [R] [T] [F] [G]",
-                    platform::VERSION
+                    VERSION
                 )))
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),

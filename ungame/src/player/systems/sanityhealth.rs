@@ -1,4 +1,4 @@
-use uncore::components::game::ui::DamageBackground;
+use uncore::components::game_ui::DamageBackground;
 
 use crate::board::{self, BoardData, Position};
 use crate::difficulty::CurrentDifficulty;

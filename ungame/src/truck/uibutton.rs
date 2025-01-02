@@ -1,8 +1,7 @@
+use uncore::colors;
+
 use super::TruckUIEvent;
-use crate::{
-    colors,
-    ghost_definitions::{self},
-};
+use crate::ghost_definitions::{self};
 use bevy::prelude::*;
 
 /// Represents the type of a button in the truck UI.

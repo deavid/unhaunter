@@ -1,4 +1,5 @@
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::{
     materials::{self, UIPanelMaterial},
     root,

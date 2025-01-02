@@ -1,6 +1,5 @@
 mod behavior;
 mod board;
-pub mod colors;
 pub mod difficulty;
 mod game;
 mod gear;
@@ -16,7 +15,6 @@ mod materials;
 pub mod npchelp;
 pub mod object_interaction;
 mod pause;
-pub mod platform;
 mod player;
 mod root;
 mod summary;
@@ -24,6 +22,8 @@ pub mod systems;
 mod tiledmap;
 mod truck;
 mod utils;
+
+use uncore::platform::plt;
 
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
@@ -33,7 +33,6 @@ use bevy::{
 };
 use materials::{CustomMaterial1, UIPanelMaterial};
 use object_interaction::ObjectInteractionConfig;
-use platform::plt;
 use std::time::Duration;
 
 const FPS_DEBUG: bool = false;
@@ -48,7 +47,7 @@ pub fn app_run() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: format!("Unhaunter {}", platform::VERSION),
+            title: format!("Unhaunter {}", plt::VERSION),
             resolution: default_resolution(),
             // Enabling VSync might make it easier in WASM? (It doesn't)
             present_mode: bevy::window::PresentMode::Fifo,

@@ -1,8 +1,10 @@
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGear};
 use super::{GearSpriteID, GearStuff, GearUsable};
-use crate::colors;
 use crate::game::GameConfig;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::player::PlayerSprite;
 use crate::root::{GameAssets, GameState};
 use bevy::prelude::*;

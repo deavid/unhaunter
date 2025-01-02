@@ -1,12 +1,13 @@
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::{Gear, GearKind};
 use crate::ghost_definitions::Evidence;
-use crate::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::{
-    colors,
     game::GameConfig,
     gear::{
         self,

@@ -13,7 +13,8 @@
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
 use uncore::components::game::{GameSound, MapUpdate};
-use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::platform::plt::IS_WASM;
 use uncore::types::game::SoundType;
 
 use crate::{
@@ -29,7 +30,6 @@ use crate::{
     ghost::{self, GhostSprite},
     ghost_definitions::Evidence,
     materials::CustomMaterial1,
-    platform::plt::IS_WASM,
     player::{self, DeployedGear, DeployedGearData},
     utils,
 };

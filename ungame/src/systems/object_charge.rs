@@ -1,6 +1,6 @@
 //! This module defines systems related to managing the charge levels of objects
 //! that influence ghost behavior.
-use uncore::components::ghost::influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 
 use crate::board::Position;
 use crate::difficulty::CurrentDifficulty;

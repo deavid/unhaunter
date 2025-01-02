@@ -1,13 +1,14 @@
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+
 use crate::{
     behavior::{
         component::{Interactive, NpcHelpDialog},
         Behavior,
     },
     board::{self, Position},
-    colors,
     game::GameConfig,
     materials::{self, UIPanelMaterial},
-    platform::plt::{FONT_SCALE, UI_SCALE},
     player::PlayerSprite,
     root,
 };
