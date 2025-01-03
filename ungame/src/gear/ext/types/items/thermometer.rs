@@ -2,10 +2,10 @@ use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 use crate::{board::Position, difficulty::CurrentDifficulty};
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::{
-    resources::boarddata::BoardData,
-    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
+use uncore::behavior::Behavior;
+use uncore::resources::boarddata::BoardData;
+use uncore::types::evidence::Evidence;
+use uncore::types::gear::equipmentposition::EquipmentPosition;
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -104,7 +104,7 @@ impl From<Thermometer> for Gear {
 pub fn temperature_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<crate::board::RoomDB>,
-    qt: Query<(&Position, &crate::uncore_behavior::Behavior)>,
+    qt: Query<(&Position, &Behavior)>,
     qg: Query<(&crate::ghost::GhostSprite, &Position)>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,

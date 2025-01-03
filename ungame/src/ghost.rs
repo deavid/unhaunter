@@ -1,6 +1,7 @@
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::boarddata::BoardData;
+use uncore::resources::object_interaction::ObjectInteractionConfig;
 
 use crate::board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
@@ -8,7 +9,6 @@ use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::ghost_definitions::GhostType;
 use crate::maplight::MapColor;
-use crate::object_interaction::ObjectInteractionConfig;
 use crate::player::{Hiding, PlayerSprite};
 use crate::{summary, utils};
 use bevy::color::palettes::css;

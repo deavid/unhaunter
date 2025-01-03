@@ -70,7 +70,7 @@ impl Behavior {
 
     /// Returns the state (On/Off, Open/Closed) as a copy so that it is not possible to
     /// modify the original from outside code.
-    pub fn state(&self) -> State {
+    pub fn state(&self) -> TileState {
         self.cfg.state.clone()
     }
 
@@ -330,7 +330,7 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub enum State {
+pub enum TileState {
     // Switch states
     On,
     Off,
@@ -346,7 +346,7 @@ pub enum State {
     None,
 }
 
-impl AutoSerialize for State {}
+impl AutoSerialize for TileState {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SpriteCVOKey {
@@ -367,7 +367,7 @@ pub struct SpriteConfig {
     // Backup of the original data for the key
     cvo_key: SpriteCVOKey,
     /// Current state of the sprite - or the initial state.
-    pub state: State,
+    pub state: TileState,
     // Other interesting metadata:
     /// Tileset name
     pub tileset: String,
@@ -451,7 +451,7 @@ impl SpriteConfig {
         let class = Class::from_text(class).context("parsing Class")?;
         let variant = variant.unwrap_or(tilesetuid_key).to_owned();
         let orientation = Orientation::from_text(orientation).context("parsing Orientation")?;
-        let state = State::from_text(state).context("parsing State")?;
+        let state = TileState::from_text(state).context("parsing State")?;
         let cvo_key = SpriteCVOKey {
             class: class.clone(),
             variant: variant.clone(),
@@ -578,8 +578,8 @@ impl SpriteConfig {
             }
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
-                p.movement.player_collision = self.state == State::Closed;
-                p.light.opaque = self.state == State::Closed;
+                p.movement.player_collision = self.state == TileState::Closed;
+                p.light.opaque = self.state == TileState::Closed;
             }
             Class::Switch => {
                 p.display.global_z = (0.000040).try_into().unwrap();
@@ -641,18 +641,18 @@ impl SpriteConfig {
             }
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
-                p.light.emits_light = self.state == State::On;
+                p.light.emits_light = self.state == TileState::On;
                 p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -1;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == State::On;
+                p.light.emits_light = self.state == TileState::On;
                 p.light.emission_power = (6.0).try_into().unwrap();
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == State::On;
+                p.light.emits_light = self.state == TileState::On;
                 p.light.emission_power = (6.5).try_into().unwrap();
             }
             Class::WallDecor => {
@@ -660,7 +660,7 @@ impl SpriteConfig {
             }
             Class::CeilingLight => {
                 p.display.disable = true;
-                p.light.emits_light = self.state == State::On;
+                p.light.emits_light = self.state == TileState::On;
                 p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
@@ -696,8 +696,8 @@ impl SpriteConfig {
 
     /// A class requires a set of states. Not only these are the only valid ones for
     /// the given class, also they need all to be included.
-    fn _required_states(&self) -> Vec<State> {
-        use State::*;
+    fn _required_states(&self) -> Vec<TileState> {
+        use TileState::*;
 
         match self.class {
             Class::Wall => vec![Full, Partial, Minimum],
@@ -824,10 +824,10 @@ mod tests {
 
     #[test]
     fn state_serialization() {
-        let c = State::On;
+        let c = TileState::On;
         let ct = c.to_text().unwrap();
         assert_eq!(ct, "On");
-        let d = State::from_text(Some(&ct)).unwrap();
+        let d = TileState::from_text(Some(&ct)).unwrap();
         assert_eq!(d, c);
     }
 }

@@ -54,14 +54,14 @@ impl Interactive {
 
     pub fn sound_for_moving_into_state(&self, behavior: &Behavior) -> String {
         match behavior.cfg.state {
-            super::State::On => self.on_activate_sound_file.clone(),
-            super::State::Off => self.on_deactivate_sound_file.clone(),
-            super::State::Open => self.on_activate_sound_file.clone(),
-            super::State::Closed => self.on_deactivate_sound_file.clone(),
-            super::State::Full => self.on_activate_sound_file.clone(),
-            super::State::Partial => self.on_activate_sound_file.clone(),
-            super::State::Minimum => self.on_activate_sound_file.clone(),
-            super::State::None => self.on_deactivate_sound_file.clone(),
+            super::TileState::On => self.on_activate_sound_file.clone(),
+            super::TileState::Off => self.on_deactivate_sound_file.clone(),
+            super::TileState::Open => self.on_activate_sound_file.clone(),
+            super::TileState::Closed => self.on_deactivate_sound_file.clone(),
+            super::TileState::Full => self.on_activate_sound_file.clone(),
+            super::TileState::Partial => self.on_activate_sound_file.clone(),
+            super::TileState::Minimum => self.on_activate_sound_file.clone(),
+            super::TileState::None => self.on_deactivate_sound_file.clone(),
         }
     }
 

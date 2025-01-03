@@ -12,6 +12,7 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
+use uncore::behavior::{Behavior, Orientation};
 use uncore::components::game::{GameSound, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::platform::plt::IS_WASM;
@@ -23,14 +24,13 @@ use uncore::types::game::SoundType;
 use crate::gear::ext::types::gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
-    uncore_behavior::{Behavior, Orientation},
     board::{self, BoardPosition, Direction, Position},
     difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
-    uncore_materials::CustomMaterial1,
     player::{self, DeployedGear, DeployedGearData},
+    uncore_materials::CustomMaterial1,
     utils,
 };
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};

@@ -1,7 +1,8 @@
-// src/ghost_events.rs
 use crate::difficulty::CurrentDifficulty;
-use crate::game::roomchanged::InteractionExecutionType;
-use crate::{uncore_behavior, board, ghost, player};
+use crate::{board, ghost, player};
+use uncore::behavior;
+use uncore::events::roomchanged::InteractionExecutionType;
+
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -19,18 +20,18 @@ pub fn trigger_ghost_events(
     q_ghost: Query<(&ghost::GhostSprite, &board::Position)>,
     // Query for doors, excluding lights
     q_doors: Query<
-        (Entity, &board::Position, &uncore_behavior::Behavior),
+        (Entity, &board::Position, &behavior::Behavior),
         (
-            With<uncore_behavior::component::Door>,
-            Without<uncore_behavior::component::Light>,
+            With<behavior::component::Door>,
+            Without<behavior::component::Light>,
         ),
     >,
     // Query for lights, excluding doors
     mut q_lights: Query<
-        (Entity, &board::Position, &mut uncore_behavior::Behavior),
+        (Entity, &board::Position, &mut behavior::Behavior),
         (
-            With<uncore_behavior::component::Light>,
-            Without<uncore_behavior::component::Interactive>,
+            With<behavior::component::Light>,
+            Without<behavior::component::Interactive>,
         ),
     >,
     mut interactive_stuff: player::InteractiveStuff,
@@ -162,7 +163,7 @@ struct FlickerTimer(Timer);
 fn update_flicker_timers(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_lights: Query<(Entity, &mut FlickerTimer, &mut uncore_behavior::Behavior)>,
+    mut q_lights: Query<(Entity, &mut FlickerTimer, &mut behavior::Behavior)>,
     mut ev_bdr: EventWriter<board::BoardDataToRebuild>,
 ) {
     for (entity, mut flicker_timer, mut behavior) in q_lights.iter_mut() {

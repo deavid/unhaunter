@@ -1,20 +1,17 @@
 use std::f32::consts::PI;
 
-use crate::{
-    maplight,
-    uncore_behavior::{self, Behavior, SpriteCVOKey},
-    uncore_materials::CustomMaterial1,
-};
-use bevy::{
-    prelude::*,
-    utils::{HashMap, Instant},
-};
+use crate::uncore_materials::CustomMaterial1;
+use bevy::prelude::*;
+use bevy::utils::{HashMap, Instant};
 use fastapprox::faster;
 use rand::Rng;
 
 pub use uncore::components::board::boardposition::BoardPosition;
 pub use uncore::components::board::direction::Direction;
 pub use uncore::components::board::position::Position;
+
+use uncore::behavior::{Behavior, SpriteCVOKey, TileState};
+use uncore::types::board::light::LightData;
 use uncore::{
     resources::boarddata::BoardData,
     types::board::fielddata::{CollisionFieldData, LightFieldData},
@@ -98,7 +95,7 @@ pub struct RoomDB {
     /// * Presence of specific objects or entities.
     ///
     /// * Temperature or other environmental factors.
-    pub room_state: HashMap<String, uncore_behavior::State>,
+    pub room_state: HashMap<String, TileState>,
 }
 
 impl SpriteDB {
@@ -436,7 +433,7 @@ pub fn boardfield_update(
             let src = bf.light_field.get(&pos).cloned().unwrap_or(LightFieldData {
                 lux: 0.0,
                 transmissivity: 1.0,
-                additional: maplight::LightData::default(),
+                additional: LightData::default(),
             });
             let lightdata = LightFieldData {
                 lux: behavior.p.light.emmisivity_lumens() + src.lux,

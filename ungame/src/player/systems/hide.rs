@@ -1,9 +1,9 @@
-use crate::uncore_behavior::Behavior;
 use crate::board::Position;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::playergear::PlayerGear;
 use crate::maplight::MapColor;
 use crate::player::{AnimationTimer, Hiding, PlayerSprite};
+use uncore::behavior::Behavior;
 
 use bevy::color::palettes::css;
 use bevy::prelude::*;

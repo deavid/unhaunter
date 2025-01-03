@@ -1,15 +1,15 @@
+use uncore::behavior::{
+    component::{Interactive, NpcHelpDialog},
+    Behavior,
+};
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
-    uncore_behavior::{
-        component::{Interactive, NpcHelpDialog},
-        Behavior,
-    },
     board::{self, Position},
     game::GameConfig,
-    uncore_materials::{self, UIPanelMaterial},
     player::PlayerSprite,
+    uncore_materials::{self, UIPanelMaterial},
     uncore_root,
 };
 use bevy::prelude::*;

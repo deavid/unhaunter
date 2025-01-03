@@ -2,9 +2,9 @@ use super::{GCameraArena, GameConfig};
 use crate::board::{self, BoardDataToRebuild};
 use crate::player::{InteractiveStuff, PlayerSprite};
 use crate::uncore_root;
-use crate::uncore_behavior::component::RoomState;
-use crate::uncore_behavior::Behavior;
 use bevy::prelude::*;
+use uncore::behavior::component::RoomState;
+use uncore::behavior::Behavior;
 
 pub use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 

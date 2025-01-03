@@ -1,6 +1,3 @@
-use uncore::components::game::GameSprite;
-
-use crate::uncore_behavior::{self, Behavior};
 use crate::board::{self, Position};
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::gear::Gear;
@@ -8,6 +5,9 @@ use crate::gear::ext::types::traits::GearUsable;
 use crate::gear::playergear::PlayerGear;
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
 use crate::uncore_root;
+use uncore::behavior::component::FloorItemCollidable;
+use uncore::behavior::Behavior;
+use uncore::components::game::GameSprite;
 
 use bevy::prelude::*;
 
@@ -68,13 +68,7 @@ pub fn grab_object(
 pub fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
-    mut objects: Query<
-        (Entity, &mut Position),
-        (
-            Without<PlayerSprite>,
-            With<uncore_behavior::component::FloorItemCollidable>,
-        ),
-    >,
+    mut objects: Query<(Entity, &mut Position), (Without<PlayerSprite>, With<FloorItemCollidable>)>,
     mut gs: GearStuff,
 ) {
     for (mut player_gear, player_pos, player) in players.iter_mut() {
@@ -178,7 +172,7 @@ pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
     mut commands: Commands,
-    q_collidable: Query<(Entity, &Position), With<uncore_behavior::component::FloorItemCollidable>>,
+    q_collidable: Query<(Entity, &Position), With<FloorItemCollidable>>,
     mut gs: GearStuff,
     handles: Res<uncore_root::GameAssets>,
 ) {
@@ -217,7 +211,7 @@ pub fn deploy_gear(
                     )
                     .insert(deployed_gear)
                     .insert(*player_pos)
-                    .insert(uncore_behavior::component::FloorItemCollidable)
+                    .insert(FloorItemCollidable)
                     .insert(GameSprite)
                     .insert(DeployedGearData {
                         gear: player_gear.right_hand.take(),

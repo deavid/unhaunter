@@ -1,30 +1,27 @@
 mod board;
-pub mod difficulty;
+mod difficulty;
 mod game;
 mod gear;
 mod ghost;
 mod ghost_definitions;
 mod ghost_events;
-pub mod ghost_setfinder;
+mod ghost_setfinder;
 mod mainmenu;
-pub mod manual;
-pub mod maphub;
+mod manual;
+mod maphub;
 mod maplight;
-pub mod npchelp;
-pub mod object_interaction;
+mod npchelp;
 mod pause;
 mod player;
 mod summary;
-pub mod systems;
+mod systems;
 mod truck;
-mod uncore_behavior;
 mod uncore_materials;
 mod uncore_root;
 mod uncore_tiledmap;
 
-use object_interaction::ObjectInteractionConfig;
-use uncore::platform::plt;
 use uncore::utils;
+use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use uncore_materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::root::UnhaunterRootPlugin;
 
@@ -49,15 +46,18 @@ pub fn app_run() {
         }),
         ..default()
     }))
-    .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
-    .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
-    .init_resource::<uncore_tiledmap::MapTileSetDb>()
-    .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
-    )))
-    .init_resource::<ObjectInteractionConfig>();
+    )));
+
+    app.init_resource::<uncore_tiledmap::MapTileSetDb>()
+        .init_resource::<difficulty::CurrentDifficulty>()
+        .init_resource::<ObjectInteractionConfig>();
+
+    app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
+        .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
+
     app.add_plugins(UnhaunterRootPlugin);
     gear::app_setup(&mut app);
     game::app_setup(&mut app);

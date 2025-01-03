@@ -16,6 +16,7 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
+use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::events::loadlevel::LoadLevelEvent;
@@ -27,11 +28,11 @@ use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle
 use crate::difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
-use crate::uncore_materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
+use crate::uncore_materials::CustomMaterial1;
 use crate::uncore_root::{self, QuadCC};
 use crate::uncore_tiledmap::{AtlasData, MapLayerType};
-use crate::{uncore_behavior, summary, uncore_tiledmap};
+use crate::{summary, uncore_tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
@@ -165,8 +166,8 @@ pub fn load_level_handler(
     for (tset_name, tileset) in tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             let sprite_config =
-                uncore_behavior::SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
-            let behavior = uncore_behavior::Behavior::from_config(sprite_config);
+                SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
+            let behavior = Behavior::from_config(sprite_config);
             let visibility = if behavior.p.display.disable {
                 Visibility::Hidden
             } else {
@@ -292,22 +293,22 @@ pub fn load_level_handler(
                 ..pos
             };
             match &mt.behavior.p.util {
-                uncore_behavior::Util::PlayerSpawn => {
+                Util::PlayerSpawn => {
                     player_spawn_points.push(new_pos);
                 }
-                uncore_behavior::Util::GhostSpawn => {
+                Util::GhostSpawn => {
                     ghost_spawn_points.push(new_pos);
                 }
-                uncore_behavior::Util::RoomDef(name) => {
+                Util::RoomDef(name) => {
                     roomdb
                         .room_tiles
                         .insert(pos.to_board_position(), name.to_owned());
-                    roomdb.room_state.insert(name.clone(), uncore_behavior::State::Off);
+                    roomdb.room_state.insert(name.clone(), TileState::Off);
                 }
-                uncore_behavior::Util::Van => {
+                Util::Van => {
                     van_entry_points.push(new_pos);
                 }
-                uncore_behavior::Util::None => {}
+                Util::None => {}
             }
             mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();
