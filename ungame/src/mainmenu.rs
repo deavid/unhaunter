@@ -110,11 +110,11 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, menu_event)
         .add_event::<MenuEvent>()
         .add_systems(Update, despawn_sound)
-        .add_systems(OnEnter(uncore_root::State::MainMenu), (setup, setup_ui))
-        .add_systems(OnExit(uncore_root::State::MainMenu), cleanup)
+        .add_systems(OnEnter(uncore_root::AppState::MainMenu), (setup, setup_ui))
+        .add_systems(OnExit(uncore_root::AppState::MainMenu), cleanup)
         .add_systems(
             Update,
-            manage_title_song.run_if(state_changed::<uncore_root::State>),
+            manage_title_song.run_if(state_changed::<uncore_root::AppState>),
         );
 }
 
@@ -166,10 +166,10 @@ pub fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
-    app_state: Res<State<uncore_root::State>>,
+    app_state: Res<State<uncore_root::AppState>>,
 ) {
     // Determine the desired song state directly from the current state
-    let should_play_song = !matches!(app_state.get(), uncore_root::State::InGame);
+    let should_play_song = !matches!(app_state.get(), uncore_root::AppState::InGame);
 
     // Check if a MenuSound entity already exists
     if let Ok(mut menusound) = q_sound.get_single_mut() {
@@ -366,18 +366,18 @@ pub fn keyboard(
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<uncore_root::State>>,
+    mut next_state: ResMut<NextState<uncore_root::AppState>>,
 ) {
     for event in ev_menu.read() {
         warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
             MenuID::MapHub => {
                 // Transition to the Map Hub state
-                next_state.set(uncore_root::State::MapHub);
+                next_state.set(uncore_root::AppState::MapHub);
             }
             MenuID::Manual => {
                 // Transition to the Manual state
-                next_state.set(uncore_root::State::UserManual);
+                next_state.set(uncore_root::AppState::UserManual);
             }
             MenuID::_Options => {}
             MenuID::Quit => {

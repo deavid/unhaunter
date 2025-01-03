@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum State {
+pub enum AppState {
     #[default]
     Loading,
     MainMenu,

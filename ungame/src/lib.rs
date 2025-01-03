@@ -8,7 +8,6 @@ mod maplight;
 mod npchelp;
 mod pause;
 mod player;
-mod summary;
 mod systems;
 mod truck;
 mod uncore_board;
@@ -16,12 +15,13 @@ mod uncore_difficulty;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
-use unstd::plugins::manual::UnhaunterManualPlugin;
+use unstd::plugins::summary::UnhaunterSummaryPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
+use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
 use unstd::tiledmap::bevy::MapTileSetDb;
 
@@ -59,11 +59,11 @@ pub fn app_run() {
         UnhaunterRootPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
+        UnhaunterSummaryPlugin,
     ));
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
-    summary::app_setup(&mut app);
     mainmenu::app_setup(&mut app);
     ghost::app_setup(&mut app);
     ghost_events::app_setup(&mut app);

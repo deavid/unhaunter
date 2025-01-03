@@ -1,11 +1,11 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 
+use uncore::difficulty::CurrentDifficulty;
+use uncore::resources::summary_data::SummaryData;
 use uncore::{
     components::board::position::Position, events::sound::SoundEvent,
     resources::board_data::BoardData,
 };
-
-use crate::{uncore_difficulty::CurrentDifficulty, summary};
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]
@@ -14,7 +14,7 @@ pub struct GearStuff<'w, 's> {
     /// fields.
     pub bf: ResMut<'w, BoardData>,
     /// Access to summary data, which tracks game progress and statistics.
-    pub summary: ResMut<'w, summary::SummaryData>,
+    pub summary: ResMut<'w, SummaryData>,
     /// Allows gear systems to spawn new entities (e.g., for sound effects).
     pub commands: Commands<'w, 's>,
     /// Provides access to the asset server for loading sound effects.

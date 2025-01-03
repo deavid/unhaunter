@@ -131,11 +131,11 @@ pub fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
         update_evidence_ui
-            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::State::InGame))),
+            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame))),
     )
     .add_systems(
         Update,
         keyboard_evidence
-            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::State::InGame))),
+            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame))),
     );
 }

@@ -9,3 +9,5 @@ pub mod game_config;
 pub mod sprite_type;
 pub mod player_inventory;
 pub mod truck_ui;
+pub mod summary_ui;
+pub mod player_sprite;

@@ -2,7 +2,7 @@ pub mod difficulty_selection;
 pub mod map_selection;
 
 use crate::mainmenu::MCamera;
-use crate::uncore_root::State;
+use crate::uncore_root::AppState;
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default)]
@@ -15,8 +15,8 @@ pub enum MapHubState {
 
 pub fn app_setup(app: &mut App) {
     app.init_state::<MapHubState>()
-        .add_systems(OnEnter(State::MapHub), setup_systems)
-        .add_systems(OnExit(State::MapHub), cleanup_systems);
+        .add_systems(OnEnter(AppState::MapHub), setup_systems)
+        .add_systems(OnExit(AppState::MapHub), cleanup_systems);
     map_selection::app_setup(app);
     difficulty_selection::app_setup(app);
 }

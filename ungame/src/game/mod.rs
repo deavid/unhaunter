@@ -55,7 +55,7 @@ pub fn cleanup(
 
 #[allow(clippy::too_many_arguments)]
 pub fn keyboard(
-    app_state: Res<State<uncore_root::State>>,
+    app_state: Res<State<uncore_root::AppState>>,
     game_state: Res<State<uncore_root::GameState>>,
     mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -64,7 +64,7 @@ pub fn keyboard(
     pc: Query<(&PlayerSprite, &Transform, &uncore_board::Direction), Without<GCameraArena>>,
     time: Res<Time>,
 ) {
-    if *app_state.get() != uncore_root::State::InGame {
+    if *app_state.get() != uncore_root::AppState::InGame {
         return;
     }
     let in_game = *game_state.get() == uncore_root::GameState::None;
@@ -124,8 +124,8 @@ pub fn keyboard(
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(OnEnter(uncore_root::State::InGame), setup)
-        .add_systems(OnExit(uncore_root::State::InGame), cleanup)
+        .add_systems(OnEnter(uncore_root::AppState::InGame), setup)
+        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
         .add_systems(
             Update,
             keyboard.before(player::systems::keyboard::keyboard_player),

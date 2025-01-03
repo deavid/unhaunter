@@ -70,7 +70,7 @@ pub fn handle_difficulty_selection(
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<uncore_root::Maps>,
     ev_load_level: EventWriter<LoadLevelEvent>,
-    next_state: ResMut<NextState<uncore_root::State>>,
+    next_state: ResMut<NextState<uncore_root::AppState>>,
 ) {
     if ev_difficulty_confirmed.read().next().is_none() {
         return;

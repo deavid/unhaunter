@@ -1,67 +1,13 @@
-use crate::{uncore_difficulty::CurrentDifficulty, player::PlayerSprite, uncore_root, utils};
 use bevy::{color::palettes::css, prelude::*};
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
+use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::types::ghost::types::GhostType;
-
-#[derive(Debug, Component, Clone)]
-pub struct SCamera;
-#[derive(Debug, Component, Clone)]
-pub struct SummaryUI;
-
-#[derive(Debug, Component, Clone)]
-pub enum SummaryUIType {
-    GhostList,
-    TimeTaken,
-    GhostUnhaunted,
-    RepellentUsed,
-    AvgSanity,
-    PlayersAlive,
-    FinalScore,
-}
-
-#[derive(Debug, Clone, Resource, Default)]
-pub struct SummaryData {
-    pub time_taken_secs: f32,
-    pub ghost_types: Vec<GhostType>,
-    pub repellent_used_amt: u32,
-    pub ghosts_unhaunted: u32,
-    pub final_score: i64,
-    pub difficulty: CurrentDifficulty,
-    pub average_sanity: f32,
-    pub player_count: usize,
-    pub alive_count: usize,
-}
-
-impl SummaryData {
-    pub fn new(ghost_types: Vec<GhostType>, difficulty: CurrentDifficulty) -> Self {
-        Self {
-            ghost_types,
-            difficulty,
-            ..default()
-        }
-    }
-
-    pub fn calculate_score(&self) -> i64 {
-        let mut score = (250.0 * self.ghosts_unhaunted as f64)
-            / (1.0 + self.repellent_used_amt as f64)
-            / (1.0 + (self.ghost_types.len() as u32 - self.ghosts_unhaunted) as f64);
-
-        // Sanity modifier
-        score *= (self.average_sanity as f64 + 30.0) / 50.0;
-
-        // Apply difficulty multiplier
-        score *= self.difficulty.0.difficulty_score_multiplier;
-        if self.player_count == self.alive_count {
-            // Apply time bonus multiplier
-            score *= 1.0 + 360.0 / (60.0 + self.time_taken_secs as f64);
-        } else {
-            score *= self.alive_count as f64 / (self.player_count as f64 + 1.0);
-        }
-
-        // Ensure score is within a reasonable range
-        score.clamp(0.0, 1000000.0) as i64
-    }
-}
+use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
+use uncore::states::GameState;
+use uncore::types::root::game_assets::GameAssets;
+use uncore::utils::time::format_time;
 
 pub fn setup(mut commands: Commands) {
     // ui camera
@@ -88,12 +34,12 @@ pub fn cleanup(
 pub fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    game_state: Res<State<uncore_root::GameState>>,
-    mut app_next_state: ResMut<NextState<uncore_root::State>>,
+    game_state: Res<State<GameState>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
     qp: Query<&PlayerSprite>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    if *game_state == uncore_root::GameState::Pause {
+    if *game_state == GameState::Pause {
         return;
     }
     sd.difficulty = difficulty.clone();
@@ -107,26 +53,26 @@ pub fn update_time(
         sd.average_sanity = total_sanity / player_count as f32;
     }
     if alive_count == 0 {
-        app_next_state.set(uncore_root::State::Summary);
+        app_next_state.set(AppState::Summary);
     }
 }
 
 pub fn keyboard(
-    app_state: Res<State<uncore_root::State>>,
-    mut app_next_state: ResMut<NextState<uncore_root::State>>,
+    app_state: Res<State<AppState>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *app_state.get() != uncore_root::State::Summary {
+    if *app_state.get() != AppState::Summary {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape)
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        app_next_state.set(uncore_root::State::MainMenu);
+        app_next_state.set(AppState::MainMenu);
     }
 }
-pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
@@ -308,7 +254,7 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
                 )
             }
             SummaryUIType::TimeTaken => {
-                text.0 = format!("Time taken: {}", utils::format_time(rsd.time_taken_secs))
+                text.0 = format!("Time taken: {}", format_time(rsd.time_taken_secs))
             }
             SummaryUIType::AvgSanity => {
                 text.0 = format!("Average Sanity: {:.1}%", rsd.average_sanity)
@@ -331,8 +277,8 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
     }
 }
 
-pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<uncore_root::State>>) {
-    if *app_state != uncore_root::State::Summary {
+pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>) {
+    if *app_state != AppState::Summary {
         return;
     }
     let desired_score = sd.calculate_score();
@@ -341,16 +287,17 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<uncore_roo
     sd.final_score += delta;
 }
 
-pub fn app_setup(app: &mut App) {
-    app.init_resource::<SummaryData>()
-        .add_systems(OnEnter(uncore_root::State::Summary), (setup, setup_ui))
-        .add_systems(OnExit(uncore_root::State::Summary), cleanup)
-        .add_systems(
-            FixedUpdate,
-            update_time.run_if(in_state(uncore_root::State::InGame)),
-        )
-        .add_systems(
-            Update,
-            (keyboard, update_ui, update_score).run_if(in_state(uncore_root::State::Summary)),
-        );
+pub struct UnhaunterSummaryPlugin;
+
+impl Plugin for UnhaunterSummaryPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SummaryData>()
+            .add_systems(OnEnter(AppState::Summary), (setup, setup_ui))
+            .add_systems(OnExit(AppState::Summary), cleanup)
+            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                (keyboard, update_ui, update_score).run_if(in_state(AppState::Summary)),
+            );
+    }
 }

@@ -373,8 +373,8 @@ pub fn toggle_held_object_ui(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(uncore_root::State::InGame), setup_ui)
-        .add_systems(OnExit(uncore_root::State::InGame), cleanup)
+    app.add_systems(OnEnter(uncore_root::AppState::InGame), setup_ui)
+        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
         .add_systems(OnEnter(uncore_root::GameState::None), resume)
         .add_systems(OnExit(uncore_root::GameState::None), pause)
         .add_systems(

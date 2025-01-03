@@ -1,7 +1,7 @@
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use uncore::resources::maps::Maps;
-use uncore::states::{GameState, State};
+use uncore::states::{GameState, AppState};
 use uncore::types::root::anchors::Anchors;
 use uncore::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
@@ -15,7 +15,7 @@ pub struct UnhaunterRootPlugin;
 
 impl Plugin for UnhaunterRootPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<State>()
+        app.init_state::<AppState>()
             .init_state::<GameState>()
             .init_resource::<Maps>()
             .add_systems(
@@ -200,8 +200,8 @@ fn load_assets(
     });
 }
 
-fn finish_loading(mut next_state: ResMut<NextState<State>>) {
-    next_state.set(State::MainMenu);
+fn finish_loading(mut next_state: ResMut<NextState<AppState>>) {
+    next_state.set(AppState::MainMenu);
 }
 
 #[cfg(not(target_arch = "wasm32"))]

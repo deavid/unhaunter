@@ -7,7 +7,7 @@ use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::platform::plt::FONT_SCALE;
 use uncore::resources::difficulty_state::DifficultySelectionState;
 use uncore::resources::maps::Maps;
-use uncore::states::State;
+use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
 
 use super::draw_manual_page;
@@ -52,7 +52,7 @@ pub fn preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<Maps>,
-    mut next_state: ResMut<NextState<State>>,
+    mut next_state: ResMut<NextState<AppState>>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
     manual: Res<Manual>,
 ) {
@@ -63,7 +63,7 @@ pub fn preplay_manual_system(
                     current_manual_page.1 -= 1; // Go to previous page
                 } else {
                     // Return to map/difficulty selection
-                    next_state.set(State::MapHub);
+                    next_state.set(AppState::MapHub);
                 }
             }
 
@@ -83,7 +83,7 @@ pub fn preplay_manual_system(
                             .path
                             .clone();
                         ev_load_level.send(LoadLevelEvent { map_filepath });
-                        next_state.set(State::InGame);
+                        next_state.set(AppState::InGame);
                     }
                 } else {
                     // No tutorial chapter, start game immediately.
@@ -92,7 +92,7 @@ pub fn preplay_manual_system(
                         .clone();
 
                     ev_load_level.send(LoadLevelEvent { map_filepath });
-                    next_state.set(State::InGame);
+                    next_state.set(AppState::InGame);
                 }
             }
         }
@@ -267,7 +267,7 @@ pub fn cleanup_preplay_ui(
 
 pub fn start_preplay_manual_system(
     difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<State>>,
+    mut next_game_state: ResMut<NextState<AppState>>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<Maps>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
@@ -278,9 +278,9 @@ pub fn start_preplay_manual_system(
             .clone();
 
         ev_load_level.send(LoadLevelEvent { map_filepath });
-        next_game_state.set(State::InGame);
+        next_game_state.set(AppState::InGame);
     } else {
-        next_game_state.set(State::PreplayManual);
+        next_game_state.set(AppState::PreplayManual);
     }
 }
 
@@ -314,8 +314,8 @@ fn redraw_manual_ui_system(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(State::PreplayManual), setup_preplay_ui)
-        .add_systems(OnExit(State::PreplayManual), cleanup_preplay_ui)
+    app.add_systems(OnEnter(AppState::PreplayManual), setup_preplay_ui)
+        .add_systems(OnExit(AppState::PreplayManual), cleanup_preplay_ui)
         .add_systems(
             Update,
             (
@@ -324,7 +324,7 @@ pub fn app_setup(app: &mut App) {
                 redraw_manual_ui_system,
             )
                 .chain()
-                .run_if(in_state(State::PreplayManual)),
+                .run_if(in_state(AppState::PreplayManual)),
         )
         .add_event::<PreplayManualNavigationEvent>(); //Add event
 }

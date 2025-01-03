@@ -14,7 +14,7 @@ const PAUSEUI_TEXT_COLOR: Color = Color::srgba(0.7, 0.82, 0.85, 1.0);
 pub fn keyboard(
     game_state: Res<State<uncore_root::GameState>>,
     mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
-    mut next_state: ResMut<NextState<uncore_root::State>>,
+    mut next_state: ResMut<NextState<uncore_root::AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *game_state.get() != uncore_root::GameState::Pause {
@@ -25,7 +25,7 @@ pub fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(uncore_root::GameState::None);
-        next_state.set(uncore_root::State::MainMenu);
+        next_state.set(uncore_root::AppState::MainMenu);
     }
 }
 

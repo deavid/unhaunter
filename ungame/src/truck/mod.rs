@@ -76,7 +76,7 @@ pub fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: EventReader<TruckUIEvent>,
-    mut next_state: ResMut<NextState<uncore_root::State>>,
+    mut next_state: ResMut<NextState<uncore_root::AppState>>,
     mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
     gg: Res<GhostGuess>,
     gc: Res<GameConfig>,
@@ -86,7 +86,7 @@ pub fn truckui_event_handle(
         match ev {
             TruckUIEvent::EndMission => {
                 game_next_state.set(uncore_root::GameState::None);
-                next_state.set(uncore_root::State::Summary);
+                next_state.set(uncore_root::AppState::Summary);
             }
             TruckUIEvent::ExitTruck => game_next_state.set(uncore_root::GameState::None),
             TruckUIEvent::CraftRepellent => {
@@ -115,8 +115,8 @@ pub fn truckui_event_handle(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(uncore_root::State::InGame), ui::setup_ui)
-        .add_systems(OnExit(uncore_root::State::InGame), cleanup)
+    app.add_systems(OnEnter(uncore_root::AppState::InGame), ui::setup_ui)
+        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
         .add_systems(OnEnter(uncore_root::GameState::Truck), show_ui)
         .add_systems(OnExit(uncore_root::GameState::Truck), hide_ui)
         .add_event::<TruckUIEvent>()

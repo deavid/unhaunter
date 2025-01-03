@@ -17,13 +17,12 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::gear::playergear::PlayerGear;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
-use crate::summary;
 use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::uncore_root::{self, QuadCC};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -34,6 +33,7 @@ use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::resources::board_data::BoardData;
+use uncore::resources::summary_data::SummaryData;
 use uncore::types::game::SoundType;
 use uncore::types::tiledmap::map::MapLayerType;
 use unstd::materials::CustomMaterial1;
@@ -61,7 +61,7 @@ pub fn load_level_handler(
     mut sdb: ResMut<SpriteDB>,
     handles: Res<uncore_root::GameAssets>,
     mut roomdb: ResMut<uncore_board::RoomDB>,
-    mut app_next_state: ResMut<NextState<uncore_root::State>>,
+    mut app_next_state: ResMut<NextState<uncore_root::AppState>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut ev_iter = ev.read();
@@ -148,7 +148,7 @@ pub fn load_level_handler(
         });
     commands.init_resource::<BoardData>();
     info!("Load Level: {}", &load_event.map_filepath);
-    app_next_state.set(uncore_root::State::InGame);
+    app_next_state.set(uncore_root::AppState::InGame);
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = bevy_load_map(
@@ -430,7 +430,7 @@ pub fn load_level_handler(
         bf.evidences.insert(evidence);
     }
     bf.breach_pos = ghost_spawn;
-    commands.insert_resource(summary::SummaryData::new(ghost_types, difficulty.clone()));
+    commands.insert_resource(SummaryData::new(ghost_types, difficulty.clone()));
     let breach_id = commands
         .spawn(Sprite {
             image: asset_server.load("img/breach.png"),

@@ -2,14 +2,15 @@ use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
+use uncore::resources::summary_data::SummaryData;
 
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};
 use crate::uncore_board::{self, BoardPosition, Position};
-use crate::{summary, utils};
+use crate::uncore_difficulty::CurrentDifficulty;
+use crate::utils;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
@@ -147,7 +148,7 @@ pub fn ghost_movement(
     >,
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
     roomdb: Res<crate::uncore_board::RoomDB>,
-    mut summary: ResMut<summary::SummaryData>,
+    mut summary: ResMut<SummaryData>,
     bf: Res<BoardData>,
     mut commands: Commands,
     time: Res<Time>,

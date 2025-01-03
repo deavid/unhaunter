@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use super::super::systemparam::gearstuff::GearStuff;
 use uncore::{
     components::board::position::Position,
     types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID},
 };
 
-use super::{uncore_gearkind::GearKind, traits::GearUsable};
+use super::{traits::GearUsable, uncore_gearkind::GearKind};
 
 /// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]

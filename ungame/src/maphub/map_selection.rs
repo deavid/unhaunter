@@ -2,7 +2,7 @@ use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::maphub::MapHubState;
-use crate::uncore_root::{GameAssets, Maps, State};
+use crate::uncore_root::{GameAssets, Maps, AppState};
 use bevy::prelude::*;
 
 #[derive(Component, Debug)]
@@ -56,7 +56,7 @@ pub fn keyboard(
     mut map_selection_state: ResMut<MapSelectionState>,
     maps: Res<Maps>,
     mut next_state: ResMut<NextState<MapHubState>>,
-    mut root_next_state: ResMut<NextState<State>>,
+    mut root_next_state: ResMut<NextState<AppState>>,
     mut ev_map_selected: EventWriter<MapSelectedEvent>,
 ) {
     let map_count = maps.maps.len();
@@ -82,12 +82,12 @@ pub fn keyboard(
             next_state.set(MapHubState::DifficultySelection);
         } else {
             // If "Go Back" is selected, transition back to the main menu
-            root_next_state.set(State::MainMenu);
+            root_next_state.set(AppState::MainMenu);
             next_state.set(MapHubState::None);
         }
     } else if keyboard_input.just_pressed(KeyCode::Escape) {
         // Transition back to the main menu
-        root_next_state.set(State::MainMenu);
+        root_next_state.set(AppState::MainMenu);
         next_state.set(MapHubState::None);
     }
 }
