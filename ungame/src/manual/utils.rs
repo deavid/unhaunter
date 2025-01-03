@@ -8,7 +8,7 @@
 use uncore::colors;
 use uncore::platform::plt::FONT_SCALE;
 
-use crate::root::GameAssets;
+use crate::uncore_root::GameAssets;
 
 use bevy::prelude::*;
 

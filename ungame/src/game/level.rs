@@ -29,7 +29,7 @@ use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::uncore_materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
-use crate::root::{self, QuadCC};
+use crate::uncore_root::{self, QuadCC};
 use crate::uncore_tiledmap::{AtlasData, MapLayerType};
 use crate::{uncore_behavior, summary, uncore_tiledmap};
 use bevy::prelude::*;
@@ -57,9 +57,9 @@ pub fn load_level_handler(
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<uncore_tiledmap::MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
-    handles: Res<root::GameAssets>,
+    handles: Res<uncore_root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
-    mut app_next_state: ResMut<NextState<root::State>>,
+    mut app_next_state: ResMut<NextState<uncore_root::State>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut ev_iter = ev.read();
@@ -146,7 +146,7 @@ pub fn load_level_handler(
         });
     commands.init_resource::<BoardData>();
     info!("Load Level: {}", &load_event.map_filepath);
-    app_next_state.set(root::State::InGame);
+    app_next_state.set(uncore_root::State::InGame);
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = uncore_tiledmap::bevy_load_map(

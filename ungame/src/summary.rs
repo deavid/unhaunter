@@ -1,7 +1,7 @@
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
-    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, root, utils,
+    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, uncore_root, utils,
 };
 use bevy::{color::palettes::css, prelude::*};
 
@@ -90,12 +90,12 @@ pub fn cleanup(
 pub fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
-    game_state: Res<State<root::GameState>>,
-    mut app_next_state: ResMut<NextState<root::State>>,
+    game_state: Res<State<uncore_root::GameState>>,
+    mut app_next_state: ResMut<NextState<uncore_root::State>>,
     qp: Query<&PlayerSprite>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    if *game_state == root::GameState::Pause {
+    if *game_state == uncore_root::GameState::Pause {
         return;
     }
     sd.difficulty = difficulty.clone();
@@ -109,26 +109,26 @@ pub fn update_time(
         sd.average_sanity = total_sanity / player_count as f32;
     }
     if alive_count == 0 {
-        app_next_state.set(root::State::Summary);
+        app_next_state.set(uncore_root::State::Summary);
     }
 }
 
 pub fn keyboard(
-    app_state: Res<State<root::State>>,
-    mut app_next_state: ResMut<NextState<root::State>>,
+    app_state: Res<State<uncore_root::State>>,
+    mut app_next_state: ResMut<NextState<uncore_root::State>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *app_state.get() != root::State::Summary {
+    if *app_state.get() != uncore_root::State::Summary {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape)
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        app_next_state.set(root::State::MainMenu);
+        app_next_state.set(uncore_root::State::MainMenu);
     }
 }
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
@@ -333,8 +333,8 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
     }
 }
 
-pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<root::State>>) {
-    if *app_state != root::State::Summary {
+pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<uncore_root::State>>) {
+    if *app_state != uncore_root::State::Summary {
         return;
     }
     let desired_score = sd.calculate_score();
@@ -345,14 +345,14 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<root::Stat
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<SummaryData>()
-        .add_systems(OnEnter(root::State::Summary), (setup, setup_ui))
-        .add_systems(OnExit(root::State::Summary), cleanup)
+        .add_systems(OnEnter(uncore_root::State::Summary), (setup, setup_ui))
+        .add_systems(OnExit(uncore_root::State::Summary), cleanup)
         .add_systems(
             FixedUpdate,
-            update_time.run_if(in_state(root::State::InGame)),
+            update_time.run_if(in_state(uncore_root::State::InGame)),
         )
         .add_systems(
             Update,
-            (keyboard, update_ui, update_score).run_if(in_state(root::State::Summary)),
+            (keyboard, update_ui, update_score).run_if(in_state(uncore_root::State::Summary)),
         );
 }

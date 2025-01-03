@@ -1,8 +1,11 @@
-use crate::uncore_behavior::component::{Interactive, RoomState};
-use crate::uncore_behavior::Behavior;
-use crate::board::{self, BoardPosition, Position};
-use crate::game::roomchanged::InteractionExecutionType;
-use crate::root;
+use crate::board::{RoomDB, SpriteDB};
+use crate::uncore_root::GameState;
+use uncore::behavior::component::{Interactive, RoomState};
+use uncore::behavior::Behavior;
+use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::position::Position;
+use uncore::events::roomchanged::InteractionExecutionType;
+use uncore::materials::CustomMaterial1;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
@@ -23,7 +26,7 @@ use bevy::prelude::*;
 pub struct InteractiveStuff<'w, 's> {
     /// Database of sprites for map tiles. Used to retrieve alternative sprites for
     /// interactive objects.
-    pub bf: Res<'w, board::SpriteDB>,
+    pub bf: Res<'w, SpriteDB>,
     /// Used to spawn sound effects and potentially other entities related to
     /// interactions.
     pub commands: Commands<'w, 's>,
@@ -31,12 +34,12 @@ pub struct InteractiveStuff<'w, 's> {
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the materials used for rendering map tiles. Used to update tile
     /// visuals when object states change.
-    pub materials1: ResMut<'w, Assets<crate::uncore_materials::CustomMaterial1>>,
+    pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
-    pub roomdb: ResMut<'w, board::RoomDB>,
+    pub roomdb: ResMut<'w, RoomDB>,
     /// Controls the transition to different game states, such as the truck UI.
-    pub game_next_state: ResMut<'w, NextState<root::GameState>>,
+    pub game_next_state: ResMut<'w, NextState<GameState>>,
 }
 
 impl InteractiveStuff<'_, '_> {
@@ -96,7 +99,7 @@ impl InteractiveStuff<'_, '_> {
                         spatial_scale: None,
                     });
             }
-            self.game_next_state.set(root::GameState::Truck);
+            self.game_next_state.set(GameState::Truck);
             return false;
         }
         for other_tuid in self.bf.cvo_idx.get(&cvo).unwrap().iter() {

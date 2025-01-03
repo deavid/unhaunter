@@ -1,7 +1,7 @@
 use super::{GCameraArena, GameConfig};
 use crate::board::{self, BoardDataToRebuild};
 use crate::player::{InteractiveStuff, PlayerSprite};
-use crate::root;
+use crate::uncore_root;
 use crate::uncore_behavior::component::RoomState;
 use crate::uncore_behavior::Behavior;
 use bevy::prelude::*;
@@ -51,7 +51,7 @@ pub fn roomchanged_event(
     if ev.open_van {
         interactive_stuff
             .game_next_state
-            .set(root::GameState::Truck);
+            .set(uncore_root::GameState::Truck);
     }
     if ev.initialize {
         for (player, p_transform) in pc.iter() {

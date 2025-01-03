@@ -9,7 +9,7 @@ use crate::{
     game::evidence,
     gear::{self, playergear::PlayerGear},
     player::PlayerSprite,
-    root,
+    uncore_root,
 };
 use bevy::{color::palettes::css, prelude::*};
 
@@ -32,7 +32,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -248,7 +248,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
 
 /// Sets up the UI elements for displaying information about the map item being
 /// held by the player.
-fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &root::GameAssets) {
+fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &uncore_root::GameAssets) {
     parent
         .spawn(Text::new("Object Name"))
         .insert(TextFont {
@@ -373,12 +373,12 @@ pub fn toggle_held_object_ui(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::State::InGame), setup_ui)
-        .add_systems(OnExit(root::State::InGame), cleanup)
-        .add_systems(OnEnter(root::GameState::None), resume)
-        .add_systems(OnExit(root::GameState::None), pause)
+    app.add_systems(OnEnter(uncore_root::State::InGame), setup_ui)
+        .add_systems(OnExit(uncore_root::State::InGame), cleanup)
+        .add_systems(OnEnter(uncore_root::GameState::None), resume)
+        .add_systems(OnExit(uncore_root::GameState::None), pause)
         .add_systems(
             Update,
-            toggle_held_object_ui.run_if(in_state(root::GameState::None)),
+            toggle_held_object_ui.run_if(in_state(uncore_root::GameState::None)),
         );
 }

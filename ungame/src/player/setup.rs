@@ -6,7 +6,7 @@ use super::systems::hide::{hide_player, unhide_player};
 use super::systems::keyboard::keyboard_player;
 use super::systems::sanityhealth::{lose_sanity, recover_sanity, visual_health};
 
-use crate::root::GameState;
+use crate::uncore_root::GameState;
 
 use bevy::prelude::*;
 

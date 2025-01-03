@@ -1,7 +1,7 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, IS_WASM, UI_SCALE, VERSION};
 
-use crate::root;
+use crate::uncore_root;
 use bevy::app::AppExit;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
@@ -110,11 +110,11 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, menu_event)
         .add_event::<MenuEvent>()
         .add_systems(Update, despawn_sound)
-        .add_systems(OnEnter(root::State::MainMenu), (setup, setup_ui))
-        .add_systems(OnExit(root::State::MainMenu), cleanup)
+        .add_systems(OnEnter(uncore_root::State::MainMenu), (setup, setup_ui))
+        .add_systems(OnExit(uncore_root::State::MainMenu), cleanup)
         .add_systems(
             Update,
-            manage_title_song.run_if(state_changed::<root::State>),
+            manage_title_song.run_if(state_changed::<uncore_root::State>),
         );
 }
 
@@ -166,10 +166,10 @@ pub fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
-    app_state: Res<State<root::State>>,
+    app_state: Res<State<uncore_root::State>>,
 ) {
     // Determine the desired song state directly from the current state
-    let should_play_song = !matches!(app_state.get(), root::State::InGame);
+    let should_play_song = !matches!(app_state.get(), uncore_root::State::InGame);
 
     // Check if a MenuSound entity already exists
     if let Ok(mut menusound) = q_sound.get_single_mut() {
@@ -199,7 +199,7 @@ pub fn manage_title_song(
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
@@ -366,18 +366,18 @@ pub fn keyboard(
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<root::State>>,
+    mut next_state: ResMut<NextState<uncore_root::State>>,
 ) {
     for event in ev_menu.read() {
         warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
             MenuID::MapHub => {
                 // Transition to the Map Hub state
-                next_state.set(root::State::MapHub);
+                next_state.set(uncore_root::State::MapHub);
             }
             MenuID::Manual => {
                 // Transition to the Manual state
-                next_state.set(root::State::UserManual);
+                next_state.set(uncore_root::State::UserManual);
             }
             MenuID::_Options => {}
             MenuID::Quit => {

@@ -1,7 +1,7 @@
 use uncore::platform::plt::FONT_SCALE;
 
 use super::{draw_manual_page, CurrentManualPage, Manual};
-use crate::root::{self, GameAssets};
+use crate::uncore_root::{self, GameAssets};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -212,7 +212,7 @@ fn handle_manual_navigation(
     mut ev_navigation: EventReader<ManualNavigationEvent>,
     mut current_manual_page: ResMut<CurrentManualPage>,
     manuals: Res<Manual>,
-    mut next_state: ResMut<NextState<root::State>>,
+    mut next_state: ResMut<NextState<uncore_root::State>>,
 ) {
     for ev in ev_navigation.read() {
         match ev {
@@ -239,7 +239,7 @@ fn handle_manual_navigation(
                 }
             }
 
-            ManualNavigationEvent::Close => next_state.set(root::State::MainMenu),
+            ManualNavigationEvent::Close => next_state.set(uncore_root::State::MainMenu),
         }
     }
 }
@@ -289,8 +289,8 @@ pub fn cleanup(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(root::State::UserManual), setup)
-        .add_systems(OnExit(root::State::UserManual), cleanup)
+    app.add_systems(OnEnter(uncore_root::State::UserManual), setup)
+        .add_systems(OnExit(uncore_root::State::UserManual), cleanup)
         .add_systems(
             Update,
             (
@@ -300,7 +300,7 @@ pub fn app_setup(app: &mut App) {
                 redraw_manual_ui_system,
             )
                 .chain()
-                .run_if(in_state(root::State::UserManual)),
+                .run_if(in_state(uncore_root::State::UserManual)),
         ) // Add event handler system
         .add_event::<ManualNavigationEvent>() // Register the event
         .insert_resource(CurrentManualPage::default());

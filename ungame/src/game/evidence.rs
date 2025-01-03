@@ -9,7 +9,7 @@ use super::GameConfig;
 use crate::{
     gear::playergear::PlayerGear,
     player::PlayerSprite,
-    root::{self, GameAssets},
+    uncore_root::{self, GameAssets},
     truck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
 };
 use bevy::color::palettes::css;
@@ -131,11 +131,11 @@ pub fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
         update_evidence_ui
-            .run_if(in_state(root::GameState::None).and(in_state(root::State::InGame))),
+            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::State::InGame))),
     )
     .add_systems(
         Update,
         keyboard_evidence
-            .run_if(in_state(root::GameState::None).and(in_state(root::State::InGame))),
+            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::State::InGame))),
     );
 }

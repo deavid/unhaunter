@@ -1,4 +1,4 @@
-use crate::board;
+use crate::board::Direction;
 use crate::gear::ext::types::gear::Gear;
 use bevy::prelude::*;
 
@@ -6,7 +6,7 @@ use bevy::prelude::*;
 #[derive(Component, Debug, Clone)]
 pub struct DeployedGear {
     /// The direction the gear is facing.
-    pub direction: board::Direction,
+    pub direction: Direction,
 }
 
 /// Component to store the GearKind of a deployed gear entity.

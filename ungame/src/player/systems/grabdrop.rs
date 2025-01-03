@@ -7,7 +7,7 @@ use crate::gear::ext::types::gear::Gear;
 use crate::gear::ext::types::traits::GearUsable;
 use crate::gear::playergear::PlayerGear;
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
-use crate::root;
+use crate::uncore_root;
 
 use bevy::prelude::*;
 
@@ -180,7 +180,7 @@ pub fn deploy_gear(
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<uncore_behavior::component::FloorItemCollidable>>,
     mut gs: GearStuff,
-    handles: Res<root::GameAssets>,
+    handles: Res<uncore_root::GameAssets>,
 ) {
     for (mut player_gear, player_pos, player, dir) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)

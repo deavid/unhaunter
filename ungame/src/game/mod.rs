@@ -6,7 +6,7 @@ pub mod ui;
 use uncore::components::game::{GCameraArena, GameSound, GameSprite};
 
 use crate::player::{self, PlayerSprite};
-use crate::{board, root};
+use crate::{board, uncore_root};
 
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
@@ -55,25 +55,25 @@ pub fn cleanup(
 
 #[allow(clippy::too_many_arguments)]
 pub fn keyboard(
-    app_state: Res<State<root::State>>,
-    game_state: Res<State<root::GameState>>,
-    mut game_next_state: ResMut<NextState<root::GameState>>,
+    app_state: Res<State<uncore_root::State>>,
+    game_state: Res<State<uncore_root::GameState>>,
+    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
     time: Res<Time>,
 ) {
-    if *app_state.get() != root::State::InGame {
+    if *app_state.get() != uncore_root::State::InGame {
         return;
     }
-    let in_game = *game_state.get() == root::GameState::None;
-    if *game_state.get() == root::GameState::Pause {
+    let in_game = *game_state.get() == uncore_root::GameState::None;
+    if *game_state.get() == uncore_root::GameState::Pause {
         return;
     }
     let dt = time.delta_secs() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
-        game_next_state.set(root::GameState::Pause);
+        game_next_state.set(uncore_root::GameState::Pause);
     }
     for mut transform in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {
@@ -124,8 +124,8 @@ pub fn keyboard(
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(OnEnter(root::State::InGame), setup)
-        .add_systems(OnExit(root::State::InGame), cleanup)
+        .add_systems(OnEnter(uncore_root::State::InGame), setup)
+        .add_systems(OnExit(uncore_root::State::InGame), cleanup)
         .add_systems(
             Update,
             keyboard.before(player::systems::keyboard::keyboard_player),

@@ -1,8 +1,8 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
-use crate::root::Maps;
-use crate::{maphub::MapHubState, root};
+use crate::maphub::MapHubState;
+use crate::uncore_root::{GameAssets, Maps, State};
 use bevy::prelude::*;
 
 #[derive(Component, Debug)]
@@ -34,7 +34,7 @@ pub fn app_setup(app: &mut App) {
         .add_event::<MapSelectedEvent>();
 }
 
-pub fn setup_systems(mut commands: Commands, maps: Res<Maps>, handles: Res<root::GameAssets>) {
+pub fn setup_systems(mut commands: Commands, maps: Res<Maps>, handles: Res<GameAssets>) {
     // Create the UI for the map selection screen
     setup_ui(&mut commands, &handles, &maps);
 
@@ -56,7 +56,7 @@ pub fn keyboard(
     mut map_selection_state: ResMut<MapSelectionState>,
     maps: Res<Maps>,
     mut next_state: ResMut<NextState<MapHubState>>,
-    mut root_next_state: ResMut<NextState<root::State>>,
+    mut root_next_state: ResMut<NextState<State>>,
     mut ev_map_selected: EventWriter<MapSelectedEvent>,
 ) {
     let map_count = maps.maps.len();
@@ -82,12 +82,12 @@ pub fn keyboard(
             next_state.set(MapHubState::DifficultySelection);
         } else {
             // If "Go Back" is selected, transition back to the main menu
-            root_next_state.set(root::State::MainMenu);
+            root_next_state.set(State::MainMenu);
             next_state.set(MapHubState::None);
         }
     } else if keyboard_input.just_pressed(KeyCode::Escape) {
         // Transition back to the main menu
-        root_next_state.set(root::State::MainMenu);
+        root_next_state.set(State::MainMenu);
         next_state.set(MapHubState::None);
     }
 }
@@ -114,7 +114,7 @@ pub fn update_item_colors(
     }
 }
 
-pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets, maps: &Maps) {
+pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
     let main_color = Color::Srgba(Srgba {
         red: 0.2,

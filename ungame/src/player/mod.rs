@@ -12,7 +12,7 @@ pub mod systems;
 pub use animation::{AnimationTimer, CharacterAnimation};
 pub use components::deployedgear::{DeployedGear, DeployedGearData};
 pub use components::playersprite::PlayerSprite;
-pub use components::util::{HeldObject, Hiding};
+pub use components::uncore_util::{HeldObject, Hiding};
 pub use systemparam::interactivestuff::InteractiveStuff;
 
 /// Enables the use of arrow keys for movement instead of WASD

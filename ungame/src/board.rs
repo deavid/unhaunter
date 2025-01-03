@@ -1,8 +1,8 @@
 use std::f32::consts::PI;
 
 use crate::{
-    uncore_behavior::{self, Behavior, SpriteCVOKey},
     maplight,
+    uncore_behavior::{self, Behavior, SpriteCVOKey},
     uncore_materials::CustomMaterial1,
 };
 use bevy::{

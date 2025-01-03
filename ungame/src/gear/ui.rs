@@ -6,7 +6,7 @@ use super::{GearSpriteID, GearStuff, GearUsable};
 use crate::game::GameConfig;
 
 use crate::player::PlayerSprite;
-use crate::root::{GameAssets, GameState};
+use crate::uncore_root::{GameAssets, GameState};
 use bevy::prelude::*;
 
 pub fn keyboard_gear(

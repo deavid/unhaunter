@@ -1,6 +1,6 @@
 use crate::manual::utils::{grid_img_text2, header};
 use crate::manual::ManualPageData;
-use crate::root::GameAssets;
+use crate::uncore_root::GameAssets;
 use bevy::prelude::*;
 
 pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {

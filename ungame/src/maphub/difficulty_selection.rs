@@ -5,7 +5,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use super::MapHubState;
 use crate::difficulty::{CurrentDifficulty, Difficulty};
 use crate::manual::preplay_manual_ui::start_preplay_manual_system;
-use crate::root;
+use crate::uncore_root;
 use bevy::prelude::*;
 
 // Add MapSelectedEvent
@@ -48,7 +48,7 @@ pub fn setup_systems(
     mut commands: Commands,
     // Access MapSelectedEvent
     mut ev_map_selected: EventReader<MapSelectedEvent>,
-    handles: Res<root::GameAssets>,
+    handles: Res<uncore_root::GameAssets>,
 ) {
     // Create the UI for the difficulty selection screen
     setup_ui(&mut commands, &handles);
@@ -75,9 +75,9 @@ pub fn handle_difficulty_selection(
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
-    maps: Res<root::Maps>,
+    maps: Res<uncore_root::Maps>,
     ev_load_level: EventWriter<LoadLevelEvent>,
-    next_state: ResMut<NextState<root::State>>,
+    next_state: ResMut<NextState<uncore_root::State>>,
 ) {
     if ev_difficulty_confirmed.read().next().is_none() {
         return;
@@ -168,7 +168,7 @@ pub fn update_item_colors(
     }
 }
 
-pub fn setup_ui(commands: &mut Commands, handles: &root::GameAssets) {
+pub fn setup_ui(commands: &mut Commands, handles: &uncore_root::GameAssets) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
     let main_color = Color::Srgba(Srgba {
         red: 0.2,

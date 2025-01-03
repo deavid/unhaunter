@@ -1,4 +1,3 @@
-mod uncore_behavior;
 mod board;
 pub mod difficulty;
 mod game;
@@ -11,16 +10,18 @@ mod mainmenu;
 pub mod manual;
 pub mod maphub;
 mod maplight;
-mod uncore_materials;
 pub mod npchelp;
 pub mod object_interaction;
 mod pause;
 mod player;
-mod root;
+mod uncore_root;
+pub mod root_plugin;
 mod summary;
 pub mod systems;
-mod uncore_tiledmap;
 mod truck;
+mod uncore_behavior;
+mod uncore_materials;
+mod uncore_tiledmap;
 
 use uncore::utils; // FIXME: Delete this.
 
@@ -32,9 +33,9 @@ use bevy::{
     sprite::Material2dPlugin,
     window::WindowResolution,
 };
-use uncore_materials::{CustomMaterial1, UIPanelMaterial};
 use object_interaction::ObjectInteractionConfig;
 use std::time::Duration;
+use uncore_materials::{CustomMaterial1, UIPanelMaterial};
 
 const FPS_DEBUG: bool = false;
 
@@ -70,7 +71,7 @@ pub fn app_run() {
             .add_plugins(LogDiagnosticsPlugin::default());
     }
     arch_setup::app_setup(&mut app);
-    root::app_setup(&mut app);
+    root_plugin::app_setup(&mut app);
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);

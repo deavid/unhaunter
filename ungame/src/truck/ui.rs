@@ -4,7 +4,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::difficulty::CurrentDifficulty;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
-use crate::{uncore_materials::UIPanelMaterial, root};
+use crate::{uncore_materials::UIPanelMaterial, uncore_root};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -134,7 +134,7 @@ impl TruckTab {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<root::GameAssets>,
+    handles: Res<uncore_root::GameAssets>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {

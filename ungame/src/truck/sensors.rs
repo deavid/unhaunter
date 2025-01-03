@@ -1,13 +1,13 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
-use crate::root;
+use crate::uncore_root;
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub fn setup_sensors_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
+pub fn setup_sensors_ui(p: &mut ChildBuilder, handles: &uncore_root::GameAssets) {
     let title = (
         Text::new("Sensors"),
         TextFont {

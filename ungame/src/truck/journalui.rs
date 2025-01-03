@@ -3,7 +3,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::evidence::Evidence;
 
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
-use crate::{difficulty::CurrentDifficulty, root};
+use crate::{difficulty::CurrentDifficulty, uncore_root};
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -16,7 +16,7 @@ const MARGIN: UiRect = UiRect::percent(
 
 pub fn setup_journal_ui(
     p: &mut ChildBuilder,
-    handles: &root::GameAssets,
+    handles: &uncore_root::GameAssets,
     difficulty: &CurrentDifficulty,
 ) {
     // Journal contents

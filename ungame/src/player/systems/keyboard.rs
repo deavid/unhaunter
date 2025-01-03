@@ -1,4 +1,4 @@
-use super::super::systemparam::collisionhandler::CollisionHandler;
+use super::super::systemparam::uncore_collisionhandler::CollisionHandler;
 use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 
 use crate::uncore_behavior::component::{Interactive, RoomState};

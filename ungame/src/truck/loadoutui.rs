@@ -17,7 +17,7 @@ use crate::{
     },
     uncore_materials::UIPanelMaterial,
     player::PlayerSprite,
-    root,
+    uncore_root,
 };
 use bevy::prelude::*;
 
@@ -35,7 +35,7 @@ pub struct GearHelp;
 
 pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
-    handles: &root::GameAssets,
+    handles: &uncore_root::GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
 ) {

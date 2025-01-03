@@ -1,7 +1,7 @@
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
-use crate::{game::GameConfig, player::PlayerSprite, root};
+use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
 use bevy::prelude::*;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -10,7 +10,7 @@ const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 #[derive(Component, Debug)]
 pub struct SanityText;
 
-pub fn setup_sanity_ui(p: &mut ChildBuilder, handles: &root::GameAssets) {
+pub fn setup_sanity_ui(p: &mut ChildBuilder, handles: &uncore_root::GameAssets) {
     let title = (
         Text::new("Sanity"),
         TextFont {

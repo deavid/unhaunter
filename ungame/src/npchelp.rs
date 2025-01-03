@@ -10,7 +10,7 @@ use crate::{
     game::GameConfig,
     uncore_materials::{self, UIPanelMaterial},
     player::PlayerSprite,
-    root,
+    uncore_root,
 };
 use bevy::prelude::*;
 
@@ -36,15 +36,15 @@ impl NpcHelpEvent {
 }
 
 pub fn keyboard(
-    game_state: Res<State<root::GameState>>,
-    mut game_next_state: ResMut<NextState<root::GameState>>,
+    game_state: Res<State<uncore_root::GameState>>,
+    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() != root::GameState::NpcHelp {
+    if *game_state.get() != uncore_root::GameState::NpcHelp {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) || keyboard_input.just_pressed(KeyCode::KeyE) {
-        game_next_state.set(root::GameState::None);
+        game_next_state.set(uncore_root::GameState::None);
     }
 }
 
@@ -57,7 +57,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<uncore_materials::UIPanelMaterial>>,
-    handles: Res<root::GameAssets>,
+    handles: Res<uncore_root::GameAssets>,
     npcdata: Res<NpcUIData>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
@@ -172,7 +172,7 @@ pub fn npchelp_event(
     mut ev_npc: EventReader<NpcHelpEvent>,
     mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
-    mut game_next_state: ResMut<NextState<root::GameState>>,
+    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
 ) {
     let Some(ev_npc) = ev_npc.read().next() else {
         return;
@@ -187,7 +187,7 @@ pub fn npchelp_event(
     };
     npcd.seen = true;
     res_npc.dialog.clone_from(&npcd.dialog);
-    game_next_state.set(root::GameState::NpcHelp);
+    game_next_state.set(uncore_root::GameState::NpcHelp);
     // warn!(npcd.dialog);
 }
 
@@ -236,8 +236,8 @@ pub fn app_setup(app: &mut App) {
     app.add_event::<NpcHelpEvent>()
         .init_resource::<NpcUIData>()
         .add_systems(Update, npchelp_event)
-        .add_systems(OnEnter(root::GameState::NpcHelp), setup_ui)
-        .add_systems(OnExit(root::GameState::NpcHelp), cleanup)
+        .add_systems(OnEnter(uncore_root::GameState::NpcHelp), setup_ui)
+        .add_systems(OnExit(uncore_root::GameState::NpcHelp), cleanup)
         .add_systems(Update, keyboard)
         .add_systems(Update, auto_call_npchelp);
 }
