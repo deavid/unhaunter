@@ -8,3 +8,4 @@ pub mod player;
 pub mod game_config;
 pub mod sprite_type;
 pub mod player_inventory;
+pub mod truck_ui;

@@ -13,13 +13,11 @@
 //! By defining these settings directly within the `Difficulty` enum, you can
 //! fine-tune the game experience for each difficulty level, providing a tailored
 //! challenge for players.
-use crate::{
-    gear::{ext::types::gear::Gear, playergear::PlayerGear},
-    truck::ui::TabContents,
-};
+use crate::gear::{ext::types::gear::Gear, playergear::PlayerGear};
 use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
+use uncore::components::truck_ui::TabContents;
 use uncore::types::ghost::definitions::GhostSet;
 use uncore::types::manual::ManualChapter;
 
