@@ -9,7 +9,11 @@ pub struct TruckGear {
 impl TruckGear {
     pub fn from_difficulty(difficulty: &DifficultyStruct) -> Self {
         Self {
-            inventory: difficulty.truck_gear.clone(),
+            inventory: difficulty
+                .truck_gear
+                .iter()
+                .map(|gk| Gear::from(gk.clone()))
+                .collect::<Vec<_>>(),
         }
     }
 }

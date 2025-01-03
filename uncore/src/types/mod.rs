@@ -9,3 +9,4 @@ pub mod root;
 pub mod quadcc;
 pub mod tiledmap;
 pub mod ghost;
+pub mod gear_kind;

@@ -13,11 +13,11 @@
 //! By defining these settings directly within the `Difficulty` enum, you can
 //! fine-tune the game experience for each difficulty level, providing a tailored
 //! challenge for players.
-use crate::gear::{ext::types::gear::Gear, playergear::PlayerGear};
 use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
 use uncore::components::truck_ui::TabContents;
+use uncore::types::gear_kind::{GearKind, PlayerGearKind};
 use uncore::types::ghost::definitions::GhostSet;
 use uncore::types::manual::ManualChapter;
 
@@ -589,33 +589,22 @@ impl Difficulty {
         }
     }
 
-    pub fn player_gear(&self) -> PlayerGear {
-        use crate::gear::prelude::*;
-
-        let flashlight: Gear = Flashlight::default().into();
-        let emfmeter: Gear = EMFMeter::default().into();
-        let thermometer: Gear = Thermometer::default().into();
-        let uvtorch: Gear = UVTorch::default().into();
-        let videocam: Gear = Videocam::default().into();
-
+    pub fn player_gear(&self) -> PlayerGearKind {
         match self {
-            Difficulty::NoviceInvestigator => PlayerGear {
-                left_hand: flashlight.clone(),
-                right_hand: thermometer.clone(),
-                inventory: vec![emfmeter.clone(), Gear::none()],
-                held_item: None,
+            Difficulty::NoviceInvestigator => PlayerGearKind {
+                left_hand: GearKind::Flashlight,
+                right_hand: GearKind::Thermometer,
+                inventory: vec![GearKind::EMFMeter, GearKind::None],
             },
-            Difficulty::AdeptInvestigator => PlayerGear {
-                left_hand: videocam.clone(),
-                right_hand: uvtorch.clone(),
-                inventory: vec![thermometer.clone(), emfmeter.clone()],
-                held_item: None,
+            Difficulty::AdeptInvestigator => PlayerGearKind {
+                left_hand: GearKind::Videocam,
+                right_hand: GearKind::UVTorch,
+                inventory: vec![GearKind::Thermometer, GearKind::EMFMeter],
             },
-            _ => PlayerGear {
-                left_hand: flashlight.clone(),
-                right_hand: Gear::none(),
-                inventory: vec![Gear::none(), Gear::none()],
-                held_item: None,
+            _ => PlayerGearKind {
+                left_hand: GearKind::Flashlight,
+                right_hand: GearKind::None,
+                inventory: vec![GearKind::None, GearKind::None],
             },
         }
     }
@@ -630,37 +619,37 @@ impl Difficulty {
         }
     }
 
-    pub fn truck_gear(&self) -> Vec<Gear> {
-        use crate::gear::prelude::*;
+    pub fn truck_gear(&self) -> Vec<GearKind> {
+        use crate::gear::ext::types::uncore_gearkind::GearKind::*;
 
         let mut gear = Vec::new();
 
         match self {
             Difficulty::NoviceInvestigator => {
-                gear.push(Flashlight::default().into());
-                gear.push(Thermometer::default().into());
-                gear.push(EMFMeter::default().into());
+                gear.push(Flashlight);
+                gear.push(Thermometer);
+                gear.push(EMFMeter);
             }
             Difficulty::AdeptInvestigator => {
                 gear.extend(Self::NoviceInvestigator.truck_gear());
-                gear.push(UVTorch::default().into());
-                gear.push(Videocam::default().into());
+                gear.push(UVTorch);
+                gear.push(Videocam);
             }
             Difficulty::SeniorInvestigator => {
                 gear.extend(Self::AdeptInvestigator.truck_gear());
-                gear.push(Recorder::default().into());
-                gear.push(GeigerCounter::default().into());
+                gear.push(Recorder);
+                gear.push(GeigerCounter);
             }
             Difficulty::ExpertInvestigator => {
                 gear.extend(Self::SeniorInvestigator.truck_gear());
-                gear.push(SpiritBox::default().into());
-                gear.push(RedTorch::default().into());
+                gear.push(SpiritBox);
+                gear.push(RedTorch);
             }
             Difficulty::AdeptSpecialist => {
                 gear.extend(Self::ExpertInvestigator.truck_gear());
-                gear.push(SaltData::default().into());
-                gear.push(QuartzStoneData::default().into());
-                gear.push(SageBundleData::default().into());
+                gear.push(Salt);
+                gear.push(QuartzStone);
+                gear.push(SageBundle);
             }
             Difficulty::LeadSpecialist => {
                 gear.extend(Self::AdeptSpecialist.truck_gear());
@@ -679,14 +668,14 @@ impl Difficulty {
         // This is for debugging purposes, to add gear that isn't functional yet.
         const ENABLE_INCOMPLETE: bool = false;
         if ENABLE_INCOMPLETE {
-            let mut incomplete: Vec<Gear> = vec![
+            let mut incomplete: Vec<GearKind> = vec![
                 // Incomplete equipment:
-                IonMeter::default().into(),
-                ThermalImager::default().into(),
-                Photocam::default().into(),
-                Compass::default().into(),
-                EStaticMeter::default().into(),
-                MotionSensor::default().into(),
+                IonMeter,
+                ThermalImager,
+                Photocam,
+                Compass,
+                EStaticMeter,
+                MotionSensor,
             ];
             gear.append(&mut incomplete);
         }
@@ -932,7 +921,7 @@ pub struct DifficultyStruct {
     // --- Gameplay ---
     pub van_auto_open: bool,
     pub default_van_tab: TabContents,
-    pub player_gear: PlayerGear,
+    pub player_gear: PlayerGearKind,
     pub ghost_set: GhostSet,
     // --- UI and Scoring ---
     pub difficulty_name: String,
@@ -940,7 +929,7 @@ pub struct DifficultyStruct {
     pub difficulty_score_multiplier: f64,
     /// The range of manual pages associated with this difficulty.
     pub tutorial_chapter: Option<ManualChapter>,
-    pub truck_gear: Vec<Gear>,
+    pub truck_gear: Vec<GearKind>,
 }
 
 #[derive(Debug, Resource, Clone)]

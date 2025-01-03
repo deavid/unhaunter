@@ -3,7 +3,7 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::ext::types::gear::Gear;
-use crate::gear::ext::types::gearkind::GearKind;
+use crate::gear::ext::types::uncore_gearkind::GearKind;
 use crate::gear::ext::types::traits::GearUsable as _;
 use crate::{
     game::GameConfig,

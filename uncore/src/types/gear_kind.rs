@@ -1,4 +1,4 @@
-use uncore::types::evidence::{Evidence, EvidenceError};
+use crate::types::evidence::{Evidence, EvidenceError};
 
 /// Represents the different types of gear available in the game.
 ///
@@ -65,4 +65,11 @@ impl TryFrom<&GearKind> for Evidence {
             GearKind::None => Err(EvidenceError::NoEvidenceForGear),
         }
     }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PlayerGearKind {
+    pub left_hand: GearKind,
+    pub right_hand: GearKind,
+    pub inventory: Vec<GearKind>,
 }

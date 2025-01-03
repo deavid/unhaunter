@@ -21,7 +21,7 @@ pub mod videocam;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 
 use super::gear::Gear;
-use super::gearkind::GearKind;
+use super::uncore_gearkind::GearKind;
 use super::traits::GearUsable;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear::utils::on_off;

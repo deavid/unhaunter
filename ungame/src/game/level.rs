@@ -17,12 +17,13 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
-use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
+use crate::gear::playergear::PlayerGear;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
 use crate::summary;
+use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::uncore_root::{self, QuadCC};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
@@ -396,7 +397,7 @@ pub fn load_level_handler(
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(GameSprite)
-        .insert(difficulty.0.player_gear.clone())
+        .insert(PlayerGear::from(difficulty.0.player_gear.clone()))
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
