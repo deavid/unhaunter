@@ -1,14 +1,13 @@
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
-use crate::gear::ext::types::traits::GearUsable;
-use crate::gear::playergear::PlayerGear;
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
 use crate::uncore_board::{self, Position};
 use crate::uncore_root;
+use bevy::prelude::*;
 use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
 use uncore::components::game::GameSprite;
-
-use bevy::prelude::*;
+use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::traits::gear_usable::GearUsable;
+use ungear::components::playergear::PlayerGear;
 
 /// Allows the player to pick up a pickable object from the environment.
 ///

@@ -1,7 +1,6 @@
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
+use uncore::systemparam::gear_stuff::GearStuff;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct IonMeter {
@@ -46,6 +45,6 @@ impl GearUsable for IonMeter {
 
 impl From<IonMeter> for Gear {
     fn from(value: IonMeter) -> Self {
-        Gear::new_from_kind(GearKind::IonMeter,value.box_clone())
+        Gear::new_from_kind(GearKind::IonMeter, value.box_clone())
     }
 }

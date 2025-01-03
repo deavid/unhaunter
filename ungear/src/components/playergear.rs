@@ -1,5 +1,4 @@
-use super::ext::types::gear::Gear;
-use crate::gear_items::repellentflask::RepellentFlask;
+use crate::types::gear::Gear;
 use bevy::prelude::*;
 use uncore::components::player::HeldObject;
 use uncore::types::gear_kind::GearKind;
@@ -130,7 +129,8 @@ impl PlayerGear {
             .any(|x| matches!(x.0.kind, GearKind::RepellentFlask));
         if !flask_exists {
             let old_rh = self.take_hand(&Hand::Right);
-            self.right_hand = RepellentFlask::default().into();
+            // FIXME: This is not possible to do here because gear_items are not loaded yet.
+            // self.right_hand = RepellentFlask::default().into();
             self.append(old_rh);
         }
 

@@ -1,12 +1,12 @@
-use super::ext::components::deployedgear::{DeployedGear, DeployedGearData};
-use super::ext::systemparam::gearstuff::GearStuff;
-use super::ext::types::traits::GearUsable;
-use super::playergear::PlayerGear;
+use super::components::deployedgear::{DeployedGear, DeployedGearData};
+use super::components::playergear::PlayerGear;
 use bevy::prelude::*;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::sound::SoundEvent;
+use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
 
 /// System for updating the internal state of all gear carried by the player.

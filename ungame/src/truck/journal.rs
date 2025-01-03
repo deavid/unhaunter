@@ -3,10 +3,10 @@ use super::{
     GhostGuess, TruckUIEvent, TruckUIGhostGuess,
 };
 use crate::game::GameConfig;
-use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
 use bevy::{prelude::*, utils::HashSet};
 use uncore::types::evidence::Evidence;
+use ungear::components::playergear::PlayerGear;
 
 #[allow(clippy::type_complexity)]
 pub fn button_system(

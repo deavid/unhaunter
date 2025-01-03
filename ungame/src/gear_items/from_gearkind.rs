@@ -1,8 +1,12 @@
 use uncore::types::gear_kind::{GearKind, PlayerGearKind};
-use crate::gear::{ext::types::gear::Gear, playergear::PlayerGear};
+use ungear::{components::playergear::PlayerGear, types::gear::Gear};
 
-impl From<GearKind> for Gear {
-    fn from(value: GearKind) -> Self {
+pub trait FromGearKind {
+    fn from_gearkind(value: GearKind) -> Gear;
+}
+
+impl FromGearKind for Gear {
+    fn from_gearkind(value: GearKind) -> Self {
         use super::prelude::*;
         match value {
             GearKind::Thermometer => Thermometer::default().into(),
@@ -29,12 +33,20 @@ impl From<GearKind> for Gear {
     }
 }
 
-impl From<PlayerGearKind> for PlayerGear {
-    fn from(value: PlayerGearKind) -> Self {
+pub trait FromPlayerGearKind {
+    fn from_playergearkind(value: PlayerGearKind) -> PlayerGear;
+}
+
+impl FromPlayerGearKind for PlayerGear {
+    fn from_playergearkind(value: PlayerGearKind) -> Self {
         Self {
-            left_hand: value.left_hand.into(),
-            right_hand: value.right_hand.into(),
-            inventory: value.inventory.into_iter().map(Gear::from).collect(),
+            left_hand: Gear::from_gearkind(value.left_hand),
+            right_hand: Gear::from_gearkind(value.right_hand),
+            inventory: value
+                .inventory
+                .into_iter()
+                .map(Gear::from_gearkind)
+                .collect(),
             held_item: None,
         }
     }

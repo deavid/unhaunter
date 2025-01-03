@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use super::super::systemparam::gearstuff::GearStuff;
-use super::traits::GearUsable;
+use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear_kind::GearKind;
 use uncore::{
     components::board::position::Position,

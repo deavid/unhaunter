@@ -3,8 +3,8 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::summary_data::SummaryData;
+use uncore::systemparam::gear_stuff::GearStuff;
 
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear_items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};

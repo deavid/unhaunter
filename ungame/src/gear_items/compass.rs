@@ -1,7 +1,6 @@
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
+use uncore::systemparam::gear_stuff::GearStuff;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Compass {

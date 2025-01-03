@@ -1,5 +1,5 @@
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use uncore::systemparam::gear_stuff::GearStuff;
 
 use bevy::prelude::*;
 
@@ -46,6 +46,6 @@ impl GearUsable for EStaticMeter {
 
 impl From<EStaticMeter> for Gear {
     fn from(value: EStaticMeter) -> Self {
-        Gear::new_from_kind(GearKind::EStaticMeter,value.box_clone())
+        Gear::new_from_kind(GearKind::EStaticMeter, value.box_clone())
     }
 }

@@ -1,14 +1,14 @@
 use super::super::systemparam::uncore_collisionhandler::CollisionHandler;
 use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 
-use crate::uncore_board::{self, Position};
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use crate::gear::playergear::PlayerGear;
 use crate::npchelp::NpcHelpEvent;
 use crate::player::CharacterAnimation;
+use crate::uncore_board::{self, Position};
+use crate::uncore_difficulty::CurrentDifficulty;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
+use ungear::components::playergear::PlayerGear;
 
 use bevy::prelude::*;
 

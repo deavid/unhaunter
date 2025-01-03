@@ -1,5 +1,8 @@
-use crate::{uncore_difficulty::DifficultyStruct, gear::ext::types::gear::Gear};
 use bevy::prelude::*;
+use uncore::difficulty::DifficultyStruct;
+use ungear::types::gear::Gear;
+
+use crate::gear_items::from_gearkind::FromGearKind;
 
 #[derive(Debug, Resource, Clone)]
 pub struct TruckGear {
@@ -12,7 +15,7 @@ impl TruckGear {
             inventory: difficulty
                 .truck_gear
                 .iter()
-                .map(|gk| Gear::from(gk.clone()))
+                .map(|gk| Gear::from_gearkind(gk.clone()))
                 .collect::<Vec<_>>(),
         }
     }

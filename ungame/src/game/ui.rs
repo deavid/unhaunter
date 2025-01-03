@@ -1,17 +1,14 @@
+use crate::game::evidence::setup_ui_evidence;
+use crate::{player::PlayerSprite, uncore_root};
+use bevy::{color::palettes::css, prelude::*};
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, GameUI, HeldObjectUI, RightSideGearUI,
 };
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
-use crate::{
-    game::evidence,
-    gear::{self, playergear::PlayerGear},
-    player::PlayerSprite,
-    uncore_root,
-};
-use bevy::{color::palettes::css, prelude::*};
+use ungear::components::playergear::PlayerGear;
+use ungear::ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 
 pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used
@@ -86,9 +83,9 @@ pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
             ..default()
         });
     };
-    let evidence = |p: Cb| evidence::setup_ui_evidence(p, &handles);
-    let inv_left = |p: Cb| gear::ui::setup_ui_gear_inv_left(p, &handles);
-    let inv_right = |p: Cb| gear::ui::setup_ui_gear_inv_right(p, &handles);
+    let evidence = |p: Cb| setup_ui_evidence(p, &handles);
+    let inv_left = |p: Cb| setup_ui_gear_inv_left(p, &handles);
+    let inv_right = |p: Cb| setup_ui_gear_inv_right(p, &handles);
     let bottom_panel = |p: Cb| {
         // Split for the bottom side in three regions Leftmost side - Inventory left
         p.spawn(Node {

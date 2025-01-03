@@ -1,23 +1,18 @@
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
-use crate::gear::ext::types::gear::Gear;
-use crate::gear::ext::types::uncore_gearkind::GearKind;
-use crate::gear::ext::types::traits::GearUsable as _;
-use crate::{
-    game::GameConfig,
-    gear::{
-        playergear::{self, PlayerGear},
-        GearSpriteID,
-    },
-    player::PlayerSprite,
-    uncore_root,
-};
+use crate::uncore_difficulty::CurrentDifficulty;
+
+use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::traits::gear_usable::GearUsable;
 use uncore::types::evidence::Evidence;
+use uncore::types::gear::spriteid::GearSpriteID;
+use uncore::types::gear_kind::GearKind;
+use ungear::components::playergear::{self, PlayerGear};
+use ungear::types::gear::Gear;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]

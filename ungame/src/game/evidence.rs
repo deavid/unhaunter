@@ -7,13 +7,13 @@ pub use uncore::types::evidence_status::EvidenceStatus;
 
 use super::GameConfig;
 use crate::{
-    gear::playergear::PlayerGear,
     player::PlayerSprite,
-    uncore_root::{self, GameAssets},
     truck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
+    uncore_root::{self, GameAssets},
 };
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use ungear::components::playergear::PlayerGear;
 
 pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
@@ -130,12 +130,14 @@ pub fn keyboard_evidence(
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
-        update_evidence_ui
-            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame))),
+        update_evidence_ui.run_if(
+            in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame)),
+        ),
     )
     .add_systems(
         Update,
-        keyboard_evidence
-            .run_if(in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame))),
+        keyboard_evidence.run_if(
+            in_state(uncore_root::GameState::None).and(in_state(uncore_root::AppState::InGame)),
+        ),
     );
 }

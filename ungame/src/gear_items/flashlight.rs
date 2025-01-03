@@ -1,4 +1,4 @@
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position, types::gear::equipmentposition::EquipmentPosition,
 };
@@ -141,6 +141,6 @@ impl GearUsable for Flashlight {
 
 impl From<Flashlight> for Gear {
     fn from(value: Flashlight) -> Self {
-        Gear::new_from_kind(GearKind::Flashlight,value.box_clone())
+        Gear::new_from_kind(GearKind::Flashlight, value.box_clone())
     }
 }

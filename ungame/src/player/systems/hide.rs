@@ -1,13 +1,12 @@
-use crate::uncore_board::Position;
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
-use crate::gear::playergear::PlayerGear;
 use crate::maplight::MapColor;
 use crate::player::{AnimationTimer, Hiding, PlayerSprite};
-use uncore::behavior::Behavior;
-
+use crate::uncore_board::Position;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use uncore::behavior::Behavior;
+use uncore::systemparam::gear_stuff::GearStuff;
+use ungear::components::playergear::PlayerGear;
 
 /// Allows the player to hide in a designated hiding spot.
 ///

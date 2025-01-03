@@ -25,9 +25,9 @@ pub mod ui;
 pub mod uibutton;
 
 use crate::game::GameConfig;
-use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
 use crate::uncore_root;
+use ungear::components::playergear::PlayerGear;
 
 use bevy::prelude::*;
 

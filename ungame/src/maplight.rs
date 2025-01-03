@@ -12,21 +12,9 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use uncore::behavior::{Behavior, Orientation};
-use uncore::components::game::{GameSound, MapUpdate};
-use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore::platform::plt::IS_WASM;
-use uncore::resources::board_data::BoardData;
-use uncore::types::board::fielddata::CollisionFieldData;
-use uncore::types::evidence::Evidence;
-use uncore::types::game::SoundType;
-use unstd::materials::CustomMaterial1;
-
-use crate::gear::ext::types::uncore_gearkind::GearKind;
 use crate::gear_items::salt::UVReactive;
 use crate::{
     game::{self, GameConfig, SpriteType},
-    gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
     player::{self, DeployedGear, DeployedGearData},
     uncore_board::{self, BoardPosition, Direction, Position},
@@ -36,6 +24,18 @@ use crate::{
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use rand::Rng as _;
 use std::collections::VecDeque;
+use uncore::behavior::{Behavior, Orientation};
+use uncore::components::game::{GameSound, MapUpdate};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::platform::plt::IS_WASM;
+use uncore::resources::board_data::BoardData;
+use uncore::types::board::fielddata::CollisionFieldData;
+use uncore::types::evidence::Evidence;
+use uncore::types::game::SoundType;
+use uncore::types::gear_kind::GearKind;
+use ungear::components::playergear::EquipmentPosition;
+use ungear::components::playergear::PlayerGear;
+use unstd::materials::CustomMaterial1;
 
 pub use uncore::types::board::light::{LightData, LightType};
 
@@ -269,7 +269,7 @@ pub fn apply_lighting(
         });
         for (power, color, p, light_type) in player_flashlight {
             if power > 0.0 {
-                use crate::gear::playergear::EquipmentPosition::*;
+                use EquipmentPosition::*;
 
                 let mut fldir = *direction;
                 if p == Stowed {

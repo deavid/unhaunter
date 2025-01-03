@@ -1,4 +1,4 @@
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
+use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position,
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},

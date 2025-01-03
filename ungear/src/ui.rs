@@ -1,12 +1,12 @@
-use super::ext::systemparam::gearstuff::GearStuff;
-use super::ext::types::traits::GearUsable;
-use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGear};
 use super::GearSpriteID;
+use crate::components::playergear::{Inventory, InventoryNext, InventoryStats, PlayerGear};
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::GameState;
+use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::traits::gear_usable::GearUsable as _;
 use uncore::types::root::game_assets::GameAssets;
 
 use bevy::prelude::*;
@@ -86,7 +86,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
         margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
         ..default()
     })
-    .insert(playergear::Inventory::new_left());
+    .insert(Inventory::new_left());
     p.spawn(Text::new("[TAB]: T.Aux"))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
@@ -140,7 +140,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             align_self: AlignSelf::Center,
             ..default()
         })
-        .insert(playergear::InventoryNext::non_empty());
+        .insert(InventoryNext::non_empty());
         p.spawn(ImageNode {
             image: handles.images.gear.clone(),
             texture_atlas: Some(TextureAtlas {
@@ -154,7 +154,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             width: Val::Px(80.0 * UI_SCALE),
             ..default()
         })
-        .insert(playergear::Inventory::new_right());
+        .insert(Inventory::new_right());
         p.spawn(Text::new("-"))
             .insert(TextFont {
                 font: handles.fonts.victormono.w600_semibold.clone(),
@@ -174,7 +174,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                 ..default()
             })
             .insert(TextLayout::default())
-            .insert(playergear::InventoryStats);
+            .insert(InventoryStats);
     });
     p.spawn(Text::new(
         "[Q]: Next  [R]: M.Toggle  [T]: Swap Hands  [C]: Change Evidence",
