@@ -18,11 +18,11 @@ pub mod prelude;
 pub mod ui;
 
 use self::playergear::PlayerGear;
-use crate::uncore_board::Position;
-use crate::game::GameConfig;
 use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use bevy::prelude::*;
 use ext::systemparam::gearstuff::GearStuff;
+use uncore::components::board::position::Position;
+use uncore::components::game_config::GameConfig;
 use uncore::events::sound::SoundEvent;
 
 pub use uncore::types::gear::spriteid::GearSpriteID;

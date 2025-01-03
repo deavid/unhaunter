@@ -1,5 +1,5 @@
 use crate::uncore_difficulty::CurrentDifficulty;
-use crate::{uncore_board, ghost, player};
+use crate::{ghost, player, uncore_board};
 use uncore::behavior;
 use uncore::events::roomchanged::InteractionExecutionType;
 
@@ -11,6 +11,9 @@ pub enum GhostEvent {
     DoorSlam,
     LightFlicker,
 }
+
+#[derive(Component)]
+struct FlickerTimer(Timer);
 
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn trigger_ghost_events(
@@ -156,9 +159,6 @@ pub fn trigger_ghost_events(
         }
     }
 }
-
-#[derive(Component)]
-struct FlickerTimer(Timer);
 
 fn update_flicker_timers(
     mut commands: Commands,

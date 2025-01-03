@@ -8,11 +8,10 @@ pub mod setup;
 pub mod systemparam;
 pub mod systems;
 
+pub use crate::gear::ext::components::deployedgear::{DeployedGear, DeployedGearData};
 pub use animation::{AnimationTimer, CharacterAnimation};
-pub use components::deployedgear::{DeployedGear, DeployedGearData};
 pub use components::playersprite::PlayerSprite;
 pub use components::uncore_util::{HeldObject, Hiding};
 pub use systemparam::interactivestuff::InteractiveStuff;
-
 
 pub use setup::app_setup;
