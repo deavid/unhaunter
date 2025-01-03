@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use crate::uncore_materials::CustomMaterial1;
 use bevy::prelude::*;
 use bevy::utils::{HashMap, Instant};
 use fastapprox::faster;
@@ -11,17 +10,12 @@ pub use uncore::components::board::direction::Direction;
 pub use uncore::components::board::position::Position;
 
 use uncore::behavior::{Behavior, SpriteCVOKey, TileState};
+use uncore::materials::CustomMaterial1;
 use uncore::types::board::light::LightData;
 use uncore::{
     resources::boarddata::BoardData,
     types::board::fielddata::{CollisionFieldData, LightFieldData},
 };
-
-pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
-    for (pos, mut transform) in q.iter_mut() {
-        transform.translation = pos.to_screen_coord();
-    }
-}
 
 #[derive(Component, Clone)]
 pub enum PreMesh {
@@ -79,6 +73,13 @@ pub struct SpriteDB {
     pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
 }
 
+impl SpriteDB {
+    pub fn clear(&mut self) {
+        self.map_tile.clear();
+        self.cvo_idx.clear();
+    }
+}
+
 /// The `RoomDB` resource manages room-related data, including room boundaries and
 /// states.
 #[derive(Clone, Default, Resource)]
@@ -98,13 +99,6 @@ pub struct RoomDB {
     pub room_state: HashMap<String, TileState>,
 }
 
-impl SpriteDB {
-    pub fn clear(&mut self) {
-        self.map_tile.clear();
-        self.cvo_idx.clear();
-    }
-}
-
 #[derive(Clone, Debug, Default, Event)]
 pub struct BoardDataToRebuild {
     pub lighting: bool,
@@ -118,7 +112,6 @@ pub struct VisibilityData {
 
 #[derive(Clone, Debug)]
 pub struct LightFieldSector {
-    // field: Vec<Vec<Vec<Option<Box`<LightFieldData>`>>>>,
     field: Vec<LightFieldData>,
     min_x: i64,
     min_y: i64,
@@ -670,6 +663,14 @@ pub fn compute_color_exposure(
         })
     };
     dst_color
+}
+
+/// Main system of board that moves the tiles to their correct place in the screen
+/// following the isometric perspective.
+pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
+    for (pos, mut transform) in q.iter_mut() {
+        transform.translation = pos.to_screen_coord();
+    }
 }
 
 pub fn app_setup(app: &mut App) {

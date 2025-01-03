@@ -9,7 +9,6 @@ pub mod chapter4;
 pub mod chapter5;
 
 use bevy::prelude::*;
-pub use preplay_manual_ui::preplay_manual_system;
 
 use crate::uncore_root::GameAssets;
 

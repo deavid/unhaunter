@@ -1,4 +1,4 @@
-use crate::behavior::{Behavior, Orientation};
+use super::{Behavior, Orientation};
 use crate::components::board::boardposition::BoardPosition;
 use crate::tiledmap::MapLayer;
 use bevy::{ecs::component::Component, log::warn, math::Vec3};
