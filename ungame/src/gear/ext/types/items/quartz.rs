@@ -103,15 +103,13 @@ impl GearUsable for QuartzStoneData {
         // TODO: Spwan here a red particle from the ghost that travels to the quartz ..
         // stone to show the energy of the ghost being drawn.
     }
-    
 }
 
 impl From<QuartzStoneData> for Gear {
     fn from(value: QuartzStoneData) -> Self {
-        Gear::new_from_kind(GearKind::QuartzStone(value.box_clone()))
+        Gear::new_from_kind(GearKind::QuartzStone, value.box_clone())
     }
 }
-
 
 pub fn update_quartz_and_ghost(
     mut q_gear1: Query<(&Position, &mut PlayerGear)>,
@@ -122,17 +120,27 @@ pub fn update_quartz_and_ghost(
     let dt = time.delta_secs();
     for (gear_pos, mut playergear) in q_gear1.iter_mut() {
         for (gear, _) in playergear.as_vec_mut().into_iter() {
-            if let GearKind::QuartzStone(ref mut qs) = gear.kind {
+            if let GearKind::QuartzStone = gear.kind {
                 for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
-                    qs.aux_quartz_update(gear_pos, ghost_pos, &mut ghost_sprite, dt);
+                    gear.data.as_mut().unwrap().aux_quartz_update(
+                        gear_pos,
+                        ghost_pos,
+                        &mut ghost_sprite,
+                        dt,
+                    );
                 }
             }
         }
     }
     for (gear_pos, mut gear_data) in q_gear2.iter_mut() {
-        if let GearKind::QuartzStone(ref mut qs) = gear_data.gear.kind {
+        if let GearKind::QuartzStone = gear_data.gear.kind {
             for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
-                qs.aux_quartz_update(gear_pos, ghost_pos, &mut ghost_sprite, dt);
+                gear_data.gear.data.as_mut().unwrap().aux_quartz_update(
+                    gear_pos,
+                    ghost_pos,
+                    &mut ghost_sprite,
+                    dt,
+                );
             }
         }
     }

@@ -97,7 +97,7 @@ impl GearUsable for Thermometer {
 
 impl From<Thermometer> for Gear {
     fn from(value: Thermometer) -> Self {
-        Gear::new_from_kind(GearKind::Thermometer(value.box_clone()))
+        Gear::new_from_kind(GearKind::Thermometer,value.box_clone())
     }
 }
 

@@ -56,6 +56,6 @@ impl GearUsable for UVTorch {
 
 impl From<UVTorch> for Gear {
     fn from(value: UVTorch) -> Self {
-        Gear::new_from_kind(GearKind::UVTorch(value.box_clone()))
+        Gear::new_from_kind(GearKind::UVTorch,value.box_clone())
     }
 }

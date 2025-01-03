@@ -106,6 +106,6 @@ impl GearUsable for SpiritBox {
 
 impl From<SpiritBox> for Gear {
     fn from(value: SpiritBox) -> Self {
-        Gear::new_from_kind(GearKind::SpiritBox(value.box_clone()))
+        Gear::new_from_kind(GearKind::SpiritBox,value.box_clone())
     }
 }

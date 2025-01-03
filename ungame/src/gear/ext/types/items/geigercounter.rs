@@ -119,6 +119,6 @@ impl GearUsable for GeigerCounter {
 
 impl From<GeigerCounter> for Gear {
     fn from(value: GeigerCounter) -> Self {
-        Gear::new_from_kind(GearKind::GeigerCounter(value.box_clone()))
+        Gear::new_from_kind(GearKind::GeigerCounter, value.box_clone())
     }
 }

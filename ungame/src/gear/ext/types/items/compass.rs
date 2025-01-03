@@ -46,6 +46,6 @@ impl GearUsable for Compass {
 
 impl From<Compass> for Gear {
     fn from(value: Compass) -> Self {
-        Gear::new_from_kind(GearKind::Compass(value.box_clone()))
+        Gear::new_from_kind(GearKind::Compass, value.box_clone())
     }
 }

@@ -86,7 +86,7 @@ impl GearUsable for SaltData {
 
 impl From<SaltData> for Gear {
     fn from(value: SaltData) -> Self {
-        Gear::new_from_kind(GearKind::Salt(value.box_clone()))
+        Gear::new_from_kind(GearKind::Salt,value.box_clone())
     }
 }
 

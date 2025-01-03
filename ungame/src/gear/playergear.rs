@@ -1,5 +1,5 @@
-pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 
 use super::ext::types::{gear::Gear, gearkind::GearKind};
 use uncore::components::player::HeldObject;
@@ -127,7 +127,7 @@ impl PlayerGear {
         let flask_exists = self
             .as_vec()
             .iter()
-            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
+            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask));
         if !flask_exists {
             let old_rh = self.take_hand(&Hand::Right);
             self.right_hand = RepellentFlask::default().into();
@@ -138,14 +138,12 @@ impl PlayerGear {
         let mut inventory = self.as_vec_mut();
         let Some(flask) = inventory
             .iter_mut()
-            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)))
+            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask))
         else {
             error!("Flask not found??");
             return;
         };
-        if let GearKind::RepellentFlask(ref mut flask) = flask.0.kind {
-            flask.fill_liquid(ghost_type);
-        }
+        flask.0.data.as_mut().unwrap().do_fill_liquid(ghost_type);
     }
 
     pub fn can_craft_repellent(&self, ghost_type: GhostType) -> bool {
@@ -153,7 +151,7 @@ impl PlayerGear {
         let flask_exists = self
             .as_vec()
             .iter()
-            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)));
+            .any(|x| matches!(x.0.kind, GearKind::RepellentFlask));
         if !flask_exists {
             return true;
         }
@@ -162,15 +160,11 @@ impl PlayerGear {
         let inventory = self.as_vec();
         let Some(flask) = inventory
             .iter()
-            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask(_)))
+            .find(|x| matches!(x.0.kind, GearKind::RepellentFlask))
         else {
             error!("Flask not found??");
             return false;
         };
-        if let GearKind::RepellentFlask(flask) = &flask.0.kind {
-            flask.can_fill_liquid(ghost_type)
-        } else {
-            false
-        }
+        flask.0.data.as_ref().unwrap().can_fill_liquid(ghost_type)
     }
 }

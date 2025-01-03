@@ -51,7 +51,7 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
         false
     }
     /// Repellent fill
-    fn fill_liquid(&mut self, _ghost_type: GhostType) {}
+    fn do_fill_liquid(&mut self, _ghost_type: GhostType) {}
 
     /// Quartz update helper
     fn aux_quartz_update(

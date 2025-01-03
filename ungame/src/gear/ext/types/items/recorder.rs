@@ -140,7 +140,7 @@ impl GearUsable for Recorder {
 
 impl From<Recorder> for Gear {
     fn from(value: Recorder) -> Self {
-        Gear::new_from_kind(GearKind::Recorder(value.box_clone()))
+        Gear::new_from_kind(GearKind::Recorder,value.box_clone())
     }
 }
 

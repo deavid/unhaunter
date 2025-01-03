@@ -139,7 +139,7 @@ impl GearUsable for SageBundleData {
 
 impl From<SageBundleData> for Gear {
     fn from(value: SageBundleData) -> Self {
-        Gear::new_from_kind(GearKind::SageBundle(value.box_clone()))
+        Gear::new_from_kind(GearKind::SageBundle,value.box_clone())
     }
 }
 

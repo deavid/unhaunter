@@ -44,6 +44,6 @@ impl GearUsable for MotionSensor {
 
 impl From<MotionSensor> for Gear {
     fn from(value: MotionSensor) -> Self {
-        Gear::new_from_kind(GearKind::MotionSensor(value.box_clone()))
+        Gear::new_from_kind(GearKind::MotionSensor,value.box_clone())
     }
 }

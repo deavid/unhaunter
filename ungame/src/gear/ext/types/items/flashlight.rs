@@ -141,6 +141,6 @@ impl GearUsable for Flashlight {
 
 impl From<Flashlight> for Gear {
     fn from(value: Flashlight) -> Self {
-        Gear::new_from_kind(GearKind::Flashlight(value.box_clone()))
+        Gear::new_from_kind(GearKind::Flashlight,value.box_clone())
     }
 }

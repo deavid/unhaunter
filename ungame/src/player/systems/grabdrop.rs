@@ -1,9 +1,8 @@
-use crate::uncore_board::{self, Position};
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
-use crate::gear::ext::types::gear::Gear;
 use crate::gear::ext::types::traits::GearUsable;
 use crate::gear::playergear::PlayerGear;
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
+use crate::uncore_board::{self, Position};
 use crate::uncore_root;
 use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
@@ -170,7 +169,12 @@ pub fn update_held_object_position(
 /// world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &uncore_board::Direction)>,
+    mut players: Query<(
+        &mut PlayerGear,
+        &Position,
+        &PlayerSprite,
+        &uncore_board::Direction,
+    )>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<FloorItemCollidable>>,
     mut gs: GearStuff,
@@ -271,9 +275,7 @@ pub fn retrieve_gear(
                             .position(|gear| gear.kind.is_none())
                         {
                             // Move right-hand gear to the empty slot
-                            player_gear.inventory[empty_slot_index] = Gear {
-                                kind: player_gear.right_hand.kind.clone(),
-                            };
+                            player_gear.inventory[empty_slot_index] = player_gear.right_hand.take();
                         } else {
                             // No empty slot - play invalid action sound and skip retrieval
                             gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);

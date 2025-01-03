@@ -46,6 +46,6 @@ impl GearUsable for IonMeter {
 
 impl From<IonMeter> for Gear {
     fn from(value: IonMeter) -> Self {
-        Gear::new_from_kind(GearKind::IonMeter(value.box_clone()))
+        Gear::new_from_kind(GearKind::IonMeter,value.box_clone())
     }
 }

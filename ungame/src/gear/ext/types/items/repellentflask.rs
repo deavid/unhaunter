@@ -110,7 +110,7 @@ impl GearUsable for RepellentFlask {
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
         !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
     }
-    fn fill_liquid(&mut self, ghost_type: GhostType) {
+    fn do_fill_liquid(&mut self, ghost_type: GhostType) {
         self.liquid_content = Some(ghost_type);
         self.active = false;
         self.qty = Self::MAX_QTY;
@@ -123,7 +123,7 @@ impl RepellentFlask {
 
 impl From<RepellentFlask> for Gear {
     fn from(value: RepellentFlask) -> Self {
-        Gear::new_from_kind(GearKind::RepellentFlask(value.box_clone()))
+        Gear::new_from_kind(GearKind::RepellentFlask, value.box_clone())
     }
 }
 

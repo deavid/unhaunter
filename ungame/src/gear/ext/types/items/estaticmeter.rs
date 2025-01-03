@@ -46,6 +46,6 @@ impl GearUsable for EStaticMeter {
 
 impl From<EStaticMeter> for Gear {
     fn from(value: EStaticMeter) -> Self {
-        Gear::new_from_kind(GearKind::EStaticMeter(value.box_clone()))
+        Gear::new_from_kind(GearKind::EStaticMeter,value.box_clone())
     }
 }

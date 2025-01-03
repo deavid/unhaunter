@@ -182,6 +182,6 @@ impl GearUsable for EMFMeter {
 
 impl From<EMFMeter> for Gear {
     fn from(value: EMFMeter) -> Self {
-        Gear::new_from_kind(GearKind::EMFMeter(value.box_clone()))
+        Gear::new_from_kind(GearKind::EMFMeter, value.box_clone())
     }
 }

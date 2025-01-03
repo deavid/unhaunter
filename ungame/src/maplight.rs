@@ -25,12 +25,12 @@ use unstd::materials::CustomMaterial1;
 use crate::gear::ext::types::gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
-    uncore_board::{self, BoardPosition, Direction, Position},
     difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
     player::{self, DeployedGear, DeployedGearData},
+    uncore_board::{self, BoardPosition, Direction, Position},
     utils,
 };
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
@@ -231,11 +231,14 @@ pub fn apply_lighting(
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
         let p = EquipmentPosition::Deployed;
+        let Some(t) = gear_data.gear.data.as_ref() else {
+            continue;
+        };
         let Some((power, color, _p, light_type)) = (match &gear_data.gear.kind {
-            GearKind::Flashlight(t) => Some((t.power(), t.color(), p, LightType::Visible)),
-            GearKind::UVTorch(t) => Some((t.power(), t.color(), p, LightType::UltraViolet)),
-            GearKind::RedTorch(t) => Some((t.power(), t.color(), p, LightType::Red)),
-            GearKind::Videocam(t) => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
+            GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),
+            GearKind::UVTorch => Some((t.power(), t.color(), p, LightType::UltraViolet)),
+            GearKind::RedTorch => Some((t.power(), t.color(), p, LightType::Red)),
+            GearKind::Videocam => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
             _ => None,
         }) else {
             continue;
@@ -253,16 +256,17 @@ pub fn apply_lighting(
         }
     }
     for (pos, player, direction, gear) in qp.iter() {
-        let player_flashlight = gear
-            .as_vec()
-            .into_iter()
-            .filter_map(|(g, p)| match &g.kind {
-                GearKind::Flashlight(t) => Some((t.power(), t.color(), p, LightType::Visible)),
-                GearKind::UVTorch(t) => Some((t.power(), t.color(), p, LightType::UltraViolet)),
-                GearKind::RedTorch(t) => Some((t.power(), t.color(), p, LightType::Red)),
-                GearKind::Videocam(t) => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
+        let player_flashlight = gear.as_vec().into_iter().filter_map(|(g, p)| {
+            let t = g.data.as_ref()?;
+
+            match &g.kind {
+                GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),
+                GearKind::UVTorch => Some((t.power(), t.color(), p, LightType::UltraViolet)),
+                GearKind::RedTorch => Some((t.power(), t.color(), p, LightType::Red)),
+                GearKind::Videocam => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
                 _ => None,
-            });
+            }
+        });
         for (power, color, p, light_type) in player_flashlight {
             if power > 0.0 {
                 use crate::gear::playergear::EquipmentPosition::*;
