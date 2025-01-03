@@ -1,1 +1,1 @@
-pub use uncore::systemparam::collisionhandler::CollisionHandler;
+pub use uncore::systemparam::collision_handler::CollisionHandler;

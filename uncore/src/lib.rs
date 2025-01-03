@@ -10,6 +10,7 @@ pub mod states;
 pub mod systemparam;
 pub mod types;
 pub mod utils;
+pub mod traits;
 
 /// Enables the use of arrow keys for movement instead of WASD
 pub const USE_ARROW_KEYS: bool = false;

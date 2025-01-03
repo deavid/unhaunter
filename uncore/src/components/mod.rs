@@ -11,3 +11,4 @@ pub mod player_inventory;
 pub mod truck_ui;
 pub mod summary_ui;
 pub mod player_sprite;
+pub mod ghost_sprite;
