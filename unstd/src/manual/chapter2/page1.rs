@@ -1,7 +1,7 @@
-use crate::manual::utils::{grid_img_text2, header};
-use crate::manual::ManualPageData;
-use crate::uncore_root::GameAssets;
+use super::super::utils::{grid_img_text2, header};
+use super::super::ManualPageData;
 use bevy::prelude::*;
+use uncore::types::root::game_assets::GameAssets;
 
 pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
     let title = "Mastering UV and Night Vision Camera";

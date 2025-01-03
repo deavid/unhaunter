@@ -5,12 +5,10 @@
 //! and pre-play tutorial) to promote code reuse and maintain consistency across the
 //! manual's interface.  The functions utilize Bevy's UI system to create the
 //! visual elements of the manual efficiently.
+use bevy::prelude::*;
 use uncore::colors;
 use uncore::platform::plt::FONT_SCALE;
-
-use crate::uncore_root::GameAssets;
-
-use bevy::prelude::*;
+use uncore::types::root::game_assets::GameAssets;
 
 pub fn grid_img_text2(
     parent: &mut ChildBuilder<'_>,

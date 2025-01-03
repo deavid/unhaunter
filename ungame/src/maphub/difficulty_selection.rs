@@ -1,12 +1,12 @@
+use super::MapHubState;
+use crate::uncore_difficulty::{CurrentDifficulty, Difficulty};
+use crate::uncore_root;
+use bevy::prelude::*;
 use uncore::colors;
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
-use super::MapHubState;
-use crate::uncore_difficulty::{CurrentDifficulty, Difficulty};
-use crate::manual::preplay_manual_ui::start_preplay_manual_system;
-use crate::uncore_root;
-use bevy::prelude::*;
+use uncore::resources::difficulty_state::DifficultySelectionState;
+use unstd::manual::preplay_manual_ui::start_preplay_manual_system;
 
 // Add MapSelectedEvent
 use crate::maphub::map_selection::MapSelectedEvent;
@@ -19,13 +19,6 @@ pub struct DifficultyDescriptionUI;
 #[derive(Component, Debug)]
 pub struct DifficultySelectionItem {
     pub difficulty: Difficulty,
-}
-
-#[derive(Resource, Debug, Default)]
-pub struct DifficultySelectionState {
-    pub selected_difficulty: Difficulty,
-    // Add this to store the selected map index
-    pub selected_map_idx: usize,
 }
 
 // New event for confirming difficulty selection

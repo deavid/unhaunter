@@ -1,10 +1,8 @@
-mod uncore_difficulty;
 mod game;
 mod gear;
 mod ghost;
 mod ghost_events;
 mod mainmenu;
-mod manual;
 mod maphub;
 mod maplight;
 mod npchelp;
@@ -14,9 +12,11 @@ mod summary;
 mod systems;
 mod truck;
 mod uncore_board;
+mod uncore_difficulty;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
+use unstd::plugins::manual::UnhaunterManualPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
@@ -55,7 +55,11 @@ pub fn app_run() {
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
-    app.add_plugins((UnhaunterRootPlugin, UnhaunterBoardPlugin));
+    app.add_plugins((
+        UnhaunterRootPlugin,
+        UnhaunterBoardPlugin,
+        UnhaunterManualPlugin,
+    ));
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
@@ -69,6 +73,6 @@ pub fn app_run() {
     npchelp::app_setup(&mut app);
     systems::object_charge::app_setup(&mut app);
     maphub::app_setup(&mut app);
-    manual::app_setup(&mut app);
+
     app.run();
 }

@@ -10,7 +10,7 @@ pub mod chapter5;
 
 use bevy::prelude::*;
 
-use crate::uncore_root::GameAssets;
+use uncore::types::root::game_assets::GameAssets;
 
 pub use uncore::resources::manual::CurrentManualPage;
 pub use uncore::resources::manual::Manual;
@@ -63,11 +63,4 @@ pub fn draw_manual_page(
 
     // --- Draw the Page ---
     (page.draw_fn)(parent, handles);
-}
-
-pub fn app_setup(app: &mut App) {
-    user_manual_ui::app_setup(app);
-    preplay_manual_ui::app_setup(app);
-
-    app.insert_resource(create_manual());
 }
