@@ -1,10 +1,7 @@
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
-use crate::{
-    uncore_materials::{self, UIPanelMaterial},
-    uncore_root,
-};
+use crate::uncore_root;
 use bevy::prelude::*;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]
 pub struct PauseUI;
@@ -40,7 +37,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 
 pub fn setup_ui(
     mut commands: Commands,
-    mut materials: ResMut<Assets<uncore_materials::UIPanelMaterial>>,
+    mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<uncore_root::GameAssets>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;

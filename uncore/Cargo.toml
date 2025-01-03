@@ -16,6 +16,5 @@ thiserror = { workspace = true }
 fastapprox = { workspace = true }
 rand = { workspace = true }
 tiled = { workspace = true }
-normalize-path = { workspace = true }
 anyhow = { workspace = true }
 ordered-float = { workspace = true }

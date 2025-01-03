@@ -20,6 +20,7 @@ use uncore::resources::boarddata::BoardData;
 use uncore::types::board::fielddata::CollisionFieldData;
 use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
+use unstd::materials::CustomMaterial1;
 
 use crate::gear::ext::types::gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
@@ -30,7 +31,6 @@ use crate::{
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
     player::{self, DeployedGear, DeployedGearData},
-    uncore_materials::CustomMaterial1,
     utils,
 };
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};

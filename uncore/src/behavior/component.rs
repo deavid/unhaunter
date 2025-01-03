@@ -1,6 +1,6 @@
 use super::{Behavior, Orientation};
 use crate::components::board::boardposition::BoardPosition;
-use crate::tiledmap::MapLayer;
+use crate::types::tiledmap::map::MapLayer;
 use bevy::{ecs::component::Component, log::warn, math::Vec3};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

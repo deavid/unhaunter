@@ -4,12 +4,12 @@ use uncore::behavior::{
 };
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use unstd::materials::UIPanelMaterial;
 
 use crate::{
     board::{self, Position},
     game::GameConfig,
     player::PlayerSprite,
-    uncore_materials::{self, UIPanelMaterial},
     uncore_root,
 };
 use bevy::prelude::*;
@@ -56,7 +56,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
 
 pub fn setup_ui(
     mut commands: Commands,
-    mut materials: ResMut<Assets<uncore_materials::UIPanelMaterial>>,
+    mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<uncore_root::GameAssets>,
     npcdata: Res<NpcUIData>,
 ) {

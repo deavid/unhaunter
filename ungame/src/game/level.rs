@@ -16,27 +16,27 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
-use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
-use uncore::components::game::{GameSound, GameSprite, MapUpdate};
-use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore::events::loadlevel::LoadLevelEvent;
-use uncore::resources::boarddata::BoardData;
-use uncore::types::game::SoundType;
-
 use super::roomchanged::RoomChangedEvent;
 use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
-use crate::uncore_materials::CustomMaterial1;
+use crate::summary;
 use crate::uncore_root::{self, QuadCC};
-use crate::uncore_tiledmap::{AtlasData, MapLayerType};
-use crate::{summary, uncore_tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
+use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
+use uncore::components::game::{GameSound, GameSprite, MapUpdate};
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::resources::boarddata::BoardData;
+use uncore::types::game::SoundType;
+use uncore::types::tiledmap::map::MapLayerType;
+use unstd::materials::CustomMaterial1;
+use unstd::tiledmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
 
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
@@ -56,7 +56,7 @@ pub fn load_level_handler(
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut tilesetdb: ResMut<uncore_tiledmap::MapTileSetDb>,
+    mut tilesetdb: ResMut<MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
     handles: Res<uncore_root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
@@ -150,7 +150,7 @@ pub fn load_level_handler(
     app_next_state.set(uncore_root::State::InGame);
 
     // ---------- NEW MAP LOAD ----------
-    let (_map, layers) = uncore_tiledmap::bevy_load_map(
+    let (_map, layers) = bevy_load_map(
         &load_event.map_filepath,
         &asset_server,
         &mut texture_atlases,

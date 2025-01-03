@@ -230,9 +230,10 @@ mod arch_setup {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod arch {
+    use crate::tiledmap::naive::naive_tmx_loader;
+
     use super::*;
     use glob::Pattern;
-    use uncore::tiledmap::naive_tmx_loader;
     use uncore::types::root::map::Map;
     use walkdir::WalkDir;
 

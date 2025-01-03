@@ -8,3 +8,4 @@ pub mod truck_button;
 pub mod manual;
 pub mod root;
 pub mod quadcc;
+pub mod tiledmap;

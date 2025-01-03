@@ -10,12 +10,12 @@ pub use uncore::components::board::direction::Direction;
 pub use uncore::components::board::position::Position;
 
 use uncore::behavior::{Behavior, SpriteCVOKey, TileState};
-use uncore::materials::CustomMaterial1;
 use uncore::types::board::light::LightData;
 use uncore::{
     resources::boarddata::BoardData,
     types::board::fielddata::{CollisionFieldData, LightFieldData},
 };
+use unstd::materials::CustomMaterial1;
 
 #[derive(Component, Clone)]
 pub enum PreMesh {

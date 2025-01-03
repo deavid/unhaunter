@@ -5,7 +5,7 @@ use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::events::roomchanged::InteractionExecutionType;
-use uncore::materials::CustomMaterial1;
+use unstd::materials::CustomMaterial1;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

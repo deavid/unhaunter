@@ -26,8 +26,8 @@ use bevy::{ecs::component::Component, utils::HashMap};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
-use crate::tiledmap::MapLayer;
 use crate::types::board::light::LightData;
+use crate::types::tiledmap::map::MapLayer;
 
 /// The `Behavior` component defines the behavior of an object in the game world.
 ///

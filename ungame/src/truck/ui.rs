@@ -1,12 +1,12 @@
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
 use crate::difficulty::CurrentDifficulty;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
-use crate::{uncore_materials::UIPanelMaterial, uncore_root};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::types::root::game_assets::GameAssets;
+use unstd::materials::UIPanelMaterial;
 
 /// Represents the visual state of a tab in the truck UI.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -134,7 +134,7 @@ impl TruckTab {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {

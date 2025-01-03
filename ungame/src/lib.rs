@@ -16,17 +16,15 @@ mod player;
 mod summary;
 mod systems;
 mod truck;
-mod uncore_materials;
 mod uncore_root;
-mod uncore_tiledmap;
-
-use uncore::utils;
-use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
-use uncore_materials::{CustomMaterial1, UIPanelMaterial};
-use unstd::plugins::root::UnhaunterRootPlugin;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
 use std::time::Duration;
+use uncore::utils;
+use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use unstd::materials::{CustomMaterial1, UIPanelMaterial};
+use unstd::plugins::root::UnhaunterRootPlugin;
+use unstd::tiledmap::bevy::MapTileSetDb;
 
 pub fn default_resolution() -> WindowResolution {
     let height = 800.0 * plt::UI_SCALE;
@@ -51,7 +49,7 @@ pub fn app_run() {
         1.0 / 15.0,
     )));
 
-    app.init_resource::<uncore_tiledmap::MapTileSetDb>()
+    app.init_resource::<MapTileSetDb>()
         .init_resource::<difficulty::CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
