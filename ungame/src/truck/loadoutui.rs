@@ -15,7 +15,7 @@ use crate::{
         playergear::{self, PlayerGear},
         GearSpriteID,
     },
-    materials::UIPanelMaterial,
+    uncore_materials::UIPanelMaterial,
     player::PlayerSprite,
     root,
 };

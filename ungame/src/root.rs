@@ -456,7 +456,7 @@ pub fn app_setup(app: &mut App) {
 #[cfg(not(target_arch = "wasm32"))]
 mod arch {
     use super::*;
-    use crate::tiledmap::naive_tmx_loader;
+    use crate::uncore_tiledmap::naive_tmx_loader;
     use glob::Pattern;
     use walkdir::WalkDir;
 

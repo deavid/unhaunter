@@ -4655,12 +4655,17 @@ checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
 name = "uncore"
 version = "0.2.5-dev"
 dependencies = [
+ "anyhow",
  "bevy",
  "enum-iterator",
  "fastapprox",
+ "normalize-path",
+ "ordered-float",
  "rand",
  "serde",
+ "serde_json",
  "thiserror 2.0.9",
+ "tiled",
 ]
 
 [[package]]
@@ -4678,7 +4683,6 @@ dependencies = [
  "hierarchical_pathfinding",
  "image",
  "itertools 0.14.0",
- "normalize-path",
  "ordered-float",
  "rand",
  "regex",

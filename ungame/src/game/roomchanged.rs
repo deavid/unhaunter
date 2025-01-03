@@ -1,6 +1,6 @@
 use super::{GCameraArena, GameConfig};
-use crate::behavior::component::RoomState;
-use crate::behavior::Behavior;
+use crate::uncore_behavior::component::RoomState;
+use crate::uncore_behavior::Behavior;
 use crate::board::{
     self, BoardDataToRebuild,
 };

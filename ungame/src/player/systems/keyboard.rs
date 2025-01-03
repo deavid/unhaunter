@@ -1,8 +1,8 @@
 use super::super::systemparam::collisionhandler::CollisionHandler;
 use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 
-use crate::behavior::component::{Interactive, RoomState};
-use crate::behavior::Behavior;
+use crate::uncore_behavior::component::{Interactive, RoomState};
+use crate::uncore_behavior::Behavior;
 use crate::board::{self, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};

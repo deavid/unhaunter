@@ -1,10 +1,9 @@
 use std::f32::consts::PI;
 
-// use std::time::Duration;
 use crate::{
-    behavior::{self, Behavior, SpriteCVOKey},
+    uncore_behavior::{self, Behavior, SpriteCVOKey},
     maplight,
-    materials::CustomMaterial1,
+    uncore_materials::CustomMaterial1,
 };
 use bevy::{
     prelude::*,
@@ -99,7 +98,7 @@ pub struct RoomDB {
     /// * Presence of specific objects or entities.
     ///
     /// * Temperature or other environmental factors.
-    pub room_state: HashMap<String, behavior::State>,
+    pub room_state: HashMap<String, uncore_behavior::State>,
 }
 
 impl SpriteDB {

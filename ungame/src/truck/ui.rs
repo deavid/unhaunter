@@ -4,7 +4,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use crate::difficulty::CurrentDifficulty;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
-use crate::{materials::UIPanelMaterial, root};
+use crate::{uncore_materials::UIPanelMaterial, root};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 

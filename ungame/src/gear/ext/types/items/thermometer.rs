@@ -104,7 +104,7 @@ impl From<Thermometer> for Gear {
 pub fn temperature_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<crate::board::RoomDB>,
-    qt: Query<(&Position, &crate::behavior::Behavior)>,
+    qt: Query<(&Position, &crate::uncore_behavior::Behavior)>,
     qg: Query<(&crate::ghost::GhostSprite, &Position)>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,

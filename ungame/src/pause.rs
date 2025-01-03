@@ -1,7 +1,7 @@
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
-    materials::{self, UIPanelMaterial},
+    uncore_materials::{self, UIPanelMaterial},
     root,
 };
 use bevy::prelude::*;
@@ -40,7 +40,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 
 pub fn setup_ui(
     mut commands: Commands,
-    mut materials: ResMut<Assets<materials::UIPanelMaterial>>,
+    mut materials: ResMut<Assets<uncore_materials::UIPanelMaterial>>,
     handles: Res<root::GameAssets>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;

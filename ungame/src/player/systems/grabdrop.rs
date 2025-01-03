@@ -1,6 +1,6 @@
 use uncore::components::game::GameSprite;
 
-use crate::behavior::{self, Behavior};
+use crate::uncore_behavior::{self, Behavior};
 use crate::board::{self, Position};
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::gear::Gear;
@@ -72,7 +72,7 @@ pub fn drop_object(
         (Entity, &mut Position),
         (
             Without<PlayerSprite>,
-            With<behavior::component::FloorItemCollidable>,
+            With<uncore_behavior::component::FloorItemCollidable>,
         ),
     >,
     mut gs: GearStuff,
@@ -178,7 +178,7 @@ pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
     mut commands: Commands,
-    q_collidable: Query<(Entity, &Position), With<behavior::component::FloorItemCollidable>>,
+    q_collidable: Query<(Entity, &Position), With<uncore_behavior::component::FloorItemCollidable>>,
     mut gs: GearStuff,
     handles: Res<root::GameAssets>,
 ) {
@@ -217,7 +217,7 @@ pub fn deploy_gear(
                     )
                     .insert(deployed_gear)
                     .insert(*player_pos)
-                    .insert(behavior::component::FloorItemCollidable)
+                    .insert(uncore_behavior::component::FloorItemCollidable)
                     .insert(GameSprite)
                     .insert(DeployedGearData {
                         gear: player_gear.right_hand.take(),

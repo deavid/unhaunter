@@ -1,5 +1,5 @@
-use crate::behavior::component::{Interactive, RoomState};
-use crate::behavior::Behavior;
+use crate::uncore_behavior::component::{Interactive, RoomState};
+use crate::uncore_behavior::Behavior;
 use crate::board::{self, BoardPosition, Position};
 use crate::game::roomchanged::InteractionExecutionType;
 use crate::root;
@@ -31,7 +31,7 @@ pub struct InteractiveStuff<'w, 's> {
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the materials used for rendering map tiles. Used to update tile
     /// visuals when object states change.
-    pub materials1: ResMut<'w, Assets<crate::materials::CustomMaterial1>>,
+    pub materials1: ResMut<'w, Assets<crate::uncore_materials::CustomMaterial1>>,
     /// Database of room data, used to track the state of rooms and update interactive
     /// objects accordingly.
     pub roomdb: ResMut<'w, board::RoomDB>,

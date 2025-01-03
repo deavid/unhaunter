@@ -23,13 +23,13 @@ use uncore::types::game::SoundType;
 use crate::gear::ext::types::gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
-    behavior::{Behavior, Orientation},
+    uncore_behavior::{Behavior, Orientation},
     board::{self, BoardPosition, Direction, Position},
     difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
-    materials::CustomMaterial1,
+    uncore_materials::CustomMaterial1,
     player::{self, DeployedGear, DeployedGearData},
     utils,
 };

@@ -5,3 +5,6 @@ pub mod platform;
 pub mod resources;
 pub mod types;
 pub mod utils;
+pub mod tiledmap;
+pub mod materials;
+pub mod behavior;

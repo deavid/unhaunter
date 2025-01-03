@@ -1,4 +1,4 @@
-mod behavior;
+mod uncore_behavior;
 mod board;
 pub mod difficulty;
 mod game;
@@ -11,7 +11,7 @@ mod mainmenu;
 pub mod manual;
 pub mod maphub;
 mod maplight;
-mod materials;
+mod uncore_materials;
 pub mod npchelp;
 pub mod object_interaction;
 mod pause;
@@ -19,7 +19,7 @@ mod player;
 mod root;
 mod summary;
 pub mod systems;
-mod tiledmap;
+mod uncore_tiledmap;
 mod truck;
 
 use uncore::utils; // FIXME: Delete this.
@@ -32,7 +32,7 @@ use bevy::{
     sprite::Material2dPlugin,
     window::WindowResolution,
 };
-use materials::{CustomMaterial1, UIPanelMaterial};
+use uncore_materials::{CustomMaterial1, UIPanelMaterial};
 use object_interaction::ObjectInteractionConfig;
 use std::time::Duration;
 
@@ -59,7 +59,7 @@ pub fn app_run() {
     .add_plugins(Material2dPlugin::<CustomMaterial1>::default())
     .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default())
     .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
-    .init_resource::<tiledmap::MapTileSetDb>()
+    .init_resource::<uncore_tiledmap::MapTileSetDb>()
     .init_resource::<difficulty::CurrentDifficulty>()
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,

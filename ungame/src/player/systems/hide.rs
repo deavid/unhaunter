@@ -1,4 +1,4 @@
-use crate::behavior::Behavior;
+use crate::uncore_behavior::Behavior;
 use crate::board::Position;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::playergear::PlayerGear;

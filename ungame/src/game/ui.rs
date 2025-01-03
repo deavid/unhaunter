@@ -5,7 +5,7 @@ use uncore::components::game_ui::{
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
-    behavior::Behavior,
+    uncore_behavior::Behavior,
     game::evidence,
     gear::{self, playergear::PlayerGear},
     player::PlayerSprite,

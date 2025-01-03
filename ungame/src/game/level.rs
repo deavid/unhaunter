@@ -27,11 +27,11 @@ use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle
 use crate::difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
-use crate::materials::CustomMaterial1;
+use crate::uncore_materials::CustomMaterial1;
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
 use crate::root::{self, QuadCC};
-use crate::tiledmap::{AtlasData, MapLayerType};
-use crate::{behavior, summary, tiledmap};
+use crate::uncore_tiledmap::{AtlasData, MapLayerType};
+use crate::{uncore_behavior, summary, uncore_tiledmap};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
@@ -55,7 +55,7 @@ pub fn load_level_handler(
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut tilesetdb: ResMut<tiledmap::MapTileSetDb>,
+    mut tilesetdb: ResMut<uncore_tiledmap::MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
     handles: Res<root::GameAssets>,
     mut roomdb: ResMut<board::RoomDB>,
@@ -149,7 +149,7 @@ pub fn load_level_handler(
     app_next_state.set(root::State::InGame);
 
     // ---------- NEW MAP LOAD ----------
-    let (_map, layers) = tiledmap::bevy_load_map(
+    let (_map, layers) = uncore_tiledmap::bevy_load_map(
         &load_event.map_filepath,
         &asset_server,
         &mut texture_atlases,
@@ -165,8 +165,8 @@ pub fn load_level_handler(
     for (tset_name, tileset) in tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             let sprite_config =
-                behavior::SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
-            let behavior = behavior::Behavior::from_config(sprite_config);
+                uncore_behavior::SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
+            let behavior = uncore_behavior::Behavior::from_config(sprite_config);
             let visibility = if behavior.p.display.disable {
                 Visibility::Hidden
             } else {
@@ -292,22 +292,22 @@ pub fn load_level_handler(
                 ..pos
             };
             match &mt.behavior.p.util {
-                behavior::Util::PlayerSpawn => {
+                uncore_behavior::Util::PlayerSpawn => {
                     player_spawn_points.push(new_pos);
                 }
-                behavior::Util::GhostSpawn => {
+                uncore_behavior::Util::GhostSpawn => {
                     ghost_spawn_points.push(new_pos);
                 }
-                behavior::Util::RoomDef(name) => {
+                uncore_behavior::Util::RoomDef(name) => {
                     roomdb
                         .room_tiles
                         .insert(pos.to_board_position(), name.to_owned());
-                    roomdb.room_state.insert(name.clone(), behavior::State::Off);
+                    roomdb.room_state.insert(name.clone(), uncore_behavior::State::Off);
                 }
-                behavior::Util::Van => {
+                uncore_behavior::Util::Van => {
                     van_entry_points.push(new_pos);
                 }
-                behavior::Util::None => {}
+                uncore_behavior::Util::None => {}
             }
             mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();

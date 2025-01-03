@@ -2,13 +2,13 @@ use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use crate::{
-    behavior::{
+    uncore_behavior::{
         component::{Interactive, NpcHelpDialog},
         Behavior,
     },
     board::{self, Position},
     game::GameConfig,
-    materials::{self, UIPanelMaterial},
+    uncore_materials::{self, UIPanelMaterial},
     player::PlayerSprite,
     root,
 };
@@ -56,7 +56,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
 
 pub fn setup_ui(
     mut commands: Commands,
-    mut materials: ResMut<Assets<materials::UIPanelMaterial>>,
+    mut materials: ResMut<Assets<uncore_materials::UIPanelMaterial>>,
     handles: Res<root::GameAssets>,
     npcdata: Res<NpcUIData>,
 ) {
