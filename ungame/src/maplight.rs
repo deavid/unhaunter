@@ -25,7 +25,7 @@ use unstd::materials::CustomMaterial1;
 use crate::gear::ext::types::uncore_gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
-    difficulty::CurrentDifficulty,
+    uncore_difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},

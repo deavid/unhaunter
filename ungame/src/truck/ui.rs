@@ -1,4 +1,4 @@
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::truck::uibutton::TruckButtonType;
 use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use bevy::prelude::*;

@@ -5,7 +5,7 @@ use uncore::{
     resources::board_data::BoardData,
 };
 
-use crate::{difficulty::CurrentDifficulty, summary};
+use crate::{uncore_difficulty::CurrentDifficulty, summary};
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]

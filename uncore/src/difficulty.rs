@@ -1,4 +1,3 @@
-// src/difficulty.rs
 //! ## Difficulty Module
 //!
 //! This module defines the difficulty system for the Unhaunter game, enabling
@@ -13,13 +12,13 @@
 //! By defining these settings directly within the `Difficulty` enum, you can
 //! fine-tune the game experience for each difficulty level, providing a tailored
 //! challenge for players.
+use crate::components::truck_ui::TabContents;
+use crate::types::gear_kind::{GearKind, PlayerGearKind};
+use crate::types::ghost::definitions::GhostSet;
+use crate::types::manual::ManualChapterIndex;
 use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
-use uncore::components::truck_ui::TabContents;
-use uncore::types::gear_kind::{GearKind, PlayerGearKind};
-use uncore::types::ghost::definitions::GhostSet;
-use uncore::types::manual::ManualChapter;
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///
@@ -620,7 +619,7 @@ impl Difficulty {
     }
 
     pub fn truck_gear(&self) -> Vec<GearKind> {
-        use crate::gear::ext::types::uncore_gearkind::GearKind::*;
+        use crate::types::gear_kind::GearKind::*;
 
         let mut gear = Vec::new();
 
@@ -833,14 +832,13 @@ impl Difficulty {
         }
     }
 
-    pub fn tutorial_chapter(&self) -> Option<ManualChapter> {
-        use crate::manual::{chapter1, chapter2, chapter3, chapter4, chapter5};
+    pub fn tutorial_chapter(&self) -> Option<ManualChapterIndex> {
         match self {
-            Difficulty::NoviceInvestigator => Some(chapter1::create_manual_chapter()),
-            Difficulty::AdeptInvestigator => Some(chapter2::create_manual_chapter()),
-            Difficulty::SeniorInvestigator => Some(chapter3::create_manual_chapter()),
-            Difficulty::ExpertInvestigator => Some(chapter4::create_manual_chapter()),
-            Difficulty::AdeptSpecialist => Some(chapter5::create_manual_chapter()),
+            Difficulty::NoviceInvestigator => Some(ManualChapterIndex::Chapter1),
+            Difficulty::AdeptInvestigator => Some(ManualChapterIndex::Chapter2),
+            Difficulty::SeniorInvestigator => Some(ManualChapterIndex::Chapter3),
+            Difficulty::ExpertInvestigator => Some(ManualChapterIndex::Chapter4),
+            Difficulty::AdeptSpecialist => Some(ManualChapterIndex::Chapter5),
             _ => None,
         }
     }
@@ -928,7 +926,7 @@ pub struct DifficultyStruct {
     pub difficulty_description: String,
     pub difficulty_score_multiplier: f64,
     /// The range of manual pages associated with this difficulty.
-    pub tutorial_chapter: Option<ManualChapter>,
+    pub tutorial_chapter: Option<ManualChapterIndex>,
     pub truck_gear: Vec<GearKind>,
 }
 

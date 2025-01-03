@@ -2,7 +2,7 @@ use super::super::systemparam::uncore_collisionhandler::CollisionHandler;
 use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 
 use crate::uncore_board::{self, Position};
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use crate::gear::playergear::PlayerGear;
 use crate::npchelp::NpcHelpEvent;

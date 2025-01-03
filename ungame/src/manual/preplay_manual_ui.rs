@@ -4,7 +4,7 @@ use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::platform::plt::FONT_SCALE;
 
 use crate::{
-    difficulty::CurrentDifficulty,
+    uncore_difficulty::CurrentDifficulty,
     manual::{CurrentManualPage, Manual},
     maphub::difficulty_selection::DifficultySelectionState,
     uncore_root::{self, GameAssets},
@@ -55,6 +55,7 @@ pub fn preplay_manual_system(
     maps: Res<uncore_root::Maps>,
     mut next_state: ResMut<NextState<uncore_root::State>>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
+    manual: Res<Manual>,
 ) {
     for ev in evr_manual_button.read() {
         match ev.action {
@@ -68,8 +69,11 @@ pub fn preplay_manual_system(
             }
 
             PreplayManualNavigationAction::Continue => {
-                if difficulty.0.tutorial_chapter.is_some() {
-                    let chapter = difficulty.0.tutorial_chapter.as_ref().unwrap();
+                if let Some(Some(chapter)) = difficulty
+                    .0
+                    .tutorial_chapter
+                    .map(|c| manual.chapters.get(c.index()))
+                {
                     let current_chapter_size = chapter.pages.len();
 
                     if current_manual_page.1 + 1 < current_chapter_size {
@@ -231,7 +235,6 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
 
 pub fn setup_preplay_ui(
     mut commands: Commands,
-    manual: Res<Manual>,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -240,7 +243,7 @@ pub fn setup_preplay_ui(
             .0
             .tutorial_chapter
             .as_ref()
-            .map(|x| x.index(&manual))
+            .map(|x| x.index())
             .unwrap_or_default(),
         0,
     ));
@@ -313,7 +316,10 @@ fn redraw_manual_ui_system(
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(uncore_root::State::PreplayManual), setup_preplay_ui)
-        .add_systems(OnExit(uncore_root::State::PreplayManual), cleanup_preplay_ui)
+        .add_systems(
+            OnExit(uncore_root::State::PreplayManual),
+            cleanup_preplay_ui,
+        )
         .add_systems(
             Update,
             (

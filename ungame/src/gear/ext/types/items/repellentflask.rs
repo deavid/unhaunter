@@ -6,7 +6,7 @@ use uncore::{
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
 
-use crate::{difficulty::CurrentDifficulty, ghost::GhostSprite, maplight::MapColor};
+use crate::{uncore_difficulty::CurrentDifficulty, ghost::GhostSprite, maplight::MapColor};
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};

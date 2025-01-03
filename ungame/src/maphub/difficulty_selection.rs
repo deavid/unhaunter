@@ -3,7 +3,7 @@ use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use super::MapHubState;
-use crate::difficulty::{CurrentDifficulty, Difficulty};
+use crate::uncore_difficulty::{CurrentDifficulty, Difficulty};
 use crate::manual::preplay_manual_ui::start_preplay_manual_system;
 use crate::uncore_root;
 use bevy::prelude::*;

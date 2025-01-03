@@ -17,7 +17,7 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::gear::playergear::PlayerGear;
 use crate::ghost::{GhostBreach, GhostSprite};

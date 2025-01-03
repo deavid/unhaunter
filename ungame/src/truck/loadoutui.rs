@@ -1,6 +1,6 @@
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::game::evidence::EvidenceStatus;
 use crate::gear::ext::types::gear::Gear;
 use crate::gear::ext::types::uncore_gearkind::GearKind;

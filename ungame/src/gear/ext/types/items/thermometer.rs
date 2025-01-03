@@ -1,5 +1,5 @@
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
-use crate::{uncore_board::Position, difficulty::CurrentDifficulty};
+use crate::{uncore_board::Position, uncore_difficulty::CurrentDifficulty};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::behavior::Behavior;

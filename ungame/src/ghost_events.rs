@@ -1,4 +1,4 @@
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::{uncore_board, ghost, player};
 use uncore::behavior;
 use uncore::events::roomchanged::InteractionExecutionType;

@@ -4,7 +4,7 @@ use uncore::components::board::position::Position;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 
-use crate::difficulty::CurrentDifficulty;
+use crate::uncore_difficulty::CurrentDifficulty;
 use crate::ghost::GhostSprite;
 
 use bevy::prelude::*;

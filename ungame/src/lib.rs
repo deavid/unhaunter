@@ -1,4 +1,4 @@
-mod difficulty;
+mod uncore_difficulty;
 mod game;
 mod gear;
 mod ghost;
@@ -49,7 +49,7 @@ pub fn app_run() {
     )));
 
     app.init_resource::<MapTileSetDb>()
-        .init_resource::<difficulty::CurrentDifficulty>()
+        .init_resource::<uncore_difficulty::CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())

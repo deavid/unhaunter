@@ -1,4 +1,4 @@
-use crate::{difficulty::CurrentDifficulty, player::PlayerSprite, uncore_root, utils};
+use crate::{uncore_difficulty::CurrentDifficulty, player::PlayerSprite, uncore_root, utils};
 use bevy::{color::palettes::css, prelude::*};
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::ghost::types::GhostType;
