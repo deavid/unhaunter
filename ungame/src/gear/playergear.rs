@@ -1,12 +1,13 @@
-pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
-pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
-use uncore::types::gear_kind::PlayerGearKind;
-
-use super::ext::types::{gear::Gear, uncore_gearkind::GearKind};
+use super::ext::types::gear::Gear;
+use super::ext::types::items::repellentflask::RepellentFlask;
+use bevy::prelude::*;
 use uncore::components::player::HeldObject;
+use uncore::types::gear_kind::GearKind;
+use uncore::types::gear_kind::PlayerGearKind;
 use uncore::types::ghost::types::GhostType;
 
-use bevy::prelude::*;
+pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {
@@ -123,8 +124,6 @@ impl PlayerGear {
     }
 
     pub fn craft_repellent(&mut self, ghost_type: GhostType) {
-        use super::prelude::RepellentFlask;
-
         // Check if the repellent exists in inventory, if not, create it:
         let flask_exists = self
             .as_vec()

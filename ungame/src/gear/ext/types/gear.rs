@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
 use super::super::systemparam::gearstuff::GearStuff;
+use super::traits::GearUsable;
+use uncore::types::gear_kind::GearKind;
 use uncore::{
     components::board::position::Position,
     types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID},
 };
-
-use super::{traits::GearUsable, uncore_gearkind::GearKind};
 
 /// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]
@@ -93,7 +93,7 @@ impl GearUsable for Gear {
 
 impl From<GearKind> for Gear {
     fn from(value: GearKind) -> Self {
-        use crate::gear::prelude::*;
+        use super::items::prelude::*;
         match value {
             GearKind::Thermometer => Thermometer::default().into(),
             GearKind::EMFMeter => EMFMeter::default().into(),

@@ -1,6 +1,5 @@
-use crate::ghost::GhostSprite;
-
 use super::super::systemparam::gearstuff::GearStuff;
+use crate::ghost::GhostSprite;
 use bevy::color::Color;
 use uncore::{
     components::board::position::Position,

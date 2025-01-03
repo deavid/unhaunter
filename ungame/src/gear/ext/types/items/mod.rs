@@ -6,6 +6,7 @@ pub mod geigercounter;
 pub mod ionmeter;
 pub mod motionsensor;
 pub mod photocam;
+pub mod prelude;
 pub mod quartz;
 pub mod recorder;
 pub mod redtorch;
@@ -18,10 +19,9 @@ pub mod thermometer;
 pub mod uvtorch;
 pub mod videocam;
 
-use crate::gear::ext::systemparam::gearstuff::GearStuff;
-
 use super::gear::Gear;
-use super::uncore_gearkind::GearKind;
+use super::super::systemparam::gearstuff::GearStuff;
 use super::traits::GearUsable;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear::utils::on_off;
+use uncore::types::gear_kind::GearKind;

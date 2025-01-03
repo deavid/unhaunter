@@ -1,12 +1,14 @@
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
+use super::ext::systemparam::gearstuff::GearStuff;
+use super::ext::types::traits::GearUsable;
 use super::playergear::{self, Inventory, InventoryNext, InventoryStats, PlayerGear};
-use super::{GearSpriteID, GearStuff, GearUsable};
-use crate::game::GameConfig;
+use super::GearSpriteID;
+use uncore::colors;
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::GameState;
+use uncore::types::root::game_assets::GameAssets;
 
-use crate::player::PlayerSprite;
-use crate::uncore_root::{GameAssets, GameState};
 use bevy::prelude::*;
 
 pub fn keyboard_gear(

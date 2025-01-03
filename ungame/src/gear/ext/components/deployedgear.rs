@@ -1,6 +1,6 @@
-use crate::uncore_board::Direction;
 use crate::gear::ext::types::gear::Gear;
 use bevy::prelude::*;
+use uncore::components::board::direction::Direction;
 
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]
