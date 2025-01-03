@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
 
-use super::*;
+use crate::components::*;
 
 pub struct UnhaunterGearItemsPlugin;
 

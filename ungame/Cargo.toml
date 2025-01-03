@@ -13,6 +13,7 @@ authors.workspace = true
 uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
+ungearitems = { path = "../ungearitems" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

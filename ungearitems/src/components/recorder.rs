@@ -1,15 +1,12 @@
-use uncore::{
-    components::board::position::Position,
-    resources::board_data::BoardData,
-    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
-
-use crate::{uncore_board::RoomDB, ghost::GhostSprite};
-
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
+use uncore::{
+    components::{board::position::Position, ghost_sprite::GhostSprite},
+    resources::{board_data::BoardData, roomdb::RoomDB},
+    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
+};
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -140,7 +137,7 @@ impl GearUsable for Recorder {
 
 impl From<Recorder> for Gear {
     fn from(value: Recorder) -> Self {
-        Gear::new_from_kind(GearKind::Recorder,value.box_clone())
+        Gear::new_from_kind(GearKind::Recorder, value.box_clone())
     }
 }
 

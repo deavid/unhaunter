@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use uncore::difficulty::DifficultyStruct;
 use ungear::types::gear::Gear;
-
-use crate::gear_items::from_gearkind::FromGearKind;
+use ungearitems::from_gearkind::FromGearKind;
 
 #[derive(Debug, Resource, Clone)]
 pub struct TruckGear {

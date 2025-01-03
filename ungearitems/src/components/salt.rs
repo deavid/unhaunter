@@ -1,11 +1,13 @@
 //! This module defines the `SaltData` struct and its associated logic,
 //! representing the Salt consumable item in the game.
-use uncore::{components::game::GameSprite, types::gear::equipmentposition::EquipmentPosition};
-
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::{uncore_board::Position, ghost::GhostSprite, maplight::MapColor};
 use bevy::prelude::*;
 use rand::Rng as _;
+use uncore::components::board::mapcolor::MapColor;
+use uncore::{
+    components::{board::position::Position, game::GameSprite, ghost_sprite::GhostSprite},
+    types::gear::equipmentposition::EquipmentPosition,
+};
 
 /// Data structure for the Salt consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -86,7 +88,7 @@ impl GearUsable for SaltData {
 
 impl From<SaltData> for Gear {
     fn from(value: SaltData) -> Self {
-        Gear::new_from_kind(GearKind::Salt,value.box_clone())
+        Gear::new_from_kind(GearKind::Salt, value.box_clone())
     }
 }
 

@@ -15,6 +15,7 @@
 //! game's mechanics, track their progress, and make strategic decisions outside of
 //! the main exploration and investigation gameplay.
 pub mod activity;
+pub mod craft_repellent;
 pub mod journal;
 pub mod journalui;
 pub mod loadoutui;
@@ -31,6 +32,7 @@ use ungear::components::playergear::PlayerGear;
 
 use bevy::prelude::*;
 
+use craft_repellent::craft_repellent;
 pub use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
 pub use uncore::events::truck::TruckUIEvent;
 use uncore::types::ghost::types::GhostType;
@@ -93,7 +95,7 @@ pub fn truckui_event_handle(
                 for (player, mut gear) in q_gear.iter_mut() {
                     if player.id == gc.player_id {
                         if let Some(ghost_type) = gg.ghost_type {
-                            gear.craft_repellent(ghost_type);
+                            craft_repellent(&mut gear, ghost_type);
                             commands
                                 .spawn(AudioPlayer::new(
                                     asset_server.load("sounds/effects-dingdingding.ogg"),

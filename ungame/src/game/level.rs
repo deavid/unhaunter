@@ -18,7 +18,6 @@
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
 use crate::game::SpriteType;
-use crate::gear_items::from_gearkind::FromPlayerGearKind as _;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
 use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
@@ -37,6 +36,7 @@ use uncore::resources::summary_data::SummaryData;
 use uncore::types::game::SoundType;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
+use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unstd::materials::CustomMaterial1;
 use unstd::tiledmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
 

@@ -4692,6 +4692,7 @@ dependencies = [
  "tiled",
  "uncore",
  "ungear",
+ "ungearitems",
  "unstd",
  "walkdir",
 ]
@@ -4708,6 +4709,17 @@ dependencies = [
  "thiserror 2.0.9",
  "uncore",
  "unstd",
+]
+
+[[package]]
+name = "ungearitems"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "rand",
+ "uncore",
+ "ungear",
 ]
 
 [[package]]

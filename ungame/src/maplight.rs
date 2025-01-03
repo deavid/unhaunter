@@ -12,7 +12,6 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use crate::gear_items::salt::UVReactive;
 use crate::{
     game::{self, GameConfig, SpriteType},
     ghost::{self, GhostSprite},
@@ -35,14 +34,11 @@ use uncore::types::game::SoundType;
 use uncore::types::gear_kind::GearKind;
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
+use ungearitems::components::salt::UVReactive;
 use unstd::materials::CustomMaterial1;
 
+pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
-
-#[derive(Debug, Clone, Copy, PartialEq, Component, Default)]
-pub struct MapColor {
-    pub color: Color,
-}
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.

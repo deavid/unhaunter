@@ -1,12 +1,13 @@
 use uncore::{
     components::{
-        board::{boardposition::BoardPosition, direction::Direction, position::Position},
         game::GameSprite,
+        ghost_sprite::GhostSprite,
     },
+    difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
-
-use crate::{uncore_difficulty::CurrentDifficulty, ghost::GhostSprite, maplight::MapColor};
+use uncore::components::board::{boardposition::BoardPosition, direction::Direction, position::Position};
+use uncore::components::board::mapcolor::MapColor;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};

@@ -2,12 +2,12 @@
 //! representing the Quartz Stone consumable item in the game.
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::{ghost::GhostSprite, player::DeployedGearData};
 use bevy::prelude::*;
 use uncore::{
-    components::board::position::Position, types::gear::equipmentposition::EquipmentPosition,
+    components::{board::position::Position, ghost_sprite::GhostSprite},
+    types::gear::equipmentposition::EquipmentPosition,
 };
-use ungear::components::playergear::PlayerGear;
+use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
 
 const MAX_CRACKS: u8 = 4;
 

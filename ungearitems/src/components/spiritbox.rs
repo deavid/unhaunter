@@ -1,8 +1,10 @@
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
-use crate::uncore_board::Position;
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition};
+use uncore::{
+    components::board::position::Position,
+    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
+};
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct SpiritBox {
@@ -106,6 +108,6 @@ impl GearUsable for SpiritBox {
 
 impl From<SpiritBox> for Gear {
     fn from(value: SpiritBox) -> Self {
-        Gear::new_from_kind(GearKind::SpiritBox,value.box_clone())
+        Gear::new_from_kind(GearKind::SpiritBox, value.box_clone())
     }
 }

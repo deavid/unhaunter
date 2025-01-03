@@ -1,5 +1,4 @@
 mod game;
-pub mod gear_items;
 mod ghost;
 mod ghost_events;
 mod mainmenu;
@@ -15,11 +14,11 @@ mod uncore_difficulty;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
-use gear_items::plugin::UnhaunterGearItemsPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use ungear::plugin::UnhaunterGearPlugin;
+use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;

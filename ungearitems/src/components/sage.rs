@@ -1,20 +1,18 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
+use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use bevy::prelude::*;
+use rand::Rng;
+use uncore::components::board::mapcolor::MapColor;
 use uncore::{
     components::{
         board::{direction::Direction, position::Position},
         game::GameSprite,
+        ghost_sprite::GhostSprite,
     },
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
 };
-
-use crate::{ghost::GhostSprite, maplight::MapColor};
-
-use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-
-use bevy::prelude::*;
-use rand::Rng;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -139,7 +137,7 @@ impl GearUsable for SageBundleData {
 
 impl From<SageBundleData> for Gear {
     fn from(value: SageBundleData) -> Self {
-        Gear::new_from_kind(GearKind::SageBundle,value.box_clone())
+        Gear::new_from_kind(GearKind::SageBundle, value.box_clone())
     }
 }
 

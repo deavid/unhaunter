@@ -7,7 +7,7 @@ pub trait FromGearKind {
 
 impl FromGearKind for Gear {
     fn from_gearkind(value: GearKind) -> Self {
-        use super::prelude::*;
+        use crate::prelude::*;
         match value {
             GearKind::Thermometer => Thermometer::default().into(),
             GearKind::EMFMeter => EMFMeter::default().into(),

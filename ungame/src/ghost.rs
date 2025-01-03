@@ -1,11 +1,3 @@
-use uncore::components::game::GameSprite;
-use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore::resources::board_data::BoardData;
-use uncore::resources::object_interaction::ObjectInteractionConfig;
-use uncore::resources::summary_data::SummaryData;
-use uncore::systemparam::gear_stuff::GearStuff;
-
-use crate::gear_items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};
 use crate::uncore_board::{self, BoardPosition, Position};
@@ -15,6 +7,14 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
+use uncore::components::game::GameSprite;
+use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::resources::board_data::BoardData;
+use uncore::resources::object_interaction::ObjectInteractionConfig;
+use uncore::resources::summary_data::SummaryData;
+use uncore::systemparam::gear_stuff::GearStuff;
+use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
+use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 
 pub use uncore::components::ghost_sprite::GhostSprite;
 
@@ -472,8 +472,6 @@ fn spawn_salty_trace(
     asset_server: &Res<AssetServer>,
     tile_position: BoardPosition,
 ) {
-    use crate::gear_items::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
-
     let mut pos = tile_position.to_position();
     let mut rng = rand::thread_rng();
     pos.x += rng.gen_range(-0.2..0.2);
