@@ -19,6 +19,7 @@ mod truck;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
+use board::UnhaunterBoardPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
@@ -56,14 +57,16 @@ pub fn app_run() {
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
-    app.add_plugins(UnhaunterRootPlugin);
+    app.add_plugins((
+        UnhaunterRootPlugin,
+        UnhaunterBoardPlugin,
+    ));
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
     summary::app_setup(&mut app);
     mainmenu::app_setup(&mut app);
     ghost::app_setup(&mut app);
-    board::app_setup(&mut app);
     ghost_events::app_setup(&mut app);
     player::app_setup(&mut app);
     pause::app_setup(&mut app);

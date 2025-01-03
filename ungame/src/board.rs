@@ -1,103 +1,23 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::*;
 use bevy::utils::{HashMap, Instant};
 use fastapprox::faster;
 use rand::Rng;
+use std::f32::consts::PI;
 
 pub use uncore::components::board::boardposition::BoardPosition;
 pub use uncore::components::board::direction::Direction;
 pub use uncore::components::board::position::Position;
+pub use uncore::resources::roomdb::RoomDB;
+pub use uncore::utils::light::compute_color_exposure;
+pub use unstd::board::spritedb::SpriteDB;
+pub use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 
-use uncore::behavior::{Behavior, SpriteCVOKey, TileState};
+use uncore::behavior::Behavior;
 use uncore::types::board::light::LightData;
 use uncore::{
     resources::boarddata::BoardData,
     types::board::fielddata::{CollisionFieldData, LightFieldData},
 };
-use unstd::materials::CustomMaterial1;
-
-#[derive(Component, Clone)]
-pub enum PreMesh {
-    Mesh(Mesh2d),
-    Image {
-        sprite_anchor: Vec2,
-        image_handle: Handle<Image>,
-    },
-}
-
-#[derive(Bundle, Clone)]
-pub struct TileSpriteBundle {
-    pub mesh: PreMesh,
-    pub material: MeshMaterial2d<CustomMaterial1>,
-    pub transform: Transform,
-    pub visibility: Visibility,
-}
-
-#[derive(Clone)]
-pub struct MapTileComponents {
-    pub bundle: TileSpriteBundle,
-    pub behavior: Behavior,
-}
-
-/// The `SpriteDB` resource stores a database of pre-built Bevy components and
-/// sprites for map tiles.
-///
-/// This resource optimizes map loading and manipulation by:
-///
-/// * Pre-building Bevy components for each tile type, avoiding redundant entity
-///   creation during map loading.
-///
-/// * Providing efficient lookup of tile components based on their unique identifiers.
-///
-/// * Indexing tiles based on their visual characteristics (class, variant,
-///   orientation) for quick access during interaction events.
-#[derive(Clone, Default, Resource)]
-pub struct SpriteDB {
-    /// Maps a unique tile identifier (tileset name + tile UID) to its pre-built Bevy
-    /// components, including the `Bdl` (bundle) and the `Behavior`. This enables
-    /// efficient lookup of components during map loading and interaction events.
-    pub map_tile: HashMap<(String, u32), MapTileComponents>,
-    /// Indexes tile identifiers based on their visual characteristics:
-    ///
-    /// * `class`: The type of tile (e.g., "Door", "Wall").
-    ///
-    /// * `variant`:  A specific variation of the tile type (e.g., "wooden", "brick").
-    ///
-    /// * `orientation`: The direction the tile is facing (e.g., "XAxis", "YAxis").
-    ///
-    /// This index allows for quick retrieval of tiles that share the same sprite,
-    /// which is useful when updating the state of interactive objects that have
-    /// multiple instances in the map. For example, when the player opens a door, all
-    /// other doors of the same type can be updated efficiently.
-    pub cvo_idx: HashMap<SpriteCVOKey, Vec<(String, u32)>>,
-}
-
-impl SpriteDB {
-    pub fn clear(&mut self) {
-        self.map_tile.clear();
-        self.cvo_idx.clear();
-    }
-}
-
-/// The `RoomDB` resource manages room-related data, including room boundaries and
-/// states.
-#[derive(Clone, Default, Resource)]
-pub struct RoomDB {
-    /// Maps each board position to the name of the room it belongs to. This defines
-    /// the boundaries of each room in the game world.
-    pub room_tiles: HashMap<BoardPosition, String>,
-    /// Tracks the current state of each room, using the room name as the key. The
-    /// exact nature of the room state is not explicitly defined but could include
-    /// things like:
-    ///
-    /// * Lighting conditions (lit/unlit).
-    ///
-    /// * Presence of specific objects or entities.
-    ///
-    /// * Temperature or other environmental factors.
-    pub room_state: HashMap<String, TileState>,
-}
 
 #[derive(Clone, Debug, Default, Event)]
 pub struct BoardDataToRebuild {
@@ -638,33 +558,6 @@ pub fn boardfield_update(
     }
 }
 
-pub fn compute_color_exposure(
-    rel_exposure: f32,
-    dither: f32,
-    gamma: f32,
-    src_color: Color,
-) -> Color {
-    let exp = rel_exposure.powf(gamma.recip()) + dither;
-    let src_srgba = src_color.to_srgba();
-    let dst_color: Color = if exp < 1.0 {
-        Color::Srgba(Srgba {
-            red: src_srgba.red * exp,
-            green: src_srgba.green * exp,
-            blue: src_srgba.blue * exp,
-            alpha: src_srgba.alpha,
-        })
-    } else {
-        let rexp = exp.recip();
-        Color::Srgba(Srgba {
-            red: 1.0 - ((1.0 - src_srgba.red) * rexp),
-            green: 1.0 - ((1.0 - src_srgba.green) * rexp),
-            blue: 1.0 - ((1.0 - src_srgba.blue) * rexp),
-            alpha: src_srgba.alpha,
-        })
-    };
-    dst_color
-}
-
 /// Main system of board that moves the tiles to their correct place in the screen
 /// following the isometric perspective.
 pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
@@ -673,12 +566,16 @@ pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
     }
 }
 
-pub fn app_setup(app: &mut App) {
-    app.init_resource::<BoardData>()
-        .init_resource::<VisibilityData>()
-        .init_resource::<SpriteDB>()
-        .init_resource::<RoomDB>()
-        .add_systems(Update, apply_perspective)
-        .add_systems(PostUpdate, boardfield_update)
-        .add_event::<BoardDataToRebuild>();
+pub struct UnhaunterBoardPlugin;
+
+impl Plugin for UnhaunterBoardPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<BoardData>()
+            .init_resource::<VisibilityData>()
+            .init_resource::<SpriteDB>()
+            .init_resource::<RoomDB>()
+            .add_systems(Update, apply_perspective)
+            .add_systems(PostUpdate, boardfield_update)
+            .add_event::<BoardDataToRebuild>();
+    }
 }
