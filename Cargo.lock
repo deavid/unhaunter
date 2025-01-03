@@ -4659,6 +4659,7 @@ dependencies = [
  "bevy",
  "enum-iterator",
  "fastapprox",
+ "itertools 0.14.0",
  "ordered-float",
  "rand",
  "serde",

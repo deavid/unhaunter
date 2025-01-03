@@ -6,7 +6,7 @@ use uncore::{
     components::board::position::Position,
     types::{
         gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID},
-        ghost_type::GhostType,
+        ghost::types::GhostType,
     },
 };
 

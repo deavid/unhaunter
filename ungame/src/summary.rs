@@ -1,9 +1,7 @@
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
-use crate::{
-    difficulty::CurrentDifficulty, ghost_definitions::GhostType, player::PlayerSprite, uncore_root, utils,
-};
+use crate::{difficulty::CurrentDifficulty, player::PlayerSprite, uncore_root, utils};
 use bevy::{color::palettes::css, prelude::*};
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::types::ghost::types::GhostType;
 
 #[derive(Debug, Component, Clone)]
 pub struct SCamera;

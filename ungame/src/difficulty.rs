@@ -15,13 +15,13 @@
 //! challenge for players.
 use crate::{
     gear::{ext::types::gear::Gear, playergear::PlayerGear},
-    ghost_definitions::GhostSet,
-    manual::ManualChapter,
     truck::ui::TabContents,
 };
 use bevy::prelude::Resource;
 use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
+use uncore::types::ghost::definitions::GhostSet;
+use uncore::types::manual::ManualChapter;
 
 /// Represents the different difficulty levels for the Unhaunter game.
 ///

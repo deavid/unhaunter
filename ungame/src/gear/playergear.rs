@@ -3,7 +3,7 @@ pub use uncore::components::player_inventory::{Inventory, InventoryNext, Invento
 
 use super::ext::types::{gear::Gear, gearkind::GearKind};
 use uncore::components::player::HeldObject;
-use uncore::types::ghost_type::GhostType;
+use uncore::types::ghost::types::GhostType;
 
 use bevy::prelude::*;
 

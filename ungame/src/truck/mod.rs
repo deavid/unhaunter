@@ -27,11 +27,13 @@ pub mod uibutton;
 use crate::game::GameConfig;
 use crate::gear::playergear::PlayerGear;
 use crate::player::PlayerSprite;
-use crate::{ghost_definitions::GhostType, uncore_root};
+use crate::uncore_root;
+
 use bevy::prelude::*;
 
 pub use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
 pub use uncore::events::truck::TruckUIEvent;
+use uncore::types::ghost::types::GhostType;
 
 #[derive(Debug, Resource, Default)]
 pub struct GhostGuess {

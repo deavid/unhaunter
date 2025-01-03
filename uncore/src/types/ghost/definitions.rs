@@ -1,4 +1,4 @@
-pub use uncore::types::ghost_type::GhostType;
+use crate::types::ghost::types::GhostType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GhostSet {
@@ -34,9 +34,9 @@ impl GhostSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::evidence::Evidence;
     use bevy::utils::{HashMap, HashSet};
     use enum_iterator::all;
-    use uncore::types::evidence::Evidence;
 
     #[test]
     fn test_generate_evidence_combinations() {

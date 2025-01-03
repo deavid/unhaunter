@@ -3,7 +3,7 @@ use uncore::{
         board::{boardposition::BoardPosition, direction::Direction, position::Position},
         game::GameSprite,
     },
-    types::{gear::equipmentposition::EquipmentPosition, ghost_type::GhostType},
+    types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
 
 use crate::{difficulty::CurrentDifficulty, ghost::GhostSprite, maplight::MapColor};

@@ -3,19 +3,19 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 
-use crate::uncore_board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
-use crate::ghost_definitions::GhostType;
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};
+use crate::uncore_board::{self, BoardPosition, Position};
 use crate::{summary, utils};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use std::time::Duration;
+use uncore::types::ghost::types::GhostType;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
