@@ -1,3 +1,4 @@
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use uncore::resources::maps::Maps;
 use uncore::states::{GameState, State};
@@ -8,6 +9,27 @@ use uncore::types::root::font_assets::{
 };
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::root::image_assets::ImageAssets;
+
+pub const FPS_DEBUG: bool = false;
+pub struct UnhaunterRootPlugin;
+
+impl Plugin for UnhaunterRootPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_state::<State>()
+            .init_state::<GameState>()
+            .init_resource::<Maps>()
+            .add_systems(
+                Startup,
+                (load_assets, arch::init_maps, finish_loading).chain(),
+            );
+        if FPS_DEBUG {
+            app.add_plugins(FrameTimeDiagnosticsPlugin)
+                .add_plugins(LogDiagnosticsPlugin::default());
+        }
+
+        arch_setup::app_setup(app);
+    }
+}
 
 fn load_assets(
     mut commands: Commands,
@@ -182,21 +204,35 @@ fn finish_loading(mut next_state: ResMut<NextState<State>>) {
     next_state.set(State::MainMenu);
 }
 
-pub fn app_setup(app: &mut App) {
-    app.init_state::<State>()
-        .init_state::<GameState>()
-        .init_resource::<Maps>()
-        .add_systems(
-            Startup,
-            (load_assets, arch::init_maps, finish_loading).chain(),
-        );
+#[cfg(not(target_arch = "wasm32"))]
+mod arch_setup {
+    use super::*;
+
+    fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
+        settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
+    }
+
+    pub fn app_setup(app: &mut App) {
+        app.add_plugins(bevy_framepace::FramepacePlugin)
+            .add_systems(Startup, set_fps_limiter);
+        if FPS_DEBUG {
+            app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+mod arch_setup {
+    use super::*;
+
+    pub fn app_setup(_app: &mut App) {}
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 mod arch {
     use super::*;
-    use crate::uncore_tiledmap::naive_tmx_loader;
     use glob::Pattern;
+    use uncore::tiledmap::naive_tmx_loader;
     use uncore::types::root::map::Map;
     use walkdir::WalkDir;
 

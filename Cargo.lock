@@ -4791,12 +4791,15 @@ name = "unstd"
 version = "0.2.5-dev"
 dependencies = [
  "bevy",
+ "bevy_framepace",
  "enum-iterator",
  "fastapprox",
+ "glob",
  "rand",
  "serde",
  "thiserror 2.0.9",
  "uncore",
+ "walkdir",
 ]
 
 [[package]]
