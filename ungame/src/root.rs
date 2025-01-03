@@ -1,5 +1,13 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 
+pub use uncore::types::root::anchors::Anchors;
+pub use uncore::types::root::font_assets::{
+    ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
+    SyneFontAssets, TitilliumWebAssets, VictorMonoAssets,
+};
+pub use uncore::types::root::game_assets::GameAssets;
+pub use uncore::types::root::image_assets::ImageAssets;
+
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum State {
     #[default]
@@ -19,181 +27,6 @@ pub enum GameState {
     Truck,
     Pause,
     NpcHelp,
-}
-
-#[derive(Debug, Clone)]
-pub struct LondrinaFontAssets {
-    pub w100_thin: Handle<Font>,
-    pub w300_light: Handle<Font>,
-    pub w400_regular: Handle<Font>,
-    pub w900_black: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SyneFontAssets {
-    pub w400_regular: Handle<Font>,
-    pub w500_medium: Handle<Font>,
-    pub w600_semibold: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-    pub w800_extrabold: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct OverlockFontAssets {
-    pub w400_regular: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-    pub w900_black: Handle<Font>,
-    pub w400i_regular: Handle<Font>,
-    pub w700i_bold: Handle<Font>,
-    pub w900i_black: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ChakraPetchAssets {
-    pub w300_light: Handle<Font>,
-    pub w400_regular: Handle<Font>,
-    pub w500_medium: Handle<Font>,
-    pub w600_semibold: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-    pub w300i_light: Handle<Font>,
-    pub w400i_regular: Handle<Font>,
-    pub w500i_medium: Handle<Font>,
-    pub w600i_semibold: Handle<Font>,
-    pub w700i_bold: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TitilliumWebAssets {
-    pub w200_extralight: Handle<Font>,
-    pub w300_light: Handle<Font>,
-    pub w400_regular: Handle<Font>,
-    pub w600_semibold: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-    pub w900_black: Handle<Font>,
-    pub w200i_extralight: Handle<Font>,
-    pub w300i_light: Handle<Font>,
-    pub w400i_regular: Handle<Font>,
-    pub w600i_semibold: Handle<Font>,
-    pub w700i_bold: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct VictorMonoAssets {
-    pub w100_thin: Handle<Font>,
-    pub w200_extralight: Handle<Font>,
-    pub w300_light: Handle<Font>,
-    pub w400_regular: Handle<Font>,
-    pub w500_medium: Handle<Font>,
-    pub w600_semibold: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-    pub w100i_thin: Handle<Font>,
-    pub w200i_extralight: Handle<Font>,
-    pub w300i_light: Handle<Font>,
-    pub w400i_regular: Handle<Font>,
-    pub w500i_medium: Handle<Font>,
-    pub w600i_semibold: Handle<Font>,
-    pub w700i_bold: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct KodeMonoAssets {
-    pub w400_regular: Handle<Font>,
-    pub w500_medium: Handle<Font>,
-    pub w600_semibold: Handle<Font>,
-    pub w700_bold: Handle<Font>,
-}
-
-#[derive(Debug, Clone)]
-pub struct FontAssets {
-    pub londrina: LondrinaFontAssets,
-    pub syne: SyneFontAssets,
-    pub overlock: OverlockFontAssets,
-    pub chakra: ChakraPetchAssets,
-    pub titillium: TitilliumWebAssets,
-    pub victormono: VictorMonoAssets,
-    pub kodemono: KodeMonoAssets,
-}
-
-#[derive(Debug, Clone)]
-pub struct ImageAssets {
-    pub title: Handle<Image>,
-    pub character1: Handle<Image>,
-    pub gear: Handle<Image>,
-    pub character1_atlas: Handle<TextureAtlasLayout>,
-    pub gear_atlas: Handle<TextureAtlasLayout>,
-    pub vignette: Handle<Image>,
-    // --- Manual Images ---
-    // Chapter 1: Page 1:
-    pub manual_investigate: Handle<Image>,
-    pub manual_locate_ghost: Handle<Image>,
-    pub manual_identify_ghost: Handle<Image>,
-    pub manual_craft_repellent: Handle<Image>,
-    pub manual_expel_ghost: Handle<Image>,
-    pub manual_end_mission: Handle<Image>,
-    // Chapter 1: Page 2:
-    pub manual_movement_wasd: Handle<Image>,
-    pub manual_interacting_objects: Handle<Image>,
-    pub manual_flashlight: Handle<Image>,
-    pub manual_activate_equipment: Handle<Image>,
-    pub manual_switch_item: Handle<Image>,
-    pub manual_quick_evidence: Handle<Image>,
-    // Chapter 1: Page 3:
-    pub manual_emf_reader: Handle<Image>,
-    pub manual_thermometer: Handle<Image>,
-    pub manual_truck_sanity: Handle<Image>,
-    pub manual_ghost_attack: Handle<Image>,
-    pub manual_truck_journal: Handle<Image>,
-    pub manual_truck_exterior: Handle<Image>,
-    // --- Chapter 2 images ---
-    pub manual_left_hand_videocam: Handle<Image>,
-    pub manual_uv_ghost: Handle<Image>,
-    pub manual_uv_object: Handle<Image>,
-    pub manual_uv_breach: Handle<Image>,
-    pub manual_floating_orbs: Handle<Image>,
-    pub manual_inventory_all: Handle<Image>,
-    pub manual_ghost_red: Handle<Image>,
-    pub manual_ghost_roar: Handle<Image>,
-    pub manual_hide_table: Handle<Image>,
-    pub manual_truck_loadout: Handle<Image>,
-    pub manual_truck_endmission: Handle<Image>,
-    pub manual_truck_refuge: Handle<Image>,
-    // -- Chapter 3 Images
-    pub manual_recorder_evp: Handle<Image>,
-    pub manual_geiger_counter: Handle<Image>,
-    pub manual_locating_ghost: Handle<Image>,
-    pub manual_sanity_management: Handle<Image>,
-    pub manual_emf_fluctuations: Handle<Image>,
-    // -- Chapter 4 Images
-    pub manual_object_interaction: Handle<Image>,
-    pub manual_object_interaction_2: Handle<Image>,
-    pub manual_spirit_box: Handle<Image>,
-    pub manual_red_torch: Handle<Image>,
-    // -- Chapter 5 Images
-    pub manual_salt: Handle<Image>,
-    pub manual_quartz: Handle<Image>,
-    pub manual_sage: Handle<Image>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Anchors {
-    pub base: Vec2,
-    pub grid1x1: Vec2,
-    pub grid1x1x4: Vec2,
-    pub character: Vec2,
-}
-
-impl Anchors {
-    /// Computes the anchors for the given sprite in pixels
-    pub fn calc(pos_x: i32, pos_y: i32, size_x: i32, size_y: i32) -> Vec2 {
-        Anchors::calc_f32(pos_x as f32, pos_y as f32, size_x as f32, size_y as f32)
-    }
-
-    /// Computes the anchors for the given sprite in pixels, f32 variant
-    pub fn calc_f32(pos_x: f32, pos_y: f32, size_x: f32, size_y: f32) -> Vec2 {
-        let x = pos_x / size_x - 0.5;
-        let y = 0.5 - pos_y / size_y;
-        Vec2::new(x, y)
-    }
 }
 
 /// A rectangle on the `XY` plane with custom center.
@@ -250,13 +83,6 @@ impl From<QuadCC> for Mesh {
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         mesh
     }
-}
-
-#[derive(Debug, Clone, Resource)]
-pub struct GameAssets {
-    pub images: ImageAssets,
-    pub fonts: FontAssets,
-    pub anchors: Anchors,
 }
 
 pub fn load_assets(

@@ -5,3 +5,5 @@ pub mod game;
 pub mod gear;
 pub mod ghost_type;
 pub mod truck_button;
+pub mod manual;
+pub mod root;

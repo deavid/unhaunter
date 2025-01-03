@@ -1,43 +1,11 @@
 pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
+pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
 
 use super::ext::types::{gear::Gear, gearkind::GearKind};
 use uncore::components::player::HeldObject;
 use uncore::types::ghost_type::GhostType;
 
 use bevy::prelude::*;
-
-#[derive(Component, Debug, Clone)]
-pub struct InventoryNext {
-    pub idx: Option<usize>,
-}
-
-impl InventoryNext {
-    pub fn new(idx: usize) -> Self {
-        Self { idx: Some(idx) }
-    }
-
-    pub fn non_empty() -> Self {
-        Self { idx: None }
-    }
-}
-
-#[derive(Component, Debug, Clone)]
-pub struct Inventory {
-    pub hand: Hand,
-}
-
-impl Inventory {
-    pub fn new_left() -> Self {
-        Inventory { hand: Hand::Left }
-    }
-
-    pub fn new_right() -> Self {
-        Inventory { hand: Hand::Right }
-    }
-}
-
-#[derive(Component, Debug, Clone)]
-pub struct InventoryStats;
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {
