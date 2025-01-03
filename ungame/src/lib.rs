@@ -1,5 +1,6 @@
 mod game;
 mod gear;
+pub mod gear_items;
 mod ghost;
 mod ghost_events;
 mod mainmenu;
@@ -15,7 +16,8 @@ mod uncore_difficulty;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
-use unstd::plugins::summary::UnhaunterSummaryPlugin;
+use gear::plugin::UnhaunterGearPlugin;
+use gear_items::plugin::UnhaunterGearItemsPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
@@ -23,6 +25,7 @@ use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
+use unstd::plugins::summary::UnhaunterSummaryPlugin;
 use unstd::tiledmap::bevy::MapTileSetDb;
 
 pub fn default_resolution() -> WindowResolution {
@@ -60,8 +63,10 @@ pub fn app_run() {
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
         UnhaunterSummaryPlugin,
+        UnhaunterGearPlugin,
+        UnhaunterGearItemsPlugin,
     ));
-    gear::app_setup(&mut app);
+
     game::app_setup(&mut app);
     truck::app_setup(&mut app);
     mainmenu::app_setup(&mut app);

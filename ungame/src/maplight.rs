@@ -23,14 +23,14 @@ use uncore::types::game::SoundType;
 use unstd::materials::CustomMaterial1;
 
 use crate::gear::ext::types::uncore_gearkind::GearKind;
-use crate::gear::ext::types::items::salt::UVReactive;
+use crate::gear_items::salt::UVReactive;
 use crate::{
-    uncore_difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
     ghost::{self, GhostSprite},
     player::{self, DeployedGear, DeployedGearData},
     uncore_board::{self, BoardPosition, Direction, Position},
+    uncore_difficulty::CurrentDifficulty,
     utils,
 };
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};

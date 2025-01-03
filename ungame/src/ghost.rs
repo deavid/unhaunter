@@ -5,7 +5,7 @@ use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::summary_data::SummaryData;
 
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
-use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
+use crate::gear_items::sage::{SageSmokeParticle, SmokeParticleTimer};
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};
 use crate::uncore_board::{self, BoardPosition, Position};
@@ -472,7 +472,7 @@ fn spawn_salty_trace(
     asset_server: &Res<AssetServer>,
     tile_position: BoardPosition,
 ) {
-    use crate::gear::ext::types::items::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+    use crate::gear_items::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 
     let mut pos = tile_position.to_position();
     let mut rng = rand::thread_rng();

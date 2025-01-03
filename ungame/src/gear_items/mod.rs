@@ -18,10 +18,12 @@ pub mod thermalimager;
 pub mod thermometer;
 pub mod uvtorch;
 pub mod videocam;
+pub mod plugin;
+pub mod from_gearkind;
 
-use super::gear::Gear;
-use super::super::systemparam::gearstuff::GearStuff;
-use super::traits::GearUsable;
+use crate::gear::ext::types::gear::Gear;
+use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear::utils::on_off;
 use uncore::types::gear_kind::GearKind;

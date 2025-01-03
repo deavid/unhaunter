@@ -1,9 +1,8 @@
 use super::ext::types::gear::Gear;
-use super::ext::types::items::repellentflask::RepellentFlask;
+use crate::gear_items::repellentflask::RepellentFlask;
 use bevy::prelude::*;
 use uncore::components::player::HeldObject;
 use uncore::types::gear_kind::GearKind;
-use uncore::types::gear_kind::PlayerGearKind;
 use uncore::types::ghost::types::GhostType;
 
 pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
@@ -167,16 +166,5 @@ impl PlayerGear {
             return false;
         };
         flask.0.data.as_ref().unwrap().can_fill_liquid(ghost_type)
-    }
-}
-
-impl From<PlayerGearKind> for PlayerGear {
-    fn from(value: PlayerGearKind) -> Self {
-        Self {
-            left_hand: value.left_hand.into(),
-            right_hand: value.right_hand.into(),
-            inventory: value.inventory.into_iter().map(Gear::from).collect(),
-            held_item: None,
-        }
     }
 }
