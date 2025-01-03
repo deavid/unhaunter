@@ -5,3 +5,5 @@ pub mod board;
 pub mod truck;
 pub mod truck_ui_button;
 pub mod player;
+pub mod game_config;
+pub mod sprite_type;

@@ -11,27 +11,8 @@ use crate::{board, root};
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 
-/// Resource to know basic stuff of the game.
-#[derive(Debug, Resource)]
-pub struct GameConfig {
-    /// Which player should the camera and lighting follow
-    pub player_id: usize,
-}
-
-impl Default for GameConfig {
-    fn default() -> Self {
-        Self { player_id: 1 }
-    }
-}
-
-#[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
-pub enum SpriteType {
-    Ghost,
-    Breach,
-    Player,
-    #[default]
-    Other,
-}
+pub use uncore::components::game_config::GameConfig;
+pub use uncore::components::sprite_type::SpriteType;
 
 pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
