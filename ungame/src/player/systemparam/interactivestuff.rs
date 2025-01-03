@@ -1,4 +1,4 @@
-use crate::board::{RoomDB, SpriteDB};
+use crate::uncore_board::{RoomDB, SpriteDB};
 use crate::uncore_root::GameState;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;

@@ -7,7 +7,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use unstd::materials::UIPanelMaterial;
 
 use crate::{
-    board::{self, Position},
+    uncore_board::{self, Position},
     game::GameConfig,
     player::PlayerSprite,
     uncore_root,
@@ -195,7 +195,7 @@ pub fn npchelp_event(
 pub fn auto_call_npchelp(
     time: Res<Time>,
     gc: Res<GameConfig>,
-    q_player: Query<(&Position, &PlayerSprite, &board::Direction)>,
+    q_player: Query<(&Position, &PlayerSprite, &uncore_board::Direction)>,
     mut interactables: Query<(
         Entity,
         &Position,

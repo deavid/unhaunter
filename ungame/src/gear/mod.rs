@@ -18,7 +18,7 @@ pub mod prelude;
 pub mod ui;
 
 use self::playergear::PlayerGear;
-use crate::board::Position;
+use crate::uncore_board::Position;
 use crate::game::GameConfig;
 use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use bevy::prelude::*;

@@ -2,7 +2,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 
 use uncore::{
     components::board::position::Position, events::sound::SoundEvent,
-    resources::boarddata::BoardData,
+    resources::board_data::BoardData,
 };
 
 use crate::{difficulty::CurrentDifficulty, summary};

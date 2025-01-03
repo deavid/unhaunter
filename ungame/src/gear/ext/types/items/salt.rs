@@ -3,7 +3,7 @@
 use uncore::{components::game::GameSprite, types::gear::equipmentposition::EquipmentPosition};
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::{board::Position, ghost::GhostSprite, maplight::MapColor};
+use crate::{uncore_board::Position, ghost::GhostSprite, maplight::MapColor};
 use bevy::prelude::*;
 use rand::Rng as _;
 

@@ -1,4 +1,4 @@
-use crate::board::{self, Position};
+use crate::uncore_board::{self, Position};
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::gear::Gear;
 use crate::gear::ext::types::traits::GearUsable;
@@ -134,7 +134,7 @@ pub fn drop_object(
 #[allow(clippy::type_complexity)]
 pub fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
-    players: Query<(&Position, &PlayerGear, &board::Direction), With<PlayerSprite>>,
+    players: Query<(&Position, &PlayerGear, &uncore_board::Direction), With<PlayerSprite>>,
     mut gs: GearStuff,
     mut last_sound_time: Local<f32>,
 ) {
@@ -170,7 +170,7 @@ pub fn update_held_object_position(
 /// world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &board::Direction)>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &uncore_board::Direction)>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<FloorItemCollidable>>,
     mut gs: GearStuff,

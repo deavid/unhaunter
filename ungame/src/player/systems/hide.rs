@@ -1,4 +1,4 @@
-use crate::board::Position;
+use crate::uncore_board::Position;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::playergear::PlayerGear;
 use crate::maplight::MapColor;

@@ -1,10 +1,10 @@
 use uncore::{
     components::board::position::Position,
-    resources::boarddata::BoardData,
+    resources::board_data::BoardData,
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
 
-use crate::{board::RoomDB, ghost::GhostSprite};
+use crate::{uncore_board::RoomDB, ghost::GhostSprite};
 
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;

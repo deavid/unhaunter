@@ -1,7 +1,7 @@
 use uncore::components::game_ui::DamageBackground;
-use uncore::resources::boarddata::BoardData;
+use uncore::resources::board_data::BoardData;
 
-use crate::board::{self, Position};
+use crate::uncore_board::{self, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::GameConfig;
 use crate::player::{PlayerSprite, DEBUG_PLAYER};
@@ -18,7 +18,7 @@ pub fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
-    roomdb: Res<board::RoomDB>,
+    roomdb: Res<uncore_board::RoomDB>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {

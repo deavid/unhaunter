@@ -1,9 +1,9 @@
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore::resources::boarddata::BoardData;
+use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 
-use crate::board::{self, BoardPosition, Position};
+use crate::uncore_board::{self, BoardPosition, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::gear::ext::systemparam::gearstuff::GearStuff;
 use crate::gear::ext::types::items::sage::{SageSmokeParticle, SmokeParticleTimer};
@@ -146,7 +146,7 @@ pub fn ghost_movement(
         ),
     >,
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
-    roomdb: Res<crate::board::RoomDB>,
+    roomdb: Res<crate::uncore_board::RoomDB>,
     mut summary: ResMut<summary::SummaryData>,
     bf: Res<BoardData>,
     mut commands: Commands,
@@ -626,7 +626,7 @@ pub fn ghost_fade_out_system(
                 .insert(SageSmokeParticle)
                 .insert(GameSprite)
                 .insert(pos)
-                .insert(board::Direction {
+                .insert(uncore_board::Direction {
                     dx: rng.gen_range(-0.9..0.9),
                     dy: rng.gen_range(-0.9..0.9),
                     dz: 0.0,

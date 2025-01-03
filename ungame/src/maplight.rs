@@ -16,7 +16,7 @@ use uncore::behavior::{Behavior, Orientation};
 use uncore::components::game::{GameSound, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::platform::plt::IS_WASM;
-use uncore::resources::boarddata::BoardData;
+use uncore::resources::board_data::BoardData;
 use uncore::types::board::fielddata::CollisionFieldData;
 use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
@@ -25,7 +25,7 @@ use unstd::materials::CustomMaterial1;
 use crate::gear::ext::types::gearkind::GearKind;
 use crate::gear::ext::types::items::salt::UVReactive;
 use crate::{
-    board::{self, BoardPosition, Direction, Position},
+    uncore_board::{self, BoardPosition, Direction, Position},
     difficulty::CurrentDifficulty,
     game::{self, GameConfig, SpriteType},
     gear::playergear::{EquipmentPosition, PlayerGear},
@@ -54,8 +54,8 @@ pub struct MapColor {
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
     cf: &HashMap<BoardPosition, CollisionFieldData>,
-    pos_start: &board::Position,
-    roomdb: Option<&mut board::RoomDB>,
+    pos_start: &uncore_board::Position,
+    roomdb: Option<&mut uncore_board::RoomDB>,
 ) {
     let mut queue = VecDeque::new();
     let start = pos_start.to_board_position();
@@ -121,11 +121,11 @@ pub fn compute_visibility(
 
 /// System to calculate the player's visibility field and update VisibilityData.
 fn player_visibility_system(
-    mut vf: ResMut<board::VisibilityData>,
+    mut vf: ResMut<uncore_board::VisibilityData>,
     bf: Res<BoardData>,
     gc: Res<game::GameConfig>,
-    qp: Query<(&board::Position, &player::PlayerSprite)>,
-    mut roomdb: ResMut<board::RoomDB>,
+    qp: Query<(&uncore_board::Position, &player::PlayerSprite)>,
+    mut roomdb: ResMut<uncore_board::RoomDB>,
 ) {
     vf.visibility_field.clear();
 
@@ -166,7 +166,7 @@ fn player_visibility_system(
 pub fn apply_lighting(
     mut qt2: Query<
         (
-            &board::Position,
+            &uncore_board::Position,
             &MeshMaterial2d<CustomMaterial1>,
             &Behavior,
             &mut Visibility,
@@ -176,20 +176,20 @@ pub fn apply_lighting(
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(
-        &board::Position,
+        &uncore_board::Position,
         &player::PlayerSprite,
-        &board::Direction,
+        &uncore_board::Direction,
         &PlayerGear,
     )>,
     q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
     mut bf: ResMut<BoardData>,
-    vf: Res<board::VisibilityData>,
+    vf: Res<uncore_board::VisibilityData>,
     gc: Res<game::GameConfig>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
         // Create a ParamSet for Sprite queries
         Query<(
-            &board::Position,
+            &uncore_board::Position,
             &mut Sprite,
             Option<&SpriteType>,
             Option<&GhostSprite>,
@@ -197,7 +197,7 @@ pub fn apply_lighting(
             Option<&UVReactive>,
         )>,
         Query<
-            (&board::Position, &mut Sprite),
+            (&uncore_board::Position, &mut Sprite),
             (
                 With<MapUpdate>,
                 Without<player::PlayerSprite>,
@@ -639,7 +639,7 @@ pub fn apply_lighting(
                 rel_lux *= 1.2;
                 rel_lux += 0.2;
             }
-            board::compute_color_exposure(rel_lux, r, dark_gamma, src_color)
+            uncore_board::compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };
 
         // 20.0;
@@ -752,8 +752,8 @@ pub fn apply_lighting(
 pub fn mark_for_update(
     time: Res<Time>,
     gc: Res<GameConfig>,
-    qp: Query<(&board::Position, &player::PlayerSprite)>,
-    mut qt2: Query<(&board::Position, &Visibility, &mut MapUpdate)>,
+    qp: Query<(&uncore_board::Position, &player::PlayerSprite)>,
+    mut qt2: Query<(&uncore_board::Position, &Visibility, &mut MapUpdate)>,
 ) {
     let mut player_pos = Position::new_i64(0, 0, 0);
     for (pos, player) in qp.iter() {
@@ -791,9 +791,9 @@ pub fn mark_for_update(
 
 /// System to manage ambient sound levels based on visibility.
 fn ambient_sound_system(
-    vf: Res<board::VisibilityData>,
+    vf: Res<uncore_board::VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
-    roomdb: Res<board::RoomDB>,
+    roomdb: Res<uncore_board::RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<&player::PlayerSprite>,
     time: Res<Time>,

@@ -1,225 +1,43 @@
 use bevy::prelude::*;
-use bevy::utils::{HashMap, Instant};
+use bevy::utils::Instant;
 use fastapprox::faster;
 use rand::Rng;
-use std::f32::consts::PI;
-
-pub use uncore::components::board::boardposition::BoardPosition;
-pub use uncore::components::board::direction::Direction;
-pub use uncore::components::board::position::Position;
-pub use uncore::resources::roomdb::RoomDB;
-pub use uncore::utils::light::compute_color_exposure;
-pub use unstd::board::spritedb::SpriteDB;
-pub use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 
 use uncore::behavior::Behavior;
+use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::position::Position;
+use uncore::events::board_data_rebuild::BoardDataToRebuild;
+use uncore::resources::roomdb::RoomDB;
+use uncore::resources::visibility_data::VisibilityData;
+use uncore::types::board::cached_board_pos::CachedBoardPos;
 use uncore::types::board::light::LightData;
+use uncore::types::board::light_field_sector::LightFieldSector;
 use uncore::{
-    resources::boarddata::BoardData,
+    resources::board_data::BoardData,
     types::board::fielddata::{CollisionFieldData, LightFieldData},
 };
 
-#[derive(Clone, Debug, Default, Event)]
-pub struct BoardDataToRebuild {
-    pub lighting: bool,
-    pub collision: bool,
-}
+use crate::board::spritedb::SpriteDB;
 
-#[derive(Clone, Debug, Resource, Default)]
-pub struct VisibilityData {
-    pub visibility_field: HashMap<BoardPosition, f32>,
-}
-
-#[derive(Clone, Debug)]
-pub struct LightFieldSector {
-    field: Vec<LightFieldData>,
-    min_x: i64,
-    min_y: i64,
-    _min_z: i64,
-    sz_x: usize,
-    sz_y: usize,
-    _sz_z: usize,
-}
-
-// FIXME: This has exactly the same computation as HashMap, at least for the part
-// that it matters.
-impl LightFieldSector {
-    pub fn new(min_x: i64, min_y: i64, min_z: i64, max_x: i64, max_y: i64, max_z: i64) -> Self {
-        let sz_x = (max_x - min_x + 1).max(0) as usize;
-        let sz_y = (max_y - min_y + 1).max(0) as usize;
-        let sz_z = (max_z - min_z + 1).max(0) as usize;
-        let light_field: Vec<LightFieldData> =
-            vec![LightFieldData::default(); sz_x * sz_y * sz_z + 15000];
-        Self {
-            field: light_field,
-            min_x,
-            min_y,
-            _min_z: min_z,
-            sz_x,
-            sz_y,
-            _sz_z: sz_z,
-        }
-    }
-
-    #[inline]
-    fn vec_coord(&self, x: i64, y: i64, _z: i64) -> usize {
-        let x = x - self.min_x;
-        let y = y - self.min_y;
-
-        // let z = z - self.min_z; These are purposefully allowing overflow and clamping
-        // to an out of bounds value.
-        let x = (x as usize).min(self.sz_x);
-        let y = (y as usize).min(self.sz_y);
-
-        // let z = (z as usize).min(self.sz_z);
-        //
-        // * z * self.sz_x * self.sz_y
-        x + y * self.sz_x
-        // (x & 0xF) | ((y & 0xF) << 4) | ((x & 0xFFFFF0) << 4) | ((y & 0xFFFFF0) << 8)
-    }
-
-    pub fn get_mut(&mut self, x: i64, y: i64, z: i64) -> Option<&mut LightFieldData> {
-        let xyz = self.vec_coord(x, y, z);
-        self.field.get_mut(xyz)
-    }
-
-    pub fn get_pos(&self, p: &BoardPosition) -> Option<&LightFieldData> {
-        self.get(p.x, p.y, p.z)
-    }
-
-    pub fn get_mut_pos(&mut self, p: &BoardPosition) -> Option<&mut LightFieldData> {
-        self.get_mut(p.x, p.y, p.z)
-    }
-
-    #[inline]
-    pub fn get(&self, x: i64, y: i64, z: i64) -> Option<&LightFieldData> {
-        let xyz = self.vec_coord(x, y, z);
-        self.field.get(xyz)
-    }
-
-    /// get_pos_unchecked: Does not seem to be any faster.
-    // #[inline] pub unsafe fn get_pos_unchecked(&self, p: &BoardPosition) ->
-    // &LightFieldData { // let xyz = self.vec_coord(p.x, p.y, p.z); let xyz = (p.x -
-    // self.min_x) as usize + (p.y - self.min_y) as usize * self.sz_x;
-    // self.field.get_unchecked(xyz) }
-    pub fn insert(&mut self, x: i64, y: i64, z: i64, lfd: LightFieldData) {
-        let xyz = self.vec_coord(x, y, z);
-        self.field[xyz] = lfd;
+/// Main system of board that moves the tiles to their correct place in the screen
+/// following the isometric perspective.
+pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
+    for (pos, mut transform) in q.iter_mut() {
+        transform.translation = pos.to_screen_coord();
     }
 }
 
-#[derive(Debug, Clone)]
-struct CachedBoardPos {
-    dist: [[f32; Self::SZ]; Self::SZ],
-    angle: [[usize; Self::SZ]; Self::SZ],
-    angle_range: [[(i64, i64); Self::SZ]; Self::SZ],
-}
+pub struct UnhaunterBoardPlugin;
 
-impl CachedBoardPos {
-    const CENTER: i64 = 32;
-    const SZ: usize = (Self::CENTER * 2 + 1) as usize;
-
-    /// Perimeter of the circle for indexing.
-    const TAU_I: usize = 48 * 2;
-
-    fn new() -> Self {
-        let mut r = Self {
-            dist: [[0.0; Self::SZ]; Self::SZ],
-            angle: [[0; Self::SZ]; Self::SZ],
-            angle_range: [[(0, 0); Self::SZ]; Self::SZ],
-        };
-        r.compute_angle();
-        r.compute_dist();
-        r
-    }
-
-    fn compute_dist(&mut self) {
-        for (x, xv) in self.dist.iter_mut().enumerate() {
-            for (y, yv) in xv.iter_mut().enumerate() {
-                let x: f32 = x as f32 - Self::CENTER as f32;
-                let y: f32 = y as f32 - Self::CENTER as f32;
-                let dist: f32 = (x * x + y * y).sqrt();
-                *yv = dist;
-            }
-        }
-    }
-
-    fn compute_angle(&mut self) {
-        for (x, xv) in self.angle.iter_mut().enumerate() {
-            for (y, yv) in xv.iter_mut().enumerate() {
-                let x: f32 = x as f32 - Self::CENTER as f32;
-                let y: f32 = y as f32 - Self::CENTER as f32;
-                let dist: f32 = (x * x + y * y).sqrt();
-                let x = x / dist;
-                let y = y / dist;
-                let angle = x.acos() * y.signum() * Self::TAU_I as f32 / PI / 2.0;
-                let angle_i = (angle.round() as i64).rem_euclid(Self::TAU_I as i64);
-                *yv = angle_i as usize;
-            }
-        }
-        for y in Self::CENTER - 3..=Self::CENTER + 3 {
-            let mut v: Vec<usize> = vec![];
-            for x in Self::CENTER - 3..=Self::CENTER + 3 {
-                v.push(self.angle[x as usize][y as usize]);
-            }
-        }
-        for (x, xv) in self.angle_range.iter_mut().enumerate() {
-            for (y, yv) in xv.iter_mut().enumerate() {
-                let orig_angle = self.angle[x][y];
-
-                // if angle < Self::TAU_I / 4 || angle > Self::TAU_I - Self::TAU_I / 4 { // Angles
-                // closer to zero need correction to avoid looking on the wrong place }
-                let mut min_angle: i64 = 0;
-                let mut max_angle: i64 = 0;
-                let x: f32 = x as f32 - Self::CENTER as f32;
-                let y: f32 = y as f32 - Self::CENTER as f32;
-                for x1 in [x - 0.5, x + 0.5] {
-                    for y1 in [y - 0.5, y + 0.5] {
-                        let dist: f32 = (x1 * x1 + y1 * y1).sqrt();
-                        let x1 = x1 / dist;
-                        let y1 = y1 / dist;
-                        let angle = x1.acos() * y1.signum() * Self::TAU_I as f32 / PI / 2.0;
-                        let mut angle_i = angle.round() as i64 - orig_angle as i64;
-                        if angle_i.abs() > Self::TAU_I as i64 / 2 {
-                            angle_i -= Self::TAU_I as i64 * angle_i.signum();
-                        }
-                        min_angle = min_angle.min(angle_i);
-                        max_angle = max_angle.max(angle_i);
-                    }
-                }
-                *yv = (min_angle, max_angle);
-            }
-        }
-        for y in Self::CENTER - 3..=Self::CENTER + 3 {
-            let mut v: Vec<(i64, i64)> = vec![];
-            for x in Self::CENTER - 3..=Self::CENTER + 3 {
-                v.push(self.angle_range[x as usize][y as usize]);
-            }
-        }
-    }
-
-    fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
-        let x = (d.x - s.x + Self::CENTER) as usize;
-        let y = (d.y - s.y + Self::CENTER) as usize;
-
-        // self.dist[x][y]
-        unsafe { *self.dist.get_unchecked(x).get_unchecked(y) }
-    }
-
-    fn bpos_angle(&self, s: &BoardPosition, d: &BoardPosition) -> usize {
-        let x = (d.x - s.x + Self::CENTER) as usize;
-        let y = (d.y - s.y + Self::CENTER) as usize;
-
-        // self.angle[x][y]
-        unsafe { *self.angle.get_unchecked(x).get_unchecked(y) }
-    }
-
-    fn bpos_angle_range(&self, s: &BoardPosition, d: &BoardPosition) -> (i64, i64) {
-        let x = (d.x - s.x + Self::CENTER) as usize;
-        let y = (d.y - s.y + Self::CENTER) as usize;
-
-        // self.angle_range[x][y]
-        unsafe { *self.angle_range.get_unchecked(x).get_unchecked(y) }
+impl Plugin for UnhaunterBoardPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<BoardData>()
+            .init_resource::<VisibilityData>()
+            .init_resource::<SpriteDB>()
+            .init_resource::<RoomDB>()
+            .add_systems(Update, apply_perspective)
+            .add_systems(PostUpdate, boardfield_update)
+            .add_event::<BoardDataToRebuild>();
     }
 }
 
@@ -555,27 +373,5 @@ pub fn boardfield_update(
             "Lighting rebuild - complete: {:?}",
             build_start_time.elapsed()
         );
-    }
-}
-
-/// Main system of board that moves the tiles to their correct place in the screen
-/// following the isometric perspective.
-pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
-    for (pos, mut transform) in q.iter_mut() {
-        transform.translation = pos.to_screen_coord();
-    }
-}
-
-pub struct UnhaunterBoardPlugin;
-
-impl Plugin for UnhaunterBoardPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<BoardData>()
-            .init_resource::<VisibilityData>()
-            .init_resource::<SpriteDB>()
-            .init_resource::<RoomDB>()
-            .add_systems(Update, apply_perspective)
-            .add_systems(PostUpdate, boardfield_update)
-            .add_event::<BoardDataToRebuild>();
     }
 }

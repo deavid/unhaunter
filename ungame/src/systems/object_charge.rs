@@ -50,7 +50,7 @@ fn check_ghost_proximity(
     // Access commands to add/remove components
     mut commands: Commands,
     // Access the room database
-    roomdb: Res<crate::board::RoomDB>,
+    roomdb: Res<crate::uncore_board::RoomDB>,
     // Access the time resource
     time: Res<Time>,
     // Access the difficulty settings

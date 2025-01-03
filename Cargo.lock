@@ -4796,6 +4796,7 @@ dependencies = [
  "fastapprox",
  "glob",
  "normalize-path",
+ "ordered-float",
  "rand",
  "serde",
  "thiserror 2.0.9",

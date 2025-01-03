@@ -1,7 +1,7 @@
 use super::super::systemparam::uncore_collisionhandler::CollisionHandler;
 use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 
-use crate::board::{self, Position};
+use crate::uncore_board::{self, Position};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use crate::gear::playergear::PlayerGear;
@@ -17,8 +17,8 @@ pub fn keyboard_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
-        &mut board::Position,
-        &mut board::Direction,
+        &mut uncore_board::Position,
+        &mut uncore_board::Direction,
         &mut PlayerSprite,
         &mut AnimationTimer,
         &PlayerGear,
@@ -28,7 +28,7 @@ pub fn keyboard_player(
     interactables: Query<
         (
             Entity,
-            &board::Position,
+            &uncore_board::Position,
             &Interactive,
             &Behavior,
             Option<&RoomState>,
@@ -52,7 +52,7 @@ pub fn keyboard_player(
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
-        let mut d = board::Direction {
+        let mut d = uncore_board::Direction {
             dx: 0.0,
             dy: 0.0,
             dz: 0.0,

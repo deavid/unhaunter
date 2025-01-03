@@ -17,7 +17,7 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
-use crate::board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
+use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
 use crate::difficulty::CurrentDifficulty;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
@@ -32,7 +32,7 @@ use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::events::loadlevel::LoadLevelEvent;
-use uncore::resources::boarddata::BoardData;
+use uncore::resources::board_data::BoardData;
 use uncore::types::game::SoundType;
 use uncore::types::tiledmap::map::MapLayerType;
 use unstd::materials::CustomMaterial1;
@@ -59,7 +59,7 @@ pub fn load_level_handler(
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
     handles: Res<uncore_root::GameAssets>,
-    mut roomdb: ResMut<board::RoomDB>,
+    mut roomdb: ResMut<uncore_board::RoomDB>,
     mut app_next_state: ResMut<NextState<uncore_root::State>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -156,9 +156,9 @@ pub fn load_level_handler(
         &mut texture_atlases,
         &mut tilesetdb,
     );
-    let mut player_spawn_points: Vec<board::Position> = vec![];
-    let mut ghost_spawn_points: Vec<board::Position> = vec![];
-    let mut van_entry_points: Vec<board::Position> = vec![];
+    let mut player_spawn_points: Vec<uncore_board::Position> = vec![];
+    let mut ghost_spawn_points: Vec<uncore_board::Position> = vec![];
+    let mut van_entry_points: Vec<uncore_board::Position> = vec![];
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     sdb.clear();
 
@@ -206,7 +206,7 @@ pub fn load_level_handler(
                     let mat = materials1.add(cmat);
 
                     TileSpriteBundle {
-                        mesh: board::PreMesh::Mesh(mesh_handle.into()),
+                        mesh: uncore_board::PreMesh::Mesh(mesh_handle.into()),
                         material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
@@ -230,7 +230,7 @@ pub fn load_level_handler(
                     let sprite_anchor = Vec2::new(1.0 / 2.0, 0.5 - tileset.y_anchor);
 
                     TileSpriteBundle {
-                        mesh: board::PreMesh::Image {
+                        mesh: uncore_board::PreMesh::Image {
                             sprite_anchor,
                             image_handle,
                         },
@@ -280,7 +280,7 @@ pub fn load_level_handler(
                 b.material = MeshMaterial2d(mat);
                 commands.spawn(b)
             };
-            let mut pos = board::Position {
+            let mut pos = uncore_board::Position {
                 x: tile.pos.x as f32,
                 y: -tile.pos.y as f32,
                 z: 0.0,
@@ -400,7 +400,7 @@ pub fn load_level_handler(
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
-        .insert(board::Direction::new_right())
+        .insert(uncore_board::Direction::new_right())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
@@ -461,19 +461,19 @@ pub fn load_level_handler(
 
 fn process_pre_meshes(
     mut commands: Commands,
-    query: Query<(Entity, &board::PreMesh)>,
+    query: Query<(Entity, &uncore_board::PreMesh)>,
     images: Res<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for (entity, pre_mesh) in query.iter() {
         match pre_mesh {
-            board::PreMesh::Mesh(mesh2d) => {
+            uncore_board::PreMesh::Mesh(mesh2d) => {
                 commands
                     .entity(entity)
                     .insert(mesh2d.clone())
-                    .remove::<board::PreMesh>();
+                    .remove::<uncore_board::PreMesh>();
             }
-            board::PreMesh::Image {
+            uncore_board::PreMesh::Image {
                 sprite_anchor,
                 image_handle,
             } => {
@@ -491,7 +491,7 @@ fn process_pre_meshes(
                     commands
                         .entity(entity)
                         .insert(mesh2d)
-                        .remove::<board::PreMesh>();
+                        .remove::<uncore_board::PreMesh>();
                     println!("Processed entity: {:?}", entity);
                 }
             }

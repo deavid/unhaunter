@@ -1,4 +1,4 @@
-use crate::board::Direction;
+use crate::uncore_board::Direction;
 use crate::gear::ext::types::gear::Gear;
 use bevy::prelude::*;
 

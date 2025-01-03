@@ -1,5 +1,5 @@
 use crate::difficulty::CurrentDifficulty;
-use crate::{board, ghost, player};
+use crate::{uncore_board, ghost, player};
 use uncore::behavior;
 use uncore::events::roomchanged::InteractionExecutionType;
 
@@ -16,11 +16,11 @@ pub enum GhostEvent {
 pub fn trigger_ghost_events(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    q_player: Query<(&board::Position, &player::PlayerSprite)>,
-    q_ghost: Query<(&ghost::GhostSprite, &board::Position)>,
+    q_player: Query<(&uncore_board::Position, &player::PlayerSprite)>,
+    q_ghost: Query<(&ghost::GhostSprite, &uncore_board::Position)>,
     // Query for doors, excluding lights
     q_doors: Query<
-        (Entity, &board::Position, &behavior::Behavior),
+        (Entity, &uncore_board::Position, &behavior::Behavior),
         (
             With<behavior::component::Door>,
             Without<behavior::component::Light>,
@@ -28,14 +28,14 @@ pub fn trigger_ghost_events(
     >,
     // Query for lights, excluding doors
     mut q_lights: Query<
-        (Entity, &board::Position, &mut behavior::Behavior),
+        (Entity, &uncore_board::Position, &mut behavior::Behavior),
         (
             With<behavior::component::Light>,
             Without<behavior::component::Interactive>,
         ),
     >,
     mut interactive_stuff: player::InteractiveStuff,
-    mut ev_bdr: EventWriter<board::BoardDataToRebuild>,
+    mut ev_bdr: EventWriter<uncore_board::BoardDataToRebuild>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut rng = rand::thread_rng();
@@ -109,7 +109,7 @@ pub fn trigger_ghost_events(
                                 .spawn(AudioPlayer::new(asset_server.load("sounds/door-close.ogg")))
                                 .insert(PlaybackSettings::default());
 
-                            ev_bdr.send(board::BoardDataToRebuild {
+                            ev_bdr.send(uncore_board::BoardDataToRebuild {
                                 lighting: true,
                                 collision: true,
                             });
@@ -145,7 +145,7 @@ pub fn trigger_ghost_events(
                             }
                         }
                         if flicker {
-                            ev_bdr.send(board::BoardDataToRebuild {
+                            ev_bdr.send(uncore_board::BoardDataToRebuild {
                                 lighting: true,
                                 collision: true,
                             });
@@ -164,7 +164,7 @@ fn update_flicker_timers(
     mut commands: Commands,
     time: Res<Time>,
     mut q_lights: Query<(Entity, &mut FlickerTimer, &mut behavior::Behavior)>,
-    mut ev_bdr: EventWriter<board::BoardDataToRebuild>,
+    mut ev_bdr: EventWriter<uncore_board::BoardDataToRebuild>,
 ) {
     for (entity, mut flicker_timer, mut behavior) in q_lights.iter_mut() {
         flicker_timer.0.tick(time.delta());
@@ -172,7 +172,7 @@ fn update_flicker_timers(
             // Reset the light to its original state using the public method
             behavior.p.light.flickering = false;
             commands.entity(entity).remove::<FlickerTimer>();
-            ev_bdr.send(board::BoardDataToRebuild {
+            ev_bdr.send(uncore_board::BoardDataToRebuild {
                 lighting: true,
                 collision: true,
             });

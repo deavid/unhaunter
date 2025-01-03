@@ -1,5 +1,5 @@
 use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
-use crate::board::Position;
+use crate::uncore_board::Position;
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition};

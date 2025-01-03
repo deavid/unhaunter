@@ -1,4 +1,3 @@
-mod board;
 mod difficulty;
 mod game;
 mod gear;
@@ -16,14 +15,15 @@ mod player;
 mod summary;
 mod systems;
 mod truck;
+mod uncore_board;
 mod uncore_root;
 
 use bevy::{prelude::*, sprite::Material2dPlugin, window::WindowResolution};
-use board::UnhaunterBoardPlugin;
 use std::time::Duration;
 use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
+use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
 use unstd::tiledmap::bevy::MapTileSetDb;
 
@@ -57,10 +57,7 @@ pub fn app_run() {
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
-    app.add_plugins((
-        UnhaunterRootPlugin,
-        UnhaunterBoardPlugin,
-    ));
+    app.add_plugins((UnhaunterRootPlugin, UnhaunterBoardPlugin));
     gear::app_setup(&mut app);
     game::app_setup(&mut app);
     truck::app_setup(&mut app);

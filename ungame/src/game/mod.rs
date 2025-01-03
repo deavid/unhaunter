@@ -6,7 +6,7 @@ pub mod ui;
 use uncore::components::game::{GCameraArena, GameSound, GameSprite};
 
 use crate::player::{self, PlayerSprite};
-use crate::{board, uncore_root};
+use crate::{uncore_board, uncore_root};
 
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
@@ -61,7 +61,7 @@ pub fn keyboard(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform, &board::Direction), Without<GCameraArena>>,
+    pc: Query<(&PlayerSprite, &Transform, &uncore_board::Direction), Without<GCameraArena>>,
     time: Res<Time>,
 ) {
     if *app_state.get() != uncore_root::State::InGame {
