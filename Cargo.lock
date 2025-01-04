@@ -4688,6 +4688,7 @@ dependencies = [
  "ungearitems",
  "unmaphub",
  "unstd",
+ "untruck",
  "wasm-bindgen",
 ]
 
@@ -4794,6 +4795,20 @@ dependencies = [
  "tiled",
  "uncore",
  "walkdir",
+]
+
+[[package]]
+name = "untruck"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "fastapprox",
+ "ordered-float",
+ "rand",
+ "uncore",
+ "ungear",
+ "ungearitems",
+ "unstd",
 ]
 
 [[package]]

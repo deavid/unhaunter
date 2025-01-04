@@ -1,10 +1,9 @@
-use crate::game::evidence::setup_ui_evidence;
 use crate::player::PlayerSprite;
 use bevy::{color::palettes::css, prelude::*};
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
-    DamageBackground, ElementObjectUI, GameUI, HeldObjectUI, RightSideGearUI,
+    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, HeldObjectUI, RightSideGearUI,
 };
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::{AppState, GameState};
@@ -243,6 +242,50 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
         .insert(GameUI)
         .with_children(game_ui);
     info!("Game UI loaded");
+}
+
+pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
+    parent
+        .spawn((
+            Text::default(),
+            TextFont {
+                font: handles.fonts.chakra.w400_regular.clone(),
+                font_size: 22.0 * FONT_SCALE,
+                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            },
+            TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
+            TextLayout::default(),
+            Node::default(),
+            EvidenceUI,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn(TextSpan::new("Freezing temps:"))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w400_regular.clone(),
+                    font_size: 22.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                 })
+                .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)));
+            parent
+                .spawn(TextSpan::new(" [+] Evidence Found\n"))
+                .insert(TextFont {
+                    font: handles.fonts.victormono.w600_semibold.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(css::GREEN.with_alpha(1.0).into()));
+            parent
+                .spawn(TextSpan::new(
+                    "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
+                ))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w300_light.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                 })
+                .insert(TextColor(colors::INVENTORY_STATS_COLOR));
+        });
 }
 
 /// Sets up the UI elements for displaying information about the map item being

@@ -1,64 +1,11 @@
-use uncore::colors;
-use uncore::components::game_ui::EvidenceUI;
-use uncore::platform::plt::FONT_SCALE;
-use uncore::types::evidence::Evidence;
-
-pub use uncore::types::evidence_status::EvidenceStatus;
-
-use super::GameConfig;
-use crate::{
-    player::PlayerSprite,
-    truck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
-};
-use bevy::color::palettes::css;
+use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use bevy::prelude::*;
+use uncore::components::game_ui::EvidenceUI;
+use uncore::components::{game_config::GameConfig, player_sprite::PlayerSprite};
 use uncore::states::{AppState, GameState};
-use uncore::types::root::game_assets::GameAssets;
+use uncore::types::evidence::Evidence;
+use uncore::types::evidence_status::EvidenceStatus;
 use ungear::components::playergear::PlayerGear;
-
-pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
-    parent
-        .spawn((
-            Text::default(),
-            TextFont {
-                font: handles.fonts.chakra.w400_regular.clone(),
-                font_size: 22.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-            },
-            TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
-            TextLayout::default(),
-            Node::default(),
-            EvidenceUI,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(TextSpan::new("Freezing temps:"))
-                .insert(TextFont {
-                    font: handles.fonts.chakra.w400_regular.clone(),
-                    font_size: 22.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                 })
-                .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)));
-            parent
-                .spawn(TextSpan::new(" [+] Evidence Found\n"))
-                .insert(TextFont {
-                    font: handles.fonts.victormono.w600_semibold.clone(),
-                    font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(css::GREEN.with_alpha(1.0).into()));
-            parent
-                .spawn(TextSpan::new(
-                    "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
-                ))
-                .insert(TextFont {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                 })
-                .insert(TextColor(colors::INVENTORY_STATS_COLOR));
-        });
-}
 
 pub fn update_evidence_ui(
     gc: Res<GameConfig>,

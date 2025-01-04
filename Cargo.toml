@@ -7,6 +7,7 @@ members = [
     "unstd",
     "ungearitems",
     "unmaphub",
+    "untruck",
 ]
 resolver = "2"
 
@@ -59,6 +60,7 @@ unstd = { path = "unstd" }
 ungear = { path = "ungear" }
 ungearitems = { path = "ungearitems" }
 unmaphub = { path = "unmaphub" }
+untruck = { path = "untruck" }
 ungame = { path = "ungame" }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }

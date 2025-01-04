@@ -1,9 +1,9 @@
-use crate::truck::uibutton::TruckButtonType;
-use crate::truck::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
+use super::uibutton::TruckButtonType;
+use super::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
 use bevy::prelude::*;
 use uncore::colors;
-pub use uncore::components::truck_ui::{TabContents, TabState, TruckTab};
-pub use uncore::difficulty::CurrentDifficulty;
+use uncore::components::truck_ui::{TabContents, TabState, TruckTab};
+use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 use unstd::materials::UIPanelMaterial;

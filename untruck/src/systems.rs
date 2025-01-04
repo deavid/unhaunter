@@ -1,46 +1,12 @@
-//! ## Truck UI Module
-//!
-//! This module defines the structure, layout, and behavior of the in-game truck
-//! UI, which serves as the player's base of operations. It includes:
-//!
-//! * UI elements for managing player gear (loadout).
-//!
-//! * A journal for reviewing evidence and guessing the ghost type.
-//!
-//! * Displays for monitoring player sanity and sensor readings.
-//!
-//! * Buttons for crafting ghost repellents, exiting the truck, and ending the mission.
-//!
-//! The truck UI provides a centralized interface for players to interact with the
-//! game's mechanics, track their progress, and make strategic decisions outside of
-//! the main exploration and investigation gameplay.
-pub mod activity;
-pub mod craft_repellent;
-pub mod journal;
-pub mod journalui;
-pub mod loadoutui;
-pub mod sanity;
-pub mod sensors;
-pub mod truckgear;
-pub mod ui;
-pub mod uibutton;
-
-use crate::game::GameConfig;
-use crate::player::PlayerSprite;
+use super::craft_repellent::craft_repellent;
+use bevy::prelude::*;
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::truck::TruckUI;
+use uncore::events::truck::TruckUIEvent;
+use uncore::resources::ghost_guess::GhostGuess;
 use uncore::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
-
-use bevy::prelude::*;
-
-use craft_repellent::craft_repellent;
-pub use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
-pub use uncore::events::truck::TruckUIEvent;
-use uncore::types::ghost::types::GhostType;
-
-#[derive(Debug, Resource, Default)]
-pub struct GhostGuess {
-    pub ghost_type: Option<GhostType>,
-}
 
 pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
@@ -114,29 +80,4 @@ pub fn truckui_event_handle(
             }
         }
     }
-}
-
-pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(AppState::InGame), ui::setup_ui)
-        .add_systems(OnExit(AppState::InGame), cleanup)
-        .add_systems(OnEnter(GameState::Truck), show_ui)
-        .add_systems(OnExit(GameState::Truck), hide_ui)
-        .add_event::<TruckUIEvent>()
-        .add_event::<loadoutui::EventButtonClicked>()
-        .init_resource::<GhostGuess>()
-        .add_systems(Update, keyboard)
-        .add_systems(Update, journal::ghost_guess_system)
-        .add_systems(
-            FixedUpdate,
-            (journal::button_system, sanity::update_sanity).run_if(in_state(GameState::Truck)),
-        )
-        .add_systems(
-            Update,
-            (
-                truckui_event_handle,
-                ui::update_tab_interactions,
-                loadoutui::update_loadout_buttons,
-                loadoutui::button_clicked,
-            ),
-        );
 }

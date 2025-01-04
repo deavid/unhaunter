@@ -1,0 +1,19 @@
+[package]
+name = "untruck"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+ungear = { path = "../ungear" }
+ungearitems = { path = "../ungearitems" }
+
+bevy = { workspace = true }
+rand = { workspace = true }
+fastapprox = { workspace = true }
+ordered-float = { workspace = true }

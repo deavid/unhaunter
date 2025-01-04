@@ -7,14 +7,12 @@ mod npchelp;
 mod pause;
 mod player;
 mod systems;
-mod truck;
 
 use bevy::prelude::*;
 use uncore::utils;
 
 pub fn app_setup(app: &mut App) {
     game::app_setup(app);
-    truck::app_setup(app);
     mainmenu::app_setup(app);
     ghost::app_setup(app);
     ghost_events::app_setup(app);

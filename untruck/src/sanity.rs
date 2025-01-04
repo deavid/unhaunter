@@ -1,6 +1,7 @@
-use crate::{game::GameConfig, player::PlayerSprite};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 

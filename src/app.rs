@@ -13,6 +13,7 @@ use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
 use unstd::plugins::summary::UnhaunterSummaryPlugin;
 use unstd::tiledmap::bevy::MapTileSetDb;
+use untruck::plugin::UnhaunterTruckPlugin;
 
 pub fn app_run() {
     let mut app = App::new();
@@ -46,6 +47,7 @@ pub fn app_run() {
         UnhaunterGearPlugin,
         UnhaunterGearItemsPlugin,
         UnhaunterMapHubPlugin,
+        UnhaunterTruckPlugin,
     ));
     ungame::app_setup(&mut app);
 

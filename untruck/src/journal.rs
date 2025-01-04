@@ -2,9 +2,9 @@ use super::{
     uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
     GhostGuess, TruckUIEvent, TruckUIGhostGuess,
 };
-use crate::game::GameConfig;
-use crate::player::PlayerSprite;
 use bevy::{prelude::*, utils::HashSet};
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
 

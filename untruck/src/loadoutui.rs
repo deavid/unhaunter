@@ -1,13 +1,14 @@
-use super::truckgear;
+use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use crate::game::evidence::EvidenceStatus;
-use crate::{game::GameConfig, player::PlayerSprite};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::evidence::Evidence;
+use uncore::types::evidence_status::EvidenceStatus;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::root::game_assets::GameAssets;
@@ -173,7 +174,7 @@ pub fn setup_loadout_ui(
                 },
             ))
             .with_children(|p| {
-                let tg = truckgear::TruckGear::from_difficulty(&difficulty.0);
+                let tg = TruckGear::from_difficulty(&difficulty.0);
                 for gear in &tg.inventory {
                     p.spawn(button())
                         .insert(LoadoutButton::Van(gear.clone()))
