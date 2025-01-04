@@ -72,10 +72,11 @@ bevy = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"
-path = "src/bin/unhaunter.rs"
+path = "unhaunter/src/bin/unhaunter.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+path = "unhaunter/src/lib.rs"
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
