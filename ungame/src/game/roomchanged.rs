@@ -1,11 +1,12 @@
 use super::{GCameraArena, GameConfig};
-use crate::player::{InteractiveStuff, PlayerSprite};
 use bevy::prelude::*;
 use uncore::behavior::component::RoomState;
 use uncore::behavior::Behavior;
 use uncore::components::board::position::Position;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::states::GameState;
+use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 pub use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 

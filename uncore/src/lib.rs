@@ -11,6 +11,7 @@ pub mod systemparam;
 pub mod types;
 pub mod utils;
 pub mod traits;
+pub mod systems;
 
 /// Enables the use of arrow keys for movement instead of WASD
 pub const USE_ARROW_KEYS: bool = false;

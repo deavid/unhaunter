@@ -12,3 +12,5 @@ pub mod truck_ui;
 pub mod summary_ui;
 pub mod player_sprite;
 pub mod ghost_sprite;
+pub mod ghost_breach;
+pub mod animation;

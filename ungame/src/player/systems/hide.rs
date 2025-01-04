@@ -1,10 +1,12 @@
 use crate::maplight::MapColor;
-use crate::player::{AnimationTimer, Hiding, PlayerSprite};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 use uncore::behavior::Behavior;
+use uncore::components::animation::AnimationTimer;
 use uncore::components::board::position::Position;
+use uncore::components::player::Hiding;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::systemparam::gear_stuff::GearStuff;
 use ungear::components::playergear::PlayerGear;
 

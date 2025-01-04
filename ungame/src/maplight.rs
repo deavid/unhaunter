@@ -12,21 +12,16 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use crate::{
-    game::{self, GameConfig, SpriteType},
-    ghost::{self, GhostSprite},
-    player::{self, DeployedGear, DeployedGearData},
-    utils,
-};
+use crate::player::{DeployedGear, DeployedGearData};
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use rand::Rng as _;
 use std::collections::VecDeque;
-use uncore::behavior::{Behavior, Orientation};
-use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_sprite::GhostSprite;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::IS_WASM;
 use uncore::resources::board_data::BoardData;
@@ -37,6 +32,11 @@ use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
 use uncore::types::gear_kind::GearKind;
 use uncore::utils::light::compute_color_exposure;
+use uncore::{
+    behavior::{Behavior, Orientation},
+    components::{game_config::GameConfig, sprite_type::SpriteType},
+};
+use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTimer};
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
@@ -124,8 +124,8 @@ pub fn compute_visibility(
 fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bf: Res<BoardData>,
-    gc: Res<game::GameConfig>,
-    qp: Query<(&Position, &player::PlayerSprite)>,
+    gc: Res<GameConfig>,
+    qp: Query<(&Position, &PlayerSprite)>,
     mut roomdb: ResMut<RoomDB>,
 ) {
     vf.visibility_field.clear();
@@ -176,11 +176,11 @@ pub fn apply_lighting(
         Changed<MapUpdate>,
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    qp: Query<(&Position, &player::PlayerSprite, &Direction, &PlayerGear)>,
+    qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
     mut bf: ResMut<BoardData>,
     vf: Res<VisibilityData>,
-    gc: Res<game::GameConfig>,
+    gc: Res<GameConfig>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
         // Create a ParamSet for Sprite queries
@@ -194,11 +194,7 @@ pub fn apply_lighting(
         )>,
         Query<
             (&Position, &mut Sprite),
-            (
-                With<MapUpdate>,
-                Without<player::PlayerSprite>,
-                Without<ghost::GhostSprite>,
-            ),
+            (With<MapUpdate>, Without<PlayerSprite>, Without<GhostSprite>),
         >,
     )>,
     // Access the difficulty settings
@@ -752,7 +748,7 @@ pub fn apply_lighting(
 pub fn mark_for_update(
     time: Res<Time>,
     gc: Res<GameConfig>,
-    qp: Query<(&Position, &player::PlayerSprite)>,
+    qp: Query<(&Position, &PlayerSprite)>,
     mut qt2: Query<(&Position, &Visibility, &mut MapUpdate)>,
 ) {
     let mut player_pos = Position::new_i64(0, 0, 0);
@@ -795,9 +791,9 @@ fn ambient_sound_system(
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
-    qp: Query<&player::PlayerSprite>,
+    qp: Query<&PlayerSprite>,
     time: Res<Time>,
-    mut timer: Local<utils::PrintingTimer>,
+    mut timer: Local<PrintingTimer>,
 ) {
     timer.tick(time.delta());
     let total_vis: f32 = vf

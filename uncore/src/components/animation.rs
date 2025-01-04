@@ -94,7 +94,6 @@ impl CharacterAnimation {
 #[derive(Component)]
 pub struct AnimationTimer {
     timer: Timer,
-    // range: RangeInclusive`<usize>`,
     frames: Vec<usize>,
     idx: usize,
 }
@@ -120,15 +119,5 @@ impl AnimationTimer {
         }
         self.idx = (self.idx + 1) % self.frames.len();
         Some(self.frames[self.idx])
-    }
-}
-
-pub fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut Sprite)>) {
-    for (mut anim, mut sprite) in query.iter_mut() {
-        if let Some(idx) = anim.tick(time.delta()) {
-            if let Some(texture_atlas) = sprite.texture_atlas.as_mut() {
-                texture_atlas.index = idx;
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-use crate::player::PlayerSprite;
+use uncore::components::player_sprite::PlayerSprite;
 use bevy::{color::palettes::css, prelude::*};
 use uncore::behavior::Behavior;
 use uncore::colors;

@@ -17,9 +17,7 @@
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
 use super::roomchanged::RoomChangedEvent;
-use crate::game::SpriteType;
-use crate::ghost::{GhostBreach, GhostSprite};
-use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
+use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
@@ -28,7 +26,11 @@ use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
+use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_sprite::GhostSprite;
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::sprite_type::SpriteType;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::resources::board_data::BoardData;

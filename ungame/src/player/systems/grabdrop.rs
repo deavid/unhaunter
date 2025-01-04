@@ -1,10 +1,11 @@
-use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
+use crate::player::{DeployedGear, DeployedGearData, PlayerSprite};
 use bevy::prelude::*;
 use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
+use uncore::components::player::HeldObject;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::root::game_assets::GameAssets;

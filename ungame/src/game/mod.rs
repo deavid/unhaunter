@@ -2,15 +2,13 @@ pub mod level;
 pub mod roomchanged;
 pub mod ui;
 
-use crate::player::{self, PlayerSprite};
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use uncore::components::board::direction::Direction;
 use uncore::components::game::{GCameraArena, GameSound, GameSprite};
+use uncore::components::game_config::GameConfig;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::states::{AppState, GameState};
-
-pub use uncore::components::game_config::GameConfig;
-pub use uncore::components::sprite_type::SpriteType;
 
 pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
@@ -124,10 +122,7 @@ pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
         .add_systems(OnEnter(AppState::InGame), setup)
         .add_systems(OnExit(AppState::InGame), cleanup)
-        .add_systems(
-            Update,
-            keyboard.before(player::systems::keyboard::keyboard_player),
-        );
+        .add_systems(Update, keyboard);
     level::app_setup(app);
     ui::app_setup(app);
     roomchanged::app_setup(app);

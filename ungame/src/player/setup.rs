@@ -1,14 +1,12 @@
-use super::animation::animate_sprite;
 use super::systems::grabdrop::{
     deploy_gear, drop_object, grab_object, retrieve_gear, update_held_object_position,
 };
 use super::systems::hide::{hide_player, unhide_player};
 use super::systems::keyboard::keyboard_player;
 use super::systems::sanityhealth::{lose_sanity, recover_sanity, visual_health};
-
-use uncore::states::GameState;
-
 use bevy::prelude::*;
+use uncore::states::GameState;
+use uncore::systems::animation::animate_sprite;
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(

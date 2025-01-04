@@ -1,5 +1,4 @@
 use crate::maplight::MapColor;
-use crate::player::{Hiding, PlayerSprite};
 use crate::utils;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
@@ -10,7 +9,9 @@ use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-pub use uncore::difficulty::CurrentDifficulty;
+use uncore::components::player::Hiding;
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
@@ -38,10 +39,6 @@ impl FadeOut {
         }
     }
 }
-
-/// Marker component for the ghost's visual breach effect.
-#[derive(Component, Debug)]
-pub struct GhostBreach;
 
 /// Updates the ghost's position based on its target location, hunting state, and
 /// warping intensity.

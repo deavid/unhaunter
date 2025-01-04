@@ -1,12 +1,13 @@
 use crate::{ghost, player};
 use uncore::behavior;
 use uncore::components::board::position::Position;
-pub use uncore::difficulty::CurrentDifficulty;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
 
 use bevy::prelude::*;
 use rand::Rng;
+use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[derive(Debug, Clone)]
 pub enum GhostEvent {
@@ -39,7 +40,7 @@ pub fn trigger_ghost_events(
             Without<behavior::component::Interactive>,
         ),
     >,
-    mut interactive_stuff: player::InteractiveStuff,
+    mut interactive_stuff: InteractiveStuff,
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     difficulty: Res<CurrentDifficulty>,
 ) {

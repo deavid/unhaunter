@@ -1,15 +1,18 @@
-use crate::{game::GameConfig, player::PlayerSprite};
 use bevy::prelude::*;
-use uncore::behavior::{
-    component::{Interactive, NpcHelpDialog},
-    Behavior,
-};
 use uncore::colors;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::GameState;
 use uncore::types::root::game_assets::GameAssets;
+use uncore::{
+    behavior::{
+        component::{Interactive, NpcHelpDialog},
+        Behavior,
+    },
+    components::game_config::GameConfig,
+};
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]

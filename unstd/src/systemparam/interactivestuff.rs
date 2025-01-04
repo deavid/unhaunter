@@ -1,3 +1,5 @@
+use crate::board::spritedb::SpriteDB;
+use crate::materials::CustomMaterial1;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
@@ -5,8 +7,6 @@ use uncore::components::board::position::Position;
 use uncore::events::roomchanged::InteractionExecutionType;
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::GameState;
-use unstd::board::spritedb::SpriteDB;
-use unstd::materials::CustomMaterial1;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

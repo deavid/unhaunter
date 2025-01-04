@@ -1,13 +1,12 @@
-use uncore::components::game_ui::DamageBackground;
-use uncore::resources::board_data::BoardData;
-use uncore::DEBUG_PLAYER;
-
-use crate::game::GameConfig;
-use crate::player::PlayerSprite;
+use uncore::components::player_sprite::PlayerSprite;
 use crate::{maplight, utils};
 use uncore::components::board::position::Position;
-pub use uncore::difficulty::CurrentDifficulty;
+use uncore::components::game_config::GameConfig;
+use uncore::components::game_ui::DamageBackground;
+use uncore::difficulty::CurrentDifficulty;
+use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
+use uncore::DEBUG_PLAYER;
 
 use bevy::prelude::*;
 
