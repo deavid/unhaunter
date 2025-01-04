@@ -265,25 +265,6 @@ pub fn cleanup_preplay_ui(
     }
 }
 
-pub fn start_preplay_manual_system(
-    difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<AppState>>,
-    difficulty_selection_state: Res<DifficultySelectionState>,
-    maps: Res<Maps>,
-    mut ev_load_level: EventWriter<LoadLevelEvent>,
-) {
-    if difficulty.0.tutorial_chapter.is_none() {
-        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
-            .path
-            .clone();
-
-        ev_load_level.send(LoadLevelEvent { map_filepath });
-        next_game_state.set(AppState::InGame);
-    } else {
-        next_game_state.set(AppState::PreplayManual);
-    }
-}
-
 fn redraw_manual_ui_system(
     mut commands: Commands,
     current_manual_page: Res<CurrentManualPage>,

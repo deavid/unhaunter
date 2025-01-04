@@ -2,7 +2,6 @@ mod game;
 mod ghost;
 mod ghost_events;
 mod mainmenu;
-mod maphub;
 mod maplight;
 mod npchelp;
 mod pause;
@@ -19,6 +18,7 @@ use uncore::utils;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
+use unmaphub::plugin::UnhaunterMapHubPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
@@ -63,6 +63,7 @@ pub fn app_run() {
         UnhaunterSummaryPlugin,
         UnhaunterGearPlugin,
         UnhaunterGearItemsPlugin,
+        UnhaunterMapHubPlugin,
     ));
 
     game::app_setup(&mut app);
@@ -75,7 +76,6 @@ pub fn app_run() {
     maplight::app_setup(&mut app);
     npchelp::app_setup(&mut app);
     systems::object_charge::app_setup(&mut app);
-    maphub::app_setup(&mut app);
 
     app.run();
 }

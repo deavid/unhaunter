@@ -1,5 +1,5 @@
 [workspace]
-members = ["ungame", "tools/ghost_radio", "uncore", "ungear", "unstd", "ungearitems"]
+members = ["ungame", "tools/ghost_radio", "uncore", "ungear", "unstd", "ungearitems", "unmaphub"]
 resolver = "2"
 
 [workspace.package]

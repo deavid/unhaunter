@@ -1,1 +1,1 @@
-pub use uncore::difficulty::{CurrentDifficulty, Difficulty};
+pub use uncore::difficulty::CurrentDifficulty;

@@ -1,20 +1,17 @@
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-
-use crate::maphub::MapHubState;
-use crate::uncore_root::{GameAssets, Maps, AppState};
 use bevy::prelude::*;
+use uncore::colors;
+use uncore::events::map_selected::MapSelectedEvent;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::resources::maps::Maps;
+use uncore::states::AppState;
+use uncore::states::MapHubState;
+use uncore::types::root::game_assets::GameAssets;
 
 #[derive(Component, Debug)]
 pub struct MapSelectionUI;
 
 #[derive(Component, Debug)]
 pub struct MapSelectionItem {
-    pub map_idx: usize,
-}
-
-#[derive(Debug, Clone, Event)]
-pub struct MapSelectedEvent {
     pub map_idx: usize,
 }
 

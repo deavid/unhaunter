@@ -1,15 +1,14 @@
-use super::MapHubState;
-use crate::uncore_difficulty::{CurrentDifficulty, Difficulty};
-use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::events::map_selected::MapSelectedEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::difficulty_state::DifficultySelectionState;
-use unstd::manual::preplay_manual_ui::start_preplay_manual_system;
-
-// Add MapSelectedEvent
-use crate::maphub::map_selection::MapSelectedEvent;
+use uncore::resources::maps::Maps;
+use uncore::states::AppState;
+use uncore::states::MapHubState;
+use uncore::types::root::game_assets::GameAssets;
 
 #[derive(Component, Debug)]
 pub struct DifficultySelectionUI;
@@ -41,7 +40,7 @@ pub fn setup_systems(
     mut commands: Commands,
     // Access MapSelectedEvent
     mut ev_map_selected: EventReader<MapSelectedEvent>,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
 ) {
     // Create the UI for the difficulty selection screen
     setup_ui(&mut commands, &handles);
@@ -68,9 +67,9 @@ pub fn handle_difficulty_selection(
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
-    maps: Res<uncore_root::Maps>,
+    maps: Res<Maps>,
     ev_load_level: EventWriter<LoadLevelEvent>,
-    next_state: ResMut<NextState<uncore_root::AppState>>,
+    next_state: ResMut<NextState<AppState>>,
 ) {
     if ev_difficulty_confirmed.read().next().is_none() {
         return;
@@ -89,6 +88,25 @@ pub fn handle_difficulty_selection(
     );
 
     next_hub_state.set(MapHubState::None);
+}
+
+fn start_preplay_manual_system(
+    difficulty: Res<CurrentDifficulty>,
+    mut next_game_state: ResMut<NextState<AppState>>,
+    difficulty_selection_state: Res<DifficultySelectionState>,
+    maps: Res<Maps>,
+    mut ev_load_level: EventWriter<LoadLevelEvent>,
+) {
+    if difficulty.0.tutorial_chapter.is_none() {
+        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+            .path
+            .clone();
+
+        ev_load_level.send(LoadLevelEvent { map_filepath });
+        next_game_state.set(AppState::InGame);
+    } else {
+        next_game_state.set(AppState::PreplayManual);
+    }
 }
 
 pub fn keyboard(
@@ -161,7 +179,7 @@ pub fn update_item_colors(
     }
 }
 
-pub fn setup_ui(commands: &mut Commands, handles: &uncore_root::GameAssets) {
+pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
     const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
     let main_color = Color::Srgba(Srgba {
         red: 0.2,

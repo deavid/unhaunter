@@ -1,0 +1,24 @@
+[package]
+name = "unmaphub"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+
+bevy = { workspace = true }
+rand = { workspace = true }
+enum-iterator = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+image = { workspace = true }
+regex = { workspace = true }
+clap = { workspace = true }
+fastapprox = { workspace = true }
+anyhow = { workspace = true }
+ordered-float = { workspace = true }
+bevy-persistent = { workspace = true }

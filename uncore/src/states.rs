@@ -20,3 +20,11 @@ pub enum GameState {
     Pause,
     NpcHelp,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default)]
+pub enum MapHubState {
+    MapSelection,
+    DifficultySelection,
+    #[default]
+    None,
+}

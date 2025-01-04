@@ -1,10 +1,10 @@
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, IS_WASM, UI_SCALE, VERSION};
-
-use crate::uncore_root;
 use bevy::app::AppExit;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use uncore::colors;
+use uncore::platform::plt::{FONT_SCALE, IS_WASM, UI_SCALE, VERSION};
+use uncore::states::AppState;
+use uncore::types::root::game_assets::GameAssets;
 
 const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
 const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
@@ -110,12 +110,9 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, menu_event)
         .add_event::<MenuEvent>()
         .add_systems(Update, despawn_sound)
-        .add_systems(OnEnter(uncore_root::AppState::MainMenu), (setup, setup_ui))
-        .add_systems(OnExit(uncore_root::AppState::MainMenu), cleanup)
-        .add_systems(
-            Update,
-            manage_title_song.run_if(state_changed::<uncore_root::AppState>),
-        );
+        .add_systems(OnEnter(AppState::MainMenu), (setup, setup_ui))
+        .add_systems(OnExit(AppState::MainMenu), cleanup)
+        .add_systems(Update, manage_title_song.run_if(state_changed::<AppState>));
 }
 
 pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
@@ -166,10 +163,10 @@ pub fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
-    app_state: Res<State<uncore_root::AppState>>,
+    app_state: Res<State<AppState>>,
 ) {
     // Determine the desired song state directly from the current state
-    let should_play_song = !matches!(app_state.get(), uncore_root::AppState::InGame);
+    let should_play_song = !matches!(app_state.get(), AppState::InGame);
 
     // Check if a MenuSound entity already exists
     if let Ok(mut menusound) = q_sound.get_single_mut() {
@@ -199,7 +196,7 @@ pub fn manage_title_song(
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
         green: 0.2,
@@ -366,18 +363,18 @@ pub fn keyboard(
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<uncore_root::AppState>>,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
     for event in ev_menu.read() {
         warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
             MenuID::MapHub => {
                 // Transition to the Map Hub state
-                next_state.set(uncore_root::AppState::MapHub);
+                next_state.set(AppState::MapHub);
             }
             MenuID::Manual => {
                 // Transition to the Manual state
-                next_state.set(uncore_root::AppState::UserManual);
+                next_state.set(AppState::UserManual);
             }
             MenuID::_Options => {}
             MenuID::Quit => {
