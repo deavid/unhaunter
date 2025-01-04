@@ -195,17 +195,17 @@ Unhaunter primarily targets native builds, so WASM support will be minimal for n
 
 Using dynamic linking for incremental builds (small code changes) can significantly reduce compile times:
 
-   ```bash
-   cargo run --features bevy/dynamic_linking  
-   ```
+```bash
+cargo run --features bevy/dynamic_linking  
+```
 
 This is mainly beneficial for debug builds. For fresh builds, the difference is negligible.
 
 You can profile the build process to identify further optimizations using:
 
-   ```bash
-   RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/dynamic_linking
-   ```
+```bash
+RUSTFLAGS="-Zself-profile" cargo +nightly run --features bevy/dynamic_linking
+```
 
 **Note:** This requires a nightly Rust toolchain.
 
@@ -216,30 +216,57 @@ https://bevy-cheatbook.github.io/platforms/wasm.html
 Install deps
  
 ```bash
-   rustup target install wasm32-unknown-unknown
-   cargo install wasm-server-runner
+rustup target install wasm32-unknown-unknown
+cargo install wasm-server-runner
 ```
  
 Run with:
  
 ```bash 
-   wasm-pack build --release --target web
+wasm-pack build --release --target web
 ```
  
 This will build in pkg/
  
 And to test:
  
- ```bash
-   python3 -m http.server 
+```bash
+python3 -m http.server 
 ```
+
+## Faster development incremental builds
+
+Incremental builds on Linux can be much faster if you use `mold`. I decided to not enable it on the project because it 
+would force everyone building from Linux to install it in order to build the game, adding a dependency.
+
+Instead, if you're interested, you can edit `~/.cargo/config.toml` (create the folder and file if they don't exist) and
+add this:
+
+```
+# Use Mold Linker for faster builds
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
+```  
+
+You'll need to install `mold` and `clang`.
+
+This is only useful for incremental builds, for example if you are actively developing the game.
+Also this these speeds are possible only using Bevy dynamic linking (`cargo run --features bevy/dynamic_linking`).
+
+With Rust default Linker:
+* Crate `uncore` changed: 4.93s (triggers all Unhaunter crates to be rebuilt)
+* Crate `unhaunter` changed: 3.74s (Just builds library + binary)
+
+With Mold Linker:
+* Crate `uncore` changed: 3.32s
+* Crate `unhaunter` changed: 1.87s
+
+This is only worth it if you plan to compile Unhaunter a lot with different small changes. If you only update Unhaunter
+on new releases, this difference is virtually nothing since you'll need to build all dependencies that have been upgraded.
 
 ## Community
 
-Unhaunter has a Matrix room for discussion and collaboration. Access is by invitation only. To join, please contact deavid (@deavidsedice:matrix.org) on Matrix.
+Unhaunter has a Matrix room for discussion and collaboration. Access public, anyone can join.
 
 [Matrix Room](https://matrix.to/#/#unhaunter:matrix.org)
-
-## Future Plans
-
-Unhaunter is constantly evolving!  Currently, two ghost events are implemented: Door Slamming and Light Flickering. Look forward to more ghost types, expanded locations, additional equipment, new ghost events, and more challenging gameplay in future updates. 
