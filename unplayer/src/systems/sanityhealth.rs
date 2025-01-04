@@ -1,11 +1,12 @@
-use uncore::components::player_sprite::PlayerSprite;
-use crate::{maplight, utils};
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::game_ui::DamageBackground;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
+use uncore::utils::light::lerp_color;
+use uncore::utils::PrintingTimer;
 use uncore::DEBUG_PLAYER;
 
 use bevy::prelude::*;
@@ -15,7 +16,7 @@ pub struct MeanSound(f32);
 
 pub fn lose_sanity(
     time: Res<Time>,
-    mut timer: Local<utils::PrintingTimer>,
+    mut timer: Local<PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
@@ -86,7 +87,7 @@ pub fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
-    mut timer: Local<utils::PrintingTimer>,
+    mut timer: Local<PrintingTimer>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -137,7 +138,7 @@ pub fn visual_health(
             let red = f32::tanh(rhealth * 2.0).clamp(0.0, 1.0) * rhealth2;
             let dst_color = Color::srgba(red, 0.0, 0.0, alpha);
             let old_color = o_uiimage.as_ref().map(|x| x.color).unwrap_or(bgcolor.0);
-            let new_color = maplight::lerp_color(old_color, dst_color, 0.2);
+            let new_color = lerp_color(old_color, dst_color, 0.2);
             if old_color != new_color {
                 if let Some(uiimage) = o_uiimage.as_mut() {
                     uiimage.color = new_color;

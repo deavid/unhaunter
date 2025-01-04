@@ -4771,6 +4771,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "unplayer"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "fastapprox",
+ "ordered-float",
+ "rand",
+ "uncore",
+ "ungear",
+ "unstd",
+]
+
+[[package]]
 name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"

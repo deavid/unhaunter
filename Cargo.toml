@@ -7,7 +7,7 @@ members = [
     "unstd",
     "ungearitems",
     "unmaphub",
-    "untruck",
+    "untruck", "unplayer",
 ]
 resolver = "2"
 

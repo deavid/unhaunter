@@ -5,7 +5,6 @@ mod mainmenu;
 mod maplight;
 mod npchelp;
 mod pause;
-mod player;
 mod systems;
 
 use bevy::prelude::*;
@@ -15,7 +14,6 @@ pub fn app_setup(app: &mut App) {
     mainmenu::app_setup(app);
     ghost::app_setup(app);
     ghost_events::app_setup(app);
-    player::app_setup(app);
     pause::app_setup(app);
     maplight::app_setup(app);
     npchelp::app_setup(app);

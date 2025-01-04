@@ -12,7 +12,6 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use crate::player::{DeployedGear, DeployedGearData};
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use rand::Rng as _;
 use std::collections::VecDeque;
@@ -31,12 +30,13 @@ use uncore::types::board::fielddata::CollisionFieldData;
 use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
 use uncore::types::gear_kind::GearKind;
-use uncore::utils::light::compute_color_exposure;
+use uncore::utils::light::{compute_color_exposure, lerp_color};
 use uncore::{
     behavior::{Behavior, Orientation},
     components::{game_config::GameConfig, sprite_type::SpriteType},
 };
 use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTimer};
+use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
@@ -854,16 +854,4 @@ pub fn app_setup(app: &mut App) {
         (mark_for_update, player_visibility_system, apply_lighting).chain(),
     )
     .add_systems(Update, ambient_sound_system);
-}
-
-pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {
-    let k = start.to_srgba().to_vec4();
-    let l = end.to_srgba().to_vec4();
-    let (sr, sg, sb, sa) = (k[0], k[1], k[2], k[3]);
-    let (er, eg, eb, ea) = (l[0], l[1], l[2], l[3]);
-    let r = sr + (er - sr) * t;
-    let g = sg + (eg - sg) * t;
-    let b = sb + (eb - sb) * t;
-    let a = sa + (ea - sa) * t;
-    Color::srgba(r, g, b, a)
 }

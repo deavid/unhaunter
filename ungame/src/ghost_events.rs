@@ -1,12 +1,12 @@
-use crate::{ghost, player};
+use bevy::prelude::*;
+use rand::Rng;
 use uncore::behavior;
 use uncore::components::board::position::Position;
+use uncore::components::ghost_sprite::GhostSprite;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
-
-use bevy::prelude::*;
-use rand::Rng;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[derive(Debug, Clone)]
@@ -22,8 +22,8 @@ struct FlickerTimer(Timer);
 pub fn trigger_ghost_events(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    q_player: Query<(&Position, &player::PlayerSprite)>,
-    q_ghost: Query<(&ghost::GhostSprite, &Position)>,
+    q_player: Query<(&Position, &PlayerSprite)>,
+    q_ghost: Query<(&GhostSprite, &Position)>,
     // Query for doors, excluding lights
     q_doors: Query<
         (Entity, &Position, &behavior::Behavior),

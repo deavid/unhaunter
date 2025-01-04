@@ -3,6 +3,7 @@ use uncore::colors;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::events::npc_help::NpcHelpEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::GameState;
 use uncore::types::root::game_assets::GameAssets;
@@ -23,17 +24,6 @@ pub struct NpcDialogText;
 #[derive(Debug, Resource, Default)]
 pub struct NpcUIData {
     pub dialog: String,
-}
-
-#[derive(Clone, Debug, Event)]
-pub struct NpcHelpEvent {
-    pub entity: Entity,
-}
-
-impl NpcHelpEvent {
-    pub fn new(entity: Entity) -> Self {
-        Self { entity }
-    }
 }
 
 pub fn keyboard(

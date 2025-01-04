@@ -26,3 +26,15 @@ pub fn compute_color_exposure(
     };
     dst_color
 }
+
+pub fn lerp_color(start: Color, end: Color, t: f32) -> Color {
+    let k = start.to_srgba().to_vec4();
+    let l = end.to_srgba().to_vec4();
+    let (sr, sg, sb, sa) = (k[0], k[1], k[2], k[3]);
+    let (er, eg, eb, ea) = (l[0], l[1], l[2], l[3]);
+    let r = sr + (er - sr) * t;
+    let g = sg + (eg - sg) * t;
+    let b = sb + (eb - sb) * t;
+    let a = sa + (ea - sa) * t;
+    Color::srgba(r, g, b, a)
+}

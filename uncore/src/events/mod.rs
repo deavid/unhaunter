@@ -4,3 +4,4 @@ pub mod truck;
 pub mod roomchanged;
 pub mod board_data_rebuild;
 pub mod map_selected;
+pub mod npc_help;
