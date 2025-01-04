@@ -16,6 +16,5 @@ pub mod components;
 pub mod plugin;
 pub mod systems;
 pub mod types;
-pub mod ui;
 
 pub use uncore::types::gear::spriteid::GearSpriteID;

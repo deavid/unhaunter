@@ -4,6 +4,7 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use ungame::game::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
@@ -48,6 +49,7 @@ pub fn app_run() {
         UnhaunterGearItemsPlugin,
         UnhaunterMapHubPlugin,
         UnhaunterTruckPlugin,
+        UnhaunterGamePlugin,
     ));
     ungame::app_setup(&mut app);
 

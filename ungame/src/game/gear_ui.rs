@@ -1,75 +1,9 @@
-use super::GearSpriteID;
-use crate::components::playergear::{Inventory, InventoryNext, InventoryStats, PlayerGear};
-use uncore::colors;
-use uncore::components::game_config::GameConfig;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::states::GameState;
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable as _;
-use uncore::types::root::game_assets::GameAssets;
-
 use bevy::prelude::*;
-
-pub fn keyboard_gear(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
-    mut gs: GearStuff,
-) {
-    for (ps, mut playergear) in q_gear.iter_mut() {
-        if keyboard_input.just_pressed(ps.controls.cycle) {
-            playergear.cycle();
-        }
-        if keyboard_input.just_pressed(ps.controls.swap) {
-            playergear.swap();
-        }
-        if keyboard_input.just_released(ps.controls.trigger) {
-            playergear.right_hand.set_trigger(&mut gs);
-        }
-        if keyboard_input.just_released(ps.controls.torch) {
-            playergear.left_hand.set_trigger(&mut gs);
-        }
-    }
-}
-
-pub fn update_gear_ui(
-    gc: Res<GameConfig>,
-    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
-    mut qs: Query<&mut Text, With<InventoryStats>>,
-    mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
-) {
-    for (ps, playergear) in q_gear.iter() {
-        if gc.player_id == ps.id {
-            for (inv, mut imgnode) in qi.iter_mut() {
-                let gear = playergear.get_hand(&inv.hand);
-                let idx = gear.get_sprite_idx() as usize;
-                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
-                }
-            }
-            let right_hand_status = playergear.right_hand.get_status();
-            for mut txt in qs.iter_mut() {
-                if txt.0 != right_hand_status {
-                    txt.0.clone_from(&right_hand_status);
-                }
-            }
-            for (inv, mut imgnode) in qin.iter_mut() {
-                // There are 2 possible "None" here, the outside Option::None for when the idx is
-                // out of bounds and the inner Gear::None when a slot is empty.
-                let next = if let Some(idx) = inv.idx {
-                    playergear.get_next(idx).unwrap_or_default()
-                } else {
-                    playergear.get_next_non_empty().unwrap_or_default()
-                };
-                let idx = next.get_sprite_idx() as usize;
-                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
-                }
-            }
-        }
-    }
-}
+use uncore::colors;
+use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::types::gear::spriteid::GearSpriteID;
+use uncore::types::root::game_assets::GameAssets;
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     // Leftmost side panel - inventory
@@ -199,10 +133,4 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         ..default()
     })
     .insert(TextLayout::default());
-}
-
-pub fn app_setup(app: &mut App) {
-    app.init_resource::<GameConfig>()
-        .add_systems(FixedUpdate, update_gear_ui)
-        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)));
 }

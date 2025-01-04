@@ -1,5 +1,4 @@
 use super::super::PlayerSprite;
-use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use crate::npchelp::NpcHelpEvent;
 use bevy::prelude::*;
 use uncore::behavior::component::{Interactive, RoomState};
@@ -9,6 +8,7 @@ use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::player::Hiding;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore::systemparam::collision_handler::CollisionHandler;
 use ungear::components::playergear::PlayerGear;
 use unstd::systemparam::interactivestuff::InteractiveStuff;

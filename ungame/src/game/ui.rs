@@ -1,15 +1,15 @@
-use uncore::components::player_sprite::PlayerSprite;
+use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, HeldObjectUI, RightSideGearUI,
 };
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::{AppState, GameState};
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
-use ungear::ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 
 pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used
