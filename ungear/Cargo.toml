@@ -9,7 +9,6 @@ authors.workspace = true
 
 [dependencies]
 uncore = { path = "../uncore" }
-unstd = { path = "../unstd" }
 
 bevy = { workspace = true }
 serde = { workspace = true }
