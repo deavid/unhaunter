@@ -27,7 +27,7 @@ pub mod uibutton;
 
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
-use crate::uncore_root;
+use uncore::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 
 use bevy::prelude::*;
@@ -61,15 +61,15 @@ pub fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
 }
 
 pub fn keyboard(
-    game_state: Res<State<uncore_root::GameState>>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() != uncore_root::GameState::Truck {
+    if *game_state.get() != GameState::Truck {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        game_next_state.set(uncore_root::GameState::None);
+        game_next_state.set(GameState::None);
     }
 }
 
@@ -78,8 +78,8 @@ pub fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: EventReader<TruckUIEvent>,
-    mut next_state: ResMut<NextState<uncore_root::AppState>>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     gg: Res<GhostGuess>,
     gc: Res<GameConfig>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
@@ -87,10 +87,10 @@ pub fn truckui_event_handle(
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
-                game_next_state.set(uncore_root::GameState::None);
-                next_state.set(uncore_root::AppState::Summary);
+                game_next_state.set(GameState::None);
+                next_state.set(AppState::Summary);
             }
-            TruckUIEvent::ExitTruck => game_next_state.set(uncore_root::GameState::None),
+            TruckUIEvent::ExitTruck => game_next_state.set(GameState::None),
             TruckUIEvent::CraftRepellent => {
                 for (player, mut gear) in q_gear.iter_mut() {
                     if player.id == gc.player_id {
@@ -117,10 +117,10 @@ pub fn truckui_event_handle(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(uncore_root::AppState::InGame), ui::setup_ui)
-        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
-        .add_systems(OnEnter(uncore_root::GameState::Truck), show_ui)
-        .add_systems(OnExit(uncore_root::GameState::Truck), hide_ui)
+    app.add_systems(OnEnter(AppState::InGame), ui::setup_ui)
+        .add_systems(OnExit(AppState::InGame), cleanup)
+        .add_systems(OnEnter(GameState::Truck), show_ui)
+        .add_systems(OnExit(GameState::Truck), hide_ui)
         .add_event::<TruckUIEvent>()
         .add_event::<loadoutui::EventButtonClicked>()
         .init_resource::<GhostGuess>()
@@ -128,8 +128,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, journal::ghost_guess_system)
         .add_systems(
             FixedUpdate,
-            (journal::button_system, sanity::update_sanity)
-                .run_if(in_state(uncore_root::GameState::Truck)),
+            (journal::button_system, sanity::update_sanity).run_if(in_state(GameState::Truck)),
         )
         .add_systems(
             Update,

@@ -1,4 +1,4 @@
-use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
+use crate::{game::GameConfig, player::PlayerSprite};
 use bevy::prelude::*;
 use uncore::behavior::{
     component::{Interactive, NpcHelpDialog},
@@ -8,6 +8,8 @@ use uncore::colors;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::GameState;
+use uncore::types::root::game_assets::GameAssets;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]
@@ -32,15 +34,15 @@ impl NpcHelpEvent {
 }
 
 pub fn keyboard(
-    game_state: Res<State<uncore_root::GameState>>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() != uncore_root::GameState::NpcHelp {
+    if *game_state.get() != GameState::NpcHelp {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) || keyboard_input.just_pressed(KeyCode::KeyE) {
-        game_next_state.set(uncore_root::GameState::None);
+        game_next_state.set(GameState::None);
     }
 }
 
@@ -53,7 +55,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
     npcdata: Res<NpcUIData>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
@@ -168,7 +170,7 @@ pub fn npchelp_event(
     mut ev_npc: EventReader<NpcHelpEvent>,
     mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
 ) {
     let Some(ev_npc) = ev_npc.read().next() else {
         return;
@@ -183,7 +185,7 @@ pub fn npchelp_event(
     };
     npcd.seen = true;
     res_npc.dialog.clone_from(&npcd.dialog);
-    game_next_state.set(uncore_root::GameState::NpcHelp);
+    game_next_state.set(GameState::NpcHelp);
     // warn!(npcd.dialog);
 }
 
@@ -232,8 +234,8 @@ pub fn app_setup(app: &mut App) {
     app.add_event::<NpcHelpEvent>()
         .init_resource::<NpcUIData>()
         .add_systems(Update, npchelp_event)
-        .add_systems(OnEnter(uncore_root::GameState::NpcHelp), setup_ui)
-        .add_systems(OnExit(uncore_root::GameState::NpcHelp), cleanup)
+        .add_systems(OnEnter(GameState::NpcHelp), setup_ui)
+        .add_systems(OnExit(GameState::NpcHelp), cleanup)
         .add_systems(Update, keyboard)
         .add_systems(Update, auto_call_npchelp);
 }

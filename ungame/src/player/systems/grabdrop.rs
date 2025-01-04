@@ -1,5 +1,4 @@
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
-use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
@@ -8,6 +7,7 @@ use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
+use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 
 /// Allows the player to pick up a pickable object from the environment.
@@ -173,7 +173,7 @@ pub fn deploy_gear(
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<FloorItemCollidable>>,
     mut gs: GearStuff,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
 ) {
     for (mut player_gear, player_pos, player, dir) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.drop)

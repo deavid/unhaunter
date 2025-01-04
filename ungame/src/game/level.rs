@@ -20,7 +20,6 @@ use super::roomchanged::RoomChangedEvent;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
-use crate::uncore_root::{self, QuadCC};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
@@ -35,7 +34,10 @@ use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
 use uncore::types::game::SoundType;
+use uncore::types::quadcc::QuadCC;
+use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
@@ -64,9 +66,9 @@ pub fn load_level_handler(
     mut meshes: ResMut<Assets<Mesh>>,
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
     mut roomdb: ResMut<RoomDB>,
-    mut app_next_state: ResMut<NextState<uncore_root::AppState>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut ev_iter = ev.read();
@@ -153,7 +155,7 @@ pub fn load_level_handler(
         });
     commands.init_resource::<BoardData>();
     info!("Load Level: {}", &load_event.map_filepath);
-    app_next_state.set(uncore_root::AppState::InGame);
+    app_next_state.set(AppState::InGame);
 
     // ---------- NEW MAP LOAD ----------
     let (_map, layers) = bevy_load_map(

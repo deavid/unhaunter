@@ -1,11 +1,11 @@
 use super::{GCameraArena, GameConfig};
 use crate::player::{InteractiveStuff, PlayerSprite};
-use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::behavior::component::RoomState;
 use uncore::behavior::Behavior;
 use uncore::components::board::position::Position;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
+use uncore::states::GameState;
 
 pub use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 
@@ -50,9 +50,7 @@ pub fn roomchanged_event(
         collision: true,
     });
     if ev.open_van {
-        interactive_stuff
-            .game_next_state
-            .set(uncore_root::GameState::Truck);
+        interactive_stuff.game_next_state.set(GameState::Truck);
     }
     if ev.initialize {
         for (player, p_transform) in pc.iter() {

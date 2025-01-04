@@ -1,6 +1,7 @@
-use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::{AppState, GameState};
+use uncore::types::root::game_assets::GameAssets;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]
@@ -12,20 +13,20 @@ const PAUSEUI_ACCENT_COLOR: Color = Color::srgba(0.290, 0.596, 0.706, 1.0);
 const PAUSEUI_TEXT_COLOR: Color = Color::srgba(0.7, 0.82, 0.85, 1.0);
 
 pub fn keyboard(
-    game_state: Res<State<uncore_root::GameState>>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
-    mut next_state: ResMut<NextState<uncore_root::AppState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    mut next_state: ResMut<NextState<AppState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() != uncore_root::GameState::Pause {
+    if *game_state.get() != GameState::Pause {
         return;
     }
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        game_next_state.set(uncore_root::GameState::None);
+        game_next_state.set(GameState::None);
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
-        game_next_state.set(uncore_root::GameState::None);
-        next_state.set(uncore_root::AppState::MainMenu);
+        game_next_state.set(GameState::None);
+        next_state.set(AppState::MainMenu);
     }
 }
 
@@ -38,7 +39,7 @@ pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<uncore_root::GameAssets>,
+    handles: Res<GameAssets>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
@@ -124,7 +125,7 @@ pub fn setup_ui(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(uncore_root::GameState::Pause), setup_ui)
-        .add_systems(OnExit(uncore_root::GameState::Pause), cleanup)
+    app.add_systems(OnEnter(GameState::Pause), setup_ui)
+        .add_systems(OnExit(GameState::Pause), cleanup)
         .add_systems(Update, keyboard);
 }

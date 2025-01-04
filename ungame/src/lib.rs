@@ -8,7 +8,6 @@ mod pause;
 mod player;
 mod systems;
 mod truck;
-mod uncore_root;
 
 use bevy::prelude::*;
 use uncore::utils;

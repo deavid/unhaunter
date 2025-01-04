@@ -1,5 +1,5 @@
 use crate::game::evidence::setup_ui_evidence;
-use crate::{player::PlayerSprite, uncore_root};
+use crate::player::PlayerSprite;
 use bevy::{color::palettes::css, prelude::*};
 use uncore::behavior::Behavior;
 use uncore::colors;
@@ -7,6 +7,8 @@ use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, GameUI, HeldObjectUI, RightSideGearUI,
 };
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::{AppState, GameState};
+use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use ungear::ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 
@@ -29,7 +31,7 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
+pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -245,7 +247,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<uncore_root::GameAssets>) {
 
 /// Sets up the UI elements for displaying information about the map item being
 /// held by the player.
-fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &uncore_root::GameAssets) {
+fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
         .spawn(Text::new("Object Name"))
         .insert(TextFont {
@@ -370,12 +372,12 @@ pub fn toggle_held_object_ui(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_systems(OnEnter(uncore_root::AppState::InGame), setup_ui)
-        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
-        .add_systems(OnEnter(uncore_root::GameState::None), resume)
-        .add_systems(OnExit(uncore_root::GameState::None), pause)
+    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+        .add_systems(OnExit(AppState::InGame), cleanup)
+        .add_systems(OnEnter(GameState::None), resume)
+        .add_systems(OnExit(GameState::None), pause)
         .add_systems(
             Update,
-            toggle_held_object_ui.run_if(in_state(uncore_root::GameState::None)),
+            toggle_held_object_ui.run_if(in_state(GameState::None)),
         );
 }

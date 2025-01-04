@@ -4,11 +4,11 @@ pub mod roomchanged;
 pub mod ui;
 
 use crate::player::{self, PlayerSprite};
-use crate::uncore_root;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use uncore::components::board::direction::Direction;
 use uncore::components::game::{GCameraArena, GameSound, GameSprite};
+use uncore::states::{AppState, GameState};
 
 pub use uncore::components::game_config::GameConfig;
 pub use uncore::components::sprite_type::SpriteType;
@@ -54,25 +54,25 @@ pub fn cleanup(
 
 #[allow(clippy::too_many_arguments)]
 pub fn keyboard(
-    app_state: Res<State<uncore_root::AppState>>,
-    game_state: Res<State<uncore_root::GameState>>,
-    mut game_next_state: ResMut<NextState<uncore_root::GameState>>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
     time: Res<Time>,
 ) {
-    if *app_state.get() != uncore_root::AppState::InGame {
+    if *app_state.get() != AppState::InGame {
         return;
     }
-    let in_game = *game_state.get() == uncore_root::GameState::None;
-    if *game_state.get() == uncore_root::GameState::Pause {
+    let in_game = *game_state.get() == GameState::None;
+    if *game_state.get() == GameState::Pause {
         return;
     }
     let dt = time.delta_secs() * 60.0;
     if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
-        game_next_state.set(uncore_root::GameState::Pause);
+        game_next_state.set(GameState::Pause);
     }
     for mut transform in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {
@@ -123,8 +123,8 @@ pub fn keyboard(
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<GameConfig>()
-        .add_systems(OnEnter(uncore_root::AppState::InGame), setup)
-        .add_systems(OnExit(uncore_root::AppState::InGame), cleanup)
+        .add_systems(OnEnter(AppState::InGame), setup)
+        .add_systems(OnExit(AppState::InGame), cleanup)
         .add_systems(
             Update,
             keyboard.before(player::systems::keyboard::keyboard_player),

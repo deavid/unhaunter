@@ -1,16 +1,16 @@
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::game::evidence::EvidenceStatus;
-pub use uncore::difficulty::CurrentDifficulty;
-
-use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
+use crate::{game::GameConfig, player::PlayerSprite};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear_kind::GearKind;
+use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::{self, PlayerGear};
 use ungear::types::gear::Gear;
 use unstd::materials::UIPanelMaterial;
@@ -29,7 +29,7 @@ pub struct GearHelp;
 
 pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
-    handles: &uncore_root::GameAssets,
+    handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
 ) {
