@@ -12,6 +12,6 @@ rustflags = ["-C", "target-feature=+neon"]
 
 
 # Use Mold Linker for faster builds (only gains ~1 second when dynamic linking is enabled)
-# [target.x86_64-unknown-linux-gnu]
-# linker = "clang"
-# rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
