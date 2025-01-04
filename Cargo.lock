@@ -4699,7 +4699,10 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unghost",
+ "unlight",
  "unmaphub",
+ "unmenu",
+ "unnpc",
  "unplayer",
  "unstd",
  "untruck",
@@ -4767,6 +4770,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
+name = "unlight"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "fastapprox",
+ "rand",
+ "uncore",
+ "ungear",
+ "ungearitems",
+ "unstd",
+]
+
+[[package]]
 name = "unmaphub"
 version = "0.2.5-dev"
 dependencies = [
@@ -4783,6 +4799,23 @@ dependencies = [
  "serde",
  "serde_json",
  "uncore",
+]
+
+[[package]]
+name = "unmenu"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "uncore",
+]
+
+[[package]]
+name = "unnpc"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "uncore",
+ "unstd",
 ]
 
 [[package]]

@@ -121,7 +121,7 @@ pub fn compute_visibility(
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
-fn player_visibility_system(
+pub fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bf: Res<BoardData>,
     gc: Res<GameConfig>,
@@ -786,7 +786,7 @@ pub fn mark_for_update(
 }
 
 /// System to manage ambient sound levels based on visibility.
-fn ambient_sound_system(
+pub fn ambient_sound_system(
     vf: Res<VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
@@ -846,12 +846,4 @@ fn ambient_sound_system(
             }
         }
     }
-}
-
-pub fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        (mark_for_update, player_visibility_system, apply_lighting).chain(),
-    )
-    .add_systems(Update, ambient_sound_system);
 }

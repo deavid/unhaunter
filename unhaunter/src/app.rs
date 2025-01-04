@@ -8,7 +8,10 @@ use ungame::game::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
+use unlight::plugin::UnhaunterLightPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
+use unmenu::plugin::UnhaunterMenuPlugin;
+use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
@@ -54,8 +57,10 @@ pub fn app_run() {
         UnhaunterGamePlugin,
         UnhaunterPlayerPlugin,
         UnhaunterGhostPlugin,
+        UnhaunterMenuPlugin,
+        UnhaunterLightPlugin,
+        UnhaunterNPCPlugin,
     ));
-    ungame::app_setup(&mut app);
 
     app.run();
 }
