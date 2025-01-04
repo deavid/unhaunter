@@ -4642,7 +4642,6 @@ name = "ungame"
 version = "0.2.5-dev"
 dependencies = [
  "bevy",
- "fastapprox",
  "ordered-float",
  "rand",
  "uncore",

@@ -17,5 +17,4 @@ ungearitems = { path = "../ungearitems" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
-fastapprox = { workspace = true }
 ordered-float = { workspace = true }
