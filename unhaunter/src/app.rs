@@ -4,7 +4,7 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
-use ungame::game::plugin::UnhaunterGamePlugin;
+use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
