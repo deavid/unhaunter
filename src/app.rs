@@ -7,6 +7,7 @@ use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConf
 use ungame::game::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
+use unghost::plugin::UnhaunterGhostPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
@@ -52,6 +53,7 @@ pub fn app_run() {
         UnhaunterTruckPlugin,
         UnhaunterGamePlugin,
         UnhaunterPlayerPlugin,
+        UnhaunterGhostPlugin,
     ));
     ungame::app_setup(&mut app);
 

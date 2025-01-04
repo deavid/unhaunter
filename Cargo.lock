@@ -4676,6 +4676,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "unghost"
+version = "0.2.5-dev"
+dependencies = [
+ "bevy",
+ "ordered-float",
+ "rand",
+ "uncore",
+ "ungear",
+ "ungearitems",
+ "unstd",
+]
+
+[[package]]
 name = "unhaunter"
 version = "0.2.5-dev"
 dependencies = [
@@ -4685,6 +4698,7 @@ dependencies = [
  "ungame",
  "ungear",
  "ungearitems",
+ "unghost",
  "unmaphub",
  "unplayer",
  "unstd",

@@ -1,14 +1,14 @@
-use crate::maplight::MapColor;
-use crate::utils;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::direction::Direction;
+use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
@@ -17,10 +17,9 @@ use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
 use uncore::systemparam::gear_stuff::GearStuff;
+use uncore::utils::{MeanValue, PrintingTimer};
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
-
-pub use uncore::components::ghost_sprite::GhostSprite;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
@@ -289,8 +288,8 @@ impl RoarType {
 #[allow(clippy::too_many_arguments)]
 fn ghost_enrage(
     time: Res<Time>,
-    mut timer: Local<utils::PrintingTimer>,
-    mut avg_angry: Local<utils::MeanValue>,
+    mut timer: Local<PrintingTimer>,
+    mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position), Without<FadeOut>>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     mut gs: GearStuff,
