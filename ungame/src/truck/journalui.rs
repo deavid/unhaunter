@@ -3,8 +3,9 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::evidence::Evidence;
 
 use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
-use crate::{uncore_difficulty::CurrentDifficulty, uncore_root};
+use crate::uncore_root;
 use bevy::prelude::*;
+use uncore::difficulty::CurrentDifficulty;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const MARGIN: UiRect = UiRect::percent(

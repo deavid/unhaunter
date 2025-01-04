@@ -1,10 +1,11 @@
 use super::{GCameraArena, GameConfig};
-use crate::uncore_board::{self, BoardDataToRebuild};
 use crate::player::{InteractiveStuff, PlayerSprite};
 use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::behavior::component::RoomState;
 use uncore::behavior::Behavior;
+use uncore::components::board::position::Position;
+use uncore::events::board_data_rebuild::BoardDataToRebuild;
 
 pub use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 
@@ -23,7 +24,7 @@ pub fn roomchanged_event(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     mut ev_room: EventReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
-    interactables: Query<(Entity, &uncore_board::Position, &Behavior, &RoomState), Without<PlayerSprite>>,
+    interactables: Query<(Entity, &Position, &Behavior, &RoomState), Without<PlayerSprite>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform), Without<GCameraArena>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,

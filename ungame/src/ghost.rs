@@ -1,16 +1,19 @@
 use crate::maplight::MapColor;
 use crate::player::{Hiding, PlayerSprite};
-use crate::uncore_board::{self, BoardPosition, Position};
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::utils;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::Rng;
+use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::direction::Direction;
+use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+pub use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
+use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
 use uncore::systemparam::gear_stuff::GearStuff;
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
@@ -56,7 +59,7 @@ fn ghost_movement(
         ),
     >,
     qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
-    roomdb: Res<crate::uncore_board::RoomDB>,
+    roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardData>,
     mut commands: Commands,
@@ -534,7 +537,7 @@ fn ghost_fade_out_system(
                 .insert(SageSmokeParticle)
                 .insert(GameSprite)
                 .insert(pos)
-                .insert(uncore_board::Direction {
+                .insert(Direction {
                     dx: rng.gen_range(-0.9..0.9),
                     dy: rng.gen_range(-0.9..0.9),
                     dz: 0.0,

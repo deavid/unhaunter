@@ -4,9 +4,10 @@ use uncore::DEBUG_PLAYER;
 
 use crate::game::GameConfig;
 use crate::player::PlayerSprite;
-use crate::uncore_board::{self, Position};
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::{maplight, utils};
+use uncore::components::board::position::Position;
+pub use uncore::difficulty::CurrentDifficulty;
+use uncore::resources::roomdb::RoomDB;
 
 use bevy::prelude::*;
 
@@ -19,7 +20,7 @@ pub fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
-    roomdb: Res<uncore_board::RoomDB>,
+    roomdb: Res<RoomDB>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {

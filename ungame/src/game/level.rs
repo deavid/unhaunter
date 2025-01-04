@@ -20,23 +20,27 @@ use super::roomchanged::RoomChangedEvent;
 use crate::game::SpriteType;
 use crate::ghost::{GhostBreach, GhostSprite};
 use crate::player::{AnimationTimer, CharacterAnimation, PlayerSprite};
-use crate::uncore_board::{self, MapTileComponents, Position, SpriteDB, TileSpriteBundle};
-use crate::uncore_difficulty::CurrentDifficulty;
 use crate::uncore_root::{self, QuadCC};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use ordered_float::OrderedFloat;
 use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
+use uncore::components::board::direction::Direction;
+use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::resources::board_data::BoardData;
+use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
 use uncore::types::game::SoundType;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
+use unstd::board::spritedb::SpriteDB;
+use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
 use unstd::tiledmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
 
@@ -61,7 +65,7 @@ pub fn load_level_handler(
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
     handles: Res<uncore_root::GameAssets>,
-    mut roomdb: ResMut<uncore_board::RoomDB>,
+    mut roomdb: ResMut<RoomDB>,
     mut app_next_state: ResMut<NextState<uncore_root::AppState>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -158,9 +162,9 @@ pub fn load_level_handler(
         &mut texture_atlases,
         &mut tilesetdb,
     );
-    let mut player_spawn_points: Vec<uncore_board::Position> = vec![];
-    let mut ghost_spawn_points: Vec<uncore_board::Position> = vec![];
-    let mut van_entry_points: Vec<uncore_board::Position> = vec![];
+    let mut player_spawn_points: Vec<Position> = vec![];
+    let mut ghost_spawn_points: Vec<Position> = vec![];
+    let mut van_entry_points: Vec<Position> = vec![];
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
     sdb.clear();
 
@@ -208,7 +212,7 @@ pub fn load_level_handler(
                     let mat = materials1.add(cmat);
 
                     TileSpriteBundle {
-                        mesh: uncore_board::PreMesh::Mesh(mesh_handle.into()),
+                        mesh: PreMesh::Mesh(mesh_handle.into()),
                         material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
@@ -232,7 +236,7 @@ pub fn load_level_handler(
                     let sprite_anchor = Vec2::new(1.0 / 2.0, 0.5 - tileset.y_anchor);
 
                     TileSpriteBundle {
-                        mesh: uncore_board::PreMesh::Image {
+                        mesh: PreMesh::Image {
                             sprite_anchor,
                             image_handle,
                         },
@@ -282,7 +286,7 @@ pub fn load_level_handler(
                 b.material = MeshMaterial2d(mat);
                 commands.spawn(b)
             };
-            let mut pos = uncore_board::Position {
+            let mut pos = Position {
                 x: tile.pos.x as f32,
                 y: -tile.pos.y as f32,
                 z: 0.0,
@@ -404,7 +408,7 @@ pub fn load_level_handler(
         .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
         .insert(SpriteType::Player)
         .insert(player_position)
-        .insert(uncore_board::Direction::new_right())
+        .insert(Direction::new_right())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
@@ -465,19 +469,19 @@ pub fn load_level_handler(
 
 fn process_pre_meshes(
     mut commands: Commands,
-    query: Query<(Entity, &uncore_board::PreMesh)>,
+    query: Query<(Entity, &PreMesh)>,
     images: Res<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for (entity, pre_mesh) in query.iter() {
         match pre_mesh {
-            uncore_board::PreMesh::Mesh(mesh2d) => {
+            PreMesh::Mesh(mesh2d) => {
                 commands
                     .entity(entity)
                     .insert(mesh2d.clone())
-                    .remove::<uncore_board::PreMesh>();
+                    .remove::<PreMesh>();
             }
-            uncore_board::PreMesh::Image {
+            PreMesh::Image {
                 sprite_anchor,
                 image_handle,
             } => {
@@ -492,10 +496,7 @@ fn process_pre_meshes(
                     let base_quad = Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
                     let mesh_handle = meshes.add(base_quad);
                     let mesh2d = Mesh2d::from(mesh_handle);
-                    commands
-                        .entity(entity)
-                        .insert(mesh2d)
-                        .remove::<uncore_board::PreMesh>();
+                    commands.entity(entity).insert(mesh2d).remove::<PreMesh>();
                     println!("Processed entity: {:?}", entity);
                 }
             }

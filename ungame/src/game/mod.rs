@@ -3,13 +3,12 @@ pub mod level;
 pub mod roomchanged;
 pub mod ui;
 
-use uncore::components::game::{GCameraArena, GameSound, GameSprite};
-
 use crate::player::{self, PlayerSprite};
-use crate::{uncore_board, uncore_root};
-
+use crate::uncore_root;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
+use uncore::components::board::direction::Direction;
+use uncore::components::game::{GCameraArena, GameSound, GameSprite};
 
 pub use uncore::components::game_config::GameConfig;
 pub use uncore::components::sprite_type::SpriteType;
@@ -61,7 +60,7 @@ pub fn keyboard(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
     gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform, &uncore_board::Direction), Without<GCameraArena>>,
+    pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
     time: Res<Time>,
 ) {
     if *app_state.get() != uncore_root::AppState::InGame {

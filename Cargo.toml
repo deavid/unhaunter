@@ -1,5 +1,13 @@
 [workspace]
-members = ["ungame", "tools/ghost_radio", "uncore", "ungear", "unstd", "ungearitems", "unmaphub"]
+members = [
+    "ungame",
+    "tools/ghost_radio",
+    "uncore",
+    "ungear",
+    "unstd",
+    "ungearitems",
+    "unmaphub",
+]
 resolver = "2"
 
 [workspace.package]
@@ -46,6 +54,11 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+uncore = { path = "uncore" }
+unstd = { path = "unstd" }
+ungear = { path = "ungear" }
+ungearitems = { path = "ungearitems" }
+unmaphub = { path = "unmaphub" }
 ungame = { path = "ungame" }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
@@ -63,6 +76,8 @@ bevy_dylib = { workspace = true }
 
 [profile.dev]
 opt-level = "z"
+lto = "off"
+codegen-units = 8
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]

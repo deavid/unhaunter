@@ -4,10 +4,11 @@ use super::super::{AnimationTimer, Hiding, InteractiveStuff, PlayerSprite};
 use crate::game::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use crate::npchelp::NpcHelpEvent;
 use crate::player::CharacterAnimation;
-use crate::uncore_board::{self, Position};
-use crate::uncore_difficulty::CurrentDifficulty;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
+use uncore::components::board::direction::Direction;
+use uncore::components::board::position::Position;
+use uncore::difficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 
 use bevy::prelude::*;
@@ -17,8 +18,8 @@ pub fn keyboard_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
-        &mut uncore_board::Position,
-        &mut uncore_board::Direction,
+        &mut Position,
+        &mut Direction,
         &mut PlayerSprite,
         &mut AnimationTimer,
         &PlayerGear,
@@ -28,7 +29,7 @@ pub fn keyboard_player(
     interactables: Query<
         (
             Entity,
-            &uncore_board::Position,
+            &Position,
             &Interactive,
             &Behavior,
             Option<&RoomState>,
@@ -52,7 +53,7 @@ pub fn keyboard_player(
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
-        let mut d = uncore_board::Direction {
+        let mut d = Direction {
             dx: 0.0,
             dy: 0.0,
             dz: 0.0,

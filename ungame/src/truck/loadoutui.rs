@@ -1,7 +1,7 @@
 use super::truckgear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::game::evidence::EvidenceStatus;
-use crate::uncore_difficulty::CurrentDifficulty;
+pub use uncore::difficulty::CurrentDifficulty;
 
 use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
 use bevy::prelude::*;

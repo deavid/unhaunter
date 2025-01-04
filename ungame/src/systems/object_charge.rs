@@ -4,7 +4,8 @@ use uncore::components::board::position::Position;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 
-use crate::uncore_difficulty::CurrentDifficulty;
+use uncore::difficulty::CurrentDifficulty;
+use uncore::resources::roomdb::RoomDB;
 use crate::ghost::GhostSprite;
 
 use bevy::prelude::*;
@@ -50,7 +51,7 @@ fn check_ghost_proximity(
     // Access commands to add/remove components
     mut commands: Commands,
     // Access the room database
-    roomdb: Res<crate::uncore_board::RoomDB>,
+    roomdb: Res<RoomDB>,
     // Access the time resource
     time: Res<Time>,
     // Access the difficulty settings

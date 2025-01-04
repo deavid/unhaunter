@@ -1,18 +1,14 @@
+use crate::{game::GameConfig, player::PlayerSprite, uncore_root};
+use bevy::prelude::*;
 use uncore::behavior::{
     component::{Interactive, NpcHelpDialog},
     Behavior,
 };
 use uncore::colors;
+use uncore::components::board::direction::Direction;
+use uncore::components::board::position::Position;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use unstd::materials::UIPanelMaterial;
-
-use crate::{
-    uncore_board::{self, Position},
-    game::GameConfig,
-    player::PlayerSprite,
-    uncore_root,
-};
-use bevy::prelude::*;
 
 #[derive(Debug, Component)]
 pub struct NpcUI;
@@ -195,7 +191,7 @@ pub fn npchelp_event(
 pub fn auto_call_npchelp(
     time: Res<Time>,
     gc: Res<GameConfig>,
-    q_player: Query<(&Position, &PlayerSprite, &uncore_board::Direction)>,
+    q_player: Query<(&Position, &PlayerSprite, &Direction)>,
     mut interactables: Query<(
         Entity,
         &Position,

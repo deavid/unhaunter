@@ -1,3 +1,5 @@
+pub mod app;
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]
@@ -6,5 +8,5 @@ pub fn wasm_load() {
 }
 
 pub fn app_run() {
-    ungame::app_run();
+    app::app_run();
 }

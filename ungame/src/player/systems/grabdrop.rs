@@ -1,9 +1,10 @@
 use crate::player::{DeployedGear, DeployedGearData, HeldObject, PlayerSprite};
-use crate::uncore_board::{self, Position};
 use crate::uncore_root;
 use bevy::prelude::*;
 use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
+use uncore::components::board::direction::Direction;
+use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
@@ -132,7 +133,7 @@ pub fn drop_object(
 #[allow(clippy::type_complexity)]
 pub fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
-    players: Query<(&Position, &PlayerGear, &uncore_board::Direction), With<PlayerSprite>>,
+    players: Query<(&Position, &PlayerGear, &Direction), With<PlayerSprite>>,
     mut gs: GearStuff,
     mut last_sound_time: Local<f32>,
 ) {
@@ -168,12 +169,7 @@ pub fn update_held_object_position(
 /// world.
 pub fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(
-        &mut PlayerGear,
-        &Position,
-        &PlayerSprite,
-        &uncore_board::Direction,
-    )>,
+    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &Direction)>,
     mut commands: Commands,
     q_collidable: Query<(Entity, &Position), With<FloorItemCollidable>>,
     mut gs: GearStuff,

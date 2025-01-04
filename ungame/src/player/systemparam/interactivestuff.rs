@@ -1,10 +1,11 @@
-use crate::uncore_board::{RoomDB, SpriteDB};
 use crate::uncore_root::GameState;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::events::roomchanged::InteractionExecutionType;
+use uncore::resources::roomdb::RoomDB;
+use unstd::board::spritedb::SpriteDB;
 use unstd::materials::CustomMaterial1;
 
 use bevy::ecs::system::SystemParam;
