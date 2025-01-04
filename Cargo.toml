@@ -62,6 +62,8 @@ ungearitems = { path = "ungearitems" }
 unmaphub = { path = "unmaphub" }
 untruck = { path = "untruck" }
 ungame = { path = "ungame" }
+unplayer = { path = "unplayer" }
+
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 

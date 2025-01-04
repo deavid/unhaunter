@@ -8,6 +8,7 @@ use ungame::game::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
+use unplayer::plugin::UnhaunterPlayerPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
@@ -50,6 +51,7 @@ pub fn app_run() {
         UnhaunterMapHubPlugin,
         UnhaunterTruckPlugin,
         UnhaunterGamePlugin,
+        UnhaunterPlayerPlugin,
     ));
     ungame::app_setup(&mut app);
 

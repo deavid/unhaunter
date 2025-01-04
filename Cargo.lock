@@ -4686,6 +4686,7 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unmaphub",
+ "unplayer",
  "unstd",
  "untruck",
  "wasm-bindgen",
