@@ -104,9 +104,3 @@ Help and Item Description:
 
 This section needs to change its title to the hovered gear name, to draw the
 player attention.
-
-# Repellant info text is too big
-
-It goes outside of the window.
-
-Reduce font size too.

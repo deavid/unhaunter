@@ -92,7 +92,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         p.spawn(Text::new("-"))
             .insert(TextFont {
                 font: handles.fonts.victormono.w600_semibold.clone(),
-                font_size: 18.0 * FONT_SCALE,
+                font_size: 15.0 * FONT_SCALE,
                 font_smoothing: bevy::text::FontSmoothing::AntiAliased,
             })
             .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -104,6 +104,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                     Val::Px(4.0 * UI_SCALE),
                     Val::Px(-16.0 * UI_SCALE),
                 ),
+                width: Val::Percent(100.0),
                 flex_grow: 1.0,
                 ..default()
             })

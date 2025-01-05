@@ -1,13 +1,12 @@
+use uncore::components::board::mapcolor::MapColor;
+use uncore::components::board::{
+    boardposition::BoardPosition, direction::Direction, position::Position,
+};
 use uncore::{
-    components::{
-        game::GameSprite,
-        ghost_sprite::GhostSprite,
-    },
+    components::{game::GameSprite, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
-use uncore::components::board::{boardposition::BoardPosition, direction::Direction, position::Position};
-use uncore::components::board::mapcolor::MapColor;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
@@ -30,7 +29,7 @@ impl GearUsable for RepellentFlask {
     }
 
     fn get_display_name(&self) -> &'static str {
-        "Unhaunter Repellent"
+        "Repellent"
     }
 
     fn get_description(&self) -> &'static str {
@@ -40,17 +39,17 @@ impl GearUsable for RepellentFlask {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = match self.liquid_content {
-            Some(x) => format!("\nAnti-{} essence", x.name()),
+            Some(x) => format!("Anti-{}", x.name()),
             None => "Empty".to_string(),
         };
         let msg = if self.liquid_content.is_some() {
             if self.active {
-                "Emptying flask... get close to the ghost!".to_string()
+                "Emptying flask...\nGet close to the ghost!".to_string()
             } else {
-                "Make the ghost absorb the repellent to expel it".to_string()
+                "Flask ready.\nActivate near the Ghost.".to_string()
             }
         } else {
-            "Flask must be filled on the van".to_string()
+            "Flask empty.\nMust be filled on the van".to_string()
         };
         format!("{name}: {on_s}\n{msg}")
     }
