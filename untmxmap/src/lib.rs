@@ -5,9 +5,7 @@
 //! library. Currently serve as an example on how to load/store data.
 
 pub mod bevy;
-pub mod load;
-pub mod naive;
 pub mod init_maps;
+pub mod load;
 pub mod plugin;
-pub mod asset_tmxmap;
-pub mod asset_index;
+pub mod map_loader;

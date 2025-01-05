@@ -1,27 +1,28 @@
-use crate::{asset_index::AssetIdx, asset_tmxmap::TmxMap};
 use bevy::prelude::*;
+use uncore::assets::index::AssetIdx;
+use uncore::assets::tmxmap::TmxMap;
+use uncore::assets::tsxsheet::TsxSheet;
+use uncore::types::root::map::Sheet;
 use uncore::{resources::maps::Maps, types::root::map::Map};
 
-pub struct MapLoad {
+pub struct PreLoad<A: Asset> {
     path: String,
-    handle: Handle<TmxMap>,
-    mapprocessed: bool,
+    handle: Handle<A>,
+    processed: bool,
 }
 
 #[derive(Resource, Default)]
 pub struct MapAssetIndexHandle {
-    mapsidx: Handle<AssetIdx>,
+    tmxidx: Handle<AssetIdx>,
+    tsxidx: Handle<AssetIdx>,
     idxprocessed: bool,
-    maps: Vec<MapLoad>,
+    maps: Vec<PreLoad<TmxMap>>,
+    sheets: Vec<PreLoad<TsxSheet>>,
 }
 
-pub fn init_maps(
-    asset_server: Res<AssetServer>,
-    // maps: ResMut<Maps>,
-    mut mapsidx: ResMut<MapAssetIndexHandle>,
-) {
-    // arch::init_maps(maps);
-    mapsidx.mapsidx = asset_server.load("index/maps.assetidx");
+pub fn init_maps(asset_server: Res<AssetServer>, mut mapsidx: ResMut<MapAssetIndexHandle>) {
+    mapsidx.tmxidx = asset_server.load("index/maps-tmx.assetidx");
+    mapsidx.tsxidx = asset_server.load("index/maps-tsx.assetidx");
 }
 
 pub fn map_index_preload(
@@ -32,20 +33,31 @@ pub fn map_index_preload(
     if mapsidx.idxprocessed {
         return;
     }
-    let maps = idx_assets.get(&mapsidx.mapsidx);
-    if let Some(maps) = maps {
-        for path in &maps.assets {
-            warn!("MAP INDEX LOADED: {path}");
-            let handle: Handle<TmxMap> = asset_server.load(path);
-            let path = path.to_string();
-            mapsidx.maps.push(MapLoad {
-                handle,
-                path,
-                mapprocessed: false,
-            });
-        }
-        mapsidx.idxprocessed = true;
+    let Some(maps) = idx_assets.get(&mapsidx.tmxidx) else {
+        return;
+    };
+    let Some(sheets) = idx_assets.get(&mapsidx.tsxidx) else {
+        return;
+    };
+    for path in &maps.assets {
+        let handle: Handle<TmxMap> = asset_server.load(path);
+        let path = path.to_string();
+        mapsidx.maps.push(PreLoad {
+            handle,
+            path,
+            processed: false,
+        });
     }
+    for path in &sheets.assets {
+        let handle: Handle<TsxSheet> = asset_server.load(path);
+        let path = path.to_string();
+        mapsidx.sheets.push(PreLoad {
+            handle,
+            path,
+            processed: false,
+        });
+    }
+    mapsidx.idxprocessed = true;
 }
 
 pub fn tmxmap_preload(
@@ -53,16 +65,18 @@ pub fn tmxmap_preload(
     tmx_assets: Res<Assets<TmxMap>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
 ) {
+    let mut cleanup_needed = false;
     if !mapsidx.idxprocessed {
         return;
     }
     for mapload in &mut mapsidx.maps {
-        if mapload.mapprocessed {
+        if mapload.processed {
             continue;
         }
         let tmx = tmx_assets.get(&mapload.handle);
         if let Some(tmx) = tmx {
-            mapload.mapprocessed = true;
+            mapload.processed = true;
+            cleanup_needed = true;
             let path = mapload.path.clone();
             let classname = tmx.class.clone();
             let display_name = tmx.display_name.clone();
@@ -86,7 +100,23 @@ pub fn tmxmap_preload(
             maps.maps.push(Map {
                 name: display_name,
                 path,
+                handle: mapload.handle.clone(),
             });
         }
+    }
+    for sheet in &mut mapsidx.sheets {
+        if !sheet.processed {
+            maps.sheets.push(Sheet {
+                path: sheet.path.clone(),
+                handle: sheet.handle.clone(),
+            });
+            sheet.processed = true;
+            cleanup_needed = true;
+        }
+    }
+    if cleanup_needed {
+        // Remove processed ones to avoid iterating them every frame.
+        mapsidx.maps.retain(|x| !x.processed);
+        mapsidx.sheets.retain(|x| !x.processed);
     }
 }

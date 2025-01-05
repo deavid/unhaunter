@@ -1,13 +1,14 @@
 // ------------ Bevy map loading utils --------------------
-use unstd::materials::CustomMaterial1;
 use bevy::{prelude::*, utils::HashMap};
 use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
 use uncore::types::tiledmap::map::{MapLayer, MapLayerGroup};
+use unstd::materials::CustomMaterial1;
 
 use super::load::load_tile_layer_iter;
+use super::map_loader::map_loader;
 
 #[derive(Debug, Clone)]
 pub enum AtlasData {
@@ -25,76 +26,6 @@ pub struct MapTileSet {
 #[derive(Debug, Clone, Default, Resource)]
 pub struct MapTileSetDb {
     pub db: HashMap<String, MapTileSet>,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-mod arch {
-    pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
-        let mut loader = tiled::Loader::new();
-        loader.load_tmx_map(path).unwrap()
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-mod arch {
-    use std::io::Cursor;
-
-    /// Basic example reader impl that just keeps a few resources in memory
-    struct MemoryReader;
-
-    impl tiled::ResourceReader for MemoryReader {
-        type Resource = Cursor<&'static [u8]>;
-        type Error = std::io::Error;
-
-        fn read_from(
-            &mut self,
-            path: &std::path::Path,
-        ) -> std::result::Result<Self::Resource, Self::Error> {
-            let path = path.to_str().unwrap();
-            match path {
-                "assets/maps/tut01_basics.tmx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/tut01_basics.tmx"
-                ))),
-                "assets/maps/tut02_glass_house.tmx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/tut02_glass_house.tmx"
-                ))),
-                "assets/maps/map_house1.tmx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/map_house1.tmx"
-                ))),
-                "assets/maps/map_house2.tmx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/map_house2.tmx"
-                ))),
-                "assets/maps/map_school1.tmx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/map_school1.tmx"
-                ))),
-                "assets/maps/unhaunter_custom_tileset.tsx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/unhaunter_custom_tileset.tsx"
-                ))),
-                "assets/maps/unhaunter_spritesheet2.tsx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/unhaunter_spritesheet2.tsx"
-                ))),
-                "assets/maps/unhaunter_spritesheetA_3x3x3.tsx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/unhaunter_spritesheetA_3x3x3.tsx"
-                ))),
-                "assets/maps/unhaunter_spritesheetA_6x6x10.tsx" => Ok(Cursor::new(include_bytes!(
-                    "../../../assets/maps/unhaunter_spritesheetA_6x6x10.tsx"
-                ))),
-                _ => Err(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "file not found",
-                )),
-            }
-        }
-    }
-
-    pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
-        let mut loader =
-            tiled::Loader::<tiled::DefaultResourceCache, MemoryReader>::with_cache_and_reader(
-                tiled::DefaultResourceCache::new(),
-                MemoryReader,
-            );
-        loader.load_tmx_map(path).unwrap()
-    }
 }
 
 /// Helps trimming the extra assets/ folder for Bevy
@@ -116,7 +47,7 @@ pub fn bevy_load_map(
 ) -> (tiled::Map, Vec<(usize, MapLayer)>) {
     // Parse Tiled file:
     let path = path.as_ref();
-    let map = arch::map_loader(path);
+    let map = map_loader(path);
 
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {

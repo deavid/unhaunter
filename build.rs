@@ -6,7 +6,7 @@ fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
     vec![
         ("fonts", vec!["ttf"]),
         ("img", vec!["png"]),
-        ("maps", vec!["tmx"]),
+        ("maps", vec!["tmx", "tsx"]),
         ("music", vec!["ogg"]),
         ("sounds", vec!["ogg"]),
         ("manual", vec!["png"]),
@@ -32,21 +32,17 @@ fn main() {
     let asset_types = get_asset_types();
 
     for (folder_name, ext_list) in asset_types {
+        for ext in &ext_list {
+            let asset_list_path = format!("assets/index/{folder_name}-{ext}.assetidx");
 
-        let asset_list_path = format!("assets/index/{folder_name}.assetidx");
+            let mut asset_list_file =
+                File::create(asset_list_path).expect("Failed to create assetidx");
 
-        let mut asset_list_file =
-            File::create(asset_list_path).expect("Failed to create assetidx");
-
-        for path in &asset_list {
-            if !path.starts_with(folder_name) {
-                continue;
-            }
-            let ext_found = ext_list.iter().any(|ext| path.ends_with(ext));
-            if ext_found {
-                writeln!(asset_list_file, "{}", path).expect("Failed to write to assetidx");    
+            for path in &asset_list {
+                if path.starts_with(folder_name) && path.ends_with(ext) {
+                    writeln!(asset_list_file, "{}", path).expect("Failed to write to assetidx");
+                }
             }
         }
     }
-    
 }
