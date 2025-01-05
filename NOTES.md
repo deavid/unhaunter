@@ -81,19 +81,3 @@ Otherwise we need to constantly update these manually.
 # Lighting needs a rework
 
 The whole maplight.rs is a mess. There are types and functions in board.rs too.
-
-# Faster incremental compile times (Cargo workspace + Bevy Plugins)
-
-I've removed debug info from libraries, moved all compilation opt-level to "z"
-to reduce size in an effort that the linking stage would take less time, and
-re-added the bevy dynamic linking.
-
-This has brought compile times from 28.2s to 8.7s when just touching one file.
-
-The linking stage is just 1.47 seconds now, while building the library part
-of Unhaunter takes 6.72 seconds.
-
-To further reduce this I would need to move to `cargo workspace` and Bevy Plugins
-in order to have separate crates for each piece of functionality and therefore
-it would only compile the crate modified only, not the whole thing. If several
-are modified, they can be built in parallel.
