@@ -1,5 +1,5 @@
 // ------------ Bevy map loading utils --------------------
-use crate::materials::CustomMaterial1;
+use unstd::materials::CustomMaterial1;
 use bevy::{prelude::*, utils::HashMap};
 use std::{
     path::{Path, PathBuf},

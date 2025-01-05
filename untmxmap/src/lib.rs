@@ -7,3 +7,5 @@
 pub mod bevy;
 pub mod load;
 pub mod naive;
+pub mod init_maps;
+pub mod plugin;

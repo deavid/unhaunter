@@ -18,7 +18,7 @@ use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
 use unstd::plugins::summary::UnhaunterSummaryPlugin;
-use unstd::tiledmap::bevy::MapTileSetDb;
+use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 
 pub fn app_run() {
@@ -38,8 +38,7 @@ pub fn app_run() {
         1.0 / 15.0,
     )));
 
-    app.init_resource::<MapTileSetDb>()
-        .init_resource::<CurrentDifficulty>()
+    app.init_resource::<CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
@@ -60,6 +59,7 @@ pub fn app_run() {
         UnhaunterMenuPlugin,
         UnhaunterLightPlugin,
         UnhaunterNPCPlugin,
+        UnhaunterTmxMapPlugin,
     ));
 
     app.run();

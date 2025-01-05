@@ -12,7 +12,7 @@ members = [
     "unghost",
     "unmenu",
     "unlight",
-    "unnpc",
+    "unnpc", "untmxmap",
 ]
 resolver = "2"
 
@@ -72,6 +72,7 @@ unghost = { path = "unghost" }
 unlight = { path = "unlight" }
 unmenu = { path = "unmenu" }
 unnpc = { path = "unnpc" }
+untmxmap = { path = "untmxmap" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }

@@ -4648,6 +4648,7 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unstd",
+ "untmxmap",
 ]
 
 [[package]]
@@ -4704,6 +4705,7 @@ dependencies = [
  "unnpc",
  "unplayer",
  "unstd",
+ "untmxmap",
  "untruck",
  "wasm-bindgen",
 ]
@@ -4840,19 +4842,28 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 name = "unstd"
 version = "0.2.5-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "bevy_framepace",
  "enum-iterator",
  "fastapprox",
- "glob",
- "normalize-path",
  "ordered-float",
  "rand",
  "serde",
  "thiserror 2.0.9",
+ "uncore",
+]
+
+[[package]]
+name = "untmxmap"
+version = "0.2.5-dev"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "glob",
+ "normalize-path",
  "tiled",
  "uncore",
+ "unstd",
  "walkdir",
 ]
 

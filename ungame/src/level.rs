@@ -46,7 +46,7 @@ use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
-use unstd::tiledmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
+use untmxmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
 
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
