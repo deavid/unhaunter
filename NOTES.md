@@ -71,13 +71,6 @@ space instead of map space.
 
 This probably means another two options to add.
 
-# Tiled Map loads need WASM support
-
-Currently the tiled maps in WASM are baked in binary in a bad way. We need to
-implement a custom asset loader for these so it works in WASM in a natural way.
-
-Otherwise we need to constantly update these manually.
-
 # Lighting needs a rework
 
 The whole maplight.rs is a mess. There are types and functions in board.rs too.
