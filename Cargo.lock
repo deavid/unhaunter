@@ -4648,7 +4648,6 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unstd",
- "untmxmap",
 ]
 
 [[package]]
@@ -4851,6 +4850,7 @@ dependencies = [
  "rand",
  "serde",
  "thiserror 2.0.9",
+ "tiled",
  "uncore",
 ]
 

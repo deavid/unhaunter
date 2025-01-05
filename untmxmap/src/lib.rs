@@ -9,3 +9,4 @@ pub mod init_maps;
 pub mod load;
 pub mod plugin;
 pub mod map_loader;
+pub mod load_level;

@@ -31,12 +31,11 @@ use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::difficulty::CurrentDifficulty;
-use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
-use uncore::states::AppState;
 use uncore::types::game::SoundType;
 use uncore::types::quadcc::QuadCC;
 use uncore::types::root::game_assets::GameAssets;
@@ -46,7 +45,7 @@ use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
-use untmxmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
+use unstd::tiledmap::{AtlasData, MapTileSetDb};
 
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
@@ -56,7 +55,7 @@ use untmxmap::bevy::{bevy_load_map, AtlasData, MapTileSetDb};
 /// `BoardData`, `SpriteDB`, and `RoomDB`.
 #[allow(clippy::too_many_arguments)]
 pub fn load_level_handler(
-    mut ev: EventReader<LoadLevelEvent>,
+    mut ev: EventReader<LevelLoadedEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut bf: ResMut<BoardData>,
@@ -64,17 +63,16 @@ pub fn load_level_handler(
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    texture_atlases: Res<Assets<TextureAtlasLayout>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut tilesetdb: ResMut<MapTileSetDb>,
+    tilesetdb: Res<MapTileSetDb>,
     mut sdb: ResMut<SpriteDB>,
     handles: Res<GameAssets>,
     mut roomdb: ResMut<RoomDB>,
-    mut app_next_state: ResMut<NextState<AppState>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let mut ev_iter = ev.read();
-    let Some(load_event) = ev_iter.next() else {
+    let Some(loaded_event) = ev_iter.next() else {
         return;
     };
 
@@ -156,16 +154,9 @@ pub fn load_level_handler(
             class: SoundType::Insane,
         });
     commands.init_resource::<BoardData>();
-    info!("Load Level: {}", &load_event.map_filepath);
-    app_next_state.set(AppState::InGame);
-
+    warn!("Level Loaded: {}", &loaded_event.map_filepath);
     // ---------- NEW MAP LOAD ----------
-    let (_map, layers) = bevy_load_map(
-        &load_event.map_filepath,
-        &asset_server,
-        &mut texture_atlases,
-        &mut tilesetdb,
-    );
+    let layers = &loaded_event.layers;
     let mut player_spawn_points: Vec<Position> = vec![];
     let mut ghost_spawn_points: Vec<Position> = vec![];
     let mut van_entry_points: Vec<Position> = vec![];
@@ -346,10 +337,7 @@ pub fn load_level_handler(
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
-        warn!(
-            "Map '{}' has less than 3 movable objects in rooms. Ghost influence system might not work as intended.",
-            load_event.map_filepath
-        );
+        warn!("Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended.");
     }
 
     // --- Random Property Assignment ---
@@ -510,6 +498,7 @@ fn process_pre_meshes(
 
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
+        .add_event::<LevelLoadedEvent>()
         .add_systems(PostUpdate, load_level_handler)
         .add_systems(Update, process_pre_meshes);
 }

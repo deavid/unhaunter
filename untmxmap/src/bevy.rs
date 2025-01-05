@@ -1,32 +1,14 @@
 // ------------ Bevy map loading utils --------------------
-use bevy::{prelude::*, utils::HashMap};
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use bevy::prelude::*;
+use std::path::{Path, PathBuf};
 use uncore::types::tiledmap::map::{MapLayer, MapLayerGroup};
-use unstd::materials::CustomMaterial1;
+use unstd::{
+    materials::CustomMaterial1,
+    tiledmap::{AtlasData, MapTileSet, MapTileSetDb},
+};
 
 use super::load::load_tile_layer_iter;
 use super::map_loader::map_loader;
-
-#[derive(Debug, Clone)]
-pub enum AtlasData {
-    Sheet((Handle<TextureAtlasLayout>, CustomMaterial1)),
-    Tiles(Vec<(Handle<Image>, CustomMaterial1)>),
-}
-
-#[derive(Debug, Clone)]
-pub struct MapTileSet {
-    pub tileset: Arc<tiled::Tileset>,
-    pub data: AtlasData,
-    pub y_anchor: f32,
-}
-
-#[derive(Debug, Clone, Default, Resource)]
-pub struct MapTileSetDb {
-    pub db: HashMap<String, MapTileSet>,
-}
 
 /// Helps trimming the extra assets/ folder for Bevy
 pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {

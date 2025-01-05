@@ -2,11 +2,10 @@ use bevy::prelude::*;
 use uncore::assets::index::{AssetIdx, AssetIdxLoader};
 use uncore::assets::tmxmap::{TmxMap, TmxMapLoader};
 use uncore::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
+use unstd::tiledmap::MapTileSetDb;
 
-use crate::{
-    bevy::MapTileSetDb,
-    init_maps::{init_maps, map_index_preload, tmxmap_preload, MapAssetIndexHandle},
-};
+use crate::init_maps::{init_maps, map_index_preload, tmxmap_preload, MapAssetIndexHandle};
+use crate::load_level::load_level_handler;
 
 pub struct UnhaunterTmxMapPlugin;
 
@@ -21,6 +20,9 @@ impl Plugin for UnhaunterTmxMapPlugin {
             .init_asset_loader::<TsxSheetLoader>()
             .init_asset_loader::<AssetIdxLoader>()
             .add_systems(Startup, init_maps)
-            .add_systems(Update, (map_index_preload, tmxmap_preload));
+            .add_systems(
+                Update,
+                (map_index_preload, tmxmap_preload, load_level_handler),
+            );
     }
 }
