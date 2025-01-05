@@ -8,7 +8,6 @@ use unstd::{
 };
 
 use super::load::load_tile_layer_iter;
-use super::map_loader::map_loader;
 
 /// Helps trimming the extra assets/ folder for Bevy
 pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
@@ -22,15 +21,11 @@ pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
 }
 
 pub fn bevy_load_map(
-    path: impl AsRef<std::path::Path>,
+    map: tiled::Map,
     asset_server: &AssetServer,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
-) -> (tiled::Map, Vec<(usize, MapLayer)>) {
-    // Parse Tiled file:
-    let path = path.as_ref();
-    let map = map_loader(path);
-
+) -> Vec<(usize, MapLayer)> {
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {
         // If an image is included, this is a tilemap. If no image is included this is a
@@ -121,7 +116,5 @@ pub fn bevy_load_map(
         .enumerate()
         .map(|(n, l)| (n, l.clone()))
         .collect();
-    (map, layers)
-    // let tile_size: (f32, f32) = (map.tile_width as f32, map.tile_height as f32);
-    // bevy_load_layers(&layers, tile_size, &mut tilesetdb)
+    layers
 }

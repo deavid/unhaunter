@@ -1,9 +1,18 @@
-
+use bevy::prelude::*;
 use std::io::Cursor;
-struct MemoryReader;
+use uncore::{
+    assets::{tmxmap::TmxMap, tsxsheet::TsxSheet},
+    resources::maps::Maps,
+};
 
-impl tiled::ResourceReader for MemoryReader {
-    type Resource = Cursor<&'static [u8]>;
+struct TmxMemoryReader<'a> {
+    maps: &'a Res<'a, Maps>,
+    tmx_assets: &'a Res<'a, Assets<TmxMap>>,
+    tsx_assets: &'a Res<'a, Assets<TsxSheet>>,
+}
+
+impl<'a> tiled::ResourceReader for TmxMemoryReader<'a> {
+    type Resource = Cursor<&'a [u8]>;
     type Error = std::io::Error;
 
     fn read_from(
@@ -11,47 +20,55 @@ impl tiled::ResourceReader for MemoryReader {
         path: &std::path::Path,
     ) -> std::result::Result<Self::Resource, Self::Error> {
         let path = path.to_str().unwrap();
-        match path {
-            "maps/tut01_basics.tmx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/tut01_basics.tmx"
-            ))),
-            "maps/tut02_glass_house.tmx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/tut02_glass_house.tmx"
-            ))),
-            "maps/map_house1.tmx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/map_house1.tmx"
-            ))),
-            "maps/map_house2.tmx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/map_house2.tmx"
-            ))),
-            "maps/map_school1.tmx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/map_school1.tmx"
-            ))),
-            "maps/unhaunter_custom_tileset.tsx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/unhaunter_custom_tileset.tsx"
-            ))),
-            "maps/unhaunter_spritesheet2.tsx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/unhaunter_spritesheet2.tsx"
-            ))),
-            "maps/unhaunter_spritesheetA_3x3x3.tsx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/unhaunter_spritesheetA_3x3x3.tsx"
-            ))),
-            "maps/unhaunter_spritesheetA_6x6x10.tsx" => Ok(Cursor::new(include_bytes!(
-                "../../assets/maps/unhaunter_spritesheetA_6x6x10.tsx"
-            ))),
-            _ => Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "file not found",
-            )),
+        info!("Tiled - loading {path:?}");
+        if let Some(map) = self.maps.maps.iter().find(|m| m.path == path) {
+            let Some(map) = self.tmx_assets.get(&map.handle) else {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("TMX file {path:?} not loaded yet!"),
+                ));
+            };
+            return Ok(Cursor::new(&map.bytes));
         }
+
+        if let Some(sheet) = self.maps.sheets.iter().find(|s| s.path == path) {
+            let Some(sheet) = self.tsx_assets.get(&sheet.handle) else {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("TSX file {path:?} not loaded yet!"),
+                ));
+            };
+            return Ok(Cursor::new(&sheet.bytes));
+        }
+
+        Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "file not found",
+        ))
     }
 }
 
-pub fn map_loader(path: impl AsRef<std::path::Path>) -> tiled::Map {
-    let mut loader =
-        tiled::Loader::<tiled::DefaultResourceCache, MemoryReader>::with_cache_and_reader(
-            tiled::DefaultResourceCache::new(),
-            MemoryReader,
-        );
-    loader.load_tmx_map(path).unwrap()
+pub struct UnhaunterMapLoader;
+
+impl UnhaunterMapLoader {
+    pub fn load(
+        path: impl AsRef<std::path::Path>,
+        maps: &Res<Maps>,
+        tmx_assets: &Res<Assets<TmxMap>>,
+        tsx_assets: &Res<Assets<TsxSheet>>,
+    ) -> tiled::Map {
+        let now = bevy::utils::Instant::now();
+        let mut loader =
+            tiled::Loader::<tiled::DefaultResourceCache, TmxMemoryReader>::with_cache_and_reader(
+                tiled::DefaultResourceCache::new(),
+                TmxMemoryReader {
+                    maps,
+                    tmx_assets,
+                    tsx_assets,
+                },
+            );
+        let ret = loader.load_tmx_map(path).unwrap();
+        warn!("Loaded map in {:?}", now.elapsed());
+        ret
+    }
 }
