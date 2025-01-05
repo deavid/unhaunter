@@ -25,8 +25,12 @@ pub enum LoadoutButton {
 
 #[derive(Debug, Event, Clone)]
 pub struct EventButtonClicked(LoadoutButton);
+
 #[derive(Debug, Component, Clone)]
 pub struct GearHelp;
+
+#[derive(Debug, Component, Clone)]
+pub struct GearHelpTitle;
 
 pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
@@ -221,6 +225,7 @@ pub fn setup_loadout_ui(
                     margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     ..default()
                 },
+                GearHelpTitle,
             ));
             p.spawn((
                 Text::new("Select ..."),
@@ -256,7 +261,7 @@ pub fn update_loadout_buttons(
         ),
         Changed<Interaction>,
     >,
-    mut qh: Query<&mut Text, With<GearHelp>>,
+    mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     interaction_query: Query<&TruckUIButton, With<Button>>,
     mut ev_clk: EventWriter<EventButtonClicked>,
@@ -318,8 +323,11 @@ pub fn update_loadout_buttons(
     } else {
         ""
     };
-    let help_text = if matches!(gear.kind, GearKind::None) {
-        "Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here.".to_string()
+    let (help_title, help_text) = if matches!(gear.kind, GearKind::None) {
+        (
+            "Help and Item description:".to_string(), 
+            "Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here.".to_string(),
+        )
     } else {
         let o_evidence = Evidence::try_from(&gear.kind).ok();
         let ev_state = match o_evidence {
@@ -331,16 +339,32 @@ pub fn update_loadout_buttons(
             None => TruckButtonState::Off,
         };
         let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
+        let evidence_text = if status.title.trim().is_empty() {
+            "".to_string()
+        } else {
+            format!(
+                "\n\nEvidence: {} ({})",
+                status.title.trim().trim_end_matches(':'),
+                status.status_desc,
+            )
+        };
         let gear_name = gear.get_display_name();
         let gear_desc = gear.get_description();
-        format!(
-            "{gear_name}: {gear_desc}\n{}{}{}\n{click_help}",
-            status.title, status.status, status.help_text
+        (
+            format!("{gear_name}:"),
+            format!(
+                "{gear_desc}{}\n\n{}\n\n{click_help}",
+                evidence_text, status.help_text
+            ),
         )
     };
-    for mut text in &mut qh {
-        if help_text != text.0 {
+    for (mut text, ohelp_body, ohelp_title) in &mut qh {
+        if ohelp_body.is_some() && help_text != text.0 {
             text.0.clone_from(&help_text);
+        }
+
+        if ohelp_title.is_some() && help_title != text.0 {
+            text.0.clone_from(&help_title);
         }
     }
 }

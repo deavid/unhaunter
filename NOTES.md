@@ -97,10 +97,3 @@ To further reduce this I would need to move to `cargo workspace` and Bevy Plugin
 in order to have separate crates for each piece of functionality and therefore
 it would only compile the crate modified only, not the whole thing. If several
 are modified, they can be built in parallel.
-
-# Loadout item help
-
-Help and Item Description:
-
-This section needs to change its title to the hovered gear name, to draw the
-player attention.

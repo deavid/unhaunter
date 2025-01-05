@@ -36,8 +36,8 @@ pub fn update_evidence_ui(
                 if let Some((_entity, _depth, mut text, _font, mut color)) =
                     writer.get(txt_entity, 2)
                 {
-                    if *text != status.status {
-                        *text = status.status;
+                    if *text != status.status_game {
+                        *text = status.status_game;
                         *color = TextColor(status.status_color);
                     }
                 }
