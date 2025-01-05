@@ -9,3 +9,5 @@ pub mod load;
 pub mod naive;
 pub mod init_maps;
 pub mod plugin;
+pub mod asset_tmxmap;
+pub mod asset_index;

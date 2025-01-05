@@ -1,13 +1,7 @@
+use std::io::BufRead;
+use std::io::Result;
 
-/// Loads a TMX as text file and inspects the first lines to obtain class and
-/// display_name.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn naive_tmx_loader(path: &str) -> anyhow::Result<(Option<String>, Option<String>)> {
-    use std::io::BufRead as _;
-
-    // ` <map version="1.10" tiledversion="1.10.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="18" nextobjectid="15"> <properties> <property name="display_name" value="123 Acorn Lane Street House"/> </properties>`
-    let file = std::fs::File::open(path)?;
-    let reader = std::io::BufReader::new(file);
+pub fn naive_tmx_loader(reader: impl BufRead) -> Result<(Option<String>, Option<String>)> {
     let mut class: Option<String> = None;
     let mut display_name: Option<String> = None;
     for line in reader.lines().take(10) {
@@ -32,4 +26,13 @@ pub fn naive_tmx_loader(path: &str) -> anyhow::Result<(Option<String>, Option<St
         }
     }
     Ok((class, display_name))
+}
+
+/// Loads a TMX as text file and inspects the first lines to obtain class and
+/// display_name.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn naive_tmx_file_loader(path: &str) -> Result<(Option<String>, Option<String>)> {
+    let file = std::fs::File::open(path)?;
+    let reader = std::io::BufReader::new(file);
+    naive_tmx_loader(reader)
 }

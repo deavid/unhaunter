@@ -160,8 +160,9 @@ pub fn load_level_handler(
     app_next_state.set(AppState::InGame);
 
     // ---------- NEW MAP LOAD ----------
+    let map_filepath = format!("assets/{}", load_event.map_filepath);
     let (_map, layers) = bevy_load_map(
-        &load_event.map_filepath,
+        &map_filepath,
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,

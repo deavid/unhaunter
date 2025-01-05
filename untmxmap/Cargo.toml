@@ -16,4 +16,4 @@ normalize-path = { workspace = true }
 tiled = { workspace = true }
 glob = { workspace = true }
 walkdir = { workspace = true }
-anyhow = { workspace = true }
+thiserror = { workspace = true }

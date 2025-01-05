@@ -4707,6 +4707,7 @@ dependencies = [
  "unstd",
  "untmxmap",
  "untruck",
+ "walkdir",
  "wasm-bindgen",
 ]
 
@@ -4857,10 +4858,10 @@ dependencies = [
 name = "untmxmap"
 version = "0.2.5-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "glob",
  "normalize-path",
+ "thiserror 2.0.9",
  "tiled",
  "uncore",
  "unstd",
