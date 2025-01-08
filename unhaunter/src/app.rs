@@ -28,7 +28,7 @@ pub fn app_run() {
             title: format!("Unhaunter {}", plt::VERSION),
             resolution: default_resolution(),
             // Enabling VSync might make it easier in WASM? (It doesn't)
-            present_mode: bevy::window::PresentMode::Fifo,
+            present_mode: bevy::window::PresentMode::AutoVsync,
             ..default()
         }),
         ..default()
