@@ -4,7 +4,6 @@ use uncore::{
     assets::{tmxmap::TmxMap, tsxsheet::TsxSheet},
     events::loadlevel::{LevelLoadedEvent, LoadLevelEvent},
     resources::maps::Maps,
-    states::AppState,
 };
 use unstd::tiledmap::MapTileSetDb;
 
@@ -14,7 +13,6 @@ pub fn load_level_handler(
     asset_server: Res<AssetServer>,
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut app_next_state: ResMut<NextState<AppState>>,
     maps: Res<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     tsx_assets: Res<Assets<TsxSheet>>,
@@ -33,7 +31,6 @@ pub fn load_level_handler(
         &mut texture_atlases,
         &mut tilesetdb,
     );
-    app_next_state.set(AppState::InGame);
     evw.send(LevelLoadedEvent {
         map_filepath,
         layers,

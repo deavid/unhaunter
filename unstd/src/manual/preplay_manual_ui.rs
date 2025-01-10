@@ -83,7 +83,7 @@ pub fn preplay_manual_system(
                             .path
                             .clone();
                         ev_load_level.send(LoadLevelEvent { map_filepath });
-                        next_state.set(AppState::InGame);
+                        next_state.set(AppState::Loading);
                     }
                 } else {
                     // No tutorial chapter, start game immediately.
@@ -92,7 +92,7 @@ pub fn preplay_manual_system(
                         .clone();
 
                     ev_load_level.send(LoadLevelEvent { map_filepath });
-                    next_state.set(AppState::InGame);
+                    next_state.set(AppState::Loading);
                 }
             }
         }

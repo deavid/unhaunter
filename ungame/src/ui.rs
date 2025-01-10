@@ -45,6 +45,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     commands
         .spawn(ImageNode {
             image: handles.images.vignette.clone(),
+            color: Color::NONE,
             ..default()
         })
         .insert(Node {

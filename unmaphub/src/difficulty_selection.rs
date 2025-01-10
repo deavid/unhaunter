@@ -103,7 +103,7 @@ fn start_preplay_manual_system(
             .clone();
 
         ev_load_level.send(LoadLevelEvent { map_filepath });
-        next_game_state.set(AppState::InGame);
+        next_game_state.set(AppState::Loading);
     } else {
         next_game_state.set(AppState::PreplayManual);
     }
@@ -202,7 +202,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
             flex_grow: 1.0,
             ..default()
         })
-        .insert(BackgroundColor(main_color))
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
             parent
@@ -293,7 +292,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
                                         margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
                                         ..default()
                                     })
-                                    .insert(BackgroundColor(Color::NONE))
                                     .insert(DifficultySelectionItem { difficulty })
                                     .with_children(|btn| {
                                         btn.spawn(Text::new(difficulty.difficulty_name()))

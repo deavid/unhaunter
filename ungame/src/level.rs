@@ -36,6 +36,7 @@ use uncore::events::roomchanged::RoomChangedEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
 use uncore::types::game::SoundType;
 use uncore::types::quadcc::QuadCC;
 use uncore::types::root::game_assets::GameAssets;
@@ -70,6 +71,7 @@ pub fn load_level_handler(
     handles: Res<GameAssets>,
     mut roomdb: ResMut<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
+    mut next_game_state: ResMut<NextState<AppState>>,
 ) {
     let mut ev_iter = ev.read();
     let Some(loaded_event) = ev_iter.next() else {
@@ -93,6 +95,7 @@ pub fn load_level_handler(
     // Remove all pre-existing data for environment
     bf.temperature_field.clear();
     bf.sound_field.clear();
+    bf.current_exposure = 10.0;
     roomdb.room_state.clear();
     roomdb.room_tiles.clear();
     commands
@@ -457,6 +460,7 @@ pub fn load_level_handler(
         .insert(ghost_spawn);
     let open_van: bool = dist_to_van < 4.0 && difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
+    next_game_state.set(AppState::InGame);
 }
 
 fn process_pre_meshes(
