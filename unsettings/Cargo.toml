@@ -1,5 +1,5 @@
 [package]
-name = "unmenu"
+name = "unsettings"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,9 +8,9 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore = { path = "../uncore" }
-unsettings = { path = "../unsettings" }
-
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
+ron = { workspace = true }
+serde = { workspace = true }
 enum-iterator = { workspace = true }
+dirs = { workspace = true }

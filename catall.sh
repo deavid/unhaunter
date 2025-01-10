@@ -34,7 +34,7 @@ echo; echo;
 echo; echo; 
 # for f in $(git ls-files -- "*.rs" "*.yaml" "*.md" "*.sh" "*.toml" "*.html" "*.wgsl"); do 
 
-for f in $(git ls-files -- "*.rs" "*.toml"); do 
+for f in $(git ls-files -- "*.rs" "*.toml" "*.md"); do 
 
     echo "--- BEGIN FILE \`$f\` ---"; 
     echo; echo; 

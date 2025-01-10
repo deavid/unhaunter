@@ -5,6 +5,7 @@ pub enum AppState {
     #[default]
     Loading,
     MainMenu,
+    SettingsMenu,
     InGame,
     Summary,
     MapHub,

@@ -1,23 +1,34 @@
 use bevy::app::AppExit;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, IS_WASM, UI_SCALE, VERSION};
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
+use unsettings::audio::AudioSettings;
 
 const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
 const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 
-// Usual value is 0.2
-const MUSIC_VOLUME: f32 = 0.2;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuID {
     MapHub,
-    _Options,
     Manual,
+    Settings,
     Quit,
+}
+
+impl std::fmt::Display for MenuID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match &self {
+            MenuID::MapHub => "New Game",
+            MenuID::Settings => "Settings",
+            MenuID::Manual => "Manual",
+            MenuID::Quit => "Quit",
+        };
+        f.write_str(text)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Event)]
@@ -30,20 +41,13 @@ pub struct Menu {
 
 impl Menu {
     pub fn items() -> &'static [MenuID] {
-        if IS_WASM {
-            &[
-                MenuID::MapHub,
-                MenuID::Manual,
-                // MenuID::Options,
-            ]
-        } else {
-            &[
-                MenuID::MapHub,
-                MenuID::Manual,
-                // MenuID::Options,
-                MenuID::Quit,
-            ]
-        }
+        &[
+            MenuID::MapHub,
+            MenuID::Manual,
+            MenuID::Settings,
+            #[cfg(not(target_arch = "wasm32"))]
+            MenuID::Quit,
+        ]
     }
 
     pub fn item_idx(&self) -> i64 {
@@ -137,18 +141,22 @@ pub fn cleanup(
     }
 }
 
-pub fn despawn_sound(mut commands: Commands, qs: Query<(Entity, &AudioSink, &MenuSound)>) {
+pub fn despawn_sound(
+    mut commands: Commands,
+    qs: Query<(Entity, &AudioSink, &MenuSound)>,
+    audio_settings: Res<Persistent<AudioSettings>>,
+) {
     for (entity, sink, menusound) in &qs {
         let vol = sink.volume();
         let v = if menusound.despawn {
             vol / 1.02
         } else {
-            const DESIRED_VOLUME: f32 = 0.2;
+            let desired_vol = audio_settings.volume_music.as_f32();
             const STEPS: f32 = 120.0;
-            if vol < DESIRED_VOLUME / 2.0 {
+            if vol < desired_vol / 2.0 {
                 vol * 1.02
             } else {
-                (vol * STEPS + DESIRED_VOLUME) / (STEPS + 1.0)
+                (vol * STEPS + desired_vol) / (STEPS + 1.0)
             }
         };
         sink.set_volume(v);
@@ -164,6 +172,7 @@ pub fn manage_title_song(
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
     app_state: Res<State<AppState>>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     // Determine the desired song state directly from the current state
     let should_play_song = !matches!(app_state.get(), AppState::InGame);
@@ -187,7 +196,7 @@ pub fn manage_title_song(
             ))
             .insert(PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(MUSIC_VOLUME),
+                volume: bevy::audio::Volume::new(audio_settings.volume_music.as_f32()),
                 speed: 1.0,
                 paused: false,
                 spatial: false,
@@ -218,7 +227,6 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
             flex_grow: 1.0,
             ..default()
         })
-        .insert(BackgroundColor(main_color))
         .insert(MenuUI)
         .with_children(|parent| {
             parent
@@ -263,36 +271,16 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                 .insert(BackgroundColor(main_color))
                 .insert(Menu::default())
                 .with_children(|parent| {
-                    // text
-                    parent
-                        .spawn(Text::new("New Game"))
-                        .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                        })
-                        .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
-                        .insert(MenuItem::new(MenuID::MapHub));
-                    parent
-                        .spawn(Text::new("Manual"))
-                        .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                        })
-                        .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
-                        .insert(MenuItem::new(MenuID::Manual));
-
-                    if !IS_WASM {
+                    for menu_id in Menu::items() {
                         parent
-                            .spawn(Text::new("Quit"))
-                            .insert(TextFont {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * FONT_SCALE,
-                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                            })
-                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
-                            .insert(MenuItem::new(MenuID::Quit));
+                        .spawn(Text::new(menu_id.to_string()))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * FONT_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
+                        .insert(MenuItem::new(*menu_id));
                     }
                 });
             parent.spawn(Node {
@@ -363,20 +351,22 @@ pub fn keyboard(
 pub fn menu_event(
     mut ev_menu: EventReader<MenuEvent>,
     mut exit: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
 ) {
     for event in ev_menu.read() {
         warn!("Main Menu Event: {:?}", event.0);
         match event.0 {
             MenuID::MapHub => {
                 // Transition to the Map Hub state
-                next_state.set(AppState::MapHub);
+                next_app_state.set(AppState::MapHub);
             }
             MenuID::Manual => {
                 // Transition to the Manual state
-                next_state.set(AppState::UserManual);
+                next_app_state.set(AppState::UserManual);
             }
-            MenuID::_Options => {}
+            MenuID::Settings => {
+                next_app_state.set(AppState::SettingsMenu);
+            }
             MenuID::Quit => {
                 exit.send(AppExit::Success);
             }

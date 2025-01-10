@@ -11,8 +11,10 @@ use unghost::plugin::UnhaunterGhostPlugin;
 use unlight::plugin::UnhaunterLightPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
 use unmenu::plugin::UnhaunterMenuPlugin;
+use unmenusettings::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
+use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
@@ -61,6 +63,7 @@ pub fn app_run() {
         UnhaunterNPCPlugin,
         UnhaunterTmxMapPlugin,
     ));
+    app.add_plugins((UnhaunterSettingsPlugin, UnhaunterMenuSettingsPlugin));
 
     app.run();
 }
