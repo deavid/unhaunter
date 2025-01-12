@@ -1,4 +1,4 @@
-use crate::components::SettingsState;
+use crate::components::{MenuEvBack, MenuEvent, SettingsState};
 use crate::{menu_ui, systems};
 use bevy::prelude::*;
 use uncore::states::AppState;
@@ -12,8 +12,15 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
             .add_systems(OnExit(AppState::SettingsMenu), menu_ui::cleanup)
             .add_systems(
                 Update,
-                (systems::handle_input, systems::item_highlight_system)
+                (
+                    systems::handle_input,
+                    systems::item_highlight_system,
+                    systems::menu_routing_system,
+                    systems::menu_back_event,
+                )
                     .run_if(in_state(AppState::SettingsMenu)),
-            );
+            )
+            .add_event::<MenuEvent>()
+            .add_event::<MenuEvBack>();
     }
 }

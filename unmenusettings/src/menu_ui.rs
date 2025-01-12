@@ -7,6 +7,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 
 pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
+    let mut menu_idx = 0;
     commands.spawn(Camera2d).insert(SCamera);
 
     commands
@@ -40,6 +41,28 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                 ..default()
             });
 
+            let create_menu_item =
+                |parent: &mut ChildBuilder<'_>, title, idx: &mut usize, menu_event: MenuEvent| {
+                    parent.spawn((
+                        Text::new(title),
+                        TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 38.0 * FONT_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        },
+                        TextColor(colors::MENU_ITEM_COLOR_OFF),
+                        MenuItem::new(*idx, menu_event),
+                        Node {
+                            min_height: Val::Px(40.0 * UI_SCALE),
+                            align_self: AlignSelf::Start,
+                            justify_self: JustifySelf::Start,
+                            padding: UiRect::left(Val::Px(15.0)),
+                            ..default()
+                        },
+                    ));
+                    *idx += 1;
+                };
+
             // Menu Items
             parent
                 .spawn(Node {
@@ -52,27 +75,21 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                 })
                 .with_children(|parent| {
                     for item in MenuSettingsLevel1::iter() {
-                        parent.spawn((
-                            Text::new(item.to_string()),
-                            TextFont {
-                                font: handles.fonts.londrina.w300_light.clone(),
-                                font_size: 38.0 * FONT_SCALE,
-                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                            },
-                            TextColor(colors::MENU_ITEM_COLOR_OFF),
-                            MenuItem::new(item),
-                            Node {
-                                min_height: Val::Px(40.0 * UI_SCALE),
-                                align_self: AlignSelf::Start,
-                                justify_self: JustifySelf::Start,
-                                padding: UiRect::left(Val::Px(15.0)),
-                                ..default()
-                            },
-                        ));
+                        create_menu_item(parent, item.to_string(), &mut menu_idx, MenuEvent::None);
                     }
+                    parent.spawn(Node {
+                        min_height: Val::Px(40.0 * UI_SCALE),
+                        ..default()
+                    });
+                    create_menu_item(
+                        parent,
+                        "Go Back".into(),
+                        &mut menu_idx,
+                        MenuEvent::Back(MenuEvBack),
+                    );
                 });
             parent
-                .spawn(Text::new("Press [Enter] or [Escape] to go back"))
+                .spawn(Text::new("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back"))
                 .insert(TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 18.0 * FONT_SCALE,

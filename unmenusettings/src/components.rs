@@ -1,7 +1,5 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::menus::MenuSettingsLevel1;
-
 #[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum MenuType {
     MainCategories,
@@ -31,15 +29,28 @@ pub enum SettingsState {
 
 #[derive(Component)]
 pub struct MenuItem {
-    pub identifier: MenuSettingsLevel1,
-    pub highlighted: bool,
+    pub idx: usize,
+    pub on_activate: MenuEvent,
 }
 
 impl MenuItem {
-    pub fn new(identifier: MenuSettingsLevel1) -> Self {
-        MenuItem {
-            identifier,
-            highlighted: false,
-        }
+    pub fn new(idx: usize, on_activate: MenuEvent) -> Self {
+        MenuItem { idx, on_activate }
     }
 }
+
+#[derive(Event, Debug, Clone, Copy, Default)]
+pub enum MenuEvent {
+    Back(MenuEvBack),
+    #[default]
+    None,
+}
+
+impl MenuEvent {
+    pub fn is_none(&self) -> bool {
+        matches!(self, MenuEvent::None)
+    }
+}
+
+#[derive(Event, Debug, Clone, Copy)]
+pub struct MenuEvBack;
