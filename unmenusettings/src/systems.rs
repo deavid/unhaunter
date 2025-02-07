@@ -1,6 +1,6 @@
 use crate::components::{
-    AudioSettingSelected, MenuEvBack, MenuEvent, MenuItem, MenuSettingClassSelected,
-    SaveAudioSetting, SettingsMenu, SettingsState,
+    AudioSettingSelected, AudioValueVariant, MenuEvBack, MenuEvent, MenuItem,
+    MenuSettingClassSelected, SaveAudioSetting, SettingsMenu, SettingsState,
 };
 use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, MenuSettingsLevel1};
@@ -180,9 +180,46 @@ pub fn menu_audio_setting_selected(
 pub fn menu_save_audio_setting(
     mut events: EventReader<SaveAudioSetting>,
     mut ev_back: EventWriter<MenuEvBack>,
+    mut audio_settings: ResMut<Persistent<AudioSettings>>,
 ) {
+    use AudioSettingsMenu as m;
+    use AudioValueVariant as v;
+
     for ev in events.read() {
         warn!("Save Audio Setting: {:?} -> {:?}", ev.setting, ev.value);
+        match (ev.setting, ev.value) {
+            (m::VolumeMaster, v::AudioLevel(audio_level)) => {
+                audio_settings.volume_master = audio_level;
+            }
+            (m::VolumeMusic, v::AudioLevel(audio_level)) => {
+                audio_settings.volume_music = audio_level;
+            }
+            (m::VolumeEffects, v::AudioLevel(audio_level)) => {
+                audio_settings.volume_effects = audio_level;
+            }
+            (m::VolumeAmbient, v::AudioLevel(audio_level)) => {
+                audio_settings.volume_ambient = audio_level;
+            }
+            (m::VolumeVoiceChat, v::AudioLevel(audio_level)) => {
+                audio_settings.volume_voice_chat = audio_level;
+            }
+            (m::SoundOutput, v::SoundOutput(sound_output)) => {
+                audio_settings.sound_output = sound_output;
+            }
+            (m::AudioPositioning, v::AudioPositioning(audio_positioning)) => {
+                audio_settings.audio_positioning = audio_positioning;
+            }
+            (m::FeedbackDelay, v::FeedbackDelay(feedback_delay)) => {
+                audio_settings.feedback_delay = feedback_delay;
+            }
+            (m::FeedbackEq, v::FeedbackEQ(feedback_eq)) => {
+                audio_settings.feedback_eq = feedback_eq;
+            }
+            (a, b) => warn!("Unsupported type {b:?} for Setting {a:?}"),
+        }
+        if let Err(e) = audio_settings.persist() {
+            error!("Error persisting Audio Settings: {e:?}");
+        }
         ev_back.send(MenuEvBack);
     }
 }
