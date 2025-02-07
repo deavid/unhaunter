@@ -4911,11 +4911,13 @@ name = "unplayer"
 version = "0.2.5-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "fastapprox",
  "ordered-float",
  "rand",
  "uncore",
  "ungear",
+ "unsettings",
  "unstd",
 ]
 

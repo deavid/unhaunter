@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
@@ -11,6 +12,7 @@ use uncore::events::npc_help::NpcHelpEvent;
 use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore::systemparam::collision_handler::CollisionHandler;
 use ungear::components::playergear::PlayerGear;
+use unsettings::game::{GameplaySettings, MovementStyle};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
@@ -39,8 +41,8 @@ pub fn keyboard_player(
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut ev_npc: EventWriter<NpcHelpEvent>,
-    // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
+    game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
     const DIR_MIN: f32 = 5.0;
@@ -58,6 +60,7 @@ pub fn keyboard_player(
             dy: 0.0,
             dz: 0.0,
         };
+
         if keyboard_input.pressed(player.controls.up) {
             d.dy += 1.0;
         }
@@ -70,6 +73,17 @@ pub fn keyboard_player(
         if keyboard_input.pressed(player.controls.right) {
             d.dx += 1.0;
         }
+        if matches!(
+            game_settings.movement_style,
+            MovementStyle::ScreenSpaceOrthogonal
+        ) {
+            pub const PERSPECTIVE_X: [f32; 2] = [1.0, 1.0];
+            pub const PERSPECTIVE_Y: [f32; 2] = [-1.0, 1.0];
+            let od = d;
+            d.dx = od.dx * PERSPECTIVE_X[0] + od.dy * PERSPECTIVE_Y[0];
+            d.dy = od.dx * PERSPECTIVE_X[1] + od.dy * PERSPECTIVE_Y[1];
+        }
+
         d = d.normalized();
         let col_delta_n = (col_delta * 100.0).clamp_length_max(1.0);
         let col_dotp = (d.dx * col_delta_n.x + d.dy * col_delta_n.y).clamp(0.0, 1.0);
