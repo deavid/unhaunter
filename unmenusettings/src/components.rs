@@ -45,7 +45,7 @@ impl MenuItem {
 
 #[derive(Event, Debug, Clone, Copy, Default)]
 pub enum MenuEvent {
-    SaveAudioSetting(AudioSettingsMenu, AudioValueVariant),
+    SaveAudioSetting(AudioSettingsValue),
     EditAudioSetting(AudioSettingsMenu),
     SettingClassSelected(MenuSettingsLevel1),
     Back(MenuEvBack),
@@ -59,13 +59,18 @@ impl MenuEvent {
     }
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
-pub enum AudioValueVariant {
-    AudioLevel(AudioLevel),
-    SoundOutput(SoundOutput),
-    AudioPositioning(AudioPositioning),
-    FeedbackDelay(FeedbackDelay),
-    FeedbackEQ(FeedbackEQ),
+pub enum AudioSettingsValue {
+    volume_master(AudioLevel),
+    volume_music(AudioLevel),
+    volume_effects(AudioLevel),
+    volume_ambient(AudioLevel),
+    volume_voice_chat(AudioLevel),
+    sound_output(SoundOutput),
+    audio_positioning(AudioPositioning),
+    feedback_delay(FeedbackDelay),
+    feedback_eq(FeedbackEQ),
 }
 
 #[derive(Event, Debug, Clone, Copy)]
@@ -78,11 +83,10 @@ pub struct MenuSettingClassSelected {
 
 #[derive(Event, Debug, Clone, Copy)]
 pub struct AudioSettingSelected {
-    pub setting: AudioSettingsMenu, 
+    pub setting: AudioSettingsMenu,
 }
 
 #[derive(Event, Debug, Clone, Copy)]
 pub struct SaveAudioSetting {
-    pub setting: AudioSettingsMenu, 
-    pub value: AudioValueVariant,
+    pub value: AudioSettingsValue,
 }

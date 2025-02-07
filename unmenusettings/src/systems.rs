@@ -1,5 +1,5 @@
 use crate::components::{
-    AudioSettingSelected, AudioValueVariant, MenuEvBack, MenuEvent, MenuItem,
+    AudioSettingSelected, AudioSettingsValue, MenuEvBack, MenuEvent, MenuItem,
     MenuSettingClassSelected, SaveAudioSetting, SettingsMenu, SettingsState,
 };
 use crate::menu_ui::setup_ui_main_cat;
@@ -81,10 +81,9 @@ pub fn menu_routing_system(
                     setting: *audio_settings_menu,
                 });
             }
-            MenuEvent::SaveAudioSetting(audio_settings_menu, value_variant) => {
+            MenuEvent::SaveAudioSetting(setting_value) => {
                 ev_save_audio_setting.send(SaveAudioSetting {
-                    setting: *audio_settings_menu,
-                    value: *value_variant,
+                    value: *setting_value,
                 });
             }
         }
@@ -182,40 +181,38 @@ pub fn menu_save_audio_setting(
     mut ev_back: EventWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
 ) {
-    use AudioSettingsMenu as m;
-    use AudioValueVariant as v;
+    use AudioSettingsValue as v;
 
     for ev in events.read() {
-        warn!("Save Audio Setting: {:?} -> {:?}", ev.setting, ev.value);
-        match (ev.setting, ev.value) {
-            (m::VolumeMaster, v::AudioLevel(audio_level)) => {
+        warn!("Save Audio Setting: {:?}", ev.value);
+        match ev.value {
+            v::volume_master(audio_level) => {
                 audio_settings.volume_master = audio_level;
             }
-            (m::VolumeMusic, v::AudioLevel(audio_level)) => {
+            v::volume_music(audio_level) => {
                 audio_settings.volume_music = audio_level;
             }
-            (m::VolumeEffects, v::AudioLevel(audio_level)) => {
+            v::volume_effects(audio_level) => {
                 audio_settings.volume_effects = audio_level;
             }
-            (m::VolumeAmbient, v::AudioLevel(audio_level)) => {
+            v::volume_ambient(audio_level) => {
                 audio_settings.volume_ambient = audio_level;
             }
-            (m::VolumeVoiceChat, v::AudioLevel(audio_level)) => {
+            v::volume_voice_chat(audio_level) => {
                 audio_settings.volume_voice_chat = audio_level;
             }
-            (m::SoundOutput, v::SoundOutput(sound_output)) => {
+            v::sound_output(sound_output) => {
                 audio_settings.sound_output = sound_output;
             }
-            (m::AudioPositioning, v::AudioPositioning(audio_positioning)) => {
+            v::audio_positioning(audio_positioning) => {
                 audio_settings.audio_positioning = audio_positioning;
             }
-            (m::FeedbackDelay, v::FeedbackDelay(feedback_delay)) => {
+            v::feedback_delay(feedback_delay) => {
                 audio_settings.feedback_delay = feedback_delay;
             }
-            (m::FeedbackEq, v::FeedbackEQ(feedback_eq)) => {
+            v::feedback_eq(feedback_eq) => {
                 audio_settings.feedback_eq = feedback_eq;
             }
-            (a, b) => warn!("Unsupported type {b:?} for Setting {a:?}"),
         }
         if let Err(e) = audio_settings.persist() {
             error!("Error persisting Audio Settings: {e:?}");
