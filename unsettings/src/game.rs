@@ -11,8 +11,28 @@ pub struct GameplaySettings {
     pub character_controls: CharacterControls,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum GameplaySettingsValue {
+    movement_style(MovementStyle),
+    camera_controls(CameraControls),
+    character_controls(CharacterControls),
+}
+
 #[derive(
-    Reflect, Component, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, Sequence,
+    Reflect,
+    Component,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    Sequence,
+    strum::Display,
+    strum::EnumIter,
 )]
 pub enum MovementStyle {
     #[default]
@@ -21,7 +41,19 @@ pub enum MovementStyle {
 }
 
 #[derive(
-    Reflect, Component, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, Sequence,
+    Reflect,
+    Component,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    Sequence,
+    strum::Display,
+    strum::EnumIter,
 )]
 pub enum CameraControls {
     #[default]
@@ -30,7 +62,19 @@ pub enum CameraControls {
 }
 
 #[derive(
-    Reflect, Component, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, Sequence,
+    Reflect,
+    Component,
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    Sequence,
+    strum::Display,
+    strum::EnumIter,
 )]
 pub enum CharacterControls {
     #[default]

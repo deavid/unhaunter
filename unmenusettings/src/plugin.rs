@@ -1,6 +1,6 @@
 use crate::components::{
-    AudioSettingSelected, MenuEvBack, MenuEvent, MenuSettingClassSelected, SaveAudioSetting,
-    SettingsState,
+    AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuSettingClassSelected,
+    SaveAudioSetting, SaveGameplaySetting, SettingsState,
 };
 use crate::{menu_ui, systems};
 use bevy::prelude::*;
@@ -26,6 +26,8 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
                     systems::menu_settings_class_selected,
                     systems::menu_audio_setting_selected,
                     systems::menu_save_audio_setting,
+                    systems::menu_gameplay_setting_selected,
+                    systems::menu_save_gameplay_setting,
                 )
                     .run_if(in_state(AppState::SettingsMenu)),
             )
@@ -33,6 +35,8 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
             .add_event::<MenuEvBack>()
             .add_event::<MenuSettingClassSelected>()
             .add_event::<AudioSettingSelected>()
-            .add_event::<SaveAudioSetting>();
+            .add_event::<SaveAudioSetting>()
+            .add_event::<GameplaySettingSelected>()
+            .add_event::<SaveGameplaySetting>();
     }
 }

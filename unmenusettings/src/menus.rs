@@ -1,7 +1,12 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use strum::IntoEnumIterator;
-use unsettings::audio::{AudioLevel, AudioSettings, AudioSettingsValue};
+use unsettings::{
+    audio::{AudioLevel, AudioSettings, AudioSettingsValue},
+    game::{
+        CameraControls, CharacterControls, GameplaySettings, GameplaySettingsValue, MovementStyle,
+    },
+};
 
 use crate::components::MenuEvent;
 
@@ -18,9 +23,9 @@ impl MenuSettingsLevel1 {
         use MenuSettingsLevel1 as m;
         match self {
             MenuSettingsLevel1::Gameplay => MenuEvent::SettingClassSelected(m::Gameplay),
-            MenuSettingsLevel1::Video => MenuEvent::SettingClassSelected(m::Video),
             MenuSettingsLevel1::Audio => MenuEvent::SettingClassSelected(m::Audio),
-            // We disable Profile for now
+            // We disable Video and Profile for now
+            MenuSettingsLevel1::Video => MenuEvent::None,
             MenuSettingsLevel1::Profile => MenuEvent::None,
         }
     }
@@ -118,22 +123,91 @@ impl AudioSettingsMenu {
     }
 }
 
-/// Common type for setting the value of the options
-pub enum OptionValue {
-    List(OptionList),
-    Text(String),
+#[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameplaySettingsMenu {
+    #[strum(to_string = "Movement Style")]
+    MovementStyle,
+    #[strum(to_string = "Camera Controls")]
+    CameraControls,
+    #[strum(to_string = "Character Controls")]
+    CharacterControls,
 }
 
-pub trait OptionListTrait {
-    fn list_options(&self) -> Vec<String>;
-}
+impl GameplaySettingsMenu {
+    pub fn menu_event(&self) -> MenuEvent {
+        #[allow(clippy::match_single_binding)]
+        match self {
+            GameplaySettingsMenu::MovementStyle => MenuEvent::EditGameplaySetting(*self),
+            GameplaySettingsMenu::CameraControls => MenuEvent::EditGameplaySetting(*self),
+            GameplaySettingsMenu::CharacterControls => MenuEvent::EditGameplaySetting(*self),
+        }
+    }
 
-pub enum OptionValue2 {
-    List(Box<dyn OptionListTrait>),
-    Text(String),
-}
+    pub fn setting_value(&self, game_settings: &Res<Persistent<GameplaySettings>>) -> String {
+        match self {
+            GameplaySettingsMenu::MovementStyle => game_settings.movement_style.to_string(),
+            GameplaySettingsMenu::CameraControls => game_settings.camera_controls.to_string(),
+            GameplaySettingsMenu::CharacterControls => game_settings.character_controls.to_string(),
+        }
+    }
 
-pub struct OptionList {
-    pub display_values: Vec<String>,
-    pub selected_idx: usize,
+    pub fn iter_events_item(
+        &self,
+        game_settings: &Res<Persistent<GameplaySettings>>,
+    ) -> Vec<(String, MenuEvent)> {
+        match self {
+            GameplaySettingsMenu::MovementStyle => MovementStyle::iter()
+                .map(|s| {
+                    (
+                        if s == game_settings.movement_style {
+                            format!("[{s}]")
+                        } else {
+                            s.to_string()
+                        },
+                        MenuEvent::SaveGameplaySetting(GameplaySettingsValue::movement_style(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            GameplaySettingsMenu::CameraControls => CameraControls::iter()
+                .map(|s| {
+                    (
+                        if s == game_settings.camera_controls {
+                            format!("[{s}]")
+                        } else {
+                            s.to_string()
+                        },
+                        MenuEvent::SaveGameplaySetting(GameplaySettingsValue::camera_controls(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            GameplaySettingsMenu::CharacterControls => CharacterControls::iter()
+                .map(|s| {
+                    (
+                        if s == game_settings.character_controls {
+                            format!("[{s}]")
+                        } else {
+                            s.to_string()
+                        },
+                        MenuEvent::SaveGameplaySetting(GameplaySettingsValue::character_controls(
+                            s,
+                        )),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+
+    pub fn iter_events(
+        game_settings: &Res<Persistent<GameplaySettings>>,
+    ) -> Vec<(String, MenuEvent)> {
+        use strum::IntoEnumIterator;
+        Self::iter()
+            .map(|s| {
+                (
+                    format!("{}: {}", s, s.setting_value(game_settings)),
+                    s.menu_event(),
+                )
+            })
+            .collect::<Vec<_>>()
+    }
 }

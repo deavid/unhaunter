@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use unsettings::audio::AudioSettingsValue;
+use unsettings::{audio::AudioSettingsValue, game::GameplaySettingsValue};
 
-use crate::menus::{AudioSettingsMenu, MenuSettingsLevel1};
+use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 
 #[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum MenuType {
@@ -47,6 +47,8 @@ impl MenuItem {
 pub enum MenuEvent {
     SaveAudioSetting(AudioSettingsValue),
     EditAudioSetting(AudioSettingsMenu),
+    SaveGameplaySetting(GameplaySettingsValue),
+    EditGameplaySetting(GameplaySettingsMenu),
     SettingClassSelected(MenuSettingsLevel1),
     Back(MenuEvBack),
     #[default]
@@ -75,4 +77,14 @@ pub struct AudioSettingSelected {
 #[derive(Event, Debug, Clone, Copy)]
 pub struct SaveAudioSetting {
     pub value: AudioSettingsValue,
+}
+
+#[derive(Event, Debug, Clone, Copy)]
+pub struct GameplaySettingSelected {
+    pub setting: GameplaySettingsMenu,
+}
+
+#[derive(Event, Debug, Clone, Copy)]
+pub struct SaveGameplaySetting {
+    pub value: GameplaySettingsValue,
 }

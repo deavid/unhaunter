@@ -1,15 +1,16 @@
 use crate::components::{
-    AudioSettingSelected, MenuEvBack, MenuEvent, MenuItem, MenuSettingClassSelected,
-    SaveAudioSetting, SettingsMenu, SettingsState,
+    AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuItem,
+    MenuSettingClassSelected, SaveAudioSetting, SaveGameplaySetting, SettingsMenu, SettingsState,
 };
 use crate::menu_ui::setup_ui_main_cat;
-use crate::menus::{AudioSettingsMenu, MenuSettingsLevel1};
+use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
 use unsettings::audio::AudioSettings;
+use unsettings::game::GameplaySettings;
 
 pub fn handle_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -64,6 +65,8 @@ pub fn menu_routing_system(
     mut ev_class: EventWriter<MenuSettingClassSelected>,
     mut ev_audio_setting: EventWriter<AudioSettingSelected>,
     mut ev_save_audio_setting: EventWriter<SaveAudioSetting>,
+    mut ev_game_setting: EventWriter<GameplaySettingSelected>,
+    mut ev_save_game_setting: EventWriter<SaveGameplaySetting>,
 ) {
     for ev in ev_menu.read() {
         match ev {
@@ -83,6 +86,16 @@ pub fn menu_routing_system(
             }
             MenuEvent::SaveAudioSetting(setting_value) => {
                 ev_save_audio_setting.send(SaveAudioSetting {
+                    value: *setting_value,
+                });
+            }
+            MenuEvent::EditGameplaySetting(gameplay_settings_menu) => {
+                ev_game_setting.send(GameplaySettingSelected {
+                    setting: *gameplay_settings_menu,
+                });
+            }
+            MenuEvent::SaveGameplaySetting(setting_value) => {
+                ev_save_game_setting.send(SaveGameplaySetting {
                     value: *setting_value,
                 });
             }
@@ -126,30 +139,35 @@ pub fn menu_settings_class_selected(
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
     audio_settings: Res<Persistent<AudioSettings>>,
+    game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     for ev in events.read() {
         warn!("Menu Setting Class Selected: {:?}", ev.menu);
-
-        if matches!(ev.menu, MenuSettingsLevel1::Audio) {
-            let menu_items = AudioSettingsMenu::iter_events(&audio_settings);
-            setup_ui_main_cat(
-                &mut commands,
-                &handles,
-                &qtui,
-                "Audio Settings",
-                &menu_items,
-            );
-            next_state.set(SettingsState::Lv2List);
-        } else {
-            // Just a demo for the ones that don't work yet.
-            let menu_items = MenuSettingsLevel1::iter_events();
-            setup_ui_main_cat(
-                &mut commands,
-                &handles,
-                &qtui,
-                "Broken Settings",
-                &menu_items[..2],
-            );
+        match ev.menu {
+            MenuSettingsLevel1::Audio => {
+                let menu_items = AudioSettingsMenu::iter_events(&audio_settings);
+                setup_ui_main_cat(
+                    &mut commands,
+                    &handles,
+                    &qtui,
+                    "Audio Settings",
+                    &menu_items,
+                );
+                next_state.set(SettingsState::Lv2List);
+            }
+            MenuSettingsLevel1::Gameplay => {
+                let menu_items = GameplaySettingsMenu::iter_events(&game_settings);
+                setup_ui_main_cat(
+                    &mut commands,
+                    &handles,
+                    &qtui,
+                    "Gameplay Settings",
+                    &menu_items,
+                );
+                next_state.set(SettingsState::Lv2List);
+            }
+            MenuSettingsLevel1::Video => todo!(),
+            MenuSettingsLevel1::Profile => todo!(),
         }
     }
 }
@@ -217,6 +235,57 @@ pub fn menu_save_audio_setting(
         }
         if let Err(e) = audio_settings.persist() {
             error!("Error persisting Audio Settings: {e:?}");
+        }
+        ev_back.send(MenuEvBack);
+    }
+}
+
+pub fn menu_gameplay_setting_selected(
+    mut commands: Commands,
+    mut events: EventReader<GameplaySettingSelected>,
+    mut next_state: ResMut<NextState<SettingsState>>,
+    handles: Res<GameAssets>,
+    qtui: Query<Entity, With<SettingsMenu>>,
+    game_settings: Res<Persistent<GameplaySettings>>,
+) {
+    for ev in events.read() {
+        warn!("Gameplay Setting Selected: {:?}", ev.setting);
+
+        let menu_items = ev.setting.iter_events_item(&game_settings);
+        setup_ui_main_cat(
+            &mut commands,
+            &handles,
+            &qtui,
+            ev.setting.to_string(), // Use Display trait for title
+            &menu_items,
+        );
+        next_state.set(SettingsState::Lv3ValueEdit(MenuSettingsLevel1::Gameplay));
+    }
+}
+
+pub fn menu_save_gameplay_setting(
+    mut events: EventReader<SaveGameplaySetting>,
+    mut ev_back: EventWriter<MenuEvBack>,
+    mut gameplay_settings: ResMut<Persistent<GameplaySettings>>,
+) {
+    use unsettings::game::GameplaySettingsValue as v;
+
+    for ev in events.read() {
+        warn!("Save Gameplay Setting: {:?}", ev.value);
+        match ev.value {
+            v::movement_style(movement_style) => {
+                gameplay_settings.movement_style = movement_style;
+            }
+            v::camera_controls(camera_controls) => {
+                gameplay_settings.camera_controls = camera_controls;
+            }
+            v::character_controls(character_controls) => {
+                gameplay_settings.character_controls = character_controls;
+            }
+
+        }
+        if let Err(e) = gameplay_settings.persist() {
+            error!("Error persisting Gameplay Settings: {e:?}");
         }
         ev_back.send(MenuEvBack);
     }
