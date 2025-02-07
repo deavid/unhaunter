@@ -1,6 +1,6 @@
 use crate::components::{
-    AudioSettingSelected, AudioSettingsValue, MenuEvBack, MenuEvent, MenuItem,
-    MenuSettingClassSelected, SaveAudioSetting, SettingsMenu, SettingsState,
+    AudioSettingSelected, MenuEvBack, MenuEvent, MenuItem, MenuSettingClassSelected,
+    SaveAudioSetting, SettingsMenu, SettingsState,
 };
 use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, MenuSettingsLevel1};
@@ -160,11 +160,12 @@ pub fn menu_audio_setting_selected(
     mut next_state: ResMut<NextState<SettingsState>>,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for ev in events.read() {
         warn!("Audio Setting Selected: {:?}", ev.setting);
 
-        let menu_items = ev.setting.iter_events_item();
+        let menu_items = ev.setting.iter_events_item(&audio_settings);
         setup_ui_main_cat(
             &mut commands,
             &handles,
@@ -181,7 +182,7 @@ pub fn menu_save_audio_setting(
     mut ev_back: EventWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
 ) {
-    use AudioSettingsValue as v;
+    use unsettings::audio::AudioSettingsValue as v;
 
     for ev in events.read() {
         warn!("Save Audio Setting: {:?}", ev.value);

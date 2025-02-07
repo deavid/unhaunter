@@ -14,6 +14,20 @@ pub struct AudioSettings {
     pub feedback_eq: FeedbackEQ,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum AudioSettingsValue {
+    volume_master(AudioLevel),
+    volume_music(AudioLevel),
+    volume_effects(AudioLevel),
+    volume_ambient(AudioLevel),
+    volume_voice_chat(AudioLevel),
+    sound_output(SoundOutput),
+    audio_positioning(AudioPositioning),
+    feedback_delay(FeedbackDelay),
+    feedback_eq(FeedbackEQ),
+}
+
 #[derive(
     Serialize,
     Deserialize,

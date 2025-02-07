@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unsettings::audio::{AudioLevel, AudioPositioning, FeedbackDelay, FeedbackEQ, SoundOutput};
+use unsettings::audio::AudioSettingsValue;
 
 use crate::menus::{AudioSettingsMenu, MenuSettingsLevel1};
 
@@ -57,20 +57,6 @@ impl MenuEvent {
     pub fn is_none(&self) -> bool {
         matches!(self, MenuEvent::None)
     }
-}
-
-#[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy)]
-pub enum AudioSettingsValue {
-    volume_master(AudioLevel),
-    volume_music(AudioLevel),
-    volume_effects(AudioLevel),
-    volume_ambient(AudioLevel),
-    volume_voice_chat(AudioLevel),
-    sound_output(SoundOutput),
-    audio_positioning(AudioPositioning),
-    feedback_delay(FeedbackDelay),
-    feedback_eq(FeedbackEQ),
 }
 
 #[derive(Event, Debug, Clone, Copy)]

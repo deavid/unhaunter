@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use strum::IntoEnumIterator;
-use unsettings::audio::{AudioLevel, AudioSettings};
+use unsettings::audio::{AudioLevel, AudioSettings, AudioSettingsValue};
 
-use crate::components::{AudioSettingsValue, MenuEvent};
+use crate::components::MenuEvent;
 
 #[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum MenuSettingsLevel1 {
@@ -79,12 +79,22 @@ impl AudioSettingsMenu {
         }
     }
 
-    pub fn iter_events_item(&self) -> Vec<(String, MenuEvent)> {
+    pub fn iter_events_item(
+        &self,
+        audio_settings: &Res<Persistent<AudioSettings>>,
+    ) -> Vec<(String, MenuEvent)> {
+        let to_string = |s: AudioLevel, v: &AudioLevel| -> String {
+            if s == *v {
+                format!("[{s}]")
+            } else {
+                s.to_string()
+            }
+        };
         match self {
             AudioSettingsMenu::VolumeMusic => AudioLevel::iter()
                 .map(|s| {
                     (
-                        s.to_string(),
+                        to_string(s, &audio_settings.volume_music),
                         MenuEvent::SaveAudioSetting(AudioSettingsValue::volume_music(s)),
                     )
                 })
