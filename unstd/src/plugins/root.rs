@@ -1,7 +1,7 @@
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use uncore::resources::maps::Maps;
-use uncore::states::{GameState, AppState};
+use uncore::states::{AppState, GameState};
 use uncore::types::root::anchors::Anchors;
 use uncore::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
@@ -18,10 +18,7 @@ impl Plugin for UnhaunterRootPlugin {
         app.init_state::<AppState>()
             .init_state::<GameState>()
             .init_resource::<Maps>()
-            .add_systems(
-                Startup,
-                (load_assets, finish_loading).chain(),
-            );
+            .add_systems(Startup, (load_assets, finish_loading).chain());
         if FPS_DEBUG {
             app.add_plugins(FrameTimeDiagnosticsPlugin)
                 .add_plugins(LogDiagnosticsPlugin::default());

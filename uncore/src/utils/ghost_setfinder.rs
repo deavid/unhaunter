@@ -1,12 +1,10 @@
 #![cfg(test)]
 
+use crate::types::evidence::Evidence;
+use crate::types::ghost::types::GhostType;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use crate::types::evidence::Evidence;
-use crate::types::ghost::types::GhostType;
-
-
 
 const MAX_COMBO: usize = 1024 * 1024;
 

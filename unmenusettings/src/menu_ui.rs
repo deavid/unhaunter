@@ -1,14 +1,37 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use strum::IntoEnumIterator;
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 
-pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
-    let mut menu_idx = 0;
+pub fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
+}
+
+pub fn setup_ui_main_cat_system(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    qtui: Query<Entity, With<SettingsMenu>>,
+) {
+    let menu_items = MenuSettingsLevel1::iter_events();
+    setup_ui_main_cat(&mut commands, &handles, &qtui, "Settings", &menu_items);
+}
+
+pub fn setup_ui_main_cat(
+    commands: &mut Commands,
+    handles: &Res<GameAssets>,
+    qtui: &Query<Entity, With<SettingsMenu>>,
+    title: impl Into<String>,
+    menu_items: &[(String, MenuEvent)],
+) {
+    // Clean up old UI:
+    for e in qtui.iter() {
+        commands.entity(e).despawn_recursive();
+    }
+
+    // Create new UI
+    let mut menu_idx = 0;
 
     commands
         .spawn(Node {
@@ -22,13 +45,11 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
         .insert(SettingsMenu {
             menu_type: MenuType::MainCategories,
             selected_item_idx: 0,
-            last_selected: default(),
-            settings_entity: None,
         })
         .with_children(|parent| {
             // Header
             parent
-                .spawn(Text::new("Settings"))
+                .spawn(Text::new(title))
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 38.0 * FONT_SCALE,
@@ -38,20 +59,19 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
 
             parent.spawn(Node {
                 flex_grow: 0.01,
+                min_height: Val::Px(18.0 * UI_SCALE),
                 ..default()
             });
 
             let create_menu_item =
-                |parent: &mut ChildBuilder<'_>, title, idx: &mut usize, menu_event: MenuEvent| {
-                    parent.spawn((
+                |parent: &mut ChildBuilder<'_>, title: &str, idx: &mut usize, menu_event: MenuEvent| {
+                    let mut menu_item = parent.spawn((
                         Text::new(title),
                         TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 38.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
-                        TextColor(colors::MENU_ITEM_COLOR_OFF),
-                        MenuItem::new(*idx, menu_event),
                         Node {
                             min_height: Val::Px(40.0 * UI_SCALE),
                             align_self: AlignSelf::Start,
@@ -60,7 +80,19 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                             ..default()
                         },
                     ));
-                    *idx += 1;
+                    if menu_event.is_none() {
+                        menu_item.insert(
+                            TextColor(colors::MENU_ITEM_COLOR_OFF.with_alpha(0.1)),
+                        );
+                    } else {
+                        menu_item.insert(
+                            (
+                                MenuItem::new(*idx, menu_event),
+                                TextColor(colors::MENU_ITEM_COLOR_OFF),
+                            )
+                        );
+                        *idx += 1;
+                    }
                 };
 
             // Menu Items
@@ -74,8 +106,8 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                     ..default()
                 })
                 .with_children(|parent| {
-                    for item in MenuSettingsLevel1::iter() {
-                        create_menu_item(parent, item.to_string(), &mut menu_idx, MenuEvent::None);
+                    for (item, event) in menu_items.iter() {
+                        create_menu_item(parent, item, &mut menu_idx, *event);
                     }
                     parent.spawn(Node {
                         min_height: Val::Px(40.0 * UI_SCALE),
@@ -83,7 +115,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                     });
                     create_menu_item(
                         parent,
-                        "Go Back".into(),
+                        "Go Back",
                         &mut menu_idx,
                         MenuEvent::Back(MenuEvBack),
                     );
@@ -104,7 +136,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
                 });
         });
 
-    info!("Settings UI initialized - Main menu only");
+    info!("Settings UI initialized");
 }
 
 pub fn cleanup(

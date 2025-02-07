@@ -44,6 +44,6 @@ impl GearUsable for ThermalImager {
 
 impl From<ThermalImager> for Gear {
     fn from(value: ThermalImager) -> Self {
-        Gear::new_from_kind(GearKind::ThermalImager,value.box_clone())
+        Gear::new_from_kind(GearKind::ThermalImager, value.box_clone())
     }
 }

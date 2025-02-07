@@ -1,7 +1,7 @@
-pub mod direction;
-pub mod position;
 pub mod boardposition;
+pub mod direction;
 pub mod mapcolor;
+pub mod position;
 
 pub const EPSILON: f32 = 0.0001;
 

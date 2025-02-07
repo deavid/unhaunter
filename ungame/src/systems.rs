@@ -1,5 +1,13 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
-use uncore::{components::{board::direction::Direction, game::{GCameraArena, GameSound, GameSprite}, game_config::GameConfig, player_sprite::PlayerSprite}, states::{AppState, GameState}};
+use uncore::{
+    components::{
+        board::direction::Direction,
+        game::{GCameraArena, GameSound, GameSprite},
+        game_config::GameConfig,
+        player_sprite::PlayerSprite,
+    },
+    states::{AppState, GameState},
+};
 
 pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists

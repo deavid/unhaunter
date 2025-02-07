@@ -44,6 +44,6 @@ impl GearUsable for Photocam {
 
 impl From<Photocam> for Gear {
     fn from(value: Photocam) -> Self {
-        Gear::new_from_kind(GearKind::Photocam,value.box_clone())
+        Gear::new_from_kind(GearKind::Photocam, value.box_clone())
     }
 }

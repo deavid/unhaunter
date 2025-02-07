@@ -1,2 +1,2 @@
-pub mod tiledata;
 pub mod spritedb;
+pub mod tiledata;

@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod behavior;
 pub mod colors;
 pub mod components;
@@ -8,11 +9,10 @@ pub mod platform;
 pub mod resources;
 pub mod states;
 pub mod systemparam;
+pub mod systems;
+pub mod traits;
 pub mod types;
 pub mod utils;
-pub mod traits;
-pub mod systems;
-pub mod assets;
 
 /// Enables the use of arrow keys for movement instead of WASD
 pub const USE_ARROW_KEYS: bool = false;

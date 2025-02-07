@@ -16,6 +16,7 @@
 //! the main exploration and investigation gameplay.
 pub mod activity;
 pub mod craft_repellent;
+pub mod evidence;
 pub mod journal;
 pub mod journalui;
 pub mod loadoutui;
@@ -26,7 +27,6 @@ pub mod systems;
 pub mod truckgear;
 pub mod ui;
 pub mod uibutton;
-pub mod evidence;
 
 use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
 use uncore::events::truck::TruckUIEvent;

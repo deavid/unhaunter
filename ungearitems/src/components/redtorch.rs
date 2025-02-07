@@ -56,6 +56,6 @@ impl GearUsable for RedTorch {
 
 impl From<RedTorch> for Gear {
     fn from(value: RedTorch) -> Self {
-        Gear::new_from_kind(GearKind::RedTorch,value.box_clone())
+        Gear::new_from_kind(GearKind::RedTorch, value.box_clone())
     }
 }
