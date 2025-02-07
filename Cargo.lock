@@ -4709,11 +4709,13 @@ name = "ungame"
 version = "0.2.5-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "ordered-float",
  "rand",
  "uncore",
  "ungear",
  "ungearitems",
+ "unsettings",
  "unstd",
 ]
 

@@ -40,6 +40,11 @@ impl PlayerSprite {
         }
     }
 
+    /// Returns a modified version with the requested controls
+    pub fn with_controls(self, controls: ControlKeys) -> Self {
+        Self { controls, ..self }
+    }
+
     /// Calculates the required crazyness based on the player's current sanity level.
     pub fn required_crazyness(sanity: f32) -> f32 {
         const LINEAR: f32 = 30.0;

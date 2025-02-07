@@ -16,9 +16,11 @@
 //!
 //! This module provides the core functionality for setting up and managing the
 //! interactive environment that the player explores and investigates.
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
+use bevy_persistent::Persistent;
 use ordered_float::OrderedFloat;
 use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
@@ -30,6 +32,7 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
+use uncore::controlkeys::ControlKeys;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
@@ -43,10 +46,27 @@ use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
+use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
 use unstd::tiledmap::{AtlasData, MapTileSetDb};
+
+#[derive(SystemParam)]
+pub struct LoadLevelSystemParam<'w> {
+    asset_server: Res<'w, AssetServer>,
+    bf: ResMut<'w, BoardData>,
+    materials1: ResMut<'w, Assets<CustomMaterial1>>,
+    texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
+    meshes: ResMut<'w, Assets<Mesh>>,
+    tilesetdb: Res<'w, MapTileSetDb>,
+    sdb: ResMut<'w, SpriteDB>,
+    handles: Res<'w, GameAssets>,
+    roomdb: ResMut<'w, RoomDB>,
+    difficulty: Res<'w, CurrentDifficulty>,
+    next_game_state: ResMut<'w, NextState<AppState>>,
+    game_settings: Res<'w, Persistent<GameplaySettings>>,
+}
 
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
@@ -58,20 +78,10 @@ use unstd::tiledmap::{AtlasData, MapTileSetDb};
 pub fn load_level_handler(
     mut ev: EventReader<LevelLoadedEvent>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut bf: ResMut<BoardData>,
-    mut materials1: ResMut<Assets<CustomMaterial1>>,
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
-    texture_atlases: Res<Assets<TextureAtlasLayout>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    tilesetdb: Res<MapTileSetDb>,
-    mut sdb: ResMut<SpriteDB>,
-    handles: Res<GameAssets>,
-    mut roomdb: ResMut<RoomDB>,
-    difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<AppState>>,
+    mut p: LoadLevelSystemParam,
 ) {
     let mut ev_iter = ev.read();
     let Some(loaded_event) = ev_iter.next() else {
@@ -90,17 +100,17 @@ pub fn load_level_handler(
     for gs in qgs2.iter() {
         commands.entity(gs).despawn_recursive();
     }
-    bf.ambient_temp = difficulty.0.ambient_temperature;
+    p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
 
     // Remove all pre-existing data for environment
-    bf.temperature_field.clear();
-    bf.sound_field.clear();
-    bf.current_exposure = 10.0;
-    roomdb.room_state.clear();
-    roomdb.room_tiles.clear();
+    p.bf.temperature_field.clear();
+    p.bf.sound_field.clear();
+    p.bf.current_exposure = 10.0;
+    p.roomdb.room_state.clear();
+    p.roomdb.room_tiles.clear();
     commands
         .spawn(AudioPlayer::new(
-            asset_server.load("sounds/background-noise-house-1.ogg"),
+            p.asset_server.load("sounds/background-noise-house-1.ogg"),
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
@@ -115,7 +125,7 @@ pub fn load_level_handler(
         });
     commands
         .spawn(AudioPlayer::new(
-            asset_server.load("sounds/ambient-clean.ogg"),
+            p.asset_server.load("sounds/ambient-clean.ogg"),
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
@@ -130,7 +140,7 @@ pub fn load_level_handler(
         });
     commands
         .spawn(AudioPlayer::new(
-            asset_server.load("sounds/heartbeat-1.ogg"),
+            p.asset_server.load("sounds/heartbeat-1.ogg"),
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
@@ -144,7 +154,7 @@ pub fn load_level_handler(
             class: SoundType::HeartBeat,
         });
     commands
-        .spawn(AudioPlayer::new(asset_server.load("sounds/insane-1.ogg")))
+        .spawn(AudioPlayer::new(p.asset_server.load("sounds/insane-1.ogg")))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
             volume: bevy::audio::Volume::new(0.00001),
@@ -164,10 +174,10 @@ pub fn load_level_handler(
     let mut ghost_spawn_points: Vec<Position> = vec![];
     let mut van_entry_points: Vec<Position> = vec![];
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
-    sdb.clear();
+    p.sdb.clear();
 
     // Load the tileset sprites first:
-    for (tset_name, tileset) in tilesetdb.db.iter() {
+    for (tset_name, tileset) in p.tilesetdb.db.iter() {
         for (tileuid, tiled_tile) in tileset.tileset.tiles() {
             let sprite_config =
                 SpriteConfig::from_tiled_auto(tset_name.clone(), tileuid, &tiled_tile);
@@ -182,7 +192,7 @@ pub fn load_level_handler(
             let bundle = match &tileset.data {
                 AtlasData::Sheet((handle, cmat)) => {
                     let mut cmat = cmat.clone();
-                    let tatlas = texture_atlases.get(handle).unwrap();
+                    let tatlas = p.texture_atlases.get(handle).unwrap();
                     let mesh_handle = mesh_tileset
                         .entry(tset_name.to_string())
                         .or_insert_with(|| {
@@ -195,7 +205,7 @@ pub fn load_level_handler(
                                 sprite_size.y * (0.5 - tileset.y_anchor),
                             );
                             let base_quad = Mesh::from(QuadCC::new(sprite_size, sprite_anchor));
-                            meshes.add(base_quad)
+                            p.meshes.add(base_quad)
                         })
                         .clone();
                     cmat.data.sheet_idx = tileuid;
@@ -207,7 +217,7 @@ pub fn load_level_handler(
                     cmat.data.gbr = 0.1;
                     cmat.data.gtl = 0.1;
                     cmat.data.gtr = 0.1;
-                    let mat = materials1.add(cmat);
+                    let mat = p.materials1.add(cmat);
 
                     TileSpriteBundle {
                         mesh: PreMesh::Mesh(mesh_handle.into()),
@@ -229,7 +239,7 @@ pub fn load_level_handler(
                     cmat.data.gbr = 0.1;
                     cmat.data.gtl = 0.1;
                     cmat.data.gtr = 0.1;
-                    let mat = materials1.add(cmat);
+                    let mat = p.materials1.add(cmat);
 
                     let sprite_anchor = Vec2::new(1.0 / 2.0, 0.5 - tileset.y_anchor);
 
@@ -245,12 +255,13 @@ pub fn load_level_handler(
                 }
             };
             let key_tuid = behavior.key_tuid();
-            sdb.cvo_idx
+            p.sdb
+                .cvo_idx
                 .entry(behavior.key_cvo())
                 .or_default()
                 .push(key_tuid.clone());
             let mt = MapTileComponents { bundle, behavior };
-            sdb.map_tile.insert(key_tuid, mt);
+            p.sdb.map_tile.insert(key_tuid, mt);
         }
     }
 
@@ -268,7 +279,8 @@ pub fn load_level_handler(
         }
     }) {
         for tile in &maptiles.v {
-            let mt = sdb
+            let mt = p
+                .sdb
                 .map_tile
                 .get(&(tile.tileset.clone(), tile.tileuid))
                 .expect("Map references non-existent tileset+tileuid");
@@ -279,8 +291,8 @@ pub fn load_level_handler(
                 if tile.flip_x {
                     b.transform.scale.x = -1.0;
                 }
-                let mat = materials1.get(&b.material).unwrap().clone();
-                let mat = materials1.add(mat);
+                let mat = p.materials1.get(&b.material).unwrap().clone();
+                let mat = p.materials1.add(mat);
                 b.material = MeshMaterial2d(mat);
                 commands.spawn(b)
             };
@@ -304,10 +316,10 @@ pub fn load_level_handler(
                     ghost_spawn_points.push(new_pos);
                 }
                 Util::RoomDef(name) => {
-                    roomdb
+                    p.roomdb
                         .room_tiles
                         .insert(pos.to_board_position(), name.to_owned());
-                    roomdb.room_state.insert(name.clone(), TileState::Off);
+                    p.roomdb.room_state.insert(name.clone(), TileState::Off);
                 }
                 Util::Van => {
                     van_entry_points.push(new_pos);
@@ -381,13 +393,18 @@ pub fn load_level_handler(
         .unwrap_or(OrderedFloat(1000.0))
         .into_inner();
 
+    let control_keys = match p.game_settings.character_controls {
+        CharacterControls::WASD => ControlKeys::WASD,
+        CharacterControls::Arrows => ControlKeys::ARROWS,
+    };
+
     // Spawn Player 1
     commands
         .spawn(Sprite {
-            image: handles.images.character1.clone(),
-            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            image: p.handles.images.character1.clone(),
+            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             texture_atlas: Some(TextureAtlas {
-                layout: handles.images.character1_atlas.clone(),
+                layout: p.handles.images.character1_atlas.clone(),
                 ..Default::default()
             }),
             ..default()
@@ -398,9 +415,13 @@ pub fn load_level_handler(
         )
         .insert(GameSprite)
         .insert(PlayerGear::from_playergearkind(
-            difficulty.0.player_gear.clone(),
+            p.difficulty.0.player_gear.clone(),
         ))
-        .insert(PlayerSprite::new(1).with_sanity(difficulty.0.starting_sanity))
+        .insert(
+            PlayerSprite::new(1)
+                .with_sanity(p.difficulty.0.starting_sanity)
+                .with_controls(control_keys),
+        )
         .insert(SpriteType::Player)
         .insert(player_position)
         .insert(Direction::new_right())
@@ -417,7 +438,7 @@ pub fn load_level_handler(
     // 0).into_global_z(0.0005)) .insert(AnimationTimer::from_range(
     // Timer::from_seconds(0.20, TimerMode::Repeating),
     // OldCharacterAnimation::Walking.animation_range(), ));
-    bf.evidences.clear();
+    p.bf.evidences.clear();
     ghost_spawn_points.shuffle(&mut thread_rng());
     if ghost_spawn_points.is_empty() {
         error!(
@@ -425,18 +446,18 @@ pub fn load_level_handler(
         );
     }
     let ghost_spawn = ghost_spawn_points.pop().unwrap();
-    let possible_ghost_types: Vec<_> = difficulty.0.ghost_set.as_vec();
+    let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
     let ghost_types = vec![ghost_sprite.class];
     for evidence in ghost_sprite.class.evidences() {
-        bf.evidences.insert(evidence);
+        p.bf.evidences.insert(evidence);
     }
-    bf.breach_pos = ghost_spawn;
-    commands.insert_resource(SummaryData::new(ghost_types, difficulty.clone()));
+    p.bf.breach_pos = ghost_spawn;
+    commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
     let breach_id = commands
         .spawn(Sprite {
-            image: asset_server.load("img/breach.png"),
-            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            image: p.asset_server.load("img/breach.png"),
+            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
@@ -448,8 +469,8 @@ pub fn load_level_handler(
         .id();
     commands
         .spawn(Sprite {
-            image: asset_server.load("img/ghost.png"),
-            anchor: Anchor::Custom(handles.anchors.grid1x1x4),
+            image: p.asset_server.load("img/ghost.png"),
+            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
@@ -458,9 +479,9 @@ pub fn load_level_handler(
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
-    let open_van: bool = dist_to_van < 4.0 && difficulty.0.van_auto_open;
+    let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
-    next_game_state.set(AppState::InGame);
+    p.next_game_state.set(AppState::InGame);
 }
 
 fn process_pre_meshes(

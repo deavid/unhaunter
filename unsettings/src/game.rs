@@ -61,6 +61,15 @@ pub enum CameraControls {
     Off,
 }
 
+impl CameraControls {
+    pub fn on(&self) -> bool {
+        match self {
+            CameraControls::On => true,
+            CameraControls::Off => false,
+        }
+    }
+}
+
 #[derive(
     Reflect,
     Component,

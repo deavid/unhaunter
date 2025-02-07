@@ -1,4 +1,5 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy_persistent::Persistent;
 use uncore::{
     components::{
         board::direction::Direction,
@@ -6,8 +7,10 @@ use uncore::{
         game_config::GameConfig,
         player_sprite::PlayerSprite,
     },
+    controlkeys::ControlKeys,
     states::{AppState, GameState},
 };
+use unsettings::game::GameplaySettings;
 
 pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
@@ -58,6 +61,7 @@ pub fn keyboard(
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
     time: Res<Time>,
+    game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     if *app_state.get() != AppState::InGame {
         return;
@@ -91,18 +95,21 @@ pub fn keyboard(
             let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
             transform.translation += vector / RED * dt;
         }
-        const DEBUG_CAMERA: bool = true;
-        if in_game && DEBUG_CAMERA {
-            if keyboard_input.pressed(KeyCode::ArrowRight) {
+        if in_game && game_settings.camera_controls.on() {
+            let controls = match game_settings.character_controls {
+                unsettings::game::CharacterControls::WASD => ControlKeys::ARROWS,
+                unsettings::game::CharacterControls::Arrows => ControlKeys::WASD,
+            };
+            if keyboard_input.pressed(controls.right) {
                 transform.translation.x += 2.0 * dt;
             }
-            if keyboard_input.pressed(KeyCode::ArrowLeft) {
+            if keyboard_input.pressed(controls.left) {
                 transform.translation.x -= 2.0 * dt;
             }
-            if keyboard_input.pressed(KeyCode::ArrowUp) {
+            if keyboard_input.pressed(controls.up) {
                 transform.translation.y += 2.0 * dt;
             }
-            if keyboard_input.pressed(KeyCode::ArrowDown) {
+            if keyboard_input.pressed(controls.down) {
                 transform.translation.y -= 2.0 * dt;
             }
             if keyboard_input.pressed(KeyCode::NumpadAdd) {

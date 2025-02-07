@@ -14,7 +14,9 @@ uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
+unsettings = { path = "../unsettings" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
 ordered-float = { workspace = true }
+bevy-persistent = { workspace = true }
