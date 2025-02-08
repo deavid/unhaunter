@@ -1,0 +1,16 @@
+[package]
+name = "unmenu"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+unsettings = { path = "../unsettings" }
+
+bevy = { workspace = true }
+bevy-persistent = { workspace = true }
+enum-iterator = { workspace = true }

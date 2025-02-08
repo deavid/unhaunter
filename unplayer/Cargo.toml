@@ -1,0 +1,21 @@
+[package]
+name = "unplayer"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+
+[dependencies]
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+ungear = { path = "../ungear" }
+unsettings = { path = "../unsettings" }
+
+bevy = { workspace = true }
+bevy-persistent = { workspace = true }
+rand = { workspace = true }
+fastapprox = { workspace = true }
+ordered-float = { workspace = true }

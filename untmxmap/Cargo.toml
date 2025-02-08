@@ -1,0 +1,19 @@
+[package]
+name = "untmxmap"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+
+bevy = { workspace = true }
+normalize-path = { workspace = true }
+tiled = { workspace = true }
+glob = { workspace = true }
+walkdir = { workspace = true }
+thiserror = { workspace = true }

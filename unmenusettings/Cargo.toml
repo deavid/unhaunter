@@ -1,0 +1,18 @@
+[package]
+name = "unmenusettings"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+bevy = { workspace = true }
+bevy-persistent = { workspace = true }
+strum = { workspace = true }
+
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+unsettings = { path = "../unsettings" }
