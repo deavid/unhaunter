@@ -200,7 +200,7 @@ pub fn apply_lighting(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();
@@ -358,7 +358,7 @@ pub fn apply_lighting(
     #[cfg(target_arch = "wasm32")]
     const VSMALL_PRIME: usize = 97;
     const BIG_PRIME: usize = 95629;
-    let mask: usize = rng.gen();
+    let mask: usize = rng.random_range(0..usize::MAX);
     let lf = &bf.light_field;
 
     // let start = Instant::now();
@@ -700,7 +700,7 @@ pub fn apply_lighting(
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
             opacity = opacity.sqrt();
             let l = dst_color.luminance();
-            let rnd_f = rng.gen_range(-1.0..1.0_f32).powi(3);
+            let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
@@ -763,12 +763,12 @@ pub fn mark_for_update(
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};
 
-    let mut small_rng = SmallRng::from_entropy();
+    let mut small_rng = SmallRng::from_os_rng();
     for (pos, vis, mut upd) in qt2.iter_mut() {
-        let r: f32 = small_rng.gen_range(0.0..1.01);
+        let r: f32 = small_rng.random_range(0.0..1.01);
         let k: f32 = if IS_WASM { 0.5 } else { 2.0 };
         let dst = pos.distance_taxicab(&player_pos);
-        let r2: f32 = small_rng.gen_range(0.05..1.0)
+        let r2: f32 = small_rng.random_range(0.05..1.0)
             * k.recip()
             * dst
             * if vis == Visibility::Hidden { 2.0 } else { 1.0 };

@@ -26,8 +26,8 @@ impl GearUsable for Recorder {
         if !self.enabled {
             return GearSpriteID::RecorderOff;
         }
-        let mut rng = rand::thread_rng();
-        let f = rng.gen_range(0.5..2.0);
+        let mut rng = rand::rng();
+        let f = rng.random_range(0.5..2.0);
         let s = self.sound * f;
         if s < 5.0 {
             return GearSpriteID::Recorder1;
@@ -72,15 +72,15 @@ impl GearUsable for Recorder {
     }
 
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.5;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
@@ -146,19 +146,19 @@ pub fn sound_update(
     roomdb: Res<RoomDB>,
     qg: Query<(&GhostSprite, &Position)>,
 ) {
-    let mut rng = rand::thread_rng();
-    let gn = rng.gen_range(0..30_u32);
+    let mut rng = rand::rng();
+    let gn = rng.random_range(0..30_u32);
     if gn == 0 {
         // Ghost talk once in a while
         for (_, pos) in qg.iter() {
             let bpos = pos.to_board_position();
             for _ in 0..16 {
-                let mut v = Vec2::new(rng.gen_range(-2.0..2.0), rng.gen_range(-2.0..2.0));
+                let mut v = Vec2::new(rng.random_range(-2.0..2.0), rng.random_range(-2.0..2.0));
                 let l = v.length();
                 if l < 0.02 {
                     continue;
                 }
-                let loudness = rng.gen_range(0.3_f32..2.0).powi(2);
+                let loudness = rng.random_range(0.3_f32..2.0).powi(2);
                 v *= loudness * 4.5 / l;
                 let vn = v.normalize() * 1.5;
                 let newbpos = Position {
@@ -186,13 +186,13 @@ pub fn sound_update(
         let sz = (v.length() * 2.0).ceil() as usize;
         for _ in 0..sz {
             let mut v = v;
-            v.x += rng.gen_range(-0.05..0.05) + rng.gen_range(-0.05..0.05);
-            v.y += rng.gen_range(-0.05..0.05) + rng.gen_range(-0.05..0.05);
+            v.x += rng.random_range(-0.05..0.05) + rng.random_range(-0.05..0.05);
+            v.y += rng.random_range(-0.05..0.05) + rng.random_range(-0.05..0.05);
             v /= 1.05 * sz as f32;
             let mut v1 = v.normalize() * 1.1;
-            v1 *= rng.gen_range(0.1..1.0);
-            v1.x += rng.gen_range(-0.3..0.3) + rng.gen_range(-0.3..0.3);
-            v1.y += rng.gen_range(-0.3..0.3) + rng.gen_range(-0.3..0.3);
+            v1 *= rng.random_range(0.1..1.0);
+            v1.x += rng.random_range(-0.3..0.3) + rng.random_range(-0.3..0.3);
+            v1.y += rng.random_range(-0.3..0.3) + rng.random_range(-0.3..0.3);
             let n_p = Position {
                 x: mpos.x as f32 + v1.x,
                 y: mpos.y as f32 + v1.y,

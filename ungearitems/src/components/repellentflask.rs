@@ -86,14 +86,14 @@ impl GearUsable for RepellentFlask {
         };
         let mut pos = *pos;
         pos.z += 0.2;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
             0.1
         } else {
             0.4
         };
-        pos.x += rng.gen_range(-spread..spread);
-        pos.y += rng.gen_range(-spread..spread);
+        pos.x += rng.random_range(-spread..spread);
+        pos.y += rng.random_range(-spread..spread);
         gs.commands
             .spawn(Sprite {
                 color: Color::NONE,
@@ -156,7 +156,7 @@ pub fn repellent_update(
     mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
     let mut pressure: HashMap<BoardPosition, f32> = HashMap::new();
@@ -198,14 +198,14 @@ pub fn repellent_update(
         // total_force = total_force.normalized().mul(total_force.distance().sqrt());
         const PRESSURE_FORCE_SCALE: f32 = 1e-4;
         rep.dir = rep.dir.add(total_force.mul(PRESSURE_FORCE_SCALE)).mul(0.97);
-        r_pos.x += rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT)
+        r_pos.x += rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT)
             + rep.dir.dx;
-        r_pos.y += rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT)
+        r_pos.y += rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT)
             + rep.dir.dy;
-        r_pos.z += (rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT))
+        r_pos.z += (rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT))
             / 10.0;
         r_pos.z = (r_pos.z * 100.0 + 0.5 * rep.life_factor()) / 101.0;
         for (g_pos, mut ghost) in &mut qgs {

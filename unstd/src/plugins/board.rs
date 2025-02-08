@@ -46,7 +46,7 @@ pub fn boardfield_update(
     mut ev_bdr: EventReader<BoardDataToRebuild>,
     qt: Query<(&Position, &Behavior)>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Here we will recreate the field (if needed? - not sure how to detect that) ...
     // maybe add a timer since last update.
@@ -94,7 +94,7 @@ pub fn boardfield_update(
     for pos in valid_k.into_iter() {
         let missing = bf.temperature_field.get(&pos).is_none();
         if missing {
-            let ambient = ambient_temp + rng.gen_range(-10.0..10.0);
+            let ambient = ambient_temp + rng.random_range(-10.0..10.0);
             added_temps.push(pos.clone());
             bf.temperature_field.insert(pos, ambient);
         }

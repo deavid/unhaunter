@@ -130,8 +130,8 @@ pub fn salt_pile_system(
                     let mut particle_position = *salt_pile_position;
 
                     // Add a random offset to the particle position
-                    particle_position.x += rand::thread_rng().gen_range(-0.2..0.2);
-                    particle_position.y += rand::thread_rng().gen_range(-0.2..0.2);
+                    particle_position.x += rand::rng().random_range(-0.2..0.2);
+                    particle_position.y += rand::rng().random_range(-0.2..0.2);
                     let _salt_particle_entity = commands
                         .spawn(Sprite {
                             image: asset_server.load("img/salt_particle.png"),

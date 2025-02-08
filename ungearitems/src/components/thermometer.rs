@@ -61,14 +61,14 @@ impl GearUsable for Thermometer {
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify +
         // distintive icons.
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.7;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
@@ -145,12 +145,12 @@ pub fn temperature_update(
     use rand::rngs::SmallRng;
     use rand::SeedableRng;
 
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = SmallRng::from_os_rng();
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
         .iter()
         .filter_map(|(p, t)| {
-            if rng.gen_range(0..8) == 0 {
+            if rng.random_range(0..8) == 0 {
                 Some((p.clone(), *t))
             } else {
                 None
@@ -182,7 +182,7 @@ pub fn temperature_update(
 
         // let neighbors = p.xy_neighbors(1);
         let neighbors = [p.left(), p.right(), p.top(), p.bottom()];
-        let n_idx = rng.gen_range(0..neighbors.len());
+        let n_idx = rng.random_range(0..neighbors.len());
         let neigh = neighbors[n_idx].clone();
         let neigh_free = bf
             .collision_field

@@ -62,8 +62,8 @@ impl GhostSprite {
     /// The ghost's initial mood, hunting state, and other attributes are set to
     /// default values.
     pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
-        let mut rng = rand::thread_rng();
-        let idx = rng.gen_range(0..ghost_types.len());
+        let mut rng = rand::rng();
+        let idx = rng.random_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());
         let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);

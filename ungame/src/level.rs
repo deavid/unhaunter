@@ -346,9 +346,8 @@ pub fn load_level_handler(
     }
 
     use rand::seq::SliceRandom;
-    use rand::thread_rng;
 
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
@@ -378,7 +377,7 @@ pub fn load_level_handler(
             });
         }
     }
-    player_spawn_points.shuffle(&mut thread_rng());
+    player_spawn_points.shuffle(&mut rand::rng());
     if player_spawn_points.is_empty() {
         error!(
             "No player spawn points found!! - that will probably not display the map because the player will be out of bounds"
@@ -439,7 +438,7 @@ pub fn load_level_handler(
     // Timer::from_seconds(0.20, TimerMode::Repeating),
     // OldCharacterAnimation::Walking.animation_range(), ));
     p.bf.evidences.clear();
-    ghost_spawn_points.shuffle(&mut thread_rng());
+    ghost_spawn_points.shuffle(&mut rand::rng());
     if ghost_spawn_points.is_empty() {
         error!(
             "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"

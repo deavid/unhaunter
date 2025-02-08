@@ -77,10 +77,10 @@ impl GearUsable for SageBundleData {
                 self.consumed = true;
             } else if (self.smoke_produced as f32) < self.burn_timer.elapsed_secs() * 3.0 {
                 let mut pos = *pos;
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 pos.z += 0.2;
-                pos.x += rng.gen_range(-0.2..0.2);
-                pos.y += rng.gen_range(-0.2..0.2);
+                pos.x += rng.random_range(-0.2..0.2);
+                pos.y += rng.random_range(-0.2..0.2);
 
                 // Spawn smoke particle
                 gs.commands

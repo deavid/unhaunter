@@ -67,12 +67,12 @@ impl GearUsable for SpiritBox {
         if !self.enabled {
             return;
         }
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         const K: f32 = 0.5;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
@@ -90,7 +90,7 @@ impl GearUsable for SpiritBox {
             gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3, &pos);
             let r = if self.charge > 30.0 {
                 self.charge = 0.0;
-                rng.gen_range(0..10)
+                rng.random_range(0..10)
             } else {
                 99
             };

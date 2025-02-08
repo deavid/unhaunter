@@ -64,12 +64,12 @@ fn ghost_movement(
     object_query: Query<(&Position, &GhostInfluence)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let dt = time.delta_secs() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
-            if rng.gen_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+            if rng.random_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
                 // Sometimes, warp ahead. This also is to increase visibility of the ghost
                 ghost.warp += 40.0;
             }
@@ -115,40 +115,40 @@ fn ghost_movement(
                 ghost.target_point = None;
             }
         }
-        if ghost.target_point.is_none() || (ghost.hunt_target && rng.gen_range(0..60) == 0) {
+        if ghost.target_point.is_none() || (ghost.hunt_target && rng.random_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
-            let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-            let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-            let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
+            let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+            let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+            let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
             let dd = (dx * dx + dy * dy).sqrt() / dist;
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
-            if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
+            if rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
                 let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
                     .filter(|(_, p, _)| p.health > 0.0)
                     .map(|(pos, _, h)| (pos, h))
                     .collect();
                 if !player_pos_l.is_empty() {
-                    let idx = rng.gen_range(0..player_pos_l.len());
+                    let idx = rng.random_range(0..player_pos_l.len());
                     let (ppos, h) = player_pos_l[idx];
                     let search_radius = if h.is_some() { 2.0 } else { 1.0 };
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
-                    old_target.x += rng.gen_range(-search_radius..search_radius);
-                    old_target.y += rng.gen_range(-search_radius..search_radius);
+                    old_target.x += rng.random_range(-search_radius..search_radius);
+                    old_target.y += rng.random_range(-search_radius..search_radius);
                     let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
                         old_target
                     } else {
                         *ppos
                     };
                     ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     let random_offset = Vec2::new(
-                        rng.gen_range(-search_radius..search_radius),
-                        rng.gen_range(-search_radius..search_radius),
+                        rng.random_range(-search_radius..search_radius),
+                        rng.random_range(-search_radius..search_radius),
                     );
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
@@ -161,12 +161,12 @@ fn ghost_movement(
                 let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
                 for _ in 0..config.num_destination_points_to_sample {
                     let mut target_point = ghost.spawn_point.to_position();
-                    let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0
+                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0
                         / difficulty.0.ghost_attraction_to_breach
                         + 0.5;
-                    let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-                    let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-                    let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+                    let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+                    let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+                    let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
                     let dd = (dx * dx + dy * dy).sqrt() / dist;
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
@@ -265,7 +265,7 @@ impl RoarType {
             ],
             RoarType::None => vec![""],
         };
-        let random_roar = roar_sounds[rand::thread_rng().gen_range(0..roar_sounds.len())];
+        let random_roar = roar_sounds[rand::rng().random_range(0..roar_sounds.len())];
         random_roar.to_string()
     }
 
@@ -305,7 +305,7 @@ fn ghost_enrage(
             ghost.salty_effect_timer.tick(time.delta());
             ghost.salty_trace_spawn_timer.tick(time.delta());
             if ghost.salty_trace_spawn_timer.just_finished() {
-                if rand::thread_rng().gen_bool(0.5) {
+                if rand::rng().random_bool(0.5) {
                     // 50% chance to spawn --- Find Valid Floor Tile ---
                     let ghost_board_position = ghost_position.to_board_position();
                     let mut valid_tile = None;
@@ -472,9 +472,9 @@ fn spawn_salty_trace(
     tile_position: BoardPosition,
 ) {
     let mut pos = tile_position.to_position();
-    let mut rng = rand::thread_rng();
-    pos.x += rng.gen_range(-0.2..0.2);
-    pos.y += rng.gen_range(-0.2..0.2);
+    let mut rng = rand::rng();
+    pos.x += rng.random_range(-0.2..0.2);
+    pos.y += rng.random_range(-0.2..0.2);
     commands
         .spawn(Sprite {
             image: asset_server.load("img/salt_particle.png"),
@@ -509,7 +509,7 @@ fn ghost_fade_out_system(
     )>,
     mut gs: GearStuff,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
         fade_out.timer.tick(time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
@@ -518,7 +518,7 @@ fn ghost_fade_out_system(
         map_color.color.set_alpha(rem_f);
 
         // Emit smoke particles while fading
-        if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
+        if fade_out.timer.remaining_secs() > 0.0 && rng.random_bool(((1.0 - rem_f) / 3.0) as f64) {
             let pos = *position;
             commands
                 .spawn(Sprite {
@@ -534,8 +534,8 @@ fn ghost_fade_out_system(
                 .insert(GameSprite)
                 .insert(pos)
                 .insert(Direction {
-                    dx: rng.gen_range(-0.9..0.9),
-                    dy: rng.gen_range(-0.9..0.9),
+                    dx: rng.random_range(-0.9..0.9),
+                    dy: rng.random_range(-0.9..0.9),
                     dz: 0.0,
                 })
                 .insert(MapColor {

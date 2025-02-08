@@ -105,16 +105,16 @@ impl GearUsable for EMFMeter {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         self.frame_counter += 1;
         if self.frame_counter > 65413 {
             self.frame_counter = 0;
         }
         const K: f32 = 0.5;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();

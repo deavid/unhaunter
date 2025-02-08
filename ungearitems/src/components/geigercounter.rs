@@ -58,15 +58,15 @@ impl GearUsable for GeigerCounter {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.5;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let dist2breach = gs.bf.breach_pos.distance2(&pos) + 10.0;
@@ -103,7 +103,7 @@ impl GearUsable for GeigerCounter {
         }
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
         if gs.time.elapsed_secs() - self.last_sound_time_secs > 60.0 / avg_snd && self.enabled {
-            self.last_sound_time_secs = gs.time.elapsed_secs() + rng.gen_range(0.01..0.02);
+            self.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
             gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
         }
         if self.display_secs_since_last_update > 0.5 {
