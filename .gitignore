@@ -1,4 +1,4 @@
-/pkg
+# /pkg  # - do not add or WASM build is broken.
 /target
 perf.data
 perf.data.old
