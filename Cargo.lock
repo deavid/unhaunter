@@ -75,10 +75,10 @@ checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
 dependencies = [
  "cfg-if",
  "const-random",
- "getrandom",
+ "getrandom 0.2.15",
  "once_cell",
  "version_check",
- "zerocopy",
+ "zerocopy 0.7.35",
 ]
 
 [[package]]
@@ -934,7 +934,7 @@ dependencies = [
  "derive_more",
  "glam",
  "itertools 0.13.0",
- "rand",
+ "rand 0.8.5",
  "rand_distr",
  "serde",
  "smallvec",
@@ -1312,7 +1312,7 @@ checksum = "2993cac374b3f88cfaf59506c71f8e3e7ad8b4961f4e9864bc76e1c9e1e4400c"
 dependencies = [
  "ahash",
  "bevy_utils_proc_macros",
- "getrandom",
+ "getrandom 0.2.15",
  "hashbrown 0.14.5",
  "thread_local",
  "tracing",
@@ -1736,7 +1736,7 @@ version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9d839f2a20b0aee515dc581a6172f2321f96cab76c1a38a4c584a194955390e"
 dependencies = [
- "getrandom",
+ "getrandom 0.2.15",
  "once_cell",
  "tiny-keccak",
 ]
@@ -1984,23 +1984,23 @@ dependencies = [
 
 [[package]]
 name = "dirs"
-version = "5.0.1"
+version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
+checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
 dependencies = [
  "dirs-sys",
 ]
 
 [[package]]
 name = "dirs-sys"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
+checksum = "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
 dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2347,15 +2347,27 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "libc",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "getrandom"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a49c392881ce6d5c3b8cb70f98717b7c07aabbdff06687b9030dbfbe2725f8"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "wasi 0.13.3+wasi-0.2.2",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
 name = "ghost_radio"
 version = "0.1.0"
 dependencies = [
- "rand",
+ "rand 0.8.5",
  "serde",
  "serde_yaml",
 ]
@@ -2422,7 +2434,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc46dd3ec48fdd8e693a98d2b8bafae273a2d54c1de02a2a7e3d57d501f39677"
 dependencies = [
  "bytemuck",
- "rand",
+ "rand 0.8.5",
  "serde",
 ]
 
@@ -3570,7 +3582,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7bb71e1b3fa6ca1c61f383464aaf2bb0e2f8e772a1f01d486832464de363b951"
 dependencies = [
  "num-traits",
- "rand",
+ "rand 0.8.5",
  "serde",
 ]
 
@@ -3719,7 +3731,7 @@ version = "0.2.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77957b295656769bb8ad2b6a6b09d897d94f05c41b069aede1fcdaa675eaea04"
 dependencies = [
- "zerocopy",
+ "zerocopy 0.7.35",
 ]
 
 [[package]]
@@ -3812,9 +3824,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
  "libc",
- "rand_chacha",
- "rand_core",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
  "serde",
+]
+
+[[package]]
+name = "rand"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3779b94aeb87e8bd4e834cee3650289ee9e0d5677f976ecdb6d219e5f4f6cd94"
+dependencies = [
+ "rand_chacha 0.9.0",
+ "rand_core 0.9.0",
+ "zerocopy 0.8.17",
 ]
 
 [[package]]
@@ -3824,7 +3847,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
- "rand_core",
+ "rand_core 0.6.4",
+]
+
+[[package]]
+name = "rand_chacha"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
+dependencies = [
+ "ppv-lite86",
+ "rand_core 0.9.0",
 ]
 
 [[package]]
@@ -3833,8 +3866,18 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
- "getrandom",
+ "getrandom 0.2.15",
  "serde",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b08f3c9802962f7e1b25113931d94f43ed9725bebc59db9d0c3e9a23b67e15ff"
+dependencies = [
+ "getrandom 0.3.1",
+ "zerocopy 0.8.17",
 ]
 
 [[package]]
@@ -3844,7 +3887,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32cb0b9bc82b0a0876c2dd994a7e7a2683d3e7390ca40e6886785ef0c7e3ee31"
 dependencies = [
  "num-traits",
- "rand",
+ "rand 0.8.5",
 ]
 
 [[package]]
@@ -3885,8 +3928,8 @@ dependencies = [
  "once_cell",
  "paste",
  "profiling",
- "rand",
- "rand_chacha",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
  "simd_helpers",
  "system-deps",
  "thiserror 1.0.69",
@@ -3971,13 +4014,13 @@ dependencies = [
 
 [[package]]
 name = "redox_users"
-version = "0.4.6"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
+checksum = "dd6f9d3d47bdd2ad6945c5015a226ec6155d0bcdfd8f7cd29f86b71f8de99d2b"
 dependencies = [
- "getrandom",
+ "getrandom 0.2.15",
  "libredox",
- "thiserror 1.0.69",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -4690,7 +4733,7 @@ checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
 
 [[package]]
 name = "uncore"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4698,7 +4741,7 @@ dependencies = [
  "fastapprox",
  "itertools 0.14.0",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "serde",
  "serde_json",
  "thiserror 2.0.11",
@@ -4707,12 +4750,12 @@ dependencies = [
 
 [[package]]
 name = "ungame"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
  "ungearitems",
@@ -4722,12 +4765,12 @@ dependencies = [
 
 [[package]]
 name = "ungear"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
  "fastapprox",
- "rand",
+ "rand 0.9.0",
  "serde",
  "thiserror 2.0.11",
  "uncore",
@@ -4735,22 +4778,22 @@ dependencies = [
 
 [[package]]
 name = "ungearitems"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
 ]
 
 [[package]]
 name = "unghost"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
  "ungearitems",
@@ -4759,7 +4802,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy_dylib",
@@ -4844,11 +4887,11 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "unlight"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "fastapprox",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
  "ungearitems",
@@ -4857,7 +4900,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4867,7 +4910,7 @@ dependencies = [
  "fastapprox",
  "image",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "regex",
  "serde",
  "serde_json",
@@ -4876,7 +4919,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4887,7 +4930,7 @@ dependencies = [
 
 [[package]]
 name = "unmenusettings"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4900,7 +4943,7 @@ dependencies = [
 
 [[package]]
 name = "unnpc"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "uncore",
@@ -4909,13 +4952,13 @@ dependencies = [
 
 [[package]]
 name = "unplayer"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
  "fastapprox",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
  "unsettings",
@@ -4930,7 +4973,7 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsettings"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4943,14 +4986,14 @@ dependencies = [
 
 [[package]]
 name = "unstd"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
  "enum-iterator",
  "fastapprox",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "serde",
  "thiserror 2.0.11",
  "tiled",
@@ -4959,7 +5002,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "glob",
@@ -4973,12 +5016,12 @@ dependencies = [
 
 [[package]]
 name = "untruck"
-version = "0.2.5"
+version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "fastapprox",
  "ordered-float",
- "rand",
+ "rand 0.9.0",
  "uncore",
  "ungear",
  "ungearitems",
@@ -4997,7 +5040,7 @@ version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3758f5e68192bb96cc8f9b7e2c2cfdabb435499a28499a42f8f984092adad4b"
 dependencies = [
- "getrandom",
+ "getrandom 0.2.15",
  "serde",
 ]
 
@@ -5057,6 +5100,15 @@ name = "wasi"
 version = "0.11.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
+
+[[package]]
+name = "wasi"
+version = "0.13.3+wasi-0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26816d2e1a4a36a2940b96c5296ce403917633dff8f3440e9b236ed6f6bacad2"
+dependencies = [
+ "wit-bindgen-rt",
+]
 
 [[package]]
 name = "wasm-bindgen"
@@ -5503,15 +5555,6 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
-version = "0.48.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
-dependencies = [
- "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
@@ -5824,6 +5867,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "wit-bindgen-rt"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3268f3d866458b787f390cf61f4bbb563b922d091359f9608842999eaee3943c"
+dependencies = [
+ "bitflags 2.8.0",
+]
+
+[[package]]
 name = "x11-dl"
 version = "2.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5899,7 +5951,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b9b4fd18abc82b8136838da5d50bae7bdea537c574d8dc1a34ed098d6c166f0"
 dependencies = [
  "byteorder",
- "zerocopy-derive",
+ "zerocopy-derive 0.7.35",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.8.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa91407dacce3a68c56de03abe2760159582b846c6a4acd2f456618087f12713"
+dependencies = [
+ "zerocopy-derive 0.8.17",
 ]
 
 [[package]]
@@ -5907,6 +5968,17 @@ name = "zerocopy-derive"
 version = "0.7.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.8.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06718a168365cad3d5ff0bb133aad346959a2074bd4a85c121255a11304a8626"
 dependencies = [
  "proc-macro2",
  "quote",
