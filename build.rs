@@ -24,6 +24,7 @@ fn get_asset_list() -> Vec<String> {
             list.push(relative_path.to_string_lossy().to_string());
         }
     }
+    list.sort();
     list
 }
 
