@@ -20,7 +20,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.2.5-dev"
+version = "0.2.5"
 edition = "2021"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"

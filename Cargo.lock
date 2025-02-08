@@ -1574,9 +1574,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.12"
+version = "1.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "755717a7de9ec452bf7f3f1a3099085deabd7f2962b861dae91ecd7a365903d2"
+checksum = "c7777341816418c02e033934a09f20dc0ccaf65a5201ef8a450ae0105a573fda"
 dependencies = [
  "jobserver",
  "libc",
@@ -4690,7 +4690,7 @@ checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
 
 [[package]]
 name = "uncore"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4707,7 +4707,7 @@ dependencies = [
 
 [[package]]
 name = "ungame"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4722,7 +4722,7 @@ dependencies = [
 
 [[package]]
 name = "ungear"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -4735,7 +4735,7 @@ dependencies = [
 
 [[package]]
 name = "ungearitems"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -4746,7 +4746,7 @@ dependencies = [
 
 [[package]]
 name = "unghost"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "ordered-float",
@@ -4759,7 +4759,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy_dylib",
@@ -4844,7 +4844,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "unlight"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "fastapprox",
@@ -4857,7 +4857,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4876,7 +4876,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4887,7 +4887,7 @@ dependencies = [
 
 [[package]]
 name = "unmenusettings"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4900,7 +4900,7 @@ dependencies = [
 
 [[package]]
 name = "unnpc"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "uncore",
@@ -4909,7 +4909,7 @@ dependencies = [
 
 [[package]]
 name = "unplayer"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4930,7 +4930,7 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsettings"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4943,7 +4943,7 @@ dependencies = [
 
 [[package]]
 name = "unstd"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -4959,7 +4959,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "glob",
@@ -4973,7 +4973,7 @@ dependencies = [
 
 [[package]]
 name = "untruck"
-version = "0.2.5-dev"
+version = "0.2.5"
 dependencies = [
  "bevy",
  "fastapprox",

@@ -1,3 +1,20 @@
+### Version 0.2.5 - 2025-02-08
+
+**Features:**
+
+*   **Screenspace orthogonal movement**: Now players can choose to move the 
+    character relative to the screen or relative to the map.
+*   **Settings**: Added gameplay + audio settings which are saved to disk or 
+    local storage for WASM.
+
+**Changes:**
+
+*   Bumped Bevy version to 0.15
+
+**Other:**
+
+*   Migrated core features and systems to separate crates for better organization and maintainability.
+
 ### Version 0.2.4 - 2024-12-30
 
 **Features:**
