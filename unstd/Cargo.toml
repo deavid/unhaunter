@@ -1,0 +1,21 @@
+[package]
+name = "unstd"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+
+bevy = { workspace = true }
+bevy_framepace = { workspace = true }
+serde = { workspace = true }
+enum-iterator = { workspace = true }
+thiserror = { workspace = true }
+fastapprox = { workspace = true }
+rand = { workspace = true }
+ordered-float = { workspace = true }
+tiled = { workspace = true }
