@@ -2,6 +2,8 @@ use bevy::{asset::AssetLoader, prelude::*};
 use std::io::BufRead;
 use thiserror::Error;
 
+/// Loads a TMX Map using Bevy machinery - to avoid reading the files manually
+/// so that this is compatible with WASM
 #[derive(Asset, Reflect)]
 pub struct TmxMap {
     pub bytes: Vec<u8>,

@@ -1,5 +1,7 @@
 use bevy::{asset::AssetLoader, prelude::*};
 
+/// Loads a TSX Sheet using Bevy machinery - to avoid reading the files manually
+/// so that this is compatible with WASM
 #[derive(Asset, Reflect)]
 pub struct TsxSheet {
     pub bytes: Vec<u8>,

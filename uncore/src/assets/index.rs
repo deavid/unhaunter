@@ -1,5 +1,8 @@
 use bevy::{asset::AssetLoader, prelude::*};
 
+/// Allows Bevy to load *.assetidx files which in turn are used to create a list
+/// of assets available. This is specially useful in WASM where we cannot list
+/// the contents of a folder.
 #[derive(Asset, Reflect)]
 pub struct AssetIdx {
     pub assets: Vec<String>,
