@@ -172,3 +172,65 @@ pub fn animate_miasma_sprites(
         // during initialization and should remain constant.
     }
 }
+
+pub fn update_miasma(
+    mut board_data: ResMut<BoardData>,
+    miasma_config: Res<MiasmaConfig>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_secs();
+    let diffusion_rate = miasma_config.diffusion_rate;
+
+    let mut pressure_changes = HashMap::<BoardPosition, f32>::new();
+
+    // Create a copy of the keys, to allow concurrent read & write.
+    let keys: Vec<BoardPosition> = board_data.miasma.pressure_field.keys().cloned().collect();
+
+    // Iterate through all cells in the pressure field.
+    for pos in keys {
+        // Get the current cell's pressure.
+        let p1 = *board_data.miasma.pressure_field.get(&pos).unwrap_or(&0.0);
+
+        // Check for walls and closed doors (collision)
+        // This part is to check we don't diffuse the walls themselves.
+        if !board_data
+            .collision_field
+            .get(&pos)
+            .map(|c| c.player_free)
+            .unwrap_or(false)
+        {
+            continue; // Skip walls and out-of-bounds
+        }
+
+        // Process each neighbor (up, down, left, right):
+        let neighbors = [pos.top(), pos.bottom(), pos.left(), pos.right()];
+        let neighbors = neighbors
+            .into_iter()
+            .filter(|nb_pos| {
+                board_data
+                    .collision_field
+                    .get(nb_pos)
+                    .map(|c| c.player_free)
+                    .unwrap_or(true)
+            })
+            .collect::<Vec<_>>();
+        let nb_len = neighbors.len() as f32;
+        for neighbor_pos in neighbors {
+            // Get the neighbor's pressure (treat out-of-bounds as 0.0)
+            let p2 = *board_data
+                .miasma
+                .pressure_field
+                .get(&neighbor_pos)
+                .unwrap_or(&0.0);
+
+            // Calculate pressure difference and exchange amount.
+            let delta_pressure = p1 - p2;
+            let exchange = delta_pressure * diffusion_rate * dt / nb_len;
+            *pressure_changes.entry(neighbor_pos).or_insert(0.0) += exchange;
+            *pressure_changes.entry(pos.clone()).or_insert(0.0) -= exchange;
+        }
+    }
+    for (pos, delta) in pressure_changes {
+        *board_data.miasma.pressure_field.entry(pos).or_insert(0.0) += delta;
+    }
+}
