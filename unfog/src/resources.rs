@@ -4,15 +4,15 @@ use bevy::prelude::*;
 pub struct MiasmaConfig {
     pub initial_room_pressure: f32,
     pub initial_outside_pressure: f32,
-    pub max_miasma_alpha: f32,
+    pub miasma_visibility_factor: f32,
 }
 
 impl Default for MiasmaConfig {
     fn default() -> Self {
         Self {
-            initial_room_pressure: 0.8,
+            initial_room_pressure: 0.3,
             initial_outside_pressure: 0.0,
-            max_miasma_alpha: 0.5,
+            miasma_visibility_factor: 0.5,
         }
     }
 }

@@ -64,6 +64,7 @@ fn load_assets(
                 Some(UVec2::new(0, 0)),
             )),
             vignette: server.load("img/vignette.png"),
+            miasma: server.load("img/miasma-base-01.png"),
             // --- Manual Images ---
             // Chapter 1: Page 1:
             manual_investigate: ch1("investigate.png"),

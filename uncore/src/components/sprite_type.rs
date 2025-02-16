@@ -5,6 +5,7 @@ pub enum SpriteType {
     Ghost,
     Breach,
     Player,
+    Miasma,
     #[default]
     Other,
 }

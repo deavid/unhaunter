@@ -34,7 +34,7 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::controlkeys::ControlKeys;
 use uncore::difficulty::CurrentDifficulty;
-use uncore::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
@@ -82,6 +82,7 @@ pub fn load_level_handler(
     qgs2: Query<Entity, With<GameSound>>,
     mut ev_room: EventWriter<RoomChangedEvent>,
     mut p: LoadLevelSystemParam,
+    mut ev_level_ready: EventWriter<LevelReadyEvent>,
 ) {
     let mut ev_iter = ev.read();
     let Some(loaded_event) = ev_iter.next() else {
@@ -481,6 +482,7 @@ pub fn load_level_handler(
     let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
     p.next_game_state.set(AppState::InGame);
+    ev_level_ready.send(LevelReadyEvent);
 }
 
 fn process_pre_meshes(
@@ -523,6 +525,7 @@ fn process_pre_meshes(
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
         .add_event::<LevelLoadedEvent>()
+        .add_event::<LevelReadyEvent>()
         .add_systems(PostUpdate, load_level_handler)
         .add_systems(Update, process_pre_meshes);
 }

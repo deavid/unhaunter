@@ -44,6 +44,7 @@ pub fn app_run() {
     app.init_resource::<CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
+    // app.add_plugins(FrameTimeDiagnosticsPlugin);
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
@@ -69,7 +70,7 @@ pub fn app_run() {
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,
     ));
-
+    // app.add_systems(Update, report_timer::report_performance);
     app.run();
 }
 

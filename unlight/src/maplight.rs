@@ -36,6 +36,8 @@ use uncore::{
     components::{game_config::GameConfig, sprite_type::SpriteType},
 };
 use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTimer};
+use unfog::components::MiasmaSprite;
+use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
@@ -191,6 +193,7 @@ pub fn apply_lighting(
             Option<&GhostSprite>,
             Option<&MapColor>,
             Option<&UVReactive>,
+            Option<&MiasmaSprite>,
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -199,6 +202,7 @@ pub fn apply_lighting(
     )>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
+    miasma_config: Res<MiasmaConfig>,
 ) {
     let mut rng = rand::rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
@@ -595,7 +599,7 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
-    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
         let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
@@ -634,6 +638,10 @@ pub fn apply_lighting(
             if sprite_type == SpriteType::Breach {
                 rel_lux *= 1.2;
                 rel_lux += 0.2;
+            }
+            if sprite_type == SpriteType::Miasma {
+                rel_lux /= 2.0;
+                rel_lux += 0.6;
             }
             compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };
@@ -724,6 +732,19 @@ pub fn apply_lighting(
                 let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
                 if delta_z > 0.0 {
                     old_a /= 1.1;
+                }
+            }
+        }
+        if sprite_type == SpriteType::Miasma {
+            let bpos = pos.to_board_position();
+            if let Some(miasma_pressure) = bf.miasma.pressure_field.get(&bpos) {
+                if let Some(miasma_sprite) = o_miasma {
+                    let miasma_visibility = miasma_pressure.cbrt()
+                        * miasma_config.miasma_visibility_factor
+                        * miasma_sprite.visibility
+                        * miasma_sprite.life.clamp(0.0, 1.0);
+                    opacity = opacity.cbrt();
+                    opacity *= miasma_visibility.clamp(0.0, 1.0);
                 }
             }
         }

@@ -41,6 +41,29 @@ impl Plugin for UnhaunterBoardPlugin {
     }
 }
 
+pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position, &Behavior)>) {
+    // info!("Collision rebuild");
+    bf.collision_field.clear();
+    for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
+        let pos = pos.to_board_position();
+        let colfd = CollisionFieldData {
+            player_free: true,
+            ghost_free: true,
+            see_through: false,
+        };
+        bf.collision_field.insert(pos, colfd);
+    }
+    for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
+        let pos = pos.to_board_position();
+        let colfd = CollisionFieldData {
+            player_free: false,
+            ghost_free: !behavior.p.movement.ghost_collision,
+            see_through: behavior.p.light.see_through,
+        };
+        bf.collision_field.insert(pos, colfd);
+    }
+}
+
 pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
@@ -62,26 +85,7 @@ pub fn boardfield_update(
         }
     }
     if bdr.collision {
-        // info!("Collision rebuild");
-        bf.collision_field.clear();
-        for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
-            let pos = pos.to_board_position();
-            let colfd = CollisionFieldData {
-                player_free: true,
-                ghost_free: true,
-                see_through: false,
-            };
-            bf.collision_field.insert(pos, colfd);
-        }
-        for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
-            let pos = pos.to_board_position();
-            let colfd = CollisionFieldData {
-                player_free: false,
-                ghost_free: !behavior.p.movement.ghost_collision,
-                see_through: behavior.p.light.see_through,
-            };
-            bf.collision_field.insert(pos, colfd);
-        }
+        rebuild_collision_data(&mut bf, &qt);
     }
 
     // Create temperature field - only missing data
