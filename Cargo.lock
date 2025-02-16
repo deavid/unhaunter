@@ -4749,6 +4749,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "unfog"
+version = "0.2.6-dev"
+dependencies = [
+ "bevy",
+ "rand 0.9.0",
+ "uncore",
+ "unstd",
+]
+
+[[package]]
 name = "ungame"
 version = "0.2.6-dev"
 dependencies = [
@@ -4807,6 +4817,7 @@ dependencies = [
  "bevy",
  "bevy_dylib",
  "uncore",
+ "unfog",
  "ungame",
  "ungear",
  "ungearitems",

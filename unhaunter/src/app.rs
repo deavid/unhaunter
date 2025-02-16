@@ -4,6 +4,7 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
@@ -63,7 +64,11 @@ pub fn app_run() {
         UnhaunterNPCPlugin,
         UnhaunterTmxMapPlugin,
     ));
-    app.add_plugins((UnhaunterSettingsPlugin, UnhaunterMenuSettingsPlugin));
+    app.add_plugins((
+        UnhaunterSettingsPlugin,
+        UnhaunterMenuSettingsPlugin,
+        UnhaunterFogPlugin,
+    ));
 
     app.run();
 }

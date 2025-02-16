@@ -16,6 +16,7 @@ members = [
     "untmxmap",
     "unsettings",
     "unmenusettings",
+    "unfog",
 ]
 resolver = "2"
 
@@ -68,6 +69,7 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "uncore" }
 unstd = { path = "unstd" }
+unfog = { path = "unfog" }
 ungear = { path = "ungear" }
 ungearitems = { path = "ungearitems" }
 unmaphub = { path = "unmaphub" }

@@ -8,6 +8,7 @@ use crate::{
     types::{
         board::fielddata::{CollisionFieldData, LightFieldData},
         evidence::Evidence,
+        miasma::MiasmaGrid,
     },
 };
 
@@ -17,6 +18,7 @@ pub struct BoardData {
     pub collision_field: HashMap<BoardPosition, CollisionFieldData>,
     pub temperature_field: HashMap<BoardPosition, f32>,
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
+    pub miasma: MiasmaGrid,
     pub breach_pos: Position,
     pub ambient_temp: f32,
     pub exposure_lux: f32,
@@ -39,6 +41,7 @@ impl FromWorld for BoardData {
             ambient_temp: 15.0,
             evidences: HashSet::new(),
             breach_pos: Position::new_i64(0, 0, 0),
+            miasma: MiasmaGrid::default(),
         }
     }
 }

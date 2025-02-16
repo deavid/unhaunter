@@ -10,3 +10,4 @@ pub mod quadcc;
 pub mod root;
 pub mod tiledmap;
 pub mod truck_button;
+pub mod miasma;
