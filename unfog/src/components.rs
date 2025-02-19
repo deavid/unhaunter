@@ -18,5 +18,13 @@ pub struct MiasmaSprite {
     /// How visible is this sprite of Miasma
     pub visibility: f32,
     /// How long has been visible
+    pub time_alive: f32,
+    /// Trigger for despawning
+    pub despawn: bool,
+    /// Despawning metric, when reaches zero despawns.
     pub life: f32,
+    /// Velocity response to flow.
+    pub vel_speed: f32,
+    /// Speed of movement of the particle so it denoises the miasma velocity field.
+    pub direction: Vec2,
 }

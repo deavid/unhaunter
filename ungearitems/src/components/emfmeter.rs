@@ -65,6 +65,8 @@ pub struct EMFMeter {
     pub temp_l1: f32,
     pub emf: f32,
     pub emf_level: EMFLevel,
+    pub miasma_pressure: f32,
+    pub miasma_pressure_2: f32,
     pub last_sound_secs: f32,
     pub last_meter_update_secs: f32,
 }
@@ -90,9 +92,10 @@ impl GearUsable for EMFMeter {
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
             format!(
-                "Reading: {:>6.1}mG {}",
+                "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
                 self.emf,
-                self.emf_level.to_status()
+                self.emf_level.to_status(),
+                self.miasma_pressure_2,
             )
         } else {
             "".to_string()
@@ -111,13 +114,36 @@ impl GearUsable for EMFMeter {
             self.frame_counter = 0;
         }
         const K: f32 = 0.5;
+        const F: f32 = 0.95;
+        for _ in 0..20 {
+            let pos = Position {
+                x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+                y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+                z: pos.z,
+                global_z: pos.global_z,
+            };
+            let bpos = pos.to_board_position();
+
+            let miasma_pressure = gs
+                .bf
+                .miasma
+                .pressure_field
+                .get(&bpos)
+                .cloned()
+                .unwrap_or_default();
+
+            self.miasma_pressure = self.miasma_pressure * F + miasma_pressure * (1.0 - F);
+        }
+        self.miasma_pressure_2 = self.miasma_pressure_2 * F + self.miasma_pressure * (1.0 - F);
+
         let pos = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
+
         let temperature = gs
             .bf
             .temperature_field

@@ -1,4 +1,6 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
+use bevy_persistent::Persistent;
+use unsettings::audio::AudioSettings;
 
 use crate::difficulty::CurrentDifficulty;
 use crate::resources::summary_data::SummaryData;
@@ -23,14 +25,20 @@ pub struct GearStuff<'w, 's> {
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
     pub sound_events: EventWriter<'w, SoundEvent>,
-    /// Access to the current difficulty
+    /// Access to the current difficulty.
     pub difficulty: Res<'w, CurrentDifficulty>,
+    /// Audio settings from the game.
+    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
 }
 
 impl GearStuff<'_, '_> {
     /// Plays a sound effect using the specified file path and volume from the given
     /// position.
     pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
+        let volume = volume
+            * self.audio_settings.volume_effects.as_f32()
+            * self.audio_settings.volume_master.as_f32();
+
         // Create a SoundEvent with the required data
         let sound_event = SoundEvent {
             sound_file,
@@ -44,6 +52,10 @@ impl GearStuff<'_, '_> {
 
     /// Plays a sound effect without having a position volume modifier.
     pub fn play_audio_nopos(&mut self, sound_file: String, volume: f32) {
+        let volume = volume
+            * self.audio_settings.volume_effects.as_f32()
+            * self.audio_settings.volume_master.as_f32();
+
         // Create a SoundEvent with the required data
         let sound_event = SoundEvent {
             sound_file,

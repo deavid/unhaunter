@@ -15,7 +15,7 @@ impl Plugin for UnhaunterFogPlugin {
             )
             .add_systems(Update, systems::spawn_miasma)
             .add_systems(
-                FixedUpdate,
+                Update,
                 (systems::animate_miasma_sprites, systems::update_miasma)
                     .run_if(in_state(AppState::InGame)),
             );

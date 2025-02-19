@@ -4757,6 +4757,7 @@ version = "0.2.6-dev"
 dependencies = [
  "anyhow",
  "bevy",
+ "bevy-persistent",
  "enum-iterator",
  "fastapprox",
  "itertools 0.14.0",
@@ -4766,6 +4767,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.11",
  "tiled",
+ "unsettings",
 ]
 
 [[package]]

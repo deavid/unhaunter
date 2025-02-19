@@ -65,7 +65,9 @@ impl AudioSettingsMenu {
         #[allow(clippy::match_single_binding)]
         match self {
             // <-- add here the events for specific menus
-            Self::VolumeMusic => MenuEvent::EditAudioSetting(*self),
+            Self::VolumeMaster | Self::VolumeEffects | Self::VolumeMusic => {
+                MenuEvent::EditAudioSetting(*self)
+            }
             _ => MenuEvent::None,
         }
     }
@@ -96,6 +98,22 @@ impl AudioSettingsMenu {
             }
         };
         match self {
+            AudioSettingsMenu::VolumeMaster => AudioLevel::iter()
+                .map(|s| {
+                    (
+                        to_string(s, &audio_settings.volume_master),
+                        MenuEvent::SaveAudioSetting(AudioSettingsValue::volume_master(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            AudioSettingsMenu::VolumeEffects => AudioLevel::iter()
+                .map(|s| {
+                    (
+                        to_string(s, &audio_settings.volume_effects),
+                        MenuEvent::SaveAudioSetting(AudioSettingsValue::volume_effects(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
             AudioSettingsMenu::VolumeMusic => AudioLevel::iter()
                 .map(|s| {
                     (

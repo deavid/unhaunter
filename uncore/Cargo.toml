@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 enum-iterator = { workspace = true }
@@ -19,3 +20,5 @@ tiled = { workspace = true }
 anyhow = { workspace = true }
 ordered-float = { workspace = true }
 itertools = { workspace = true }
+
+unsettings = { path = "../unsettings" }

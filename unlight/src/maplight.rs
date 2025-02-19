@@ -737,15 +737,52 @@ pub fn apply_lighting(
         }
         if sprite_type == SpriteType::Miasma {
             let bpos = pos.to_board_position();
-            if let Some(miasma_pressure) = bf.miasma.pressure_field.get(&bpos) {
-                if let Some(miasma_sprite) = o_miasma {
-                    let miasma_visibility = miasma_pressure.cbrt()
-                        * miasma_config.miasma_visibility_factor
-                        * miasma_sprite.visibility
-                        * miasma_sprite.life.clamp(0.0, 1.0);
-                    opacity = opacity.cbrt();
-                    opacity *= miasma_visibility.clamp(0.0, 1.0);
+            if let Some(miasma_sprite) = o_miasma {
+                let mut total_pressure = 0.0;
+                let mut total_weight = 0.0;
+
+                for dx in -1..1 {
+                    for dy in -1..1 {
+                        let neighbor_pos = BoardPosition {
+                            x: bpos.x + dx,
+                            y: bpos.y + dy,
+                            z: bpos.z,
+                        };
+
+                        if let Some(neighbor_pressure) = bf.miasma.pressure_field.get(&neighbor_pos)
+                        {
+                            // Calculate distance from sprite's *actual* position to the
+                            // *center* of the neighbor tile. This is important for smooth
+                            // weighting.
+                            let neighbor_center = neighbor_pos.to_position_center();
+                            let distance = pos.distance(&neighbor_center); // Euclidean distance
+                            let weight = (distance + 0.1).recip(); // Avoid division by zero
+
+                            total_pressure += neighbor_pressure * weight;
+                            total_weight += weight;
+                        }
+                    }
                 }
+
+                let average_pressure = if total_weight > 0.0 {
+                    total_pressure / total_weight
+                } else {
+                    0.0 // Default to 0 if no neighbors have pressure (shouldn't happen)
+                };
+
+                let miasma_visibility = (average_pressure.max(0.0).sqrt()
+                    * miasma_config.miasma_visibility_factor
+                    * miasma_sprite.visibility
+                    * miasma_sprite.time_alive.clamp(0.0, 1.0)
+                    * miasma_sprite.life.clamp(0.0, 1.0)
+                    * (ld.magnitude().atan() / 1.2 + 0.25))
+                    .min(1.0 - dst_color.luminance() * 0.5);
+                dst_color = dst_color.with_luminance((dst_color.luminance() * 7.0).tanh() / 1.5);
+                opacity = opacity.max(0.0).sqrt();
+                opacity *= miasma_visibility.clamp(0.0, 1.0);
+                // if opacity < old_a {
+                //     smooth = 25.0;
+                // }
             }
         }
         dst_color.set_alpha(
