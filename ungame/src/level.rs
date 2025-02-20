@@ -88,6 +88,7 @@ pub fn load_level_handler(
     let Some(loaded_event) = ev_iter.next() else {
         return;
     };
+    let layers = &loaded_event.layers;
 
     // Consume all events, just in case to prevent double loading.
     let _ = ev_iter.count();
@@ -103,7 +104,36 @@ pub fn load_level_handler(
     }
     p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
 
+    // Compute map size
+    let mut map_min_x = i32::MAX;
+    let mut map_min_y = i32::MAX;
+    let mut map_max_x = i32::MIN;
+    let mut map_max_y = i32::MIN;
+    for (maptiles, _layer) in layers.iter().filter_map(|(_, layer)| {
+        // filter only the tile layers and extract that directly
+        if let MapLayerType::Tiles(tiles) = &layer.data {
+            Some((tiles, layer))
+        } else {
+            None
+        }
+    }) {
+        for tile in &maptiles.v {
+            map_min_x = tile.pos.x.min(map_min_x);
+            map_min_y = tile.pos.y.min(map_min_y);
+            map_max_x = tile.pos.x.max(map_max_x);
+            map_max_y = tile.pos.y.max(map_max_y);
+        }
+    }
+    let map_size = (
+        (map_max_x - map_min_x + 1) as usize,
+        (map_max_y - map_min_y + 1) as usize,
+    );
+
+    info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
+
     // Remove all pre-existing data for environment
+    p.bf.map_size = map_size;
+    p.bf.origin = (map_min_x, map_min_y);
     p.bf.temperature_field.clear();
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
@@ -170,7 +200,7 @@ pub fn load_level_handler(
     commands.init_resource::<BoardData>();
     warn!("Level Loaded: {}", &loaded_event.map_filepath);
     // ---------- NEW MAP LOAD ----------
-    let layers = &loaded_event.layers;
+
     let mut player_spawn_points: Vec<Position> = vec![];
     let mut ghost_spawn_points: Vec<Position> = vec![];
     let mut van_entry_points: Vec<Position> = vec![];
@@ -269,6 +299,7 @@ pub fn load_level_handler(
     // ---
     //
     // ## We will need a 2nd pass load to sync some data
+
     let mut c: f32 = 0.0;
     let mut movable_objects: Vec<Entity> = Vec::new();
     for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
@@ -297,9 +328,11 @@ pub fn load_level_handler(
                 b.material = MeshMaterial2d(mat);
                 commands.spawn(b)
             };
+            let t_x = (tile.pos.x - map_min_x) as f32;
+            let t_y = (tile.pos.y - map_min_y) as f32;
             let mut pos = Position {
-                x: tile.pos.x as f32,
-                y: -tile.pos.y as f32,
+                x: t_x,
+                y: -t_y,
                 z: 0.0,
                 global_z: 0.0,
             };

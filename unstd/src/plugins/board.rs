@@ -96,7 +96,7 @@ pub fn boardfield_update(
     // Randomize initial temperatures so the player cannot exploit the fact that the
     // data is "flat" at the beginning
     for pos in valid_k.into_iter() {
-        let missing = bf.temperature_field.get(&pos).is_none();
+        let missing = !bf.temperature_field.contains_key(&pos);
         if missing {
             let ambient = ambient_temp + rng.random_range(-10.0..10.0);
             added_temps.push(pos.clone());

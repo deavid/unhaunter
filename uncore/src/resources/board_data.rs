@@ -14,6 +14,9 @@ use crate::{
 
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
+    pub map_size: (usize, usize),
+    pub origin: (i32, i32),
+
     pub light_field: HashMap<BoardPosition, LightFieldData>,
     pub collision_field: HashMap<BoardPosition, CollisionFieldData>,
     pub temperature_field: HashMap<BoardPosition, f32>,
@@ -31,6 +34,8 @@ impl FromWorld for BoardData {
     fn from_world(_world: &mut World) -> Self {
         // Using from_world to initialize is not needed but just in case we need it later.
         Self {
+            map_size: (0, 0),
+            origin: (0, 0),
             collision_field: HashMap::new(),
             light_field: HashMap::new(),
             temperature_field: HashMap::new(),

@@ -87,6 +87,7 @@ unmenusettings = { path = "unmenusettings" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
+ndarray = "0.16.1"
 
 [build-dependencies]
 walkdir = { workspace = true }

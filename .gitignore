@@ -6,3 +6,5 @@ unhaunter_game
 trace-*.json
 unhaunter_project.txt
 diff.txt
+flamegraph.svg
+*/flamegraph.svg
