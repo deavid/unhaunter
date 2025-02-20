@@ -1,7 +1,7 @@
 use crate::board::spritedb::SpriteDB;
 use crate::materials::CustomMaterial1;
-use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
+use uncore::behavior::component::{Interactive, RoomState};
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::events::roomchanged::InteractionExecutionType;

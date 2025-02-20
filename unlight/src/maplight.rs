@@ -291,7 +291,7 @@ pub fn apply_lighting(
         }
         player_pos = *pos;
     }
-    for (pos, _fldir, _power, _color, _light_type, ref mut vis_field) in flashlights.iter_mut() {
+    for (pos, _fldir, _power, _color, _light_type, vis_field) in flashlights.iter_mut() {
         compute_visibility(vis_field, &bf.collision_field, pos, None);
     }
 

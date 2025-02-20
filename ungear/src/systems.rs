@@ -43,7 +43,7 @@ pub fn update_deployed_gear_data(
 pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearData)>) {
     for (mut sprite, gear_data) in q_gear.iter_mut() {
         let new_index = gear_data.gear.get_sprite_idx() as usize;
-        if let Some(ref mut texture_atlas) = &mut sprite.texture_atlas {
+        if let Some(texture_atlas) = &mut sprite.texture_atlas {
             if texture_atlas.index != new_index {
                 texture_atlas.index = new_index;
             }
