@@ -2,7 +2,6 @@ use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::behavior::Behavior;
-use uncore::celsius_to_kelvin;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
@@ -10,6 +9,7 @@ use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
+use uncore::{celsius_to_kelvin, kelvin_to_celsius};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -52,7 +52,7 @@ impl GearUsable for Thermometer {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
         let msg = if self.enabled {
-            format!("Temperature: {:>5.1}ºC", self.temp)
+            format!("Temperature: {:>5.1}ºC", kelvin_to_celsius(self.temp))
         } else {
             "".to_string()
         };
