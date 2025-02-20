@@ -4,6 +4,7 @@ use bevy::{
 };
 
 use crate::{
+    celsius_to_kelvin,
     components::board::{boardposition::BoardPosition, position::Position},
     types::{
         board::fielddata::{CollisionFieldData, LightFieldData},
@@ -43,7 +44,7 @@ impl FromWorld for BoardData {
             exposure_lux: 1.0,
             current_exposure: 1.0,
             current_exposure_accel: 1.0,
-            ambient_temp: 15.0,
+            ambient_temp: celsius_to_kelvin(15.0),
             evidences: HashSet::new(),
             breach_pos: Position::new_i64(0, 0, 0),
             miasma: MiasmaGrid::default(),

@@ -1,7 +1,8 @@
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::behavior::Behavior;
+use uncore::celsius_to_kelvin;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
@@ -23,9 +24,9 @@ impl Default for Thermometer {
     fn default() -> Self {
         Self {
             enabled: Default::default(),
-            temp: 10.0,
-            temp_l2: [10.0; 5],
-            temp_l1: 10.0,
+            temp: celsius_to_kelvin(10.0),
+            temp_l2: [celsius_to_kelvin(10.0); 5],
+            temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
         }
     }
@@ -142,8 +143,8 @@ pub fn temperature_update(
         }
     }
 
-    use rand::rngs::SmallRng;
     use rand::SeedableRng;
+    use rand::rngs::SmallRng;
 
     let mut rng = SmallRng::from_os_rng();
     let old_temps: Vec<(_, _)> = bf

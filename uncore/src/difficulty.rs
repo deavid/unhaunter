@@ -12,12 +12,13 @@
 //! By defining these settings directly within the `Difficulty` enum, you can
 //! fine-tune the game experience for each difficulty level, providing a tailored
 //! challenge for players.
+use crate::celsius_to_kelvin;
 use crate::components::truck_ui::TabContents;
 use crate::types::gear_kind::{GearKind, PlayerGearKind};
 use crate::types::ghost::definitions::GhostSet;
 use crate::types::manual::ManualChapterIndex;
 use bevy::prelude::Resource;
-use enum_iterator::{all, Sequence};
+use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};
 
 /// Represents the different difficulty levels for the Unhaunter game.
@@ -288,22 +289,22 @@ impl Difficulty {
     /// Returns the base ambient temperature of the location.
     pub fn ambient_temperature(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 19.0,
-            Difficulty::AdeptInvestigator => 18.0,
-            Difficulty::SeniorInvestigator => 16.0,
-            Difficulty::ExpertInvestigator => 14.0,
-            Difficulty::AdeptSpecialist => 12.0,
-            Difficulty::LeadSpecialist => 11.0,
-            Difficulty::ExpertSpecialist => 10.0,
-            Difficulty::MasterSpecialist => 9.0,
-            Difficulty::InitiateOccultist => 8.0,
-            Difficulty::AdeptOccultist => 7.0,
-            Difficulty::ExpertOccultist => 6.0,
-            Difficulty::MasterOccultist => 5.0,
-            Difficulty::AdeptGuardian => 5.0,
-            Difficulty::LeadGuardian => 4.5,
-            Difficulty::ExpertGuardian => 4.0,
-            Difficulty::MasterGuardian => 4.0,
+            Difficulty::NoviceInvestigator => celsius_to_kelvin(19.0),
+            Difficulty::AdeptInvestigator => celsius_to_kelvin(18.0),
+            Difficulty::SeniorInvestigator => celsius_to_kelvin(16.0),
+            Difficulty::ExpertInvestigator => celsius_to_kelvin(14.0),
+            Difficulty::AdeptSpecialist => celsius_to_kelvin(12.0),
+            Difficulty::LeadSpecialist => celsius_to_kelvin(11.0),
+            Difficulty::ExpertSpecialist => celsius_to_kelvin(10.0),
+            Difficulty::MasterSpecialist => celsius_to_kelvin(9.0),
+            Difficulty::InitiateOccultist => celsius_to_kelvin(8.0),
+            Difficulty::AdeptOccultist => celsius_to_kelvin(7.0),
+            Difficulty::ExpertOccultist => celsius_to_kelvin(6.0),
+            Difficulty::MasterOccultist => celsius_to_kelvin(5.0),
+            Difficulty::AdeptGuardian => celsius_to_kelvin(5.0),
+            Difficulty::LeadGuardian => celsius_to_kelvin(4.5),
+            Difficulty::ExpertGuardian => celsius_to_kelvin(4.0),
+            Difficulty::MasterGuardian => celsius_to_kelvin(4.0),
         }
     }
 
