@@ -56,6 +56,7 @@ bevy = "0.15"
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
+ndarray = "0.16.1"
 
 [package]
 name = "unhaunter"
@@ -87,7 +88,6 @@ unmenusettings = { path = "unmenusettings" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
-ndarray = "0.16.1"
 
 [build-dependencies]
 walkdir = { workspace = true }

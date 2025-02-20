@@ -39,8 +39,9 @@ pub fn initialize_miasma(
     let mut rng = rand::rng();
     let collision_field = board_data.collision_field.clone();
 
-    for (board_position, cfield) in &collision_field {
-        let opt_room_id = roomdb.room_tiles.get(board_position);
+    for (p, cfield) in collision_field.indexed_iter() {
+        let board_position = BoardPosition::from_ndidx(p);
+        let opt_room_id = roomdb.room_tiles.get(&board_position);
 
         // 1. Get or Insert Room Modifier:
         let mut modifier = if let Some(room_id) = opt_room_id {
@@ -134,12 +135,7 @@ pub fn spawn_miasma(
     }
 
     for (bpos, vis) in vf.visibility_field.iter() {
-        if !board_data
-            .collision_field
-            .get(bpos)
-            .map(|c| c.player_free)
-            .unwrap_or(false)
-        {
+        if !board_data.collision_field[bpos.ndidx()].player_free {
             continue;
         }
 
@@ -238,12 +234,7 @@ pub fn animate_miasma_sprites(
         let mut total_vel = Vec2::ZERO;
         let mut total_w = 0.0001;
         for bpos in bpos.xy_neighbors(1) {
-            if !board_data
-                .collision_field
-                .get(&bpos)
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-            {
+            if !board_data.collision_field[bpos.ndidx()].player_free {
                 continue;
             }
             let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
@@ -290,12 +281,7 @@ pub fn update_miasma(
     for pos in keys {
         // Check for walls and closed doors (collision)
         // This part is to check we don't diffuse the walls themselves.
-        if !board_data
-            .collision_field
-            .get(&pos)
-            .map(|c| c.player_free)
-            .unwrap_or(false)
-        {
+        if !board_data.collision_field[pos.ndidx()].player_free {
             continue; // Skip walls and out-of-bounds
         }
         let is_room = roomdb.room_tiles.contains_key(&pos);
@@ -315,14 +301,21 @@ pub fn update_miasma(
             .filter(|nb_pos| {
                 board_data
                     .collision_field
-                    .get(nb_pos)
-                    .map(|c| c.player_free)
+                    .get(nb_pos.ndidx())
+                    .map(|x| x.player_free)
                     .unwrap_or(true)
             })
             .collect::<Vec<_>>();
         let nb_len = neighbors.len() as f32 + 0.01;
         let mut total_v = Vec2::ZERO;
         for neighbor_pos in neighbors {
+            if board_data
+                .collision_field
+                .get(neighbor_pos.ndidx())
+                .is_none()
+            {
+                continue;
+            }
             // Get the neighbor's pressure (treat out-of-bounds as 0.0)
             let mut p2 = board_data
                 .miasma
@@ -386,11 +379,7 @@ pub fn update_miasma(
     // Average velocities over space
     for (pos, vel) in velocity_changes {
         let is_room = roomdb.room_tiles.contains_key(&pos)
-            && board_data
-                .collision_field
-                .get(&pos)
-                .map(|c| c.player_free)
-                .unwrap_or(true);
+            && board_data.collision_field[pos.ndidx()].player_free;
         let entry = board_data
             .miasma
             .velocity_field
@@ -406,11 +395,7 @@ pub fn update_miasma(
     }
     for (pos, delta) in pressure_changes {
         let is_room = roomdb.room_tiles.contains_key(&pos)
-            && board_data
-                .collision_field
-                .get(&pos)
-                .map(|c| c.player_free)
-                .unwrap_or(true);
+            && board_data.collision_field[pos.ndidx()].player_free;
 
         let entry = board_data.miasma.pressure_field.entry(pos).or_insert(0.0);
         *entry += delta;
@@ -436,12 +421,7 @@ pub fn update_miasma(
                 // Consider outside to be zero pressure always.
                 return 0.0;
             }
-            if board_data
-                .collision_field
-                .get(pos)
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-            {
+            if board_data.collision_field[pos.ndidx()].player_free {
                 board_data
                     .miasma
                     .pressure_field
@@ -482,7 +462,7 @@ pub fn update_miasma(
         if new_velocity.x > -WALL_REPEL_SPEED
             && !board_data
                 .collision_field
-                .get(&pos.right())
+                .get(pos.right().ndidx())
                 .map(|c| c.player_free)
                 .unwrap_or(true)
         {
@@ -491,7 +471,7 @@ pub fn update_miasma(
         if new_velocity.x < WALL_REPEL_SPEED
             && !board_data
                 .collision_field
-                .get(&pos.left())
+                .get(pos.left().ndidx())
                 .map(|c| c.player_free)
                 .unwrap_or(true)
         {
@@ -500,7 +480,7 @@ pub fn update_miasma(
         if new_velocity.y < WALL_REPEL_SPEED
             && !board_data
                 .collision_field
-                .get(&pos.top())
+                .get(pos.top().ndidx())
                 .map(|c| c.player_free)
                 .unwrap_or(true)
         {
@@ -509,7 +489,7 @@ pub fn update_miasma(
         if new_velocity.y > -WALL_REPEL_SPEED
             && !board_data
                 .collision_field
-                .get(&pos.bottom())
+                .get(pos.bottom().ndidx())
                 .map(|c| c.player_free)
                 .unwrap_or(true)
         {

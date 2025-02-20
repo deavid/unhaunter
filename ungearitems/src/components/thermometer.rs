@@ -2,6 +2,7 @@ use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::behavior::Behavior;
+use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
@@ -73,9 +74,7 @@ impl GearUsable for Thermometer {
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
-        let Some(temperature) = gs.bf.temperature_field.get(&bpos) else {
-            return;
-        };
+        let temperature = gs.bf.temperature_field[bpos.ndidx()];
         let temp_reading = temperature;
         let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
 
@@ -113,17 +112,16 @@ pub fn temperature_update(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let ambient = bf.ambient_temp;
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();
         if h_out < 0.001 {
             continue;
         }
         let bpos = pos.to_board_position();
-        let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
+        let prev_temp = bf.temperature_field[bpos.ndidx()];
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
         let t_out = h_out * k * 0.5 * difficulty.0.light_heat;
-        bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
+        bf.temperature_field[bpos.ndidx()] += t_out;
     }
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
@@ -132,14 +130,12 @@ pub fn temperature_update(
         const GHOST_MAX_POWER: f32 = 0.0002;
         const BREACH_MAX_POWER: f32 = 0.2;
         for npos in bpos.xy_neighbors(1) {
-            bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
-            });
+            let t = &mut bf.temperature_field[npos.ndidx()];
+            *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
         }
         for npos in gs.spawn_point.xy_neighbors(2) {
-            bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
-            });
+            let t = &mut bf.temperature_field[npos.ndidx()];
+            *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
         }
     }
 
@@ -149,10 +145,10 @@ pub fn temperature_update(
     let mut rng = SmallRng::from_os_rng();
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
-        .iter()
+        .indexed_iter()
         .filter_map(|(p, t)| {
             if rng.random_range(0..8) == 0 {
-                Some((p.clone(), *t))
+                Some((p, *t))
             } else {
                 None
             }
@@ -166,30 +162,33 @@ pub fn temperature_update(
     const WALL_CONDUCTIVITY: f32 = 0.1;
     let smooth: f32 = 4.0 / difficulty.0.temperature_spread_speed;
     for (p, temp) in old_temps.into_iter() {
-        let free = bf
-            .collision_field
-            .get(&p)
-            .map(|x| (x.player_free, x.ghost_free))
-            .unwrap_or((true, true));
+        let cp = &bf.collision_field[p];
+        let free = (cp.player_free, cp.ghost_free);
+
         let mut self_k = match free {
             (true, true) => INSIDE_CONDUCTIVITY,
             (false, false) => WALL_CONDUCTIVITY,
             _ => OTHER_CONDUCTIVITY,
         };
-        let is_outside = roomdb.room_tiles.get(&p).is_none();
+        let bpos = BoardPosition::from_ndidx(p);
+        let is_outside = roomdb.room_tiles.get(&bpos).is_none();
         if is_outside {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
 
-        // let neighbors = p.xy_neighbors(1);
-        let neighbors = [p.left(), p.right(), p.top(), p.bottom()];
+        // let neighbors = bpos.xy_neighbors(1);
+        let neighbors = [bpos.left(), bpos.right(), bpos.top(), bpos.bottom()];
         let n_idx = rng.random_range(0..neighbors.len());
         let neigh = neighbors[n_idx].clone();
-        let neigh_free = bf
+        let neigh_ndidx = neigh.ndidx();
+        let Some(neigh_free) = bf
             .collision_field
-            .get(&neigh)
-            .map(|x| (x.player_free, x.ghost_free))
-            .unwrap_or((true, true));
+            .get(neigh_ndidx)
+            .map(|ncp| (ncp.player_free, ncp.ghost_free))
+        else {
+            continue;
+        };
+
         let neigh_k = match neigh_free {
             (true, true) => INSIDE_CONDUCTIVITY,
             (false, false) => WALL_CONDUCTIVITY,
@@ -199,14 +198,16 @@ pub fn temperature_update(
         if nis_outside {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
-        let neigh_temp = bf.temperature_field.get(&neigh).copied().unwrap_or(ambient);
+        let neigh_temp = bf
+            .temperature_field
+            .get(neigh_ndidx)
+            .copied()
+            .unwrap_or(bf.ambient_temp);
         let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
         let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
         let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
         let new_temp2 = temp - new_temp1 + neigh_temp;
-        bf.temperature_field.entry(p).and_modify(|x| *x = new_temp1);
-        bf.temperature_field
-            .entry(neigh)
-            .and_modify(|x| *x = new_temp2);
+        bf.temperature_field[p] = new_temp1;
+        bf.temperature_field[neigh_ndidx] = new_temp2;
     }
 }

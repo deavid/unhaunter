@@ -1,3 +1,4 @@
+use uncore::DEBUG_PLAYER;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::game_ui::DamageBackground;
@@ -5,9 +6,8 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
-use uncore::utils::light::lerp_color;
 use uncore::utils::PrintingTimer;
-use uncore::DEBUG_PLAYER;
+use uncore::utils::light::lerp_color;
 
 use bevy::prelude::*;
 
@@ -28,14 +28,9 @@ pub fn lose_sanity(
     let dt = time.delta_secs();
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
-        let lux = bf
-            .light_field
-            .get(&bpos)
-            .map(|x| x.lux)
-            .unwrap_or(2.0)
-            .sqrt()
-            + 0.001;
-        let temp = bf.temperature_field.get(&bpos).cloned().unwrap_or(2.0);
+        let p = bpos.ndidx();
+        let lux = bf.light_field[p].lux.sqrt() + 0.001;
+        let temp = bf.temperature_field[p];
         let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
         let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
         let mut sound = 0.0;

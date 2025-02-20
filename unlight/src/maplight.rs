@@ -13,6 +13,7 @@
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
+use ndarray::Array3;
 use rand::Rng as _;
 use std::collections::VecDeque;
 use uncore::components::board::direction::Direction;
@@ -56,7 +57,7 @@ pub use uncore::types::board::light::{LightData, LightType};
 /// and the values are visibility factors (0.0 to 1.0).
 pub fn compute_visibility(
     vf: &mut HashMap<BoardPosition, f32>,
-    cf: &HashMap<BoardPosition, CollisionFieldData>,
+    cf: &Array3<CollisionFieldData>,
     pos_start: &Position,
     roomdb: Option<&mut RoomDB>,
 ) {
@@ -68,7 +69,7 @@ pub fn compute_visibility(
         let pds = pos.to_position().distance(pos_start);
         let src_f = vf.get(&pos).cloned().unwrap_or_default();
         if !cf
-            .get(&pos)
+            .get(pos.ndidx())
             .map(|c| c.player_free || c.see_through)
             .unwrap_or_default()
         {
@@ -83,41 +84,42 @@ pub fn compute_visibility(
             if npos == pos {
                 continue;
             }
-            if cf.contains_key(&npos) {
-                let npds = npos.to_position().distance(pos_start);
-                let npref = npos.distance(&pos2) / 2.0;
-                let f = if npds < 1.5 {
-                    1.0
-                } else {
-                    ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
-                };
-                let mut dst_f = src_f * f;
-                if dst_f < 0.00001 {
-                    continue;
-                }
-                if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
-                    queue.push_front((npos.clone(), pos.clone()));
-                }
-                let k = if let Some(roomdb) = roomdb.as_ref() {
-                    match roomdb.room_tiles.get(&npos).is_some() {
-                        // Decrease view range inside the location
-                        true => 3.0,
-                        false => {
-                            if IS_WASM {
-                                4.0
-                            } else {
-                                7.0
-                            }
+            if cf.get(npos.ndidx()).is_none() {
+                continue;
+            }
+            let npds = npos.to_position().distance(pos_start);
+            let npref = npos.distance(&pos2) / 2.0;
+            let f = if npds < 1.5 {
+                1.0
+            } else {
+                ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
+            };
+            let mut dst_f = src_f * f;
+            if dst_f < 0.00001 {
+                continue;
+            }
+            if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
+                queue.push_front((npos.clone(), pos.clone()));
+            }
+            let k = if let Some(roomdb) = roomdb.as_ref() {
+                match roomdb.room_tiles.get(&npos).is_some() {
+                    // Decrease view range inside the location
+                    true => 3.0,
+                    false => {
+                        if IS_WASM {
+                            4.0
+                        } else {
+                            7.0
                         }
                     }
-                } else {
-                    // For deployed gear
-                    3.0
-                };
-                dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
-                let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
-                *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
-            }
+                }
+            } else {
+                // For deployed gear
+                3.0
+            };
+            dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
+            let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
+            *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
         }
     }
 }
@@ -284,10 +286,9 @@ pub fn apply_lighting(
         }
         let cursor_pos = pos.to_board_position();
         for npos in cursor_pos.xy_neighbors(1) {
-            if let Some(lf) = bf.light_field.get(&npos) {
-                cursor_exp += lf.lux.powf(gamma_exp);
-                exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
-            }
+            let lf = &bf.light_field[npos.ndidx()];
+            cursor_exp += lf.lux.powf(gamma_exp);
+            exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
         }
         player_pos = *pos;
     }
@@ -429,7 +430,7 @@ pub fn apply_lighting(
                 lightdata = lightdata.add(&ld);
             }
             const AMBIENT_LIGHT: f32 = 0.0001;
-            lf.get(bpos).map(|lf| {
+            lf.get(bpos.ndidx()).map(|lf| {
                 (
                     (
                         (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure,
@@ -791,7 +792,7 @@ pub fn apply_lighting(
         sprite.color = dst_color;
     }
     for (bpos, ld) in lightdata_map.into_iter() {
-        bf.light_field.entry(bpos).and_modify(|l| l.additional = ld);
+        bf.light_field[bpos.ndidx()].additional = ld;
     }
     // if mask % 55 == 0 { warn!("change_count: {}", &change_count);
     // warn!("apply_lighting elapsed: {:?}", start.elapsed()); }

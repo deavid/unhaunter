@@ -20,3 +20,4 @@ bevy = { workspace = true }
 rand = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
+ndarray = { workspace = true }

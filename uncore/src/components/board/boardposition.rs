@@ -11,6 +11,31 @@ pub struct BoardPosition {
 }
 
 impl BoardPosition {
+    pub fn from_ndidx(pos: (usize, usize, usize)) -> Self {
+        Self {
+            x: pos.0 as i64,
+            y: pos.1 as i64,
+            z: pos.2 as i64,
+        }
+    }
+    pub fn ndidx(&self) -> (usize, usize, usize) {
+        (self.x as usize, self.y as usize, self.z as usize)
+    }
+
+    pub fn try_ndidx(&self, map_size: &(usize, usize, usize)) -> Option<(usize, usize, usize)> {
+        if self.x < 0
+            || self.x >= map_size.0 as i64
+            || self.y < 0
+            || self.y >= map_size.1 as i64
+            || self.z < 0
+            || self.z >= map_size.2 as i64
+        {
+            None // Out of bounds
+        } else {
+            Some((self.x as usize, self.y as usize, self.z as usize))
+        }
+    }
+
     pub fn to_position(&self) -> Position {
         Position {
             x: self.x as f32,
@@ -31,7 +56,7 @@ impl BoardPosition {
 
     pub fn left(&self) -> Self {
         Self {
-            x: self.x - 1,
+            x: (self.x - 1).max(0),
             y: self.y,
             z: self.z,
         }
@@ -48,7 +73,7 @@ impl BoardPosition {
     pub fn top(&self) -> Self {
         Self {
             x: self.x,
-            y: self.y - 1,
+            y: (self.y - 1).max(0),
             z: self.z,
         }
     }

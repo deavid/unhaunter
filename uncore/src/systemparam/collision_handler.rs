@@ -23,7 +23,7 @@ impl CollisionHandler<'_> {
             let cf = self
                 .bf
                 .collision_field
-                .get(&npos)
+                .get(npos.ndidx())
                 .copied()
                 .unwrap_or_default();
             if !cf.player_free && Self::ENABLE_COLLISION {

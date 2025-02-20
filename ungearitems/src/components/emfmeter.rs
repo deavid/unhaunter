@@ -5,7 +5,7 @@ use uncore::{
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
 
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 
@@ -144,12 +144,7 @@ impl GearUsable for EMFMeter {
         };
         let bpos = pos.to_board_position();
 
-        let temperature = gs
-            .bf
-            .temperature_field
-            .get(&bpos)
-            .copied()
-            .unwrap_or_default();
+        let temperature = gs.bf.temperature_field[bpos.ndidx()];
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
         let temp_reading = temperature / 10.0 + sound_reading;

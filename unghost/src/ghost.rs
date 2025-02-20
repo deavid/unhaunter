@@ -189,13 +189,7 @@ fn ghost_movement(
             }
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
-            if dstroom.is_some()
-                && bf
-                    .collision_field
-                    .get(&bpos)
-                    .map(|x| x.ghost_free)
-                    .unwrap_or_default()
-            {
+            if dstroom.is_some() && bf.collision_field[bpos.ndidx()].ghost_free {
                 if hunt {
                     if !ghost.hunt_target {
                         ghost.hunt_time_secs = time.elapsed_secs();
@@ -311,12 +305,11 @@ fn ghost_enrage(
                     let mut valid_tile = None;
                     for nearby_tile in ghost_board_position.xy_neighbors(1) {
                         // Check adjacent tiles
-                        if let Some(collision_data) = gs.bf.collision_field.get(&nearby_tile) {
-                            if collision_data.player_free {
-                                // Check if the tile is walkable
-                                valid_tile = Some(nearby_tile);
-                                break;
-                            }
+                        let collision_data = gs.bf.collision_field[nearby_tile.ndidx()];
+                        if collision_data.player_free {
+                            // Check if the tile is walkable
+                            valid_tile = Some(nearby_tile);
+                            break;
                         }
                     }
 

@@ -16,4 +16,5 @@ ungearitems = { path = "../ungearitems" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
+ndarray = { workspace = true }
 fastapprox = { workspace = true }

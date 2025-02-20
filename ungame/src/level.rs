@@ -21,9 +21,12 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use bevy_persistent::Persistent;
+use ndarray::Array3;
 use ordered_float::OrderedFloat;
+use rand::Rng;
 use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
+use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite, MapUpdate};
@@ -40,6 +43,7 @@ use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
 use uncore::states::AppState;
+use uncore::types::board::fielddata::{CollisionFieldData, LightFieldData};
 use uncore::types::game::SoundType;
 use uncore::types::quadcc::QuadCC;
 use uncore::types::root::game_assets::GameAssets;
@@ -127,7 +131,7 @@ pub fn load_level_handler(
     let map_size = (
         (map_max_x - map_min_x + 1) as usize,
         (map_max_y - map_min_y + 1) as usize,
-        0,
+        1,
     );
 
     info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
@@ -135,7 +139,9 @@ pub fn load_level_handler(
     // Remove all pre-existing data for environment
     p.bf.map_size = map_size;
     p.bf.origin = (map_min_x, map_min_y, 0);
-    p.bf.temperature_field.clear();
+    p.bf.temperature_field = Array3::from_elem(map_size, p.bf.ambient_temp);
+    p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
+    p.bf.light_field = Array3::from_elem(map_size, LightFieldData::default());
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
     p.roomdb.room_state.clear();
@@ -333,7 +339,7 @@ pub fn load_level_handler(
             let t_y = (tile.pos.y - map_min_y) as f32;
             let mut pos = Position {
                 x: t_x,
-                y: -t_y,
+                y: map_max_y as f32 - t_y,
                 z: 0.0,
                 global_z: 0.0,
             };
@@ -521,6 +527,66 @@ pub fn load_level_handler(
     ev_level_ready.send(LevelReadyEvent);
 }
 
+fn after_level_ready(mut bf: ResMut<BoardData>, ev: EventReader<LevelReadyEvent>) {
+    if ev.is_empty() {
+        return;
+    }
+    let mut rng = rand::rng();
+
+    // Create temperature field
+    let ambient_temp = bf.ambient_temp;
+
+    // Randomize initial temperatures so the player cannot exploit the fact that the
+    // data is "flat" at the beginning
+    for temperature in bf.temperature_field.iter_mut() {
+        let ambient = ambient_temp + rng.random_range(-10.0..10.0);
+        *temperature = ambient;
+    }
+
+    // Smoothen after first initialization so it is not as jumpy.
+    warn!(
+        "Computing 16x{:?} = {}",
+        bf.map_size,
+        16 * bf.map_size.0 * bf.map_size.1 * bf.map_size.2
+    );
+    for _ in 0..16 {
+        for z in 0..bf.map_size.2 {
+            for y in 0..bf.map_size.1 {
+                for x in 0..bf.map_size.0 {
+                    let bpos = BoardPosition::from_ndidx((x, y, z));
+                    let nbors = bpos.xy_neighbors(1);
+                    let mut t_temp = 0.0;
+                    let mut count = 0.0;
+                    let free_tot = bf
+                        .collision_field
+                        .get(bpos.ndidx())
+                        .map(|x| x.player_free)
+                        .unwrap_or(true);
+                    for npos in &nbors {
+                        let free = bf
+                            .collision_field
+                            .get(npos.ndidx())
+                            .map(|x| x.player_free)
+                            .unwrap_or(true);
+                        if free {
+                            t_temp += bf
+                                .temperature_field
+                                .get(npos.ndidx())
+                                .copied()
+                                .unwrap_or(ambient_temp);
+                            count += 1.0;
+                        }
+                    }
+                    if free_tot {
+                        t_temp /= count;
+                        bf.temperature_field[bpos.ndidx()] *= t_temp;
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn process_pre_meshes(
     mut commands: Commands,
     query: Query<(Entity, &PreMesh)>,
@@ -563,5 +629,5 @@ pub fn app_setup(app: &mut App) {
         .add_event::<LevelLoadedEvent>()
         .add_event::<LevelReadyEvent>()
         .add_systems(PostUpdate, load_level_handler)
-        .add_systems(Update, process_pre_meshes);
+        .add_systems(Update, (process_pre_meshes, after_level_ready));
 }

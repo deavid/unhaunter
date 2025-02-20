@@ -4817,6 +4817,7 @@ dependencies = [
  "enum-iterator",
  "fastapprox",
  "itertools 0.14.0",
+ "ndarray",
  "ordered-float",
  "rand 0.9.0",
  "serde",
@@ -4843,6 +4844,7 @@ version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "ndarray",
  "ordered-float",
  "rand 0.9.0",
  "uncore",
@@ -4895,7 +4897,6 @@ version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy_dylib",
- "ndarray",
  "uncore",
  "unfog",
  "ungame",
@@ -4982,6 +4983,7 @@ version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "fastapprox",
+ "ndarray",
  "rand 0.9.0",
  "uncore",
  "unfog",

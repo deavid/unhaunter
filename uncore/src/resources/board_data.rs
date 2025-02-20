@@ -2,6 +2,7 @@ use bevy::{
     prelude::*,
     utils::{HashMap, HashSet},
 };
+use ndarray::Array3;
 
 use crate::{
     celsius_to_kelvin,
@@ -18,9 +19,9 @@ pub struct BoardData {
     pub map_size: (usize, usize, usize),
     pub origin: (i32, i32, i32),
 
-    pub light_field: HashMap<BoardPosition, LightFieldData>,
-    pub collision_field: HashMap<BoardPosition, CollisionFieldData>,
-    pub temperature_field: HashMap<BoardPosition, f32>,
+    pub light_field: Array3<LightFieldData>,
+    pub collision_field: Array3<CollisionFieldData>,
+    pub temperature_field: Array3<f32>,
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
     pub miasma: MiasmaGrid,
     pub breach_pos: Position,
@@ -34,12 +35,13 @@ pub struct BoardData {
 impl FromWorld for BoardData {
     fn from_world(_world: &mut World) -> Self {
         // Using from_world to initialize is not needed but just in case we need it later.
+        let map_size = (0, 0, 0);
         Self {
-            map_size: (0, 0, 0),
+            map_size,
             origin: (0, 0, 0),
-            collision_field: HashMap::new(),
-            light_field: HashMap::new(),
-            temperature_field: HashMap::new(),
+            collision_field: Array3::from_elem(map_size, CollisionFieldData::default()),
+            light_field: Array3::from_elem(map_size, LightFieldData::default()),
+            temperature_field: Array3::from_elem(map_size, 0.0),
             sound_field: HashMap::new(),
             exposure_lux: 1.0,
             current_exposure: 1.0,

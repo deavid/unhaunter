@@ -20,5 +20,6 @@ tiled = { workspace = true }
 anyhow = { workspace = true }
 ordered-float = { workspace = true }
 itertools = { workspace = true }
+ndarray = { workspace = true }
 
 unsettings = { path = "../unsettings" }
