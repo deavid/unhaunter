@@ -106,7 +106,7 @@ impl Behavior {
         self.p.light.emmisivity_lumens() / 10000.0 * heat_coeff
     }
 
-    /// Resistance to change temperature (how many Joules per Celsius)
+    /// Resistance to change temperature (how many Joules per Kelvin)
     pub fn _temp_heat_capacity(&self) -> f32 {
         let f1 = match self.p.light.opaque {
             true => 10000.0,

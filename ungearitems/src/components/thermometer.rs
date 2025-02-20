@@ -128,7 +128,7 @@ pub fn temperature_update(
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
-        let ghost_target_temp: f32 = if freezing { -5.0 } else { 1.0 };
+        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -5.0 } else { 1.0 });
         const GHOST_MAX_POWER: f32 = 0.0002;
         const BREACH_MAX_POWER: f32 = 0.2;
         for npos in bpos.xy_neighbors(1) {
