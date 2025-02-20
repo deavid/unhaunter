@@ -579,7 +579,7 @@ fn after_level_ready(mut bf: ResMut<BoardData>, ev: EventReader<LevelReadyEvent>
                     }
                     if free_tot {
                         t_temp /= count;
-                        bf.temperature_field[bpos.ndidx()] *= t_temp;
+                        bf.temperature_field[bpos.ndidx()] = t_temp;
                     }
                 }
             }
