@@ -65,8 +65,8 @@ impl GearUsable for Flashlight {
             self.battery_level = 0.0;
             self.status = FlashlightStatus::Off;
         }
-        self.inner_temp += self.power() / 10000.0;
-        self.inner_temp /= 1.0016;
+        self.inner_temp += self.power() / 50000.0;
+        self.inner_temp /= 1.00032;
         if self.inner_temp > 1.0 && self.status != FlashlightStatus::Off {
             self.status = FlashlightStatus::Off;
             gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
