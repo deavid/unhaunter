@@ -1,4 +1,4 @@
-use crate::{controlkeys::ControlKeys, USE_ARROW_KEYS};
+use crate::controlkeys::ControlKeys;
 use bevy::prelude::*;
 
 /// Represents a player character in the game world.
@@ -55,13 +55,7 @@ impl PlayerSprite {
     /// Returns the default `ControlKeys` for the given player ID.
     fn default_controls(id: usize) -> ControlKeys {
         match id {
-            1 => {
-                if USE_ARROW_KEYS {
-                    ControlKeys::ARROWS
-                } else {
-                    ControlKeys::WASD
-                }
-            }
+            1 => ControlKeys::WASD,
             2 => ControlKeys::IJKL,
             _ => ControlKeys::NONE,
         }

@@ -14,8 +14,5 @@ pub mod traits;
 pub mod types;
 pub mod utils;
 
-/// Enables the use of arrow keys for movement instead of WASD
-pub const USE_ARROW_KEYS: bool = false;
-
 /// Enables/disables debug logs related to the player.
 pub const DEBUG_PLAYER: bool = false;
