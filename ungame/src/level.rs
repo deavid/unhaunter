@@ -127,13 +127,14 @@ pub fn load_level_handler(
     let map_size = (
         (map_max_x - map_min_x + 1) as usize,
         (map_max_y - map_min_y + 1) as usize,
+        0,
     );
 
     info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
 
     // Remove all pre-existing data for environment
     p.bf.map_size = map_size;
-    p.bf.origin = (map_min_x, map_min_y);
+    p.bf.origin = (map_min_x, map_min_y, 0);
     p.bf.temperature_field.clear();
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
@@ -385,7 +386,9 @@ pub fn load_level_handler(
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
-        warn!("Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended.");
+        warn!(
+            "Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended."
+        );
     }
 
     // --- Random Property Assignment ---
