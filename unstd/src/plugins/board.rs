@@ -54,10 +54,6 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
             ghost_free: true,
             see_through: false,
         };
-        if bpos.try_ndidx(&bf.map_size).is_none() {
-            dbg!(bpos, pos);
-            continue;
-        }
         bf.collision_field[bpos.ndidx()] = colfd;
     }
     for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
