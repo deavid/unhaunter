@@ -1,4 +1,4 @@
-use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position};
 
 use bevy::prelude::*;
 
@@ -23,6 +23,15 @@ impl Direction {
             dx: 0.0,
             dy: 0.0,
             dz: 0.0,
+        }
+    }
+
+    pub fn add_to_position(&self, rhs: &Position) -> Position {
+        Position {
+            x: self.dx + rhs.x,
+            y: self.dy + rhs.y,
+            z: self.dz + rhs.z,
+            global_z: rhs.global_z,
         }
     }
 

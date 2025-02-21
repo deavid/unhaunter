@@ -68,7 +68,6 @@ pub struct LoadLevelSystemParam<'w> {
     handles: Res<'w, GameAssets>,
     roomdb: ResMut<'w, RoomDB>,
     difficulty: Res<'w, CurrentDifficulty>,
-    next_game_state: ResMut<'w, NextState<AppState>>,
     game_settings: Res<'w, Persistent<GameplaySettings>>,
 }
 
@@ -123,11 +122,16 @@ pub fn load_level_handler(
     }) {
         for tile in &maptiles.v {
             map_min_x = tile.pos.x.min(map_min_x);
-            map_min_y = tile.pos.y.min(map_min_y);
+            map_min_y = (-tile.pos.y).min(map_min_y);
             map_max_x = tile.pos.x.max(map_max_x);
-            map_max_y = tile.pos.y.max(map_max_y);
+            map_max_y = (-tile.pos.y).max(map_max_y);
         }
     }
+    // We need a margin so that neighbor check doesn't go negative.
+    const MAP_MARGIN: i32 = 3;
+    map_min_x -= MAP_MARGIN;
+    map_min_y -= MAP_MARGIN;
+
     let map_size = (
         (map_max_x - map_min_x + 1) as usize,
         (map_max_y - map_min_y + 1) as usize,
@@ -142,6 +146,9 @@ pub fn load_level_handler(
     p.bf.temperature_field = Array3::from_elem(map_size, p.bf.ambient_temp);
     p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
     p.bf.light_field = Array3::from_elem(map_size, LightFieldData::default());
+    p.bf.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
+    p.bf.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
+
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
     p.roomdb.room_state.clear();
@@ -330,16 +337,38 @@ pub fn load_level_handler(
                 if tile.flip_x {
                     b.transform.scale.x = -1.0;
                 }
-                let mat = p.materials1.get(&b.material).unwrap().clone();
+                let mut mat = p.materials1.get(&b.material).unwrap().clone();
+                mat.data.color.alpha = 0.0;
                 let mat = p.materials1.add(mat);
                 b.material = MeshMaterial2d(mat);
+
                 commands.spawn(b)
             };
             let t_x = (tile.pos.x - map_min_x) as f32;
-            let t_y = (tile.pos.y - map_min_y) as f32;
+            let t_y = (-tile.pos.y - map_min_y) as f32;
+            assert!(
+                t_x >= MAP_MARGIN as f32,
+                "out of bounds X < v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_y >= MAP_MARGIN as f32,
+                "out of bounds Y < v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_x < map_size.0 as f32,
+                "out of bounds X > v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_y < map_size.1 as f32,
+                "out of bounds Y > v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
             let mut pos = Position {
                 x: t_x,
-                y: map_max_y as f32 - t_y,
+                y: t_y,
                 z: 0.0,
                 global_z: 0.0,
             };
@@ -382,6 +411,7 @@ pub fn load_level_handler(
                 .insert(beh)
                 .insert(GameSprite)
                 .insert(pos)
+                .insert(Visibility::Hidden)
                 .insert(MapUpdate::default());
         }
     }
@@ -523,16 +553,20 @@ pub fn load_level_handler(
         .insert(ghost_spawn);
     let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
     ev_room.send(RoomChangedEvent::init(open_van));
-    p.next_game_state.set(AppState::InGame);
     ev_level_ready.send(LevelReadyEvent);
+    warn!("Done: load_level_handler");
 }
 
-fn after_level_ready(mut bf: ResMut<BoardData>, ev: EventReader<LevelReadyEvent>) {
+fn after_level_ready(
+    mut bf: ResMut<BoardData>,
+    ev: EventReader<LevelReadyEvent>,
+    mut next_game_state: ResMut<NextState<AppState>>,
+) {
     if ev.is_empty() {
         return;
     }
     let mut rng = rand::rng();
-
+    next_game_state.set(AppState::InGame);
     // Create temperature field
     let ambient_temp = bf.ambient_temp;
 
@@ -553,15 +587,15 @@ fn after_level_ready(mut bf: ResMut<BoardData>, ev: EventReader<LevelReadyEvent>
         for z in 0..bf.map_size.2 {
             for y in 0..bf.map_size.1 {
                 for x in 0..bf.map_size.0 {
-                    let bpos = BoardPosition::from_ndidx((x, y, z));
+                    let p = (x, y, z);
+                    let free_tot = bf.collision_field[p].player_free;
+                    if !free_tot {
+                        continue;
+                    }
+                    let bpos = BoardPosition::from_ndidx(p);
                     let nbors = bpos.xy_neighbors(1);
                     let mut t_temp = 0.0;
                     let mut count = 0.0;
-                    let free_tot = bf
-                        .collision_field
-                        .get(bpos.ndidx())
-                        .map(|x| x.player_free)
-                        .unwrap_or(true);
                     for npos in &nbors {
                         let free = bf
                             .collision_field
@@ -577,14 +611,13 @@ fn after_level_ready(mut bf: ResMut<BoardData>, ev: EventReader<LevelReadyEvent>
                             count += 1.0;
                         }
                     }
-                    if free_tot {
-                        t_temp /= count;
-                        bf.temperature_field[bpos.ndidx()] = t_temp;
-                    }
+                    t_temp /= count;
+                    bf.temperature_field[p] = t_temp;
                 }
             }
         }
     }
+    warn!("Done: Computing 16x");
 }
 
 fn process_pre_meshes(

@@ -334,14 +334,14 @@ pub fn apply_lighting(
             power / (player_pos.distance2(x.0) + 1.0)
         })
         .sum();
-    cursor_exp += fl_total_power.sqrt() * 2.0;
+    cursor_exp += fl_total_power.sqrt() * 0.9;
     assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see
     cursor_exp += 0.001 / difficulty.0.environment_gamma;
 
     // Compensate overall to make the scene brighter
-    cursor_exp /= 2.4;
+    cursor_exp /= 2.8;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -388,6 +388,10 @@ pub fn apply_lighting(
         }
 
         let bpos = pos.to_board_position();
+        // Use a margin (that sohuld be baked on the map) to avoid negative access.
+        if bpos.x < 2 || bpos.y < 2 {
+            continue;
+        }
         let bpos_tr = bpos.bottom();
         let bpos_bl = bpos.top();
         let bpos_br = bpos.right();
@@ -750,7 +754,8 @@ pub fn apply_lighting(
                             z: bpos.z,
                         };
 
-                        if let Some(neighbor_pressure) = bf.miasma.pressure_field.get(&neighbor_pos)
+                        if let Some(neighbor_pressure) =
+                            bf.miasma.pressure_field.get(neighbor_pos.ndidx())
                         {
                             // Calculate distance from sprite's *actual* position to the
                             // *center* of the neighbor tile. This is important for smooth
@@ -771,16 +776,18 @@ pub fn apply_lighting(
                     0.0 // Default to 0 if no neighbors have pressure (shouldn't happen)
                 };
 
-                let miasma_visibility = (average_pressure.max(0.0).sqrt()
+                let miasma_visibility = average_pressure.max(0.0).sqrt()
                     * miasma_config.miasma_visibility_factor
-                    * miasma_sprite.visibility
                     * miasma_sprite.time_alive.clamp(0.0, 1.0)
                     * miasma_sprite.life.clamp(0.0, 1.0)
-                    * (ld.magnitude().atan() / 1.2 + 0.25))
-                    .min(1.0 - dst_color.luminance() * 0.5);
-                dst_color = dst_color.with_luminance((dst_color.luminance() * 7.0).tanh() / 1.5);
-                opacity = opacity.max(0.0).sqrt();
-                opacity *= miasma_visibility.clamp(0.0, 1.0);
+                    * (ld.magnitude().atan() / 1.2 + 0.25);
+
+                dst_color = dst_color
+                    .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
+                opacity = opacity.max(0.0);
+                opacity *= miasma_visibility.clamp(0.0, 0.25)
+                    * miasma_sprite.visibility
+                    * (1.0 - dst_color.luminance() * 0.5);
                 // if opacity < old_a {
                 //     smooth = 25.0;
                 // }

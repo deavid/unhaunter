@@ -124,13 +124,7 @@ impl GearUsable for EMFMeter {
             };
             let bpos = pos.to_board_position();
 
-            let miasma_pressure = gs
-                .bf
-                .miasma
-                .pressure_field
-                .get(&bpos)
-                .cloned()
-                .unwrap_or_default();
+            let miasma_pressure = gs.bf.miasma.pressure_field[bpos.ndidx()];
 
             self.miasma_pressure = self.miasma_pressure * F + miasma_pressure * (1.0 - F);
         }

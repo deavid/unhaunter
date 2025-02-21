@@ -4832,6 +4832,7 @@ name = "unfog"
 version = "0.2.6-dev"
 dependencies = [
  "bevy",
+ "ndarray",
  "noise",
  "rand 0.9.0",
  "uncore",

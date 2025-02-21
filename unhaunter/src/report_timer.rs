@@ -9,20 +9,19 @@ pub fn report_performance(
     mut timer: Local<ReportTimer>,
 ) {
     if timer.0.tick(time.delta()).just_finished() {
-        let mut system_times: Vec<(&str, f64)> = Vec::new();
+        let mut system_times: Vec<(&str, f64, String)> = Vec::new();
 
         for diagnostic in diagnostics.iter() {
             if let Some(average) = diagnostic.average() {
                 let system_name = diagnostic.path().as_str();
-                system_times.push((system_name, average));
+                system_times.push((system_name, average, diagnostic.suffix.to_string()));
             }
         }
+        system_times.sort_by_key(|x| x.0);
 
-        info!("--- Performance Report ---");
-        for (name, time) in system_times.iter() {
-            info!("{}: {:.2}", name, time);
+        for (name, time, suffix) in system_times.iter() {
+            info!("{name}: {time:.2} {suffix}");
         }
-        info!("------------------------");
     }
 }
 

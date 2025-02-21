@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use uncore::{events::loadlevel::LevelReadyEvent, states::AppState};
-// use uncore::resources::board_data::BoardData;
 
-use crate::{resources::MiasmaConfig, systems};
+use crate::{metrics, resources::MiasmaConfig, systems};
 
 pub struct UnhaunterFogPlugin;
 
@@ -19,7 +18,6 @@ impl Plugin for UnhaunterFogPlugin {
                 (systems::animate_miasma_sprites, systems::update_miasma)
                     .run_if(in_state(AppState::InGame)),
             );
-        // .add_systems(FixedUpdate, systems::update_miasma.run_if(in_state(AppState::InGame)));
-        // Removed systems for now.
+        metrics::register_all(app);
     }
 }

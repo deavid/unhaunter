@@ -123,6 +123,13 @@ impl BoardPosition {
         (dx.powi(2) + dy.powi(2) + dz.powi(2)).sqrt()
     }
 
+    pub fn distance_taxicab(&self, other: &Self) -> i64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        let dz = self.z - other.z;
+        dx.abs() + dy.abs() + dz.abs()
+    }
+
     pub fn fast_distance_xy(&self, other: &Self) -> f32 {
         let dx = (self.x - other.x) as f32;
         let dy = (self.y - other.y) as f32;
