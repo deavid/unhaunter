@@ -22,6 +22,20 @@ impl BoardPosition {
         (self.x as usize, self.y as usize, self.z as usize)
     }
 
+    pub fn ndidx_checked(&self, map_size: (usize, usize, usize)) -> Option<(usize, usize, usize)> {
+        if self.x < 0
+            || self.x >= map_size.0 as i64
+            || self.y < 0
+            || self.y >= map_size.1 as i64
+            || self.z < 0
+            || self.z >= map_size.2 as i64
+        {
+            None
+        } else {
+            Some((self.x as usize, self.y as usize, self.z as usize))
+        }
+    }
+
     pub fn to_position(&self) -> Position {
         Position {
             x: self.x as f32,

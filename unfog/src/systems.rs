@@ -119,8 +119,7 @@ pub fn spawn_miasma(
         }
         let player_dst2 = player_pos.distance2(&miasma_sprite.base_position);
 
-        let vis =
-            vf.visibility_field.get(&bpos).copied().unwrap_or_default() + DIST_FACTOR / player_dst2;
+        let vis = vf.visibility_field[bpos.ndidx()] + DIST_FACTOR / player_dst2;
         let target_count =
             ((pressure.cbrt() / 3.1 + 0.1).min(1.0) * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
@@ -133,11 +132,11 @@ pub fn spawn_miasma(
         }
     }
 
-    for (bpos, vis) in vf.visibility_field.iter() {
-        if !board_data.collision_field[bpos.ndidx()].player_free {
+    for (bp, vis) in vf.visibility_field.indexed_iter() {
+        if !board_data.collision_field[bp].player_free {
             continue;
         }
-
+        let bpos = BoardPosition::from_ndidx(bp);
         let player_dst2 = player_pos.distance2(&bpos.to_position_center());
         let vis = vis + DIST_FACTOR / player_dst2;
         if vis < THRESHOLD * 2.0 {

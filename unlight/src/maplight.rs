@@ -13,6 +13,7 @@
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
+use core::f32;
 use ndarray::Array3;
 use rand::Rng as _;
 use std::collections::VecDeque;
@@ -61,39 +62,42 @@ use crate::metrics::{
 /// visibility field is stored in a `HashMap`, where the keys are `BoardPosition`s
 /// and the values are visibility factors (0.0 to 1.0).
 pub fn compute_visibility(
-    vf: &mut HashMap<BoardPosition, f32>,
-    cf: &Array3<CollisionFieldData>,
+    vis_field: &mut Array3<f32>,
+    collision_field: &Array3<CollisionFieldData>,
     pos_start: &Position,
     roomdb: Option<&mut RoomDB>,
+    pre_fill: bool,
 ) {
     let measure = COMPUTE_VISIBILITY.time_measure();
-
+    if pre_fill {
+        vis_field.fill(-0.001);
+    }
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
+    let map_size = {
+        let s = collision_field.dim();
+        (s.0, s.1)
+    };
     queue.push_front((start.clone(), start.clone()));
-    *vf.entry(start.clone()).or_default() = 1.0;
+    vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
         let pds = pos.to_position().distance(pos_start);
-        let src_f = vf.get(&pos).cloned().unwrap_or_default();
-        if !cf
-            .get(pos.ndidx())
-            .map(|c| c.player_free || c.see_through)
-            .unwrap_or_default()
-        {
+        let p = pos.ndidx();
+        let src_f = vis_field[p];
+        let cf = &collision_field[p];
+        if !(cf.player_free || cf.see_through) {
             // If the current position analyzed is not free (a wall or out of bounds) then
             // stop extending.
             continue;
         }
 
-        // let neighbors = [pos.left(), pos.top(), pos.bottom(), pos.right()];
-        let neighbors = pos.iter_xy_neighbors_nosize(1);
+        let neighbors = pos.iter_xy_neighbors(1, map_size);
         for npos in neighbors {
             if npos == pos {
                 continue;
             }
-            if cf.get(npos.ndidx()).is_none() {
-                continue;
-            }
+            let np = npos.ndidx();
+            let ncf = collision_field[np];
             let npds = npos.to_position().distance(pos_start);
             let npref = npos.distance(&pos2) / 2.0;
             let f = if npds < 1.5 {
@@ -104,9 +108,6 @@ pub fn compute_visibility(
             let mut dst_f = src_f * f;
             if dst_f < 0.00001 {
                 continue;
-            }
-            if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
-                queue.push_front((npos.clone(), pos.clone()));
             }
             let k = if let Some(roomdb) = roomdb.as_ref() {
                 match roomdb.room_tiles.get(&npos).is_some() {
@@ -125,8 +126,15 @@ pub fn compute_visibility(
                 3.0
             };
             dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
-            let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
-            *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
+            let vf_np = &mut vis_field[np];
+            if *vf_np < -0.000001 {
+                if ncf.player_free || ncf.see_through {
+                    queue.push_front((npos.clone(), pos.clone()));
+                }
+                *vf_np = dst_f;
+            } else {
+                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
+            }
         }
     }
     measure.end_ms();
@@ -142,8 +150,6 @@ pub fn player_visibility_system(
 ) {
     let measure = PLAYER_VISIBILITY.time_measure();
 
-    vf.visibility_field.clear();
-
     // Find the active player's position
     let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
         if player.id == gc.player_id {
@@ -154,13 +160,18 @@ pub fn player_visibility_system(
     }) else {
         return;
     };
-
+    if vf.visibility_field.dim() != bf.collision_field.dim() {
+        vf.visibility_field = Array3::from_elem(bf.collision_field.dim(), -0.001_f32);
+    } else {
+        vf.visibility_field.fill(-0.001_f32);
+    }
     // Calculate visibility
     compute_visibility(
         &mut vf.visibility_field,
         &bf.collision_field,
         &player_pos,
         Some(&mut roomdb),
+        false,
     );
     measure.end_ms();
 }
@@ -239,6 +250,8 @@ pub fn apply_lighting(
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
+    let board_dim = bf.collision_field.dim();
+
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
         let p = EquipmentPosition::Deployed;
@@ -255,7 +268,7 @@ pub fn apply_lighting(
             continue;
         };
         if power > 0.0 {
-            let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+            let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
             flashlights.push((
                 pos,
                 deployed_gear.direction,
@@ -290,7 +303,7 @@ pub fn apply_lighting(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-                let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+                let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
                 flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
@@ -306,7 +319,7 @@ pub fn apply_lighting(
         player_pos = *pos;
     }
     for (pos, _fldir, _power, _color, _light_type, vis_field) in flashlights.iter_mut() {
-        compute_visibility(vis_field, &bf.collision_field, pos, None);
+        compute_visibility(vis_field, &bf.collision_field, pos, None, false);
     }
 
     // --- Access queries from the ParamSet ---
@@ -416,6 +429,7 @@ pub fn apply_lighting(
         // behavior.p.movement.walkable
         let fpos_gamma_color = |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
             let rpos = bpos.to_position();
+            let p = bpos.ndidx_checked(bf.map_size)?;
             let mut lux_fl = [0_f32; 3];
             let mut lightdata = LightData::default();
             for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
@@ -437,7 +451,7 @@ pub fn apply_lighting(
                 }
                 let dist = (lpos.distance(&rpos) + 1.0)
                     .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                let flvis = flvismap.get(bpos).copied().unwrap_or_default();
+                let flvis = flvismap[p];
                 let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
                 let flsrgba = flcolor.to_srgba();
                 lux_fl[0] += fl * flsrgba.red;
@@ -515,7 +529,7 @@ pub fn apply_lighting(
             }
         }
         opacity = opacity
-            .min(vf.visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
+            .min(vf.visibility_field[bpos.ndidx()] * 2.0)
             .clamp(0.0, 1.0);
         let mut new_mat = materials1.get(mat).unwrap().clone();
         let orig_mat = new_mat.clone();
@@ -628,12 +642,8 @@ pub fn apply_lighting(
         let ld_mag = ld_abs.magnitude();
         let ld = ld_abs.normalize();
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
-        let mut opacity: f32 = map_color.alpha()
-            * vf.visibility_field
-                .get(&bpos)
-                .copied()
-                .unwrap_or_default()
-                .clamp(0.0, 1.0);
+        let mut opacity: f32 =
+            map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
@@ -882,9 +892,10 @@ pub fn ambient_sound_system(
     timer.tick(time.delta());
     let total_vis: f32 = vf
         .visibility_field
-        .iter()
+        .indexed_iter()
         .map(|(k, v)| {
-            v * match roomdb.room_tiles.get(k).is_some() {
+            let k = BoardPosition::from_ndidx(k);
+            v * match roomdb.room_tiles.get(&k).is_some() {
                 true => 0.2,
                 false => 1.0,
             }
