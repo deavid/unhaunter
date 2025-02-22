@@ -23,6 +23,7 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
 use uncore::platform::plt::IS_WASM;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
@@ -48,6 +49,10 @@ use unstd::materials::CustomMaterial1;
 pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
 
+use crate::metrics::{
+    AMBIENT_SOUND_SYSTEM, APPLY_LIGHTING, COMPUTE_VISIBILITY, MARK_FOR_UPDATE, PLAYER_VISIBILITY,
+};
+
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.
 ///
@@ -61,7 +66,9 @@ pub fn compute_visibility(
     pos_start: &Position,
     roomdb: Option<&mut RoomDB>,
 ) {
-    let mut queue = VecDeque::new();
+    let measure = COMPUTE_VISIBILITY.time_measure();
+
+    let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
     queue.push_front((start.clone(), start.clone()));
     *vf.entry(start.clone()).or_default() = 1.0;
@@ -122,6 +129,7 @@ pub fn compute_visibility(
             *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
         }
     }
+    measure.end_ms();
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
@@ -132,6 +140,8 @@ pub fn player_visibility_system(
     qp: Query<(&Position, &PlayerSprite)>,
     mut roomdb: ResMut<RoomDB>,
 ) {
+    let measure = PLAYER_VISIBILITY.time_measure();
+
     vf.visibility_field.clear();
 
     // Find the active player's position
@@ -152,6 +162,7 @@ pub fn player_visibility_system(
         &player_pos,
         Some(&mut roomdb),
     );
+    measure.end_ms();
 }
 
 /// Applies lighting effects to map tiles and sprites, adjusting colors based on
@@ -206,6 +217,8 @@ pub fn apply_lighting(
     difficulty: Res<CurrentDifficulty>,
     miasma_config: Res<MiasmaConfig>,
 ) {
+    let measure = APPLY_LIGHTING.time_measure();
+
     let mut rng = rand::rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
@@ -801,8 +814,8 @@ pub fn apply_lighting(
     for (bpos, ld) in lightdata_map.into_iter() {
         bf.light_field[bpos.ndidx()].additional = ld;
     }
-    // if mask % 55 == 0 { warn!("change_count: {}", &change_count);
-    // warn!("apply_lighting elapsed: {:?}", start.elapsed()); }
+
+    measure.end_ms();
 }
 
 /// Marks map tiles for lighting update based on player position and visibility.
@@ -817,6 +830,8 @@ pub fn mark_for_update(
     qp: Query<(&Position, &PlayerSprite)>,
     mut qt2: Query<(&Position, &Visibility, &mut MapUpdate)>,
 ) {
+    let measure = MARK_FOR_UPDATE.time_measure();
+
     let mut player_pos = Position::new_i64(0, 0, 0);
     for (pos, player) in qp.iter() {
         if player.id != gc.player_id {
@@ -849,6 +864,7 @@ pub fn mark_for_update(
             upd.last_update = now;
         }
     }
+    measure.end_ms();
 }
 
 /// System to manage ambient sound levels based on visibility.
@@ -861,6 +877,8 @@ pub fn ambient_sound_system(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
 ) {
+    let measure = AMBIENT_SOUND_SYSTEM.time_measure();
+
     timer.tick(time.delta());
     let total_vis: f32 = vf
         .visibility_field
@@ -912,4 +930,5 @@ pub fn ambient_sound_system(
             }
         }
     }
+    measure.end_ms();
 }

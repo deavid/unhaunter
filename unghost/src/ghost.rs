@@ -12,6 +12,7 @@ use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
@@ -20,6 +21,8 @@ use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::utils::{MeanValue, PrintingTimer};
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+
+use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = false;
@@ -64,6 +67,8 @@ fn ghost_movement(
     object_query: Query<(&Position, &GhostInfluence)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
+    let measure = GHOST_MOVEMENT.time_measure();
+
     let mut rng = rand::rng();
     let dt = time.delta_secs() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
@@ -227,6 +232,7 @@ fn ghost_movement(
                 });
         }
     }
+    measure.end_ms();
 }
 
 pub enum RoarType {
@@ -290,6 +296,8 @@ fn ghost_enrage(
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
 ) {
+    let measure = GHOST_ENRAGE.time_measure();
+
     timer.tick(time.delta());
     let dt = time.delta_secs();
     for (mut ghost, ghost_position) in &mut qg {
@@ -425,6 +433,8 @@ fn ghost_enrage(
             }
         }
     }
+
+    measure.end_ms();
 }
 
 /// Calculates the desirability score of a potential destination point for the
