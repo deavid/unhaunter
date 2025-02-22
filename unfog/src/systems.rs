@@ -156,7 +156,7 @@ pub fn spawn_miasma(
             let pos = bpos
                 .to_position_center()
                 .with_global_z(0.00037 * rng.random_range(0.99..1.01))
-                .with_random(1.0);
+                .with_random(0.5);
 
             commands
                 .spawn(Sprite {
@@ -300,7 +300,7 @@ pub fn update_miasma(
 
     let dt = time.delta_secs();
     let diffusion_rate = miasma_config.diffusion_rate;
-    const EXCHANGE_VEL_SCALE: f32 = 1.0;
+    const EXCHANGE_VEL_SCALE: f32 = 2.0;
     let mut pressure_changes = Array3::from_elem(board_data.map_size, 0.0);
     let mut velocity_changes = Array3::from_elem(board_data.map_size, Vec2::ZERO);
     let mut room_present = Array3::from_elem(board_data.map_size, false);
@@ -429,7 +429,7 @@ pub fn update_miasma(
         let Some(entry) = board_data.miasma.velocity_field.get_mut(p) else {
             continue;
         };
-        let f = 0.9;
+        let f = 0.0001;
         *entry = *entry * (1.0 - f) + vel * f;
 
         if !is_room {
@@ -455,13 +455,13 @@ pub fn update_miasma(
     let mut new_velocities = board_data.miasma.velocity_field.clone();
     for (p, &p_center) in board_data.miasma.pressure_field.indexed_iter() {
         let bpos = BoardPosition::from_ndidx(p);
-        let is_room = room_present[p];
+        let is_room = room_present.get(p).copied().unwrap_or_default();
         if !is_room {
             // Don't compute velocity outside of rooms.
             continue;
         }
-        let player_presence =
-            (256 / (1 + bpos.distance_taxicab(&player_bpos).clamp(0, 64))).clamp(0, 255) as u8;
+        let player_presence = (256 / (1 + (bpos.distance_taxicab(&player_bpos) / 8).clamp(0, 64)))
+            .clamp(0, 255) as u8;
         arr_j += 1;
         arr_j %= arr.len();
         if arr[arr_j] > player_presence {
@@ -492,7 +492,7 @@ pub fn update_miasma(
             (p_top - p_bottom) * miasma_config.velocity_scale,
         );
         let calc_vel_len = calculated_velocity.length() + 0.000001;
-        let adjusted_vel = calc_vel_len.cbrt().min(5.0);
+        let adjusted_vel = calc_vel_len.cbrt().min(15.0);
         let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
         let previous_velocity = board_data.miasma.velocity_field[p];
 
@@ -502,7 +502,7 @@ pub fn update_miasma(
             / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
 
         // Take walls into account.
-        const WALL_REPEL_SPEED: f32 = 0.001;
+        const WALL_REPEL_SPEED: f32 = 0.00;
         let old_speed = new_velocity.length();
         if new_velocity.x > -WALL_REPEL_SPEED
             && !board_data
