@@ -134,11 +134,11 @@ pub fn temperature_update(
         let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -5.0 } else { 1.0 });
         const GHOST_MAX_POWER: f32 = 0.0002;
         const BREACH_MAX_POWER: f32 = 0.2;
-        for npos in bpos.xy_neighbors(1) {
+        for npos in bpos.iter_xy_neighbors_nosize(1) {
             let t = &mut bf.temperature_field[npos.ndidx()];
             *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
         }
-        for npos in gs.spawn_point.xy_neighbors(2) {
+        for npos in gs.spawn_point.iter_xy_neighbors_nosize(2) {
             let t = &mut bf.temperature_field[npos.ndidx()];
             *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
         }

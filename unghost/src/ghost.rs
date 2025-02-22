@@ -311,7 +311,7 @@ fn ghost_enrage(
                     // 50% chance to spawn --- Find Valid Floor Tile ---
                     let ghost_board_position = ghost_position.to_board_position();
                     let mut valid_tile = None;
-                    for nearby_tile in ghost_board_position.xy_neighbors(1) {
+                    for nearby_tile in ghost_board_position.iter_xy_neighbors_nosize(1) {
                         // Check adjacent tiles
                         let collision_data = gs.bf.collision_field[nearby_tile.ndidx()];
                         if collision_data.player_free {

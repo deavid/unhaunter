@@ -86,7 +86,7 @@ pub fn compute_visibility(
         }
 
         // let neighbors = [pos.left(), pos.top(), pos.bottom(), pos.right()];
-        let neighbors = pos.xy_neighbors(1);
+        let neighbors = pos.iter_xy_neighbors_nosize(1);
         for npos in neighbors {
             if npos == pos {
                 continue;
@@ -298,7 +298,7 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.xy_neighbors(1) {
+        for npos in cursor_pos.iter_xy_neighbors_nosize(1) {
             let lf = &bf.light_field[npos.ndidx()];
             cursor_exp += lf.lux.powf(gamma_exp);
             exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);

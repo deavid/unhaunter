@@ -136,7 +136,6 @@ pub fn boardfield_update(
         for (k, v) in bf.light_field.indexed_iter() {
             lfs.insert(k.0 as i64, k.1 as i64, k.2 as i64, v.clone());
         }
-        let mut nbors_buf = Vec::with_capacity(52 * 52);
 
         // let mut lfs_clone_time_total = Duration::ZERO; let mut shadows_time_total =
         // Duration::ZERO; let mut store_lfs_time_total = Duration::ZERO;
@@ -184,18 +183,12 @@ pub fn boardfield_update(
                         }
 
                         // Optimize next steps by only looking to harsh differences.
-                        root_pos.xy_neighbors_buf_clamped(
-                            1,
-                            &mut nbors_buf,
-                            min_x,
-                            max_x,
-                            min_y,
-                            max_y,
-                        );
-                        let nbors = &nbors_buf;
+                        let nbors =
+                            root_pos.iter_xy_neighbors_clamped(1, (min_x, min_y), (max_x, max_y));
+
                         if step > 0 {
-                            let ldata_iter = nbors.iter().filter_map(|b| {
-                                lfs.get_pos(b).map(|l| {
+                            let ldata_iter = nbors.filter_map(|b| {
+                                lfs.get_pos(&b).map(|l| {
                                     (
                                         ordered_float::OrderedFloat(l.lux),
                                         ordered_float::OrderedFloat(l.transmissivity),
@@ -224,24 +217,20 @@ pub fn boardfield_update(
                         }
 
                         // let shadows_time = Instant::now(); This takes time to process:
-                        root_pos.xy_neighbors_buf_clamped(
+                        let nbors = root_pos.iter_xy_neighbors_clamped(
                             size,
-                            &mut nbors_buf,
-                            min_x,
-                            max_x,
-                            min_y,
-                            max_y,
+                            (min_x, min_y),
+                            (max_x, max_y),
                         );
-                        let nbors = &nbors_buf;
 
                         // reset the light value for this light, so we don't count double.
                         lfs.get_mut_pos(&root_pos).unwrap().lux -= src_lux;
                         let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
 
                         // Compute shadows
-                        for pillar_pos in nbors.iter() {
+                        for pillar_pos in nbors.clone() {
                             // 60% of the time spent in compute shadows is obtaining this:
-                            let Some(lf) = lfs.get_pos(pillar_pos) else {
+                            let Some(lf) = lfs.get_pos(&pillar_pos) else {
                                 continue;
                             };
 
@@ -250,9 +239,9 @@ pub fn boardfield_update(
                             if !consider_opaque {
                                 continue;
                             }
-                            let min_dist = cbp.bpos_dist(&root_pos, pillar_pos);
-                            let angle = cbp.bpos_angle(&root_pos, pillar_pos);
-                            let angle_range = cbp.bpos_angle_range(&root_pos, pillar_pos);
+                            let min_dist = cbp.bpos_dist(&root_pos, &pillar_pos);
+                            let angle = cbp.bpos_angle(&root_pos, &pillar_pos);
+                            let angle_range = cbp.bpos_angle_range(&root_pos, &pillar_pos);
                             for d in angle_range.0..=angle_range.1 {
                                 let ang = (angle as i64 + d)
                                     .rem_euclid(CachedBoardPos::TAU_I as i64)
@@ -281,17 +270,17 @@ pub fn boardfield_update(
                         let total_lux = 2.0;
 
                         // new shadow method
-                        for neighbor in nbors.iter() {
-                            let dist = cbp.bpos_dist(&root_pos, neighbor);
+                        for neighbor in nbors {
+                            let dist = cbp.bpos_dist(&root_pos, &neighbor);
 
                             // let dist = root_pos.fast_distance_xy(neighbor);
                             let dist2 = dist + light_height;
-                            let angle = cbp.bpos_angle(&root_pos, neighbor);
+                            let angle = cbp.bpos_angle(&root_pos, &neighbor);
                             let sd = shadow_dist[angle];
                             let lux_add = src_lux / dist2 / dist2 / total_lux;
                             if dist - 3.0 < sd {
                                 // FIXME: f here controls the bleed through walls.
-                                if let Some(lf) = lfs.get_mut_pos(neighbor) {
+                                if let Some(lf) = lfs.get_mut_pos(&neighbor) {
                                     // 0.5 is too low, it creates un-evenness.
                                     const BLEED_TILES: f32 = 0.8;
                                     let f = (faster::tanh((sd - dist - 0.5) * BLEED_TILES.recip())

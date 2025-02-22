@@ -593,10 +593,10 @@ fn after_level_ready(
                         continue;
                     }
                     let bpos = BoardPosition::from_ndidx(p);
-                    let nbors = bpos.xy_neighbors(1);
+                    let nbors = bpos.iter_xy_neighbors_nosize(1);
                     let mut t_temp = 0.0;
                     let mut count = 0.0;
-                    for npos in &nbors {
+                    for npos in nbors {
                         let free = bf
                             .collision_field
                             .get(npos.ndidx())

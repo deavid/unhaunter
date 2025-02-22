@@ -34,10 +34,10 @@ pub fn lose_sanity(
         let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
         let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
         let mut sound = 0.0;
-        for bpos in bpos.xy_neighbors(3).iter() {
+        for bpos in bpos.iter_xy_neighbors_nosize(3) {
             sound += bf
                 .sound_field
-                .get(bpos)
+                .get(&bpos)
                 .map(|x| x.iter().map(|y| y.length()).sum::<f32>())
                 .unwrap_or_default()
                 * 10.0;

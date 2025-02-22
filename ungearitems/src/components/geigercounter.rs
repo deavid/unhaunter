@@ -4,7 +4,7 @@ use uncore::{
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
 
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 
@@ -72,8 +72,8 @@ impl GearUsable for GeigerCounter {
         let dist2breach = gs.bf.breach_pos.distance2(&pos) + 10.0;
         let breach_energy = dist2breach.recip() * 20000.0;
         let bpos = pos.to_board_position();
-        for (i, bpos) in bpos.xy_neighbors(4).iter().enumerate() {
-            let sound = gs.bf.sound_field.get(bpos).cloned().unwrap_or_default();
+        for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
+            let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
             if self.sound_l.len() < 1200 {
                 self.sound_l.push(sound_reading);

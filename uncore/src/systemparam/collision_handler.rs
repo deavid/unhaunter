@@ -19,7 +19,7 @@ impl CollisionHandler<'_> {
     pub fn delta(&self, pos: &Position) -> Vec3 {
         let bpos = pos.to_board_position();
         let mut delta = Vec3::ZERO;
-        for npos in bpos.xy_neighbors(1) {
+        for npos in bpos.iter_xy_neighbors_nosize(1) {
             let cf = self
                 .bf
                 .collision_field

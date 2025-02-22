@@ -168,7 +168,7 @@ pub fn repellent_update(
     const RADIUS: f32 = 0.7;
     for (r_pos, rep, _, _) in &qrp {
         let bpos = r_pos.to_board_position();
-        for nb in bpos.xy_neighbors(3) {
+        for nb in bpos.iter_xy_neighbors_nosize(3) {
             let dist2 = (nb.to_position_center().distance(r_pos) * RADIUS).powi(2);
             let exponent: f32 = -0.5 * dist2;
             let gauss = exponent.exp();
@@ -188,7 +188,7 @@ pub fn repellent_update(
             .set_alpha(rep.life_factor().sqrt() / 4.0 + 0.01);
         let bpos = r_pos.to_board_position();
         let mut total_force = Direction::zero();
-        for nb in bpos.xy_neighbors(3) {
+        for nb in bpos.iter_xy_neighbors_nosize(3) {
             let npos = nb.to_position_center();
             let dist2 = (npos.distance(&r_pos) * RADIUS).powi(2);
             let exponent: f32 = -0.5 * dist2;

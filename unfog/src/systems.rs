@@ -224,7 +224,7 @@ pub fn animate_miasma_sprites(
         let bpos = pos.to_board_position();
         let mut total_vel = Vec2::ZERO;
         let mut total_w = 0.0001;
-        for bpos in bpos.xy_neighbors(1) {
+        for bpos in bpos.iter_xy_neighbors_nosize(1) {
             if !board_data
                 .collision_field
                 .get(bpos.ndidx())
