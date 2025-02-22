@@ -4,6 +4,6 @@ pub struct UnhaunterCorePlugin;
 
 impl Plugin for UnhaunterCorePlugin {
     fn build(&self, app: &mut App) {
-        crate::metrics::app_setup(app);
+        crate::metric_recorder::app_setup(app);
     }
 }

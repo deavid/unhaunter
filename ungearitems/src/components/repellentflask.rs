@@ -2,11 +2,14 @@ use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::{
     boardposition::BoardPosition, direction::Direction, position::Position,
 };
+use uncore::metric_recorder::SendMetric;
 use uncore::{
     components::{game::GameSprite, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
+
+use crate::metrics;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
@@ -156,6 +159,8 @@ pub fn repellent_update(
     mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
     difficulty: Res<CurrentDifficulty>,
 ) {
+    let measure = metrics::REPELLENT_UPDATE.time_measure();
+
     let mut rng = rand::rng();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
@@ -233,4 +238,6 @@ pub fn repellent_update(
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
         }
     }
+
+    measure.end_ms();
 }

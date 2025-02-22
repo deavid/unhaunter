@@ -56,19 +56,35 @@ pub fn send_metric(path: &DiagnosticPath, value: f64) {
     }
 }
 
-pub trait SendMetric {
-    fn tx(&self, value: f64);
+pub struct TimeMeasure {
+    path: DiagnosticPath,
+    start: Instant,
 }
 
-impl SendMetric for &DiagnosticPath {
-    fn tx(&self, value: f64) {
-        send_metric(self, value);
+impl TimeMeasure {
+    pub fn start(path: DiagnosticPath) -> TimeMeasure {
+        TimeMeasure {
+            path,
+            start: Instant::now(),
+        }
     }
+
+    pub fn end_ms(self) {
+        self.path.tx(self.start.elapsed().as_secs_f64() * 1000.0);
+    }
+}
+
+pub trait SendMetric {
+    fn tx(&self, value: f64);
+    fn time_measure(self) -> TimeMeasure;
 }
 
 impl SendMetric for DiagnosticPath {
     fn tx(&self, value: f64) {
         send_metric(self, value);
+    }
+    fn time_measure(self) -> TimeMeasure {
+        TimeMeasure::start(self)
     }
 }
 

@@ -1,3 +1,5 @@
+use crate::metrics;
+
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
@@ -6,6 +8,7 @@ use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::types::evidence::Evidence;
@@ -112,6 +115,8 @@ pub fn temperature_update(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
+    let measure = metrics::TEMPERATURE_UPDATE.time_measure();
+
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();
         if h_out < 0.001 {
@@ -210,4 +215,6 @@ pub fn temperature_update(
         bf.temperature_field[p] = new_temp1;
         bf.temperature_field[neigh_ndidx] = new_temp2;
     }
+
+    measure.end_ms();
 }

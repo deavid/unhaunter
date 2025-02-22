@@ -88,6 +88,7 @@ unmenusettings = { path = "unmenusettings" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
+ordered-float = { workspace = true }
 
 [build-dependencies]
 walkdir = { workspace = true }

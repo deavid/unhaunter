@@ -2,9 +2,11 @@
 //! representing the Quartz Stone consumable item in the game.
 
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use crate::metrics;
 use bevy::prelude::*;
 use uncore::{
     components::{board::position::Position, ghost_sprite::GhostSprite},
+    metric_recorder::SendMetric,
     types::gear::equipmentposition::EquipmentPosition,
 };
 use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
@@ -118,6 +120,7 @@ pub fn update_quartz_and_ghost(
     mut q_ghost: Query<(&Position, &mut GhostSprite)>,
     time: Res<Time>,
 ) {
+    let measure = metrics::UPDATE_QUARTZ_AND_GHOST.time_measure();
     let dt = time.delta_secs();
     for (gear_pos, mut playergear) in q_gear1.iter_mut() {
         for (gear, _) in playergear.as_vec_mut().into_iter() {
@@ -145,4 +148,5 @@ pub fn update_quartz_and_ghost(
             }
         }
     }
+    measure.end_ms();
 }

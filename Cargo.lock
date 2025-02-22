@@ -4898,6 +4898,7 @@ version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "bevy_dylib",
+ "ordered-float",
  "uncore",
  "unfog",
  "ungame",

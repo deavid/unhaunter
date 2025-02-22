@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
-use bevy::utils::Instant;
 use ndarray::Array3;
 use noise::{NoiseFn, Perlin};
 use rand::Rng;
@@ -13,7 +12,7 @@ use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::events::loadlevel::LevelReadyEvent;
-use uncore::metrics::SendMetric;
+use uncore::metric_recorder::SendMetric;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
@@ -78,7 +77,7 @@ pub fn spawn_miasma(
     board_data: Res<BoardData>,
     mut commands: Commands,
 ) {
-    let sys_start = Instant::now();
+    let measure = metrics::SPAWN_MIASMA.time_measure();
     const THRESHOLD: f32 = 0.01;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 10;
@@ -186,8 +185,7 @@ pub fn spawn_miasma(
             *pos_count += 1;
         }
     }
-    // Update diagnostics
-    metrics::SPAWN_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
+    measure.end_ms();
 }
 
 pub fn animate_miasma_sprites(
@@ -195,7 +193,8 @@ pub fn animate_miasma_sprites(
     board_data: Res<BoardData>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
-    let sys_start = Instant::now();
+    let measure = metrics::ANIMATE_MIASMA.time_measure();
+
     let dt = time.delta_secs();
     let perlin = Perlin::new(1); // 1 is just the seed.
     const MOVEMENT_FACTOR: f32 = 1.01;
@@ -264,7 +263,7 @@ pub fn animate_miasma_sprites(
             miasma_sprite.base_position = new_pos;
         }
     }
-    metrics::ANIMATE_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
+    measure.end_ms();
 }
 
 pub fn update_miasma(
@@ -275,7 +274,7 @@ pub fn update_miasma(
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
 ) {
-    let sys_start = Instant::now();
+    let measure = metrics::UPDATE_MIASMA.time_measure();
 
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
@@ -532,6 +531,5 @@ pub fn update_miasma(
     // --- 3. Apply New Velocities ---
     board_data.miasma.velocity_field = new_velocities;
 
-    // Update diagnostics
-    metrics::UPDATE_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
+    measure.end_ms();
 }

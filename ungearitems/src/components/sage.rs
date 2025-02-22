@@ -1,9 +1,12 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
+use crate::metrics;
+
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::components::board::mapcolor::MapColor;
+use uncore::metric_recorder::SendMetric;
 use uncore::{
     components::{
         board::{direction::Direction, position::Position},
@@ -167,6 +170,8 @@ pub fn sage_smoke_system(
     >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
+    let measure = metrics::SAGE_SMOKE.time_measure();
+
     let dt = time.delta_secs();
     for (entity, mut position, mut transform, mut smoke_particle, mut map_color, o_dir) in
         smoke_particles.iter_mut()
@@ -211,4 +216,6 @@ pub fn sage_smoke_system(
             }
         }
     }
+
+    measure.end_ms();
 }

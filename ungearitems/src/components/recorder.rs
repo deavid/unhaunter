@@ -1,9 +1,12 @@
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::metrics;
+
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
 use uncore::{
     components::{board::position::Position, ghost_sprite::GhostSprite},
+    metric_recorder::SendMetric,
     resources::{board_data::BoardData, roomdb::RoomDB},
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
@@ -146,6 +149,8 @@ pub fn sound_update(
     roomdb: Res<RoomDB>,
     qg: Query<(&GhostSprite, &Position)>,
 ) {
+    let measure = metrics::SOUND_UPDATE.time_measure();
+
     let mut rng = rand::rng();
     let gn = rng.random_range(0..30_u32);
     if gn == 0 {
@@ -205,4 +210,6 @@ pub fn sound_update(
             }
         }
     }
+
+    measure.end_ms();
 }
