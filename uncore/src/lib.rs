@@ -13,6 +13,8 @@ pub mod systems;
 pub mod traits;
 pub mod types;
 pub mod utils;
+pub mod metrics;
+pub mod plugin;
 
 /// Enables/disables debug logs related to the player.
 pub const DEBUG_PLAYER: bool = false;

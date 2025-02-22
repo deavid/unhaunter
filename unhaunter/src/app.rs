@@ -3,6 +3,7 @@ use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::plugin::UnhaunterCorePlugin;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
@@ -49,6 +50,7 @@ pub fn app_run() {
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
     app.add_plugins((
+        UnhaunterCorePlugin,
         UnhaunterRootPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
@@ -63,9 +65,9 @@ pub fn app_run() {
         UnhaunterMenuPlugin,
         UnhaunterLightPlugin,
         UnhaunterNPCPlugin,
-        UnhaunterTmxMapPlugin,
     ));
     app.add_plugins((
+        UnhaunterTmxMapPlugin,
         UnhaunterSettingsPlugin,
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,

@@ -1,5 +1,3 @@
-use bevy::diagnostic::DiagnosticMeasurement;
-use bevy::diagnostic::DiagnosticsStore;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
@@ -15,6 +13,7 @@ use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::events::loadlevel::LevelReadyEvent;
+use uncore::metrics::SendMetric;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
@@ -78,7 +77,6 @@ pub fn spawn_miasma(
     handles: Res<GameAssets>,
     board_data: Res<BoardData>,
     mut commands: Commands,
-    mut diag_store: ResMut<DiagnosticsStore>,
 ) {
     let sys_start = Instant::now();
     const THRESHOLD: f32 = 0.01;
@@ -189,19 +187,13 @@ pub fn spawn_miasma(
         }
     }
     // Update diagnostics
-    if let Some(diag) = diag_store.get_mut(&metrics::SPAWN_MIASMA) {
-        diag.add_measurement(DiagnosticMeasurement {
-            time: Instant::now(),
-            value: sys_start.elapsed().as_secs_f64() * 1000.0,
-        });
-    }
+    metrics::SPAWN_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
 }
 
 pub fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
-    mut diag_store: ResMut<DiagnosticsStore>,
 ) {
     let sys_start = Instant::now();
     let dt = time.delta_secs();
@@ -272,13 +264,7 @@ pub fn animate_miasma_sprites(
             miasma_sprite.base_position = new_pos;
         }
     }
-    // Update diagnostics
-    if let Some(diag) = diag_store.get_mut(&metrics::ANIMATE_MIASMA) {
-        diag.add_measurement(DiagnosticMeasurement {
-            time: Instant::now(),
-            value: sys_start.elapsed().as_secs_f64() * 1000.0,
-        });
-    }
+    metrics::ANIMATE_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
 }
 
 pub fn update_miasma(
@@ -286,7 +272,6 @@ pub fn update_miasma(
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
     roomdb: Res<RoomDB>,
-    mut diag_store: ResMut<DiagnosticsStore>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
 ) {
@@ -548,10 +533,5 @@ pub fn update_miasma(
     board_data.miasma.velocity_field = new_velocities;
 
     // Update diagnostics
-    if let Some(diag) = diag_store.get_mut(&metrics::UPDATE_MIASMA) {
-        diag.add_measurement(DiagnosticMeasurement {
-            time: Instant::now(),
-            value: sys_start.elapsed().as_secs_f64() * 1000.0,
-        });
-    }
+    metrics::UPDATE_MIASMA.tx(sys_start.elapsed().as_secs_f64() * 1000.0);
 }
