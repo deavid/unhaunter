@@ -19,7 +19,7 @@ use crate::board::spritedb::SpriteDB;
 
 /// Main system of board that moves the tiles to their correct place in the screen
 /// following the isometric perspective.
-pub fn apply_perspective(mut q: Query<(&Position, &mut Transform)>) {
+pub fn apply_perspective(mut q: Query<(&Position, &mut Transform), Changed<Position>>) {
     for (pos, mut transform) in q.iter_mut() {
         transform.translation = pos.to_screen_coord();
     }
