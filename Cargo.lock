@@ -4874,6 +4874,7 @@ version = "0.2.6-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
+ "fastapprox",
  "ndarray",
  "rand 0.9.0",
  "uncore",

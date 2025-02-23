@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::position::Position;
+use super::{direction::Direction, position::Position};
 
 #[derive(Component, Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct BoardPosition {
@@ -27,6 +27,24 @@ impl BoardPosition {
             || self.x >= map_size.0 as i64
             || self.y < 0
             || self.y >= map_size.1 as i64
+            || self.z < 0
+            || self.z >= map_size.2 as i64
+        {
+            None
+        } else {
+            Some((self.x as usize, self.y as usize, self.z as usize))
+        }
+    }
+
+    pub fn ndidx_checked_margin(
+        &self,
+        map_size: (usize, usize, usize),
+    ) -> Option<(usize, usize, usize)> {
+        const MARGIN: i64 = 2;
+        if self.x < MARGIN
+            || self.x >= map_size.0 as i64 - MARGIN
+            || self.y < MARGIN
+            || self.y >= map_size.1 as i64 - MARGIN
             || self.z < 0
             || self.z >= map_size.2 as i64
         {
@@ -161,6 +179,13 @@ impl BoardPosition {
         (dx.powi(2) + dy.powi(2) + dz.powi(2)).sqrt()
     }
 
+    pub fn distance2(&self, other: &Self) -> f32 {
+        let dx = self.x as f32 - other.x as f32;
+        let dy = self.y as f32 - other.y as f32;
+        let dz = self.z as f32 - other.z as f32;
+        dx.powi(2) + dy.powi(2) + dz.powi(2)
+    }
+
     pub fn distance_taxicab(&self, other: &Self) -> i64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -198,6 +223,14 @@ impl BoardPosition {
     pub fn mini_hash(&self) -> f32 {
         let h: i64 = ((self.x + 41) % 61 + (self.y * 13 + 47) % 67 + (self.z * 29 + 59) % 79) % 109;
         h as f32 / 109.0
+    }
+
+    pub fn delta(&self, rhs: &BoardPosition) -> Direction {
+        Direction {
+            dx: (self.x - rhs.x) as f32,
+            dy: (self.y - rhs.y) as f32,
+            dz: (self.z - rhs.z) as f32,
+        }
     }
 }
 

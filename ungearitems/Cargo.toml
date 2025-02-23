@@ -15,3 +15,4 @@ bevy = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
 enum-iterator = { workspace = true }
+fastapprox = { workspace = true }

@@ -1,6 +1,6 @@
 use super::{
-    boardposition::BoardPosition, direction::Direction, EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y,
-    PERSPECTIVE_Z,
+    EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, boardposition::BoardPosition,
+    direction::Direction,
 };
 
 use bevy::prelude::*;

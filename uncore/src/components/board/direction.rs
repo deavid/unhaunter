@@ -36,7 +36,11 @@ impl Direction {
     }
 
     pub fn distance(&self) -> f32 {
-        (self.dx.powi(2) + self.dy.powi(2) + self.dz.powi(2)).sqrt()
+        (self.dx * self.dx + self.dy * self.dy + self.dz * self.dz).sqrt()
+    }
+
+    pub fn distance2(&self) -> f32 {
+        self.dx * self.dx + self.dy * self.dy + self.dz * self.dz
     }
 
     pub fn normalized(&self) -> Self {
