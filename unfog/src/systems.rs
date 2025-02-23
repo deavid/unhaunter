@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
-use ndarray::Array3;
+use ndarray::{Array3, s};
 use rand::Rng;
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
@@ -94,6 +94,7 @@ pub fn spawn_miasma(
     }) else {
         return;
     };
+    let player_bpos = player_pos.to_board_position();
 
     if vf.visibility_field.dim() != board_data.collision_field.dim() {
         // If the visibility field hasn't updated to the same size, skip processing.
@@ -137,8 +138,20 @@ pub fn spawn_miasma(
             *pos_count += 1;
         }
     }
+    // Limit the number of cells to check to 8x8 around the player
+    const MAX_RADIUS: i64 = 8;
+    let min_x = (player_bpos.x - MAX_RADIUS).max(0) as usize;
+    let max_x = (player_bpos.x + MAX_RADIUS).min(board_data.map_size.0 as i64) as usize;
+    let min_y = (player_bpos.y - MAX_RADIUS).max(0) as usize;
+    let max_y = (player_bpos.y + MAX_RADIUS).min(board_data.map_size.1 as i64) as usize;
+    let z = player_bpos.z as usize;
 
-    for (bp, vis) in vf.visibility_field.indexed_iter() {
+    for (bp, vis) in vf
+        .visibility_field
+        .slice(s![min_x..=max_x, min_y..=max_y, z..=z])
+        .indexed_iter()
+    {
+        let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
         if !board_data.collision_field[bp].player_free {
             continue;
         }
