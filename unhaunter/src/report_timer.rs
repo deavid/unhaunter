@@ -21,12 +21,12 @@ pub fn report_performance(
         }
         // Grab the top-N
         system_times.sort_by_key(|x| ordered_float::OrderedFloat::from(-x.1));
-        system_times.truncate(10);
+        system_times.truncate(15);
 
         system_times.sort_by_key(|x| x.0);
 
         for (name, time, suffix) in system_times.iter() {
-            if *time > 0.09 {
+            if *time > 0.05 {
                 info!("{name}: {time:.2} {suffix}");
             }
         }

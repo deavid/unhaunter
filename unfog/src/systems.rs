@@ -95,6 +95,12 @@ pub fn spawn_miasma(
         return;
     };
 
+    if vf.visibility_field.dim() != board_data.collision_field.dim() {
+        // If the visibility field hasn't updated to the same size, skip processing.
+        // This happens on map load and takes 1-2 frames to stabilize.
+        return;
+    }
+
     let mut count: HashMap<BoardPosition, usize> = HashMap::new();
     for (entity, mut miasma_sprite) in q_miasma.iter_mut() {
         if miasma_sprite.despawn {

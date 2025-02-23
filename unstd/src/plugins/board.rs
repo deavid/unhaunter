@@ -20,7 +20,7 @@ use uncore::{
 use crate::board::spritedb::SpriteDB;
 
 pub const APPLY_PERSPECTIVE: DiagnosticPath =
-    DiagnosticPath::const_new("unfog/systems/spawn_miasma");
+    DiagnosticPath::const_new("unboard/systems/apply_perspective");
 
 /// Main system of board that moves the tiles to their correct place in the screen
 /// following the isometric perspective.
