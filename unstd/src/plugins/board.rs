@@ -1,3 +1,4 @@
+use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use fastapprox::faster;
@@ -6,6 +7,7 @@ use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
+use uncore::metric_recorder::SendMetric;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
 use uncore::types::board::cached_board_pos::CachedBoardPos;
@@ -17,12 +19,19 @@ use uncore::{
 
 use crate::board::spritedb::SpriteDB;
 
+pub const APPLY_PERSPECTIVE: DiagnosticPath =
+    DiagnosticPath::const_new("unfog/systems/spawn_miasma");
+
 /// Main system of board that moves the tiles to their correct place in the screen
 /// following the isometric perspective.
 pub fn apply_perspective(mut q: Query<(&Position, &mut Transform), Changed<Position>>) {
+    let measure = APPLY_PERSPECTIVE.time_measure();
+
     for (pos, mut transform) in q.iter_mut() {
         transform.translation = pos.to_screen_coord();
     }
+
+    measure.end_ms();
 }
 
 pub struct UnhaunterBoardPlugin;
@@ -36,6 +45,7 @@ impl Plugin for UnhaunterBoardPlugin {
             .add_systems(Update, apply_perspective)
             .add_systems(PostUpdate, boardfield_update)
             .add_event::<BoardDataToRebuild>();
+        app.register_diagnostic(Diagnostic::new(APPLY_PERSPECTIVE).with_suffix("ms"));
     }
 }
 
