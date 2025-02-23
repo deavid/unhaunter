@@ -10,6 +10,8 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "../uncore" }
 ungear = { path = "../ungear" }
+
 bevy = { workspace = true }
 rand = { workspace = true }
+ndarray = { workspace = true }
 enum-iterator = { workspace = true }

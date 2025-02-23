@@ -1,8 +1,8 @@
+use ndarray::Array3;
 use uncore::components::board::mapcolor::MapColor;
-use uncore::components::board::{
-    boardposition::BoardPosition, direction::Direction, position::Position,
-};
+use uncore::components::board::{direction::Direction, position::Position};
 use uncore::metric_recorder::SendMetric;
+use uncore::resources::board_data::BoardData;
 use uncore::{
     components::{game::GameSprite, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
@@ -12,7 +12,7 @@ use uncore::{
 use crate::metrics;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
-use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
+use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
 use std::ops::{Add, Mul};
 
@@ -157,6 +157,7 @@ pub fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
     mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
+    bf: Res<BoardData>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let measure = metrics::REPELLENT_UPDATE.time_measure();
@@ -164,16 +165,17 @@ pub fn repellent_update(
     let mut rng = rand::rng();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
-    let mut pressure: HashMap<BoardPosition, f32> = HashMap::new();
+    let mut pressure: Array3<f32> = Array3::from_elem(bf.map_size, 0.0);
+    let map_size2 = (bf.map_size.0, bf.map_size.1);
     const RADIUS: f32 = 0.7;
     for (r_pos, rep, _, _) in &qrp {
         let bpos = r_pos.to_board_position();
-        for nb in bpos.iter_xy_neighbors_nosize(3) {
-            let dist2 = (nb.to_position_center().distance(r_pos) * RADIUS).powi(2);
+        for nb in bpos.iter_xy_neighbors(3, map_size2) {
+            let dist2 = nb.to_position_center().distance2(r_pos) * RADIUS;
             let exponent: f32 = -0.5 * dist2;
             let gauss = exponent.exp();
             let life = 1.001 - rep.life_factor();
-            *pressure.entry(nb).or_default() += gauss * life;
+            pressure[nb.ndidx()] += gauss * life;
         }
     }
     for (mut r_pos, mut rep, mut mapcolor, entity) in &mut qrp {
@@ -188,13 +190,13 @@ pub fn repellent_update(
             .set_alpha(rep.life_factor().sqrt() / 4.0 + 0.01);
         let bpos = r_pos.to_board_position();
         let mut total_force = Direction::zero();
-        for nb in bpos.iter_xy_neighbors_nosize(3) {
+        for nb in bpos.iter_xy_neighbors(3, map_size2) {
             let npos = nb.to_position_center();
-            let dist2 = (npos.distance(&r_pos) * RADIUS).powi(2);
+            let dist2 = npos.distance2(&r_pos) * RADIUS;
             let exponent: f32 = -0.5 * dist2;
             let gauss = exponent.exp();
             let vector = r_pos.delta(npos);
-            let psi = *pressure.entry(nb).or_default();
+            let psi = pressure[nb.ndidx()];
             let mut vector_scaled = vector.normalized().mul(psi * gauss);
             vector_scaled.dz = 0.0;
             total_force = total_force + vector_scaled;
