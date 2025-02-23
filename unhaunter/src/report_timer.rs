@@ -25,11 +25,17 @@ pub fn report_performance(
 
         system_times.sort_by_key(|x| x.0);
 
+        let mut total_systems_time = 0.0;
         for (name, time, suffix) in system_times.iter() {
             if *time > 0.05 {
                 info!("{name}: {time:.2} {suffix}");
             }
+            if name.starts_with("un") && name.contains("/systems/") {
+                total_systems_time += time;
+            }
         }
+        const MAX_TIME: f64 = 1000.0 / 60.0;
+        info!("systems: {:.2}%", total_systems_time / MAX_TIME * 100.0);
     }
 }
 
