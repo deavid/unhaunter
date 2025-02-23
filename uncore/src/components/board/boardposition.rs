@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -231,6 +233,34 @@ impl BoardPosition {
             dy: (self.y - rhs.y) as f32,
             dz: (self.z - rhs.z) as f32,
         }
+    }
+
+    pub fn distance_to_chunk(&self, chunk: &(Range<usize>, Range<usize>, Range<usize>)) -> i64 {
+        const Z_AXIS_MULTIPLIER: i64 = 8;
+
+        let x = self.x;
+        let y = self.y;
+        let z = self.z;
+
+        let x_range = chunk.0.start as i64..chunk.0.end as i64;
+        let y_range = chunk.1.start as i64..chunk.1.end as i64;
+        let z_range = chunk.2.start as i64..chunk.2.end as i64;
+
+        let mut distance = 0;
+
+        if !x_range.contains(&x) {
+            distance += (x - x.clamp(x_range.start, x_range.end - 1)).abs();
+        }
+
+        if !y_range.contains(&y) {
+            distance += (y - y.clamp(y_range.start, y_range.end - 1)).abs();
+        }
+
+        if !z_range.contains(&z) {
+            distance += (z - z.clamp(z_range.start, z_range.end - 1)).abs() * Z_AXIS_MULTIPLIER;
+        }
+
+        distance
     }
 }
 

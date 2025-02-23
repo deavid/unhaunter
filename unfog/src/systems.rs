@@ -6,6 +6,7 @@ use noise::{NoiseFn, Perlin};
 use rand::Rng;
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::chunk::{CellIterator, ChunkIterator};
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::game_config::GameConfig;
@@ -278,6 +279,7 @@ pub fn update_miasma(
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
+    mut room_present: Local<Array3<bool>>,
 ) {
     let measure = metrics::UPDATE_MIASMA.time_measure();
 
@@ -292,7 +294,15 @@ pub fn update_miasma(
     const EXCHANGE_VEL_SCALE: f32 = 2.0;
     let mut pressure_changes = Array3::from_elem(board_data.map_size, 0.0);
     let mut velocity_changes = Array3::from_elem(board_data.map_size, Vec2::ZERO);
-    let mut room_present = Array3::from_elem(board_data.map_size, false);
+
+    if room_present.dim() != board_data.map_size {
+        // FIXME: This will introduce a bug, if the player loads a new map with exact same size, it will not update.
+        *room_present = Array3::from_elem(board_data.map_size, false);
+        for bpos in roomdb.room_tiles.keys() {
+            let p = bpos.ndidx();
+            room_present[p] = true;
+        }
+    }
 
     // Find the active player's position
     let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
@@ -307,230 +317,265 @@ pub fn update_miasma(
 
     let player_bpos = player_pos.to_board_position();
 
-    for bpos in roomdb.room_tiles.keys() {
-        let p = bpos.ndidx();
-        room_present[p] = true;
-    }
-    let mut arr_j = 0;
-    // Iterate through all cells in the pressure field.
-    for (p, &p1) in board_data.miasma.pressure_field.indexed_iter() {
-        // Check for walls and closed doors (collision)
-        // This part is to check we don't diffuse the walls themselves.
-        if !board_data.collision_field[p].player_free {
-            continue; // Skip walls and out-of-bounds
-        }
-        let bpos = BoardPosition::from_ndidx(p);
-        let is_room = room_present[p];
-        let player_presence =
-            (256 / (1 + bpos.distance_taxicab(&player_bpos).clamp(0, 64))).clamp(0, 255) as u8;
-        arr_j += 1;
-        arr_j %= arr.len();
-        if arr[arr_j] > player_presence {
-            continue;
-        }
-
-        // Process each neighbor (up, down, left, right):
-        let neighbors = [bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
-        let neighbors = neighbors
-            .into_iter()
-            .filter(|nb_pos| {
-                board_data
-                    .collision_field
-                    .get(nb_pos.ndidx())
-                    .map(|x| x.player_free)
-                    .unwrap_or(true)
-            })
-            .collect::<Vec<_>>();
-        let nb_len = neighbors.len() as f32 + 0.01;
-        let mut total_v = Vec2::ZERO;
-        for neighbor_pos in neighbors {
-            if board_data
-                .collision_field
-                .get(neighbor_pos.ndidx())
-                .is_none()
-            {
-                continue;
+    // Iterate through chunks
+    let chunks = ChunkIterator::new(board_data.map_size)
+        .filter(|chunk| {
+            let dist = player_bpos.distance_to_chunk(chunk);
+            let r = rng.random_range(1.0..3.0);
+            dist < (r * r * r) as i64
+        })
+        .take(8)
+        .collect::<Vec<_>>();
+    // if rng.random_range(0..256) == 0 {
+    //     dbg!(
+    //         chunks.len(),
+    //         ChunkIterator::new(board_data.map_size).count()
+    //     );
+    //     dbg!(
+    //         chunks
+    //             .iter()
+    //             .map(|chunk| CellIterator::new(chunk).count())
+    //             .sum::<usize>()
+    //     );
+    //     let mut distances = chunks
+    //         .iter()
+    //         .map(|chunk| player_bpos.distance_to_chunk(chunk))
+    //         .collect::<Vec<_>>();
+    //     distances.sort();
+    //     warn!("Chunk distances: {:?}", distances);
+    // }
+    for chunk in &chunks {
+        // Iterate through all cells in the pressure field within the chunk.
+        for p in CellIterator::new(chunk) {
+            // Check for walls and closed doors (collision)
+            if !board_data.collision_field[p].player_free {
+                continue; // Skip walls and out-of-bounds
             }
-            let np = neighbor_pos.ndidx();
-            // Get the neighbor's pressure (treat out-of-bounds as 0.0)
-            let mut p2 = board_data
-                .miasma
-                .pressure_field
-                .get(np)
-                .copied()
-                .unwrap_or(0.0);
-            let mut v2 = board_data
-                .miasma
-                .velocity_field
-                .get(np)
-                .copied()
-                .unwrap_or(Vec2::ZERO);
-            let is_room_nb = room_present[np];
-            if !is_room_nb {
-                // Consider outside to be zero pressure and velocity.
-                p2 = 0.0;
-                v2 = Vec2::ZERO;
-            }
-
-            total_v += v2;
-            // Calculate pressure difference and exchange amount.
-            let delta_pressure = p1 - p2;
-            let max_exchange_outwards = p1.max(-p2) / 4.0; // Max positive exchange
-            let max_exchange_inwards = (-p2).min(p1) / 4.0; // Max negative exchange
-
-            // if delta_pressure.abs() > 100.0 {
-            //     dbg!(p1, p2, max_exchange_outwards, max_exchange_inwards);
+            let p1 = board_data.miasma.pressure_field[p];
+            let bpos = BoardPosition::from_ndidx(p);
+            let is_room = room_present[p];
+            // let player_presence =
+            //     (256 / (1 + bpos.distance_taxicab(&player_bpos).clamp(0, 64))).clamp(0, 255) as u8;
+            // arr_j += 1;
+            // arr_j %= arr.len();
+            // if arr[arr_j] > player_presence {
+            //     continue;
             // }
-            let mut exchange = delta_pressure * diffusion_rate * dt / nb_len;
-            if !is_room {
-                // Diffuse slower outside of rooms
-                exchange /= 10.0;
+
+            // Process each neighbor (up, down, left, right):
+            let neighbors = [bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
+            let neighbors = neighbors
+                .into_iter()
+                .filter(|nb_pos| {
+                    let n_idx = nb_pos.ndidx();
+                    board_data
+                        .collision_field
+                        .get(n_idx)
+                        .map(|x| x.player_free)
+                        .unwrap_or(true)
+                })
+                .collect::<Vec<_>>();
+            let nb_len = neighbors.len() as f32 + 0.01;
+            let mut total_v = Vec2::ZERO;
+            for neighbor_pos in neighbors {
+                if board_data
+                    .collision_field
+                    .get(neighbor_pos.ndidx())
+                    .is_none()
+                {
+                    continue;
+                }
+                let np = neighbor_pos.ndidx();
+                // Get the neighbor's pressure (treat out-of-bounds as 0.0)
+                let mut p2 = board_data
+                    .miasma
+                    .pressure_field
+                    .get(np)
+                    .copied()
+                    .unwrap_or(0.0);
+                let mut v2 = board_data
+                    .miasma
+                    .velocity_field
+                    .get(np)
+                    .copied()
+                    .unwrap_or(Vec2::ZERO);
+                let is_room_nb = room_present[np];
+                if !is_room_nb {
+                    // Consider outside to be zero pressure and velocity.
+                    p2 = 0.0;
+                    v2 = Vec2::ZERO;
+                }
+
+                total_v += v2;
+                // Calculate pressure difference and exchange amount.
+                let delta_pressure = p1 - p2;
+                let max_exchange_outwards = p1.max(-p2) / 4.0; // Max positive exchange
+                let max_exchange_inwards = (-p2).min(p1) / 4.0; // Max negative exchange
+
+                let mut exchange = delta_pressure * diffusion_rate * dt / nb_len;
+                if !is_room {
+                    // Diffuse slower outside of rooms
+                    exchange /= 10.0;
+                }
+
+                // --- Biased Diffusion ---
+                let velocity = *board_data
+                    .miasma
+                    .velocity_field
+                    .get(p)
+                    .unwrap_or(&Vec2::ZERO);
+                // Adjust exchange based on velocity components
+                if neighbor_pos == bpos.top() {
+                    exchange -= velocity.y * EXCHANGE_VEL_SCALE;
+                } else if neighbor_pos == bpos.bottom() {
+                    exchange += velocity.y * EXCHANGE_VEL_SCALE;
+                } else if neighbor_pos == bpos.left() {
+                    exchange -= velocity.x * EXCHANGE_VEL_SCALE;
+                } else if neighbor_pos == bpos.right() {
+                    exchange += velocity.x * EXCHANGE_VEL_SCALE;
+                }
+
+                exchange = exchange.clamp(max_exchange_inwards, max_exchange_outwards);
+
+                pressure_changes[p] -= exchange;
+                pressure_changes[np] += exchange;
             }
-
-            // --- Biased Diffusion ---
-            let velocity = *board_data
-                .miasma
-                .velocity_field
-                .get(p)
-                .unwrap_or(&Vec2::ZERO);
-            // Adjust exchange based on velocity components
-            if neighbor_pos == bpos.top() {
-                exchange -= velocity.y * EXCHANGE_VEL_SCALE;
-            } else if neighbor_pos == bpos.bottom() {
-                exchange += velocity.y * EXCHANGE_VEL_SCALE;
-            } else if neighbor_pos == bpos.left() {
-                exchange -= velocity.x * EXCHANGE_VEL_SCALE;
-            } else if neighbor_pos == bpos.right() {
-                exchange += velocity.x * EXCHANGE_VEL_SCALE;
-            }
-
-            exchange = exchange.clamp(max_exchange_inwards, max_exchange_outwards);
-
-            pressure_changes[p] -= exchange;
-            pressure_changes[np] += exchange;
+            velocity_changes[p] = total_v / nb_len;
         }
-        velocity_changes[p] = total_v / nb_len;
     }
 
     // Average velocities over space
-    for (p, vel) in velocity_changes.indexed_iter() {
-        let is_room = room_present[p] && board_data.collision_field[p].player_free;
-        let Some(entry) = board_data.miasma.velocity_field.get_mut(p) else {
-            continue;
-        };
-        let f = 0.0001;
-        *entry = *entry * (1.0 - f) + vel * f;
+    for chunk in &chunks {
+        // Iterate through all cells in the pressure field within the chunk.
+        for p in CellIterator::new(chunk) {
+            let vel = velocity_changes[p];
+            let Some(entry) = board_data.miasma.velocity_field.get_mut(p) else {
+                continue;
+            };
+            let f = 0.0001;
+            *entry = *entry * (1.0 - f) + vel * f;
 
-        if !is_room {
-            // Slow particles that aren't in a room.
-            *entry /= 1.00001;
+            // let is_room = room_present[p] && board_data.collision_field[p].player_free;
+            // if !is_room {
+            //     // Slow particles that aren't in a room.
+            //     *entry /= 1.00001;
+            // }
         }
     }
-    for (p, &delta) in pressure_changes.indexed_iter() {
-        let is_room = room_present[p] && board_data.collision_field[p].player_free;
+    for chunk in &chunks {
+        // Iterate through all cells in the pressure field within the chunk.
+        for p in CellIterator::new(chunk) {
+            let delta = pressure_changes[p];
+            let is_room = room_present[p] && board_data.collision_field[p].player_free;
 
-        let Some(entry) = board_data.miasma.pressure_field.get_mut(p) else {
-            continue;
-        };
-        *entry += delta;
-        if !is_room {
-            // Evaporate miasma fast when outside.
-            *entry /= 1.00001;
+            let Some(entry) = board_data.miasma.pressure_field.get_mut(p) else {
+                continue;
+            };
+            *entry += delta;
+            if !is_room {
+                // Evaporate miasma fast when outside.
+                *entry /= 1.00001;
+            }
         }
-        // *entry = entry.max(0.0);
     }
 
     // --- 2. Velocity Calculation and Inertia ---
     let mut new_velocities = board_data.miasma.velocity_field.clone();
-    for (p, &p_center) in board_data.miasma.pressure_field.indexed_iter() {
-        let bpos = BoardPosition::from_ndidx(p);
-        let is_room = room_present.get(p).copied().unwrap_or_default();
-        if !is_room {
-            // Don't compute velocity outside of rooms.
-            continue;
-        }
-        let player_presence = (256 / (1 + (bpos.distance_taxicab(&player_bpos) / 8).clamp(0, 64)))
-            .clamp(0, 255) as u8;
-        arr_j += 1;
-        arr_j %= arr.len();
-        if arr[arr_j] > player_presence {
-            continue;
-        }
-
-        let get_pressure = |pos: &BoardPosition| -> f32 {
-            let p = pos.ndidx();
+    for chunk in &chunks {
+        for p in CellIterator::new(chunk) {
+            let p_center = board_data.miasma.pressure_field[p];
+            let bpos = BoardPosition::from_ndidx(p);
             let is_room = room_present[p];
             if !is_room {
-                // Consider outside to be zero pressure always.
-                return 0.0;
+                // Don't compute velocity outside of rooms.
+                // Slow particles that aren't in a room.
+                new_velocities[p] /= 1.00001;
+                continue;
             }
-            if board_data.collision_field[p].player_free {
-                board_data.miasma.pressure_field[p]
-            } else {
-                p_center
+            // let player_presence = (256
+            //     / (1 + (bpos.distance_taxicab(&player_bpos) / 8).clamp(0, 64)))
+            // .clamp(0, 255) as u8;
+            // arr_j += 1;
+            // arr_j %= arr.len();
+            // if arr[arr_j] > player_presence {
+            //     continue;
+            // }
+
+            let get_pressure = |pos: &BoardPosition| -> f32 {
+                let gp = pos.ndidx();
+                let is_room = room_present[gp];
+                if !is_room {
+                    // Consider outside to be zero pressure always.
+                    return 0.0;
+                }
+                if board_data.collision_field[gp].player_free {
+                    board_data.miasma.pressure_field[gp]
+                } else {
+                    p_center
+                }
+            };
+
+            let p_left = get_pressure(&bpos.left());
+            let p_right = get_pressure(&bpos.right());
+            let p_top = get_pressure(&bpos.top());
+            let p_bottom = get_pressure(&bpos.bottom());
+
+            let calculated_velocity = Vec2::new(
+                (p_left - p_right) * miasma_config.velocity_scale,
+                (p_top - p_bottom) * miasma_config.velocity_scale,
+            );
+            let calc_vel_len = calculated_velocity.length() + 0.000001;
+            let adjusted_vel = calc_vel_len.cbrt().min(1.0);
+            let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
+            let previous_velocity = board_data.miasma.velocity_field[p];
+
+            // FIXME: This should be proportional change of `dt`
+            let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
+                + calculated_velocity)
+                / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
+
+            // Take walls into account.
+            const WALL_REPEL_SPEED: f32 = 0.00;
+            let old_speed = new_velocity.length();
+            if new_velocity.x > -WALL_REPEL_SPEED
+                && !board_data
+                    .collision_field
+                    .get(bpos.right().ndidx())
+                    .map(|c| c.player_free)
+                    .unwrap_or(true)
+            {
+                new_velocity.x = -WALL_REPEL_SPEED;
             }
-        };
-
-        let p_left = get_pressure(&bpos.left());
-        let p_right = get_pressure(&bpos.right());
-        let p_top = get_pressure(&bpos.top());
-        let p_bottom = get_pressure(&bpos.bottom());
-
-        let calculated_velocity = Vec2::new(
-            (p_left - p_right) * miasma_config.velocity_scale,
-            (p_top - p_bottom) * miasma_config.velocity_scale,
-        );
-        let calc_vel_len = calculated_velocity.length() + 0.000001;
-        let adjusted_vel = calc_vel_len.cbrt().min(15.0);
-        let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
-        let previous_velocity = board_data.miasma.velocity_field[p];
-
-        // FIXME: This should be proportional change of `dt`
-        let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
-            + calculated_velocity)
-            / (1.0 + miasma_config.inertia_factor + miasma_config.friction);
-
-        // Take walls into account.
-        const WALL_REPEL_SPEED: f32 = 0.00;
-        let old_speed = new_velocity.length();
-        if new_velocity.x > -WALL_REPEL_SPEED
-            && !board_data
-                .collision_field
-                .get(bpos.right().ndidx())
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-        {
-            new_velocity.x = -WALL_REPEL_SPEED;
+            if new_velocity.x < WALL_REPEL_SPEED
+                && !board_data
+                    .collision_field
+                    .get(bpos.left().ndidx())
+                    .map(|c| c.player_free)
+                    .unwrap_or(true)
+            {
+                new_velocity.x = WALL_REPEL_SPEED;
+            }
+            if new_velocity.y < WALL_REPEL_SPEED
+                && !board_data
+                    .collision_field
+                    .get(bpos.top().ndidx())
+                    .map(|c| c.player_free)
+                    .unwrap_or(true)
+            {
+                new_velocity.y = WALL_REPEL_SPEED;
+            }
+            if new_velocity.y > -WALL_REPEL_SPEED
+                && !board_data
+                    .collision_field
+                    .get(bpos.bottom().ndidx())
+                    .map(|c| c.player_free)
+                    .unwrap_or(true)
+            {
+                new_velocity.y = -WALL_REPEL_SPEED;
+            }
+            new_velocity = new_velocity.normalize_or_zero() * old_speed;
+            new_velocities[p] = new_velocity; // Store calculated velocity
         }
-        if new_velocity.x < WALL_REPEL_SPEED
-            && !board_data
-                .collision_field
-                .get(bpos.left().ndidx())
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-        {
-            new_velocity.x = WALL_REPEL_SPEED;
-        }
-        if new_velocity.y < WALL_REPEL_SPEED
-            && !board_data
-                .collision_field
-                .get(bpos.top().ndidx())
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-        {
-            new_velocity.y = WALL_REPEL_SPEED;
-        }
-        if new_velocity.y > -WALL_REPEL_SPEED
-            && !board_data
-                .collision_field
-                .get(bpos.bottom().ndidx())
-                .map(|c| c.player_free)
-                .unwrap_or(true)
-        {
-            new_velocity.y = -WALL_REPEL_SPEED;
-        }
-        new_velocity = new_velocity.normalize_or_zero() * old_speed;
-        new_velocities[p] = new_velocity; // Store calculated velocity
     }
 
     // --- 3. Apply New Velocities ---
