@@ -23,6 +23,7 @@ pub mod component;
 
 use anyhow::Context;
 use bevy::{ecs::component::Component, utils::HashMap};
+use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
@@ -102,7 +103,8 @@ impl Behavior {
 
     /// Amount of "watts" of heat poured into the environment
     pub fn temp_heat_output(&self) -> f32 {
-        let heat_coeff = (self.p.light.heat_coef as f32).exp();
+        // FIXME: Precompute this value and store it. This is slow and it's computed every frame by the temperature system.
+        let heat_coeff = faster::exp(self.p.light.heat_coef as f32);
         self.p.light.emmisivity_lumens() / 10000.0 * heat_coeff
     }
 
