@@ -74,10 +74,8 @@ pub fn compute_visibility(
     }
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
-    let map_size = {
-        let s = collision_field.dim();
-        (s.0, s.1)
-    };
+    let map_size = collision_field.dim();
+
     queue.push_front((start.clone(), start.clone()));
     vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
@@ -808,7 +806,7 @@ pub fn apply_lighting(
                 dst_color = dst_color
                     .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
                 opacity = opacity.max(0.0);
-                opacity *= miasma_visibility.clamp(0.0, 0.25)
+                opacity *= miasma_visibility.clamp(0.0, 0.45)
                     * miasma_sprite.visibility
                     * (1.0 - dst_color.luminance() * 0.5);
                 // if opacity < old_a {

@@ -148,7 +148,11 @@ impl BoardPosition {
         NeighborsIterator::new(self, dist, (0, 0), (2048, 2048))
     }
 
-    pub fn iter_xy_neighbors(&self, dist: i64, map_size: (usize, usize)) -> NeighborsIterator {
+    pub fn iter_xy_neighbors(
+        &self,
+        dist: i64,
+        map_size: (usize, usize, usize),
+    ) -> NeighborsIterator {
         NeighborsIterator::new(
             self,
             dist,

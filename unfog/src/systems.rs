@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::HashMap;
 use ndarray::Array3;
-use noise::{NoiseFn, Perlin};
 use rand::Rng;
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
@@ -22,7 +21,7 @@ use unstd::plugins::board::rebuild_collision_data;
 
 use crate::components::MiasmaSprite;
 use crate::metrics;
-use crate::resources::MiasmaConfig;
+use crate::resources::{MiasmaConfig, PerlinNoiseTable};
 
 pub fn initialize_miasma(
     mut board_data: ResMut<BoardData>,
@@ -81,7 +80,7 @@ pub fn spawn_miasma(
     let measure = metrics::SPAWN_MIASMA.time_measure();
     const THRESHOLD: f32 = 0.01;
     const DIST_FACTOR: f32 = 0.00001;
-    const MIASMA_TARGET_SPRITE_COUNT: usize = 10;
+    const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
     let mut rng = rand::rng();
     let dt = time.delta_secs();
 
@@ -132,7 +131,7 @@ pub fn spawn_miasma(
 
         let pos_count = count.entry(bpos).or_default();
 
-        if vis < THRESHOLD || *pos_count > target_count {
+        if vis < THRESHOLD || *pos_count > target_count * 9 {
             miasma_sprite.despawn = true;
         } else {
             *pos_count += 1;
@@ -152,10 +151,16 @@ pub fn spawn_miasma(
         let target_count = ((board_data.miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
             * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
+        let pos9_count = bpos
+            .iter_xy_neighbors(1, board_data.map_size)
+            .map(|bpos| count.get(&bpos).copied().unwrap_or_default())
+            .sum::<usize>();
+
         let pos_count = count.entry(bpos.clone()).or_default();
-        if *pos_count < target_count {
+
+        if pos9_count < target_count * 9 {
             // Spawn miasma if too low
-            let scale = rng.random_range(0.15..1.0_f32).sqrt() * 1.4;
+            let scale = rng.random_range(0.15..1.0_f32).sqrt() * 1.8;
             let pos = bpos
                 .to_position_center()
                 .with_global_z(0.00037 * rng.random_range(0.99..1.01))
@@ -197,12 +202,12 @@ pub fn spawn_miasma(
 pub fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
+    noise_table: Res<PerlinNoiseTable>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
 
     let dt = time.delta_secs();
-    let perlin = Perlin::new(1); // 1 is just the seed.
     const MOVEMENT_FACTOR: f32 = 1.01;
     for (mut pos, mut miasma_sprite) in query.iter_mut() {
         miasma_sprite.time_alive += dt;
@@ -211,15 +216,15 @@ pub fn animate_miasma_sprites(
         let circular_x = miasma_sprite.radius * angle.cos();
         let circular_y = miasma_sprite.radius * angle.sin();
 
-        // 2. Perlin Noise Offset:
-        let noise_x = perlin.get([
-            (miasma_sprite.noise_offset_x + miasma_sprite.time_alive * 0.2) as f64, // Slow change over time
-            miasma_sprite.noise_offset_y as f64,
-        ]) as f32;
-        let noise_y = perlin.get([
-            miasma_sprite.noise_offset_x as f64,
-            (miasma_sprite.noise_offset_y + miasma_sprite.time_alive * 0.2) as f64, // Different offset for Y
-        ]) as f32;
+        // 2. Perlin Noise Offset using precomputed values:
+        let noise_x = noise_table.get(
+            miasma_sprite.noise_offset_x + miasma_sprite.time_alive * 0.2,
+            miasma_sprite.noise_offset_y,
+        );
+        let noise_y = noise_table.get(
+            miasma_sprite.noise_offset_x,
+            miasma_sprite.noise_offset_y + miasma_sprite.time_alive * 0.2,
+        );
 
         // 3. Combine and Update Position:
         pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR; // Scale noise influence
@@ -230,13 +235,8 @@ pub fn animate_miasma_sprites(
         let bpos = pos.to_board_position();
         let mut total_vel = Vec2::ZERO;
         let mut total_w = 0.0001;
-        for bpos in bpos.iter_xy_neighbors_nosize(1) {
-            if !board_data
-                .collision_field
-                .get(bpos.ndidx())
-                .map(|x| x.player_free)
-                .unwrap_or(false)
-            {
+        for bpos in bpos.iter_xy_neighbors(1, board_data.map_size) {
+            if !board_data.collision_field[bpos.ndidx()].player_free {
                 continue;
             }
             let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
