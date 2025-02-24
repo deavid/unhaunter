@@ -29,7 +29,7 @@ use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
-use uncore::components::game::{GameSound, GameSprite, MapUpdate};
+use uncore::components::game::{GameSound, GameSprite, MapTileSprite};
 use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
@@ -148,6 +148,7 @@ pub fn load_level_handler(
     p.bf.light_field = Array3::from_elem(map_size, LightFieldData::default());
     p.bf.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
     p.bf.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
+    p.bf.map_entity_field = Array3::default(map_size);
 
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
@@ -398,6 +399,7 @@ pub fn load_level_handler(
             }
             mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();
+            p.bf.map_entity_field[pos.to_board_position().ndidx()].push(entity.id());
             beh.flip(tile.flip_x);
 
             // --- Check if Object is Movable ---
@@ -410,9 +412,9 @@ pub fn load_level_handler(
             entity
                 .insert(beh)
                 .insert(GameSprite)
+                .insert(MapTileSprite)
                 .insert(pos)
-                .insert(Visibility::Hidden)
-                .insert(MapUpdate::default());
+                .insert(Visibility::Hidden);
         }
     }
 

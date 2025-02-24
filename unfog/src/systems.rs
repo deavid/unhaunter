@@ -84,6 +84,9 @@ pub fn spawn_miasma(
     let mut rng = rand::rng();
     let dt = time.delta_secs();
 
+    if board_data.map_size.0 == 0 {
+        return;
+    }
     // Find the active player's position
     let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
         if player.id == gc.player_id {
@@ -141,9 +144,9 @@ pub fn spawn_miasma(
     // Limit the number of cells to check to 8x8 around the player
     const MAX_RADIUS: i64 = 8;
     let min_x = (player_bpos.x - MAX_RADIUS).max(0) as usize;
-    let max_x = (player_bpos.x + MAX_RADIUS).min(board_data.map_size.0 as i64) as usize;
+    let max_x = (player_bpos.x + MAX_RADIUS).min(board_data.map_size.0 as i64 - 1) as usize;
     let min_y = (player_bpos.y - MAX_RADIUS).max(0) as usize;
-    let max_y = (player_bpos.y + MAX_RADIUS).min(board_data.map_size.1 as i64) as usize;
+    let max_y = (player_bpos.y + MAX_RADIUS).min(board_data.map_size.1 as i64 - 1) as usize;
     let z = player_bpos.z as usize;
 
     for (bp, vis) in vf

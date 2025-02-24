@@ -23,6 +23,7 @@ pub struct BoardData {
     pub collision_field: Array3<CollisionFieldData>,
     pub temperature_field: Array3<f32>,
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
+    pub map_entity_field: Array3<Vec<Entity>>,
     pub miasma: MiasmaGrid,
     pub breach_pos: Position,
     pub ambient_temp: f32,
@@ -50,6 +51,7 @@ impl FromWorld for BoardData {
             evidences: HashSet::new(),
             breach_pos: Position::new_i64(0, 0, 0),
             miasma: MiasmaGrid::default(),
+            map_entity_field: Array3::default(map_size),
         }
     }
 }
