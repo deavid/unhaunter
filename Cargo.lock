@@ -4860,12 +4860,14 @@ name = "ungear"
 version = "0.2.6-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "enum-iterator",
  "fastapprox",
  "rand 0.9.0",
  "serde",
  "thiserror 2.0.11",
  "uncore",
+ "unsettings",
 ]
 
 [[package]]
@@ -4986,6 +4988,7 @@ name = "unlight"
 version = "0.2.6-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "fastapprox",
  "ndarray",
  "rand 0.9.0",
@@ -4993,6 +4996,7 @@ dependencies = [
  "unfog",
  "ungear",
  "ungearitems",
+ "unsettings",
  "unstd",
 ]
 

@@ -1,6 +1,7 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
@@ -9,6 +10,7 @@ use uncore::events::sound::SoundEvent;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
+use unsettings::audio::AudioSettings;
 
 /// System for updating the internal state of all gear carried by the player.
 ///
@@ -59,6 +61,7 @@ pub fn sound_playback_system(
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
     mut commands: Commands,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
         // Get player position (Match against the player ID from GameConfig)
@@ -73,12 +76,13 @@ pub fn sound_playback_system(
                 let distance2 = player_position.distance2(&position) + MIN_DIST;
                 let distance = distance2.powf(0.7) + MIN_DIST;
 
-                // Calculate adjusted volume based on distance
+                // Calculate adjusted volume based on distance and audio settings
                 (sound_event.volume / distance2 * MIN_DIST
                     + sound_event.volume / distance * MIN_DIST)
                     .clamp(0.0, 1.0)
+                    * audio_settings.volume_effects.as_f32()
             }
-            None => sound_event.volume,
+            None => sound_event.volume * audio_settings.volume_effects.as_f32(),
         };
 
         // Spawn an AudioBundle with the adjusted volume

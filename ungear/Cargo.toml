@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 uncore = { path = "../uncore" }
+unsettings = { path = "../unsettings" }
 
 bevy = { workspace = true }
 serde = { workspace = true }
@@ -16,3 +17,4 @@ enum-iterator = { workspace = true }
 thiserror = { workspace = true }
 fastapprox = { workspace = true }
 rand = { workspace = true }
+bevy-persistent = { workspace = true }

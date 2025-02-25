@@ -13,6 +13,7 @@
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
+use bevy_persistent::Persistent;
 use core::f32;
 use ndarray::Array3;
 use rand::Rng;
@@ -45,6 +46,7 @@ use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
+use unsettings::audio::AudioSettings;
 use unstd::materials::CustomMaterial1;
 
 pub use uncore::components::board::mapcolor::MapColor;
@@ -868,6 +870,7 @@ pub fn ambient_sound_system(
     qp: Query<&PlayerSprite>,
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     let measure = AMBIENT_SOUND_SYSTEM.time_measure();
 
@@ -899,26 +902,44 @@ pub fn ambient_sound_system(
         const SMOOTH: f32 = 60.0;
         match gamesound.class {
             SoundType::BackgroundHouse => {
-                let v = (sink.volume().ln() * SMOOTH + house_volume.ln() * health * sanity)
+                let v = (sink.volume().ln() * SMOOTH
+                    + house_volume.ln()
+                        * health
+                        * sanity
+                        * audio_settings.volume_master.as_f32()
+                        * audio_settings.volume_ambient.as_f32())
                     / (SMOOTH + 1.0);
                 sink.set_volume(v.exp());
             }
             SoundType::BackgroundStreet => {
-                let v = (sink.volume().ln() * SMOOTH + street_volume.ln() * health * sanity)
+                let v = (sink.volume().ln() * SMOOTH
+                    + street_volume.ln()
+                        * health
+                        * sanity
+                        * audio_settings.volume_master.as_f32()
+                        * audio_settings.volume_ambient.as_f32())
                     / (SMOOTH + 1.0);
                 sink.set_volume(v.exp());
             }
             SoundType::HeartBeat => {
                 // Handle heartbeat sound Volume based on health
                 let heartbeat_volume = (1.0 - health).powf(0.7) * 0.5 + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0);
+                let v = (sink.volume().ln() * SMOOTH
+                    + heartbeat_volume.ln()
+                        * audio_settings.volume_master.as_f32()
+                        * audio_settings.volume_ambient.as_f32())
+                    / (SMOOTH + 1.0);
                 sink.set_volume(v.exp());
             }
             SoundType::Insane => {
                 // Handle insanity sound Volume based on sanity
                 let insanity_volume =
                     (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.3, 1.0) + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0);
+                let v = (sink.volume().ln() * SMOOTH
+                    + insanity_volume.ln()
+                        * audio_settings.volume_master.as_f32()
+                        * audio_settings.volume_ambient.as_f32())
+                    / (SMOOTH + 1.0);
                 sink.set_volume(v.exp());
             }
         }
