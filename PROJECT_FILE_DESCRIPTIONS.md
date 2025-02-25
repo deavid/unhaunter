@@ -1,7 +1,7 @@
-This is an inex of all files in the project for reference. So if we need to know where's something, this should be enough
+This is an index of all files in the project for reference. So if we need to know where's something, this should be enough
 to guide us on where to look it.
 
-In this guide we talk about an hypothetic "Feature X": This refers to, if we wanted to add a new feature that modifies that
+In this guide we talk about a hypothetical "Feature X": This refers to, if we wanted to add a new feature that modifies that
 file, what it could be. This gives ideas when finding what files are relevant for modification when we need to do something.
 It doesn't exist, and it's just for example purposes.
 
