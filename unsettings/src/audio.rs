@@ -103,9 +103,18 @@ pub enum AudioLevel {
 impl AudioLevel {
     /// Converts the `AudioLevel` to an `f32` volume multiplier.
     ///
-    /// This uses a cubic curve to make the change in volume feel more natural.
+    /// This uses a quadratic curve to make the change in volume feel more natural.
     pub fn as_f32(&self) -> f32 {
-        let v: f32 = match self {
+        let v = self.as_f32_linear();
+
+        v * v
+    }
+
+    /// Converts the `AudioLevel` to an `f32` volume multiplier.
+    ///
+    /// This uses a linear curve.
+    pub fn as_f32_linear(&self) -> f32 {
+        match self {
             AudioLevel::Vol000 => 0.00,
             AudioLevel::Vol010 => 0.10,
             AudioLevel::Vol020 => 0.20,
@@ -117,9 +126,7 @@ impl AudioLevel {
             AudioLevel::Vol080 => 0.80,
             AudioLevel::Vol090 => 0.90,
             AudioLevel::Vol100 => 1.00,
-        };
-
-        v * v * v
+        }
     }
 }
 

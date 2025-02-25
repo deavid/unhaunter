@@ -900,49 +900,30 @@ pub fn ambient_sound_system(
     }
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
-        match gamesound.class {
+        let volume_factor =
+            audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
+        let ln_volume = (sink.volume() / volume_factor + 0.000000001).ln();
+        let v = match gamesound.class {
             SoundType::BackgroundHouse => {
-                let v = (sink.volume().ln() * SMOOTH
-                    + house_volume.ln()
-                        * health
-                        * sanity
-                        * audio_settings.volume_master.as_f32()
-                        * audio_settings.volume_ambient.as_f32())
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + house_volume.ln() * health * sanity) / (SMOOTH + 1.0)
             }
             SoundType::BackgroundStreet => {
-                let v = (sink.volume().ln() * SMOOTH
-                    + street_volume.ln()
-                        * health
-                        * sanity
-                        * audio_settings.volume_master.as_f32()
-                        * audio_settings.volume_ambient.as_f32())
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + street_volume.ln() * health * sanity) / (SMOOTH + 1.0)
             }
             SoundType::HeartBeat => {
                 // Handle heartbeat sound Volume based on health
                 let heartbeat_volume = (1.0 - health).powf(0.7) * 0.5 + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH
-                    + heartbeat_volume.ln()
-                        * audio_settings.volume_master.as_f32()
-                        * audio_settings.volume_ambient.as_f32())
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0)
             }
             SoundType::Insane => {
                 // Handle insanity sound Volume based on sanity
                 let insanity_volume =
                     (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.3, 1.0) + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH
-                    + insanity_volume.ln()
-                        * audio_settings.volume_master.as_f32()
-                        * audio_settings.volume_ambient.as_f32())
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0)
             }
-        }
+        };
+        let new_volume = v.exp() * volume_factor;
+        sink.set_volume(new_volume.clamp(0.00001, 1.0));
     }
     measure.end_ms();
 }
