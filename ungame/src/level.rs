@@ -83,7 +83,6 @@ pub fn load_level_handler(
     mut commands: Commands,
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
-    mut ev_room: EventWriter<RoomChangedEvent>,
     mut p: LoadLevelSystemParam,
     mut ev_level_ready: EventWriter<LevelReadyEvent>,
 ) {
@@ -554,20 +553,22 @@ pub fn load_level_handler(
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
     let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
-    ev_room.send(RoomChangedEvent::init(open_van));
-    ev_level_ready.send(LevelReadyEvent);
+
+    ev_level_ready.send(LevelReadyEvent { open_van });
     warn!("Done: load_level_handler");
 }
 
 fn after_level_ready(
     mut bf: ResMut<BoardData>,
-    ev: EventReader<LevelReadyEvent>,
+    mut ev: EventReader<LevelReadyEvent>,
+    mut ev_room: EventWriter<RoomChangedEvent>,
     mut next_game_state: ResMut<NextState<AppState>>,
 ) {
     if ev.is_empty() {
         return;
     }
     let mut rng = rand::rng();
+    let open_van = ev.read().next().unwrap().open_van;
     next_game_state.set(AppState::InGame);
     // Create temperature field
     let ambient_temp = bf.ambient_temp;
@@ -578,7 +579,7 @@ fn after_level_ready(
         let ambient = ambient_temp + rng.random_range(-10.0..10.0);
         *temperature = ambient;
     }
-
+    ev_room.send(RoomChangedEvent::init(open_van));
     // Smoothen after first initialization so it is not as jumpy.
     warn!(
         "Computing 16x{:?} = {}",

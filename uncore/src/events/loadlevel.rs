@@ -21,4 +21,6 @@ pub struct LevelLoadedEvent {
 }
 
 #[derive(Debug, Clone, Event, Default)]
-pub struct LevelReadyEvent;
+pub struct LevelReadyEvent {
+    pub open_van: bool,
+}
