@@ -886,7 +886,11 @@ pub fn ambient_sound_system(
             }
         })
         .sum();
-    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+    let house_volume = (20.0 / total_vis.max(1.0))
+        .powi(3)
+        .tanh()
+        .clamp(0.00001, 0.9999)
+        * 6.0;
     let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
     // --- Get Player Health and Sanity ---
@@ -901,8 +905,8 @@ pub fn ambient_sound_system(
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
         let volume_factor =
-            audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
-        let ln_volume = (sink.volume() / volume_factor + 0.000000001).ln();
+            2.0 * audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
+        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001).ln();
         let v = match gamesound.class {
             SoundType::BackgroundHouse => {
                 (ln_volume * SMOOTH + house_volume.ln() * health * sanity) / (SMOOTH + 1.0)
@@ -923,7 +927,7 @@ pub fn ambient_sound_system(
             }
         };
         let new_volume = v.exp() * volume_factor;
-        sink.set_volume(new_volume.clamp(0.00001, 1.0));
+        sink.set_volume(new_volume.clamp(0.00001, 10.0));
     }
     measure.end_ms();
 }

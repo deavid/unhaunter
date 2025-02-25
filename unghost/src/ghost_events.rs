@@ -7,6 +7,7 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
+use uncore::events::sound::SoundEvent;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[derive(Debug, Clone)]
@@ -21,7 +22,6 @@ struct FlickerTimer(Timer);
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn trigger_ghost_events(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     q_player: Query<(&Position, &PlayerSprite)>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     // Query for doors, excluding lights
@@ -111,9 +111,11 @@ pub fn trigger_ghost_events(
                             ));
 
                             // Play door slam sound effect
-                            commands
-                                .spawn(AudioPlayer::new(asset_server.load("sounds/door-close.ogg")))
-                                .insert(PlaybackSettings::default());
+                            interactive_stuff.sound_events.send(SoundEvent {
+                                sound_file: "sounds/door-close.ogg".to_string(),
+                                volume: 1.0,
+                                position: Some(*door_position),
+                            });
 
                             ev_bdr.send(BoardDataToRebuild {
                                 lighting: true,

@@ -80,9 +80,8 @@ pub fn sound_playback_system(
                 (sound_event.volume / distance2 * MIN_DIST
                     + sound_event.volume / distance * MIN_DIST)
                     .clamp(0.0, 1.0)
-                    * audio_settings.volume_effects.as_f32()
             }
-            None => sound_event.volume * audio_settings.volume_effects.as_f32(),
+            None => sound_event.volume,
         };
 
         // Spawn an AudioBundle with the adjusted volume
@@ -92,7 +91,11 @@ pub fn sound_playback_system(
             ))
             .insert(PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Despawn,
-                volume: bevy::audio::Volume::new(adjusted_volume),
+                volume: bevy::audio::Volume::new(
+                    adjusted_volume
+                        * audio_settings.volume_effects.as_f32()
+                        * audio_settings.volume_master.as_f32(),
+                ),
                 speed: 1.0,
                 paused: false,
                 spatial: false,

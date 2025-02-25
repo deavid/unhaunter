@@ -5,9 +5,11 @@ use uncore::behavior::component::{Interactive, RoomState};
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::events::roomchanged::InteractionExecutionType;
+use uncore::events::sound::SoundEvent;
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::GameState;
 
+use bevy::ecs::event::EventWriter;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -31,6 +33,8 @@ pub struct InteractiveStuff<'w, 's> {
     /// Used to spawn sound effects and potentially other entities related to
     /// interactions.
     pub commands: Commands<'w, 's>,
+    /// Event writer for sending sound events.
+    pub sound_events: EventWriter<'w, SoundEvent>,
     /// Access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the materials used for rendering map tiles. Used to update tile
@@ -87,18 +91,11 @@ impl InteractiveStuff<'_, '_> {
             }
             if let Some(interactive) = interactive {
                 let sound_file = interactive.sound_for_moving_into_state(behavior);
-                self.commands
-                    .spawn(AudioPlayer::<AudioSource>(
-                        self.asset_server.load(sound_file),
-                    ))
-                    .insert(PlaybackSettings {
-                        mode: bevy::audio::PlaybackMode::Despawn,
-                        volume: bevy::audio::Volume::new(1.0),
-                        speed: 1.0,
-                        paused: false,
-                        spatial: false,
-                        spatial_scale: None,
-                    });
+                self.sound_events.send(SoundEvent {
+                    sound_file,
+                    volume: 1.0,
+                    position: Some(*item_pos),
+                });
             }
             self.game_next_state.set(GameState::Truck);
             return false;
@@ -151,18 +148,11 @@ impl InteractiveStuff<'_, '_> {
             if ietype == InteractionExecutionType::ChangeState {
                 if let Some(interactive) = interactive {
                     let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
-                    self.commands
-                        .spawn(AudioPlayer::<AudioSource>(
-                            self.asset_server.load(sound_file),
-                        ))
-                        .insert(PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::new(1.0),
-                            speed: 1.0,
-                            paused: false,
-                            spatial: false,
-                            spatial_scale: None,
-                        });
+                    self.sound_events.send(SoundEvent {
+                        sound_file,
+                        volume: 1.0,
+                        position: Some(*item_pos),
+                    });
                 }
             }
             return true;
