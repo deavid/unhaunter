@@ -5121,12 +5121,14 @@ name = "untruck"
 version = "0.2.6-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "fastapprox",
  "ordered-float",
  "rand 0.9.0",
  "uncore",
  "ungear",
  "ungearitems",
+ "unsettings",
  "unstd",
 ]
 
