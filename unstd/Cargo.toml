@@ -19,3 +19,4 @@ fastapprox = { workspace = true }
 rand = { workspace = true }
 ordered-float = { workspace = true }
 tiled = { workspace = true }
+ndarray = { workspace = true }

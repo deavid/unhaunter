@@ -5094,6 +5094,7 @@ dependencies = [
  "bevy_framepace",
  "enum-iterator",
  "fastapprox",
+ "ndarray",
  "ordered-float",
  "rand 0.9.0",
  "serde",
