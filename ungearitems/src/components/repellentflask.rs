@@ -141,12 +141,12 @@ impl From<RepellentFlask> for Gear {
 #[derive(Component, Debug, Clone, PartialEq)]
 pub struct Repellent {
     pub class: GhostType,
-    pub life: i32,
+    pub life: f32,
     pub dir: Direction,
 }
 
 impl Repellent {
-    const MAX_LIFE: i32 = 500;
+    const MAX_LIFE: f32 = 30.0;
 
     pub fn new(class: GhostType) -> Self {
         Self {
@@ -157,7 +157,7 @@ impl Repellent {
     }
 
     pub fn life_factor(&self) -> f32 {
-        (self.life as f32) / (Self::MAX_LIFE as f32)
+        self.life / Self::MAX_LIFE
     }
 }
 
@@ -169,10 +169,12 @@ pub fn repellent_update(
     difficulty: Res<CurrentDifficulty>,
     mut pressure_base: Local<Array3<f32>>,
     mut positions: Local<Array3<Vec<Vec3>>>,
+    time: Res<Time>,
 ) {
     let measure = metrics::REPELLENT_UPDATE.time_measure();
 
     let mut rng = rand::rng();
+    let dt = time.delta_secs();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
     if pressure_base.dim() != bf.map_size {
@@ -222,8 +224,8 @@ pub fn repellent_update(
     }
 
     for (mut r_pos, mut rep, mut mapcolor, entity) in &mut qrp {
-        rep.life -= 1;
-        if rep.life < 0 {
+        rep.life -= dt;
+        if rep.life < 0.0 {
             cmd.entity(entity).despawn();
             continue;
         }
@@ -244,7 +246,7 @@ pub fn repellent_update(
             let npos = nb.to_position();
             let vector = rr_pos.delta(npos);
             let dist2 = vector.distance2();
-            let psi = pressure[nb.ndidx()] / (0.2 + dist2);
+            let psi = pressure[nb.ndidx()] / (0.2 + dist2) * 3.0;
 
             total_force.dx += vector.dx * psi;
             total_force.dy += vector.dy * psi;
@@ -253,7 +255,7 @@ pub fn repellent_update(
         for &s_p in positions[ndidx].iter() {
             let dist2 = v_pos.distance_squared(s_p) + 0.1;
             let delta = v_pos - s_p;
-            let force = 2.0 * delta / dist2;
+            let force = 4.0 * delta / dist2;
             total_force.dx += force.x;
             total_force.dy += force.y;
         }
@@ -299,17 +301,17 @@ pub fn repellent_update(
             .ndidx_checked_margin(bf.map_size)
             .is_none()
         {
-            rep.life = 0;
+            rep.life = 0.0;
         }
         for (g_pos, mut ghost) in &mut qgs {
             let dist = g_pos.distance(&r_pos);
             if dist < 1.5 {
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += 1.2 / (dist + 1.0);
+                    ghost.repellent_hits_frame += dt * 183.2 / (dist + 1.0);
                 } else {
-                    ghost.repellent_misses_frame += 1.2 / (dist + 1.0);
+                    ghost.repellent_misses_frame += dt * 183.2 / (dist + 1.0);
                 }
-                rep.life -= 20;
+                rep.life -= 20.0 * dt;
                 // cmd.entity(entity).despawn();
             }
         }
