@@ -122,7 +122,7 @@ pub fn spawn_miasma(
             miasma_sprite.despawn = true;
             continue;
         };
-        miasma_sprite.life -= dt / 4.0;
+        miasma_sprite.life -= dt / 10.0;
         if miasma_sprite.life < 0.02 {
             miasma_sprite.despawn = true;
             continue;

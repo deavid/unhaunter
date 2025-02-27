@@ -835,7 +835,7 @@ pub fn apply_lighting(
                 let miasma_visibility = average_pressure.max(0.0).sqrt()
                     * miasma_config.miasma_visibility_factor
                     * miasma_sprite.time_alive.clamp(0.0, 1.0)
-                    * miasma_sprite.life.clamp(0.0, 1.0)
+                    * (miasma_sprite.life / 2.0).clamp(0.0, 1.0)
                     * (ld.magnitude().atan() / 1.2 + 0.25);
 
                 dst_color = dst_color
