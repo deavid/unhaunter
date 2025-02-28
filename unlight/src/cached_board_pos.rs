@@ -1,4 +1,6 @@
+use ndarray::{Array2, ArrayView2, s};
 use std::f32::consts::PI;
+use std::ops::Range;
 
 use uncore::components::board::boardposition::BoardPosition;
 
@@ -19,6 +21,11 @@ pub struct CachedBoardPos {
 
     /// Cache of angle ranges (min, max) for shadow casting from each position
     pub angle_range: [[(i64, i64); Self::SZ]; Self::SZ],
+
+    // New ndarray caches copied from the above arrays.
+    pub dist_array: Array2<f32>,
+    pub angle_array: Array2<usize>,
+    pub angle_range_array: Array2<(i64, i64)>,
 }
 
 impl CachedBoardPos {
@@ -39,14 +46,40 @@ impl CachedBoardPos {
     /// Initializes the cache by computing all distances and angles.
     /// This is computationally expensive but only needs to be done once.
     pub fn new() -> Self {
-        let mut r = Self {
+        let mut cp = Self {
             dist: [[0.0; Self::SZ]; Self::SZ],
             angle: [[0; Self::SZ]; Self::SZ],
             angle_range: [[(0, 0); Self::SZ]; Self::SZ],
+            // Initialize with zero arrays; we'll fill them after computing the cache.
+            dist_array: Array2::<f32>::zeros((Self::SZ, Self::SZ)),
+            angle_array: Array2::<usize>::zeros((Self::SZ, Self::SZ)),
+            angle_range_array: Array2::from_elem((Self::SZ, Self::SZ), (0, 0)),
         };
-        r.compute_angle();
-        r.compute_dist();
-        r
+        cp.compute_angle();
+        cp.compute_dist();
+        // Build the ndarray copies from the computed arrays.
+        cp.dist_array = Array2::from_shape_vec(
+            (Self::SZ, Self::SZ),
+            cp.dist.iter().flat_map(|row| row.iter().cloned()).collect(),
+        )
+        .expect("Failed to create dist_array");
+        cp.angle_array = Array2::from_shape_vec(
+            (Self::SZ, Self::SZ),
+            cp.angle
+                .iter()
+                .flat_map(|row| row.iter().cloned())
+                .collect(),
+        )
+        .expect("Failed to create angle_array");
+        cp.angle_range_array = Array2::from_shape_vec(
+            (Self::SZ, Self::SZ),
+            cp.angle_range
+                .iter()
+                .flat_map(|row| row.iter().cloned())
+                .collect(),
+        )
+        .expect("Failed to create angle_range_array");
+        cp
     }
 
     /// Computes the Euclidean distance from the center to each position
@@ -181,8 +214,61 @@ impl CachedBoardPos {
         // self.angle_range[x][y]
         unsafe { *self.angle_range.get_unchecked(x).get_unchecked(y) }
     }
-}
 
+    /// Given a root board position and a board region (in board coordinates),
+    /// return the relative index ranges into the cache.
+    ///
+    /// The cached arrays are indexed by (other.x - root.x + CENTER, other.y - root.y + CENTER).
+    pub fn relative_ranges(
+        &self,
+        root: &BoardPosition,
+        board_x: Range<usize>,
+        board_y: Range<usize>,
+    ) -> (Range<usize>, Range<usize>) {
+        let start_x = board_x.start as i64 - root.x + Self::CENTER;
+        let end_x = board_x.end as i64 - root.x + Self::CENTER;
+        let start_y = board_y.start as i64 - root.y + Self::CENTER;
+        let end_y = board_y.end as i64 - root.y + Self::CENTER;
+        (
+            start_x as usize..end_x as usize,
+            start_y as usize..end_y as usize,
+        )
+    }
+
+    /// Returns a view into the distance cache for a given relative region.
+    pub fn dist_slice<'a>(
+        &'a self,
+        root: &BoardPosition,
+        board_x: Range<usize>,
+        board_y: Range<usize>,
+    ) -> ArrayView2<'a, f32> {
+        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
+        self.dist_array.slice(s![rx, ry])
+    }
+
+    /// Returns a view into the angle cache for a given relative region.
+    pub fn angle_slice<'a>(
+        &'a self,
+        root: &BoardPosition,
+        board_x: Range<usize>,
+        board_y: Range<usize>,
+    ) -> ArrayView2<'a, usize> {
+        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
+        self.angle_array.slice(s![rx, ry])
+    }
+
+    /// Returns a view into the angle_range cache for a given relative region.
+    pub fn angle_range_slice<'a>(
+        &'a self,
+        root: &BoardPosition,
+        board_x: Range<usize>,
+        board_y: Range<usize>,
+    ) -> ArrayView2<'a, (i64, i64)> {
+        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
+        self.angle_range_array.slice(s![rx, ry])
+    }
+
+}
 impl Default for CachedBoardPos {
     /// Creates a new instance with default values
     ///

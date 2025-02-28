@@ -122,33 +122,44 @@ pub fn rebuild_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
                 src_lux /= 1.01;
             }
 
-            // let shadows_time = Instant::now(); This takes time to process:
+            // let shadows_time = Instant::now();
             let nbors = root_pos.iter_xy_neighbors(size, bf.map_size);
-
-            // reset the light value for this light, so we don't count double.
             lfs[root_ndidx].lux -= src_lux;
             let mut shadow_dist = [(size + 1) as f32; CachedBoardPos::TAU_I];
 
             let time1 = bevy::utils::Instant::now();
 
-            // Compute shadows
-            for pillar_pos in nbors.clone() {
-                // 60% of the time spent in compute shadows is obtaining this:
-                let lf = &lfs[pillar_pos.ndidx()];
+            // Instead of iterating over nbors.clone(), compute a contiguous region around root_pos.
+            let root_x = root_ndidx.0;
+            let root_y = root_ndidx.1;
+            let board_x = root_x.saturating_sub(size as usize)
+                ..(root_x + size as usize + 1).min(bf.map_size.0);
+            let board_y = root_y.saturating_sub(size as usize)
+                ..(root_y + size as usize + 1).min(bf.map_size.1);
 
-                // let lf = unsafe { lfs.get_pos_unchecked(pillar_pos) }; t_x += lf.lux; continue;
-                let consider_opaque = lf.transmissivity < 0.5;
-                if !consider_opaque {
-                    continue;
-                }
-                let min_dist = cbp.bpos_dist(&root_pos, &pillar_pos);
-                let angle = cbp.bpos_angle(&root_pos, &pillar_pos);
-                let angle_range = cbp.bpos_angle_range(&root_pos, &pillar_pos);
-                for d in angle_range.0..=angle_range.1 {
-                    let ang = (angle as i64 + d).rem_euclid(CachedBoardPos::TAU_I as i64) as usize;
-                    shadow_dist[ang] = shadow_dist[ang].min(min_dist);
-                }
-            }
+            // Create a view into the light-field for this window (make sure to choose the correct z value)
+            let window = lfs.slice(ndarray::s![board_x.clone(), board_y.clone(), root_ndidx.2]);
+
+            // Now get the cache slices
+            let dist_view = cbp.dist_slice(&root_pos, board_x.clone(), board_y.clone());
+            let angle_view = cbp.angle_slice(&root_pos, board_x.clone(), board_y.clone());
+            let angle_range_view = cbp.angle_range_slice(&root_pos, board_x, board_y);
+
+            // Then iterate over the indices of the window:
+            ndarray::Zip::indexed(&window)
+                .and(&dist_view)
+                .and(&angle_view)
+                .for_each(|(i, j), lf, &cached_dist, &cached_angle| {
+                    if lf.transmissivity >= 0.5 {
+                        return;
+                    }
+                    let angle_range = angle_range_view[(i, j)];
+                    for d in angle_range.0..=angle_range.1 {
+                        let ang = (cached_angle as i64 + d).rem_euclid(CachedBoardPos::TAU_I as i64)
+                            as usize;
+                        shadow_dist[ang] = shadow_dist[ang].min(cached_dist);
+                    }
+                });
             total_time1 += time1.elapsed();
 
             // shadows_time_total += shadows_time.elapsed(); FIXME: Possibly we want to smooth
