@@ -1,14 +1,14 @@
-use std::time::Duration;
-
+use crate::cached_board_pos::CachedBoardPos;
 use bevy::prelude::*;
 use bevy::utils::Instant;
 use fastapprox::faster;
 use ndarray::Array3;
+use std::time::Duration;
 use uncore::{
     behavior::Behavior,
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
-    types::board::{cached_board_pos::CachedBoardPos, fielddata::LightFieldData},
+    types::board::fielddata::LightFieldData,
 };
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors.
