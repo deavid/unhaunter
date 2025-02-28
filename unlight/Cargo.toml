@@ -20,3 +20,4 @@ rand = { workspace = true }
 ndarray = { workspace = true }
 fastapprox = { workspace = true }
 bevy-persistent = { workspace = true }
+ordered-float = { workspace = true }

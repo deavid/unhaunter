@@ -3,7 +3,8 @@ use uncore::behavior::Behavior;
 use uncore::components::board::position::Position;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::resources::board_data::BoardData;
-use unstd::plugins::board::{rebuild_collision_data, rebuild_lighting_field};
+use unlight::lighting::rebuild_lighting_field;
+use unstd::plugins::board::rebuild_collision_data;
 
 /// Updates the board field based on incoming events and rebuilds collision and lighting data if needed.
 ///

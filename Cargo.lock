@@ -4851,6 +4851,7 @@ dependencies = [
  "uncore",
  "ungear",
  "ungearitems",
+ "unlight",
  "unsettings",
  "unstd",
 ]
@@ -4991,6 +4992,7 @@ dependencies = [
  "bevy-persistent",
  "fastapprox",
  "ndarray",
+ "ordered-float",
  "rand 0.9.0",
  "uncore",
  "unfog",
