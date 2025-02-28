@@ -163,6 +163,7 @@ pub fn rebuild_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
         let pos = pos.to_board_position();
         lfs[pos.ndidx()] = LightFieldData {
             lux: behavior.p.light.emmisivity_lumens() + def_light.lux,
+            color: behavior.p.light.color(),
             transmissivity: behavior.p.light.transmissivity_factor() * def_light.transmissivity
                 + 0.0001,
             additional: def_light

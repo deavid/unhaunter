@@ -235,6 +235,10 @@ impl Light {
         }
     }
 
+    pub fn color(&self) -> (f32, f32, f32) {
+        (1.0, 1.0, 1.0)
+    }
+
     /// This represents if a light on the map is emitting visible light or other types.
     pub fn additional_data(&self) -> LightData {
         LightData::UNIT_VISIBLE
