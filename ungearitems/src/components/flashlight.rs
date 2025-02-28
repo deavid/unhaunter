@@ -1,3 +1,4 @@
+use uncore::random_seed;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position, types::gear::equipmentposition::EquipmentPosition,
@@ -56,7 +57,7 @@ impl GearUsable for Flashlight {
         self.frame_counter += 1;
         self.frame_counter %= 210;
         if self.frame_counter % 5 == 0 {
-            self.rand = rand::rng().random_range(0..12);
+            self.rand = random_seed::rng().random_range(0..12);
             const HS_MASS: f32 = 2.0;
             self.heatsink_temp = (self.heatsink_temp * HS_MASS + self.inner_temp) / (HS_MASS + 1.0);
         }

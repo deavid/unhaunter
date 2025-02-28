@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::prelude::*;
 use rand::Rng as _;
 
-use crate::types::ghost::types::GhostType;
+use crate::{random_seed, types::ghost::types::GhostType};
 
 use super::board::{boardposition::BoardPosition, position::Position};
 
@@ -62,7 +62,7 @@ impl GhostSprite {
     /// The ghost's initial mood, hunting state, and other attributes are set to
     /// default values.
     pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         let idx = rng.random_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());

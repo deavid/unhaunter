@@ -1,3 +1,4 @@
+use uncore::random_seed;
 use uncore::systemparam::gear_stuff::GearStuff;
 
 use uncore::{
@@ -108,7 +109,7 @@ impl GearUsable for EMFMeter {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         self.frame_counter += 1;
         if self.frame_counter > 65413 {
             self.frame_counter = 0;

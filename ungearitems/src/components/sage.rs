@@ -16,6 +16,7 @@ use uncore::{
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
 };
+use uncore::random_seed;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -80,7 +81,7 @@ impl GearUsable for SageBundleData {
                 self.consumed = true;
             } else if (self.smoke_produced as f32) < self.burn_timer.elapsed_secs() * 3.0 {
                 let mut pos = *pos;
-                let mut rng = rand::rng();
+                let mut rng = random_seed::rng();
                 pos.z += 0.2;
                 pos.x += rng.random_range(-0.2..0.2);
                 pos.y += rng.random_range(-0.2..0.2);

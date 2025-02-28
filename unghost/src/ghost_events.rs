@@ -9,6 +9,7 @@ use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
 use uncore::events::sound::SoundEvent;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uncore::random_seed;
 
 #[derive(Debug, Clone)]
 pub enum GhostEvent {
@@ -44,7 +45,7 @@ pub fn trigger_ghost_events(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let roomdb = interactive_stuff.roomdb.clone();
 
     // Iterate through players inside the house

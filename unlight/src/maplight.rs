@@ -53,6 +53,7 @@ pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
 
 use crate::metrics::{AMBIENT_SOUND_SYSTEM, APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
+use uncore::random_seed;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.
@@ -232,7 +233,7 @@ pub fn apply_lighting(
 ) {
     let measure = APPLY_LIGHTING.time_measure();
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();

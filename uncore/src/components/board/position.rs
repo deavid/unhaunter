@@ -1,3 +1,5 @@
+use crate::random_seed;
+
 use super::{
     EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, boardposition::BoardPosition,
     direction::Direction,
@@ -47,7 +49,7 @@ impl Position {
     }
 
     pub fn with_random(&self, range: f32) -> Self {
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         Self {
             x: self.x + rng.random_range(-range..range),
             y: self.y + rng.random_range(-range..range),

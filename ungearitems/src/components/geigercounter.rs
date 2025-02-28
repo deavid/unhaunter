@@ -1,3 +1,4 @@
+use uncore::random_seed;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position,
@@ -58,7 +59,7 @@ impl GearUsable for GeigerCounter {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;

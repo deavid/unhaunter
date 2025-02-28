@@ -13,6 +13,7 @@ use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
@@ -69,7 +70,7 @@ fn ghost_movement(
 ) {
     let measure = GHOST_MOVEMENT.time_measure();
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let dt = time.delta_secs() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
@@ -150,7 +151,7 @@ fn ghost_movement(
                         *ppos
                     };
                     ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
-                    let mut rng = rand::rng();
+                    let mut rng = random_seed::rng();
                     let random_offset = Vec2::new(
                         rng.random_range(-search_radius..search_radius),
                         rng.random_range(-search_radius..search_radius),
@@ -265,7 +266,7 @@ impl RoarType {
             ],
             RoarType::None => vec![""],
         };
-        let random_roar = roar_sounds[rand::rng().random_range(0..roar_sounds.len())];
+        let random_roar = roar_sounds[random_seed::rng().random_range(0..roar_sounds.len())];
         random_roar.to_string()
     }
 
@@ -307,7 +308,7 @@ fn ghost_enrage(
             ghost.salty_effect_timer.tick(time.delta());
             ghost.salty_trace_spawn_timer.tick(time.delta());
             if ghost.salty_trace_spawn_timer.just_finished() {
-                if rand::rng().random_bool(0.5) {
+                if random_seed::rng().random_bool(0.5) {
                     // 50% chance to spawn --- Find Valid Floor Tile ---
                     let ghost_board_position = ghost_position.to_board_position();
                     let mut valid_tile = None;
@@ -475,7 +476,7 @@ fn spawn_salty_trace(
     tile_position: BoardPosition,
 ) {
     let mut pos = tile_position.to_position();
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     pos.x += rng.random_range(-0.2..0.2);
     pos.y += rng.random_range(-0.2..0.2);
     commands
@@ -512,7 +513,7 @@ fn ghost_fade_out_system(
     )>,
     mut gs: GearStuff,
 ) {
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
         fade_out.timer.tick(time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();

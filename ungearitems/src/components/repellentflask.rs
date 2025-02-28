@@ -11,6 +11,7 @@ use uncore::{
     difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
+use uncore::random_seed;
 
 use crate::metrics;
 
@@ -78,7 +79,7 @@ impl GearUsable for RepellentFlask {
         if self.qty == Self::MAX_QTY {
             gs.summary.repellent_used_amt += 1;
         }
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         if rng.random_range(0.0..1.0) > 0.5 {
             // Reduce the amount of particles emitted. Also reduces the speed of depletion.
             return;
@@ -173,7 +174,7 @@ pub fn repellent_update(
 ) {
     let measure = metrics::REPELLENT_UPDATE.time_measure();
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let dt = time.delta_secs();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;

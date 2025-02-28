@@ -13,6 +13,7 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::events::loadlevel::LevelReadyEvent;
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
@@ -39,7 +40,7 @@ pub fn initialize_miasma(
 
     board_data.miasma.room_modifiers.clear();
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let collision_field = board_data.collision_field.clone();
 
     for (p, cfield) in collision_field.indexed_iter() {
@@ -81,7 +82,7 @@ pub fn spawn_miasma(
     const THRESHOLD: f32 = 0.01;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let dt = time.delta_secs();
 
     if board_data.map_size.0 == 0 {
@@ -299,9 +300,7 @@ pub fn update_miasma(
 ) {
     let measure = metrics::UPDATE_MIASMA.time_measure();
 
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
-    let mut rng = SmallRng::from_rng(&mut rand::rng());
+    let mut rng = random_seed::rng();
     let mut arr = [0u8; 97];
     rng.fill(&mut arr);
 

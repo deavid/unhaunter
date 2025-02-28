@@ -39,6 +39,7 @@ use uncore::controlkeys::ControlKeys;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
@@ -419,7 +420,7 @@ pub fn load_level_handler(
 
     use rand::seq::SliceRandom;
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
@@ -451,7 +452,7 @@ pub fn load_level_handler(
             });
         }
     }
-    player_spawn_points.shuffle(&mut rand::rng());
+    player_spawn_points.shuffle(&mut random_seed::rng());
     if player_spawn_points.is_empty() {
         error!(
             "No player spawn points found!! - that will probably not display the map because the player will be out of bounds"
@@ -512,7 +513,7 @@ pub fn load_level_handler(
     // Timer::from_seconds(0.20, TimerMode::Repeating),
     // OldCharacterAnimation::Walking.animation_range(), ));
     p.bf.evidences.clear();
-    ghost_spawn_points.shuffle(&mut rand::rng());
+    ghost_spawn_points.shuffle(&mut random_seed::rng());
     if ghost_spawn_points.is_empty() {
         error!(
             "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
@@ -567,7 +568,7 @@ fn after_level_ready(
     if ev.is_empty() {
         return;
     }
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let open_van = ev.read().next().unwrap().open_van;
     next_game_state.set(AppState::InGame);
     // Create temperature field

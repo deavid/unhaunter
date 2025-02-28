@@ -14,6 +14,7 @@ use uncore::resources::roomdb::RoomDB;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
 use uncore::{celsius_to_kelvin, kelvin_to_celsius};
+use uncore::random_seed;
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -66,7 +67,7 @@ impl GearUsable for Thermometer {
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify +
         // distintive icons.
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.7;
@@ -144,10 +145,7 @@ pub fn temperature_update(
         }
     }
 
-    use rand::SeedableRng;
-    use rand::rngs::SmallRng;
-
-    let mut rng = SmallRng::from_os_rng();
+    let mut rng = random_seed::rng();
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
         .indexed_iter()

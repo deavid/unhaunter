@@ -10,6 +10,7 @@ use uncore::{
     resources::{board_data::BoardData, roomdb::RoomDB},
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
+use uncore::random_seed;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -29,7 +30,7 @@ impl GearUsable for Recorder {
         if !self.enabled {
             return GearSpriteID::RecorderOff;
         }
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         let f = rng.random_range(0.5..2.0);
         let s = self.sound * f;
         if s < 5.0 {
@@ -75,7 +76,7 @@ impl GearUsable for Recorder {
     }
 
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         self.display_secs_since_last_update += gs.time.delta_secs();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
@@ -151,7 +152,7 @@ pub fn sound_update(
 ) {
     let measure = metrics::SOUND_UPDATE.time_measure();
 
-    let mut rng = rand::rng();
+    let mut rng = random_seed::rng();
     let gn = rng.random_range(0..30_u32);
     if gn == 0 {
         // Ghost talk once in a while

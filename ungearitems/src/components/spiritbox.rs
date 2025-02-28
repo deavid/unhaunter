@@ -1,10 +1,11 @@
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::{
     components::board::position::Position,
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
+use uncore::random_seed;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct SpiritBox {
@@ -67,7 +68,7 @@ impl GearUsable for SpiritBox {
         if !self.enabled {
             return;
         }
-        let mut rng = rand::rng();
+        let mut rng = random_seed::rng();
         const K: f32 = 0.5;
         let pos = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),

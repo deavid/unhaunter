@@ -29,7 +29,11 @@ license = "Apache-2.0"
 authors = ["David Martínez Martí <deavidsedice@gmail.com>"]
 
 [workspace.dependencies]
-rand = { version = "0.9", features = ["small_rng"] }
+rand = { version = "0.9", default-features = false, features = [
+    "small_rng",
+    "alloc",
+    "std_rng",
+] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -44,7 +48,7 @@ ordered-float = { version = "5.0", features = ["serde"] }
 hierarchical_pathfinding = "0.5"
 walkdir = "2.5"
 glob = "0.3"
-tiled = { version = "0.13", features = ["wasm"] }
+tiled = { version = "0.14", features = ["wasm"] }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
 itertools = "0.14.0"
