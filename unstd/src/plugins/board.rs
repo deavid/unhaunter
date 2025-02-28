@@ -13,7 +13,6 @@ use ndarray::Array3;
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
-use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::metric_recorder::SendMetric;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
@@ -58,9 +57,7 @@ impl Plugin for UnhaunterBoardPlugin {
             .init_resource::<VisibilityData>()
             .init_resource::<SpriteDB>()
             .init_resource::<RoomDB>()
-            .add_systems(Update, apply_perspective)
-            .add_systems(PostUpdate, boardfield_update)
-            .add_event::<BoardDataToRebuild>();
+            .add_systems(Update, apply_perspective);
         app.register_diagnostic(Diagnostic::new(APPLY_PERSPECTIVE).with_suffix("ms"));
     }
 }
@@ -96,45 +93,6 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
             see_through: behavior.p.light.see_through,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
-    }
-}
-
-/// Updates the board field based on incoming events and rebuilds collision and lighting data if needed.
-///
-/// # Arguments
-///
-/// * `bf` - A mutable reference to the `BoardData` resource.
-/// * `ev_bdr` - An event reader for `BoardDataToRebuild` events.
-/// * `qt` - A query for entities with `Position` and `Behavior` components.
-pub fn boardfield_update(
-    mut bf: ResMut<BoardData>,
-    mut ev_bdr: EventReader<BoardDataToRebuild>,
-    qt: Query<(&Position, &Behavior)>,
-) {
-    if ev_bdr.is_empty() {
-        return;
-    }
-
-    // Here we will recreate the field (if needed? - not sure how to detect that) ...
-    // maybe add a timer since last update.
-    let mut bdr = BoardDataToRebuild::default();
-
-    // Merge all the incoming events into a single one.
-    for b in ev_bdr.read() {
-        if b.collision {
-            bdr.collision = true;
-        }
-        if b.lighting {
-            bdr.lighting = true;
-        }
-    }
-
-    if bdr.collision {
-        rebuild_collision_data(&mut bf, &qt);
-    }
-
-    if bdr.lighting {
-        rebuild_lighting_field(&mut bf, &qt);
     }
 }
 

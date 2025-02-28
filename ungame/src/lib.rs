@@ -6,3 +6,4 @@ pub mod plugin;
 pub mod roomchanged;
 pub mod systems;
 pub mod ui;
+pub mod boardfield_update;
