@@ -1,18 +1,20 @@
+use crate::{
+    celsius_to_kelvin,
+    components::board::{boardposition::BoardPosition, position::Position},
+    types::{
+        board::{
+            fielddata::{CollisionFieldData, LightFieldData},
+            prebaked_lighting_data::PrebakedLightingData,
+        },
+        evidence::Evidence,
+        miasma::MiasmaGrid,
+    },
+};
 use bevy::{
     prelude::*,
     utils::{HashMap, HashSet},
 };
 use ndarray::Array3;
-
-use crate::{
-    celsius_to_kelvin,
-    components::board::{boardposition::BoardPosition, position::Position},
-    types::{
-        board::fielddata::{CollisionFieldData, LightFieldData},
-        evidence::Evidence,
-        miasma::MiasmaGrid,
-    },
-};
 
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
@@ -31,6 +33,9 @@ pub struct BoardData {
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
     pub evidences: HashSet<Evidence>,
+
+    // New prebaked lighting field.
+    pub prebaked_lighting: Array3<PrebakedLightingData>,
 }
 
 impl FromWorld for BoardData {
@@ -52,6 +57,7 @@ impl FromWorld for BoardData {
             breach_pos: Position::new_i64(0, 0, 0),
             miasma: MiasmaGrid::default(),
             map_entity_field: Array3::default(map_size),
+            prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
         }
     }
 }

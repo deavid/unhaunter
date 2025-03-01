@@ -1,3 +1,5 @@
+use crate::behavior::Orientation;
+
 use super::light::LightData;
 
 #[derive(Clone, Debug)]
@@ -24,4 +26,5 @@ pub struct CollisionFieldData {
     pub player_free: bool,
     pub ghost_free: bool,
     pub see_through: bool,
+    pub wall_orientation: Orientation,
 }

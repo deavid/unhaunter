@@ -51,10 +51,12 @@ use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
+use unlight::lighting::prebake_lighting_field;
 use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
+use unstd::plugins::board::rebuild_collision_data;
 use unstd::tiledmap::{AtlasData, MapTileSetDb};
 
 #[derive(SystemParam)]
@@ -661,10 +663,27 @@ fn process_pre_meshes(
     }
 }
 
+pub fn load_map_add_prebaked_lighting(
+    mut bf: ResMut<BoardData>,
+    qt: Query<(&Position, &Behavior)>,
+) {
+    // Ensure the collision field is up to date. It might have not been loaded yet.
+    rebuild_collision_data(&mut bf, &qt);
+    // Call the prebaking function once the map and entities are loaded
+    prebake_lighting_field(&mut bf, &qt);
+
+    // You might want to log that prebaking is complete
+    info!("Map loaded with prebaked lighting data");
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
         .add_event::<LevelLoadedEvent>()
         .add_event::<LevelReadyEvent>()
         .add_systems(PostUpdate, load_level_handler)
-        .add_systems(Update, (process_pre_meshes, after_level_ready));
+        .add_systems(Update, (process_pre_meshes, after_level_ready))
+        .add_systems(
+            Update,
+            load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>),
+        );
 }

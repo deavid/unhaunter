@@ -5,7 +5,7 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
-use uncore::behavior::Behavior;
+use uncore::behavior::{Behavior, Orientation};
 use uncore::components::board::position::Position;
 use uncore::metric_recorder::SendMetric;
 use uncore::resources::roomdb::RoomDB;
@@ -71,16 +71,20 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
         let colfd = CollisionFieldData {
             player_free: true,
             ghost_free: true,
-            see_through: false,
+            see_through: true,
+            wall_orientation: Orientation::None,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }
     for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
         let bpos = pos.to_board_position();
+        let wall_orientation = behavior.orientation();
+
         let colfd = CollisionFieldData {
             player_free: false,
             ghost_free: !behavior.p.movement.ghost_collision,
             see_through: behavior.p.light.see_through,
+            wall_orientation,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }

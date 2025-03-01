@@ -98,7 +98,7 @@ impl Behavior {
         if !self.p.light.opaque {
             return Orientation::None;
         }
-        self.cfg.orientation.clone()
+        self.cfg.orientation
     }
 
     /// Amount of "watts" of heat poured into the environment
@@ -141,6 +141,10 @@ impl Behavior {
 
     pub fn can_emit_light(&self) -> bool {
         self.p.light.emission_power.into_inner() > 1.0
+    }
+
+    pub fn orientation(&self) -> Orientation {
+        self.cfg.orientation
     }
 }
 
@@ -295,7 +299,7 @@ pub enum Class {
 
 impl AutoSerialize for Class {}
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub enum Orientation {
     XAxis,
     YAxis,
@@ -461,7 +465,7 @@ impl SpriteConfig {
         let cvo_key = SpriteCVOKey {
             class: class.clone(),
             variant: variant.clone(),
-            orientation: orientation.clone(),
+            orientation,
         };
         Ok(SpriteConfig {
             class,
