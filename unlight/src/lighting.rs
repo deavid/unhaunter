@@ -1,5 +1,8 @@
 use crate::cached_board_pos::CachedBoardPos;
-use bevy::{prelude::*, utils::Instant};
+use bevy::{
+    prelude::*,
+    utils::{HashMap, HashSet, Instant},
+};
 use fastapprox::faster;
 use ndarray::Array3;
 use std::{collections::VecDeque, time::Duration};
@@ -9,7 +12,10 @@ use uncore::{
     resources::board_data::BoardData,
     types::board::{
         fielddata::LightFieldData,
-        prebaked_lighting_data::{LightInfo, PrebakedLightingData},
+        prebaked_lighting_data::{
+            LightInfo, PendingPropagation, PrebakedLightingData, PropagationDirection,
+            SourceContribution,
+        },
     },
 };
 
@@ -251,87 +257,190 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
     // Create a new light field with default values
     let mut lfs = Array3::from_elem(bf.map_size, LightFieldData::default());
 
-    // Collect dynamic light sources that might have changed since prebake
-    // (like switched-on lights or newly opened doors)
-    let mut dynamic_light_count = 0;
+    // First, we need to determine which light sources are currently active
+    // Create a set of active source IDs
+    let mut active_source_ids = HashSet::new();
+
+    // Track dynamic lights by collecting them from entities
     for (pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
         let idx = board_pos.ndidx();
 
-        // Add any dynamic light sources to our light field
-        let lux = behavior.p.light.emmisivity_lumens();
-        if lux > 0.0 {
-            dynamic_light_count += 1;
-            lfs[idx] = LightFieldData {
-                lux,
-                color: behavior.p.light.color(),
-                transmissivity: behavior.p.light.transmissivity_factor(),
-                additional: behavior.p.light.additional_data(),
-            };
+        // Check if this tile has a static light source in prebaked data
+        let prebaked_data = &bf.prebaked_lighting[idx];
+        if prebaked_data.light_info.is_source {
+            // Check if the light is currently on
+            let is_on = behavior.p.light.emmisivity_lumens() > 0.0;
+            if is_on {
+                // Add this light source ID to the active set
+                active_source_ids.insert(prebaked_data.light_info.source_id);
+            }
         }
     }
-    info!("Dynamic light sources found: {}", dynamic_light_count);
 
-    // Create a visited set to track which tiles have been processed
-    // We'll use this to prevent duplicate work and handle wave collisions
-    let mut visited = Array3::from_elem(bf.map_size, false);
+    info!(
+        "Active light sources: {}/{}",
+        active_source_ids.len(),
+        bf.prebaked_lighting
+            .iter()
+            .filter(|d| d.light_info.is_source)
+            .count()
+    );
 
-    // Queue for BFS processing
+    // Queue for BFS processing with (position, source_id, remaining_distance, current_lux, color)
     let mut queue = VecDeque::new();
 
-    // Count seeds from prebaked data
-    let mut seed_count = 0;
+    // Visited tracking - we'll track positions that have been visited by any light
+    let mut visited = Array3::from_elem(bf.map_size, false);
 
-    // Seed the queue with all light sources (based on prebaked data)
+    // Apply initial light contributions from active sources
+    let mut initial_tiles_lit = 0;
+
+    // First pass: Apply prebaked contributions for all active light sources
     for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
-        if prebaked_data.light_info.is_source {
-            seed_count += 1;
-            let pos = BoardPosition {
-                x: i as i64,
-                y: j as i64,
-                z: k as i64,
+        let pos_idx = (i, j, k);
+        let mut total_lux = 0.0;
+        let mut weighted_color = (0.0, 0.0, 0.0);
+
+        // Apply contributions from all active sources
+        for (source_id, contribution) in &prebaked_data.source_contributions {
+            if active_source_ids.contains(source_id) {
+                total_lux += contribution.lux;
+                weighted_color.0 += contribution.color.0 * contribution.lux;
+                weighted_color.1 += contribution.color.1 * contribution.lux;
+                weighted_color.2 += contribution.color.2 * contribution.lux;
+            }
+        }
+
+        // If we have any light, update the light field
+        if total_lux > 0.0 {
+            initial_tiles_lit += 1;
+
+            // Normalize the color based on total lux
+            let color = if total_lux > 0.0 {
+                (
+                    weighted_color.0 / total_lux,
+                    weighted_color.1 / total_lux,
+                    weighted_color.2 / total_lux,
+                )
+            } else {
+                (1.0, 1.0, 1.0)
             };
 
-            // Add the light source to the BFS queue with distance and lux
-            queue.push_back((pos.clone(), 30.0, prebaked_data.light_info.lux));
-
-            // Update the light field with prebaked source data
-            lfs[pos.ndidx()] = LightFieldData {
-                lux: prebaked_data.light_info.lux,
-                color: prebaked_data.light_info.color,
+            // Set the light field data
+            lfs[pos_idx] = LightFieldData {
+                lux: total_lux,
+                color,
                 transmissivity: prebaked_data.light_info.transmissivity,
                 ..Default::default()
             };
-
-            // Mark as visited
-            visited[pos.ndidx()] = true;
         }
     }
-    info!("Light sources seeded from prebaked data: {}", seed_count);
 
-    if seed_count == 0 {
-        warn!("No light sources found in prebaked data! Map will be dark.");
-    }
+    info!(
+        "Initial light application: {} tiles lit from prebaked sources",
+        initial_tiles_lit
+    );
 
-    // Define directions for 4-way connectivity
+    // Second pass: Check for continuation points where doors are now open
+    // These are points that were blocked during prebaking but are now unblocked
+    let mut continuation_points_processed = 0;
+
     let directions = [
-        // North (+Y)
-        (0, 1, 0),
-        // East (+X)
-        (1, 0, 0),
-        // South (-Y)
-        (0, -1, 0),
-        // West (-X)
-        (-1, 0, 0),
+        (0, 1, 0, PropagationDirection::North),
+        (1, 0, 0, PropagationDirection::East),
+        (0, -1, 0, PropagationDirection::South),
+        (-1, 0, 0, PropagationDirection::West),
     ];
 
-    // Track propagation statistics
-    let mut propagated_light_count = 0;
-    let mut max_distance = ordered_float::OrderedFloat(0.0);
-    let mut total_tiles_lit = 0;
+    for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
+        // Skip if not a continuation point
+        if !prebaked_data.is_continuation_point {
+            continue;
+        }
 
-    // BFS processing - extend light waves in all directions
-    while let Some((pos, remaining_distance, current_lux)) = queue.pop_front() {
+        // Check if this point has any pending propagations
+        if prebaked_data.pending_propagations.is_empty() {
+            continue;
+        }
+
+        // Get current collision data
+        let pos_idx = (i, j, k);
+        let collision = &bf.collision_field[pos_idx];
+
+        // If this tile is now see_through (e.g., an open door), process the pending propagations
+        if collision.see_through {
+            continuation_points_processed += 1;
+
+            // Process each pending propagation
+            for pending in &prebaked_data.pending_propagations {
+                // Skip if this source isn't active
+                if !active_source_ids.contains(&pending.source_id) {
+                    continue;
+                }
+
+                // Add to the BFS queue to continue propagation
+                let pos = BoardPosition {
+                    x: i as i64,
+                    y: j as i64,
+                    z: k as i64,
+                };
+
+                // Get the direction to propagate
+                let (dx, dy, dz) = match pending.direction {
+                    PropagationDirection::North => (0, 1, 0),
+                    PropagationDirection::East => (1, 0, 0),
+                    PropagationDirection::South => (0, -1, 0),
+                    PropagationDirection::West => (-1, 0, 0),
+                };
+
+                // Calculate the new position to continue from
+                let nx = pos.x + dx;
+                let ny = pos.y + dy;
+                let nz = pos.z + dz;
+
+                // Skip if out of bounds
+                if nx < 0
+                    || ny < 0
+                    || nz < 0
+                    || nx >= bf.map_size.0 as i64
+                    || ny >= bf.map_size.1 as i64
+                    || nz >= bf.map_size.2 as i64
+                {
+                    continue;
+                }
+
+                let new_pos = BoardPosition {
+                    x: nx,
+                    y: ny,
+                    z: nz,
+                };
+
+                // Add this position to the BFS queue
+                // (position, source_id, remaining_distance, current_lux, color)
+                queue.push_back((
+                    new_pos.clone(),
+                    pending.source_id,
+                    pending.remaining_distance - 1.0, // Reduce distance by 1 for the step
+                    pending.incoming_lux * 0.75,      // Apply some falloff
+                    pending.color,
+                ));
+
+                // Mark this position as visited
+                visited[new_pos.ndidx()] = true;
+            }
+        }
+    }
+
+    info!(
+        "Continuation points processed: {}",
+        continuation_points_processed
+    );
+
+    // BFS processing - extend light waves from continuation points
+    let mut dynamic_propagation_count = 0;
+
+    while let Some((pos, source_id, remaining_distance, current_lux, color)) = queue.pop_front() {
         // Skip if we've reached the distance limit or light is too dim
         if remaining_distance <= 0.0 || current_lux < 0.001 {
             continue;
@@ -339,30 +448,44 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
 
         let pos_idx = pos.ndidx();
 
-        // Track maximum propagation distance
-        let distance_traveled = 30.0 - remaining_distance;
-        max_distance = max_distance.max(ordered_float::OrderedFloat(distance_traveled));
+        // Skip if this source isn't active
+        if !active_source_ids.contains(&source_id) {
+            continue;
+        }
+
+        // Add light to the current position
+        lfs[pos_idx].lux += current_lux;
+
+        // Blend colors weighted by intensity
+        let current_color = lfs[pos_idx].color;
+        let total_lux = lfs[pos_idx].lux;
+
+        if total_lux > 0.0 {
+            lfs[pos_idx].color = (
+                (current_color.0 * (total_lux - current_lux) + color.0 * current_lux) / total_lux,
+                (current_color.1 * (total_lux - current_lux) + color.1 * current_lux) / total_lux,
+                (current_color.2 * (total_lux - current_lux) + color.2 * current_lux) / total_lux,
+            );
+        } else {
+            lfs[pos_idx].color = color;
+        }
 
         // Get the prebaked data for this position
         let prebaked_data = &bf.prebaked_lighting[pos_idx];
 
-        // Log this position being processed
-        if propagated_light_count == 0 || propagated_light_count < 10 {
-            info!(
-                "Processing light at {:?}, remaining_distance={}, current_lux={}",
-                pos, remaining_distance, current_lux
-            );
-        }
-
         // Propagate in each direction
-        for (dir_i, &(dx, dy, dz)) in directions.iter().enumerate() {
-            let dir_name = match dir_i {
-                0 => "North",
-                1 => "East",
-                2 => "South",
-                3 => "West",
-                _ => "Unknown",
+        for &(dx, dy, dz, dir) in &directions {
+            // Check if the current position allows propagation in this direction
+            let can_propagate = match dir {
+                PropagationDirection::North => prebaked_data.propagation_dirs.north,
+                PropagationDirection::East => prebaked_data.propagation_dirs.east,
+                PropagationDirection::South => prebaked_data.propagation_dirs.south,
+                PropagationDirection::West => prebaked_data.propagation_dirs.west,
             };
+
+            if !can_propagate {
+                continue;
+            }
 
             // Calculate neighbor position
             let nx = pos.x + dx;
@@ -390,83 +513,41 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
             // Check for doors/walls (dynamic check)
             let collision = &bf.collision_field[neighbor_idx];
             if !collision.see_through {
-                if propagated_light_count < 10 {
-                    info!("  -> {} blocked by collision", dir_name);
-                }
-                continue;
-            }
-
-            // Check if the current position allows propagation in this direction
-            let can_propagate = match dir_i {
-                0 => prebaked_data.propagation_dirs.north,
-                1 => prebaked_data.propagation_dirs.east,
-                2 => prebaked_data.propagation_dirs.south,
-                3 => prebaked_data.propagation_dirs.west,
-                _ => false,
-            };
-
-            if !can_propagate {
-                if propagated_light_count < 10 {
-                    info!("  -> {} blocked by propagation direction", dir_name);
-                }
                 continue;
             }
 
             // Check if already visited
             if visited[neighbor_idx] {
-                if propagated_light_count < 10 {
-                    info!("  -> {} already visited", dir_name);
-                }
                 continue; // Wave collision - both waves stop
             }
 
             // Get the prebaked data for the neighbor
             let neighbor_prebaked = &bf.prebaked_lighting[neighbor_idx];
 
-            // If the neighbor is a light source too, handle differently
-            if neighbor_prebaked.light_info.is_source {
-                if propagated_light_count < 10 {
-                    info!("  -> {} is a light source", dir_name);
-                }
-                continue;
-            }
-
-            // Calculate diminished light level (using neighbor's transmissivity from prebaked data)
+            // Calculate diminished light level
             let transmissivity = neighbor_prebaked.light_info.transmissivity;
             let falloff = 0.75 * transmissivity;
             let new_lux = current_lux * falloff;
 
-            // Update light field for neighbor
-            lfs[neighbor_idx].lux += new_lux;
-
-            // Use the color from the light source that reached this tile
-            if lfs[neighbor_idx].lux > 0.0 {
-                lfs[neighbor_idx].color = prebaked_data.light_info.color;
-            }
-
             // Add neighbor to queue for next wave propagation
-            queue.push_back((neighbor_pos, remaining_distance - 1.0, new_lux));
-
-            if propagated_light_count < 10 {
-                info!(
-                    "  -> {} propagated: lux={}, new_distance={}",
-                    dir_name,
-                    new_lux,
-                    remaining_distance - 1.0
-                );
-            }
-
-            propagated_light_count += 1;
-            total_tiles_lit += 1;
+            queue.push_back((
+                neighbor_pos,
+                source_id,
+                remaining_distance - 1.0,
+                new_lux,
+                color,
+            ));
 
             // Mark as visited
             visited[neighbor_idx] = true;
+
+            dynamic_propagation_count += 1;
         }
     }
 
     info!(
-        "BFS propagation stats: {} light propagations, {} total tiles lit, max distance: {}",
-        propagated_light_count, total_tiles_lit, max_distance
+        "Dynamic BFS propagation: {} additional light propagations",
+        dynamic_propagation_count
     );
 
     // Count how many tiles have light
@@ -476,7 +557,7 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
     let max_lux = lfs.iter().map(|x| x.lux).fold(0.0, f32::max);
 
     info!(
-        "Light field after BFS: {}/{} tiles lit ({:.2}%), avg lux: {:.6}, max lux: {:.6}",
+        "Light field after rebuild: {}/{} tiles lit ({:.2}%), avg lux: {:.6}, max lux: {:.6}",
         tiles_with_light,
         total_tiles,
         (tiles_with_light as f32 / total_tiles as f32) * 100.0,
@@ -484,8 +565,7 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
         max_lux
     );
 
-    // ADDED STEP: Apply ambient light to walls based on neighbors
-    // This will make walls visible with soft lighting from adjacent tiles
+    // Apply ambient light to walls based on neighbors
     apply_ambient_light_to_walls(bf, &mut lfs);
 
     // Calculate exposure
@@ -622,6 +702,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
 
     // First pass - identify all light sources and track their properties
     let mut light_source_count = 0;
+    let mut next_source_id = 1; // Start source IDs from 1 (0 can be reserved for "no source")
 
     // IMPORTANT: Set a default transmissivity factor for ALL tiles first
     // This ensures even non-source tiles have proper transmissivity
@@ -644,10 +725,23 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
             light_source_count += 1;
             prebaked[idx].light_info = LightInfo {
                 is_source: true,
+                source_id: next_source_id, // Assign unique ID to this light source
                 lux,
                 color: behavior.p.light.color(),
                 transmissivity: behavior.p.light.transmissivity_factor(),
             };
+
+            // Use the source itself as first contribution
+            prebaked[idx].source_contributions.insert(
+                next_source_id,
+                SourceContribution {
+                    lux,
+                    color: behavior.p.light.color(),
+                    remaining_distance: 30.0, // Max propagation distance
+                },
+            );
+
+            next_source_id += 1; // Increment for the next source
         }
     }
 
@@ -680,6 +774,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
             y: j as i64,
             z: k as i64,
         };
+
+        // Also identify potential continuation points (tiles with see_through=false neighbors)
+        let mut has_blocked_neighbor = false;
 
         let directions = [
             // North (+Y)
@@ -719,6 +816,12 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
             let collision = &bf.collision_field[neighbor_idx];
             let can_propagate = collision.see_through;
 
+            // Check if this might be a continuation point
+            // (if we have a neighbor that blocks light)
+            if !can_propagate {
+                has_blocked_neighbor = true;
+            }
+
             // Set propagation data based on direction
             match dir_i {
                 0 => data.propagation_dirs.north = can_propagate,
@@ -731,6 +834,16 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
             if can_propagate {
                 propagation_count += 1;
             }
+        }
+
+        // Mark as continuation point if it's at the boundary of blocked/unblocked
+        if has_blocked_neighbor
+            && (data.propagation_dirs.north
+                || data.propagation_dirs.east
+                || data.propagation_dirs.south
+                || data.propagation_dirs.west)
+        {
+            data.is_continuation_point = true;
         }
     }
 
@@ -745,6 +858,8 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
         })
         .count();
 
+    let continuation_points = prebaked.iter().filter(|d| d.is_continuation_point).count();
+
     info!(
         "Propagation: {}/{} tiles can propagate in at least one direction ({:.2}%)",
         can_propagate_tiles,
@@ -756,6 +871,206 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
         "Propagation directions set: {} total (avg {:.2} per tile)",
         propagation_count,
         propagation_count as f32 / total_tiles as f32
+    );
+
+    info!(
+        "Identified {} continuation points for potential dynamic propagation",
+        continuation_points
+    );
+
+    // Now perform a unified BFS wave propagation to calculate source contributions
+    // Queue for BFS processing with (position, source_id, remaining_distance, current_lux, color)
+    let mut queue = VecDeque::new();
+    let mut visited_by_source = HashMap::new(); // Maps source_id -> set of visited positions
+
+    // Initialize the queue with all light sources
+    for ((i, j, k), data) in prebaked.indexed_iter() {
+        if data.light_info.is_source {
+            let pos = BoardPosition {
+                x: i as i64,
+                y: j as i64,
+                z: k as i64,
+            };
+            let source_id = data.light_info.source_id;
+            let lux = data.light_info.lux;
+            let color = data.light_info.color;
+
+            // Add to queue: (position, source_id, remaining_distance, current_lux, color)
+            queue.push_back((pos, source_id, 30.0, lux, color));
+
+            // Mark as visited by this source
+            let source_visited = visited_by_source
+                .entry(source_id)
+                .or_insert_with(HashSet::new);
+            source_visited.insert((i, j, k));
+        }
+    }
+
+    // Track propagation statistics
+    let mut propagated_light_count = 0;
+
+    // Define directions array once
+    let directions = [
+        // North (+Y)
+        (0, 1, 0, PropagationDirection::North),
+        // East (+X)
+        (1, 0, 0, PropagationDirection::East),
+        // South (-Y)
+        (0, -1, 0, PropagationDirection::South),
+        // West (-X)
+        (-1, 0, 0, PropagationDirection::West),
+    ];
+
+    // BFS processing - extend light waves in all directions
+    while let Some((pos, source_id, remaining_distance, current_lux, color)) = queue.pop_front() {
+        // Skip if we've reached the distance limit or light is too dim
+        if remaining_distance <= 0.0 || current_lux < 0.001 {
+            continue;
+        }
+
+        let pos_idx = pos.ndidx();
+
+        // FIX: Store propagation directions in local variables to avoid borrowing issues
+        // Get the prebaked data in a scope-limited way to just extract what we need
+        let propagation_dirs = {
+            let prebaked_data = &prebaked[pos_idx];
+            (
+                prebaked_data.propagation_dirs.north,
+                prebaked_data.propagation_dirs.east,
+                prebaked_data.propagation_dirs.south,
+                prebaked_data.propagation_dirs.west,
+            )
+        };
+
+        // Propagate in each direction
+        for &(dx, dy, dz, dir) in &directions {
+            // Check if can propagate in this direction using the cached directions
+            let can_propagate = match dir {
+                PropagationDirection::North => propagation_dirs.0,
+                PropagationDirection::East => propagation_dirs.1,
+                PropagationDirection::South => propagation_dirs.2,
+                PropagationDirection::West => propagation_dirs.3,
+            };
+
+            if !can_propagate {
+                continue;
+            }
+
+            // Calculate neighbor position
+            let nx = pos.x + dx;
+            let ny = pos.y + dy;
+            let nz = pos.z + dz;
+
+            // Skip if out of bounds
+            if nx < 0
+                || ny < 0
+                || nz < 0
+                || nx >= bf.map_size.0 as i64
+                || ny >= bf.map_size.1 as i64
+                || nz >= bf.map_size.2 as i64
+            {
+                continue;
+            }
+
+            let neighbor_pos = BoardPosition {
+                x: nx,
+                y: ny,
+                z: nz,
+            };
+            let neighbor_idx = neighbor_pos.ndidx();
+
+            // Check if already visited by this source
+            let source_visited = visited_by_source
+                .entry(source_id)
+                .or_insert_with(HashSet::new);
+            if source_visited.contains(&(nx as usize, ny as usize, nz as usize)) {
+                continue;
+            }
+
+            // Mark as visited by this source
+            source_visited.insert((nx as usize, ny as usize, nz as usize));
+
+            // FIX: Split the immutable and mutable accesses to prebaked
+            // First get the properties we need for decisions with an immutable borrow
+            let (is_continuation_point, transmissivity, see_through) = {
+                let neighbor_prebaked = &prebaked[neighbor_idx];
+                let collision = &bf.collision_field[neighbor_idx];
+                (
+                    neighbor_prebaked.is_continuation_point,
+                    neighbor_prebaked.light_info.transmissivity,
+                    collision.see_through,
+                )
+            };
+
+            // Now do the mutable operations based on the decisions
+            if is_continuation_point && !see_through {
+                // Mutable borrow for adding pending propagation
+                prebaked[neighbor_idx]
+                    .pending_propagations
+                    .push(PendingPropagation {
+                        source_id,
+                        direction: dir,
+                        incoming_lux: current_lux,
+                        color,
+                        remaining_distance,
+                    });
+                continue;
+            }
+
+            // Calculate diminished light level
+            let falloff = 0.75 * transmissivity;
+            let new_lux = current_lux * falloff;
+
+            // Mutable borrow for adding/updating contribution
+            // Get the existing contribution or create a new one
+            let contribution = {
+                let neighbor_prebaked = &mut prebaked[neighbor_idx];
+                neighbor_prebaked
+                    .source_contributions
+                    .entry(source_id)
+                    .or_insert(SourceContribution {
+                        lux: 0.0,
+                        color,
+                        remaining_distance,
+                    })
+            };
+
+            // Add the new light contribution (may receive from multiple paths)
+            contribution.lux += new_lux;
+            // Keep the maximum remaining distance
+            contribution.remaining_distance = contribution
+                .remaining_distance
+                .max(remaining_distance - 1.0);
+
+            // Add neighbor to queue for next wave propagation
+            queue.push_back((
+                neighbor_pos,
+                source_id,
+                remaining_distance - 1.0,
+                new_lux,
+                color,
+            ));
+
+            propagated_light_count += 1;
+        }
+    }
+
+    info!(
+        "Prebake BFS propagation: {} total light propagations processed",
+        propagated_light_count
+    );
+
+    // Count how many tiles have contributions
+    let tiles_with_contributions = prebaked
+        .iter()
+        .filter(|x| !x.source_contributions.is_empty())
+        .count();
+
+    info!(
+        "Source contributions: {}/{} tiles have recorded contributions ({:.2}%)",
+        tiles_with_contributions,
+        total_tiles,
+        (tiles_with_contributions as f32 / total_tiles as f32) * 100.0
     );
 
     // Store the prebaked data in BoardData
