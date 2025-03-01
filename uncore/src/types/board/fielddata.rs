@@ -1,6 +1,5 @@
-use crate::behavior::Orientation;
-
 use super::light::LightData;
+use crate::behavior::Orientation;
 
 #[derive(Clone, Debug)]
 pub struct LightFieldData {
