@@ -51,7 +51,7 @@ use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
-use unlight::lighting::prebake_lighting_field;
+use unlight::prebake::prebake_lighting_field;
 use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
