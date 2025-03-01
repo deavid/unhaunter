@@ -46,8 +46,8 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
         prebaked[idx].light_info.transmissivity = behavior.p.light.transmissivity_factor();
 
         // Check if this entity emits light
-        let lux = behavior.p.light.emmisivity_lumens();
-        if lux > 0.0 {
+        if behavior.p.light.emits_light {
+            let lux = behavior.p.light.emmisivity_lumens();
             light_source_count += 1;
             prebaked[idx].light_info = LightInfo {
                 is_source: true,
@@ -77,19 +77,19 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
     }
 
     // Track transmissivity statistics
-    let transmissivity_zero_count = prebaked
+    let transmissivity_deny = prebaked
         .iter()
-        .filter(|d| d.light_info.transmissivity == 0.0)
+        .filter(|d| d.light_info.transmissivity <= 0.1)
         .count();
-    let transmissivity_gt_one_count = prebaked
+    let transmissivity_allow = prebaked
         .iter()
-        .filter(|d| d.light_info.transmissivity >= 1.0)
+        .filter(|d| d.light_info.transmissivity >= 0.9)
         .count();
     let total_tiles = bf.map_size.0 * bf.map_size.1 * bf.map_size.2;
 
     info!(
-        "Transmissivity stats: {}/{} tiles are opaque (0.0), {}/{} tiles allow light (>=1.0)",
-        transmissivity_zero_count, total_tiles, transmissivity_gt_one_count, total_tiles
+        "Transmissivity stats: {}/{} tiles are opaque (<=0.1), {}/{} tiles allow light (>=0.9)",
+        transmissivity_deny, total_tiles, transmissivity_allow, total_tiles
     );
 
     // Calculate propagation directions for ALL tiles

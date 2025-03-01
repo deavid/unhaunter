@@ -300,15 +300,20 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
     let wall_light_start = Instant::now();
     let mut walls_lit = 0;
 
-    // Define directions for 4-way connectivity
-    let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
+    // // Define directions for 4-way connectivity
+    // let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
+
+    // Only 2 directions to lit up the external walls on their facing side from the camera POV.
+    let directions = [(1, 0, 0), (0, -1, 0)];
 
     // Threshold for considering a tile "dark"
     const DARK_THRESHOLD: f32 = 0.000001;
 
+    let src_lfs = lfs.clone();
+
     for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
         // Only process dark tiles
-        if lfs[(i, j, k)].lux > DARK_THRESHOLD {
+        if src_lfs[(i, j, k)].lux > DARK_THRESHOLD {
             continue;
         }
 
@@ -328,7 +333,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
             }
 
             let n_pos = (nx as usize, ny as usize, nz as usize);
-            let neighbor_light = &lfs[n_pos];
+            let neighbor_light = &src_lfs[n_pos];
 
             // Skip if neighbor has no light
             if neighbor_light.lux <= 0.001 {
@@ -375,8 +380,9 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
             );
 
             // Update the light field for this wall
-            lfs[(i, j, k)].lux = total_lux;
-            lfs[(i, j, k)].color = avg_color;
+            let lfs_idx = &mut lfs[(i, j, k)];
+            lfs_idx.lux = total_lux;
+            lfs_idx.color = avg_color;
             walls_lit += 1;
         }
     }
