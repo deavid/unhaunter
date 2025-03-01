@@ -357,13 +357,8 @@ pub fn prepare_continuation_points(
 ) -> Vec<(BoardPosition, u32, f32, f32, (f32, f32, f32))> {
     let mut continuation_points = Vec::new();
 
-    // Check all prebaked data for pending propagations
+    // STEP 1: Handle standard continuation points from prebaking
     for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
-        // Skip if not a continuation point or has no pending propagations
-        if !prebaked_data.is_continuation_point || prebaked_data.pending_propagations.is_empty() {
-            continue;
-        }
-
         let pos_idx = (i, j, k);
         let pos = BoardPosition {
             x: i as i64,
@@ -378,25 +373,22 @@ pub fn prepare_continuation_points(
         // Check if this is a portal point
         let is_portal = portal_points.contains(&pos_idx);
 
-        // KEY FIX: Only continue light propagation from this point if:
-        // 1. It's a door and it's currently open (door state == open)
-        // 2. OR it's a portal point and not a door (for other continuation points)
-        if (is_door_position && is_open_door) || (!is_door_position && is_portal) {
-            // For each pending propagation from an active light source
+        // KEY FIX: Process this position if:
+        // 1. It's an open door OR
+        // 2. It's a portal point OR
+        // 3. It's a continuation point with pending propagations
+        if (is_door_position && is_open_door) || is_portal || prebaked_data.is_continuation_point {
+            // For each pending propagation from active sources
             for pending in &prebaked_data.pending_propagations {
-                // Skip if source is not active
-                if !active_source_ids.contains(&pending.source_id) {
-                    continue;
+                if active_source_ids.contains(&pending.source_id) {
+                    continuation_points.push((
+                        pos.clone(),
+                        pending.source_id,
+                        pending.remaining_distance,
+                        pending.incoming_lux,
+                        pending.color,
+                    ));
                 }
-
-                // Add to continuation points with the pending propagation data
-                continuation_points.push((
-                    pos.clone(),
-                    pending.source_id,
-                    pending.remaining_distance,
-                    pending.incoming_lux,
-                    pending.color,
-                ));
             }
         }
     }
@@ -527,6 +519,8 @@ pub fn propagate_from_continuation_points(
     visited: &mut Array3<bool>,
     continuation_points: &[(BoardPosition, u32, f32, f32, (f32, f32, f32))],
     active_source_ids: &HashSet<u32>,
+    door_states: &HashMap<(usize, usize, usize), bool>,
+    portal_points: &HashSet<(usize, usize, usize)>,
 ) -> (usize, f32) {
     let mut queue = VecDeque::new();
     let mut propagation_count = 0;
@@ -544,7 +538,7 @@ pub fn propagate_from_continuation_points(
     // Process queue using BFS
     while let Some((pos, source_id, remaining_distance, current_lux, color)) = queue.pop_front() {
         // Skip if we've reached the distance limit or light is too dim
-        if remaining_distance <= 0.0 || current_lux < 0.001 {
+        if remaining_distance <= 0.0 || current_lux < 0.0000001 {
             continue;
         }
 
@@ -560,14 +554,40 @@ pub fn propagate_from_continuation_points(
 
         // Process each direction
         for (dir_i, &(dx, dy, dz)) in directions.iter().enumerate() {
-            // Check if can propagate in this direction
-            let can_propagate = match dir_i {
+            // Check if this position is a door and it's open
+            let current_pos_idx = (pos.x as usize, pos.y as usize, pos.z as usize);
+            let current_is_open_door = door_states.get(&current_pos_idx).copied().unwrap_or(false);
+
+            // Calculate neighbor position
+            let nx = pos.x + dx;
+            let ny = pos.y + dy;
+            let nz = pos.z + dz;
+
+            // Skip if out of bounds
+            if !is_in_bounds((nx, ny, nz), bf.map_size) {
+                continue;
+            }
+
+            let neighbor_pos = (nx as usize, ny as usize, nz as usize);
+
+            // Get prebaked propagation directions
+            let standard_can_propagate = match dir_i {
                 0 => prebaked_data.propagation_dirs.north,
                 1 => prebaked_data.propagation_dirs.east,
                 2 => prebaked_data.propagation_dirs.south,
                 3 => prebaked_data.propagation_dirs.west,
                 _ => false,
             };
+
+            let is_open_door = door_states.get(&neighbor_pos).copied().unwrap_or(false);
+            let is_portal = portal_points.contains(&neighbor_pos);
+
+            // Check if we can propagate based on:
+            // 1. Normal prebaked propagation OR
+            // 2. We're at an open door (allow propagation in all directions) OR
+            // 3. Neighbor is an open door OR portal point
+            let can_propagate =
+                standard_can_propagate || current_is_open_door || is_open_door || is_portal;
 
             if !can_propagate {
                 continue;

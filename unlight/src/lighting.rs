@@ -276,6 +276,8 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
         &mut visited,
         &continuation_points,
         &active_source_ids,
+        &door_states,
+        &portal_points,
     );
 
     info!(
