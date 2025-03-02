@@ -4,7 +4,7 @@ use crate::{
     types::{
         board::{
             fielddata::{CollisionFieldData, LightFieldData},
-            prebaked_lighting_data::PrebakedLightingData,
+            prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata},
         },
         evidence::Evidence,
         miasma::MiasmaGrid,
@@ -36,6 +36,7 @@ pub struct BoardData {
 
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
+    pub prebaked_metadata: PrebakedMetadata,
 }
 
 impl FromWorld for BoardData {
@@ -58,6 +59,7 @@ impl FromWorld for BoardData {
             miasma: MiasmaGrid::default(),
             map_entity_field: Array3::default(map_size),
             prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
+            prebaked_metadata: PrebakedMetadata::default(),
         }
     }
 }

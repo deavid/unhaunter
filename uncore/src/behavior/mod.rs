@@ -208,7 +208,8 @@ pub struct Display {
 pub struct Light {
     pub opaque: bool,
     pub see_through: bool,
-    pub emits_light: bool,
+    pub light_emission_enabled: bool,
+    pub can_emit_light: bool,
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
     pub flickering: bool,
@@ -218,14 +219,14 @@ impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
         if self.flickering {
             // Reduced emission when flickering, with a slight glow even when off
-            if self.emits_light {
+            if self.light_emission_enabled {
                 self.emission_power.exp() * 0.4
             } else {
                 self.emission_power.exp() * 0.001
             }
         } else {
             // Normal emission based on emits_light
-            match self.emits_light {
+            match self.light_emission_enabled {
                 true => self.emission_power.exp(),
                 false => 0.0,
             }
@@ -654,18 +655,21 @@ impl SpriteConfig {
             }
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -1;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (6.0).try_into().unwrap();
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (6.5).try_into().unwrap();
             }
             Class::WallDecor => {
@@ -673,13 +677,15 @@ impl SpriteConfig {
             }
             Class::CeilingLight => {
                 p.display.disable = true;
-                p.light.emits_light = self.state == TileState::On;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
             Class::StreetLight => {
                 p.display.disable = true;
-                p.light.emits_light = true;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = true;
                 p.light.emission_power = (6.0).try_into().unwrap();
                 p.light.heat_coef = -6;
             }

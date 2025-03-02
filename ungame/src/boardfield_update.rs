@@ -16,7 +16,7 @@ use unstd::plugins::board::rebuild_collision_data;
 pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
-    qt: Query<(&Position, &Behavior)>,
+    mut qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     if ev_bdr.is_empty() {
         return;
@@ -41,7 +41,8 @@ pub fn boardfield_update(
     }
 
     if bdr.lighting {
-        rebuild_lighting_field(&mut bf, &qt);
+        let mut lens = qt.transmute_lens::<(&Position, &Behavior)>();
+        rebuild_lighting_field(&mut bf, &lens.query());
     }
 }
 

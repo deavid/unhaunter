@@ -58,7 +58,10 @@ impl Plugin for UnhaunterBoardPlugin {
 ///
 /// * `bf` - A mutable reference to the `BoardData` resource, which stores the collision field.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
-pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position, &Behavior)>) {
+pub fn rebuild_collision_data(
+    bf: &mut ResMut<BoardData>,
+    qt: &Query<(Entity, &Position, &Behavior)>,
+) {
     // info!("Collision rebuild");
     assert_eq!(
         bf.collision_field.shape(),
@@ -66,7 +69,7 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
     );
     bf.collision_field.fill(CollisionFieldData::default());
 
-    for (pos, _behavior) in qt.iter().filter(|(_p, b)| b.p.movement.walkable) {
+    for (_entity, pos, _behavior) in qt.iter().filter(|(_e, _p, b)| b.p.movement.walkable) {
         let bpos = pos.to_board_position();
         let colfd = CollisionFieldData {
             player_free: true,
@@ -77,7 +80,10 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }
-    for (pos, behavior) in qt.iter().filter(|(_p, b)| b.p.movement.player_collision) {
+    for (_entity, pos, behavior) in qt
+        .iter()
+        .filter(|(_e, _p, b)| b.p.movement.player_collision)
+    {
         let bpos = pos.to_board_position();
 
         let colfd = CollisionFieldData {
@@ -90,4 +96,3 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
         bf.collision_field[bpos.ndidx()] = colfd;
     }
 }
-

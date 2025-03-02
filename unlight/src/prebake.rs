@@ -19,7 +19,7 @@ use uncore::{
 /// 1. Identifies all light sources
 /// 2. Propagates light using BFS
 /// 3. Marks wave edges where light stops at dynamic objects or other light sources
-pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavior)>) {
+pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position, &Behavior)>) {
     info!("Computing prebaked lighting field...");
     let build_start_time = Instant::now();
 
@@ -30,14 +30,15 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
     let mut light_source_count = 0;
     let mut next_source_id = 1; // Start from 1, 0 is reserved for "no source"
 
+    bf.prebaked_metadata = Default::default();
     // Process all entities to find light sources
-    for (pos, behavior) in qt.iter() {
+    for (entity, pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
         let idx = board_pos.ndidx();
 
         // Check if this entity emits light
-        if behavior.p.light.emits_light {
-            let lux = behavior.p.light.emmisivity_lumens();
+        if behavior.p.light.can_emit_light {
+            let lux = behavior.p.light.emission_power.exp();
             let color = behavior.p.light.color();
 
             light_source_count += 1;
@@ -46,7 +47,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
                 lux,
                 color,
             };
-
+            bf.prebaked_metadata.light_sources.push((entity, idx));
             next_source_id += 1;
         }
     }

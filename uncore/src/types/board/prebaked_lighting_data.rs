@@ -4,6 +4,8 @@
 //! allowing for significant performance improvements by reusing calculations
 //! for static elements in the map.
 
+use bevy::ecs::entity::Entity;
+
 /// Holds precomputed lighting propagation data for a single tile.
 ///
 /// This structure stores minimal information about light sources and wave edges,
@@ -31,4 +33,10 @@ pub struct LightInfo {
 
     /// Light color (r, g, b)
     pub color: (f32, f32, f32),
+}
+
+/// Stores general metadata useful for speeding up light rebuilds.
+#[derive(Clone, Debug, Default)]
+pub struct PrebakedMetadata {
+    pub light_sources: Vec<(Entity, (usize, usize, usize))>,
 }

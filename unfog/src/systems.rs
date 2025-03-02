@@ -29,7 +29,7 @@ pub fn initialize_miasma(
     roomdb: Res<RoomDB>,
     config: Res<MiasmaConfig>,
     mut level_ready: EventReader<LevelReadyEvent>,
-    qt: Query<(&Position, &Behavior)>,
+    qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     // Only run on LevelLoadedEvent
     if level_ready.read().next().is_none() {

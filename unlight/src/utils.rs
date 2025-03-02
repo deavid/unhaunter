@@ -60,7 +60,7 @@ pub fn has_active_light_nearby(
 /// Determines if a light is currently active based on its position and behavior
 pub fn is_light_active(pos: &BoardPosition, behaviors: &HashMap<BoardPosition, &Behavior>) -> bool {
     if let Some(behavior) = behaviors.get(pos) {
-        behavior.p.light.emits_light
+        behavior.p.light.light_emission_enabled
     } else {
         false
     }
@@ -91,30 +91,17 @@ pub fn identify_active_light_sources(
 ) -> HashSet<u32> {
     let mut active_source_ids = HashSet::new();
 
-    // Create a map of entity positions to their behaviors
-    let mut position_to_behavior = HashMap::new();
-    for (pos, behavior) in qt.iter() {
-        position_to_behavior.insert(pos.to_board_position(), behavior);
-    }
+    for (entity, ndidx) in &bf.prebaked_metadata.light_sources {
+        let Ok((_pos, behavior)) = qt.get(*entity) else {
+            continue;
+        };
 
-    // First pass: mark prebaked sources
-    for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
-        if let Some(source_id) = prebaked_data.light_info.source_id {
-            let pos = BoardPosition {
-                x: i as i64,
-                y: j as i64,
-                z: k as i64,
-            };
-
-            // Check if this light source is currently emitting light
-            if let Some(behavior) = position_to_behavior.get(&pos) {
-                if behavior.p.light.emits_light {
-                    active_source_ids.insert(source_id);
-                }
+        if behavior.p.light.light_emission_enabled {
+            if let Some(source_id) = bf.prebaked_lighting[*ndidx].light_info.source_id {
+                active_source_ids.insert(source_id);
             }
         }
     }
-
     info!(
         "Active light sources: {}/{} (prebaked) ",
         active_source_ids.len(),

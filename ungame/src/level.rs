@@ -665,7 +665,7 @@ fn process_pre_meshes(
 
 pub fn load_map_add_prebaked_lighting(
     mut bf: ResMut<BoardData>,
-    qt: Query<(&Position, &Behavior)>,
+    qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     // Ensure the collision field is up to date. It might have not been loaded yet.
     rebuild_collision_data(&mut bf, &qt);
