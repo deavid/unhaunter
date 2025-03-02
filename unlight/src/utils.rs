@@ -266,29 +266,41 @@ pub fn find_wave_edge_tiles(
             continue;
         }
 
-        // Check if this is adjacent to a door and if it's open
-        let is_near_open_door = door_states.iter().any(|(&(dx, dy, dz), &is_open)| {
-            is_open
-                && ((dx as i32 - i as i32).abs() <= 1
-                    && (dy as i32 - j as i32).abs() <= 1
-                    && (dz as i32 - k as i32).abs() <= 1)
+        // Check if this is adjacent to a door
+        let is_near_door = door_states.iter().any(|(&(dx, dy, dz), &_)| {
+            (dx as i32 - i as i32).abs() <= 1
+                && (dy as i32 - j as i32).abs() <= 1
+                && (dz as i32 - k as i32).abs() <= 1
         });
 
-        if is_near_open_door {
-            let pos = BoardPosition {
-                x: i as i64,
-                y: j as i64,
-                z: k as i64,
-            };
+        // If it's near a door, only add if door is open
+        if is_near_door {
+            let is_near_open_door = door_states.iter().any(|(&(dx, dy, dz), &is_open)| {
+                is_open
+                    && (dx as i32 - i as i32).abs() <= 1
+                    && (dy as i32 - j as i32).abs() <= 1
+                    && (dz as i32 - k as i32).abs() <= 1
+            });
 
-            wave_edges.push((
-                pos,
-                source_id,
-                prebaked_data.light_info.lux,
-                prebaked_data.light_info.color,
-                20.0, // Remaining distance for propagation
-            ));
+            if !is_near_open_door {
+                continue;
+            }
         }
+
+        // Add to wave edges (whether or not it's near a door)
+        let pos = BoardPosition {
+            x: i as i64,
+            y: j as i64,
+            z: k as i64,
+        };
+
+        wave_edges.push((
+            pos,
+            source_id,
+            prebaked_data.light_info.lux,
+            prebaked_data.light_info.color,
+            20.0, // Remaining distance for propagation
+        ));
     }
 
     info!("Found {} wave edge tiles for propagation", wave_edges.len());
