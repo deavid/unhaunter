@@ -2,8 +2,8 @@ use crate::{
     cached_board_pos::CachedBoardPos,
     utils::{
         add_dynamic_light_sources, apply_prebaked_contributions, collect_door_states,
-        identify_active_light_sources, identify_portal_points, is_in_bounds,
-        prepare_continuation_points, propagate_from_continuation_points, update_exposure_and_stats,
+        find_wave_edge_tiles, identify_active_light_sources, is_in_bounds,
+        propagate_from_wave_edges, update_exposure_and_stats,
     },
 };
 use bevy::{prelude::*, utils::Instant};
@@ -260,35 +260,28 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
     // 2. Apply prebaked contributions from active sources
     let initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
 
-    // 3. Handle door states and identify continuation points
+    // 3. Handle door states
     let door_states = collect_door_states(qt);
-    let portal_points = identify_portal_points(bf);
-    let continuation_points =
-        prepare_continuation_points(bf, &active_source_ids, &door_states, &portal_points);
 
-    // 4. Add dynamic lights to initial state
+    // 4. Find wave edge tiles that need propagation
+    let wave_edges = find_wave_edge_tiles(bf, &active_source_ids, &door_states);
+
+    // 5. Add dynamic lights to initial state
     let mut visited = add_dynamic_light_sources(bf, &mut lfs, dynamic_lights);
 
-    // 5. Propagate light from continuation points
-    let (dynamic_propagation_count, light_continued) = propagate_from_continuation_points(
-        bf,
-        &mut lfs,
-        &mut visited,
-        &continuation_points,
-        &active_source_ids,
-        &door_states,
-        &portal_points,
-    );
+    // 6. Propagate light from wave edges
+    let dynamic_propagation_count =
+        propagate_from_wave_edges(bf, &mut lfs, &mut visited, &wave_edges);
 
     info!(
-        "Dynamic BFS propagation: {} additional light propagations, {:.2} total lux continued, {} initial tiles lit",
-        dynamic_propagation_count, light_continued, initial_tiles_lit
+        "Dynamic BFS propagation: {} additional light propagations, {} initial tiles lit",
+        dynamic_propagation_count, initial_tiles_lit
     );
 
-    // 6. Apply ambient light to walls
+    // 7. Apply ambient light to walls
     apply_ambient_light_to_walls(bf, &mut lfs);
 
-    // 7. Calculate exposure and update board data
+    // 8. Calculate exposure and update board data
     update_exposure_and_stats(bf, &lfs);
 
     info!(
