@@ -73,6 +73,7 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
             ghost_free: true,
             see_through: true,
             wall_orientation: Orientation::None,
+            is_dynamic: false,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }
@@ -84,9 +85,9 @@ pub fn rebuild_collision_data(bf: &mut ResMut<BoardData>, qt: &Query<(&Position,
             ghost_free: !behavior.p.movement.ghost_collision,
             see_through: behavior.p.light.see_through,
             wall_orientation: behavior.orientation(),
+            is_dynamic: behavior.p.movement.is_dynamic,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }
 }
 
-// rebuild_lighting_field function has been moved to unlight::lighting

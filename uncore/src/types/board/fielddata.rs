@@ -26,4 +26,5 @@ pub struct CollisionFieldData {
     pub ghost_free: bool,
     pub see_through: bool,
     pub wall_orientation: Orientation,
+    pub is_dynamic: bool,
 }

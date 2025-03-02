@@ -378,9 +378,19 @@ pub fn prepare_continuation_points(
         // 2. It's a portal point OR
         // 3. It's a continuation point with pending propagations
         if (is_door_position && is_open_door) || is_portal || prebaked_data.is_continuation_point {
+            // FIXME: code reaches here perfectly multiple times
             // For each pending propagation from active sources
+            // warn!(
+            //     "Continuation point found at: {:?}, {}, {:?}",
+            //     pos,
+            //     prebaked_data.pending_propagations.len(),
+            //     active_source_ids
+            // );
+            // prebaked_data.pending_propagations.len is zero.
             for pending in &prebaked_data.pending_propagations {
                 if active_source_ids.contains(&pending.source_id) {
+                    // FIXME: But this is never executed
+                    warn!("Propagation point found at: {:?}", pos);
                     continuation_points.push((
                         pos.clone(),
                         pending.source_id,

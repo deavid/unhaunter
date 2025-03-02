@@ -186,6 +186,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
         };
 
         data.is_continuation_point = (is_at_boundary && can_propagate) || might_be_door_area;
+        // data.is_continuation_point = true;
     }
 
     // Log propagation setup with more details
@@ -367,6 +368,11 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
                 // If this is a continuation point and it's not see_through, store as pending propagation
                 // but DO NOT continue propagation through it during prebaking
                 if is_continuation_point && !see_through {
+                    // FIXME: This never executes.
+                    warn!(
+                        "Continuation point reached at {:?} but blocked by non-see-through tile - pending propagation - source_id: {}",
+                        neighbor_pos, source_id
+                    );
                     prebaked[neighbor_idx]
                         .pending_propagations
                         .push(PendingPropagation {

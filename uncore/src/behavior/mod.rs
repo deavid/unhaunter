@@ -259,6 +259,8 @@ pub struct Movement {
     pub ghost_collision: bool,
     // 9x9 collision map on the sub-tile. This is using a subtile of 3x3, so it means
     // it can cover an area of 3x3 board tiles. collision_map: [[bool; 9]; 9],
+    /// Indicates that this will make collision dynamic. This is used for doors.
+    pub is_dynamic: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -589,6 +591,7 @@ impl SpriteConfig {
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == TileState::Closed;
+                p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
             }
             Class::Switch => {
