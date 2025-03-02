@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use walkdir::WalkDir;
 
 fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
@@ -35,15 +35,28 @@ fn main() {
     for (folder_name, ext_list) in asset_types {
         for ext in &ext_list {
             let asset_list_path = format!("assets/index/{folder_name}-{ext}.assetidx");
-
-            let mut asset_list_file =
-                File::create(asset_list_path).expect("Failed to create assetidx");
-
-            for path in &asset_list {
-                if path.starts_with(folder_name) && path.ends_with(ext) {
-                    writeln!(asset_list_file, "{}", path).expect("Failed to write to assetidx");
+            let mut expected_file_contents: String = asset_list
+                .iter()
+                .filter(|p| p.starts_with(folder_name) && p.ends_with(ext))
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
+                .join("\n");
+            expected_file_contents.push('\n');
+            if let Ok(mut file) = File::open(&asset_list_path) {
+                let mut buf = String::new();
+                file.read_to_string(&mut buf)
+                    .expect("Failed to read assetidx");
+                if buf == expected_file_contents {
+                    continue;
                 }
             }
+            eprintln!("Updating assetidx: {}", asset_list_path);
+            let mut asset_list_file =
+                File::create(&asset_list_path).expect("Failed to create assetidx");
+
+            asset_list_file
+                .write_all(expected_file_contents.as_bytes())
+                .expect("Failed to write to assetidx");
         }
     }
 }
