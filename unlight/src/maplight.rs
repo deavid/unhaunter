@@ -15,7 +15,7 @@
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
 use bevy_persistent::Persistent;
 use core::f32;
-use ndarray::Array3;
+use ndarray::{Array3, s};
 use rand::Rng;
 use std::collections::VecDeque;
 use uncore::components::board::direction::Direction;
@@ -868,7 +868,7 @@ pub fn ambient_sound_system(
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
-    qp: Query<&PlayerSprite>,
+    qp: Query<(&PlayerSprite, &Position)>, // Added Position to the query
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
     audio_settings: Res<Persistent<AudioSettings>>,
@@ -876,17 +876,51 @@ pub fn ambient_sound_system(
     let measure = AMBIENT_SOUND_SYSTEM.time_measure();
 
     timer.tick(time.delta());
+
+    if vf.visibility_field.is_empty() {
+        return;
+    }
+    // Find the active player's position
+    let player_bpos = qp
+        .iter()
+        .find_map(|(player, pos)| {
+            if player.id == gc.player_id {
+                Some(pos.to_board_position())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_default();
+
+    // Define a radius around the player
+    const RADIUS: usize = 32;
+
+    // Calculate bounds for our slice
+    let player_ndidx = player_bpos.ndidx();
+    let (map_width, map_height, _map_depth) = vf.visibility_field.dim();
+
+    let min_x = player_ndidx.0.saturating_sub(RADIUS);
+    let max_x = (player_ndidx.0 + RADIUS).min(map_width - 1);
+    let min_y = player_ndidx.1.saturating_sub(RADIUS);
+    let max_y = (player_ndidx.1 + RADIUS).min(map_height - 1);
+    let z = player_ndidx.2;
+
+    // Calculate total_vis only for the subslice
     let total_vis: f32 = vf
         .visibility_field
+        .slice(s![min_x..=max_x, min_y..=max_y, z..=z])
         .indexed_iter()
-        .map(|(k, v)| {
-            let k = BoardPosition::from_ndidx(k);
+        .map(|(rel_idx, v)| {
+            // Convert relative indices back to absolute indices
+            let abs_idx = (rel_idx.0 + min_x, rel_idx.1 + min_y, rel_idx.2 + z);
+            let k = BoardPosition::from_ndidx(abs_idx);
             v * match roomdb.room_tiles.get(&k).is_some() {
                 true => 0.2,
                 false => 1.0,
             }
         })
         .sum();
+
     let house_volume = (20.0 / total_vis.max(1.0))
         .powi(3)
         .tanh()
@@ -895,7 +929,7 @@ pub fn ambient_sound_system(
     let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
     // --- Get Player Health and Sanity ---
-    let player = qp.iter().find(|p| p.id == gc.player_id);
+    let player = qp.iter().find(|p| p.0.id == gc.player_id).map(|(p, _)| p);
     let health = player
         .map(|p| p.health.clamp(0.0, 100.0) / 100.0)
         .unwrap_or(1.0);
