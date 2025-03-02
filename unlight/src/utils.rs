@@ -88,12 +88,8 @@ pub fn blend_colors(
 pub fn identify_active_light_sources(
     bf: &BoardData,
     qt: &Query<(&Position, &Behavior)>,
-) -> (
-    HashSet<u32>,
-    Vec<(BoardPosition, f32, (f32, f32, f32), f32)>,
-) {
+) -> HashSet<u32> {
     let mut active_source_ids = HashSet::new();
-    let mut dynamic_lights = Vec::new();
 
     // Create a map of entity positions to their behaviors
     let mut position_to_behavior = HashMap::new();
@@ -119,36 +115,16 @@ pub fn identify_active_light_sources(
         }
     }
 
-    // Collect dynamic lights that aren't in prebaked data
-    for (pos, behavior) in qt.iter() {
-        let board_pos = pos.to_board_position();
-        let idx = board_pos.ndidx();
-        let lux = behavior.p.light.emmisivity_lumens();
-
-        if lux > 0.0 && behavior.p.light.emits_light {
-            let prebaked_data = &bf.prebaked_lighting[idx];
-            if prebaked_data.light_info.source_id.is_none() {
-                dynamic_lights.push((
-                    board_pos.clone(),
-                    lux,
-                    behavior.p.light.color(),
-                    30.0, // Default maximum propagation distance
-                ));
-            }
-        }
-    }
-
     info!(
-        "Active light sources: {}/{} (prebaked) + {} dynamic sources",
+        "Active light sources: {}/{} (prebaked) ",
         active_source_ids.len(),
         bf.prebaked_lighting
             .iter()
             .filter(|d| d.light_info.source_id.is_some())
             .count(),
-        dynamic_lights.len()
     );
 
-    (active_source_ids, dynamic_lights)
+    active_source_ids
 }
 
 /// Apply prebaked light contributions from active sources
@@ -245,7 +221,7 @@ pub fn find_wave_edge_tiles(
     bf: &BoardData,
     active_source_ids: &HashSet<u32>,
     door_states: &HashMap<(usize, usize, usize), bool>,
-) -> Vec<(BoardPosition, u32, f32, (f32, f32, f32), f32)> {
+) -> Vec<(BoardPosition, u32, f32, (f32, f32, f32))> {
     let mut wave_edges = Vec::new();
 
     // Find all wave edge tiles where light propagation can continue
@@ -299,7 +275,6 @@ pub fn find_wave_edge_tiles(
             source_id,
             prebaked_data.light_info.lux,
             prebaked_data.light_info.color,
-            20.0, // Remaining distance for propagation
         ));
     }
 
@@ -307,132 +282,27 @@ pub fn find_wave_edge_tiles(
     wave_edges
 }
 
-/// Adds dynamic light sources to the lighting field
-pub fn add_dynamic_light_sources(
-    bf: &BoardData,
-    lfs: &mut Array3<LightFieldData>,
-    dynamic_lights: Vec<(BoardPosition, f32, (f32, f32, f32), f32)>,
-) -> Array3<bool> {
-    let mut visited = Array3::from_elem(bf.map_size, false);
-    let mut dynamic_queue = VecDeque::new();
-
-    // Define directions for propagation
-    let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
-
-    // Add all dynamic light sources to the queue
-    for (pos, lux, color, distance) in dynamic_lights {
-        let idx = pos.ndidx();
-
-        // Update light field with dynamic source
-        lfs[idx].lux += lux;
-        if lfs[idx].lux > 0.0 {
-            lfs[idx].color = blend_colors(lfs[idx].color, lfs[idx].lux - lux, color, lux);
-        } else {
-            lfs[idx].color = color;
-        }
-
-        // Add to queue for propagation
-        dynamic_queue.push_back((pos, distance, lux, color));
-        visited[idx] = true;
-    }
-
-    // Propagate dynamic lights
-    let mut propagation_count = 0;
-
-    while let Some((pos, remaining_distance, current_lux, color)) = dynamic_queue.pop_front() {
-        // Skip if we've reached the distance limit or light is too dim
-        if remaining_distance <= 0.0 || current_lux < 0.001 {
-            continue;
-        }
-
-        // Process each direction
-        for &(dx, dy, dz) in &directions {
-            let nx = pos.x + dx;
-            let ny = pos.y + dy;
-            let nz = pos.z + dz;
-
-            // Skip if out of bounds
-            if !is_in_bounds((nx, ny, nz), bf.map_size) {
-                continue;
-            }
-
-            let neighbor_pos = BoardPosition {
-                x: nx,
-                y: ny,
-                z: nz,
-            };
-            let neighbor_idx = neighbor_pos.ndidx();
-
-            // Skip if already visited
-            if visited[neighbor_idx] {
-                continue;
-            }
-
-            // Check if light can pass through
-            let collision = &bf.collision_field[neighbor_idx];
-            if !collision.see_through {
-                continue;
-            }
-
-            // Calculate diminished light
-            let falloff = 0.75;
-            let new_lux = current_lux * falloff;
-
-            // Skip if too dim
-            if new_lux < 0.001 {
-                continue;
-            }
-
-            // Update light field for neighbor
-            lfs[neighbor_idx].lux += new_lux;
-            if lfs[neighbor_idx].lux > 0.0 {
-                lfs[neighbor_idx].color = blend_colors(
-                    lfs[neighbor_idx].color,
-                    lfs[neighbor_idx].lux - new_lux,
-                    color,
-                    new_lux,
-                );
-            } else {
-                lfs[neighbor_idx].color = color;
-            }
-
-            // Add neighbor to queue
-            dynamic_queue.push_back((neighbor_pos, remaining_distance - 1.0, new_lux, color));
-            visited[neighbor_idx] = true;
-
-            propagation_count += 1;
-        }
-    }
-
-    info!("Added {} dynamic light propagations", propagation_count);
-    visited
-}
-
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
     bf: &BoardData,
     lfs: &mut Array3<LightFieldData>,
-    visited: &mut Array3<bool>,
-    wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32), f32)],
+    wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32))],
 ) -> usize {
     let mut queue = VecDeque::new();
     let mut propagation_count = 0;
+
+    let mut visited: Array3<bool> = Array3::from_elem(bf.map_size, false);
 
     // Define directions for propagation
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
 
     // Add all wave edges to the queue
-    for &(ref pos, _, lux, color, remaining_distance) in wave_edges {
-        queue.push_back((pos.clone(), remaining_distance, lux, color));
+    for &(ref pos, _, lux, color) in wave_edges {
+        queue.push_back((pos.clone(), lux, color));
     }
 
     // Process queue using BFS
-    while let Some((pos, remaining_distance, current_lux, color)) = queue.pop_front() {
-        // Skip if we've reached the distance limit or light is too dim
-        if remaining_distance <= 0.0 || current_lux < 0.001 {
-            continue;
-        }
-
+    while let Some((pos, current_lux, color)) = queue.pop_front() {
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
             let nx = pos.x + dx;
@@ -458,25 +328,24 @@ pub fn propagate_from_wave_edges(
 
             // Check collision data
             let collision = &bf.collision_field[neighbor_idx];
-            if !collision.see_through {
+
+            if !collision.see_through && !collision.is_dynamic {
                 continue;
             }
 
-            // Calculate diminished light
-            let falloff = 0.75;
+            // Calculate diminished light (use 0.05 for objects that are opaque but can be changed)
+            let falloff = if collision.see_through { 0.65 } else { 0.05 };
             let new_lux = current_lux * falloff;
 
-            // Skip if too dim
-            if new_lux < 0.001 {
+            // Skip propagating if the contribution is too small
+            if lfs[neighbor_idx].lux > new_lux * 2.0 {
                 continue;
             }
-
             // Update light field for neighbor
-            lfs[neighbor_idx].lux += new_lux;
             if lfs[neighbor_idx].lux > 0.0 {
                 lfs[neighbor_idx].color = blend_colors(
                     lfs[neighbor_idx].color,
-                    lfs[neighbor_idx].lux - new_lux,
+                    lfs[neighbor_idx].lux,
                     color,
                     new_lux,
                 );
@@ -484,13 +353,15 @@ pub fn propagate_from_wave_edges(
                 lfs[neighbor_idx].color = color;
             }
 
+            lfs[neighbor_idx].lux += new_lux;
             // Add neighbor to queue
-            queue.push_back((neighbor_pos, remaining_distance - 1.0, new_lux, color));
+            queue.push_back((neighbor_pos, new_lux, color));
             visited[neighbor_idx] = true;
 
             propagation_count += 1;
         }
     }
 
+    info!("Total light propagations: {}", propagation_count);
     propagation_count
 }

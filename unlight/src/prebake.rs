@@ -131,11 +131,6 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
             // Get collision data for the neighbor
             let collision = &bf.collision_field[neighbor_idx];
 
-            // Check if we can propagate light through this neighbor
-            if !collision.see_through {
-                continue;
-            }
-
             // Check if already visited by this source
             let source_visited = visited_by_source
                 .entry(source_id)
@@ -160,10 +155,13 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(&Position, &Behavi
                 prebaked[pos.ndidx()].is_wave_edge = true;
                 wave_edges += 1;
 
-                // Skip propagation through this neighbor if it's already lit by another source
-                if already_has_different_source {
-                    continue;
-                }
+                // If it's the edge, it's because we stopped here. So we stop.
+                continue;
+            }
+
+            // Check if we can propagate light through this neighbor
+            if !collision.see_through {
+                continue;
             }
 
             // Mark this neighbor as visited by this source
