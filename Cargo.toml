@@ -110,22 +110,40 @@ path = "unhaunter/src/lib.rs"
 bevy_dylib = { workspace = true }
 
 [profile.dev]
-opt-level = "z"
-lto = "off"
-codegen-units = 8
+opt-level = "s"
+lto = "thin"
+debug-assertions = true
+overflow-checks = true
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
-opt-level = "z"
+opt-level = "s"
 debug = false
 strip = "debuginfo"
+codegen-units = 1
+
+debug-assertions = true
+overflow-checks = true
 
 # These optimizations for release are trying to target mostly WASM
 [profile.release]
+opt-level = "s"
+# TODO: When WASM gets its own release profile we will keep some debug info to do profiling as well on release.
+debug = false
+strip = "debuginfo"
+# --
+debug-assertions = false
+overflow-checks = false
+lto = "thin"
+codegen-units = 1
+
+# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE. 
+# This will allow us to have a custom profile for WASM builds, and then make it much more aggressive.
+
+[profile.release.package."*"]
 opt-level = "s"
 debug = false
 strip = "debuginfo"
 debug-assertions = false
 overflow-checks = false
-lto = true
 codegen-units = 1
