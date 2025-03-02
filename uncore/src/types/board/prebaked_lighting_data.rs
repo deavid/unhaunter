@@ -39,4 +39,5 @@ pub struct LightInfo {
 #[derive(Clone, Debug, Default)]
 pub struct PrebakedMetadata {
     pub light_sources: Vec<(Entity, (usize, usize, usize))>,
+    pub doors: Vec<Entity>,
 }

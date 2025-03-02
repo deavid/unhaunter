@@ -261,7 +261,7 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
     let initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
 
     // 3. Handle door states
-    let door_states = collect_door_states(qt);
+    let door_states = collect_door_states(bf, qt);
 
     // 4. Find wave edge tiles that need propagation
     let wave_edges = find_wave_edge_tiles(bf, &active_source_ids, &door_states);

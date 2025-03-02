@@ -5,7 +5,7 @@ use bevy::{
 use ndarray::Array3;
 use std::collections::VecDeque;
 use uncore::{
-    behavior::{Behavior, Class, TileState},
+    behavior::{Behavior, TileState},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
     types::board::fielddata::LightFieldData,
@@ -177,21 +177,14 @@ pub fn update_exposure_and_stats(bf: &mut BoardData, lfs: &Array3<LightFieldData
 
 /// Collects information about door states from entity behaviors
 pub fn collect_door_states(
+    bf: &BoardData,
     qt: &Query<(&Position, &Behavior)>,
 ) -> HashMap<(usize, usize, usize), bool> {
     let mut door_states = HashMap::new();
-
-    for (pos, behavior) in qt.iter() {
-        // Check if this entity is a door
-        let is_door = behavior.key_cvo().class == Class::Door;
-
-        if is_door {
+    for entity in &bf.prebaked_metadata.doors {
+        if let Ok((pos, behavior)) = qt.get(*entity) {
             let board_pos = pos.to_board_position();
-            let idx = (
-                board_pos.x as usize,
-                board_pos.y as usize,
-                board_pos.z as usize,
-            );
+            let idx = board_pos.ndidx();
             let is_open = behavior.state() == TileState::Open;
 
             // Store the door's open state (true if open, false if closed)

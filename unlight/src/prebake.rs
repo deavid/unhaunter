@@ -7,7 +7,7 @@ use bevy::{
 };
 use ndarray::Array3;
 use uncore::{
-    behavior::Behavior,
+    behavior::{Behavior, Class},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
     types::board::prebaked_lighting_data::{LightInfo, PrebakedLightingData},
@@ -35,6 +35,11 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     for (entity, pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
         let idx = board_pos.ndidx();
+        let is_door = behavior.key_cvo().class == Class::Door;
+
+        if is_door {
+            bf.prebaked_metadata.doors.push(entity);
+        }
 
         // Check if this entity emits light
         if behavior.p.light.can_emit_light {
