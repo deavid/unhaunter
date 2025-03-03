@@ -278,7 +278,10 @@ pub fn propagate_from_wave_edges(
                 z: nz,
             };
             let neighbor_idx = neighbor_pos.ndidx();
-
+            // If the neighbor was already in the prebaked data, skip
+            if Some(source_id) == bf.prebaked_lighting[neighbor_idx].light_info.source_id {
+                continue;
+            }
             // Skip if already visited
             if visited[neighbor_idx].contains(&source_id) {
                 continue;
@@ -291,7 +294,7 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
-            let transparency = if collision.see_through { 1.0 } else { 0.05 };
+            let transparency = if collision.see_through { 0.9 } else { 0.05 };
             let src_light_lux = wave_edge.src_light_lux * transparency;
             let distance_travelled = wave_edge.distance_travelled;
             let new_lux = src_light_lux / (distance_travelled * distance_travelled);
