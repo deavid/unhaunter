@@ -6,6 +6,8 @@
 
 use bevy::ecs::entity::Entity;
 
+use crate::components::board::boardposition::BoardPosition;
+
 /// Holds precomputed lighting propagation data for a single tile.
 ///
 /// This structure stores minimal information about light sources and wave edges,
@@ -28,6 +30,8 @@ pub struct WaveEdge {
     pub src_light_lux: f32,
     /// The distance travelled by the light wave
     pub distance_travelled: f32,
+    /// History of positions that led to this wave edge
+    pub path_history: Vec<BoardPosition>,
 }
 
 /// Stores the base light information for a tile

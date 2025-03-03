@@ -246,21 +246,38 @@ pub fn propagate_from_wave_edges(
     lfs: &mut Array3<LightFieldData>,
     wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32), WaveEdge)],
 ) -> usize {
+    // New struct to track position history for turn detection
+    #[derive(Clone)]
+    struct InternalWaveEdge {
+        wave_edge: WaveEdge,
+        source_id: u32,
+        color: (f32, f32, f32),
+    }
+
     let mut queue = VecDeque::new();
     let mut propagation_count = 0;
+    const MAX_HISTORY: usize = 12; // Number of positions to track
 
     let mut visited: Array3<HashSet<u32>> = Array3::from_elem(bf.map_size, HashSet::new());
 
-    // Define directions for propagation
+    // Define directions for propagation1
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
 
-    // Add all wave edges to the queue
-    for &(ref pos, source_id, _lux, color, ref wave_edge) in wave_edges {
-        queue.push_back((pos.clone(), source_id, color, wave_edge.clone()));
+    // Add all wave edges to the queue with initial history
+    for &(ref _pos, source_id, _lux, color, ref wave_edge) in wave_edges {
+        // Use stored history when available, otherwise initialize with current position
+
+        queue.push_back(InternalWaveEdge {
+            wave_edge: wave_edge.clone(),
+            source_id,
+            color,
+        });
     }
 
     // Process queue using BFS
-    while let Some((pos, source_id, color, wave_edge)) = queue.pop_front() {
+    while let Some(edge_data) = queue.pop_front() {
+        let pos = edge_data.wave_edge.path_history.last().unwrap();
+
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
             let nx = pos.x + dx;
@@ -278,15 +295,19 @@ pub fn propagate_from_wave_edges(
                 z: nz,
             };
             let neighbor_idx = neighbor_pos.ndidx();
+
             // If the neighbor was already in the prebaked data, skip
-            if Some(source_id) == bf.prebaked_lighting[neighbor_idx].light_info.source_id {
+            if Some(edge_data.source_id) == bf.prebaked_lighting[neighbor_idx].light_info.source_id
+            {
                 continue;
             }
+
             // Skip if already visited
-            if visited[neighbor_idx].contains(&source_id) {
+            if visited[neighbor_idx].contains(&edge_data.source_id) {
                 continue;
             }
-            visited[neighbor_idx].insert(source_id);
+            visited[neighbor_idx].insert(edge_data.source_id);
+
             // Check collision data
             let collision = &bf.collision_field[neighbor_idx];
 
@@ -294,38 +315,115 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
-            let transparency = if collision.see_through { 0.9 } else { 0.05 };
-            let src_light_lux = wave_edge.src_light_lux * transparency;
-            let distance_travelled = wave_edge.distance_travelled;
+            // Create history for the new position
+            let mut new_history = edge_data.wave_edge.path_history.clone();
+            new_history.push(neighbor_pos.clone());
+            if new_history.len() > MAX_HISTORY {
+                new_history.remove(0); // Keep history at MAX_HISTORY positions maximum
+            }
+
+            // Calculate turn penalty based on history
+            let turn_penalty = if new_history.len() >= MAX_HISTORY {
+                // Get the old direction (from pos[0] to pos[9])
+                let start_idx = 0;
+                let mid_idx = MAX_HISTORY * 3 / 4;
+                let start_pos = &new_history[start_idx];
+                let mid_pos = &new_history[mid_idx];
+
+                let old_dir = (
+                    mid_pos.x - start_pos.x,
+                    mid_pos.y - start_pos.y,
+                    mid_pos.z - start_pos.z,
+                );
+
+                // Get the recent direction (from pos[mid_idx] to current)
+                let end_pos = new_history.last().unwrap();
+                let recent_dir = (
+                    end_pos.x - mid_pos.x,
+                    end_pos.y - mid_pos.y,
+                    end_pos.z - mid_pos.z,
+                );
+
+                // Calculate dot product of normalized vectors
+                let old_len = ((old_dir.0 * old_dir.0
+                    + old_dir.1 * old_dir.1
+                    + old_dir.2 * old_dir.2) as f32)
+                    .sqrt();
+                let recent_len = ((recent_dir.0 * recent_dir.0
+                    + recent_dir.1 * recent_dir.1
+                    + recent_dir.2 * recent_dir.2) as f32)
+                    .sqrt();
+
+                if old_len > 0.0 && recent_len > 0.0 {
+                    let old_norm = (
+                        old_dir.0 as f32 / old_len,
+                        old_dir.1 as f32 / old_len,
+                        old_dir.2 as f32 / old_len,
+                    );
+
+                    let recent_norm = (
+                        recent_dir.0 as f32 / recent_len,
+                        recent_dir.1 as f32 / recent_len,
+                        recent_dir.2 as f32 / recent_len,
+                    );
+
+                    // Dot product (cosine of angle between vectors)
+                    let dot_product = old_norm.0 * recent_norm.0
+                        + old_norm.1 * recent_norm.1
+                        + old_norm.2 * recent_norm.2;
+
+                    // Convert dot product to penalty factor
+                    // When dot = 1 (straight line): penalty = 1.0 (no penalty)
+                    // When dot = 0 (90° turn): penalty = 1.0 + TURN_FACTOR
+                    // When dot = -1 (180° turn): penalty = 1.0 + 2*TURN_FACTOR
+                    const TURN_FACTOR: f32 = 1.0; // Adjust to control severity of turn penalty
+                    1.0 + (1.0 - dot_product) * TURN_FACTOR
+                } else {
+                    1.0 // No penalty if vectors can't be normalized
+                }
+            } else {
+                1.0 // No penalty until we have enough history
+            };
+            let transparency = if collision.see_through {
+                0.9 / turn_penalty
+            } else {
+                0.05
+            };
+            let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
+            let distance_travelled = edge_data.wave_edge.distance_travelled;
+
+            // Apply the turn penalty to the light intensity
             let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
             // Skip propagating if the contribution is too small
             if lfs[neighbor_idx].lux > new_lux * 2.0 {
                 continue;
             }
+
             // Update light field for neighbor
             if lfs[neighbor_idx].lux > 0.0 {
                 lfs[neighbor_idx].color = blend_colors(
                     lfs[neighbor_idx].color,
                     lfs[neighbor_idx].lux,
-                    color,
+                    edge_data.color,
                     new_lux,
                 );
             } else {
-                lfs[neighbor_idx].color = color;
+                lfs[neighbor_idx].color = edge_data.color;
             }
 
             lfs[neighbor_idx].lux += new_lux;
-            // Add neighbor to queue
-            queue.push_back((
-                neighbor_pos,
-                source_id,
-                color,
-                WaveEdge {
+
+            // Add neighbor to queue with updated history
+            queue.push_back(InternalWaveEdge {
+                wave_edge: WaveEdge {
                     src_light_lux,
-                    distance_travelled: wave_edge.distance_travelled + 1.0,
+                    distance_travelled: distance_travelled + 1.0,
+                    path_history: new_history,
                 },
-            ));
+                source_id: edge_data.source_id,
+                color: edge_data.color,
+            });
 
             propagation_count += 1;
         }

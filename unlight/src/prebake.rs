@@ -66,7 +66,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // Track positions visited by each light source to prevent overlap
     let mut visited_by_source: HashMap<u32, HashSet<(i64, i64, i64)>> = HashMap::new();
 
-    // BFS queue for light propagation - (position, source_id, current_lux, color, remaining_distance)
+    // BFS queue for light propagation - (position, source_id, current_lux, color, remaining_distance, path_history)
     let mut propagation_queue = VecDeque::new();
 
     // Initialize queue with all light sources
@@ -78,6 +78,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 z: k as i64,
             };
 
+            // Create initial history with just the source position
+            let initial_history = vec![pos.clone()];
+
             // Add light source to the queue
             propagation_queue.push_back((
                 pos,
@@ -85,6 +88,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 data.light_info.lux,
                 data.light_info.color,
                 2.0, // Distance travelled by light (in tiles, initialized with the light height)
+                initial_history,
             ));
 
             // Mark source position as visited
@@ -106,9 +110,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
         (0, -1, 0), // South (-Y)
         (-1, 0, 0), // West (-X)
     ];
+    const MAX_HISTORY: usize = 20;
 
     // Process the queue in BFS manner
-    while let Some((pos, source_id, src_light_lux, color, distance_travelled)) =
+    while let Some((pos, source_id, src_light_lux, color, distance_travelled, path_history)) =
         propagation_queue.pop_front()
     {
         // Process each neighbor
@@ -151,11 +156,19 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             // Mark wave edge if:
             // 1. We hit another light source's area, or
             // 2. We hit a dynamic object like a door
-            if already_has_different_source || is_dynamic_object {
-                // Mark the current position as a wave edge (not the neighbor)
+            // 3. Transparent things where the player cannot move through, i.e. windows.
+            if already_has_different_source || is_dynamic_object || !collision.player_free {
+                // Create a trimmed history of the most recent MAX_HISTORY positions
+                let mut stored_history = path_history.clone();
+                if stored_history.len() > MAX_HISTORY {
+                    stored_history = stored_history.split_off(stored_history.len() - MAX_HISTORY);
+                }
+
+                // Mark the current position as a wave edge with history
                 prebaked[pos.ndidx()].wave_edge = Some(WaveEdge {
                     src_light_lux,
                     distance_travelled,
+                    path_history: stored_history,
                 });
                 wave_edges += 1;
 
@@ -186,6 +199,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 propagated_tiles += 1;
             }
 
+            // Create updated path history for the neighbor
+            let mut new_history = path_history.clone();
+            new_history.push(neighbor_pos.clone());
+
             // Continue propagation by adding the neighbor to the queue
             propagation_queue.push_back((
                 neighbor_pos,
@@ -193,6 +210,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 src_light_lux,
                 color,
                 distance_travelled + 1.0,
+                new_history,
             ));
         }
     }
