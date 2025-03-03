@@ -1,9 +1,8 @@
 use crate::{
     cached_board_pos::CachedBoardPos,
     utils::{
-        apply_prebaked_contributions, collect_door_states, find_wave_edge_tiles,
-        identify_active_light_sources, is_in_bounds, propagate_from_wave_edges,
-        update_exposure_and_stats,
+        apply_prebaked_contributions, find_wave_edge_tiles, identify_active_light_sources,
+        is_in_bounds, propagate_from_wave_edges, update_exposure_and_stats,
     },
 };
 use bevy::{prelude::*, utils::Instant};
@@ -260,13 +259,10 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
     // 2. Apply prebaked contributions from active sources
     let initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
 
-    // 3. Handle door states
-    let door_states = collect_door_states(bf, qt);
+    // 3. Find wave edge tiles that need propagation
+    let wave_edges = find_wave_edge_tiles(bf, &active_source_ids);
 
-    // 4. Find wave edge tiles that need propagation
-    let wave_edges = find_wave_edge_tiles(bf, &active_source_ids, &door_states);
-
-    // 5. Propagate light from wave edges
+    // 4. Propagate light from wave edges
     let dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &wave_edges);
 
     info!(
@@ -274,10 +270,10 @@ pub fn rebuild_lighting_field_new(bf: &mut BoardData, qt: &Query<(&Position, &Be
         dynamic_propagation_count, initial_tiles_lit
     );
 
-    // 6. Apply ambient light to walls
+    // 5. Apply ambient light to walls
     apply_ambient_light_to_walls(bf, &mut lfs);
 
-    // 7. Calculate exposure and update board data
+    // 6. Calculate exposure and update board data
     update_exposure_and_stats(bf, &lfs);
 
     info!(

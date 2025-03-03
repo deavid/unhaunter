@@ -19,7 +19,15 @@ pub struct PrebakedLightingData {
     /// Indicates if this is a wave edge (point where light wave stopped propagating)
     /// These points can be used to continue light propagation at runtime
     /// for dynamic elements like doors
-    pub is_wave_edge: bool,
+    pub wave_edge: Option<WaveEdge>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct WaveEdge {
+    /// The lux intensity for the corresponding light at the source
+    pub src_light_lux: f32,
+    /// The distance travelled by the light wave
+    pub distance_travelled: f32,
 }
 
 /// Stores the base light information for a tile

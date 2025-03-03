@@ -10,7 +10,7 @@ use uncore::{
     behavior::{Behavior, Class},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
-    types::board::prebaked_lighting_data::{LightInfo, PrebakedLightingData},
+    types::board::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge},
 };
 
 /// Pre-computes static light propagation data using a simplified BFS approach.
@@ -84,7 +84,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 source_id,
                 data.light_info.lux,
                 data.light_info.color,
-                30.0, // Max propagation distance
+                2.0, // Distance travelled by light (in tiles, initialized with the light height)
             ));
 
             // Mark source position as visited
@@ -108,14 +108,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     ];
 
     // Process the queue in BFS manner
-    while let Some((pos, source_id, current_lux, color, remaining_distance)) =
+    while let Some((pos, source_id, src_light_lux, color, distance_travelled)) =
         propagation_queue.pop_front()
     {
-        // Skip if light is too dim or distance limit reached
-        if remaining_distance <= 0.0 || current_lux < 0.001 {
-            continue;
-        }
-
         // Process each neighbor
         for &(dx, dy, dz) in &directions {
             let nx = pos.x + dx;
@@ -158,7 +153,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             // 2. We hit a dynamic object like a door
             if already_has_different_source || is_dynamic_object {
                 // Mark the current position as a wave edge (not the neighbor)
-                prebaked[pos.ndidx()].is_wave_edge = true;
+                prebaked[pos.ndidx()].wave_edge = Some(WaveEdge {
+                    src_light_lux,
+                    distance_travelled,
+                });
                 wave_edges += 1;
 
                 // If it's the edge, it's because we stopped here. So we stop.
@@ -174,13 +172,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             source_visited.insert((nx, ny, nz));
 
             // Calculate light attenuation with distance
-            let falloff = 0.75; // Basic falloff factor
-            let new_lux = current_lux * falloff;
-
-            // Skip if light becomes too dim
-            if new_lux < 0.001 {
-                continue;
-            }
+            let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
             // Apply the light to this neighbor if it doesn't already have a source
             if prebaked[neighbor_idx].light_info.source_id.is_none() {
@@ -198,9 +190,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             propagation_queue.push_back((
                 neighbor_pos,
                 source_id,
-                new_lux,
+                src_light_lux,
                 color,
-                remaining_distance - 1.0,
+                distance_travelled + 1.0,
             ));
         }
     }

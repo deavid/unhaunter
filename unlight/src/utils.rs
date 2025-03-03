@@ -8,7 +8,7 @@ use uncore::{
     behavior::{Behavior, TileState},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
-    types::board::fielddata::LightFieldData,
+    types::board::{fielddata::LightFieldData, prebaked_lighting_data::WaveEdge},
 };
 
 /// Checks if a position is within the board boundaries
@@ -200,47 +200,24 @@ pub fn collect_door_states(
 pub fn find_wave_edge_tiles(
     bf: &BoardData,
     active_source_ids: &HashSet<u32>,
-    door_states: &HashMap<(usize, usize, usize), bool>,
-) -> Vec<(BoardPosition, u32, f32, (f32, f32, f32))> {
+) -> Vec<(BoardPosition, u32, f32, (f32, f32, f32), WaveEdge)> {
     let mut wave_edges = Vec::new();
 
     // Find all wave edge tiles where light propagation can continue
     for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
         // Skip if not a wave edge
-        if !prebaked_data.is_wave_edge {
+        let Some(wave_edge) = &prebaked_data.wave_edge else {
             continue;
-        }
+        };
 
         // Skip if no source info
-        let source_id = match prebaked_data.light_info.source_id {
-            Some(id) => id,
-            None => continue,
+        let Some(source_id) = prebaked_data.light_info.source_id else {
+            continue;
         };
 
         // Skip if source is not active
         if !active_source_ids.contains(&source_id) {
             continue;
-        }
-
-        // Check if this is adjacent to a door
-        let is_near_door = door_states.iter().any(|(&(dx, dy, dz), &_)| {
-            (dx as i32 - i as i32).abs() <= 1
-                && (dy as i32 - j as i32).abs() <= 1
-                && (dz as i32 - k as i32).abs() <= 1
-        });
-
-        // If it's near a door, only add if door is open
-        if is_near_door {
-            let is_near_open_door = door_states.iter().any(|(&(dx, dy, dz), &is_open)| {
-                is_open
-                    && (dx as i32 - i as i32).abs() <= 1
-                    && (dy as i32 - j as i32).abs() <= 1
-                    && (dz as i32 - k as i32).abs() <= 1
-            });
-
-            if !is_near_open_door {
-                continue;
-            }
         }
 
         // Add to wave edges (whether or not it's near a door)
@@ -255,6 +232,7 @@ pub fn find_wave_edge_tiles(
             source_id,
             prebaked_data.light_info.lux,
             prebaked_data.light_info.color,
+            wave_edge.clone(),
         ));
     }
 
@@ -266,23 +244,23 @@ pub fn find_wave_edge_tiles(
 pub fn propagate_from_wave_edges(
     bf: &BoardData,
     lfs: &mut Array3<LightFieldData>,
-    wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32))],
+    wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32), WaveEdge)],
 ) -> usize {
     let mut queue = VecDeque::new();
     let mut propagation_count = 0;
 
-    let mut visited: Array3<bool> = Array3::from_elem(bf.map_size, false);
+    let mut visited: Array3<HashSet<u32>> = Array3::from_elem(bf.map_size, HashSet::new());
 
     // Define directions for propagation
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
 
     // Add all wave edges to the queue
-    for &(ref pos, _, lux, color) in wave_edges {
-        queue.push_back((pos.clone(), lux, color));
+    for &(ref pos, source_id, _lux, color, ref wave_edge) in wave_edges {
+        queue.push_back((pos.clone(), source_id, color, wave_edge.clone()));
     }
 
     // Process queue using BFS
-    while let Some((pos, current_lux, color)) = queue.pop_front() {
+    while let Some((pos, source_id, color, wave_edge)) = queue.pop_front() {
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
             let nx = pos.x + dx;
@@ -302,10 +280,10 @@ pub fn propagate_from_wave_edges(
             let neighbor_idx = neighbor_pos.ndidx();
 
             // Skip if already visited
-            if visited[neighbor_idx] {
+            if visited[neighbor_idx].contains(&source_id) {
                 continue;
             }
-
+            visited[neighbor_idx].insert(source_id);
             // Check collision data
             let collision = &bf.collision_field[neighbor_idx];
 
@@ -313,9 +291,10 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
-            // Calculate diminished light (use 0.05 for objects that are opaque but can be changed)
-            let falloff = if collision.see_through { 0.65 } else { 0.05 };
-            let new_lux = current_lux * falloff;
+            let transparency = if collision.see_through { 1.0 } else { 0.05 };
+            let src_light_lux = wave_edge.src_light_lux * transparency;
+            let distance_travelled = wave_edge.distance_travelled;
+            let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
             // Skip propagating if the contribution is too small
             if lfs[neighbor_idx].lux > new_lux * 2.0 {
@@ -335,8 +314,15 @@ pub fn propagate_from_wave_edges(
 
             lfs[neighbor_idx].lux += new_lux;
             // Add neighbor to queue
-            queue.push_back((neighbor_pos, new_lux, color));
-            visited[neighbor_idx] = true;
+            queue.push_back((
+                neighbor_pos,
+                source_id,
+                color,
+                WaveEdge {
+                    src_light_lux,
+                    distance_travelled: wave_edge.distance_travelled + 1.0,
+                },
+            ));
 
             propagation_count += 1;
         }
