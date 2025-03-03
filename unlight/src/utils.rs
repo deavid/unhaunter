@@ -385,19 +385,21 @@ pub fn propagate_from_wave_edges(
                 1.0 // No penalty until we have enough history
             };
             let transparency = if collision.see_through {
-                0.9 / turn_penalty
+                0.9 / turn_penalty.min(1.2)
             } else {
                 0.05
             };
-            let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
+            let mut src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
             let distance_travelled = edge_data.wave_edge.distance_travelled;
 
             // Apply the turn penalty to the light intensity
             let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
             // Skip propagating if the contribution is too small
-            if lfs[neighbor_idx].lux > new_lux * 2.0 {
+            if lfs[neighbor_idx].lux > new_lux * 10.0 {
                 continue;
+            } else if lfs[neighbor_idx].lux > new_lux {
+                src_light_lux /= 1.2;
             }
 
             // Update light field for neighbor

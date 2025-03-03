@@ -657,20 +657,20 @@ impl SpriteConfig {
                 p.display.global_z = (-0.00004).try_into().unwrap();
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.emission_power = (3.0).try_into().unwrap();
                 p.light.heat_coef = -1;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (6.0).try_into().unwrap();
+                p.light.emission_power = (2.0).try_into().unwrap();
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (6.5).try_into().unwrap();
+                p.light.emission_power = (1.0).try_into().unwrap();
             }
             Class::WallDecor => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
@@ -679,7 +679,7 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
-                p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.emission_power = (3.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
             Class::StreetLight => {
