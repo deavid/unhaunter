@@ -287,11 +287,14 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
     let wall_light_start = Instant::now();
     let mut walls_lit = 0;
 
-    // // Define directions for 4-way connectivity
-    // let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
-
-    // Only 2 directions to lit up the external walls on their facing side from the camera POV.
-    let directions = [(1, 0, 0), (0, -1, 0)];
+    // // Define directions for 4-way connectivity (plus weight)
+    let directions = [
+        (0, 1, 0, 0.01),
+        (1, -1, 0, 0.1),
+        (1, 0, 0, 1.0),
+        (0, -1, 0, 1.0),
+        (-1, 0, 0, 0.01),
+    ];
 
     // Threshold for considering a tile "dark"
     const DARK_THRESHOLD: f32 = 0.000001;
@@ -309,7 +312,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
         let mut weighted_color_sum = (0.0, 0.0, 0.0);
         let mut weight_sum = 0.0;
 
-        for &(dx, dy, dz) in &directions {
+        for &(dx, dy, dz, w_factor) in &directions {
             let nx = i as i64 + dx;
             let ny = j as i64 + dy;
             let nz = k as i64 + dz;
@@ -344,7 +347,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
                     }
                 }
                 _ => 1.0,
-            };
+            } * w_factor;
 
             // Apply ambient factor
             let ambient_factor = 0.3;
