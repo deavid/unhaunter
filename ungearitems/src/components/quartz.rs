@@ -18,6 +18,8 @@ const MAX_CRACKS: u8 = 4;
 pub struct QuartzStoneData {
     /// Number of cracks in the stone (0-3).
     pub cracks: u8,
+    /// Bonus time for recently cracked
+    pub cracked_time: f32,
     /// Amount of energy absorbed from the ghost - what produces the cracks.
     pub energy_absorbed: f32,
 }
@@ -32,14 +34,18 @@ impl GearUsable for QuartzStoneData {
     }
 
     fn get_status(&self) -> String {
-        match self.cracks {
-            0 => "Pure".to_string(),
-            1 => "Used once".to_string(),
-            2 => "Used twice".to_string(),
-            3 => "Cracked, one use remaining".to_string(),
-            4 => "Shattered - Unusable".to_string(),
-            _ => "unknown".to_string(),
-        }
+        let state = match self.cracks {
+            0 => "Pure",
+            1 => "Used once",
+            2 => "Used twice",
+            3 => "Cracked, one use remaining",
+            4 => "Shattered - Unusable",
+            _ => "unknown",
+        };
+        format!(
+            "State: {state}\nEnergy absorbed: {energy:.1}",
+            energy = self.energy_absorbed - self.cracked_time
+        )
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
@@ -47,11 +53,11 @@ impl GearUsable for QuartzStoneData {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        if self.energy_absorbed > 30.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
+        if self.energy_absorbed > 10.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
             && self.cracks <= MAX_CRACKS
         {
             self.energy_absorbed = 0.0;
-
+            self.cracked_time = 5.0;
             // Increment cracks
             self.cracks += 1;
 
@@ -88,20 +94,25 @@ impl GearUsable for QuartzStoneData {
         let dist_adj = (distance2 + MIN_DIST2) / MIN_DIST2;
         let dist_adj_recip = dist_adj.recip() - 0.2;
         let stone_health = (MAX_CRACKS - self.cracks) as f32 / MAX_CRACKS as f32;
-        let str = ghost_sprite.hunting
+        let strength = ghost_sprite.hunting
             * dt
             * dist_adj_recip.clamp(0.0, 1.0)
             * stone_health.clamp(0.0, 1.0).sqrt();
-        if ghost_sprite.hunt_target {
-            let str = (str * 4.0).min(ghost_sprite.hunting);
-            ghost_sprite.hunting -= str;
-            self.energy_absorbed += str;
+        if self.cracked_time > 0.0 {
+            self.cracked_time -= dt;
+            let strength = (strength * 1.0).min(ghost_sprite.hunting);
+            ghost_sprite.hunting -= strength;
+        } else if ghost_sprite.hunt_target {
+            let strength = (strength * 8.0).min(ghost_sprite.hunting);
+            ghost_sprite.hunting -= strength;
+            self.energy_absorbed += strength;
         } else {
-            let str = (str * 0.4).min(ghost_sprite.hunting);
-            ghost_sprite.hunting -= str;
-            self.energy_absorbed += str;
+            let strength = (strength * 0.1).min(ghost_sprite.hunting);
+            ghost_sprite.hunting -= strength;
+            self.energy_absorbed += strength;
         }
-        const RESTORE_SPEED: f32 = 0.3;
+
+        const RESTORE_SPEED: f32 = 0.1;
         self.energy_absorbed -= (RESTORE_SPEED * dt).min(self.energy_absorbed);
         // TODO: Spwan here a red particle from the ghost that travels to the quartz ..
         // stone to show the energy of the ghost being drawn.
