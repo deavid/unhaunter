@@ -2,6 +2,7 @@ use uncore::DEBUG_PLAYER;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::game_ui::DamageBackground;
+use uncore::components::player::Stamina;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
@@ -141,6 +142,29 @@ pub fn visual_health(
                     bgcolor.0 = new_color;
                 }
             }
+        }
+    }
+}
+
+pub fn update_player_stamina(
+    mut players: Query<(&PlayerSprite, &mut Stamina)>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    for (player_sprite, mut stamina) in players.iter_mut() {
+        // Adjust stamina parameters based on health
+        let health_percentage = player_sprite.health / 100.0;
+
+        // When health is low, stamina depletes faster and recovers slower
+        if health_percentage < 0.3 {
+            stamina.depletion_rate = 1.2 * difficulty.0.health_recovery_rate; // Depletes 50% faster when health is critical
+            stamina.recovery_rate = 0.15 * difficulty.0.health_recovery_rate; // Recovers 50% slower when health is critical
+        } else if health_percentage < 0.6 {
+            stamina.depletion_rate = 1.0 * difficulty.0.health_recovery_rate; // Depletes 25% faster when health is low
+            stamina.recovery_rate = 0.2 * difficulty.0.health_recovery_rate; // Recovers 33% slower when health is low
+        } else {
+            // Reset to default rates based on difficulty
+            stamina.depletion_rate = 0.8 * difficulty.0.health_recovery_rate;
+            stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate;
         }
     }
 }

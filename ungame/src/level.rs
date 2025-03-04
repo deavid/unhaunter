@@ -33,6 +33,7 @@ use uncore::components::game::{GameSound, GameSprite, MapTileSprite};
 use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
+use uncore::components::player::Stamina;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::controlkeys::ControlKeys;
@@ -504,7 +505,8 @@ pub fn load_level_handler(
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
-        ));
+        ))
+        .insert(Stamina::default());
 
     // Spawn Player 2 commands .spawn(SpriteSheetBundle { texture_atlas:
     // handles.images.character1.clone(), sprite: TextureAtlasSprite { anchor:

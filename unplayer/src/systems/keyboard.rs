@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::behavior::component::{Interactive, RoomState};
 use uncore::behavior::Behavior;
+use uncore::behavior::component::{Interactive, RoomState};
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
-use uncore::components::player::Hiding;
+use uncore::components::player::{Hiding, Stamina};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::npc_help::NpcHelpEvent;
@@ -26,6 +26,7 @@ pub fn keyboard_player(
         &mut AnimationTimer,
         &PlayerGear,
         Option<&Hiding>,
+        &mut Stamina,
     )>,
     colhand: CollisionHandler,
     interactables: Query<
@@ -45,13 +46,15 @@ pub fn keyboard_player(
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
+    const RUN_MULTIPLIER: f32 = 1.6; // Multiplier for running speed
     const DIR_MIN: f32 = 5.0;
     const DIR_MAX: f32 = 80.0;
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
     const DIR_RED: f32 = 1.001;
     let dt = time.delta_secs() * 60.0;
-    for (mut pos, mut dir, player, mut anim, player_gear, hiding) in players.iter_mut() {
+    for (mut pos, mut dir, player, mut anim, player_gear, hiding, mut stamina) in players.iter_mut()
+    {
         let col_delta = colhand.delta(&pos);
         pos.x -= col_delta.x;
         pos.y -= col_delta.y;
@@ -91,13 +94,19 @@ pub fn keyboard_player(
         d.dy -= col_delta_n.y * col_dotp;
         let delta = d / 0.1 + dir.normalized() / DIR_MAG2 / 1000.0;
 
-        // d.dx /= 1.5; // Compensate for the projection --- Speed Penalty Based on Held
-        // Object Weight ---
+        // --- Speed Penalty Based on Held Object Weight ---
         let speed_penalty = if player_gear.held_item.is_some() {
             0.5
         } else {
             1.0
         };
+
+        // --- Check for Running with Stamina System ---
+        let wants_to_run = keyboard_input.pressed(player.controls.run);
+        let is_running = stamina.update(dt, wants_to_run);
+
+        let run_multiplier = if is_running { RUN_MULTIPLIER } else { 1.0 };
+
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;
         let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
@@ -121,13 +130,22 @@ pub fn keyboard_player(
             continue;
         }
 
-        // Apply speed penalty
-        pos.x += PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed;
-        pos.y += PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed;
+        // Apply speed penalty and run multiplier
+        pos.x +=
+            PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
+        pos.y +=
+            PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
 
-        // Update player animation
+        // Update player animation - make animations faster when running
+        let animation_speed_factor = if run_multiplier > 1.0 { 1.5 } else { 1.0 };
         let dscreen = delta.to_screen_coord();
-        anim.set_range(CharacterAnimation::from_dir(dscreen.x, dscreen.y * 2.0).to_vec());
+        anim.set_range(
+            CharacterAnimation::from_dir(
+                dscreen.x * animation_speed_factor,
+                dscreen.y * 2.0 * animation_speed_factor,
+            )
+            .to_vec(),
+        );
 
         // ---
         if keyboard_input.just_pressed(player.controls.activate) {

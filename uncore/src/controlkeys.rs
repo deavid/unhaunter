@@ -27,6 +27,8 @@ pub struct ControlKeys {
     pub swap: KeyCode,
     /// Key for changing the evidence selection in the quick menu.
     pub change_evidence: KeyCode,
+    /// Key for running (hold to move faster).
+    pub run: KeyCode,
 }
 
 /// System for handling player movement, interaction, and collision.
@@ -48,6 +50,7 @@ impl ControlKeys {
         drop: KeyCode::KeyG,
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
+        run: KeyCode::ShiftLeft,
     };
     pub const ARROWS: Self = ControlKeys {
         up: KeyCode::ArrowUp,
@@ -62,6 +65,7 @@ impl ControlKeys {
         drop: KeyCode::KeyG,
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
+        run: KeyCode::ShiftLeft,
     };
     pub const IJKL: Self = ControlKeys {
         up: KeyCode::KeyI,
@@ -76,6 +80,7 @@ impl ControlKeys {
         drop: KeyCode::NonConvert,
         trigger: KeyCode::NonConvert,
         change_evidence: KeyCode::NonConvert,
+        run: KeyCode::ShiftRight,
     };
     pub const NONE: Self = ControlKeys {
         up: KeyCode::NonConvert,
@@ -90,5 +95,6 @@ impl ControlKeys {
         drop: KeyCode::NonConvert,
         trigger: KeyCode::NonConvert,
         change_evidence: KeyCode::NonConvert,
+        run: KeyCode::NonConvert,
     };
 }
