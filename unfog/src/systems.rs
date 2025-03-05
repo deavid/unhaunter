@@ -9,6 +9,7 @@ use uncore::components::board::chunk::{CellIterator, ChunkIterator};
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::game_config::GameConfig;
+use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::events::loadlevel::LevelReadyEvent;
@@ -296,6 +297,7 @@ pub fn update_miasma(
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
+    ghost_query: Query<&GhostSprite>,
     mut room_present: Local<Array3<bool>>,
 ) {
     let measure = metrics::UPDATE_MIASMA.time_measure();
@@ -305,7 +307,12 @@ pub fn update_miasma(
     rng.fill(&mut arr);
 
     let dt = time.delta_secs();
-    let diffusion_rate = miasma_config.diffusion_rate;
+    let ghosts_remain = !ghost_query.is_empty();
+    let diffusion_rate = if ghosts_remain {
+        miasma_config.diffusion_rate
+    } else {
+        miasma_config.diffusion_rate * 20.0
+    };
     const EXCHANGE_VEL_SCALE: f32 = 2.0;
     let mut pressure_changes = Array3::from_elem(board_data.map_size, 0.0);
     let mut velocity_changes = Array3::from_elem(board_data.map_size, Vec2::ZERO);
@@ -329,7 +336,6 @@ pub fn update_miasma(
     }) else {
         return;
     };
-
     let player_bpos = player_pos.to_board_position();
 
     // Iterate through chunks
@@ -490,6 +496,10 @@ pub fn update_miasma(
             if !is_room {
                 // Evaporate miasma fast when outside.
                 *entry /= 1.00001;
+            }
+            if !ghosts_remain {
+                // Once every ghost is expelled, evaporate the miasma.
+                *entry /= 1.001;
             }
         }
     }
