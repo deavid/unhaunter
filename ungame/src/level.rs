@@ -496,7 +496,8 @@ pub fn load_level_handler(
         ))
         .insert(
             PlayerSprite::new(1)
-                .with_sanity(p.difficulty.0.starting_sanity)
+                // We should always start with 100% sanity, no matter the difficulty
+                // .with_sanity(p.difficulty.0.starting_sanity)
                 .with_controls(control_keys),
         )
         .insert(SpriteType::Player)

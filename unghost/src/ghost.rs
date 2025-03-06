@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
@@ -26,7 +28,7 @@ use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
 
 /// Enables/disables debug logs for hunting behavior.
-const DEBUG_HUNTS: bool = false;
+const DEBUG_HUNTS: bool = true;
 
 #[derive(Component)]
 struct FadeOut {
@@ -132,7 +134,9 @@ fn ghost_movement(
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
-            if rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
+            if !ghost.hunt_warning_active
+                && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
+            {
                 let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
                     .filter(|(_, p, _)| p.health > 0.0)
@@ -354,9 +358,15 @@ fn ghost_enrage(
             // Reduce ghost hunting when player is away
             ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
         }
-
         // ---
+
         if ghost.hunt_target {
+            // --- Handle the warning wave when hunting ---
+            ghost.hunt_warning_active = false;
+            ghost.hunt_warning_intensity = 1.0;
+            ghost.hunt_warning_timer = 0.0;
+            // ----
+
             let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
                 let dist2 = gpos.distance2(ppos) + 2.0;
@@ -375,6 +385,23 @@ fn ghost_enrage(
             }
             continue;
         }
+
+        // --- Hunt Warning Logic ---
+        if ghost.hunt_warning_active {
+            ghost.hunt_warning_timer -= dt;
+            ghost.hunt_warning_intensity = 1.0 - (ghost.hunt_warning_timer / 10.0);
+            if ghost.hunt_warning_timer <= 0.0 {
+                // Trigger hunt after warning period
+                ghost.hunt_warning_active = false;
+                ghost.hunt_warning_intensity = 1.0; //Max intensity
+                ghost.hunt_target = true;
+                ghost.hunt_time_secs = time.elapsed_secs();
+                warn!("Hunting player for {:.1}s", ghost.hunting);
+            }
+        } else if ghost.hunting < 0.001 {
+            ghost.hunt_warning_intensity /= 2.2_f32.powf(dt);
+        }
+        // --- Rage Calculation ---
         let mut total_angry2 = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
@@ -403,13 +430,29 @@ fn ghost_enrage(
             ghost.hunting = 0.0;
         }
         avg_angry.push_len(angry, dt);
-        if timer.just_finished() && DEBUG_HUNTS {
-            dbg!(ghost.calm_time_secs, ghost.rage);
-        }
         let rage_limit =
             400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
-        if ghost.rage > rage_limit {
+        if timer.just_finished() && DEBUG_HUNTS {
+            info!(
+                "Ghost calm time: {}, Ghost rage: {}, Ghost rage limit: {}, Ghost hunting: {}, Hunt warning active: {}, Hunt warning intensity: {}, Hunt warning timer: {}",
+                ghost.calm_time_secs,
+                ghost.rage,
+                rage_limit,
+                ghost.hunting,
+                ghost.hunt_warning_active,
+                ghost.hunt_warning_intensity,
+                ghost.hunt_warning_timer
+            );
+        }
+
+        // --- Hunt Trigger Logic ---
+        if ghost.rage > rage_limit && !ghost.hunt_warning_active && !ghost.hunt_target {
+            // Start Hunt Warning Phase
+            ghost.hunt_warning_active = true;
+            ghost.hunt_warning_timer = 5.0;
+            ghost.hunt_warning_intensity = 0.0;
             ghost.rage_limit_multiplier *= 1.3;
+
             let prev_rage = ghost.rage;
             ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
             if ghost.hunting < 1.0 {
@@ -423,6 +466,8 @@ fn ghost_enrage(
                 ghost.rage_limit_multiplier /= 1.01_f32.powf(dt);
             }
         }
+
+        // --- Snore logic ---
         if *last_roar > 30.0 && matches!(should_roar, RoarType::None) {
             should_roar = RoarType::Snore;
         }
@@ -571,9 +616,43 @@ fn ghost_fade_out_system(
     }
 }
 
+/// Updates the ghost warning field based on the intensity of nearby ghosts.
+///
+/// This system calculates the ghost warning field based on the highest intensity
+/// warning from any ghost. The warning field is used to display a visual warning
+/// to the player when a ghost is nearby.
+fn update_ghost_warning_field(
+    mut board_data: ResMut<BoardData>,
+    q_ghost: Query<(&GhostSprite, &Position)>,
+    time: Res<Time>,
+) {
+    // Reset warning field
+    board_data.ghost_warning_intensity = 0.0;
+    board_data.ghost_warning_position = None;
+
+    let mut max_intensity = 0.0;
+
+    // Find the highest intensity warning from any ghost
+    for (ghost, position) in q_ghost.iter() {
+        if ghost.hunt_warning_intensity > max_intensity {
+            max_intensity = ghost.hunt_warning_intensity;
+            board_data.ghost_warning_position = Some(*position);
+        }
+    }
+
+    let cur_t = time.elapsed_secs_f64();
+    let wave = f64::sin(PI * cur_t * 2.0).powi(2);
+    board_data.ghost_warning_intensity = max_intensity * wave as f32;
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (ghost_movement, ghost_enrage, ghost_fade_out_system),
+        (
+            ghost_movement,
+            ghost_enrage,
+            ghost_fade_out_system,
+            update_ghost_warning_field,
+        ),
     );
 }

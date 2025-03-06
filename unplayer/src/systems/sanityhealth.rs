@@ -53,7 +53,7 @@ pub fn lose_sanity(
         }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
-        let sanity_recover: f32 = if ps.sanity() < difficulty.0.starting_sanity {
+        let sanity_recover: f32 = if ps.sanity() < difficulty.0.max_recoverable_sanity {
             4.0 / 100.0 / difficulty.0.sanity_drain_rate
         } else {
             0.0
@@ -100,8 +100,10 @@ pub fn recover_sanity(
                 // Clamp health to a maximum of 100%
                 ps.health = ps.health.min(100.0);
             }
-            if ps.sanity() < difficulty.0.starting_sanity {
+            if ps.sanity() < difficulty.0.max_recoverable_sanity {
                 ps.crazyness /= 1.07_f32.powf(dt);
+            } else {
+                ps.crazyness /= 1.005_f32.powf(dt);
             }
             if timer.just_finished() {
                 dbg!(ps.sanity());

@@ -53,6 +53,12 @@ pub struct GhostSprite {
     pub salty_trace_spawn_timer: Timer,
     /// Makes the ghost wait more for the next attack but it will be a harder attack.
     pub rage_limit_multiplier: f32,
+    /// True when in pre-hunt warning state
+    pub hunt_warning_active: bool,
+    /// Countdown timer (10 seconds)
+    pub hunt_warning_timer: f32,
+    /// Current warning wave intensity (0.0-1.0)
+    pub hunt_warning_intensity: f32,
 }
 
 impl GhostSprite {
@@ -86,6 +92,9 @@ impl GhostSprite {
             salty_effect_timer,
             salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
             rage_limit_multiplier: 1.0,
+            hunt_warning_active: false,
+            hunt_warning_timer: 0.0,
+            hunt_warning_intensity: 0.0,
         }
     }
 

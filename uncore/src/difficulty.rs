@@ -122,9 +122,9 @@ impl Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     pub fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.2,
-            Difficulty::AdeptInvestigator => 0.4,
-            Difficulty::SeniorInvestigator => 0.8,
+            Difficulty::NoviceInvestigator => 0.7,
+            Difficulty::AdeptInvestigator => 0.8,
+            Difficulty::SeniorInvestigator => 0.9,
             Difficulty::ExpertInvestigator => 1.0,
             Difficulty::AdeptSpecialist => 1.2,
             Difficulty::LeadSpecialist => 1.25,
@@ -147,22 +147,22 @@ impl Difficulty {
     /// A higher value leads to more frequent paranormal activity.
     pub fn ghost_interaction_frequency(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.5,
-            Difficulty::AdeptInvestigator => 0.7,
+            Difficulty::NoviceInvestigator => 0.9,
+            Difficulty::AdeptInvestigator => 0.9,
             Difficulty::SeniorInvestigator => 0.9,
             Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.1,
-            Difficulty::LeadSpecialist => 1.2,
-            Difficulty::ExpertSpecialist => 1.3,
-            Difficulty::MasterSpecialist => 1.4,
-            Difficulty::InitiateOccultist => 1.5,
-            Difficulty::AdeptOccultist => 1.6,
-            Difficulty::ExpertOccultist => 1.7,
-            Difficulty::MasterOccultist => 1.8,
-            Difficulty::AdeptGuardian => 1.9,
-            Difficulty::LeadGuardian => 2.0,
-            Difficulty::ExpertGuardian => 2.0,
-            Difficulty::MasterGuardian => 2.0,
+            Difficulty::AdeptSpecialist => 1.0,
+            Difficulty::LeadSpecialist => 1.0,
+            Difficulty::ExpertSpecialist => 1.1,
+            Difficulty::MasterSpecialist => 1.1,
+            Difficulty::InitiateOccultist => 1.1,
+            Difficulty::AdeptOccultist => 1.1,
+            Difficulty::ExpertOccultist => 1.1,
+            Difficulty::MasterOccultist => 1.1,
+            Difficulty::AdeptGuardian => 1.1,
+            Difficulty::LeadGuardian => 1.1,
+            Difficulty::ExpertGuardian => 1.1,
+            Difficulty::MasterGuardian => 1.1,
         }
     }
 
@@ -171,22 +171,22 @@ impl Difficulty {
     /// A higher value results in longer hunts.
     pub fn ghost_hunt_duration(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.1,
-            Difficulty::AdeptInvestigator => 0.3,
-            Difficulty::SeniorInvestigator => 0.7,
+            Difficulty::NoviceInvestigator => 0.5,
+            Difficulty::AdeptInvestigator => 0.7,
+            Difficulty::SeniorInvestigator => 0.9,
             Difficulty::ExpertInvestigator => 1.0,
             Difficulty::AdeptSpecialist => 1.1,
-            Difficulty::LeadSpecialist => 1.2,
-            Difficulty::ExpertSpecialist => 1.4,
-            Difficulty::MasterSpecialist => 1.6,
-            Difficulty::InitiateOccultist => 2.0,
-            Difficulty::AdeptOccultist => 2.5,
-            Difficulty::ExpertOccultist => 3.0,
-            Difficulty::MasterOccultist => 3.5,
-            Difficulty::AdeptGuardian => 4.0,
-            Difficulty::LeadGuardian => 4.5,
-            Difficulty::ExpertGuardian => 5.0,
-            Difficulty::MasterGuardian => 6.0,
+            Difficulty::LeadSpecialist => 1.15,
+            Difficulty::ExpertSpecialist => 1.2,
+            Difficulty::MasterSpecialist => 1.25,
+            Difficulty::InitiateOccultist => 1.30,
+            Difficulty::AdeptOccultist => 1.35,
+            Difficulty::ExpertOccultist => 1.4,
+            Difficulty::MasterOccultist => 1.5,
+            Difficulty::AdeptGuardian => 1.6,
+            Difficulty::LeadGuardian => 1.7,
+            Difficulty::ExpertGuardian => 1.8,
+            Difficulty::MasterGuardian => 1.9,
         }
     }
 
@@ -195,22 +195,22 @@ impl Difficulty {
     /// A higher value means longer periods of calm between hunts.
     pub fn ghost_hunt_cooldown(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 3.0,
-            Difficulty::AdeptInvestigator => 3.0,
-            Difficulty::SeniorInvestigator => 3.0,
+            Difficulty::NoviceInvestigator => 6.0,
+            Difficulty::AdeptInvestigator => 5.0,
+            Difficulty::SeniorInvestigator => 4.0,
             Difficulty::ExpertInvestigator => 3.0,
             Difficulty::AdeptSpecialist => 2.5,
             Difficulty::LeadSpecialist => 2.0,
             Difficulty::ExpertSpecialist => 1.5,
             Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 1.0,
-            Difficulty::AdeptOccultist => 1.0,
-            Difficulty::ExpertOccultist => 1.0,
-            Difficulty::MasterOccultist => 1.0,
-            Difficulty::AdeptGuardian => 0.6,
-            Difficulty::LeadGuardian => 0.3,
+            Difficulty::InitiateOccultist => 0.9,
+            Difficulty::AdeptOccultist => 0.8,
+            Difficulty::ExpertOccultist => 0.7,
+            Difficulty::MasterOccultist => 0.6,
+            Difficulty::AdeptGuardian => 0.4,
+            Difficulty::LeadGuardian => 0.2,
             Difficulty::ExpertGuardian => 0.1,
-            Difficulty::MasterGuardian => 0.02,
+            Difficulty::MasterGuardian => 0.05,
         }
     }
 
@@ -290,21 +290,21 @@ impl Difficulty {
     pub fn ambient_temperature(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => celsius_to_kelvin(19.0),
-            Difficulty::AdeptInvestigator => celsius_to_kelvin(18.0),
-            Difficulty::SeniorInvestigator => celsius_to_kelvin(16.0),
-            Difficulty::ExpertInvestigator => celsius_to_kelvin(14.0),
-            Difficulty::AdeptSpecialist => celsius_to_kelvin(12.0),
-            Difficulty::LeadSpecialist => celsius_to_kelvin(11.0),
-            Difficulty::ExpertSpecialist => celsius_to_kelvin(10.0),
-            Difficulty::MasterSpecialist => celsius_to_kelvin(9.0),
-            Difficulty::InitiateOccultist => celsius_to_kelvin(8.0),
-            Difficulty::AdeptOccultist => celsius_to_kelvin(7.0),
-            Difficulty::ExpertOccultist => celsius_to_kelvin(6.0),
-            Difficulty::MasterOccultist => celsius_to_kelvin(5.0),
-            Difficulty::AdeptGuardian => celsius_to_kelvin(5.0),
-            Difficulty::LeadGuardian => celsius_to_kelvin(4.5),
-            Difficulty::ExpertGuardian => celsius_to_kelvin(4.0),
-            Difficulty::MasterGuardian => celsius_to_kelvin(4.0),
+            Difficulty::AdeptInvestigator => celsius_to_kelvin(18.5),
+            Difficulty::SeniorInvestigator => celsius_to_kelvin(18.0),
+            Difficulty::ExpertInvestigator => celsius_to_kelvin(17.0),
+            Difficulty::AdeptSpecialist => celsius_to_kelvin(16.0),
+            Difficulty::LeadSpecialist => celsius_to_kelvin(15.0),
+            Difficulty::ExpertSpecialist => celsius_to_kelvin(14.0),
+            Difficulty::MasterSpecialist => celsius_to_kelvin(13.0),
+            Difficulty::InitiateOccultist => celsius_to_kelvin(12.0),
+            Difficulty::AdeptOccultist => celsius_to_kelvin(11.0),
+            Difficulty::ExpertOccultist => celsius_to_kelvin(10.0),
+            Difficulty::MasterOccultist => celsius_to_kelvin(9.0),
+            Difficulty::AdeptGuardian => celsius_to_kelvin(8.0),
+            Difficulty::LeadGuardian => celsius_to_kelvin(7.5),
+            Difficulty::ExpertGuardian => celsius_to_kelvin(7.0),
+            Difficulty::MasterGuardian => celsius_to_kelvin(6.0),
         }
     }
 
@@ -343,15 +343,15 @@ impl Difficulty {
             Difficulty::AdeptSpecialist => 0.6,
             Difficulty::LeadSpecialist => 0.8,
             Difficulty::ExpertSpecialist => 1.0,
-            Difficulty::MasterSpecialist => 1.1,
-            Difficulty::InitiateOccultist => 1.2,
-            Difficulty::AdeptOccultist => 1.3,
-            Difficulty::ExpertOccultist => 1.4,
-            Difficulty::MasterOccultist => 1.5,
-            Difficulty::AdeptGuardian => 1.6,
-            Difficulty::LeadGuardian => 1.7,
-            Difficulty::ExpertGuardian => 1.8,
-            Difficulty::MasterGuardian => 2.0,
+            Difficulty::MasterSpecialist => 1.0,
+            Difficulty::InitiateOccultist => 1.1,
+            Difficulty::AdeptOccultist => 1.1,
+            Difficulty::ExpertOccultist => 1.2,
+            Difficulty::MasterOccultist => 1.2,
+            Difficulty::AdeptGuardian => 1.3,
+            Difficulty::LeadGuardian => 1.3,
+            Difficulty::ExpertGuardian => 1.3,
+            Difficulty::MasterGuardian => 1.4,
         }
     }
 
@@ -407,7 +407,7 @@ impl Difficulty {
 
     // --- Player ---
     /// Returns the player's starting sanity level.
-    pub fn starting_sanity(&self) -> f32 {
+    pub fn max_recoverable_sanity(&self) -> f32 {
         match self {
             Difficulty::NoviceInvestigator => 100.0,
             Difficulty::AdeptInvestigator => 100.0,
@@ -865,7 +865,7 @@ impl Difficulty {
             light_heat: self.light_heat(),
             darkness_intensity: self.darkness_intensity(),
             environment_gamma: self.environment_gamma(),
-            starting_sanity: self.starting_sanity(),
+            max_recoverable_sanity: self.max_recoverable_sanity(),
             sanity_drain_rate: self.sanity_drain_rate(),
             health_drain_rate: self.health_drain_rate(),
             health_recovery_rate: self.health_recovery_rate(),
@@ -909,7 +909,7 @@ pub struct DifficultyStruct {
     pub darkness_intensity: f32,
     pub environment_gamma: f32,
     // --- Player ---
-    pub starting_sanity: f32,
+    pub max_recoverable_sanity: f32,
     pub sanity_drain_rate: f32,
     pub health_drain_rate: f32,
     pub health_recovery_rate: f32,

@@ -9,12 +9,12 @@ use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
 use uncore::{celsius_to_kelvin, kelvin_to_celsius};
-use uncore::random_seed;
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -23,6 +23,7 @@ pub struct Thermometer {
     pub temp_l2: [f32; 5],
     pub temp_l1: f32,
     pub frame_counter: u16,
+    pub display_glitch_timer: f32,
 }
 
 impl Default for Thermometer {
@@ -33,6 +34,7 @@ impl Default for Thermometer {
             temp_l2: [celsius_to_kelvin(10.0); 5],
             temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
+            display_glitch_timer: Default::default(),
         }
     }
 }
@@ -56,6 +58,19 @@ impl GearUsable for Thermometer {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
+
+        // Show garbled text when glitching
+        if self.enabled && self.display_glitch_timer > 0.0 {
+            let garbled = match random_seed::rng().random_range(0..4) {
+                0 => "Temperature: ERR0R",
+                1 => "Temperature: ---.--°C",
+                2 => "Temperature: ?**.??°C",
+                _ => "SENSOR MALFUNCTION",
+            };
+            return format!("{name}: {on_s}\n{garbled}");
+        }
+
+        // Regular display
         let msg = if self.enabled {
             format!("Temperature: {:>5.1}ºC", kelvin_to_celsius(self.temp))
         } else {
@@ -91,6 +106,21 @@ impl GearUsable for Thermometer {
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
         }
+        // Decrement glitch timer if active
+        if self.display_glitch_timer > 0.0 {
+            self.display_glitch_timer -= gs.time.delta_secs();
+
+            // Possibly play crackling/static sounds during glitches
+            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.3 {
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
+            }
+        }
+
+        // Apply EMI if warning is active and we're electronic
+        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+            let distance2 = pos.distance2(ghost_pos);
+            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+        }
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
@@ -99,6 +129,35 @@ impl GearUsable for Thermometer {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+
+    fn is_electronic(&self) -> bool {
+        true
+    }
+
+    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
+        if warning_level < 0.0001 || !self.enabled {
+            return;
+        }
+        let mut rng = random_seed::rng();
+
+        // Scale effect by distance and warning level
+        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
+
+        // Random temperature spikes
+        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
+            // Random temperature spike - show extreme cold or hot temperatures
+            if rng.random_bool(0.7) {
+                // Show extremely cold temperatures
+                self.temp = celsius_to_kelvin(rng.random_range(-20.0..-5.0));
+            } else {
+                // Show extremely hot temperatures
+                self.temp = celsius_to_kelvin(rng.random_range(30.0..60.0));
+            }
+
+            // Add a display glitch timer field to Thermometer struct
+            self.display_glitch_timer = 0.3;
+        }
     }
 }
 

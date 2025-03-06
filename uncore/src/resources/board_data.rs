@@ -37,6 +37,12 @@ pub struct BoardData {
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
     pub prebaked_metadata: PrebakedMetadata,
+
+    // Ghost warning state
+    /// Current warning intensity (0.0-1.0)
+    pub ghost_warning_intensity: f32,
+    /// Source position of warning
+    pub ghost_warning_position: Option<Position>,
 }
 
 impl FromWorld for BoardData {
@@ -60,6 +66,8 @@ impl FromWorld for BoardData {
             map_entity_field: Array3::default(map_size),
             prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
             prebaked_metadata: PrebakedMetadata::default(),
+            ghost_warning_intensity: 0.0,
+            ghost_warning_position: None,
         }
     }
 }
