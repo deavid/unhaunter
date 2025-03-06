@@ -73,7 +73,7 @@ impl Flashlight {
     pub fn update_output_power(&mut self) {
         let new_power = self.calculate_output_power();
 
-        self.output_power = (self.output_power * 10.0 + new_power) / 11.0;
+        self.output_power = (self.output_power * 2.0 + new_power) / 3.0;
     }
 }
 

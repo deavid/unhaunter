@@ -300,6 +300,7 @@ fn ghost_enrage(
     mut gs: GearStuff,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
+    roomdb: Res<RoomDB>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
@@ -403,6 +404,8 @@ fn ghost_enrage(
         }
         // --- Rage Calculation ---
         let mut total_angry2 = 0.0;
+        let mut player_in_room = false;
+        let mut total_inv_sanity = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
             let inv_sanity = (120.0 - sanity) / 100.0;
@@ -415,6 +418,11 @@ fn ghost_enrage(
                 * (player.health / 100.0).clamp(0.0, 1.0);
             total_angry2 +=
                 angry2 * inv_sanity + player.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+            let player_board_position = ppos.to_board_position();
+            if roomdb.room_tiles.contains_key(&player_board_position) {
+                player_in_room = true;
+                total_inv_sanity += inv_sanity;
+            }
         }
         let angry = total_angry2.sqrt();
         let a_f = 1.0 + (avg_angry.avg() * 2.0).powi(2);
@@ -422,6 +430,9 @@ fn ghost_enrage(
         ghost.rage -= dt * 2.0 / a_f;
         if ghost.rage < 0.0 {
             ghost.rage = 0.0;
+        }
+        if player_in_room {
+            ghost.rage += dt * difficulty.0.ghost_rage_likelihood * 5.2 * total_inv_sanity;
         }
         ghost.rage +=
             angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood;

@@ -243,22 +243,22 @@ impl Difficulty {
     /// can provoke a hunt.
     pub fn hunt_provocation_radius(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.3,
-            Difficulty::AdeptInvestigator => 0.35,
-            Difficulty::SeniorInvestigator => 0.4,
-            Difficulty::ExpertInvestigator => 0.45,
-            Difficulty::AdeptSpecialist => 0.6,
-            Difficulty::LeadSpecialist => 0.7,
-            Difficulty::ExpertSpecialist => 0.9,
-            Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 1.2,
-            Difficulty::AdeptOccultist => 1.3,
-            Difficulty::ExpertOccultist => 1.4,
-            Difficulty::MasterOccultist => 1.5,
-            Difficulty::AdeptGuardian => 1.6,
-            Difficulty::LeadGuardian => 1.7,
-            Difficulty::ExpertGuardian => 1.8,
-            Difficulty::MasterGuardian => 2.0,
+            Difficulty::NoviceInvestigator => 1.5,
+            Difficulty::AdeptInvestigator => 1.6,
+            Difficulty::SeniorInvestigator => 1.7,
+            Difficulty::ExpertInvestigator => 1.8,
+            Difficulty::AdeptSpecialist => 1.9,
+            Difficulty::LeadSpecialist => 2.0,
+            Difficulty::ExpertSpecialist => 2.2,
+            Difficulty::MasterSpecialist => 2.4,
+            Difficulty::InitiateOccultist => 2.6,
+            Difficulty::AdeptOccultist => 2.8,
+            Difficulty::ExpertOccultist => 3.0,
+            Difficulty::MasterOccultist => 3.3,
+            Difficulty::AdeptGuardian => 3.6,
+            Difficulty::LeadGuardian => 3.8,
+            Difficulty::ExpertGuardian => 4.0,
+            Difficulty::MasterGuardian => 5.0,
         }
     }
 
