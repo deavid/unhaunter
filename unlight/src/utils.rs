@@ -276,7 +276,7 @@ pub fn propagate_from_wave_edges(
 
     // Process queue using BFS
     while let Some(edge_data) = queue.pop_front() {
-        let pos = edge_data.wave_edge.path_history.last().unwrap();
+        let pos = edge_data.wave_edge.path_history.back().unwrap();
 
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
@@ -317,9 +317,9 @@ pub fn propagate_from_wave_edges(
 
             // Create history for the new position
             let mut new_history = edge_data.wave_edge.path_history.clone();
-            new_history.push(neighbor_pos.clone());
+            new_history.push_back(neighbor_pos.clone());
             if new_history.len() > MAX_HISTORY {
-                new_history.remove(0); // Keep history at MAX_HISTORY positions maximum
+                new_history.pop_front(); // Keep history at MAX_HISTORY positions maximum
             }
 
             // Calculate turn penalty based on history
@@ -327,8 +327,8 @@ pub fn propagate_from_wave_edges(
                 // Get the old direction (from pos[0] to pos[9])
                 let start_idx = 0;
                 let mid_idx = MAX_HISTORY * 3 / 4;
-                let start_pos = &new_history[start_idx];
-                let mid_pos = &new_history[mid_idx];
+                let start_pos = new_history.get(start_idx).unwrap();
+                let mid_pos = new_history.get(mid_idx).unwrap();
 
                 let old_dir = (
                     mid_pos.x - start_pos.x,
@@ -337,7 +337,7 @@ pub fn propagate_from_wave_edges(
                 );
 
                 // Get the recent direction (from pos[mid_idx] to current)
-                let end_pos = new_history.last().unwrap();
+                let end_pos = new_history.back().unwrap();
                 let recent_dir = (
                     end_pos.x - mid_pos.x,
                     end_pos.y - mid_pos.y,

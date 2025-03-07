@@ -79,7 +79,8 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             };
 
             // Create initial history with just the source position
-            let initial_history = vec![pos.clone()];
+            let mut initial_history = VecDeque::new();
+            initial_history.push_back(pos.clone());
 
             // Add light source to the queue
             propagation_queue.push_back((
@@ -161,7 +162,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 // Create a trimmed history of the most recent MAX_HISTORY positions
                 let mut stored_history = path_history.clone();
                 if stored_history.len() > MAX_HISTORY {
-                    stored_history = stored_history.split_off(stored_history.len() - MAX_HISTORY);
+                    // Keep only the last MAX_HISTORY elements
+                    while stored_history.len() > MAX_HISTORY {
+                        stored_history.pop_front();
+                    }
                 }
 
                 // Mark the current position as a wave edge with history
@@ -201,7 +205,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
 
             // Create updated path history for the neighbor
             let mut new_history = path_history.clone();
-            new_history.push(neighbor_pos.clone());
+            new_history.push_back(neighbor_pos.clone());
 
             // Continue propagation by adding the neighbor to the queue
             propagation_queue.push_back((

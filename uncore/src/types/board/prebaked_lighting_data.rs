@@ -5,6 +5,7 @@
 //! for static elements in the map.
 
 use bevy::ecs::entity::Entity;
+use std::collections::VecDeque;
 
 use crate::components::board::boardposition::BoardPosition;
 
@@ -31,7 +32,7 @@ pub struct WaveEdge {
     /// The distance travelled by the light wave
     pub distance_travelled: f32,
     /// History of positions that led to this wave edge
-    pub path_history: Vec<BoardPosition>,
+    pub path_history: VecDeque<BoardPosition>,
 }
 
 /// Stores the base light information for a tile
