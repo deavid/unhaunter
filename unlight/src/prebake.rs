@@ -167,13 +167,24 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                         stored_history.pop_front();
                     }
                 }
-
+                let pos_last = stored_history.front().unwrap().clone();
+                let pos_mid = stored_history
+                    .get(stored_history.len() / 2)
+                    .unwrap()
+                    .clone();
                 // Mark the current position as a wave edge with history
                 prebaked[pos.ndidx()].wave_edge = Some(WaveEdge {
                     src_light_lux,
                     distance_travelled,
-                    path_history: stored_history,
+                    current_pos: (pos.x as f32, pos.y as f32, pos.z as f32),
+                    iir_mean_pos: (pos_mid.x as f32, pos_mid.y as f32, pos_mid.z as f32),
+                    iir_mean_iir_mean_pos: (
+                        pos_last.x as f32,
+                        pos_last.y as f32,
+                        pos_last.z as f32,
+                    ),
                 });
+
                 wave_edges += 1;
 
                 // If it's the edge, it's because we stopped here. So we stop.

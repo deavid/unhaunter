@@ -5,7 +5,6 @@
 //! for static elements in the map.
 
 use bevy::ecs::entity::Entity;
-use std::collections::VecDeque;
 
 use crate::components::board::boardposition::BoardPosition;
 
@@ -31,8 +30,12 @@ pub struct WaveEdge {
     pub src_light_lux: f32,
     /// The distance travelled by the light wave
     pub distance_travelled: f32,
-    /// History of positions that led to this wave edge
-    pub path_history: VecDeque<BoardPosition>,
+    /// Current position
+    pub current_pos: (f32, f32, f32),
+    /// IIR filtered mean position
+    pub iir_mean_pos: (f32, f32, f32),
+    /// IIR filtered mean of the iir_mean_pos
+    pub iir_mean_iir_mean_pos: (f32, f32, f32),
 }
 
 /// Represents a wave edge tile with its associated data for light propagation.

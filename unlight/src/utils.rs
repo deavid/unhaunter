@@ -14,8 +14,6 @@ use uncore::{
     },
 };
 
-use crate::prebake::WAVE_MAX_HISTORY;
-
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {
     pos.0 >= 0
@@ -242,6 +240,18 @@ pub fn find_wave_edge_tiles(bf: &BoardData, active_source_ids: &HashSet<u32>) ->
     wave_edges
 }
 
+fn apply_iir_filter(
+    current_value: (f32, f32, f32),
+    new_value: (f32, f32, f32),
+    factor: f32,
+) -> (f32, f32, f32) {
+    (
+        current_value.0 * factor + new_value.0 * (1.0 - factor),
+        current_value.1 * factor + new_value.1 * (1.0 - factor),
+        current_value.2 * factor + new_value.2 * (1.0 - factor),
+    )
+}
+
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
     bf: &BoardData,
@@ -257,17 +267,19 @@ pub fn propagate_from_wave_edges(
         color: (f32, f32, f32),
     }
 
-    // let time_start = Instant::now();
-
     let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
 
     let mut visited: Array3<HashSet<u32>> = Array3::from_elem(bf.map_size, HashSet::new());
 
-    // Define directions for propagation1
+    // Define directions for propagation
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
 
-    // Add all wave edges to the queue with initial history
+    // IIR factors (adjust these to control the "smoothness")
+    const IIR_FACTOR_1: f32 = 0.8; // First level of smoothing
+    const IIR_FACTOR_2: f32 = 0.9; // Second level of smoothing
+
+    // Add all wave edges to the queue
     for edge_data in bf.prebaked_wave_edges.iter() {
         if !active_source_ids.contains(&edge_data.source_id) {
             continue;
@@ -279,12 +291,7 @@ pub fn propagate_from_wave_edges(
             color: edge_data.color,
         });
     }
-    // info!(
-    //     "Starting light propagation from {}/{} wave edges (wave copy took {:?})",
-    //     queue.len(),
-    //     bf.prebaked_wave_edges.len(),
-    //     time_start.elapsed()
-    // );
+
     // Process queue using BFS
     while let Some(edge_data) = queue.pop_front() {
         let pos = edge_data.position;
@@ -334,99 +341,88 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
-            let mut turn_penalty = 1.0;
-            // Create history for the new position
-            let mut new_history = edge_data.wave_edge.path_history.clone();
-            if !new_history.is_empty() {
-                new_history.push_back(neighbor_pos.clone());
-                while new_history.len() > WAVE_MAX_HISTORY {
-                    new_history.pop_front(); // Keep history at MAX_HISTORY positions maximum
-                }
+            // Update wave edge position using IIR filter
+            let new_pos_f32 = (nx as f32, ny as f32, nz as f32);
 
-                // Calculate turn penalty based on history
-                turn_penalty = if new_history.len() >= WAVE_MAX_HISTORY {
-                    // Get the old direction (from pos[0] to pos[9])
-                    let start_idx = 0;
-                    let mid_idx = WAVE_MAX_HISTORY * 3 / 4;
-                    let start_pos = new_history.get(start_idx).unwrap();
-                    let mid_pos = new_history.get(mid_idx).unwrap();
+            // Update the current position.
+            let mut new_wave_edge = edge_data.wave_edge.clone();
+            new_wave_edge.current_pos = new_pos_f32;
 
-                    let old_dir = (
-                        mid_pos.x - start_pos.x,
-                        mid_pos.y - start_pos.y,
-                        mid_pos.z - start_pos.z,
+            // Apply the first IIR filter to update the mean position.
+            new_wave_edge.iir_mean_pos =
+                apply_iir_filter(new_wave_edge.iir_mean_pos, new_pos_f32, IIR_FACTOR_1);
+
+            // Apply the second IIR filter to update the mean of the mean position.
+            new_wave_edge.iir_mean_iir_mean_pos = apply_iir_filter(
+                new_wave_edge.iir_mean_iir_mean_pos,
+                new_wave_edge.iir_mean_pos,
+                IIR_FACTOR_2,
+            );
+
+            let turn_penalty = {
+                // old_dir is now: from iir_mean_iir_mean_pos to iir_mean_pos
+                let old_dir = (
+                    new_wave_edge.iir_mean_pos.0 - new_wave_edge.iir_mean_iir_mean_pos.0,
+                    new_wave_edge.iir_mean_pos.1 - new_wave_edge.iir_mean_iir_mean_pos.1,
+                    new_wave_edge.iir_mean_pos.2 - new_wave_edge.iir_mean_iir_mean_pos.2,
+                );
+
+                // recent_dir is now: from iir_mean_pos to current_pos
+                let recent_dir = (
+                    new_wave_edge.current_pos.0 - new_wave_edge.iir_mean_pos.0,
+                    new_wave_edge.current_pos.1 - new_wave_edge.iir_mean_pos.1,
+                    new_wave_edge.current_pos.2 - new_wave_edge.iir_mean_pos.2,
+                );
+
+                // Normalize vectors and compute dot product
+                let old_len =
+                    (old_dir.0 * old_dir.0 + old_dir.1 * old_dir.1 + old_dir.2 * old_dir.2).sqrt();
+                let recent_len = (recent_dir.0 * recent_dir.0
+                    + recent_dir.1 * recent_dir.1
+                    + recent_dir.2 * recent_dir.2)
+                    .sqrt();
+
+                if old_len > 0.0 && recent_len > 0.0 {
+                    let old_norm = (
+                        old_dir.0 / old_len,
+                        old_dir.1 / old_len,
+                        old_dir.2 / old_len,
                     );
-
-                    // Get the recent direction (from pos[mid_idx] to current)
-                    let end_pos = new_history.back().unwrap();
-                    let recent_dir = (
-                        end_pos.x - mid_pos.x,
-                        end_pos.y - mid_pos.y,
-                        end_pos.z - mid_pos.z,
+                    let recent_norm = (
+                        recent_dir.0 / recent_len,
+                        recent_dir.1 / recent_len,
+                        recent_dir.2 / recent_len,
                     );
+                    let dot_product = old_norm.0 * recent_norm.0
+                        + old_norm.1 * recent_norm.1
+                        + old_norm.2 * recent_norm.2;
 
-                    // Calculate dot product of normalized vectors
-                    let old_len = ((old_dir.0 * old_dir.0
-                        + old_dir.1 * old_dir.1
-                        + old_dir.2 * old_dir.2) as f32)
-                        .sqrt();
-                    let recent_len = ((recent_dir.0 * recent_dir.0
-                        + recent_dir.1 * recent_dir.1
-                        + recent_dir.2 * recent_dir.2)
-                        as f32)
-                        .sqrt();
-
-                    if old_len > 0.0 && recent_len > 0.0 {
-                        let old_norm = (
-                            old_dir.0 as f32 / old_len,
-                            old_dir.1 as f32 / old_len,
-                            old_dir.2 as f32 / old_len,
-                        );
-
-                        let recent_norm = (
-                            recent_dir.0 as f32 / recent_len,
-                            recent_dir.1 as f32 / recent_len,
-                            recent_dir.2 as f32 / recent_len,
-                        );
-
-                        // Dot product (cosine of angle between vectors)
-                        let dot_product = old_norm.0 * recent_norm.0
-                            + old_norm.1 * recent_norm.1
-                            + old_norm.2 * recent_norm.2;
-
-                        // Convert dot product to penalty factor
-                        // When dot = 1 (straight line): penalty = 1.0 (no penalty)
-                        // When dot = 0 (90° turn): penalty = 1.0 + TURN_FACTOR
-                        // When dot = -1 (180° turn): penalty = 1.0 + 2*TURN_FACTOR
-                        const TURN_FACTOR: f32 = 1.0; // Adjust to control severity of turn penalty
-                        1.0 + (1.0 - dot_product) * TURN_FACTOR
-                    } else {
-                        1.0 // No penalty if vectors can't be normalized
-                    }
+                    let dot_product = (dot_product + 0.07).clamp(-1.0, 1.0);
+                    const TURN_FACTOR: f32 = 0.3; // Adjust for turn penalty
+                    1.0 + (1.0 - dot_product) * TURN_FACTOR
                 } else {
-                    1.0 // No penalty until we have enough history
-                };
-            }
+                    1.0
+                }
+            };
             let transparency = if collision.see_through {
-                0.9 / turn_penalty.min(1.2)
+                0.97 / turn_penalty.min(1.2)
             } else {
                 0.05
             };
-            let mut src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
+            let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
             let distance_travelled = edge_data.wave_edge.distance_travelled;
 
             // Apply the turn penalty to the light intensity
             let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
-            if new_lux < 0.02 {
-                // Stop computing light turns for small contributions
-                new_history.clear();
-            }
+            new_wave_edge.distance_travelled += 1.0;
+            new_wave_edge.src_light_lux = src_light_lux;
+
             // Skip propagating if the contribution is too small
-            if lfs[neighbor_idx].lux > new_lux * 10.0 {
+            if lfs[neighbor_idx].lux > new_lux * 5.0 {
                 continue;
-            } else if lfs[neighbor_idx].lux > new_lux {
-                src_light_lux /= 1.2;
+            } else if lfs[neighbor_idx].lux > new_lux * 2.0 {
+                new_wave_edge.src_light_lux /= 1.1;
             }
 
             // Update light field for neighbor
@@ -446,11 +442,7 @@ pub fn propagate_from_wave_edges(
             // Add neighbor to queue with updated history
             queue.push_back(InternalWaveEdge {
                 position: neighbor_pos,
-                wave_edge: WaveEdge {
-                    src_light_lux,
-                    distance_travelled: distance_travelled + 1.0,
-                    path_history: new_history,
-                },
+                wave_edge: new_wave_edge,
                 source_id: edge_data.source_id,
                 color: edge_data.color,
             });
@@ -459,10 +451,5 @@ pub fn propagate_from_wave_edges(
         }
     }
 
-    // info!(
-    //     "Total light propagations: {} in {:?}",
-    //     propagation_count,
-    //     time_start.elapsed()
-    // );
     propagation_count
 }
