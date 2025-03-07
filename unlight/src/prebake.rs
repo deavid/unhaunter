@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::utils::is_in_bounds;
+use crate::utils::{find_wave_edge_tiles, is_in_bounds};
 use bevy::{
     prelude::*,
     utils::{HashMap, HashSet, Instant},
@@ -12,6 +12,7 @@ use uncore::{
     resources::board_data::BoardData,
     types::board::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge},
 };
+pub const WAVE_MAX_HISTORY: usize = 12;
 
 /// Pre-computes static light propagation data using a simplified BFS approach.
 ///
@@ -111,7 +112,6 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
         (0, -1, 0), // South (-Y)
         (-1, 0, 0), // West (-X)
     ];
-    const MAX_HISTORY: usize = 20;
 
     // Process the queue in BFS manner
     while let Some((pos, source_id, src_light_lux, color, distance_travelled, path_history)) =
@@ -161,9 +161,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             if already_has_different_source || is_dynamic_object || !collision.player_free {
                 // Create a trimmed history of the most recent MAX_HISTORY positions
                 let mut stored_history = path_history.clone();
-                if stored_history.len() > MAX_HISTORY {
+                if stored_history.len() > WAVE_MAX_HISTORY {
                     // Keep only the last MAX_HISTORY elements
-                    while stored_history.len() > MAX_HISTORY {
+                    while stored_history.len() > WAVE_MAX_HISTORY {
                         stored_history.pop_front();
                     }
                 }
@@ -224,8 +224,13 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
         propagated_tiles, wave_edges
     );
 
+    // Create a HashSet of all source IDs (during prebaking, all sources are considered active)
+    let all_source_ids: HashSet<u32> = visited_by_source.keys().copied().collect();
+
     // Store the prebaked data in BoardData
     bf.prebaked_lighting = prebaked;
+    // Pass the HashSet of all source IDs to find_wave_edge_tiles
+    bf.prebaked_wave_edges = find_wave_edge_tiles(bf, &all_source_ids);
 
     info!(
         "Prebaked lighting field computed in: {:?}",

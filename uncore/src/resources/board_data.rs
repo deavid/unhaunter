@@ -4,7 +4,7 @@ use crate::{
     types::{
         board::{
             fielddata::{CollisionFieldData, LightFieldData},
-            prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata},
+            prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
         },
         evidence::Evidence,
         miasma::MiasmaGrid,
@@ -37,6 +37,7 @@ pub struct BoardData {
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
     pub prebaked_metadata: PrebakedMetadata,
+    pub prebaked_wave_edges: Vec<WaveEdgeData>,
 
     // Ghost warning state
     /// Current warning intensity (0.0-1.0)
@@ -66,6 +67,7 @@ impl FromWorld for BoardData {
             map_entity_field: Array3::default(map_size),
             prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
             prebaked_metadata: PrebakedMetadata::default(),
+            prebaked_wave_edges: Vec::new(),
             ghost_warning_intensity: 0.0,
             ghost_warning_position: None,
         }

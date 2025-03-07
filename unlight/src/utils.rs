@@ -8,8 +8,13 @@ use uncore::{
     behavior::{Behavior, TileState},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::board_data::BoardData,
-    types::board::{fielddata::LightFieldData, prebaked_lighting_data::WaveEdge},
+    types::board::{
+        fielddata::LightFieldData,
+        prebaked_lighting_data::{WaveEdge, WaveEdgeData},
+    },
 };
+
+use crate::prebake::WAVE_MAX_HISTORY;
 
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {
@@ -197,10 +202,7 @@ pub fn collect_door_states(
 }
 
 /// Finds wave edge tiles for continuing light propagation
-pub fn find_wave_edge_tiles(
-    bf: &BoardData,
-    active_source_ids: &HashSet<u32>,
-) -> Vec<(BoardPosition, u32, f32, (f32, f32, f32), WaveEdge)> {
+pub fn find_wave_edge_tiles(bf: &BoardData, active_source_ids: &HashSet<u32>) -> Vec<WaveEdgeData> {
     let mut wave_edges = Vec::new();
 
     // Find all wave edge tiles where light propagation can continue
@@ -227,13 +229,13 @@ pub fn find_wave_edge_tiles(
             z: k as i64,
         };
 
-        wave_edges.push((
-            pos,
+        wave_edges.push(WaveEdgeData {
+            position: pos,
             source_id,
-            prebaked_data.light_info.lux,
-            prebaked_data.light_info.color,
-            wave_edge.clone(),
-        ));
+            lux: prebaked_data.light_info.lux,
+            color: prebaked_data.light_info.color,
+            wave_edge: wave_edge.clone(),
+        });
     }
 
     info!("Found {} wave edge tiles for propagation", wave_edges.len());
@@ -244,19 +246,21 @@ pub fn find_wave_edge_tiles(
 pub fn propagate_from_wave_edges(
     bf: &BoardData,
     lfs: &mut Array3<LightFieldData>,
-    wave_edges: &[(BoardPosition, u32, f32, (f32, f32, f32), WaveEdge)],
+    active_source_ids: &HashSet<u32>,
 ) -> usize {
     // New struct to track position history for turn detection
     #[derive(Clone)]
     struct InternalWaveEdge {
+        position: BoardPosition,
         wave_edge: WaveEdge,
         source_id: u32,
         color: (f32, f32, f32),
     }
 
-    let mut queue = VecDeque::new();
+    // let time_start = Instant::now();
+
+    let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
-    const MAX_HISTORY: usize = 12; // Number of positions to track
 
     let mut visited: Array3<HashSet<u32>> = Array3::from_elem(bf.map_size, HashSet::new());
 
@@ -264,20 +268,32 @@ pub fn propagate_from_wave_edges(
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
 
     // Add all wave edges to the queue with initial history
-    for &(ref _pos, source_id, _lux, color, ref wave_edge) in wave_edges {
-        // Use stored history when available, otherwise initialize with current position
-
+    for edge_data in bf.prebaked_wave_edges.iter() {
+        if !active_source_ids.contains(&edge_data.source_id) {
+            continue;
+        }
         queue.push_back(InternalWaveEdge {
-            wave_edge: wave_edge.clone(),
-            source_id,
-            color,
+            position: edge_data.position.clone(),
+            wave_edge: edge_data.wave_edge.clone(),
+            source_id: edge_data.source_id,
+            color: edge_data.color,
         });
     }
-
+    // info!(
+    //     "Starting light propagation from {}/{} wave edges (wave copy took {:?})",
+    //     queue.len(),
+    //     bf.prebaked_wave_edges.len(),
+    //     time_start.elapsed()
+    // );
     // Process queue using BFS
     while let Some(edge_data) = queue.pop_front() {
-        let pos = edge_data.wave_edge.path_history.back().unwrap();
-
+        let pos = edge_data.position;
+        let max_lux_possible = edge_data.wave_edge.src_light_lux
+            / (edge_data.wave_edge.distance_travelled * edge_data.wave_edge.distance_travelled);
+        // If light is too low, skip
+        if max_lux_possible < 0.00000001 {
+            continue;
+        }
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
             let nx = pos.x + dx;
@@ -301,7 +317,10 @@ pub fn propagate_from_wave_edges(
             {
                 continue;
             }
-
+            // Stop checking early if this neighbor is already too bright
+            if lfs[neighbor_idx].lux > max_lux_possible * 4.0 {
+                continue;
+            }
             // Skip if already visited
             if visited[neighbor_idx].contains(&edge_data.source_id) {
                 continue;
@@ -315,75 +334,79 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
+            let mut turn_penalty = 1.0;
             // Create history for the new position
             let mut new_history = edge_data.wave_edge.path_history.clone();
-            new_history.push_back(neighbor_pos.clone());
-            if new_history.len() > MAX_HISTORY {
-                new_history.pop_front(); // Keep history at MAX_HISTORY positions maximum
-            }
-
-            // Calculate turn penalty based on history
-            let turn_penalty = if new_history.len() >= MAX_HISTORY {
-                // Get the old direction (from pos[0] to pos[9])
-                let start_idx = 0;
-                let mid_idx = MAX_HISTORY * 3 / 4;
-                let start_pos = new_history.get(start_idx).unwrap();
-                let mid_pos = new_history.get(mid_idx).unwrap();
-
-                let old_dir = (
-                    mid_pos.x - start_pos.x,
-                    mid_pos.y - start_pos.y,
-                    mid_pos.z - start_pos.z,
-                );
-
-                // Get the recent direction (from pos[mid_idx] to current)
-                let end_pos = new_history.back().unwrap();
-                let recent_dir = (
-                    end_pos.x - mid_pos.x,
-                    end_pos.y - mid_pos.y,
-                    end_pos.z - mid_pos.z,
-                );
-
-                // Calculate dot product of normalized vectors
-                let old_len = ((old_dir.0 * old_dir.0
-                    + old_dir.1 * old_dir.1
-                    + old_dir.2 * old_dir.2) as f32)
-                    .sqrt();
-                let recent_len = ((recent_dir.0 * recent_dir.0
-                    + recent_dir.1 * recent_dir.1
-                    + recent_dir.2 * recent_dir.2) as f32)
-                    .sqrt();
-
-                if old_len > 0.0 && recent_len > 0.0 {
-                    let old_norm = (
-                        old_dir.0 as f32 / old_len,
-                        old_dir.1 as f32 / old_len,
-                        old_dir.2 as f32 / old_len,
-                    );
-
-                    let recent_norm = (
-                        recent_dir.0 as f32 / recent_len,
-                        recent_dir.1 as f32 / recent_len,
-                        recent_dir.2 as f32 / recent_len,
-                    );
-
-                    // Dot product (cosine of angle between vectors)
-                    let dot_product = old_norm.0 * recent_norm.0
-                        + old_norm.1 * recent_norm.1
-                        + old_norm.2 * recent_norm.2;
-
-                    // Convert dot product to penalty factor
-                    // When dot = 1 (straight line): penalty = 1.0 (no penalty)
-                    // When dot = 0 (90° turn): penalty = 1.0 + TURN_FACTOR
-                    // When dot = -1 (180° turn): penalty = 1.0 + 2*TURN_FACTOR
-                    const TURN_FACTOR: f32 = 1.0; // Adjust to control severity of turn penalty
-                    1.0 + (1.0 - dot_product) * TURN_FACTOR
-                } else {
-                    1.0 // No penalty if vectors can't be normalized
+            if !new_history.is_empty() {
+                new_history.push_back(neighbor_pos.clone());
+                while new_history.len() > WAVE_MAX_HISTORY {
+                    new_history.pop_front(); // Keep history at MAX_HISTORY positions maximum
                 }
-            } else {
-                1.0 // No penalty until we have enough history
-            };
+
+                // Calculate turn penalty based on history
+                turn_penalty = if new_history.len() >= WAVE_MAX_HISTORY {
+                    // Get the old direction (from pos[0] to pos[9])
+                    let start_idx = 0;
+                    let mid_idx = WAVE_MAX_HISTORY * 3 / 4;
+                    let start_pos = new_history.get(start_idx).unwrap();
+                    let mid_pos = new_history.get(mid_idx).unwrap();
+
+                    let old_dir = (
+                        mid_pos.x - start_pos.x,
+                        mid_pos.y - start_pos.y,
+                        mid_pos.z - start_pos.z,
+                    );
+
+                    // Get the recent direction (from pos[mid_idx] to current)
+                    let end_pos = new_history.back().unwrap();
+                    let recent_dir = (
+                        end_pos.x - mid_pos.x,
+                        end_pos.y - mid_pos.y,
+                        end_pos.z - mid_pos.z,
+                    );
+
+                    // Calculate dot product of normalized vectors
+                    let old_len = ((old_dir.0 * old_dir.0
+                        + old_dir.1 * old_dir.1
+                        + old_dir.2 * old_dir.2) as f32)
+                        .sqrt();
+                    let recent_len = ((recent_dir.0 * recent_dir.0
+                        + recent_dir.1 * recent_dir.1
+                        + recent_dir.2 * recent_dir.2)
+                        as f32)
+                        .sqrt();
+
+                    if old_len > 0.0 && recent_len > 0.0 {
+                        let old_norm = (
+                            old_dir.0 as f32 / old_len,
+                            old_dir.1 as f32 / old_len,
+                            old_dir.2 as f32 / old_len,
+                        );
+
+                        let recent_norm = (
+                            recent_dir.0 as f32 / recent_len,
+                            recent_dir.1 as f32 / recent_len,
+                            recent_dir.2 as f32 / recent_len,
+                        );
+
+                        // Dot product (cosine of angle between vectors)
+                        let dot_product = old_norm.0 * recent_norm.0
+                            + old_norm.1 * recent_norm.1
+                            + old_norm.2 * recent_norm.2;
+
+                        // Convert dot product to penalty factor
+                        // When dot = 1 (straight line): penalty = 1.0 (no penalty)
+                        // When dot = 0 (90° turn): penalty = 1.0 + TURN_FACTOR
+                        // When dot = -1 (180° turn): penalty = 1.0 + 2*TURN_FACTOR
+                        const TURN_FACTOR: f32 = 1.0; // Adjust to control severity of turn penalty
+                        1.0 + (1.0 - dot_product) * TURN_FACTOR
+                    } else {
+                        1.0 // No penalty if vectors can't be normalized
+                    }
+                } else {
+                    1.0 // No penalty until we have enough history
+                };
+            }
             let transparency = if collision.see_through {
                 0.9 / turn_penalty.min(1.2)
             } else {
@@ -395,6 +418,10 @@ pub fn propagate_from_wave_edges(
             // Apply the turn penalty to the light intensity
             let new_lux = src_light_lux / (distance_travelled * distance_travelled);
 
+            if new_lux < 0.02 {
+                // Stop computing light turns for small contributions
+                new_history.clear();
+            }
             // Skip propagating if the contribution is too small
             if lfs[neighbor_idx].lux > new_lux * 10.0 {
                 continue;
@@ -418,6 +445,7 @@ pub fn propagate_from_wave_edges(
 
             // Add neighbor to queue with updated history
             queue.push_back(InternalWaveEdge {
+                position: neighbor_pos,
                 wave_edge: WaveEdge {
                     src_light_lux,
                     distance_travelled: distance_travelled + 1.0,
@@ -431,6 +459,10 @@ pub fn propagate_from_wave_edges(
         }
     }
 
-    info!("Total light propagations: {}", propagation_count);
+    // info!(
+    //     "Total light propagations: {} in {:?}",
+    //     propagation_count,
+    //     time_start.elapsed()
+    // );
     propagation_count
 }

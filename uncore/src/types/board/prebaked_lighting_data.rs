@@ -35,6 +35,21 @@ pub struct WaveEdge {
     pub path_history: VecDeque<BoardPosition>,
 }
 
+/// Represents a wave edge tile with its associated data for light propagation.
+#[derive(Debug, Clone)]
+pub struct WaveEdgeData {
+    /// The position of the wave edge on the board.
+    pub position: BoardPosition,
+    /// The ID of the light source associated with this wave edge.
+    pub source_id: u32,
+    /// The light intensity (lux) at the wave edge.
+    pub lux: f32,
+    /// The color of the light at the wave edge.
+    pub color: (f32, f32, f32),
+    /// The wave edge data containing propagation history.
+    pub wave_edge: WaveEdge,
+}
+
 /// Stores the base light information for a tile
 #[derive(Clone, Debug, Default)]
 pub struct LightInfo {

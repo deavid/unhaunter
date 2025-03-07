@@ -17,6 +17,7 @@ pub fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
     mut qt: Query<(Entity, &Position, &Behavior)>,
+    mut avg_time: Local<(f32, f32)>,
 ) {
     if ev_bdr.is_empty() {
         return;
@@ -42,7 +43,10 @@ pub fn boardfield_update(
 
     if bdr.lighting {
         let mut lens = qt.transmute_lens::<(&Position, &Behavior)>();
-        rebuild_lighting_field(&mut bf, &lens.query());
+        // for _ in 0..32 {
+        //     rebuild_lighting_field(&mut bf, &lens.query(), &mut avg_time);
+        // }
+        rebuild_lighting_field(&mut bf, &lens.query(), &mut avg_time);
     }
 }
 
