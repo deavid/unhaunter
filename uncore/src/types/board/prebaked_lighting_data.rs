@@ -4,7 +4,7 @@
 //! allowing for significant performance improvements by reusing calculations
 //! for static elements in the map.
 
-use bevy::ecs::entity::Entity;
+use bevy::{ecs::entity::Entity, utils::HashMap};
 
 use crate::components::board::boardposition::BoardPosition;
 
@@ -71,4 +71,5 @@ pub struct LightInfo {
 pub struct PrebakedMetadata {
     pub light_sources: Vec<(Entity, (usize, usize, usize))>,
     pub doors: Vec<Entity>,
+    pub light_source_ids: HashMap<Entity, u32>,
 }

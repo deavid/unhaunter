@@ -5,7 +5,7 @@ use bevy::{
     prelude::*,
     utils::{HashMap, HashSet, Instant},
 };
-use ndarray::Array3;
+use ndarray::{Array2, Array3};
 use uncore::{
     behavior::{Behavior, Class},
     components::board::{boardposition::BoardPosition, position::Position},
@@ -30,6 +30,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // First pass - identify all light sources and assign unique IDs
     let mut light_source_count = 0;
     let mut next_source_id = 1; // Start from 1, 0 is reserved for "no source"
+    bf.prebaked_metadata.light_source_ids.clear();
+
+    // First pass - identify all light sources and assign sequential IDs
 
     bf.prebaked_metadata = Default::default();
     // Process all entities to find light sources
@@ -53,6 +56,9 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 lux,
                 color,
             };
+            bf.prebaked_metadata
+                .light_source_ids
+                .insert(entity, next_source_id);
             bf.prebaked_metadata.light_sources.push((entity, idx));
             next_source_id += 1;
         }
@@ -243,8 +249,97 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // Pass the HashSet of all source IDs to find_wave_edge_tiles
     bf.prebaked_wave_edges = find_wave_edge_tiles(bf, &all_source_ids);
 
+    // Add the call to prebake_propagation_data here
+    prebake_propagation_data(bf);
+
     info!(
         "Prebaked lighting field computed in: {:?}",
+        build_start_time.elapsed()
+    );
+}
+
+/// Pre-computes the allowed propagation directions for each light source and tile
+pub fn prebake_propagation_data(bf: &mut BoardData) {
+    info!("Computing prebaked propagation directions...");
+    let build_start_time = Instant::now();
+
+    let map_size = bf.map_size;
+
+    // Create and initialize the vector of Array2
+    bf.prebaked_propagation = vec![
+        Array2::from_elem((map_size.0, map_size.1), [false; 4]);
+        bf.prebaked_metadata.light_sources.len() + 1
+    ];
+
+    // Second pass - compute allowed propagation directions for each light source
+    for (source_entity, source_idx) in &bf.prebaked_metadata.light_sources {
+        let source_id = match bf.prebaked_metadata.light_source_ids.get(source_entity) {
+            Some(id) => *id,
+            None => {
+                warn!("Light source entity not found in light_source_ids map");
+                continue;
+            }
+        };
+
+        let source_pos = BoardPosition::from_ndidx(*source_idx);
+
+        // Initialize distance field with f32::INFINITY
+        let mut distance_field =
+            Array3::from_elem((map_size.0, map_size.1, map_size.2), f32::INFINITY);
+        distance_field[source_pos.ndidx()] = 0.0;
+
+        let mut queue = VecDeque::new();
+        queue.push_front(source_pos.clone()); // Simplified - no need to carry previous position
+
+        while let Some(pos) = queue.pop_back() {
+            let p = pos.ndidx();
+            let current_distance = distance_field[p];
+
+            // We iterate the 4 neighbors
+            for (dir_idx, dir) in [
+                (0, -1, 0), // Up (North)
+                (0, 1, 0),  // Down (South)
+                (-1, 0, 0), // Left (West)
+                (1, 0, 0),  // Right (East)
+            ]
+            .iter()
+            .enumerate()
+            {
+                let neighbor_pos = BoardPosition {
+                    x: pos.x + dir.0,
+                    y: pos.y + dir.1,
+                    z: pos.z + dir.2,
+                };
+
+                let n_idx = match neighbor_pos.ndidx_checked(bf.map_size) {
+                    Some(idx) => idx,
+                    None => continue, // Out of bounds, skip
+                };
+                let collision = &bf.collision_field[n_idx];
+
+                // Skip if this is a static obstacle (except doors)
+                if !collision.see_through && !collision.is_dynamic {
+                    continue;
+                }
+
+                let new_distance = current_distance + 1.0;
+
+                // Only update if this is a shorter path
+                if new_distance < distance_field[n_idx] {
+                    distance_field[n_idx] = new_distance;
+
+                    // Mark that we can propagate from pos in direction dir_idx
+                    bf.prebaked_propagation[source_id as usize][(pos.x as usize, pos.y as usize)]
+                        [dir_idx] = true;
+
+                    queue.push_front(neighbor_pos.clone()); // Simplified - no need for previous position
+                }
+            }
+        }
+    }
+
+    info!(
+        "Prebaked propagation directions computed in: {:?}",
         build_start_time.elapsed()
     );
 }

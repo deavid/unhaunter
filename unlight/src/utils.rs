@@ -270,10 +270,19 @@ pub fn propagate_from_wave_edges(
     let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
 
-    let mut visited: Array3<HashSet<u32>> = Array3::from_elem(bf.map_size, HashSet::new());
-
     // Define directions for propagation
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
+
+    // Direction index mapping: (dx, dy, dz) -> dir_idx
+    let direction_to_idx = |dx: i64, dy: i64, dz: i64| -> usize {
+        match (dx, dy, dz) {
+            (0, -1, 0) => 0,                  // Up (North)
+            (0, 1, 0) => 1,                   // Down (South)
+            (-1, 0, 0) => 2,                  // Left (West)
+            (1, 0, 0) => 3,                   // Right (East)
+            _ => panic!("Invalid direction"), // Should never happen
+        }
+    };
 
     // IIR factors (adjust these to control the "smoothness")
     const IIR_FACTOR_1: f32 = 0.8; // First level of smoothing
@@ -297,12 +306,20 @@ pub fn propagate_from_wave_edges(
         let pos = edge_data.position;
         let max_lux_possible = edge_data.wave_edge.src_light_lux
             / (edge_data.wave_edge.distance_travelled * edge_data.wave_edge.distance_travelled);
+
         // If light is too low, skip
         if max_lux_possible < 0.00000001 {
             continue;
         }
+        let allowed_directions = &bf.prebaked_propagation[edge_data.source_id as usize]
+            .get((pos.x as usize, pos.y as usize))
+            .copied()
+            .unwrap_or([false; 4]);
+
         // Process each neighbor direction
         for &(dx, dy, dz) in &directions {
+            let dir_idx = direction_to_idx(dx, dy, dz);
+
             let nx = pos.x + dx;
             let ny = pos.y + dy;
             let nz = pos.z + dz;
@@ -317,6 +334,13 @@ pub fn propagate_from_wave_edges(
                 y: ny,
                 z: nz,
             };
+
+            // Check if the prebaked data allows propagation in this direction
+
+            if !allowed_directions[dir_idx] {
+                continue;
+            }
+
             let neighbor_idx = neighbor_pos.ndidx();
 
             // If the neighbor was already in the prebaked data, skip
@@ -324,22 +348,14 @@ pub fn propagate_from_wave_edges(
             {
                 continue;
             }
+
             // Stop checking early if this neighbor is already too bright
             if lfs[neighbor_idx].lux > max_lux_possible * 4.0 {
                 continue;
             }
-            // Skip if already visited
-            if visited[neighbor_idx].contains(&edge_data.source_id) {
-                continue;
-            }
-            visited[neighbor_idx].insert(edge_data.source_id);
 
             // Check collision data
             let collision = &bf.collision_field[neighbor_idx];
-
-            if !collision.see_through && !collision.is_dynamic {
-                continue;
-            }
 
             // Update wave edge position using IIR filter
             let new_pos_f32 = (nx as f32, ny as f32, nz as f32);

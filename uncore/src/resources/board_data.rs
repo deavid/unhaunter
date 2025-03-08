@@ -14,7 +14,7 @@ use bevy::{
     prelude::*,
     utils::{HashMap, HashSet},
 };
-use ndarray::Array3;
+use ndarray::{Array2, Array3};
 
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
@@ -38,6 +38,7 @@ pub struct BoardData {
     pub prebaked_lighting: Array3<PrebakedLightingData>,
     pub prebaked_metadata: PrebakedMetadata,
     pub prebaked_wave_edges: Vec<WaveEdgeData>,
+    pub prebaked_propagation: Vec<Array2<[bool; 4]>>,
 
     // Ghost warning state
     /// Current warning intensity (0.0-1.0)
@@ -68,8 +69,10 @@ impl FromWorld for BoardData {
             prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
             prebaked_metadata: PrebakedMetadata::default(),
             prebaked_wave_edges: Vec::new(),
+            prebaked_propagation: Vec::new(),
             ghost_warning_intensity: 0.0,
             ghost_warning_position: None,
         }
     }
 }
+
