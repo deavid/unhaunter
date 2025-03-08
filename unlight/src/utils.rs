@@ -124,7 +124,10 @@ pub fn apply_prebaked_contributions(
     lfs: &mut Array3<LightFieldData>,
 ) -> usize {
     let mut tiles_lit = 0;
-
+    let mut v_active = vec![false; bf.prebaked_propagation.len()];
+    for source_id in active_source_ids {
+        v_active[*source_id as usize] = true;
+    }
     // Apply light from active prebaked sources to the lighting field
     for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
         let pos_idx = (i, j, k);
@@ -132,13 +135,8 @@ pub fn apply_prebaked_contributions(
         // Get the source ID (if any)
         if let Some(source_id) = prebaked_data.light_info.source_id {
             // Only apply if this source is currently active
-            if active_source_ids.contains(&source_id) {
+            if v_active[source_id as usize] {
                 let lux = prebaked_data.light_info.lux;
-
-                // Skip if no meaningful light contribution
-                if lux <= 0.001 {
-                    continue;
-                }
 
                 // Apply light to this position
                 lfs[pos_idx].lux = lux;
@@ -271,22 +269,11 @@ pub fn propagate_from_wave_edges(
     let mut propagation_count = 0;
 
     // Define directions for propagation
-    let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
-
-    // Direction index mapping: (dx, dy, dz) -> dir_idx
-    let direction_to_idx = |dx: i64, dy: i64, dz: i64| -> usize {
-        match (dx, dy, dz) {
-            (0, -1, 0) => 0,                  // Up (North)
-            (0, 1, 0) => 1,                   // Down (South)
-            (-1, 0, 0) => 2,                  // Left (West)
-            (1, 0, 0) => 3,                   // Right (East)
-            _ => panic!("Invalid direction"), // Should never happen
-        }
-    };
+    let directions = [(0, -1, 0), (0, 1, 0), (-1, 0, 0), (1, 0, 0)];
 
     // IIR factors (adjust these to control the "smoothness")
     const IIR_FACTOR_1: f32 = 0.8; // First level of smoothing
-    const IIR_FACTOR_2: f32 = 0.9; // Second level of smoothing
+    const IIR_FACTOR_2: f32 = 0.8; // Second level of smoothing
 
     // Add all wave edges to the queue
     for edge_data in bf.prebaked_wave_edges.iter() {
@@ -308,18 +295,21 @@ pub fn propagate_from_wave_edges(
             / (edge_data.wave_edge.distance_travelled * edge_data.wave_edge.distance_travelled);
 
         // If light is too low, skip
-        if max_lux_possible < 0.00000001 {
+        if max_lux_possible < 0.0000001 {
             continue;
         }
-        let allowed_directions = &bf.prebaked_propagation[edge_data.source_id as usize]
+        let Some(allowed_directions) = &bf.prebaked_propagation[edge_data.source_id as usize]
             .get((pos.x as usize, pos.y as usize))
-            .copied()
-            .unwrap_or([false; 4]);
+        else {
+            continue;
+        };
 
         // Process each neighbor direction
-        for &(dx, dy, dz) in &directions {
-            let dir_idx = direction_to_idx(dx, dy, dz);
-
+        for (_, &(dx, dy, dz)) in directions
+            .iter()
+            .enumerate()
+            .filter(|(dir_idx, _)| allowed_directions[*dir_idx])
+        {
             let nx = pos.x + dx;
             let ny = pos.y + dy;
             let nz = pos.z + dz;
@@ -335,22 +325,16 @@ pub fn propagate_from_wave_edges(
                 z: nz,
             };
 
-            // Check if the prebaked data allows propagation in this direction
+            let neighbor_idx = neighbor_pos.ndidx();
 
-            if !allowed_directions[dir_idx] {
+            // Stop checking early if this neighbor is already too bright
+            if lfs[neighbor_idx].lux > max_lux_possible * 4.0 {
                 continue;
             }
-
-            let neighbor_idx = neighbor_pos.ndidx();
 
             // If the neighbor was already in the prebaked data, skip
             if Some(edge_data.source_id) == bf.prebaked_lighting[neighbor_idx].light_info.source_id
             {
-                continue;
-            }
-
-            // Stop checking early if this neighbor is already too bright
-            if lfs[neighbor_idx].lux > max_lux_possible * 4.0 {
                 continue;
             }
 
@@ -375,7 +359,7 @@ pub fn propagate_from_wave_edges(
                 IIR_FACTOR_2,
             );
 
-            let turn_penalty = {
+            let mut turn_penalty = {
                 // old_dir is now: from iir_mean_iir_mean_pos to iir_mean_pos
                 let old_dir = (
                     new_wave_edge.iir_mean_pos.0 - new_wave_edge.iir_mean_iir_mean_pos.0,
@@ -413,15 +397,19 @@ pub fn propagate_from_wave_edges(
                         + old_norm.1 * recent_norm.1
                         + old_norm.2 * recent_norm.2;
 
-                    let dot_product = (dot_product + 0.07).clamp(-1.0, 1.0);
-                    const TURN_FACTOR: f32 = 0.3; // Adjust for turn penalty
+                    let dot_product = (dot_product + 0.01).clamp(-1.0, 1.0);
+                    const TURN_FACTOR: f32 = 0.6; // Adjust for turn penalty
                     1.0 + (1.0 - dot_product) * TURN_FACTOR
                 } else {
                     1.0
                 }
             };
+            if max_lux_possible > 0.1 {
+                turn_penalty += 0.2;
+            }
+
             let transparency = if collision.see_through {
-                0.97 / turn_penalty.min(1.2)
+                0.95 / turn_penalty.min(1.5)
             } else {
                 0.05
             };

@@ -86,7 +86,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
 
     for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
         // Only process dark tiles
-        if src_lfs[(i, j, k)].lux > DARK_THRESHOLD {
+        if src_lfs[(i, j, k)].lux > DARK_THRESHOLD && !collision.is_dynamic {
             continue;
         }
 
