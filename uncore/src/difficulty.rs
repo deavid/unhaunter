@@ -98,12 +98,12 @@ impl Difficulty {
     /// A higher value means the ghost becomes enraged more quickly.
     pub fn ghost_rage_likelihood(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.0,
-            Difficulty::AdeptInvestigator => 1.0,
-            Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.0,
-            Difficulty::LeadSpecialist => 1.2,
+            Difficulty::NoviceInvestigator => 1.3,
+            Difficulty::AdeptInvestigator => 1.3,
+            Difficulty::SeniorInvestigator => 1.3,
+            Difficulty::ExpertInvestigator => 1.3,
+            Difficulty::AdeptSpecialist => 1.3,
+            Difficulty::LeadSpecialist => 1.3,
             Difficulty::ExpertSpecialist => 1.4,
             Difficulty::MasterSpecialist => 1.6,
             Difficulty::InitiateOccultist => 2.0,
@@ -122,10 +122,10 @@ impl Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     pub fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.7,
-            Difficulty::AdeptInvestigator => 0.8,
-            Difficulty::SeniorInvestigator => 0.9,
-            Difficulty::ExpertInvestigator => 1.0,
+            Difficulty::NoviceInvestigator => 1.1,
+            Difficulty::AdeptInvestigator => 1.1,
+            Difficulty::SeniorInvestigator => 1.1,
+            Difficulty::ExpertInvestigator => 1.1,
             Difficulty::AdeptSpecialist => 1.2,
             Difficulty::LeadSpecialist => 1.25,
             Difficulty::ExpertSpecialist => 1.3,

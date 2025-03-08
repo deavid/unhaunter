@@ -686,7 +686,7 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = true;
-                p.light.emission_power = (6.0).try_into().unwrap();
+                p.light.emission_power = (5.5).try_into().unwrap();
                 p.light.heat_coef = -6;
             }
             Class::Appliance => {

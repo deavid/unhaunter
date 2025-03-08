@@ -714,7 +714,13 @@ pub fn apply_lighting(
             let Some(gs) = o_gs else {
                 continue;
             };
-            if gs.hunt_target {
+            if gs.hunt_warning_active {
+                dst_color = lerp_color(
+                    css::RED.into(),
+                    css::ALICE_BLUE.into(),
+                    gs.hunt_warning_intensity.clamp(0.0, 1.0),
+                );
+            } else if gs.hunt_target {
                 dst_color = lerp_color(
                     css::RED.into(),
                     css::ALICE_BLUE.into(),

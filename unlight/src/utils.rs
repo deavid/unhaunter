@@ -404,15 +404,18 @@ pub fn propagate_from_wave_edges(
                     1.0
                 }
             };
-            if max_lux_possible > 0.1 {
-                turn_penalty += 0.2;
+            if max_lux_possible > 0.2 {
+                turn_penalty += 0.1;
             }
 
-            let transparency = if collision.see_through {
-                0.95 / turn_penalty.min(1.5)
-            } else {
-                0.05
-            };
+            let transparency =
+                if collision.player_free && collision.see_through && !collision.is_dynamic {
+                    0.98 / turn_penalty.min(1.5)
+                } else if collision.see_through {
+                    0.4
+                } else {
+                    0.05
+                };
             let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
             let distance_travelled = edge_data.wave_edge.distance_travelled;
 
