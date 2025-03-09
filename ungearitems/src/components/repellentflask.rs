@@ -5,13 +5,13 @@ use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::{direction::Direction, position::Position};
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::{
     components::{game::GameSprite, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
-use uncore::random_seed;
 
 use crate::metrics;
 
@@ -76,15 +76,15 @@ impl GearUsable for RepellentFlask {
         if !self.active {
             return;
         }
-        if self.qty == Self::MAX_QTY {
-            gs.summary.repellent_used_amt += 1;
-        }
         let mut rng = random_seed::rng();
         if rng.random_range(0.0..1.0) > 0.5 {
             // Reduce the amount of particles emitted. Also reduces the speed of depletion.
             return;
         }
 
+        if self.qty == Self::MAX_QTY {
+            gs.summary.repellent_used_amt += 1;
+        }
         self.qty -= 1;
         if self.qty <= 0 {
             self.qty = 0;
