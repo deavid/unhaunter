@@ -10,6 +10,7 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::npc_help::NpcHelpEvent;
 use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use uncore::resources::board_data::BoardData;
 use uncore::systemparam::collision_handler::CollisionHandler;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::{GameplaySettings, MovementStyle};
@@ -44,9 +45,10 @@ pub fn keyboard_player(
     mut ev_npc: EventWriter<NpcHelpEvent>,
     difficulty: Res<CurrentDifficulty>,
     game_settings: Res<Persistent<GameplaySettings>>,
+    board_data: Res<BoardData>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
-    const RUN_MULTIPLIER: f32 = 1.6; // Multiplier for running speed
+    const RUN_ADD_MULTIPLIER: f32 = 0.9; // Add Multiplier for running speed
     const DIR_MIN: f32 = 5.0;
     const DIR_MAX: f32 = 80.0;
     const DIR_STEPS: f32 = 15.0;
@@ -103,9 +105,21 @@ pub fn keyboard_player(
 
         // --- Check for Running with Stamina System ---
         let wants_to_run = keyboard_input.pressed(player.controls.run);
-        let is_running = stamina.update(dt, wants_to_run);
 
-        let run_multiplier = if is_running { RUN_MULTIPLIER } else { 1.0 };
+        // --- Miasma Logic ---
+        let bpos = pos.to_board_position();
+        let Some(pressure) = board_data.miasma.pressure_field.get(bpos.ndidx()) else {
+            continue;
+        };
+        let miasma_factor = (*pressure / 100.0).sqrt().clamp(0.0, 0.7);
+
+        // --- Stamina Modification ---
+        // Increase depletion rate based on miasma.
+        stamina.depletion_rate = miasma_factor;
+
+        let is_running = stamina.update(dt, wants_to_run).cbrt();
+
+        let run_multiplier = 1.0 + RUN_ADD_MULTIPLIER * is_running;
 
         dir.dx += DIR_MAG2 * d.dx;
         dir.dy += DIR_MAG2 * d.dy;

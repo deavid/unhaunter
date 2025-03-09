@@ -50,7 +50,7 @@ impl Stamina {
         !self.exhausted && self.current >= self.min_to_run
     }
 
-    pub fn update(&mut self, dt: f32, wants_to_run: bool) -> bool {
+    pub fn update(&mut self, dt: f32, wants_to_run: bool) -> f32 {
         self.running = wants_to_run && self.is_able_to_run();
 
         if self.running {
@@ -61,6 +61,7 @@ impl Stamina {
                 self.exhausted = true;
                 self.running = false;
             }
+            self.current / self.max
         } else {
             // Recover stamina when not running
             self.current += self.recovery_rate * dt;
@@ -71,9 +72,8 @@ impl Stamina {
                 // Once we recover enough stamina, we're no longer exhausted
                 self.exhausted = false;
             }
+            0.0
         }
-
-        self.running
     }
 
     /// Returns the current stamina percentage (0.0 - 1.0)
