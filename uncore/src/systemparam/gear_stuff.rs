@@ -1,4 +1,6 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
+use bevy_persistent::Persistent;
+use unsettings::audio::AudioSettings;
 
 use crate::difficulty::CurrentDifficulty;
 use crate::resources::summary_data::SummaryData;
@@ -23,8 +25,10 @@ pub struct GearStuff<'w, 's> {
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
     pub sound_events: EventWriter<'w, SoundEvent>,
-    /// Access to the current difficulty
+    /// Access to the current difficulty.
     pub difficulty: Res<'w, CurrentDifficulty>,
+    /// Audio settings from the game.
+    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
 }
 
 impl GearStuff<'_, '_> {

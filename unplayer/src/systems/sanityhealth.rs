@@ -1,13 +1,14 @@
+use uncore::DEBUG_PLAYER;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
 use uncore::components::game_ui::DamageBackground;
+use uncore::components::player::Stamina;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
-use uncore::utils::light::lerp_color;
 use uncore::utils::PrintingTimer;
-use uncore::DEBUG_PLAYER;
+use uncore::utils::light::lerp_color;
 
 use bevy::prelude::*;
 
@@ -28,21 +29,16 @@ pub fn lose_sanity(
     let dt = time.delta_secs();
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
-        let lux = bf
-            .light_field
-            .get(&bpos)
-            .map(|x| x.lux)
-            .unwrap_or(2.0)
-            .sqrt()
-            + 0.001;
-        let temp = bf.temperature_field.get(&bpos).cloned().unwrap_or(2.0);
+        let p = bpos.ndidx();
+        let lux = bf.light_field[p].lux.sqrt() + 0.001;
+        let temp = bf.temperature_field[p];
         let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
         let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
         let mut sound = 0.0;
-        for bpos in bpos.xy_neighbors(3).iter() {
+        for bpos in bpos.iter_xy_neighbors_nosize(3) {
             sound += bf
                 .sound_field
-                .get(bpos)
+                .get(&bpos)
                 .map(|x| x.iter().map(|y| y.length()).sum::<f32>())
                 .unwrap_or_default()
                 * 10.0;
@@ -57,7 +53,7 @@ pub fn lose_sanity(
         }
         let crazy =
             lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
-        let sanity_recover: f32 = if ps.sanity() < difficulty.0.starting_sanity {
+        let sanity_recover: f32 = if ps.sanity() < difficulty.0.max_recoverable_sanity {
             4.0 / 100.0 / difficulty.0.sanity_drain_rate
         } else {
             0.0
@@ -104,8 +100,10 @@ pub fn recover_sanity(
                 // Clamp health to a maximum of 100%
                 ps.health = ps.health.min(100.0);
             }
-            if ps.sanity() < difficulty.0.starting_sanity {
+            if ps.sanity() < difficulty.0.max_recoverable_sanity {
                 ps.crazyness /= 1.07_f32.powf(dt);
+            } else {
+                ps.crazyness /= 1.005_f32.powf(dt);
             }
             if timer.just_finished() {
                 dbg!(ps.sanity());
@@ -146,6 +144,29 @@ pub fn visual_health(
                     bgcolor.0 = new_color;
                 }
             }
+        }
+    }
+}
+
+pub fn update_player_stamina(
+    mut players: Query<(&PlayerSprite, &mut Stamina)>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    for (player_sprite, mut stamina) in players.iter_mut() {
+        // Adjust stamina parameters based on health
+        let health_percentage = player_sprite.health / 100.0;
+
+        // When health is low, stamina depletes faster and recovers slower
+        if health_percentage < 0.3 {
+            stamina.depletion_rate = 1.2 * difficulty.0.health_recovery_rate; // Depletes 50% faster when health is critical
+            stamina.recovery_rate = 0.15 * difficulty.0.health_recovery_rate; // Recovers 50% slower when health is critical
+        } else if health_percentage < 0.6 {
+            stamina.depletion_rate = 1.0 * difficulty.0.health_recovery_rate; // Depletes 25% faster when health is low
+            stamina.recovery_rate = 0.2 * difficulty.0.health_recovery_rate; // Recovers 33% slower when health is low
+        } else {
+            // Reset to default rates based on difficulty
+            stamina.depletion_rate = 0.8 * difficulty.0.health_recovery_rate;
+            stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate;
         }
     }
 }

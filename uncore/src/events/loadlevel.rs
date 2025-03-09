@@ -19,3 +19,8 @@ pub struct LevelLoadedEvent {
     /// The layers of the map loaded
     pub layers: Vec<(usize, MapLayer)>,
 }
+
+#[derive(Debug, Clone, Event, Default)]
+pub struct LevelReadyEvent {
+    pub open_van: bool,
+}

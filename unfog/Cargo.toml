@@ -1,0 +1,17 @@
+[package]
+name = "unfog"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+
+bevy = { workspace = true }
+rand = { workspace = true }
+noise = { workspace = true }
+ndarray = { workspace = true }

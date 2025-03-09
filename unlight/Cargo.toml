@@ -10,9 +10,14 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
+unfog = { path = "../unfog" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
+unsettings = { path = "../unsettings" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
+ndarray = { workspace = true }
 fastapprox = { workspace = true }
+bevy-persistent = { workspace = true }
+ordered-float = { workspace = true }

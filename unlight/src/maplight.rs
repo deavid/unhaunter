@@ -13,15 +13,19 @@
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
 use bevy::{color::palettes::css, prelude::*, utils::HashMap};
-use rand::Rng as _;
+use bevy_persistent::Persistent;
+use core::f32;
+use ndarray::{Array3, s};
+use rand::Rng;
 use std::collections::VecDeque;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
-use uncore::components::game::{GameSound, MapUpdate};
+use uncore::components::game::{GameSound, MapTileSprite};
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
 use uncore::platform::plt::IS_WASM;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
@@ -36,14 +40,20 @@ use uncore::{
     components::{game_config::GameConfig, sprite_type::SpriteType},
 };
 use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTimer};
+use unfog::components::MiasmaSprite;
+use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
+use unsettings::audio::AudioSettings;
 use unstd::materials::CustomMaterial1;
 
 pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
+
+use crate::metrics::{AMBIENT_SOUND_SYSTEM, APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
+use uncore::random_seed;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.
@@ -53,71 +63,74 @@ pub use uncore::types::board::light::{LightData, LightType};
 /// visibility field is stored in a `HashMap`, where the keys are `BoardPosition`s
 /// and the values are visibility factors (0.0 to 1.0).
 pub fn compute_visibility(
-    vf: &mut HashMap<BoardPosition, f32>,
-    cf: &HashMap<BoardPosition, CollisionFieldData>,
+    vis_field: &mut Array3<f32>,
+    collision_field: &Array3<CollisionFieldData>,
     pos_start: &Position,
     roomdb: Option<&mut RoomDB>,
+    pre_fill: bool,
 ) {
-    let mut queue = VecDeque::new();
+    let measure = COMPUTE_VISIBILITY.time_measure();
+    if pre_fill {
+        vis_field.fill(-0.001);
+    }
+    let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
+    let map_size = collision_field.dim();
+
     queue.push_front((start.clone(), start.clone()));
-    *vf.entry(start.clone()).or_default() = 1.0;
+    vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
         let pds = pos.to_position().distance(pos_start);
-        let src_f = vf.get(&pos).cloned().unwrap_or_default();
-        if !cf
-            .get(&pos)
-            .map(|c| c.player_free || c.see_through)
-            .unwrap_or_default()
-        {
+        let p = pos.ndidx();
+        let src_f = vis_field[p];
+        let cf = &collision_field[p];
+        if !(cf.player_free || cf.see_through) {
             // If the current position analyzed is not free (a wall or out of bounds) then
             // stop extending.
             continue;
         }
 
-        // let neighbors = [pos.left(), pos.top(), pos.bottom(), pos.right()];
-        let neighbors = pos.xy_neighbors(1);
+        let neighbors = pos.iter_xy_neighbors(1, map_size);
         for npos in neighbors {
             if npos == pos {
                 continue;
             }
-            if cf.contains_key(&npos) {
-                let npds = npos.to_position().distance(pos_start);
-                let npref = npos.distance(&pos2) / 2.0;
-                let f = if npds < 1.5 {
-                    1.0
-                } else {
-                    ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
-                };
-                let mut dst_f = src_f * f;
-                if dst_f < 0.00001 {
-                    continue;
+            let np = npos.ndidx();
+            let ncf = collision_field[np];
+            let npds = npos.to_position().distance(pos_start);
+            let npref = npos.distance(&pos2) / 2.0;
+            let f = if npds < 1.5 {
+                1.0
+            } else {
+                ((npds - pds) / npref).clamp(0.0, 1.0).powf(2.0)
+            };
+            let mut dst_f = src_f * f;
+            if dst_f < 0.00001 {
+                continue;
+            }
+            let k = if let Some(roomdb) = roomdb.as_ref() {
+                match roomdb.room_tiles.get(&npos).is_some() {
+                    // Decrease view range inside the location
+                    true => 6.0,
+                    false => 8.0,
                 }
-                if vf.get(&npos).copied().unwrap_or(-0.01) < 0.0 {
+            } else {
+                // For deployed gear
+                3.0
+            };
+            dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
+            let vf_np = &mut vis_field[np];
+            if *vf_np < -0.000001 {
+                if ncf.player_free || ncf.see_through {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                let k = if let Some(roomdb) = roomdb.as_ref() {
-                    match roomdb.room_tiles.get(&npos).is_some() {
-                        // Decrease view range inside the location
-                        true => 3.0,
-                        false => {
-                            if IS_WASM {
-                                4.0
-                            } else {
-                                7.0
-                            }
-                        }
-                    }
-                } else {
-                    // For deployed gear
-                    3.0
-                };
-                dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
-                let entry = vf.entry(npos.clone()).or_insert(dst_f / 2.0);
-                *entry = 1.0 - (1.0 - *entry) * (1.0 - dst_f);
+                *vf_np = dst_f;
+            } else {
+                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
             }
         }
     }
+    measure.end_ms();
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
@@ -128,7 +141,7 @@ pub fn player_visibility_system(
     qp: Query<(&Position, &PlayerSprite)>,
     mut roomdb: ResMut<RoomDB>,
 ) {
-    vf.visibility_field.clear();
+    let measure = PLAYER_VISIBILITY.time_measure();
 
     // Find the active player's position
     let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
@@ -140,14 +153,20 @@ pub fn player_visibility_system(
     }) else {
         return;
     };
-
+    if vf.visibility_field.dim() != bf.collision_field.dim() {
+        vf.visibility_field = Array3::from_elem(bf.collision_field.dim(), -0.001_f32);
+    } else {
+        vf.visibility_field.fill(-0.001_f32);
+    }
     // Calculate visibility
     compute_visibility(
         &mut vf.visibility_field,
         &bf.collision_field,
         &player_pos,
         Some(&mut roomdb),
+        false,
     );
+    measure.end_ms();
 }
 
 /// Applies lighting effects to map tiles and sprites, adjusting colors based on
@@ -173,7 +192,7 @@ pub fn apply_lighting(
             &mut Visibility,
             Option<&GhostInfluence>,
         ),
-        Changed<MapUpdate>,
+        With<MapTileSprite>,
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
@@ -191,16 +210,24 @@ pub fn apply_lighting(
             Option<&GhostSprite>,
             Option<&MapColor>,
             Option<&UVReactive>,
+            Option<&MiasmaSprite>,
         )>,
         Query<
             (&Position, &mut Sprite),
-            (With<MapUpdate>, Without<PlayerSprite>, Without<GhostSprite>),
+            (
+                With<MapTileSprite>,
+                Without<PlayerSprite>,
+                Without<GhostSprite>,
+            ),
         >,
     )>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
+    miasma_config: Res<MiasmaConfig>,
 ) {
-    let mut rng = rand::thread_rng();
+    let measure = APPLY_LIGHTING.time_measure();
+
+    let mut rng = random_seed::rng();
     let gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();
@@ -220,6 +247,11 @@ pub fn apply_lighting(
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
+    let board_dim = bf.collision_field.dim();
+    if bf.map_size.0 == 0 {
+        // If we don't have a valid map, skip this
+        return;
+    }
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
         let p = EquipmentPosition::Deployed;
@@ -236,7 +268,7 @@ pub fn apply_lighting(
             continue;
         };
         if power > 0.0 {
-            let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+            let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
             flashlights.push((
                 pos,
                 deployed_gear.direction,
@@ -271,7 +303,7 @@ pub fn apply_lighting(
                         dz: fldir.dz / 1000.0,
                     };
                 }
-                let vis_field: HashMap<BoardPosition, f32> = HashMap::new();
+                let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
                 flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
@@ -279,16 +311,15 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.xy_neighbors(1) {
-            if let Some(lf) = bf.light_field.get(&npos) {
-                cursor_exp += lf.lux.powf(gamma_exp);
-                exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
-            }
+        for npos in cursor_pos.iter_xy_neighbors_nosize(1) {
+            let lf = &bf.light_field[npos.ndidx()];
+            cursor_exp += lf.lux.powf(gamma_exp);
+            exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
         }
         player_pos = *pos;
     }
-    for (pos, _fldir, _power, _color, _light_type, ref mut vis_field) in flashlights.iter_mut() {
-        compute_visibility(vis_field, &bf.collision_field, pos, None);
+    for (pos, _fldir, _power, _color, _light_type, vis_field) in flashlights.iter_mut() {
+        compute_visibility(vis_field, &bf.collision_field, pos, None, false);
     }
 
     // --- Access queries from the ParamSet ---
@@ -329,14 +360,14 @@ pub fn apply_lighting(
             power / (player_pos.distance2(x.0) + 1.0)
         })
         .sum();
-    cursor_exp += fl_total_power.sqrt() * 2.0;
+    cursor_exp += fl_total_power.sqrt() * 0.9;
     assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see
     cursor_exp += 0.001 / difficulty.0.environment_gamma;
 
     // Compensate overall to make the scene brighter
-    cursor_exp /= 2.4;
+    cursor_exp /= 2.8;
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -351,251 +382,287 @@ pub fn apply_lighting(
     let exposure = bf.current_exposure;
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
-    // 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
-    // 79, 83, 89, 97
-    #[cfg(not(target_arch = "wasm32"))]
-    const VSMALL_PRIME: usize = 31;
-    #[cfg(target_arch = "wasm32")]
-    const VSMALL_PRIME: usize = 97;
+    // Primes: 13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,173,281,409,541,659,809
+    const VSMALL_PRIME: usize = 59;
     const BIG_PRIME: usize = 95629;
-    let mask: usize = rng.gen();
+    let mask: usize = rng.random_range(0..usize::MAX);
     let lf = &bf.light_field;
 
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
 
-    // let mut change_count = 0;
-    for (n, (pos, mat, behavior, mut vis, o_ghost_influence)) in qt2.iter_mut().enumerate() {
-        let min_threshold = (((n * BIG_PRIME) ^ mask) % VSMALL_PRIME) as f32 / 10.0;
+    let update_radius: usize = rng.random_range(8..16);
+    let player_bpos = player_pos.to_board_position();
+    let (map_width, map_height, _map_depth) = bf.map_size;
+    let player_ndidx = player_bpos.ndidx();
+    let min_x = (player_ndidx.0).saturating_sub(update_radius);
+    let max_x = (player_ndidx.0 + update_radius).min(map_width - 1);
+    let min_y = (player_ndidx.1).saturating_sub(update_radius);
+    let max_y = (player_ndidx.1 + update_radius).min(map_height - 1);
+    let z = player_ndidx.2;
 
-        // if min_threshold > 4.5 { continue; }
-        let mut opacity: f32 = 1.0;
-        if behavior.p.display.auto_hide {
-            // Make big objects semitransparent when the player is behind them
-            const MAX_DIST: f32 = 8.0;
-            let dist = pos.distance(&player_pos);
-            if dist < MAX_DIST {
-                let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
-                if delta_z > 0.0 {
-                    opacity = 0.1;
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            let n = x + y * max_x;
+            let dist = ((player_ndidx.0 as isize - x as isize).abs()
+                + (player_ndidx.1 as isize - y as isize).abs()) as usize;
+            let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
+            if min_threshold * dist / 20 > update_radius.saturating_sub(dist + 2) {
+                continue;
+            }
+            let min_threshold = min_threshold as f32 / 10.0;
+            let entities = &bf.map_entity_field[(x, y, z)];
+            for entity in entities.iter() {
+                if let Ok((pos, mat, behavior, mut vis, o_ghost_influence)) = qt2.get_mut(*entity) {
+                    let mut opacity: f32 = 1.0;
+                    if behavior.p.display.auto_hide {
+                        // Make big objects semitransparent when the player is behind them
+                        const MAX_DIST: f32 = 8.0;
+                        let dist = pos.distance(&player_pos);
+                        if dist < MAX_DIST {
+                            let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
+                            if delta_z > 0.0 {
+                                opacity = 0.1;
+                            }
+                        }
+                    }
+
+                    let mut bpos = pos.to_board_position();
+                    bpos.x += behavior.p.display.light_recv_offset.0;
+                    bpos.y += behavior.p.display.light_recv_offset.1;
+
+                    // Use a margin (that should be baked on the map) to avoid negative access.
+                    if bpos.x < 2 || bpos.y < 2 {
+                        continue;
+                    }
+                    let bpos_tr = bpos.bottom();
+                    let bpos_bl = bpos.top();
+                    let bpos_br = bpos.right();
+                    let bpos_tl = bpos.left();
+
+                    // minimum distance for flashlight
+                    const FL_MIN_DST: f32 = 7.0;
+
+                    // behavior.p.movement.walkable
+                    let fpos_gamma_color =
+                        |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
+                            let rpos = bpos.to_position();
+                            let p = bpos.ndidx_checked(bf.map_size)?;
+                            let mut lux_fl = [0_f32; 3];
+                            let mut lightdata = LightData::default();
+                            for (flpos, fldir, flpower, flcolor, fltype, flvismap) in
+                                flashlights.iter()
+                            {
+                                let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
+                                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
+                                let mut lpos = lpos.unrotate_by_dir(fldir);
+                                let mut rpos = rpos.unrotate_by_dir(fldir);
+                                rpos.x -= lpos.x;
+                                rpos.y -= lpos.y;
+                                lpos.x = 0.0;
+                                lpos.y = 0.0;
+                                if rpos.x > 0.0 {
+                                    rpos.x = fastapprox::faster::pow(
+                                        rpos.x,
+                                        1.0 / focus.clamp(1.0, 1.1),
+                                    );
+                                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                                }
+                                if rpos.x < 0.0 {
+                                    rpos.x = -fastapprox::faster::pow(
+                                        -rpos.x,
+                                        (focus / 5.0 + 1.0).clamp(1.0, 3.0),
+                                    );
+                                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                                }
+                                let dist = (lpos.distance(&rpos) + 1.0).powf(
+                                    fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0),
+                                );
+                                let flvis = flvismap[p];
+                                let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
+                                let flsrgba = flcolor.to_srgba();
+                                lux_fl[0] += fl * flsrgba.red;
+                                lux_fl[1] += fl * flsrgba.green;
+                                lux_fl[2] += fl * flsrgba.blue;
+                                let ld = LightData::from_type(*fltype, fl);
+                                lightdata = lightdata.add(&ld);
+                            }
+                            const AMBIENT_LIGHT: f32 = 0.0001;
+                            lf.get(bpos.ndidx()).map(|lf| {
+                                (
+                                    (
+                                        (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure,
+                                        (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure,
+                                        (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure,
+                                    ),
+                                    lightdata.add(&LightData::from_type(
+                                        LightType::Visible,
+                                        lf.lux + AMBIENT_LIGHT,
+                                    )),
+                                )
+                            })
+                        };
+                    let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
+                        let gcolor = fpos_gamma_color(bpos);
+                        gcolor
+                            .map(|((r, g, b), _)| (r + g + b) / 3.0)
+                            .map(|l| (l / brightness_harsh).tanh() * brightness_harsh)
+                    };
+                    let ((mut r, mut g, mut b), light_data) = fpos_gamma_color(&bpos)
+                        .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+                    let (att_charge, rep_charge) = o_ghost_influence
+                        .map(|x| match x.influence_type {
+                            InfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                            InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+                        })
+                        .unwrap_or_default();
+                    let rgbl = (r + g + b) / 3.0 + 1.0;
+                    g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
+                    b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
+                    b += light_data.red * rep_charge * 0.01 * rgbl;
+                    r /= 1.0
+                        + light_data.red * rep_charge * 50.0 * rgbl
+                        + light_data.ultraviolet * att_charge * 12.0 * rgbl;
+                    g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
+                    b /= 1.0
+                        + light_data.infrared * (att_charge + rep_charge) * 10.0 * rgbl
+                        + light_data.ultraviolet * att_charge * 12.0 * rgbl;
+                    if behavior.p.movement.walkable {
+                        lightdata_map.insert(bpos.clone(), light_data);
+                    }
+                    let max_color = r.max(g).max(b).max(0.005);
+                    let src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
+
+                    let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
+                    let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
+                    let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
+                    let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
+                    let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
+                    match behavior.obsolete_occlusion_type() {
+                        Orientation::None => {}
+                        Orientation::XAxis => {
+                            lux_tl = lux_c;
+                            lux_br = lux_c;
+                        }
+                        Orientation::YAxis => {
+                            lux_tr = lux_c;
+                            lux_bl = lux_c;
+                        }
+                        Orientation::Both => {
+                            lux_tl = lux_c;
+                            lux_br = lux_c;
+                            lux_tr = lux_c;
+                            lux_bl = lux_c;
+                        }
+                    }
+                    opacity = opacity
+                        .min(vf.visibility_field[bpos.ndidx()] * 2.0)
+                        .clamp(0.0, 1.0);
+                    let mut new_mat = materials1.get(mat).unwrap().clone();
+                    let orig_mat = new_mat.clone();
+
+                    // remove brightness calculation for main tile:
+                    let mut dst_color = src_color_base;
+
+                    let opacity = opacity.clamp(0.000, 1.0);
+                    const A_DELTA: f32 = 0.02;
+                    let f = 0.5;
+                    let next_a = opacity * f + new_mat.data.color.alpha() * (1.0 - f);
+                    let new_a = if (next_a - opacity).abs() < A_DELTA {
+                        opacity
+                    } else {
+                        next_a - A_DELTA * (next_a - opacity).signum()
+                    };
+                    dst_color.set_alpha(new_a);
+
+                    // Sound field visualization:
+                    let f_gamma = |lux: f32| {
+                        (fastapprox::faster::pow(lux, light_gamma)
+                            + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
+                            / 2.0
+                    };
+                    const K_COLD: f32 = 0.5;
+                    let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
+                    const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
+                    const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
+                    let exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5)
+                        .clamp(0.0, 1.0);
+                    let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+                    let dark2 = lerp_color(
+                        Color::WHITE,
+                        DARK_COLOR2,
+                        exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
+                    );
+                    new_mat.data.ambient_color = dark.with_alpha(0.0).into();
+
+                    // Convert both colors to LinearRgba for multiplication
+                    let linear_dst_color = LinearRgba::from(dst_color);
+                    let linear_dark2_color = LinearRgba::from(dark2);
+
+                    // Perform the multiplication in the LinearRgba space
+                    let new_color = linear_dst_color.to_vec4() * linear_dark2_color.to_vec4();
+
+                    // Convert back to Color
+                    let new_color = LinearRgba::from_vec4(new_color);
+
+                    let src_a = new_mat.data.color.alpha();
+
+                    new_mat.data.color = new_color;
+                    // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
+
+                    const BRIGHTNESS: f32 = 1.01;
+                    let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
+                    let smooth_f: f32 = src_a + 0.0000001 + 0.3;
+                    let gamma_mean = |a: f32, b: f32| {
+                        (a * smooth_f
+                            + f_gamma(
+                                b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
+                                    + (tint_comp + cold_f * 2.0 + (exp_color * 2.0).powi(2))
+                                        / (10.0 + exposure + b),
+                            )
+                            + exp_color / 40.0)
+                            / (1.0 + smooth_f)
+                    };
+                    // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
+                    lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
+                    new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
+                    new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
+                    new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
+                    new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
+                    new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
+                    const DEBUG_SOUND: bool = false;
+                    if DEBUG_SOUND {
+                        if let Some(sf) = bf.sound_field.get(&bpos) {
+                            let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
+                            if l > 0.0001 {
+                                new_mat.data.gamma = 2.0;
+                                new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
+                            }
+                        }
+                    }
+                    let invisible =
+                        new_mat.data.color.alpha() < 0.005 || behavior.p.display.disable;
+                    let new_vis = if invisible {
+                        Visibility::Hidden
+                    } else {
+                        Visibility::Inherited
+                    };
+                    *vis = new_vis;
+                    let delta = orig_mat.data.delta(&new_mat.data);
+                    let thr = if IS_WASM { 0.2 } else { 0.02 };
+                    if behavior.p.display.auto_hide || delta > thr + min_threshold {
+                        let mat = materials1.get_mut(mat).unwrap();
+                        mat.data = new_mat.data;
+                        // change_count += 1;
+                    }
                 }
             }
-        }
-
-        let bpos = pos.to_board_position();
-        let bpos_tr = bpos.bottom();
-        let bpos_bl = bpos.top();
-        let bpos_br = bpos.right();
-        let bpos_tl = bpos.left();
-
-        // minimum distance for flashlight
-        const FL_MIN_DST: f32 = 7.0;
-
-        // behavior.p.movement.walkable
-        let fpos_gamma_color = |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
-            let rpos = bpos.to_position();
-            let mut lux_fl = [0_f32; 3];
-            let mut lightdata = LightData::default();
-            for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
-                let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
-                let mut lpos = lpos.unrotate_by_dir(fldir);
-                let mut rpos = rpos.unrotate_by_dir(fldir);
-                rpos.x -= lpos.x;
-                rpos.y -= lpos.y;
-                lpos.x = 0.0;
-                lpos.y = 0.0;
-                if rpos.x > 0.0 {
-                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
-                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                }
-                if rpos.x < 0.0 {
-                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
-                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                }
-                let dist = (lpos.distance(&rpos) + 1.0)
-                    .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
-                let flvis = flvismap.get(bpos).copied().unwrap_or_default();
-                let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
-                let flsrgba = flcolor.to_srgba();
-                lux_fl[0] += fl * flsrgba.red;
-                lux_fl[1] += fl * flsrgba.green;
-                lux_fl[2] += fl * flsrgba.blue;
-                let ld = LightData::from_type(*fltype, fl);
-                lightdata = lightdata.add(&ld);
-            }
-            const AMBIENT_LIGHT: f32 = 0.0001;
-            lf.get(bpos).map(|lf| {
-                (
-                    (
-                        (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure,
-                        (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure,
-                        (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure,
-                    ),
-                    lightdata.add(&LightData::from_type(
-                        LightType::Visible,
-                        lf.lux + AMBIENT_LIGHT,
-                    )),
-                )
-            })
-        };
-        let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
-            let gcolor = fpos_gamma_color(bpos);
-            gcolor
-                .map(|((r, g, b), _)| (r + g + b) / 3.0)
-                .map(|l| (l / brightness_harsh).tanh() * brightness_harsh)
-        };
-        let ((mut r, mut g, mut b), light_data) =
-            fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
-        let (att_charge, rep_charge) = o_ghost_influence
-            .map(|x| match x.influence_type {
-                InfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
-                InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
-            })
-            .unwrap_or_default();
-        let rgbl = (r + g + b) / 3.0 + 1.0;
-        g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
-        b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
-        b += light_data.red * rep_charge * 0.01 * rgbl;
-        r /= 1.0
-            + light_data.red * rep_charge * 50.0 * rgbl
-            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
-        g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
-        b /= 1.0
-            + light_data.infrared * (att_charge + rep_charge) * 10.0 * rgbl
-            + light_data.ultraviolet * att_charge * 12.0 * rgbl;
-        if behavior.p.movement.walkable {
-            lightdata_map.insert(bpos.clone(), light_data);
-        }
-        let max_color = r.max(g).max(b).max(0.005);
-        let src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
-
-        let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
-        let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
-        let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
-        let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
-        let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
-        match behavior.obsolete_occlusion_type() {
-            Orientation::None => {}
-            Orientation::XAxis => {
-                lux_tl = lux_c;
-                lux_br = lux_c;
-            }
-            Orientation::YAxis => {
-                lux_tr = lux_c;
-                lux_bl = lux_c;
-            }
-            Orientation::Both => {
-                lux_tl = lux_c;
-                lux_br = lux_c;
-                lux_tr = lux_c;
-                lux_bl = lux_c;
-            }
-        }
-        opacity = opacity
-            .min(vf.visibility_field.get(&bpos).copied().unwrap_or_default() * 2.0)
-            .clamp(0.0, 1.0);
-        let mut new_mat = materials1.get(mat).unwrap().clone();
-        let orig_mat = new_mat.clone();
-
-        // remove brightness calculation for main tile:
-        let mut dst_color = src_color_base;
-
-        let opacity = opacity.clamp(0.000, 1.0);
-        const A_DELTA: f32 = 0.02;
-        let f = 0.5;
-        let next_a = opacity * f + new_mat.data.color.alpha() * (1.0 - f);
-        let new_a = if (next_a - opacity).abs() < A_DELTA {
-            opacity
-        } else {
-            next_a - A_DELTA * (next_a - opacity).signum()
-        };
-        dst_color.set_alpha(new_a);
-
-        // Sound field visualization:
-        let f_gamma = |lux: f32| {
-            (fastapprox::faster::pow(lux, light_gamma)
-                + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
-                / 2.0
-        };
-        const K_COLD: f32 = 0.5;
-        let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
-        const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
-        const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
-        let exp_color =
-            ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-        let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
-        let dark2 = lerp_color(
-            Color::WHITE,
-            DARK_COLOR2,
-            exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
-        );
-        new_mat.data.ambient_color = dark.with_alpha(0.0).into();
-
-        // Convert both colors to LinearRgba for multiplication
-        let linear_dst_color = LinearRgba::from(dst_color);
-        let linear_dark2_color = LinearRgba::from(dark2);
-
-        // Perform the multiplication in the LinearRgba space
-        let new_color = linear_dst_color.to_vec4() * linear_dark2_color.to_vec4();
-
-        // Convert back to Color
-        let new_color = LinearRgba::from_vec4(new_color);
-
-        let src_a = new_mat.data.color.alpha();
-
-        new_mat.data.color = new_color;
-        // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
-
-        const BRIGHTNESS: f32 = 1.01;
-        let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
-        let smooth_f: f32 = src_a + 0.0000001 + 0.3;
-        let gamma_mean = |a: f32, b: f32| {
-            (a * smooth_f
-                + f_gamma(
-                    b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
-                        + (tint_comp + cold_f * 2.0 + (exp_color * 2.0).powi(2))
-                            / (10.0 + exposure + b),
-                )
-                + exp_color / 40.0)
-                / (1.0 + smooth_f)
-        };
-        // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
-        lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
-        new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
-        new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
-        new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
-        new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
-        new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
-        const DEBUG_SOUND: bool = false;
-        if DEBUG_SOUND {
-            if let Some(sf) = bf.sound_field.get(&bpos) {
-                let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
-                if l > 0.0001 {
-                    new_mat.data.gamma = 2.0;
-                    new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
-                }
-            }
-        }
-        let invisible = new_mat.data.color.alpha() < 0.005 || behavior.p.display.disable;
-        let new_vis = if invisible {
-            Visibility::Hidden
-        } else {
-            Visibility::Inherited
-        };
-        *vis = new_vis;
-        let delta = orig_mat.data.delta(&new_mat.data);
-        let thr = if IS_WASM { 0.2 } else { 0.02 };
-        if behavior.p.display.auto_hide || delta > thr + min_threshold {
-            let mat = materials1.get_mut(mat).unwrap();
-            mat.data = new_mat.data;
-            // change_count += 1;
         }
     }
 
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
-    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position();
         let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
@@ -606,12 +673,8 @@ pub fn apply_lighting(
         let ld_mag = ld_abs.magnitude();
         let ld = ld_abs.normalize();
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
-        let mut opacity: f32 = map_color.alpha()
-            * vf.visibility_field
-                .get(&bpos)
-                .copied()
-                .unwrap_or_default()
-                .clamp(0.0, 1.0);
+        let mut opacity: f32 =
+            map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
         let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
@@ -635,6 +698,10 @@ pub fn apply_lighting(
                 rel_lux *= 1.2;
                 rel_lux += 0.2;
             }
+            if sprite_type == SpriteType::Miasma {
+                rel_lux /= 2.0;
+                rel_lux += 0.6;
+            }
             compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };
 
@@ -644,7 +711,13 @@ pub fn apply_lighting(
             let Some(gs) = o_gs else {
                 continue;
             };
-            if gs.hunt_target {
+            if gs.hunt_warning_active {
+                dst_color = lerp_color(
+                    css::RED.into(),
+                    css::ALICE_BLUE.into(),
+                    gs.hunt_warning_intensity.clamp(0.0, 1.0),
+                );
+            } else if gs.hunt_target {
                 dst_color = lerp_color(
                     css::RED.into(),
                     css::ALICE_BLUE.into(),
@@ -700,7 +773,7 @@ pub fn apply_lighting(
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
             opacity = opacity.sqrt();
             let l = dst_color.luminance();
-            let rnd_f = rng.gen_range(-1.0..1.0_f32).powi(3);
+            let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
@@ -727,62 +800,69 @@ pub fn apply_lighting(
                 }
             }
         }
+        if sprite_type == SpriteType::Miasma {
+            let bpos = pos.to_board_position();
+            if let Some(miasma_sprite) = o_miasma {
+                let mut total_pressure = 0.0;
+                let mut total_weight = 0.0;
+
+                for dx in -1..1 {
+                    for dy in -1..1 {
+                        let neighbor_pos = BoardPosition {
+                            x: bpos.x + dx,
+                            y: bpos.y + dy,
+                            z: bpos.z,
+                        };
+
+                        if let Some(neighbor_pressure) =
+                            bf.miasma.pressure_field.get(neighbor_pos.ndidx())
+                        {
+                            // Calculate distance from sprite's *actual* position to the
+                            // *center* of the neighbor tile. This is important for smooth
+                            // weighting.
+                            let neighbor_center = neighbor_pos.to_position_center();
+                            let distance = pos.distance(&neighbor_center); // Euclidean distance
+                            let weight = (distance + 0.1).recip(); // Avoid division by zero
+
+                            total_pressure += neighbor_pressure * weight;
+                            total_weight += weight;
+                        }
+                    }
+                }
+
+                let average_pressure = if total_weight > 0.0 {
+                    total_pressure / total_weight
+                } else {
+                    0.0 // Default to 0 if no neighbors have pressure (shouldn't happen)
+                };
+
+                let miasma_visibility = average_pressure.max(0.0).sqrt()
+                    * miasma_config.miasma_visibility_factor
+                    * miasma_sprite.time_alive.clamp(0.0, 1.0)
+                    * (miasma_sprite.life / 2.0).clamp(0.0, 1.0)
+                    * (ld.magnitude().atan() / 1.2 + 0.25);
+
+                dst_color = dst_color
+                    .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
+                opacity = opacity.max(0.0);
+                opacity *= miasma_visibility.clamp(0.0, 0.45)
+                    * miasma_sprite.visibility
+                    * (1.0 - dst_color.luminance() * 0.5);
+                // if opacity < old_a {
+                //     smooth = 25.0;
+                // }
+            }
+        }
         dst_color.set_alpha(
             ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
         );
         sprite.color = dst_color;
     }
     for (bpos, ld) in lightdata_map.into_iter() {
-        bf.light_field.entry(bpos).and_modify(|l| l.additional = ld);
+        bf.light_field[bpos.ndidx()].additional = ld;
     }
-    // if mask % 55 == 0 { warn!("change_count: {}", &change_count);
-    // warn!("apply_lighting elapsed: {:?}", start.elapsed()); }
-}
 
-/// Marks map tiles for lighting update based on player position and visibility.
-///
-/// This system optimizes the lighting system by only updating tiles that are
-/// likely visible to the player. It uses a distance-based heuristic to determine
-/// which tiles need updating, potentially improving performance by avoiding
-/// unnecessary lighting calculations.
-pub fn mark_for_update(
-    time: Res<Time>,
-    gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
-    mut qt2: Query<(&Position, &Visibility, &mut MapUpdate)>,
-) {
-    let mut player_pos = Position::new_i64(0, 0, 0);
-    for (pos, player) in qp.iter() {
-        if player.id != gc.player_id {
-            continue;
-        }
-        player_pos = *pos;
-    }
-    let now = time.elapsed_secs();
-
-    use rand::rngs::SmallRng;
-    use rand::{Rng, SeedableRng};
-
-    let mut small_rng = SmallRng::from_entropy();
-    for (pos, vis, mut upd) in qt2.iter_mut() {
-        let r: f32 = small_rng.gen_range(0.0..1.01);
-        let k: f32 = if IS_WASM { 0.5 } else { 2.0 };
-        let dst = pos.distance_taxicab(&player_pos);
-        let r2: f32 = small_rng.gen_range(0.05..1.0)
-            * k.recip()
-            * dst
-            * if vis == Visibility::Hidden { 2.0 } else { 1.0 };
-
-        let min_dst = 3.0
-            + if vis == Visibility::Hidden {
-                r.powi(10) * 20.0 * k
-            } else {
-                r.powi(10) * 100.0 * k
-            };
-        if dst < min_dst || now - upd.last_update > r2.max(0.3) {
-            upd.last_update = now;
-        }
-    }
+    measure.end_ms();
 }
 
 /// System to manage ambient sound levels based on visibility.
@@ -791,26 +871,68 @@ pub fn ambient_sound_system(
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
-    qp: Query<&PlayerSprite>,
+    qp: Query<(&PlayerSprite, &Position)>, // Added Position to the query
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
+    let measure = AMBIENT_SOUND_SYSTEM.time_measure();
+
     timer.tick(time.delta());
+
+    if vf.visibility_field.is_empty() {
+        return;
+    }
+    // Find the active player's position
+    let player_bpos = qp
+        .iter()
+        .find_map(|(player, pos)| {
+            if player.id == gc.player_id {
+                Some(pos.to_board_position())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_default();
+
+    // Define a radius around the player
+    const RADIUS: usize = 32;
+
+    // Calculate bounds for our slice
+    let player_ndidx = player_bpos.ndidx();
+    let (map_width, map_height, _map_depth) = vf.visibility_field.dim();
+
+    let min_x = player_ndidx.0.saturating_sub(RADIUS);
+    let max_x = (player_ndidx.0 + RADIUS).min(map_width - 1);
+    let min_y = player_ndidx.1.saturating_sub(RADIUS);
+    let max_y = (player_ndidx.1 + RADIUS).min(map_height - 1);
+    let z = player_ndidx.2;
+
+    // Calculate total_vis only for the subslice
     let total_vis: f32 = vf
         .visibility_field
-        .iter()
-        .map(|(k, v)| {
-            v * match roomdb.room_tiles.get(k).is_some() {
+        .slice(s![min_x..=max_x, min_y..=max_y, z..=z])
+        .indexed_iter()
+        .map(|(rel_idx, v)| {
+            // Convert relative indices back to absolute indices
+            let abs_idx = (rel_idx.0 + min_x, rel_idx.1 + min_y, rel_idx.2 + z);
+            let k = BoardPosition::from_ndidx(abs_idx);
+            v * match roomdb.room_tiles.get(&k).is_some() {
                 true => 0.2,
                 false => 1.0,
             }
         })
         .sum();
-    let house_volume = (20.0 / total_vis).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
+
+    let house_volume = (20.0 / total_vis.max(1.0))
+        .powi(3)
+        .tanh()
+        .clamp(0.00001, 0.9999)
+        * 6.0;
     let street_volume = (total_vis / 20.0).powi(3).tanh().clamp(0.00001, 0.9999) * 6.0;
 
     // --- Get Player Health and Sanity ---
-    let player = qp.iter().find(|p| p.id == gc.player_id);
+    let player = qp.iter().find(|p| p.0.id == gc.player_id).map(|(p, _)| p);
     let health = player
         .map(|p| p.health.clamp(0.0, 100.0) / 100.0)
         .unwrap_or(1.0);
@@ -820,30 +942,30 @@ pub fn ambient_sound_system(
     }
     for (sink, gamesound) in qas.iter() {
         const SMOOTH: f32 = 60.0;
-        match gamesound.class {
+        let volume_factor =
+            2.0 * audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
+        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001).ln();
+        let v = match gamesound.class {
             SoundType::BackgroundHouse => {
-                let v = (sink.volume().ln() * SMOOTH + house_volume.ln() * health * sanity)
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + house_volume.ln() * health * sanity) / (SMOOTH + 1.0)
             }
             SoundType::BackgroundStreet => {
-                let v = (sink.volume().ln() * SMOOTH + street_volume.ln() * health * sanity)
-                    / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + street_volume.ln() * health * sanity) / (SMOOTH + 1.0)
             }
             SoundType::HeartBeat => {
                 // Handle heartbeat sound Volume based on health
                 let heartbeat_volume = (1.0 - health).powf(0.7) * 0.5 + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + heartbeat_volume.ln()) / (SMOOTH + 1.0)
             }
             SoundType::Insane => {
                 // Handle insanity sound Volume based on sanity
                 let insanity_volume =
                     (1.0 - sanity).powf(5.0) * 0.7 * house_volume.clamp(0.3, 1.0) + 0.0000001;
-                let v = (sink.volume().ln() * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0);
-                sink.set_volume(v.exp());
+                (ln_volume * SMOOTH + insanity_volume.ln()) / (SMOOTH + 1.0)
             }
-        }
+        };
+        let new_volume = v.exp() * volume_factor;
+        sink.set_volume(new_volume.clamp(0.00001, 10.0));
     }
+    measure.end_ms();
 }

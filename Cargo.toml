@@ -16,19 +16,24 @@ members = [
     "untmxmap",
     "unsettings",
     "unmenusettings",
+    "unfog",
 ]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
-version = "0.2.5"
-edition = "2021"
+version = "0.2.6"
+edition = "2024"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"
 license = "Apache-2.0"
 authors = ["David Martínez Martí <deavidsedice@gmail.com>"]
 
 [workspace.dependencies]
-rand = { version = "0.8", features = ["small_rng"] }
+rand = { version = "0.9", default-features = false, features = [
+    "small_rng",
+    "alloc",
+    "std_rng",
+] }
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -39,21 +44,23 @@ clap = "4.5"
 fastapprox = "0.3"
 anyhow = "1.0"
 thiserror = "2.0"
-ordered-float = { version = "4.2", features = ["serde"] }
+ordered-float = { version = "5.0", features = ["serde"] }
 hierarchical_pathfinding = "0.5"
 walkdir = "2.5"
 glob = "0.3"
-tiled = { version = "0.13", features = ["wasm"] }
+tiled = { version = "0.14", features = ["wasm"] }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
 itertools = "0.14.0"
-dirs = "5.0"
-strum = { version = "0.26", features = ["derive"] }
+dirs = "6.0"
+strum = { version = "0.27", features = ["derive"] }
+noise = { version = "0.9.0", features = ["std"] }
 
 bevy = "0.15"
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
+ndarray = "0.16.1"
 
 [package]
 name = "unhaunter"
@@ -68,6 +75,7 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "uncore" }
 unstd = { path = "unstd" }
+unfog = { path = "unfog" }
 ungear = { path = "ungear" }
 ungearitems = { path = "ungearitems" }
 unmaphub = { path = "unmaphub" }
@@ -84,6 +92,7 @@ unmenusettings = { path = "unmenusettings" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
+ordered-float = { workspace = true }
 
 [build-dependencies]
 walkdir = { workspace = true }
@@ -97,26 +106,44 @@ crate-type = ["cdylib", "rlib"]
 path = "unhaunter/src/lib.rs"
 
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 bevy_dylib = { workspace = true }
 
 [profile.dev]
-opt-level = "z"
-lto = "off"
-codegen-units = 8
+opt-level = "s"
+lto = "thin"
+debug-assertions = true
+overflow-checks = true
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
-opt-level = "z"
+opt-level = "s"
 debug = false
 strip = "debuginfo"
+codegen-units = 1
+
+debug-assertions = true
+overflow-checks = true
 
 # These optimizations for release are trying to target mostly WASM
 [profile.release]
+opt-level = "s"
+# TODO: When WASM gets its own release profile we will keep some debug info to do profiling as well on release.
+debug = false
+strip = "debuginfo"
+# --
+debug-assertions = false
+overflow-checks = false
+lto = "thin"
+codegen-units = 1
+
+# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE. 
+# This will allow us to have a custom profile for WASM builds, and then make it much more aggressive.
+
+[profile.release.package."*"]
 opt-level = "s"
 debug = false
 strip = "debuginfo"
 debug-assertions = false
 overflow-checks = false
-lto = true
 codegen-units = 1

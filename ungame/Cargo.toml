@@ -15,8 +15,10 @@ unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
+unlight = { path = "../unlight" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
+ndarray = { workspace = true }

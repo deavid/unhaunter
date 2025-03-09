@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::prelude::*;
 use rand::Rng as _;
 
-use crate::types::ghost::types::GhostType;
+use crate::{random_seed, types::ghost::types::GhostType};
 
 use super::board::{boardposition::BoardPosition, position::Position};
 
@@ -53,6 +53,12 @@ pub struct GhostSprite {
     pub salty_trace_spawn_timer: Timer,
     /// Makes the ghost wait more for the next attack but it will be a harder attack.
     pub rage_limit_multiplier: f32,
+    /// True when in pre-hunt warning state
+    pub hunt_warning_active: bool,
+    /// Countdown timer (10 seconds)
+    pub hunt_warning_timer: f32,
+    /// Current warning wave intensity (0.0-1.0)
+    pub hunt_warning_intensity: f32,
 }
 
 impl GhostSprite {
@@ -62,8 +68,8 @@ impl GhostSprite {
     /// The ghost's initial mood, hunting state, and other attributes are set to
     /// default values.
     pub fn new(spawn_point: BoardPosition, ghost_types: &[GhostType]) -> Self {
-        let mut rng = rand::thread_rng();
-        let idx = rng.gen_range(0..ghost_types.len());
+        let mut rng = random_seed::rng();
+        let idx = rng.random_range(0..ghost_types.len());
         let class = ghost_types[idx];
         warn!("Ghost type: {:?} - {:?}", class, class.evidences());
         let mut salty_effect_timer = Timer::from_seconds(120.0, TimerMode::Once);
@@ -86,6 +92,9 @@ impl GhostSprite {
             salty_effect_timer,
             salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
             rage_limit_multiplier: 1.0,
+            hunt_warning_active: false,
+            hunt_warning_timer: 0.0,
+            hunt_warning_intensity: 0.0,
         }
     }
 

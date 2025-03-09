@@ -1,3 +1,4 @@
+use uncore::random_seed;
 use uncore::systemparam::gear_stuff::GearStuff;
 
 use uncore::{
@@ -5,7 +6,7 @@ use uncore::{
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
 
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 
@@ -65,14 +66,38 @@ pub struct EMFMeter {
     pub temp_l1: f32,
     pub emf: f32,
     pub emf_level: EMFLevel,
+    pub miasma_pressure: f32,
+    pub miasma_pressure_2: f32,
     pub last_sound_secs: f32,
     pub last_meter_update_secs: f32,
+    pub display_glitch_timer: f32,
 }
 
 impl GearUsable for EMFMeter {
     fn get_sprite_idx(&self) -> GearSpriteID {
         match self.enabled {
-            true => self.emf_level.to_spriteid(),
+            true => {
+                // Occasionally show blank screen during glitch
+                if self.display_glitch_timer > 0.0
+                    && random_seed::rng().random_range(0.0..1.0) < 0.3
+                {
+                    // Alternative if EMFMeterGlitch doesn't exist yet
+                    if self.display_glitch_timer > 0.0
+                        && random_seed::rng().random_range(0.0..1.0) < 0.3
+                    {
+                        // Temporarily show as off or randomly flicker between levels
+                        match random_seed::rng().random_range(0..3) {
+                            0 => GearSpriteID::EMFMeterOff,
+                            1 => GearSpriteID::EMFMeter4,
+                            _ => self.emf_level.to_spriteid(),
+                        }
+                    } else {
+                        self.emf_level.to_spriteid()
+                    }
+                } else {
+                    self.emf_level.to_spriteid()
+                }
+            }
             false => GearSpriteID::EMFMeterOff,
         }
     }
@@ -88,11 +113,25 @@ impl GearUsable for EMFMeter {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
+
+        // Show garbled text when glitching
+        if self.enabled && self.display_glitch_timer > 0.0 {
+            let garbled = match random_seed::rng().random_range(0..4) {
+                0 => "Reading: ERR0R\nEnergy: ###.###",
+                1 => "Reading: ---.--\nEnergy: FAULT",
+                2 => "INTERFERENCE DET---\nCALIBRATING...",
+                _ => "Signal Lost\nReacquiring...",
+            };
+            return format!("{name}:  {on_s}\n{garbled}");
+        }
+
+        // Regular display
         let msg = if self.enabled {
             format!(
-                "Reading: {:>6.1}mG {}",
+                "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
                 self.emf,
-                self.emf_level.to_status()
+                self.emf_level.to_status(),
+                self.miasma_pressure_2,
             )
         } else {
             "".to_string()
@@ -105,25 +144,37 @@ impl GearUsable for EMFMeter {
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
-        let mut rng = rand::thread_rng();
+        let mut rng = random_seed::rng();
         self.frame_counter += 1;
         if self.frame_counter > 65413 {
             self.frame_counter = 0;
         }
         const K: f32 = 0.5;
+        const F: f32 = 0.95;
+        for _ in 0..20 {
+            let pos = Position {
+                x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+                y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+                z: pos.z,
+                global_z: pos.global_z,
+            };
+            let bpos = pos.to_board_position();
+
+            let miasma_pressure = gs.bf.miasma.pressure_field[bpos.ndidx()];
+
+            self.miasma_pressure = self.miasma_pressure * F + miasma_pressure * (1.0 - F);
+        }
+        self.miasma_pressure_2 = self.miasma_pressure_2 * F + self.miasma_pressure * (1.0 - F);
+
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
-        let temperature = gs
-            .bf
-            .temperature_field
-            .get(&bpos)
-            .copied()
-            .unwrap_or_default();
+
+        let temperature = gs.bf.temperature_field[bpos.ndidx()];
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
         let temp_reading = temperature / 10.0 + sound_reading;
@@ -172,6 +223,44 @@ impl GearUsable for EMFMeter {
                     }
                 }
             }
+        }
+
+        // Decrement glitch timer if active
+        if self.display_glitch_timer > 0.0 {
+            self.display_glitch_timer -= gs.time.delta_secs();
+
+            // Play static/interference sound when glitching
+            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.5 {
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, &pos);
+            }
+        }
+
+        // Apply EMI if warning is active and we're electronic
+        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+            let distance2 = pos.distance2(ghost_pos);
+            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+        }
+    }
+
+    fn is_electronic(&self) -> bool {
+        true
+    }
+
+    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
+        if warning_level < 0.0001 || !self.enabled {
+            return;
+        }
+        let mut rng = random_seed::rng();
+
+        // Scale effect by distance and warning level
+        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
+
+        // Random EMF spikes
+        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
+            self.emf = (rng.random_range(0.0..1.0) * effect_strength * 5.0).min(11.0);
+            self.emf_level = EMFLevel::from_milligauss(self.emf);
+            // Jumble numbers temporarily
+            self.display_glitch_timer = 0.2;
         }
     }
 

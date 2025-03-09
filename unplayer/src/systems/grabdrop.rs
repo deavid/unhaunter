@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore::behavior::component::FloorItemCollidable;
 use uncore::behavior::Behavior;
+use uncore::behavior::component::FloorItemCollidable;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
@@ -78,12 +78,7 @@ pub fn drop_object(
             if let Some(held_object) = player_gear.held_item.take() {
                 // Check for valid Drop location
                 let target_tile = player_pos.to_board_position();
-                let is_valid_tile = gs
-                    .bf
-                    .collision_field
-                    .get(&target_tile)
-                    .map(|col| col.player_free)
-                    .unwrap_or(false);
+                let is_valid_tile = gs.bf.collision_field[target_tile.ndidx()].player_free;
 
                 // Check for object obstruction
                 let is_obstructed = objects.iter().any(|(entity, object_pos)| {
@@ -184,12 +179,7 @@ pub fn deploy_gear(
         {
             let deployed_gear = DeployedGear { direction: *dir };
             let target_tile = player_pos.to_board_position();
-            let is_valid_tile = gs
-                .bf
-                .collision_field
-                .get(&target_tile)
-                .map(|col| col.player_free)
-                .unwrap_or(false);
+            let is_valid_tile = gs.bf.collision_field[target_tile.ndidx()].player_free;
             let is_obstructed = q_collidable
                 .iter()
                 .any(|(_entity, object_pos)| target_tile.to_position().distance(object_pos) < 0.5);

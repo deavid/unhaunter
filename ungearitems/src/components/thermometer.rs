@@ -1,14 +1,20 @@
-use super::{on_off, Gear, GearKind, GearSpriteID, GearUsable};
+use crate::metrics;
+
+use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::behavior::Behavior;
+use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
+use uncore::{celsius_to_kelvin, kelvin_to_celsius};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -17,16 +23,18 @@ pub struct Thermometer {
     pub temp_l2: [f32; 5],
     pub temp_l1: f32,
     pub frame_counter: u16,
+    pub display_glitch_timer: f32,
 }
 
 impl Default for Thermometer {
     fn default() -> Self {
         Self {
             enabled: Default::default(),
-            temp: 10.0,
-            temp_l2: [10.0; 5],
-            temp_l1: 10.0,
+            temp: celsius_to_kelvin(10.0),
+            temp_l2: [celsius_to_kelvin(10.0); 5],
+            temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
+            display_glitch_timer: Default::default(),
         }
     }
 }
@@ -50,8 +58,21 @@ impl GearUsable for Thermometer {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled);
+
+        // Show garbled text when glitching
+        if self.enabled && self.display_glitch_timer > 0.0 {
+            let garbled = match random_seed::rng().random_range(0..4) {
+                0 => "Temperature: ERR0R",
+                1 => "Temperature: ---.--°C",
+                2 => "Temperature: ?**.??°C",
+                _ => "SENSOR MALFUNCTION",
+            };
+            return format!("{name}: {on_s}\n{garbled}");
+        }
+
+        // Regular display
         let msg = if self.enabled {
-            format!("Temperature: {:>5.1}ºC", self.temp)
+            format!("Temperature: {:>5.1}ºC", kelvin_to_celsius(self.temp))
         } else {
             "".to_string()
         };
@@ -61,20 +82,18 @@ impl GearUsable for Thermometer {
     fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
         // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify +
         // distintive icons.
-        let mut rng = rand::thread_rng();
+        let mut rng = random_seed::rng();
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.7;
         let pos = Position {
-            x: pos.x + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            y: pos.y + rng.gen_range(-K..K) + rng.gen_range(-K..K),
-            z: pos.z + rng.gen_range(-K..K) + rng.gen_range(-K..K),
+            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
         let bpos = pos.to_board_position();
-        let Some(temperature) = gs.bf.temperature_field.get(&bpos) else {
-            return;
-        };
+        let temperature = gs.bf.temperature_field[bpos.ndidx()];
         let temp_reading = temperature;
         let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
 
@@ -87,6 +106,21 @@ impl GearUsable for Thermometer {
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
         }
+        // Decrement glitch timer if active
+        if self.display_glitch_timer > 0.0 {
+            self.display_glitch_timer -= gs.time.delta_secs();
+
+            // Possibly play crackling/static sounds during glitches
+            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.3 {
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
+            }
+        }
+
+        // Apply EMI if warning is active and we're electronic
+        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+            let distance2 = pos.distance2(ghost_pos);
+            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+        }
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
@@ -95,6 +129,35 @@ impl GearUsable for Thermometer {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+
+    fn is_electronic(&self) -> bool {
+        true
+    }
+
+    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
+        if warning_level < 0.0001 || !self.enabled {
+            return;
+        }
+        let mut rng = random_seed::rng();
+
+        // Scale effect by distance and warning level
+        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
+
+        // Random temperature spikes
+        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
+            // Random temperature spike - show extreme cold or hot temperatures
+            if rng.random_bool(0.7) {
+                // Show extremely cold temperatures
+                self.temp = celsius_to_kelvin(rng.random_range(-20.0..-5.0));
+            } else {
+                // Show extremely hot temperatures
+                self.temp = celsius_to_kelvin(rng.random_range(30.0..60.0));
+            }
+
+            // Add a display glitch timer field to Thermometer struct
+            self.display_glitch_timer = 0.3;
+        }
     }
 }
 
@@ -112,46 +175,42 @@ pub fn temperature_update(
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let ambient = bf.ambient_temp;
+    let measure = metrics::TEMPERATURE_UPDATE.time_measure();
+
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();
         if h_out < 0.001 {
             continue;
         }
         let bpos = pos.to_board_position();
-        let prev_temp = bf.temperature_field.get(&bpos).copied().unwrap_or(ambient);
+        let prev_temp = bf.temperature_field[bpos.ndidx()];
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
         let t_out = h_out * k * 0.5 * difficulty.0.light_heat;
-        bf.temperature_field.entry(bpos).and_modify(|t| *t += t_out);
+        bf.temperature_field[bpos.ndidx()] += t_out;
     }
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
-        let ghost_target_temp: f32 = if freezing { -5.0 } else { 1.0 };
+        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -5.0 } else { 1.0 });
         const GHOST_MAX_POWER: f32 = 0.0002;
         const BREACH_MAX_POWER: f32 = 0.2;
-        for npos in bpos.xy_neighbors(1) {
-            bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER)
-            });
+        for npos in bpos.iter_xy_neighbors_nosize(1) {
+            let t = &mut bf.temperature_field[npos.ndidx()];
+            *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
         }
-        for npos in gs.spawn_point.xy_neighbors(2) {
-            bf.temperature_field.entry(npos).and_modify(|t| {
-                *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
-            });
+        for npos in gs.spawn_point.iter_xy_neighbors_nosize(2) {
+            let t = &mut bf.temperature_field[npos.ndidx()];
+            *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
         }
     }
 
-    use rand::rngs::SmallRng;
-    use rand::SeedableRng;
-
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = random_seed::rng();
     let old_temps: Vec<(_, _)> = bf
         .temperature_field
-        .iter()
+        .indexed_iter()
         .filter_map(|(p, t)| {
-            if rng.gen_range(0..8) == 0 {
-                Some((p.clone(), *t))
+            if rng.random_range(0..8) == 0 {
+                Some((p, *t))
             } else {
                 None
             }
@@ -165,30 +224,33 @@ pub fn temperature_update(
     const WALL_CONDUCTIVITY: f32 = 0.1;
     let smooth: f32 = 4.0 / difficulty.0.temperature_spread_speed;
     for (p, temp) in old_temps.into_iter() {
-        let free = bf
-            .collision_field
-            .get(&p)
-            .map(|x| (x.player_free, x.ghost_free))
-            .unwrap_or((true, true));
+        let cp = &bf.collision_field[p];
+        let free = (cp.player_free, cp.ghost_free);
+
         let mut self_k = match free {
             (true, true) => INSIDE_CONDUCTIVITY,
             (false, false) => WALL_CONDUCTIVITY,
             _ => OTHER_CONDUCTIVITY,
         };
-        let is_outside = roomdb.room_tiles.get(&p).is_none();
+        let bpos = BoardPosition::from_ndidx(p);
+        let is_outside = roomdb.room_tiles.get(&bpos).is_none();
         if is_outside {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
 
-        // let neighbors = p.xy_neighbors(1);
-        let neighbors = [p.left(), p.right(), p.top(), p.bottom()];
-        let n_idx = rng.gen_range(0..neighbors.len());
+        // let neighbors = bpos.xy_neighbors(1);
+        let neighbors = [bpos.left(), bpos.right(), bpos.top(), bpos.bottom()];
+        let n_idx = rng.random_range(0..neighbors.len());
         let neigh = neighbors[n_idx].clone();
-        let neigh_free = bf
+        let neigh_ndidx = neigh.ndidx();
+        let Some(neigh_free) = bf
             .collision_field
-            .get(&neigh)
-            .map(|x| (x.player_free, x.ghost_free))
-            .unwrap_or((true, true));
+            .get(neigh_ndidx)
+            .map(|ncp| (ncp.player_free, ncp.ghost_free))
+        else {
+            continue;
+        };
+
         let neigh_k = match neigh_free {
             (true, true) => INSIDE_CONDUCTIVITY,
             (false, false) => WALL_CONDUCTIVITY,
@@ -198,14 +260,18 @@ pub fn temperature_update(
         if nis_outside {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
-        let neigh_temp = bf.temperature_field.get(&neigh).copied().unwrap_or(ambient);
+        let neigh_temp = bf
+            .temperature_field
+            .get(neigh_ndidx)
+            .copied()
+            .unwrap_or(bf.ambient_temp);
         let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
         let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
         let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
         let new_temp2 = temp - new_temp1 + neigh_temp;
-        bf.temperature_field.entry(p).and_modify(|x| *x = new_temp1);
-        bf.temperature_field
-            .entry(neigh)
-            .and_modify(|x| *x = new_temp2);
+        bf.temperature_field[p] = new_temp1;
+        bf.temperature_field[neigh_ndidx] = new_temp2;
     }
+
+    measure.end_ms();
 }

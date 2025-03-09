@@ -1,5 +1,6 @@
 use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
+use bevy_persistent::Persistent;
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
@@ -10,6 +11,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::states::{AppState, GameState};
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
+use unsettings::game::GameplaySettings;
 
 pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used
@@ -30,7 +32,11 @@ pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     }
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
+pub fn setup_ui(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    game_settings: Res<Persistent<GameplaySettings>>,
+) {
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -62,9 +68,10 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
-        p.spawn(Text::new(
-            "[WASD]: Movement\n[E]: Interact\n[F]: Grab/Move\n[G]: Drop",
-        ))
+        let ch_control = game_settings.character_controls.to_string();
+        p.spawn(Text::new(format!(
+            "[{ch_control}]: Movement\n[E]: Interact\n[F]: Grab/Move\n[G]: Drop"
+        )))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 16.0 * FONT_SCALE,

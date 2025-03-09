@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
 
-use crate::components::*;
+use crate::{components::*, metrics};
 
 pub struct UnhaunterGearItemsPlugin;
 
@@ -16,5 +16,6 @@ impl Plugin for UnhaunterGearItemsPlugin {
             .add_systems(Update, thermometer::temperature_update)
             .add_systems(Update, recorder::sound_update)
             .add_systems(Update, repellentflask::repellent_update);
+        metrics::register_all(app);
     }
 }

@@ -3,7 +3,9 @@ use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::plugin::UnhaunterCorePlugin;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
@@ -43,10 +45,12 @@ pub fn app_run() {
     app.init_resource::<CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
+    app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 
     app.add_plugins((
+        UnhaunterCorePlugin,
         UnhaunterRootPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
@@ -61,10 +65,14 @@ pub fn app_run() {
         UnhaunterMenuPlugin,
         UnhaunterLightPlugin,
         UnhaunterNPCPlugin,
-        UnhaunterTmxMapPlugin,
     ));
-    app.add_plugins((UnhaunterSettingsPlugin, UnhaunterMenuSettingsPlugin));
-
+    app.add_plugins((
+        UnhaunterTmxMapPlugin,
+        UnhaunterSettingsPlugin,
+        UnhaunterMenuSettingsPlugin,
+        UnhaunterFogPlugin,
+    ));
+    app.add_systems(Update, crate::report_timer::report_performance);
     app.run();
 }
 

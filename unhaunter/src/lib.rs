@@ -1,4 +1,5 @@
 pub mod app;
+pub mod report_timer;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 

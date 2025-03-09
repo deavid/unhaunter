@@ -1,3 +1,5 @@
+use crate::boardfield_update;
+
 use super::{level, object_charge, pause_ui, roomchanged, systems, ui};
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
@@ -11,6 +13,7 @@ impl Plugin for UnhaunterGamePlugin {
             .add_systems(OnEnter(AppState::InGame), systems::setup)
             .add_systems(OnExit(AppState::InGame), systems::cleanup)
             .add_systems(Update, systems::keyboard);
+        boardfield_update::app_setup(app);
         level::app_setup(app);
         ui::app_setup(app);
         roomchanged::app_setup(app);

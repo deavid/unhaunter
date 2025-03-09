@@ -1,9 +1,13 @@
 //! This module defines the `SaltData` struct and its associated logic,
 //! representing the Salt consumable item in the game.
+use crate::metrics;
+
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore::components::board::mapcolor::MapColor;
+use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::{
     components::{board::position::Position, game::GameSprite, ghost_sprite::GhostSprite},
     types::gear::equipmentposition::EquipmentPosition,
@@ -113,6 +117,8 @@ pub fn salt_pile_system(
     // Retrieve SaltPile Position
     mut salt_piles: Query<(Entity, &Position), With<SaltPile>>,
 ) {
+    let measure = metrics::SALT_PILE.time_measure();
+
     for (mut ghost, ghost_position) in ghosts.iter_mut() {
         for (salt_pile_entity, salt_pile_position) in salt_piles.iter_mut() {
             if ghost_position.distance(salt_pile_position) < 2.0
@@ -130,8 +136,8 @@ pub fn salt_pile_system(
                     let mut particle_position = *salt_pile_position;
 
                     // Add a random offset to the particle position
-                    particle_position.x += rand::thread_rng().gen_range(-0.2..0.2);
-                    particle_position.y += rand::thread_rng().gen_range(-0.2..0.2);
+                    particle_position.x += random_seed::rng().random_range(-0.2..0.2);
+                    particle_position.y += random_seed::rng().random_range(-0.2..0.2);
                     let _salt_particle_entity = commands
                         .spawn(Sprite {
                             image: asset_server.load("img/salt_particle.png"),
@@ -157,6 +163,8 @@ pub fn salt_pile_system(
             }
         }
     }
+
+    measure.end_ms();
 }
 
 /// System to handle salt particle logic.
@@ -165,6 +173,8 @@ pub fn salt_particle_system(
     time: Res<Time>,
     mut salt_particles: Query<(Entity, &mut Transform, &mut SaltParticleTimer)>,
 ) {
+    let measure = metrics::SALT_PARTICLE.time_measure();
+
     let dt = time.delta_secs();
     for (entity, mut transform, mut salt_particle_timer) in salt_particles.iter_mut() {
         salt_particle_timer.0.tick(time.delta());
@@ -181,6 +191,7 @@ pub fn salt_particle_system(
         transform.scale.y = transform.scale.y.max(0.00001);
         transform.scale.z = transform.scale.z.max(0.00001);
     }
+    measure.end_ms();
 }
 
 /// Marker component for salt trace entities.
@@ -204,6 +215,8 @@ pub fn salty_trace_system(
         With<SaltyTrace>,
     >,
 ) {
+    let measure = metrics::SALTY_TRACE.time_measure();
+
     for (entity, mut map_color, mut uv_reactive, mut salty_trace_timer) in salty_traces.iter_mut() {
         salty_trace_timer.0.tick(time.delta());
 
@@ -230,4 +243,6 @@ pub fn salty_trace_system(
             commands.entity(entity).despawn();
         }
     }
+
+    measure.end_ms();
 }

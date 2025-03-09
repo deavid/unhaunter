@@ -1,3 +1,4 @@
+# /pkg  # - do not add or WASM build is broken.
 /target
 perf.data
 perf.data.old
@@ -5,3 +6,5 @@ unhaunter_game
 trace-*.json
 unhaunter_project.txt
 diff.txt
+flamegraph.svg
+*/flamegraph.svg

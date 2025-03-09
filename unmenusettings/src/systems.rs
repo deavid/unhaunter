@@ -282,7 +282,6 @@ pub fn menu_save_gameplay_setting(
             v::character_controls(character_controls) => {
                 gameplay_settings.character_controls = character_controls;
             }
-
         }
         if let Err(e) = gameplay_settings.persist() {
             error!("Error persisting Gameplay Settings: {e:?}");
