@@ -1,3 +1,36 @@
+### Version 0.2.6 - 2025-03-09
+
+**Features:**
+
+*   **Miasma System:** Introduced a dynamic miasma (fog) system that affects gameplay.
+    The miasma's density and movement are simulated, and it interacts with the environment and player.
+*   **Electromagnetic Interference (EMI):** Added a new mechanic where the ghost,
+    particularly during its pre-hunt warning phase, emits electromagnetic interference.
+    This affects electronic gear (Flashlight, EMF Meter, Recorder, Red Torch, Videocam), 
+    causing glitches, malfunctions, and false readings. This adds a layer of challenge 
+    and realism to using electronic equipment.
+*   **Stamina System Integration:** The miasma now directly impacts the player's stamina.
+    Higher miasma density in a location increases the rate at which stamina depletes while sprinting.
+    This encourages players to avoid or quickly traverse miasma-filled areas.
+
+**Changes:**
+
+*   **Lighting System Refactoring:**
+    * The lighting system has been significantly refactored for improved performance and organization.
+    * Light propagation now uses a pre-baked data structure along with wave edges, allowing for dynamic light calculation with closed doors and windows.
+    * The van's light is sampled by an offset to avoid darkening.
+
+*   **Ghost Behavior:**
+    * Ghost rage mechanics were refined, now considering player presence in the location overall.
+    * Added a pre-hunt warning state for the ghost, including visual and auditory cues.
+
+*   **Difficulty Adjustments:**
+    * Updated hunt provocation radius values across different difficulty levels to improve game balance.
+
+*   **Gear Adjustments:**
+    * Added Electromagnetic interference to electronic gear.
+
+
 ### Version 0.2.5 - 2025-02-08
 
 **Features:**
