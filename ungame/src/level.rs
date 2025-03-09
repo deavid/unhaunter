@@ -27,6 +27,7 @@ use rand::Rng;
 use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::boardposition::MapEntityFieldBPos;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite, MapTileSprite};
@@ -60,6 +61,7 @@ use unstd::materials::CustomMaterial1;
 use unstd::plugins::board::rebuild_collision_data;
 use unstd::tiledmap::{AtlasData, MapTileSetDb};
 
+/// System parameter for loading levels, providing access to various resources.
 #[derive(SystemParam)]
 pub struct LoadLevelSystemParam<'w> {
     asset_server: Res<'w, AssetServer>,
@@ -404,7 +406,7 @@ pub fn load_level_handler(
             let mut beh = mt.behavior.clone();
             p.bf.map_entity_field[pos.to_board_position().ndidx()].push(entity.id());
             beh.flip(tile.flip_x);
-
+            entity.insert(MapEntityFieldBPos(pos.to_board_position()));
             // --- Check if Object is Movable ---
             if mt.behavior.p.object.movable {
                 // FIXME: It does not check if the item is in a valid room, since the rooms are

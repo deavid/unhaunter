@@ -268,6 +268,12 @@ impl BoardPosition {
     }
 }
 
+/// A component that stores the board position of a map entity. This is used
+/// to detect when the actual position of the sprite has moved from where it
+/// was registered initially on the map_entity_field.
+#[derive(Component, Debug, Clone, PartialEq, Eq)]
+pub struct MapEntityFieldBPos(pub BoardPosition);
+
 #[derive(Debug, Clone)]
 pub struct NeighborsIterator {
     current_x: i64,
