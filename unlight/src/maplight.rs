@@ -433,7 +433,10 @@ pub fn apply_lighting(
                         }
                     }
 
-                    let bpos = pos.to_board_position();
+                    let mut bpos = pos.to_board_position();
+                    bpos.x += behavior.p.display.light_recv_offset.0;
+                    bpos.y += behavior.p.display.light_recv_offset.1;
+
                     // Use a margin (that should be baked on the map) to avoid negative access.
                     if bpos.x < 2 || bpos.y < 2 {
                         continue;

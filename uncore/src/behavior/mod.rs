@@ -202,6 +202,8 @@ pub struct Display {
     pub global_z: NotNan<f32>,
     /// Used to partially make transparent big objects when the player walks behind them
     pub auto_hide: bool,
+    /// Mainly for the van, to make the light computation look at a different tile.
+    pub light_recv_offset: (i64, i64),
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -686,7 +688,7 @@ impl SpriteConfig {
                 p.display.disable = true;
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = true;
-                p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
             }
             Class::Appliance => {
@@ -695,6 +697,7 @@ impl SpriteConfig {
             Class::Van => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.display.auto_hide = true;
+                p.display.light_recv_offset = (5, 0);
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
