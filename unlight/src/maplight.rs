@@ -111,14 +111,8 @@ pub fn compute_visibility(
             let k = if let Some(roomdb) = roomdb.as_ref() {
                 match roomdb.room_tiles.get(&npos).is_some() {
                     // Decrease view range inside the location
-                    true => 3.0,
-                    false => {
-                        if IS_WASM {
-                            4.0
-                        } else {
-                            7.0
-                        }
-                    }
+                    true => 6.0,
+                    false => 8.0,
                 }
             } else {
                 // For deployed gear
@@ -413,7 +407,7 @@ pub fn apply_lighting(
             let dist = ((player_ndidx.0 as isize - x as isize).abs()
                 + (player_ndidx.1 as isize - y as isize).abs()) as usize;
             let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
-            if min_threshold * dist / 10 > update_radius.saturating_sub(dist + 2) {
+            if min_threshold * dist / 20 > update_radius.saturating_sub(dist + 2) {
                 continue;
             }
             let min_threshold = min_threshold as f32 / 10.0;

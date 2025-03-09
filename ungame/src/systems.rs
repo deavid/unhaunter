@@ -21,7 +21,7 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // 2D orthographic camera - Arena
     let mut projection = OrthographicProjection::default_2d();
     projection.scaling_mode = ScalingMode::FixedVertical {
-        viewport_height: 200.0,
+        viewport_height: 224.0,
     };
     commands
         .spawn(Camera2d)
