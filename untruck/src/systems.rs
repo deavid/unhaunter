@@ -1,5 +1,6 @@
 use super::craft_repellent::craft_repellent;
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::truck::TruckUI;
@@ -7,6 +8,7 @@ use uncore::events::truck::TruckUIEvent;
 use uncore::resources::ghost_guess::GhostGuess;
 use uncore::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
+use unsettings::audio::AudioSettings;
 
 pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
@@ -49,6 +51,7 @@ pub fn truckui_event_handle(
     gg: Res<GhostGuess>,
     gc: Res<GameConfig>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
@@ -68,7 +71,10 @@ pub fn truckui_event_handle(
                                 ))
                                 .insert(PlaybackSettings {
                                     mode: bevy::audio::PlaybackMode::Despawn,
-                                    volume: bevy::audio::Volume::new(1.0),
+                                    volume: bevy::audio::Volume::new(
+                                        1.0 * audio_settings.volume_master.as_f32()
+                                            * audio_settings.volume_effects.as_f32(),
+                                    ),
                                     speed: 1.0,
                                     paused: false,
                                     spatial: false,

@@ -21,37 +21,47 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::utils::hashbrown::HashMap;
 use bevy_persistent::Persistent;
+use ndarray::Array3;
 use ordered_float::OrderedFloat;
+use rand::Rng;
 use uncore::behavior::{Behavior, SpriteConfig, TileState, Util};
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
+use uncore::components::board::boardposition::BoardPosition;
+use uncore::components::board::boardposition::MapEntityFieldBPos;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
-use uncore::components::game::{GameSound, GameSprite, MapUpdate};
+use uncore::components::game::{GameSound, GameSprite, MapTileSprite};
 use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
+use uncore::components::player::Stamina;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::sprite_type::SpriteType;
 use uncore::controlkeys::ControlKeys;
 use uncore::difficulty::CurrentDifficulty;
-use uncore::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
 use uncore::states::AppState;
+use uncore::types::board::fielddata::{CollisionFieldData, LightFieldData};
 use uncore::types::game::SoundType;
 use uncore::types::quadcc::QuadCC;
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
+use unlight::prebake::prebake_lighting_field;
 use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
+use unstd::plugins::board::rebuild_collision_data;
 use unstd::tiledmap::{AtlasData, MapTileSetDb};
 
+/// System parameter for loading levels, providing access to various resources.
 #[derive(SystemParam)]
 pub struct LoadLevelSystemParam<'w> {
     asset_server: Res<'w, AssetServer>,
@@ -64,7 +74,6 @@ pub struct LoadLevelSystemParam<'w> {
     handles: Res<'w, GameAssets>,
     roomdb: ResMut<'w, RoomDB>,
     difficulty: Res<'w, CurrentDifficulty>,
-    next_game_state: ResMut<'w, NextState<AppState>>,
     game_settings: Res<'w, Persistent<GameplaySettings>>,
 }
 
@@ -80,13 +89,14 @@ pub fn load_level_handler(
     mut commands: Commands,
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
-    mut ev_room: EventWriter<RoomChangedEvent>,
     mut p: LoadLevelSystemParam,
+    mut ev_level_ready: EventWriter<LevelReadyEvent>,
 ) {
     let mut ev_iter = ev.read();
     let Some(loaded_event) = ev_iter.next() else {
         return;
     };
+    let layers = &loaded_event.layers;
 
     // Consume all events, just in case to prevent double loading.
     let _ = ev_iter.count();
@@ -102,8 +112,49 @@ pub fn load_level_handler(
     }
     p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
 
+    // Compute map size
+    let mut map_min_x = i32::MAX;
+    let mut map_min_y = i32::MAX;
+    let mut map_max_x = i32::MIN;
+    let mut map_max_y = i32::MIN;
+    for (maptiles, _layer) in layers.iter().filter_map(|(_, layer)| {
+        // filter only the tile layers and extract that directly
+        if let MapLayerType::Tiles(tiles) = &layer.data {
+            Some((tiles, layer))
+        } else {
+            None
+        }
+    }) {
+        for tile in &maptiles.v {
+            map_min_x = tile.pos.x.min(map_min_x);
+            map_min_y = (-tile.pos.y).min(map_min_y);
+            map_max_x = tile.pos.x.max(map_max_x);
+            map_max_y = (-tile.pos.y).max(map_max_y);
+        }
+    }
+    // We need a margin so that neighbor check doesn't go negative.
+    const MAP_MARGIN: i32 = 3;
+    map_min_x -= MAP_MARGIN;
+    map_min_y -= MAP_MARGIN;
+
+    let map_size = (
+        (map_max_x - map_min_x + 1) as usize,
+        (map_max_y - map_min_y + 1) as usize,
+        1,
+    );
+
+    info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
+
     // Remove all pre-existing data for environment
-    p.bf.temperature_field.clear();
+    p.bf.map_size = map_size;
+    p.bf.origin = (map_min_x, map_min_y, 0);
+    p.bf.temperature_field = Array3::from_elem(map_size, p.bf.ambient_temp);
+    p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
+    p.bf.light_field = Array3::from_elem(map_size, LightFieldData::default());
+    p.bf.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
+    p.bf.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
+    p.bf.map_entity_field = Array3::default(map_size);
+
     p.bf.sound_field.clear();
     p.bf.current_exposure = 10.0;
     p.roomdb.room_state.clear();
@@ -169,7 +220,7 @@ pub fn load_level_handler(
     commands.init_resource::<BoardData>();
     warn!("Level Loaded: {}", &loaded_event.map_filepath);
     // ---------- NEW MAP LOAD ----------
-    let layers = &loaded_event.layers;
+
     let mut player_spawn_points: Vec<Position> = vec![];
     let mut ghost_spawn_points: Vec<Position> = vec![];
     let mut van_entry_points: Vec<Position> = vec![];
@@ -268,6 +319,7 @@ pub fn load_level_handler(
     // ---
     //
     // ## We will need a 2nd pass load to sync some data
+
     let mut c: f32 = 0.0;
     let mut movable_objects: Vec<Entity> = Vec::new();
     for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
@@ -291,14 +343,38 @@ pub fn load_level_handler(
                 if tile.flip_x {
                     b.transform.scale.x = -1.0;
                 }
-                let mat = p.materials1.get(&b.material).unwrap().clone();
+                let mut mat = p.materials1.get(&b.material).unwrap().clone();
+                mat.data.color.alpha = 0.0;
                 let mat = p.materials1.add(mat);
                 b.material = MeshMaterial2d(mat);
+
                 commands.spawn(b)
             };
+            let t_x = (tile.pos.x - map_min_x) as f32;
+            let t_y = (-tile.pos.y - map_min_y) as f32;
+            assert!(
+                t_x >= MAP_MARGIN as f32,
+                "out of bounds X < v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_y >= MAP_MARGIN as f32,
+                "out of bounds Y < v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_x < map_size.0 as f32,
+                "out of bounds X > v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
+            assert!(
+                t_y < map_size.1 as f32,
+                "out of bounds Y > v {:?} => {t_x},{t_y}",
+                tile.pos
+            );
             let mut pos = Position {
-                x: tile.pos.x as f32,
-                y: -tile.pos.y as f32,
+                x: t_x,
+                y: t_y,
                 z: 0.0,
                 global_z: 0.0,
             };
@@ -328,8 +404,9 @@ pub fn load_level_handler(
             }
             mt.behavior.default_components(&mut entity, layer);
             let mut beh = mt.behavior.clone();
+            p.bf.map_entity_field[pos.to_board_position().ndidx()].push(entity.id());
             beh.flip(tile.flip_x);
-
+            entity.insert(MapEntityFieldBPos(pos.to_board_position()));
             // --- Check if Object is Movable ---
             if mt.behavior.p.object.movable {
                 // FIXME: It does not check if the item is in a valid room, since the rooms are
@@ -340,19 +417,21 @@ pub fn load_level_handler(
             entity
                 .insert(beh)
                 .insert(GameSprite)
+                .insert(MapTileSprite)
                 .insert(pos)
-                .insert(MapUpdate::default());
+                .insert(Visibility::Hidden);
         }
     }
 
     use rand::seq::SliceRandom;
-    use rand::thread_rng;
 
-    let mut rng = thread_rng();
+    let mut rng = random_seed::rng();
 
     // --- Map Validation ---
     if movable_objects.len() < 3 {
-        warn!("Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended.");
+        warn!(
+            "Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended."
+        );
     }
 
     // --- Random Property Assignment ---
@@ -378,7 +457,7 @@ pub fn load_level_handler(
             });
         }
     }
-    player_spawn_points.shuffle(&mut thread_rng());
+    player_spawn_points.shuffle(&mut random_seed::rng());
     if player_spawn_points.is_empty() {
         error!(
             "No player spawn points found!! - that will probably not display the map because the player will be out of bounds"
@@ -419,7 +498,8 @@ pub fn load_level_handler(
         ))
         .insert(
             PlayerSprite::new(1)
-                .with_sanity(p.difficulty.0.starting_sanity)
+                // We should always start with 100% sanity, no matter the difficulty
+                // .with_sanity(p.difficulty.0.starting_sanity)
                 .with_controls(control_keys),
         )
         .insert(SpriteType::Player)
@@ -428,7 +508,8 @@ pub fn load_level_handler(
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
-        ));
+        ))
+        .insert(Stamina::default());
 
     // Spawn Player 2 commands .spawn(SpriteSheetBundle { texture_atlas:
     // handles.images.character1.clone(), sprite: TextureAtlasSprite { anchor:
@@ -439,7 +520,7 @@ pub fn load_level_handler(
     // Timer::from_seconds(0.20, TimerMode::Repeating),
     // OldCharacterAnimation::Walking.animation_range(), ));
     p.bf.evidences.clear();
-    ghost_spawn_points.shuffle(&mut thread_rng());
+    ghost_spawn_points.shuffle(&mut random_seed::rng());
     if ghost_spawn_points.is_empty() {
         error!(
             "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
@@ -480,8 +561,74 @@ pub fn load_level_handler(
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
     let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
+
+    ev_level_ready.send(LevelReadyEvent { open_van });
+    warn!("Done: load_level_handler");
+}
+
+fn after_level_ready(
+    mut bf: ResMut<BoardData>,
+    mut ev: EventReader<LevelReadyEvent>,
+    mut ev_room: EventWriter<RoomChangedEvent>,
+    mut next_game_state: ResMut<NextState<AppState>>,
+) {
+    if ev.is_empty() {
+        return;
+    }
+    let mut rng = random_seed::rng();
+    let open_van = ev.read().next().unwrap().open_van;
+    next_game_state.set(AppState::InGame);
+    // Create temperature field
+    let ambient_temp = bf.ambient_temp;
+
+    // Randomize initial temperatures so the player cannot exploit the fact that the
+    // data is "flat" at the beginning
+    for temperature in bf.temperature_field.iter_mut() {
+        let ambient = ambient_temp + rng.random_range(-10.0..10.0);
+        *temperature = ambient;
+    }
     ev_room.send(RoomChangedEvent::init(open_van));
-    p.next_game_state.set(AppState::InGame);
+    // Smoothen after first initialization so it is not as jumpy.
+    warn!(
+        "Computing 16x{:?} = {}",
+        bf.map_size,
+        16 * bf.map_size.0 * bf.map_size.1 * bf.map_size.2
+    );
+    for _ in 0..16 {
+        for z in 0..bf.map_size.2 {
+            for y in 0..bf.map_size.1 {
+                for x in 0..bf.map_size.0 {
+                    let p = (x, y, z);
+                    let free_tot = bf.collision_field[p].player_free;
+                    if !free_tot {
+                        continue;
+                    }
+                    let bpos = BoardPosition::from_ndidx(p);
+                    let nbors = bpos.iter_xy_neighbors_nosize(1);
+                    let mut t_temp = 0.0;
+                    let mut count = 0.0;
+                    for npos in nbors {
+                        let free = bf
+                            .collision_field
+                            .get(npos.ndidx())
+                            .map(|x| x.player_free)
+                            .unwrap_or(true);
+                        if free {
+                            t_temp += bf
+                                .temperature_field
+                                .get(npos.ndidx())
+                                .copied()
+                                .unwrap_or(ambient_temp);
+                            count += 1.0;
+                        }
+                    }
+                    t_temp /= count;
+                    bf.temperature_field[p] = t_temp;
+                }
+            }
+        }
+    }
+    warn!("Done: Computing 16x");
 }
 
 fn process_pre_meshes(
@@ -521,9 +668,27 @@ fn process_pre_meshes(
     }
 }
 
+pub fn load_map_add_prebaked_lighting(
+    mut bf: ResMut<BoardData>,
+    qt: Query<(Entity, &Position, &Behavior)>,
+) {
+    // Ensure the collision field is up to date. It might have not been loaded yet.
+    rebuild_collision_data(&mut bf, &qt);
+    // Call the prebaking function once the map and entities are loaded
+    prebake_lighting_field(&mut bf, &qt);
+
+    // You might want to log that prebaking is complete
+    info!("Map loaded with prebaked lighting data");
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
         .add_event::<LevelLoadedEvent>()
+        .add_event::<LevelReadyEvent>()
         .add_systems(PostUpdate, load_level_handler)
-        .add_systems(Update, process_pre_meshes);
+        .add_systems(Update, (process_pre_meshes, after_level_ready))
+        .add_systems(
+            Update,
+            load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>),
+        );
 }

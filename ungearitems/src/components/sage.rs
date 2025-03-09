@@ -1,9 +1,12 @@
 //! This module defines the `SageBundleData` struct and its associated logic,
 //! representing the Sage Bundle consumable item in the game.
+use crate::metrics;
+
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore::components::board::mapcolor::MapColor;
+use uncore::metric_recorder::SendMetric;
 use uncore::{
     components::{
         board::{direction::Direction, position::Position},
@@ -13,6 +16,7 @@ use uncore::{
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
 };
+use uncore::random_seed;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -77,10 +81,10 @@ impl GearUsable for SageBundleData {
                 self.consumed = true;
             } else if (self.smoke_produced as f32) < self.burn_timer.elapsed_secs() * 3.0 {
                 let mut pos = *pos;
-                let mut rng = rand::thread_rng();
+                let mut rng = random_seed::rng();
                 pos.z += 0.2;
-                pos.x += rng.gen_range(-0.2..0.2);
-                pos.y += rng.gen_range(-0.2..0.2);
+                pos.x += rng.random_range(-0.2..0.2);
+                pos.y += rng.random_range(-0.2..0.2);
 
                 // Spawn smoke particle
                 gs.commands
@@ -167,6 +171,8 @@ pub fn sage_smoke_system(
     >,
     mut ghosts: Query<(&mut GhostSprite, &Position)>,
 ) {
+    let measure = metrics::SAGE_SMOKE.time_measure();
+
     let dt = time.delta_secs();
     for (entity, mut position, mut transform, mut smoke_particle, mut map_color, o_dir) in
         smoke_particles.iter_mut()
@@ -211,4 +217,6 @@ pub fn sage_smoke_system(
             }
         }
     }
+
+    measure.end_ms();
 }

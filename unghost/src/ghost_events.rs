@@ -7,7 +7,9 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
+use uncore::events::sound::SoundEvent;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uncore::random_seed;
 
 #[derive(Debug, Clone)]
 pub enum GhostEvent {
@@ -21,7 +23,6 @@ struct FlickerTimer(Timer);
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn trigger_ghost_events(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     q_player: Query<(&Position, &PlayerSprite)>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     // Query for doors, excluding lights
@@ -44,7 +45,7 @@ pub fn trigger_ghost_events(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = random_seed::rng();
     let roomdb = interactive_stuff.roomdb.clone();
 
     // Iterate through players inside the house
@@ -63,9 +64,9 @@ pub fn trigger_ghost_events(
             (10.0 / (distance + 2.0)).sqrt() / 200.0 * difficulty.0.ghost_interaction_frequency;
 
         // Roll for an event
-        if rng.gen_range(0.0..1.0) < event_probability {
+        if rng.random_range(0.0..1.0) < event_probability {
             // Choose a random event
-            let event = match rng.gen_range(0..10) {
+            let event = match rng.random_range(0..10) {
                 0 => GhostEvent::DoorSlam,
                 _ => GhostEvent::LightFlicker,
             };
@@ -92,7 +93,7 @@ pub fn trigger_ghost_events(
 
                     // If there are doors, slam a random one
                     if !doors_in_room.is_empty() {
-                        let door_to_slam = doors_in_room[rng.gen_range(0..doors_in_room.len())];
+                        let door_to_slam = doors_in_room[rng.random_range(0..doors_in_room.len())];
 
                         // Retrieve the door's Behavior component
                         if let Ok((_, door_position, behavior)) = q_doors.get(door_to_slam) {
@@ -111,9 +112,11 @@ pub fn trigger_ghost_events(
                             ));
 
                             // Play door slam sound effect
-                            commands
-                                .spawn(AudioPlayer::new(asset_server.load("sounds/door-close.ogg")))
-                                .insert(PlaybackSettings::default());
+                            interactive_stuff.sound_events.send(SoundEvent {
+                                sound_file: "sounds/door-close.ogg".to_string(),
+                                volume: 1.0,
+                                position: Some(*door_position),
+                            });
 
                             ev_bdr.send(BoardDataToRebuild {
                                 lighting: true,

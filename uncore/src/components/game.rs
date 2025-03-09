@@ -7,10 +7,8 @@ pub struct GCameraArena;
 #[derive(Component, Debug)]
 pub struct GameSprite;
 
-#[derive(Component, Debug, Default)]
-pub struct MapUpdate {
-    pub last_update: f32,
-}
+#[derive(Component, Debug)]
+pub struct MapTileSprite;
 
 #[derive(Component, Debug)]
 pub struct GameSound {

@@ -1,15 +1,22 @@
+use bevy::utils::HashSet;
+use fastapprox::faster;
+use ndarray::Array3;
+use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::mapcolor::MapColor;
-use uncore::components::board::{
-    boardposition::BoardPosition, direction::Direction, position::Position,
-};
+use uncore::components::board::{direction::Direction, position::Position};
+use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
+use uncore::resources::board_data::BoardData;
 use uncore::{
     components::{game::GameSprite, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
     types::{gear::equipmentposition::EquipmentPosition, ghost::types::GhostType},
 };
 
+use crate::metrics;
+
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
-use bevy::{color::palettes::css, prelude::*, utils::hashbrown::HashMap};
+use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
 use std::ops::{Add, Mul};
 
@@ -69,6 +76,12 @@ impl GearUsable for RepellentFlask {
         if !self.active {
             return;
         }
+        let mut rng = random_seed::rng();
+        if rng.random_range(0.0..1.0) > 0.5 {
+            // Reduce the amount of particles emitted. Also reduces the speed of depletion.
+            return;
+        }
+
         if self.qty == Self::MAX_QTY {
             gs.summary.repellent_used_amt += 1;
         }
@@ -86,14 +99,13 @@ impl GearUsable for RepellentFlask {
         };
         let mut pos = *pos;
         pos.z += 0.2;
-        let mut rng = rand::thread_rng();
         let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
             0.1
         } else {
             0.4
         };
-        pos.x += rng.gen_range(-spread..spread);
-        pos.y += rng.gen_range(-spread..spread);
+        pos.x += rng.random_range(-spread..spread);
+        pos.y += rng.random_range(-spread..spread);
         gs.commands
             .spawn(Sprite {
                 color: Color::NONE,
@@ -130,12 +142,12 @@ impl From<RepellentFlask> for Gear {
 #[derive(Component, Debug, Clone, PartialEq)]
 pub struct Repellent {
     pub class: GhostType,
-    pub life: i32,
+    pub life: f32,
     pub dir: Direction,
 }
 
 impl Repellent {
-    const MAX_LIFE: i32 = 1500;
+    const MAX_LIFE: f32 = 30.0;
 
     pub fn new(class: GhostType) -> Self {
         Self {
@@ -146,7 +158,7 @@ impl Repellent {
     }
 
     pub fn life_factor(&self) -> f32 {
-        (self.life as f32) / (Self::MAX_LIFE as f32)
+        self.life / Self::MAX_LIFE
     }
 }
 
@@ -154,69 +166,153 @@ pub fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
     mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
+    bf: Res<BoardData>,
     difficulty: Res<CurrentDifficulty>,
+    mut pressure_base: Local<Array3<f32>>,
+    mut positions: Local<Array3<Vec<Vec3>>>,
+    time: Res<Time>,
 ) {
-    let mut rng = rand::thread_rng();
+    let measure = metrics::REPELLENT_UPDATE.time_measure();
+
+    let mut rng = random_seed::rng();
+    let dt = time.delta_secs();
     const SPREAD: f32 = 0.1;
     const SPREAD_SHORT: f32 = 0.02;
-    let mut pressure: HashMap<BoardPosition, f32> = HashMap::new();
+    if pressure_base.dim() != bf.map_size {
+        *pressure_base = Array3::from_elem(bf.map_size, 0.0);
+    }
+
+    pressure_base.indexed_iter_mut().for_each(|(p, v)| {
+        *v = if bf.collision_field[p].player_free {
+            20.0
+        } else {
+            0.0
+        }
+    });
+    if positions.dim() != bf.map_size {
+        *positions = Array3::from_elem(bf.map_size, Vec::with_capacity(8));
+    }
+    positions.iter_mut().for_each(|v| v.clear());
+
     const RADIUS: f32 = 0.7;
+    let mut p_set = HashSet::with_capacity(1024);
+
     for (r_pos, rep, _, _) in &qrp {
         let bpos = r_pos.to_board_position();
-        for nb in bpos.xy_neighbors(3) {
-            let dist2 = (nb.to_position_center().distance(r_pos) * RADIUS).powi(2);
+        let life = 1.001 - rep.life_factor();
+        let nidx = bpos.ndidx();
+        let Some(pres) = pressure_base.get_mut(nidx) else {
+            continue;
+        };
+        *pres += life;
+        p_set.insert(nidx);
+        positions[nidx].push(r_pos.to_vec3());
+    }
+    let mut pressure: Array3<f32> = Array3::from_elem(bf.map_size, 0.0);
+    for &p in p_set.iter() {
+        let pres = pressure_base[p];
+        if !(0.0001..=19.0).contains(&pres) {
+            // Skip cells that don't have anything on them or are walls
+            continue;
+        }
+        let bpos = BoardPosition::from_ndidx(p);
+        for nb in bpos.iter_xy_neighbors(2, bf.map_size) {
+            let dist2 = nb.distance2(&bpos) * RADIUS;
             let exponent: f32 = -0.5 * dist2;
-            let gauss = exponent.exp();
-            let life = 1.001 - rep.life_factor();
-            *pressure.entry(nb).or_default() += gauss * life;
+            let gauss = faster::exp(exponent);
+            pressure[nb.ndidx()] += gauss * pres;
         }
     }
+
     for (mut r_pos, mut rep, mut mapcolor, entity) in &mut qrp {
-        rep.life -= 1;
-        if rep.life < 0 {
+        rep.life -= dt;
+        if rep.life < 0.0 {
             cmd.entity(entity).despawn();
             continue;
         }
-        let rev_factor = 1.01 - rep.life_factor();
-        mapcolor
-            .color
-            .set_alpha(rep.life_factor().sqrt() / 4.0 + 0.01);
+        let life_factor = rep.life_factor();
+        let rev_factor = 1.01 - life_factor;
+        mapcolor.color.set_alpha(life_factor.cbrt() / 2.0 + 0.01);
         let bpos = r_pos.to_board_position();
+        let rr_pos = Position {
+            x: r_pos.x + rng.random_range(-0.5..0.5),
+            y: r_pos.y + rng.random_range(-0.5..0.5),
+            z: r_pos.z + rng.random_range(-0.5..0.5),
+            global_z: r_pos.global_z,
+        };
+        let ndidx = bpos.ndidx();
+
         let mut total_force = Direction::zero();
-        for nb in bpos.xy_neighbors(3) {
-            let npos = nb.to_position_center();
-            let dist2 = (npos.distance(&r_pos) * RADIUS).powi(2);
-            let exponent: f32 = -0.5 * dist2;
-            let gauss = exponent.exp();
-            let vector = r_pos.delta(npos);
-            let psi = *pressure.entry(nb).or_default();
-            let mut vector_scaled = vector.normalized().mul(psi * gauss);
-            vector_scaled.dz = 0.0;
-            total_force = total_force + vector_scaled;
+        for nb in bpos.iter_xy_neighbors(2, bf.map_size) {
+            let npos = nb.to_position();
+            let vector = rr_pos.delta(npos);
+            let dist2 = vector.distance2();
+            let psi = pressure[nb.ndidx()] / (0.2 + dist2) * 3.0;
+
+            total_force.dx += vector.dx * psi;
+            total_force.dy += vector.dy * psi;
         }
+        let v_pos = r_pos.to_vec3();
+        for &s_p in positions[ndidx].iter() {
+            let dist2 = v_pos.distance_squared(s_p) + 0.1;
+            let delta = v_pos - s_p;
+            let force = 4.0 * delta / dist2;
+            total_force.dx += force.x;
+            total_force.dy += force.y;
+        }
+        total_force.dx += rng.random_range(-0.1..0.1);
+        total_force.dy += rng.random_range(-0.1..0.1);
 
         // total_force = total_force.normalized().mul(total_force.distance().sqrt());
-        const PRESSURE_FORCE_SCALE: f32 = 1e-4;
-        rep.dir = rep.dir.add(total_force.mul(PRESSURE_FORCE_SCALE)).mul(0.97);
-        r_pos.x += rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT)
+        const PRESSURE_FORCE_SCALE: f32 = 1e-5;
+        rep.dir = rep
+            .dir
+            .add(total_force.mul(PRESSURE_FORCE_SCALE))
+            .mul(0.999);
+
+        for nb in bpos.iter_xy_neighbors(1, bf.map_size) {
+            if !bf.collision_field[nb.ndidx()].player_free {
+                // Collision with walls
+                let wall_pos = nb.to_position();
+                let delta = r_pos.delta(wall_pos);
+                let dist2 = delta.distance2() + 0.2;
+                let norm = delta.normalized();
+                let recip = dist2.recip();
+                let force = recip * 0.001;
+                if bpos == nb {
+                    rep.dir.dx *= 0.8;
+                    rep.dir.dy *= 0.8;
+                }
+                rep.dir.dx += norm.dx * force;
+                rep.dir.dy += norm.dy * force;
+            }
+        }
+        r_pos.x += rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT)
             + rep.dir.dx;
-        r_pos.y += rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT)
+        r_pos.y += rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT)
             + rep.dir.dy;
-        r_pos.z += (rng.gen_range(-SPREAD..SPREAD) * rev_factor
-            + rng.gen_range(-SPREAD_SHORT..SPREAD_SHORT))
+        r_pos.z += (rng.random_range(-SPREAD..SPREAD) * rev_factor
+            + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT))
             / 10.0;
         r_pos.z = (r_pos.z * 100.0 + 0.5 * rep.life_factor()) / 101.0;
+        if r_pos
+            .to_board_position()
+            .ndidx_checked_margin(bf.map_size)
+            .is_none()
+        {
+            rep.life = 0.0;
+        }
         for (g_pos, mut ghost) in &mut qgs {
             let dist = g_pos.distance(&r_pos);
             if dist < 1.5 {
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += 1.2 / (dist + 1.0);
+                    ghost.repellent_hits_frame += dt * 183.2 / (dist + 1.0);
                 } else {
-                    ghost.repellent_misses_frame += 1.2 / (dist + 1.0);
+                    ghost.repellent_misses_frame += dt * 183.2 / (dist + 1.0);
                 }
-                rep.life -= 20;
+                rep.life -= 20.0 * dt;
                 // cmd.entity(entity).despawn();
             }
         }
@@ -233,4 +329,6 @@ pub fn repellent_update(
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
         }
     }
+
+    measure.end_ms();
 }

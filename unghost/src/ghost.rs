@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use ordered_float::OrderedFloat;
@@ -12,6 +14,8 @@ use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
+use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
@@ -21,8 +25,10 @@ use uncore::utils::{MeanValue, PrintingTimer};
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 
+use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
+
 /// Enables/disables debug logs for hunting behavior.
-const DEBUG_HUNTS: bool = false;
+const DEBUG_HUNTS: bool = true;
 
 #[derive(Component)]
 struct FadeOut {
@@ -64,12 +70,14 @@ fn ghost_movement(
     object_query: Query<(&Position, &GhostInfluence)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
-    let mut rng = rand::thread_rng();
+    let measure = GHOST_MOVEMENT.time_measure();
+
+    let mut rng = random_seed::rng();
     let dt = time.delta_secs() * 60.0;
     for (mut ghost, mut pos, entity) in q.iter_mut() {
         if let Some(target_point) = ghost.target_point {
             let mut delta = target_point.delta(*pos);
-            if rng.gen_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
+            if rng.random_range(0..500) == 0 && delta.distance() > 3.0 && ghost.warp < 0.1 {
                 // Sometimes, warp ahead. This also is to increase visibility of the ghost
                 ghost.warp += 40.0;
             }
@@ -115,40 +123,42 @@ fn ghost_movement(
                 ghost.target_point = None;
             }
         }
-        if ghost.target_point.is_none() || (ghost.hunt_target && rng.gen_range(0..60) == 0) {
+        if ghost.target_point.is_none() || (ghost.hunt_target && rng.random_range(0..60) == 0) {
             let mut target_point = ghost.spawn_point.to_position();
-            let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
-            let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-            let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-            let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+            let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
+            let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+            let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+            let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
             let dd = (dx * dx + dy * dy).sqrt() / dist;
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
-            if rng.gen_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0 {
+            if !ghost.hunt_warning_active
+                && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
+            {
                 let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
                     .filter(|(_, p, _)| p.health > 0.0)
                     .map(|(pos, _, h)| (pos, h))
                     .collect();
                 if !player_pos_l.is_empty() {
-                    let idx = rng.gen_range(0..player_pos_l.len());
+                    let idx = rng.random_range(0..player_pos_l.len());
                     let (ppos, h) = player_pos_l[idx];
                     let search_radius = if h.is_some() { 2.0 } else { 1.0 };
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
-                    old_target.x += rng.gen_range(-search_radius..search_radius);
-                    old_target.y += rng.gen_range(-search_radius..search_radius);
+                    old_target.x += rng.random_range(-search_radius..search_radius);
+                    old_target.y += rng.random_range(-search_radius..search_radius);
                     let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
                         old_target
                     } else {
                         *ppos
                     };
                     ghost.calm_time_secs -= 2.0_f32.min(ghost.calm_time_secs);
-                    let mut rng = rand::thread_rng();
+                    let mut rng = random_seed::rng();
                     let random_offset = Vec2::new(
-                        rng.gen_range(-search_radius..search_radius),
-                        rng.gen_range(-search_radius..search_radius),
+                        rng.random_range(-search_radius..search_radius),
+                        rng.random_range(-search_radius..search_radius),
                     );
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
@@ -161,12 +171,12 @@ fn ghost_movement(
                 let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
                 for _ in 0..config.num_destination_points_to_sample {
                     let mut target_point = ghost.spawn_point.to_position();
-                    let wander: f32 = rng.gen_range(0.001..1.0_f32).powf(6.0) * 12.0
+                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0
                         / difficulty.0.ghost_attraction_to_breach
                         + 0.5;
-                    let dx: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-                    let dy: f32 = (0..5).map(|_| rng.gen_range(-1.0..1.0)).sum();
-                    let dist: f32 = (0..5).map(|_| rng.gen_range(0.2..wander)).sum();
+                    let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+                    let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+                    let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
                     let dd = (dx * dx + dy * dy).sqrt() / dist;
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
@@ -189,13 +199,7 @@ fn ghost_movement(
             }
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
-            if dstroom.is_some()
-                && bf
-                    .collision_field
-                    .get(&bpos)
-                    .map(|x| x.ghost_free)
-                    .unwrap_or_default()
-            {
+            if dstroom.is_some() && bf.collision_field[bpos.ndidx()].ghost_free {
                 if hunt {
                     if !ghost.hunt_target {
                         ghost.hunt_time_secs = time.elapsed_secs();
@@ -233,6 +237,7 @@ fn ghost_movement(
                 });
         }
     }
+    measure.end_ms();
 }
 
 pub enum RoarType {
@@ -265,7 +270,7 @@ impl RoarType {
             ],
             RoarType::None => vec![""],
         };
-        let random_roar = roar_sounds[rand::thread_rng().gen_range(0..roar_sounds.len())];
+        let random_roar = roar_sounds[random_seed::rng().random_range(0..roar_sounds.len())];
         random_roar.to_string()
     }
 
@@ -295,7 +300,10 @@ fn ghost_enrage(
     mut gs: GearStuff,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
+    roomdb: Res<RoomDB>,
 ) {
+    let measure = GHOST_ENRAGE.time_measure();
+
     timer.tick(time.delta());
     let dt = time.delta_secs();
     for (mut ghost, ghost_position) in &mut qg {
@@ -305,18 +313,17 @@ fn ghost_enrage(
             ghost.salty_effect_timer.tick(time.delta());
             ghost.salty_trace_spawn_timer.tick(time.delta());
             if ghost.salty_trace_spawn_timer.just_finished() {
-                if rand::thread_rng().gen_bool(0.5) {
+                if random_seed::rng().random_bool(0.5) {
                     // 50% chance to spawn --- Find Valid Floor Tile ---
                     let ghost_board_position = ghost_position.to_board_position();
                     let mut valid_tile = None;
-                    for nearby_tile in ghost_board_position.xy_neighbors(1) {
+                    for nearby_tile in ghost_board_position.iter_xy_neighbors_nosize(1) {
                         // Check adjacent tiles
-                        if let Some(collision_data) = gs.bf.collision_field.get(&nearby_tile) {
-                            if collision_data.player_free {
-                                // Check if the tile is walkable
-                                valid_tile = Some(nearby_tile);
-                                break;
-                            }
+                        let collision_data = gs.bf.collision_field[nearby_tile.ndidx()];
+                        if collision_data.player_free {
+                            // Check if the tile is walkable
+                            valid_tile = Some(nearby_tile);
+                            break;
                         }
                     }
 
@@ -352,9 +359,15 @@ fn ghost_enrage(
             // Reduce ghost hunting when player is away
             ghost.hunting -= dt * min_player_dist.sqrt() / 3.0;
         }
-
         // ---
+
         if ghost.hunt_target {
+            // --- Handle the warning wave when hunting ---
+            ghost.hunt_warning_active = false;
+            ghost.hunt_warning_intensity = 1.0;
+            ghost.hunt_warning_timer = 0.0;
+            // ----
+
             let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
                 let dist2 = gpos.distance2(ppos) + 2.0;
@@ -373,7 +386,26 @@ fn ghost_enrage(
             }
             continue;
         }
+
+        // --- Hunt Warning Logic ---
+        if ghost.hunt_warning_active {
+            ghost.hunt_warning_timer -= dt;
+            ghost.hunt_warning_intensity = 1.0 - (ghost.hunt_warning_timer / 10.0);
+            if ghost.hunt_warning_timer <= 0.0 {
+                // Trigger hunt after warning period
+                ghost.hunt_warning_active = false;
+                ghost.hunt_warning_intensity = 1.0; //Max intensity
+                ghost.hunt_target = true;
+                ghost.hunt_time_secs = time.elapsed_secs();
+                warn!("Hunting player for {:.1}s", ghost.hunting);
+            }
+        } else if ghost.hunting < 0.001 {
+            ghost.hunt_warning_intensity /= 2.2_f32.powf(dt);
+        }
+        // --- Rage Calculation ---
         let mut total_angry2 = 0.0;
+        let mut player_in_room = false;
+        let mut total_inv_sanity = 0.0;
         for (player, ppos) in &qp {
             let sanity = player.sanity();
             let inv_sanity = (120.0 - sanity) / 100.0;
@@ -386,6 +418,11 @@ fn ghost_enrage(
                 * (player.health / 100.0).clamp(0.0, 1.0);
             total_angry2 +=
                 angry2 * inv_sanity + player.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+            let player_board_position = ppos.to_board_position();
+            if roomdb.room_tiles.contains_key(&player_board_position) {
+                player_in_room = true;
+                total_inv_sanity += inv_sanity;
+            }
         }
         let angry = total_angry2.sqrt();
         let a_f = 1.0 + (avg_angry.avg() * 2.0).powi(2);
@@ -394,6 +431,9 @@ fn ghost_enrage(
         if ghost.rage < 0.0 {
             ghost.rage = 0.0;
         }
+        if player_in_room {
+            ghost.rage += dt * difficulty.0.ghost_rage_likelihood * 5.2 * total_inv_sanity;
+        }
         ghost.rage +=
             angry * dt / 10.0 / (1.0 + ghost.calm_time_secs) * difficulty.0.ghost_rage_likelihood;
         ghost.hunting -= dt * 0.2 / difficulty.0.ghost_hunt_duration;
@@ -401,13 +441,29 @@ fn ghost_enrage(
             ghost.hunting = 0.0;
         }
         avg_angry.push_len(angry, dt);
-        if timer.just_finished() && DEBUG_HUNTS {
-            dbg!(ghost.calm_time_secs, ghost.rage);
-        }
         let rage_limit =
             400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
-        if ghost.rage > rage_limit {
+        if timer.just_finished() && DEBUG_HUNTS {
+            info!(
+                "Ghost calm time: {}, Ghost rage: {}, Ghost rage limit: {}, Ghost hunting: {}, Hunt warning active: {}, Hunt warning intensity: {}, Hunt warning timer: {}",
+                ghost.calm_time_secs,
+                ghost.rage,
+                rage_limit,
+                ghost.hunting,
+                ghost.hunt_warning_active,
+                ghost.hunt_warning_intensity,
+                ghost.hunt_warning_timer
+            );
+        }
+
+        // --- Hunt Trigger Logic ---
+        if ghost.rage > rage_limit && !ghost.hunt_warning_active && !ghost.hunt_target {
+            // Start Hunt Warning Phase
+            ghost.hunt_warning_active = true;
+            ghost.hunt_warning_timer = 5.0;
+            ghost.hunt_warning_intensity = 0.0;
             ghost.rage_limit_multiplier *= 1.3;
+
             let prev_rage = ghost.rage;
             ghost.rage /= 1.0 + difficulty.0.ghost_hunt_cooldown;
             if ghost.hunting < 1.0 {
@@ -421,6 +477,8 @@ fn ghost_enrage(
                 ghost.rage_limit_multiplier /= 1.01_f32.powf(dt);
             }
         }
+
+        // --- Snore logic ---
         if *last_roar > 30.0 && matches!(should_roar, RoarType::None) {
             should_roar = RoarType::Snore;
         }
@@ -432,6 +490,8 @@ fn ghost_enrage(
             }
         }
     }
+
+    measure.end_ms();
 }
 
 /// Calculates the desirability score of a potential destination point for the
@@ -472,9 +532,9 @@ fn spawn_salty_trace(
     tile_position: BoardPosition,
 ) {
     let mut pos = tile_position.to_position();
-    let mut rng = rand::thread_rng();
-    pos.x += rng.gen_range(-0.2..0.2);
-    pos.y += rng.gen_range(-0.2..0.2);
+    let mut rng = random_seed::rng();
+    pos.x += rng.random_range(-0.2..0.2);
+    pos.y += rng.random_range(-0.2..0.2);
     commands
         .spawn(Sprite {
             image: asset_server.load("img/salt_particle.png"),
@@ -509,7 +569,7 @@ fn ghost_fade_out_system(
     )>,
     mut gs: GearStuff,
 ) {
-    let mut rng = rand::thread_rng();
+    let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
         fade_out.timer.tick(time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
@@ -518,7 +578,7 @@ fn ghost_fade_out_system(
         map_color.color.set_alpha(rem_f);
 
         // Emit smoke particles while fading
-        if fade_out.timer.remaining_secs() > 0.0 && rng.gen_bool(((1.0 - rem_f) / 3.0) as f64) {
+        if fade_out.timer.remaining_secs() > 0.0 && rng.random_bool(((1.0 - rem_f) / 3.0) as f64) {
             let pos = *position;
             commands
                 .spawn(Sprite {
@@ -534,8 +594,8 @@ fn ghost_fade_out_system(
                 .insert(GameSprite)
                 .insert(pos)
                 .insert(Direction {
-                    dx: rng.gen_range(-0.9..0.9),
-                    dy: rng.gen_range(-0.9..0.9),
+                    dx: rng.random_range(-0.9..0.9),
+                    dy: rng.random_range(-0.9..0.9),
                     dz: 0.0,
                 })
                 .insert(MapColor {
@@ -567,9 +627,43 @@ fn ghost_fade_out_system(
     }
 }
 
+/// Updates the ghost warning field based on the intensity of nearby ghosts.
+///
+/// This system calculates the ghost warning field based on the highest intensity
+/// warning from any ghost. The warning field is used to display a visual warning
+/// to the player when a ghost is nearby.
+fn update_ghost_warning_field(
+    mut board_data: ResMut<BoardData>,
+    q_ghost: Query<(&GhostSprite, &Position)>,
+    time: Res<Time>,
+) {
+    // Reset warning field
+    board_data.ghost_warning_intensity = 0.0;
+    board_data.ghost_warning_position = None;
+
+    let mut max_intensity = 0.0;
+
+    // Find the highest intensity warning from any ghost
+    for (ghost, position) in q_ghost.iter() {
+        if ghost.hunt_warning_intensity > max_intensity {
+            max_intensity = ghost.hunt_warning_intensity;
+            board_data.ghost_warning_position = Some(*position);
+        }
+    }
+
+    let cur_t = time.elapsed_secs_f64();
+    let wave = f64::sin(PI * cur_t * 2.0).powi(2);
+    board_data.ghost_warning_intensity = max_intensity * wave as f32;
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (ghost_movement, ghost_enrage, ghost_fade_out_system),
+        (
+            ghost_movement,
+            ghost_enrage,
+            ghost_fade_out_system,
+            update_ghost_warning_field,
+        ),
     );
 }

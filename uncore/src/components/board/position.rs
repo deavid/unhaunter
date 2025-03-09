@@ -1,9 +1,12 @@
+use crate::random_seed;
+
 use super::{
-    boardposition::BoardPosition, direction::Direction, EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y,
-    PERSPECTIVE_Z,
+    EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, boardposition::BoardPosition,
+    direction::Direction,
 };
 
 use bevy::prelude::*;
+use rand::Rng;
 
 /// Represents the logical position of an object on the game board.
 ///
@@ -33,6 +36,25 @@ impl Position {
             y: y as f32,
             z: z as f32,
             global_z: 0 as f32,
+        }
+    }
+
+    pub fn with_global_z(&self, global_z: f32) -> Self {
+        Self {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            global_z,
+        }
+    }
+
+    pub fn with_random(&self, range: f32) -> Self {
+        let mut rng = random_seed::rng();
+        Self {
+            x: self.x + rng.random_range(-range..range),
+            y: self.y + rng.random_range(-range..range),
+            z: self.z,
+            global_z: self.global_z,
         }
     }
 

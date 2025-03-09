@@ -1,8 +1,7 @@
-use bevy::{prelude::*, utils::HashMap};
-
-use crate::components::board::boardposition::BoardPosition;
+use bevy::prelude::*;
+use ndarray::Array3;
 
 #[derive(Clone, Debug, Resource, Default)]
 pub struct VisibilityData {
-    pub visibility_field: HashMap<BoardPosition, f32>,
+    pub visibility_field: Array3<f32>,
 }

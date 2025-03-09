@@ -82,7 +82,9 @@ pub fn tmxmap_preload(
             let display_name = tmx.display_name.clone();
 
             if classname.is_none() {
-                debug!("Ignored TMX {path:?} because it doesn't have a classname (Should be 'UnhaunterMap1')");
+                debug!(
+                    "Ignored TMX {path:?} because it doesn't have a classname (Should be 'UnhaunterMap1')"
+                );
                 continue;
             }
 
@@ -104,6 +106,7 @@ pub fn tmxmap_preload(
             });
         }
     }
+    maps.maps.sort_by_key(|x| x.path.clone());
     for sheet in &mut mapsidx.sheets {
         if !sheet.processed {
             maps.sheets.push(Sheet {

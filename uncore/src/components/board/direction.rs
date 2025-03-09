@@ -1,4 +1,4 @@
-use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position};
 
 use bevy::prelude::*;
 
@@ -26,8 +26,21 @@ impl Direction {
         }
     }
 
+    pub fn add_to_position(&self, rhs: &Position) -> Position {
+        Position {
+            x: self.dx + rhs.x,
+            y: self.dy + rhs.y,
+            z: self.dz + rhs.z,
+            global_z: rhs.global_z,
+        }
+    }
+
     pub fn distance(&self) -> f32 {
-        (self.dx.powi(2) + self.dy.powi(2) + self.dz.powi(2)).sqrt()
+        (self.dx * self.dx + self.dy * self.dy + self.dz * self.dz).sqrt()
+    }
+
+    pub fn distance2(&self) -> f32 {
+        self.dx * self.dx + self.dy * self.dy + self.dz * self.dz
     }
 
     pub fn normalized(&self) -> Self {

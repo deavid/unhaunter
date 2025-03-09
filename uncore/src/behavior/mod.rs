@@ -23,6 +23,7 @@ pub mod component;
 
 use anyhow::Context;
 use bevy::{ecs::component::Component, utils::HashMap};
+use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
@@ -97,16 +98,17 @@ impl Behavior {
         if !self.p.light.opaque {
             return Orientation::None;
         }
-        self.cfg.orientation.clone()
+        self.cfg.orientation
     }
 
     /// Amount of "watts" of heat poured into the environment
     pub fn temp_heat_output(&self) -> f32 {
-        let heat_coeff = (self.p.light.heat_coef as f32).exp();
+        // FIXME: Precompute this value and store it. This is slow and it's computed every frame by the temperature system.
+        let heat_coeff = faster::exp(self.p.light.heat_coef as f32);
         self.p.light.emmisivity_lumens() / 10000.0 * heat_coeff
     }
 
-    /// Resistance to change temperature (how many Joules per Celsius)
+    /// Resistance to change temperature (how many Joules per Kelvin)
     pub fn _temp_heat_capacity(&self) -> f32 {
         let f1 = match self.p.light.opaque {
             true => 10000.0,
@@ -139,6 +141,10 @@ impl Behavior {
 
     pub fn can_emit_light(&self) -> bool {
         self.p.light.emission_power.into_inner() > 1.0
+    }
+
+    pub fn orientation(&self) -> Orientation {
+        self.cfg.orientation
     }
 }
 
@@ -196,13 +202,16 @@ pub struct Display {
     pub global_z: NotNan<f32>,
     /// Used to partially make transparent big objects when the player walks behind them
     pub auto_hide: bool,
+    /// Mainly for the van, to make the light computation look at a different tile.
+    pub light_recv_offset: (i64, i64),
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Light {
     pub opaque: bool,
     pub see_through: bool,
-    pub emits_light: bool,
+    pub light_emission_enabled: bool,
+    pub can_emit_light: bool,
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
     pub flickering: bool,
@@ -212,14 +221,14 @@ impl Light {
     pub fn emmisivity_lumens(&self) -> f32 {
         if self.flickering {
             // Reduced emission when flickering, with a slight glow even when off
-            if self.emits_light {
+            if self.light_emission_enabled {
                 self.emission_power.exp() * 0.4
             } else {
                 self.emission_power.exp() * 0.001
             }
         } else {
             // Normal emission based on emits_light
-            match self.emits_light {
+            match self.light_emission_enabled {
                 true => self.emission_power.exp(),
                 false => 0.0,
             }
@@ -231,6 +240,10 @@ impl Light {
             true => 0.00,
             false => 1.01,
         }
+    }
+
+    pub fn color(&self) -> (f32, f32, f32) {
+        (1.0, 1.0, 1.0)
     }
 
     /// This represents if a light on the map is emitting visible light or other types.
@@ -249,6 +262,8 @@ pub struct Movement {
     pub ghost_collision: bool,
     // 9x9 collision map on the sub-tile. This is using a subtile of 3x3, so it means
     // it can cover an area of 3x3 board tiles. collision_map: [[bool; 9]; 9],
+    /// Indicates that this will make collision dynamic. This is used for doors.
+    pub is_dynamic: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -289,7 +304,7 @@ pub enum Class {
 
 impl AutoSerialize for Class {}
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub enum Orientation {
     XAxis,
     YAxis,
@@ -455,7 +470,7 @@ impl SpriteConfig {
         let cvo_key = SpriteCVOKey {
             class: class.clone(),
             variant: variant.clone(),
-            orientation: orientation.clone(),
+            orientation,
         };
         Ok(SpriteConfig {
             class,
@@ -579,6 +594,7 @@ impl SpriteConfig {
             Class::Door => {
                 p.display.global_z = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == TileState::Closed;
+                p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
             }
             Class::Switch => {
@@ -641,33 +657,38 @@ impl SpriteConfig {
             }
             Class::WallLamp => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
-                p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
+                p.light.emission_power = (3.0).try_into().unwrap();
                 p.light.heat_coef = -1;
             }
             Class::FloorLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
-                p.light.emission_power = (6.0).try_into().unwrap();
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
+                p.light.emission_power = (2.0).try_into().unwrap();
             }
             Class::TableLamp => {
                 p.display.global_z = (0.000050).try_into().unwrap();
-                p.light.emits_light = self.state == TileState::On;
-                p.light.emission_power = (6.5).try_into().unwrap();
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
+                p.light.emission_power = (1.0).try_into().unwrap();
             }
             Class::WallDecor => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
             }
             Class::CeilingLight => {
                 p.display.disable = true;
-                p.light.emits_light = self.state == TileState::On;
-                p.light.emission_power = (5.5).try_into().unwrap();
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = self.state == TileState::On;
+                p.light.emission_power = (3.5).try_into().unwrap();
                 p.light.heat_coef = -2;
             }
             Class::StreetLight => {
                 p.display.disable = true;
-                p.light.emits_light = true;
-                p.light.emission_power = (6.0).try_into().unwrap();
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = true;
+                p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
             }
             Class::Appliance => {
@@ -676,6 +697,7 @@ impl SpriteConfig {
             Class::Van => {
                 p.display.global_z = (0.000050).try_into().unwrap();
                 p.display.auto_hide = true;
+                p.display.light_recv_offset = (5, 0);
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
