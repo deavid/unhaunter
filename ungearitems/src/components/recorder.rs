@@ -89,19 +89,6 @@ impl GearUsable for Recorder {
             return format!("{name}: {on_s}\n{garbled}");
         }
 
-        // For false readings, show excessive volume or fake EVP
-        if self.false_reading_timer > 0.0 {
-            if random_seed::rng().random_range(0.0..1.0) < 0.5 {
-                return format!("{name}: {on_s}\n- EVP DETECTED -");
-            } else {
-                let fake_vol = 50.0 + random_seed::rng().random_range(10.0..40.0);
-                return format!(
-                    "{name}: {on_s}\nVolume: {:>4.0}dB ({})",
-                    fake_vol, self.evp_recorded_count
-                );
-            }
-        }
-
         // Normal display
         let msg = if self.enabled {
             if self.evp_recorded_display {
