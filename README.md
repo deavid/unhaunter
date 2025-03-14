@@ -169,11 +169,11 @@ For more information on profiling Bevy, see:
 
 ## WASM Support
 
-A basic WASM version of Unhaunter is available to play directly in your web browser:
+A WASM version of Unhaunter is available to play directly in your web browser:
 
 [https://deavid.github.io/unhaunter/](https://deavid.github.io/unhaunter/)
 
-Please note that this version is primarily intended as a demo and may have some performance or functionality limitations.
+Please note that this version is primarily intended as a demo.
 
 For the best experience, we recommend playing the native build.
 
@@ -182,8 +182,7 @@ For the best experience, we recommend playing the native build.
 ### Current WASM Limitations:
 
 *   Performance issues may occur in Firefox.
-*   Map names are displayed by filename rather than internal name.
-*   Map data is pre-baked and doesn't reflect newly added maps.
+*   Single-thread only.
 
 This WASM version is intended as a demo for those who cannot build the game locally. Unhaunter primarily targets native builds, so WASM support will be minimal for now.
 
