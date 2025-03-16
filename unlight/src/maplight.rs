@@ -311,7 +311,7 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors_nosize(1) {
+        for npos in cursor_pos.iter_xy_neighbors(1, board_dim) {
             let lf = &bf.light_field[npos.ndidx()];
             cursor_exp += lf.lux.powf(gamma_exp);
             exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);

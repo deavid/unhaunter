@@ -1,5 +1,6 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
+use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::board::position::Position;
@@ -59,48 +60,61 @@ pub fn sound_playback_system(
     mut sound_events: EventReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(Entity, &Position, &PlayerSprite)>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
-        // Get player position (Match against the player ID from GameConfig)
-        let Some((player_position, _)) = qp.iter().find(|(_, p)| p.id == gc.player_id) else {
+        // Get player position
+        let Some((player_entity, player_position, _)) =
+            qp.iter().find(|(_, _, p)| p.id == gc.player_id)
+        else {
             return;
         };
+
         let adjusted_volume = match sound_event.position {
             Some(position) => {
-                const MIN_DIST: f32 = 25.0;
+                // const MIN_DIST: f32 = 25.0;
 
-                // Calculate distance from player to sound source
-                let distance2 = player_position.distance2(&position) + MIN_DIST;
-                let distance = distance2.powf(0.7) + MIN_DIST;
+                // // Calculate distance from player to sound source
+                // let distance2 = player_position.distance2(&position) + MIN_DIST;
+                // let distance = distance2.powf(0.7) + MIN_DIST;
 
-                // Calculate adjusted volume based on distance and audio settings
-                (sound_event.volume / distance2 * MIN_DIST
-                    + sound_event.volume / distance * MIN_DIST)
-                    .clamp(0.0, 1.0)
+                // // Calculate adjusted volume based on distance and audio settings
+                // (sound_event.volume / distance2 * MIN_DIST
+                //     + sound_event.volume / distance * MIN_DIST)
+                //     .clamp(0.0, 1.0)
+                let distance = player_position.distance(&position);
+                sound_event.volume * (8.0 + distance)
             }
             None => sound_event.volume,
         };
 
         // Spawn an AudioBundle with the adjusted volume
-        commands
-            .spawn(AudioPlayer::<AudioSource>(
-                asset_server.load(sound_event.sound_file.clone()),
-            ))
-            .insert(PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Despawn,
-                volume: bevy::audio::Volume::new(
-                    adjusted_volume
-                        * audio_settings.volume_effects.as_f32()
-                        * audio_settings.volume_master.as_f32(),
-                ),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            });
+
+        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
+            asset_server.load(sound_event.sound_file.clone()),
+        ));
+        sound.insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Despawn,
+            volume: bevy::audio::Volume::new(
+                adjusted_volume
+                    * audio_settings.volume_effects.as_f32()
+                    * audio_settings.volume_master.as_f32(),
+            ),
+            speed: 1.0,
+            paused: false,
+            spatial: sound_event.position.is_some(),
+            spatial_scale: Some(SpatialScale::new(0.06)),
+        });
+
+        if let Some(position) = sound_event.position {
+            let mut spos_vec = position.to_screen_coord() * -2.0;
+            let distance = player_position.distance(&position);
+            spos_vec.z += 200.0 / (2.0 + distance);
+            sound.insert(Transform::from_translation(spos_vec));
+            sound.set_parent(player_entity);
+        }
     }
 }
 
