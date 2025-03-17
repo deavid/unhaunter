@@ -1,7 +1,10 @@
+use bevy::audio::AddAudioSource;
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
 use uncore::events::sound::SoundEvent;
 use uncore::states::GameState;
+
+use crate::audiomix::AudioMix;
 
 use super::systems;
 
@@ -19,6 +22,8 @@ impl Plugin for UnhaunterGearPlugin {
                 systems::keyboard_gear.run_if(in_state(GameState::None)),
             )
             .add_systems(Update, systems::sound_playback_system)
+            .init_asset::<AudioMix>()
+            .add_audio_source::<AudioMix>()
             .add_event::<SoundEvent>();
     }
 }

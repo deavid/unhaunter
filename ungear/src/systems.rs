@@ -1,6 +1,10 @@
+use std::time::Duration;
+
+use crate::audiomix::AudioMix;
+
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
-use bevy::audio::SpatialScale;
+use bevy::audio::{Source, SpatialScale};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::board::position::Position;
@@ -59,10 +63,13 @@ pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGea
 pub fn sound_playback_system(
     mut sound_events: EventReader<SoundEvent>,
     asset_server: Res<AssetServer>,
+    audio_sources: Res<Assets<AudioSource>>,
+    mut amix_assets: ResMut<Assets<AudioMix>>,
     gc: Res<GameConfig>,
     qp: Query<(Entity, &Position, &PlayerSprite)>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
+    mut known_audio_sources: Local<Vec<Handle<AudioSource>>>,
 ) {
     for sound_event in sound_events.read() {
         // Get player position
@@ -91,10 +98,28 @@ pub fn sound_playback_system(
         };
 
         // Spawn an AudioBundle with the adjusted volume
+        let sound_handle: Handle<AudioSource> = asset_server.load(sound_event.sound_file.clone());
+        if !known_audio_sources.iter().any(|x| *x == sound_handle) {
+            // This is to prevent unloading of the sound.
+            known_audio_sources.push(sound_handle.clone());
+        }
 
-        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
-            asset_server.load(sound_event.sound_file.clone()),
-        ));
+        let mut sound = if let Some(source) = audio_sources.get(&sound_handle) {
+            warn!("Playing sound with reverb: {}", sound_event.sound_file);
+            let reverb = source
+                .decoder()
+                .buffered()
+                .reverb(Duration::from_millis(100), 0.7);
+            let amix = AudioMix::from_source(reverb);
+            let amix_sound_handle = amix_assets.add(amix);
+            commands.spawn(AudioPlayer::<AudioMix>(amix_sound_handle))
+            // commands.spawn(AudioPlayer::<AudioSource>(sound_handle))
+        } else {
+            warn!("Playing sound NATURAL: {}", sound_event.sound_file);
+            commands.spawn(AudioPlayer::<AudioSource>(sound_handle))
+        };
+
+        // let mut sound = commands.spawn(AudioPlayer::<AudioSource>(sound_handle));
         sound.insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Despawn,
             volume: bevy::audio::Volume::new(

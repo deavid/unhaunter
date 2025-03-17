@@ -61,6 +61,8 @@ bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
 ndarray = "0.16.1"
+# Rodio needs to match Bevy's version
+rodio = "0.19"
 
 [package]
 name = "unhaunter"
