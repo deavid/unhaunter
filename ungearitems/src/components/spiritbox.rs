@@ -137,13 +137,13 @@ impl GearUsable for SpiritBox {
         }
         let mut rng = random_seed::rng();
         const K: f32 = 0.5;
-        let pos = Position {
+        let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
             z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
-        let bpos = pos.to_board_position();
+        let bpos = posk.to_board_position();
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
         if gs.bf.evidences.contains(&Evidence::SpiritBox) {
@@ -156,7 +156,7 @@ impl GearUsable for SpiritBox {
         } else if delta > 0.3 && self.false_answer_timer <= 0.0 && self.display_glitch_timer <= 0.0
         {
             self.last_change_secs = sec;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3, &pos);
+            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3, pos);
             let r = if self.charge > 30.0 {
                 self.charge = 0.0;
                 rng.random_range(0..10)
@@ -165,16 +165,16 @@ impl GearUsable for SpiritBox {
             };
             self.ghost_answer = true;
             match r {
-                0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, &pos),
-                1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, &pos),
-                2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, &pos),
-                3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, &pos),
+                0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, pos),
+                1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, pos),
+                2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, pos),
+                3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
                 _ => self.ghost_answer = false,
             }
         } else if delta > 0.3 && self.false_answer_timer > 0.0 && self.display_glitch_timer <= 0.0 {
             self.last_change_secs = sec;
             self.ghost_answer = true;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, &pos);
+            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
         }
     }
     fn is_electronic(&self) -> bool {

@@ -99,15 +99,15 @@ impl GearUsable for GeigerCounter {
         self.frame_counter += 1;
         self.frame_counter %= 65413;
         const K: f32 = 0.5;
-        let pos = Position {
+        let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
             z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
             global_z: pos.global_z,
         };
-        let dist2breach = gs.bf.breach_pos.distance2(&pos) + 10.0;
+        let dist2breach = gs.bf.breach_pos.distance2(&posk) + 10.0;
         let breach_energy = dist2breach.recip() * 20000.0;
-        let bpos = pos.to_board_position();
+        let bpos = posk.to_board_position();
         for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
             let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
@@ -148,10 +148,10 @@ impl GearUsable for GeigerCounter {
         {
             if self.display_glitch_timer <= 0.0001 {
                 self.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
-                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, &pos);
+                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, pos);
             } else {
                 self.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.25, &pos);
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.25, pos);
             }
         }
         // Update sound_display *only* if enough time has passed.

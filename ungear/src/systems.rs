@@ -11,7 +11,7 @@ use uncore::events::sound::SoundEvent;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::equipmentposition::EquipmentPosition;
-use unsettings::audio::AudioSettings;
+use unsettings::audio::{AudioSettings, SoundOutput};
 
 /// System for updating the internal state of all gear carried by the player.
 ///
@@ -66,29 +66,19 @@ pub fn sound_playback_system(
 ) {
     for sound_event in sound_events.read() {
         // Get player position
-        let Some((player_entity, player_position, _)) =
+        let Some((_player_entity, player_position, _)) =
             qp.iter().find(|(_, _, p)| p.id == gc.player_id)
         else {
             return;
         };
-
-        let adjusted_volume = match sound_event.position {
-            Some(position) => {
-                // const MIN_DIST: f32 = 25.0;
-
-                // // Calculate distance from player to sound source
-                // let distance2 = player_position.distance2(&position) + MIN_DIST;
-                // let distance = distance2.powf(0.7) + MIN_DIST;
-
-                // // Calculate adjusted volume based on distance and audio settings
-                // (sound_event.volume / distance2 * MIN_DIST
-                //     + sound_event.volume / distance * MIN_DIST)
-                //     .clamp(0.0, 1.0)
-                let distance = player_position.distance(&position);
-                sound_event.volume * (8.0 + distance)
-            }
-            None => sound_event.volume,
-        };
+        let dist = sound_event
+            .position
+            .map(|pos| player_position.distance(&pos))
+            .unwrap_or(0.0);
+        let mut adjusted_volume = (sound_event.volume * (1.0 + dist * 0.2)).clamp(0.0, 1.0);
+        if audio_settings.sound_output == SoundOutput::Mono {
+            adjusted_volume /= 1.0 + dist * 0.4;
+        }
 
         // Spawn an AudioBundle with the adjusted volume
 
@@ -104,16 +94,15 @@ pub fn sound_playback_system(
             ),
             speed: 1.0,
             paused: false,
-            spatial: sound_event.position.is_some(),
-            spatial_scale: Some(SpatialScale::new(0.06)),
+            spatial: sound_event.position.is_some()
+                && audio_settings.sound_output != SoundOutput::Mono,
+            spatial_scale: Some(SpatialScale::new(0.005)),
         });
 
         if let Some(position) = sound_event.position {
-            let mut spos_vec = position.to_screen_coord() * -2.0;
-            let distance = player_position.distance(&position);
-            spos_vec.z += 200.0 / (2.0 + distance);
+            let mut spos_vec = position.to_screen_coord();
+            spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
             sound.insert(Transform::from_translation(spos_vec));
-            sound.set_parent(player_entity);
         }
     }
 }

@@ -148,12 +148,23 @@ impl AudioLevel {
 pub enum SoundOutput {
     /// Mono sound output.
     Mono,
-    /// Headphones sound output (default).
+    HalfStereo,
+    Stereo,
     #[default]
-    Headphones,
-    /// Speakers sound output.
-    Speakers,
+    WideStereo,
 }
+
+impl SoundOutput {
+    pub fn to_ear_offset(&self) -> f32 {
+        match self {
+            SoundOutput::Mono => 0.1,
+            SoundOutput::HalfStereo => 1.0,
+            SoundOutput::Stereo => 3.0,
+            SoundOutput::WideStereo => 10.0,
+        }
+    }
+}
+
 /// Represents the different audio positioning modes.
 #[derive(
     Serialize,

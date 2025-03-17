@@ -54,6 +54,7 @@ use uncore::types::tiledmap::map::MapLayerType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unlight::prebake::prebake_lighting_field;
+use unsettings::audio::AudioSettings;
 use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
@@ -75,6 +76,7 @@ pub struct LoadLevelSystemParam<'w> {
     roomdb: ResMut<'w, RoomDB>,
     difficulty: Res<'w, CurrentDifficulty>,
     game_settings: Res<'w, Persistent<GameplaySettings>>,
+    audio_settings: Res<'w, Persistent<AudioSettings>>,
 }
 
 /// Loads a new level based on the `LoadLevelEvent`.
@@ -502,6 +504,10 @@ pub fn load_level_handler(
                 // .with_sanity(p.difficulty.0.starting_sanity)
                 .with_controls(control_keys),
         )
+        // Update the SpatialListener to use the ear offset from audio settings
+        .insert(SpatialListener::new(
+            -p.audio_settings.sound_output.to_ear_offset(),
+        ))
         .insert(SpriteType::Player)
         .insert(player_position)
         .insert(Direction::new_right())

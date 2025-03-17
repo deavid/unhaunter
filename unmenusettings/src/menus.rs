@@ -68,6 +68,7 @@ impl AudioSettingsMenu {
             Self::VolumeMaster | Self::VolumeEffects | Self::VolumeMusic | Self::VolumeAmbient => {
                 MenuEvent::EditAudioSetting(*self)
             }
+            Self::SoundOutput => MenuEvent::EditAudioSetting(*self),
             _ => MenuEvent::None,
         }
     }
@@ -130,6 +131,24 @@ impl AudioSettingsMenu {
                     )
                 })
                 .collect::<Vec<_>>(),
+            AudioSettingsMenu::SoundOutput => {
+                use unsettings::audio::SoundOutput;
+                let to_string = |s: SoundOutput, v: &SoundOutput| -> String {
+                    if s == *v {
+                        format!("[{s}]")
+                    } else {
+                        s.to_string()
+                    }
+                };
+                SoundOutput::iter()
+                    .map(|s| {
+                        (
+                            to_string(s, &audio_settings.sound_output),
+                            MenuEvent::SaveAudioSetting(AudioSettingsValue::sound_output(s)),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            }
             _ => vec![],
         }
     }
