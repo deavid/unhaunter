@@ -1,0 +1,9 @@
+[package]
+name = "ghost_list"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+uncore = { path = "../../uncore" }
+enum-iterator = { workspace = true }
+bevy = { workspace = true }

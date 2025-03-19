@@ -2,6 +2,7 @@
 members = [
     "ungame",
     "tools/ghost_radio",
+    "tools/ghost_list",
     "uncore",
     "ungear",
     "unstd",
@@ -100,6 +101,7 @@ walkdir = { workspace = true }
 [[bin]]
 name = "unhaunter_game"
 path = "unhaunter/src/bin/unhaunter.rs"
+
 
 [lib]
 crate-type = ["cdylib", "rlib"]

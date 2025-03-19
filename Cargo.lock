@@ -2352,6 +2352,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ghost_list"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "uncore",
+]
+
+[[package]]
 name = "ghost_radio"
 version = "0.1.0"
 dependencies = [
