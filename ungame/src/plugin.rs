@@ -1,4 +1,4 @@
-use crate::{boardfield_update, looking_gear};
+use crate::{boardfield_update, hide_mouse::system_hide_mouse, looking_gear};
 
 use super::{level, object_charge, pause_ui, roomchanged, systems, ui};
 use bevy::prelude::*;
@@ -12,7 +12,7 @@ impl Plugin for UnhaunterGamePlugin {
         app.init_resource::<GameConfig>()
             .add_systems(OnEnter(AppState::InGame), systems::setup)
             .add_systems(OnExit(AppState::InGame), systems::cleanup)
-            .add_systems(Update, systems::keyboard);
+            .add_systems(Update, (systems::keyboard, system_hide_mouse));
         boardfield_update::app_setup(app);
         level::app_setup(app);
         ui::app_setup(app);

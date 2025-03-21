@@ -8,3 +8,4 @@ pub mod systems;
 pub mod ui;
 pub mod boardfield_update;
 pub mod looking_gear;
+pub mod hide_mouse;
