@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
-    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, HeldObjectUI, RightSideGearUI,
+    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI,
 };
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -70,19 +70,21 @@ pub fn setup_ui(
         // For now a reminder of the keys:
         let ch_control = game_settings.character_controls.to_string();
         p.spawn(Text::new(format!(
-            "[{ch_control}]: Movement\n[E]: Interact\n[F]: Grab/Move\n[G]: Drop"
+            "[{ch_control}]: Movement - [Shift]: Sprint/Left Hand - [E]: Interact - [F]: Grab/Move - [G]: Drop - [Q]: Next - [T]: Swap Hands - [C]: Change Evidence"
         )))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 16.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
-        .insert(TextColor(colors::INVENTORY_STATS_COLOR))
+        // .insert(TextLayout::new_with_justify(JustifyText::Right))
+        .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(0.4)))
         .insert(Node {
             // height: Val::Percent(100.0),
             align_self: AlignSelf::End,
             justify_self: JustifySelf::End,
             justify_content: JustifyContent::End,
+            // max_width: Val::Px(160.0),
             margin: UiRect::new(
                 Val::Px(4.0 * UI_SCALE),
                 Val::Px(4.0 * UI_SCALE),
@@ -96,18 +98,17 @@ pub fn setup_ui(
     let inv_left = |p: Cb| setup_ui_gear_inv_left(p, &handles);
     let inv_right = |p: Cb| setup_ui_gear_inv_right(p, &handles);
     let bottom_panel = |p: Cb| {
+        // Left side
         // Split for the bottom side in three regions Leftmost side - Inventory left
         p.spawn(Node {
-            width: Val::Px(100.0 * UI_SCALE),
-            max_width: Val::Percent(20.0),
-            // Vertical alignment
-            align_items: AlignItems::Center,
+            min_width: Val::Px(100.0 * UI_SCALE),
+            max_width: Val::Percent(33.3),
             // Horizontal alignment - start from the left.
             align_content: AlignContent::Start,
-            flex_direction: FlexDirection::Column,
+            flex_direction: FlexDirection::Row,
             border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
             padding: UiRect::all(Val::Px(1.0)),
-            flex_grow: 0.0,
+            flex_grow: 0.01,
             flex_shrink: 0.0,
             ..Default::default()
         })
@@ -115,26 +116,11 @@ pub fn setup_ui(
         .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(inv_left);
 
-        // Left side
-        p.spawn(Node {
-            min_width: Val::Px(200.0 * UI_SCALE),
-            align_content: AlignContent::Center,
-            align_items: AlignItems::Center,
-            border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
-            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)),
-            flex_grow: 0.0,
-            ..Default::default()
-        })
-        .insert(colors::DEBUG_BCOLOR)
-        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
-        .with_children(key_legend);
-
         // Mid side
         p.spawn(Node {
             border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
             padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
             flex_grow: 1.0,
-            max_width: Val::Percent(60.0),
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
@@ -149,7 +135,7 @@ pub fn setup_ui(
             align_content: AlignContent::Center,
             border: UiRect::all(Val::Px(1.0)),
             padding: UiRect::all(Val::Px(1.0)),
-            flex_grow: 1.0,
+            flex_grow: 0.01,
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR)
@@ -166,18 +152,19 @@ pub fn setup_ui(
             })
             .insert(RightSideGearUI)
             .with_children(inv_right);
-            p.spawn(Node {
-                display: Display::None,
-                border: UiRect::all(Val::Px(1.0)),
-                padding: UiRect::all(Val::Px(1.0)),
-                flex_direction: FlexDirection::Column,
-                flex_grow: 1.0,
-                ..Default::default()
-            })
-            .insert(colors::DEBUG_BCOLOR)
-            .insert(BackgroundColor(colors::PANEL_BGCOLOR))
-            .insert(HeldObjectUI)
-            .with_children(|parent| setup_ui_held_object(parent, &handles));
+            // TODO: For now disabling the held object UI because it will clash with the looking left gear function.
+            // p.spawn(Node {
+            //     display: Display::None,
+            //     border: UiRect::all(Val::Px(1.0)),
+            //     padding: UiRect::all(Val::Px(1.0)),
+            //     flex_direction: FlexDirection::Column,
+            //     flex_grow: 1.0,
+            //     ..Default::default()
+            // })
+            // .insert(colors::DEBUG_BCOLOR)
+            // .insert(BackgroundColor(colors::PANEL_BGCOLOR))
+            // .insert(HeldObjectUI)
+            // .with_children(|parent| setup_ui_held_object(parent, &handles));
         });
     };
     let game_ui = |p: Cb| {
@@ -219,6 +206,17 @@ pub fn setup_ui(
             ..Default::default()
         })
         .insert(colors::DEBUG_BCOLOR);
+
+        p.spawn(Node {
+            align_content: AlignContent::Start,
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::Start,
+            border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
+            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)),
+            flex_grow: 0.0,
+            ..Default::default()
+        })
+        .with_children(key_legend);
 
         // Bottom side - inventory and stats
         p.spawn(Node {
@@ -298,7 +296,7 @@ pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
 
 /// Sets up the UI elements for displaying information about the map item being
 /// held by the player.
-fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
+fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
         .spawn(Text::new("Object Name"))
         .insert(TextFont {
@@ -340,49 +338,50 @@ fn setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
 /// reverts to displaying the player's gear information.
 #[allow(clippy::type_complexity)]
 pub fn toggle_held_object_ui(
-    mut held_object_ui: Query<
-        (&mut Visibility, &mut Node),
-        (With<HeldObjectUI>, Without<RightSideGearUI>),
-    >,
-    mut right_hand_ui: Query<
-        (&mut Visibility, &mut Node),
-        (With<RightSideGearUI>, Without<HeldObjectUI>),
-    >,
+    // mut held_object_ui: Query<
+    //     (&mut Visibility, &mut Node),
+    //     (With<HeldObjectUI>, Without<RightSideGearUI>),
+    // >,
+    // mut right_hand_ui: Query<
+    //     (&mut Visibility, &mut Node),
+    //     (With<RightSideGearUI>, Without<HeldObjectUI>),
+    // >,
     mut text_query: Query<(&mut Text, &mut TextColor, &ElementObjectUI)>,
     players: Query<&PlayerGear, With<PlayerSprite>>,
     objects: Query<&Behavior>,
 ) {
-    let is_holding_object = players
-        .iter()
-        .any(|player_gear| player_gear.held_item.is_some());
+    // let is_holding_object = players
+    //     .iter()
+    //     .any(|player_gear| player_gear.held_item.is_some());
 
-    // --- Toggle Held Object UI ---
-    for (mut visibility, mut style) in held_object_ui.iter_mut() {
-        *visibility = if is_holding_object {
-            Visibility::Inherited
-        } else {
-            Visibility::Hidden
-        };
-        style.display = if is_holding_object {
-            Display::Flex
-        } else {
-            Display::None
-        };
-    }
+    // TODO: For now I'm disabling the Held Object UI - it will clash with Shift to look at the left gear.
+    // // --- Toggle Held Object UI ---
+    // for (mut visibility, mut style) in held_object_ui.iter_mut() {
+    //     *visibility = if is_holding_object {
+    //         Visibility::Inherited
+    //     } else {
+    //         Visibility::Hidden
+    //     };
+    //     style.display = if is_holding_object {
+    //         Display::Flex
+    //     } else {
+    //         Display::None
+    //     };
+    // }
 
-    // --- Toggle Right-Hand Gear UI ---
-    for (mut visibility, mut style) in right_hand_ui.iter_mut() {
-        *visibility = if is_holding_object {
-            Visibility::Hidden
-        } else {
-            Visibility::Inherited
-        };
-        style.display = if is_holding_object {
-            Display::None
-        } else {
-            Display::Flex
-        };
-    }
+    // // --- Toggle Right-Hand Gear UI ---
+    // for (mut visibility, mut style) in right_hand_ui.iter_mut() {
+    //     *visibility = if is_holding_object {
+    //         Visibility::Hidden
+    //     } else {
+    //         Visibility::Inherited
+    //     };
+    //     style.display = if is_holding_object {
+    //         Display::None
+    //     } else {
+    //         Display::Flex
+    //     };
+    // }
 
     // --- Retrieve Object Data ---
     if let Ok(player_gear) = players.get_single() {

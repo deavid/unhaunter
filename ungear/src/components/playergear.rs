@@ -1,11 +1,9 @@
 use crate::types::gear::Gear;
 use bevy::prelude::*;
 use uncore::components::player::HeldObject;
+use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use uncore::types::gear_kind::GearKind;
 use uncore::types::ghost::types::GhostType;
-
-pub use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
-pub use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {
@@ -80,8 +78,8 @@ impl PlayerGear {
         })
     }
 
-    pub fn cycle(&mut self) {
-        let old_right = self.right_hand.clone();
+    pub fn cycle(&mut self, hand: &Hand) {
+        let old_hand = self.get_hand(hand).clone();
         let last_idx = self.inventory.len() - 1;
         let Some((lidx, inv)) = self
             .inventory
@@ -91,11 +89,14 @@ impl PlayerGear {
         else {
             return;
         };
-        self.right_hand = inv.clone();
+        match hand {
+            Hand::Left => self.left_hand = inv.clone(),
+            Hand::Right => self.right_hand = inv.clone(),
+        };
         for i in lidx..last_idx {
             self.inventory[i] = self.inventory[i + 1].clone()
         }
-        self.inventory[last_idx] = old_right;
+        self.inventory[last_idx] = old_hand;
     }
 
     pub fn swap(&mut self) {

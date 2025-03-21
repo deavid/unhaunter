@@ -33,6 +33,7 @@ use uncore::resources::visibility_data::VisibilityData;
 use uncore::types::board::fielddata::CollisionFieldData;
 use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
+use uncore::types::gear::equipmentposition::EquipmentPosition;
 use uncore::types::gear_kind::GearKind;
 use uncore::utils::light::{compute_color_exposure, lerp_color};
 use uncore::{
@@ -43,7 +44,6 @@ use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTim
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
-use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
 use unsettings::audio::AudioSettings;

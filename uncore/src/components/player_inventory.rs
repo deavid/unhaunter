@@ -33,4 +33,15 @@ impl Inventory {
 }
 
 #[derive(Component, Debug, Clone)]
-pub struct InventoryStats;
+pub struct InventoryStats {
+    pub hand: Hand,
+}
+
+impl InventoryStats {
+    pub fn left() -> Self {
+        InventoryStats { hand: Hand::Left }
+    }
+    pub fn right() -> Self {
+        InventoryStats { hand: Hand::Right }
+    }
+}
