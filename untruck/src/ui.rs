@@ -1,5 +1,5 @@
 use super::uibutton::TruckButtonType;
-use super::{activity, journalui, loadoutui, sanity, sensors, TruckUI};
+use super::{TruckUI, activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab};
@@ -228,8 +228,10 @@ pub fn setup_ui(
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     margin: UiRect::bottom(Val::Percent(MARGIN_PERCENT)),
+                    position_type: PositionType::Relative,
                     ..default()
                 })
+                .insert(ZIndex(20))
                 .insert(BackgroundColor(Color::NONE))
                 .insert(BorderColor(Color::NONE))
                 .insert(Interaction::None)
@@ -255,8 +257,10 @@ pub fn setup_ui(
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     border: MARGIN,
+                    position_type: PositionType::Relative,
                     ..default()
                 })
+                .insert(ZIndex(20))
                 .insert(BackgroundColor(Color::NONE))
                 .insert(BorderColor(Color::NONE))
                 .insert(Interaction::None)

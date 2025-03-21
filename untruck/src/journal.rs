@@ -33,6 +33,11 @@ pub fn button_system(
     let mut first_ghost = true;
     let mut new_ghost_selected = None;
     for (interaction, _color, _border_color, _children, mut tui_button) in &mut interaction_query {
+        // Skip buttons that use hold timer - they're handled by the hold system
+        if tui_button.hold_duration.is_some() {
+            continue;
+        }
+
         if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
             match tui_button.status {
                 TruckButtonState::Off => {}

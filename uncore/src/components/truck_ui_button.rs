@@ -14,10 +14,21 @@ pub struct TruckUIButton {
     pub class: TruckButtonType,
     /// Indicates whether the button is disabled and cannot be interacted with.
     pub disabled: bool,
+    /// Duration in seconds the button must be held to activate (None = instant)
+    pub hold_duration: Option<f32>,
+    /// Current time the button has been held
+    pub hold_timer: Option<f32>,
+    /// Whether the button is currently being held
+    pub holding: bool,
 }
 
 impl TruckUIButton {
     pub fn pressed(&mut self) -> Option<TruckUIEvent> {
+        // If this button requires holding, don't trigger immediately
+        if self.hold_duration.is_some() {
+            return None;
+        }
+
         match self.class {
             TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
                 self.status = match self.status {
@@ -109,10 +120,18 @@ impl TruckUIButton {
 
 impl From<TruckButtonType> for TruckUIButton {
     fn from(value: TruckButtonType) -> Self {
+        let hold_duration = match value {
+            TruckButtonType::CraftRepellent | TruckButtonType::EndMission => Some(1.0),
+            _ => None,
+        };
+
         TruckUIButton {
             status: TruckButtonState::Off,
             class: value,
             disabled: false,
+            hold_duration,
+            hold_timer: None,
+            holding: false,
         }
     }
 }
