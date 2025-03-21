@@ -8,9 +8,10 @@ use uncore::components::game_config::GameConfig;
 use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::sound::SoundEvent;
+use uncore::resources::looking_gear::LookingGear;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
-use uncore::types::gear::equipmentposition::EquipmentPosition;
+use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unsettings::audio::{AudioSettings, SoundOutput};
 
 /// System for updating the internal state of all gear carried by the player.
@@ -110,11 +111,12 @@ pub fn sound_playback_system(
 pub fn keyboard_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    looking_gear: Res<LookingGear>,
     mut gs: GearStuff,
 ) {
     for (ps, mut playergear) in q_gear.iter_mut() {
         if keyboard_input.just_pressed(ps.controls.cycle) {
-            playergear.cycle();
+            playergear.cycle(&looking_gear.hand());
         }
         if keyboard_input.just_pressed(ps.controls.swap) {
             playergear.swap();
@@ -132,8 +134,9 @@ pub fn update_gear_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
-    mut qs: Query<&mut Text, With<InventoryStats>>,
+    mut qs: Query<(&mut Text, &mut Node, &InventoryStats)>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
+    looking_gear: Res<LookingGear>,
 ) {
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
@@ -144,10 +147,20 @@ pub fn update_gear_ui(
                     imgnode.texture_atlas.as_mut().unwrap().index = idx;
                 }
             }
+            let left_hand_status = playergear.left_hand.get_status();
             let right_hand_status = playergear.right_hand.get_status();
-            for mut txt in qs.iter_mut() {
-                if txt.0 != right_hand_status {
-                    txt.0.clone_from(&right_hand_status);
+            for (mut txt, mut node, istats) in qs.iter_mut() {
+                let hand_status = match istats.hand {
+                    Hand::Left => left_hand_status.clone(),
+                    Hand::Right => right_hand_status.clone(),
+                };
+                let display = looking_gear.hand() == istats.hand;
+                node.display = match display {
+                    false => Display::None,
+                    true => Display::Block,
+                };
+                if txt.0 != hand_status {
+                    txt.0.clone_from(&hand_status);
                 }
             }
             for (inv, mut imgnode) in qin.iter_mut() {

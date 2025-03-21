@@ -1,4 +1,4 @@
-use crate::boardfield_update;
+use crate::{boardfield_update, looking_gear};
 
 use super::{level, object_charge, pause_ui, roomchanged, systems, ui};
 use bevy::prelude::*;
@@ -19,5 +19,6 @@ impl Plugin for UnhaunterGamePlugin {
         roomchanged::app_setup(app);
         pause_ui::app_setup(app);
         object_charge::app_setup(app);
+        looking_gear::app_setup(app);
     }
 }

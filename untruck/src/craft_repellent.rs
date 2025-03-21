@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore::types::{gear_kind::GearKind, ghost::types::GhostType};
-use ungear::components::playergear::{Hand, PlayerGear};
+use uncore::types::{gear::equipmentposition::Hand, gear_kind::GearKind, ghost::types::GhostType};
+use ungear::components::playergear::PlayerGear;
 use ungearitems::prelude::RepellentFlask;
 
 pub fn craft_repellent(playergear: &mut PlayerGear, ghost_type: GhostType) {
