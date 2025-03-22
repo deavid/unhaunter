@@ -1,11 +1,11 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::random_seed;
 use uncore::{
     components::board::position::Position,
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
+use uncore::{kelvin_to_celsius, random_seed};
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct SpiritBox {
@@ -14,8 +14,8 @@ pub struct SpiritBox {
     pub ghost_answer: bool,
     pub last_change_secs: f32,
     pub charge: f32,
-    pub display_glitch_timer: f32, // New: Glitch timer
-    pub false_answer_timer: f32,   // New: Timer for false answers
+    pub display_glitch_timer: f32,
+    pub interference2_timer: f32,
 }
 
 impl GearUsable for SpiritBox {
@@ -53,7 +53,7 @@ impl GearUsable for SpiritBox {
     }
 
     fn get_description(&self) -> &'static str {
-        "A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living."
+        "A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living if you're close to its breach, and with the lights off."
     }
 
     fn get_status(&self) -> String {
@@ -72,8 +72,7 @@ impl GearUsable for SpiritBox {
             return format!("{name}: {on_s}\n{garbled}");
         }
 
-        // False answers
-        if self.false_answer_timer > 0.0 {
+        if self.interference2_timer > 0.0 {
             return format!("{name}: {on_s}\nEVP? (Static.)");
         }
 
@@ -112,15 +111,15 @@ impl GearUsable for SpiritBox {
 
             // Play more static sounds when glitching
             if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.6 {
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.5, pos);
+                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
             }
         }
 
-        // Decrement false answer timer if active
-        if self.false_answer_timer > 0.0 {
-            self.false_answer_timer -= gs.time.delta_secs();
+        // Decrement interference2 timer if active
+        if self.interference2_timer > 0.0 {
+            self.interference2_timer -= gs.time.delta_secs();
 
-            // Play static/interference sounds during false answers
+            // Play static/interference sounds during interference2s
             if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.5 {
                 gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
             }
@@ -146,17 +145,41 @@ impl GearUsable for SpiritBox {
         let bpos = posk.to_board_position();
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
         let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
+        let temp_celsius = kelvin_to_celsius(
+            gs.bf
+                .temperature_field
+                .get(bpos.ndidx())
+                .cloned()
+                .unwrap_or_default(),
+        );
+        let light_lux = gs
+            .bf
+            .light_field
+            .get(bpos.ndidx())
+            .cloned()
+            .unwrap_or_default()
+            .lux;
+
         if gs.bf.evidences.contains(&Evidence::SpiritBox) {
-            self.charge += sound_reading;
+            let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
+            let temp_clamped = (temp_celsius - 3.0).clamp(0.5, 10.0);
+            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0;
+            // info!(
+            //     "charge: {:.2} sound:{:.2} temp:{:.2} light:{:.2}",
+            //     self.charge,
+            //     sound_reading,
+            //     temp_clamped.powi(2),
+            //     light_clamped
+            // );
         }
         if self.ghost_answer {
             if delta > 3.0 {
                 self.ghost_answer = false;
             }
-        } else if delta > 0.3 && self.false_answer_timer <= 0.0 && self.display_glitch_timer <= 0.0
+        } else if delta > 0.3 && self.interference2_timer <= 0.0 && self.display_glitch_timer <= 0.0
         {
             self.last_change_secs = sec;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.3, pos);
+            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
             let r = if self.charge > 30.0 {
                 self.charge = 0.0;
                 rng.random_range(0..10)
@@ -171,7 +194,8 @@ impl GearUsable for SpiritBox {
                 3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
                 _ => self.ghost_answer = false,
             }
-        } else if delta > 0.3 && self.false_answer_timer > 0.0 && self.display_glitch_timer <= 0.0 {
+        } else if delta > 0.3 && self.interference2_timer > 0.0 && self.display_glitch_timer <= 0.0
+        {
             self.last_change_secs = sec;
             self.ghost_answer = true;
             gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
@@ -195,9 +219,9 @@ impl GearUsable for SpiritBox {
             self.display_glitch_timer = rng.random_range(0.2..0.5);
         }
 
-        // Effect 2: False answers
+        // Effect 2: interference2
         if rng.random_range(0.0..1.0) < effect_strength.powi(2) * 0.6 {
-            self.false_answer_timer = rng.random_range(0.3..0.8);
+            self.interference2_timer = rng.random_range(0.3..0.8);
             self.ghost_answer = true;
         }
     }

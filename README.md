@@ -59,16 +59,16 @@ Beware! Ghosts can enter a hunting phase, becoming more aggressive and directly 
 
 ## Evidence & Equipment
 
-| Evidence       | Gear             | Description                                                                                                                                                                                                                                                            |
-| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Freezing Temps | Thermometer      | The room frequented by the ghost becomes unusually cold. Some ghosts will cause temperatures to drop below 0°C.                                                                                                                                                        |
-| Floating Orbs  | Video Camera      | The ghost's breach (a spectral dust cloud) might glow brightly when viewed through a Night Vision camera.  Lights must be OFF.                                                                                                                                         |
-| UV Ectoplasm   | UV Torch         | Some ghosts will emit a greenish glow under UV light. Lights must be OFF.                                                                                                                                                                                         |
-| EMF Level 5    | EMF Meter        | The EMF Meter may spike to level 5 in the presence of certain ghosts.  Keep the meter close to the ghost's area of activity.                                                                                                                                   |
-| EVP Recording  | Recorder         | The Recorder might capture ghostly voices (Electronic Voice Phenomena). If a EVP Recording is made, [EVP RECORDED] will appear.                                                                                                                               |
-| Spirit Box     | Spirit Box       | Screams, whispers, or other paranormal sounds may be heard through the Spirit Box when the ghost is nearby.                                                                                                                                                        |
-| RL Presence    | Red Torch        | Some ghosts glow orange under red light.  Lights must be OFF.                                                                                                                                                                                                           |
-| 500+ cpm       | Geiger Counter   | The Geiger Counter measures radiation levels. Some ghosts emit high radiation, registering over 500 counts per minute (cpm). It takes time for the Geiger counter to settle into a value. |
+| Evidence       | Gear           | Description                                                                                                                                                                               |
+| -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Freezing Temps | Thermometer    | The room frequented by the ghost becomes unusually cold. Some ghosts will cause temperatures to drop below 0°C.                                                                           |
+| Floating Orbs  | Video Camera   | The ghost's breach (a spectral dust cloud) might glow brightly when viewed through a Night Vision camera.  Lights must be OFF.                                                            |
+| UV Ectoplasm   | UV Torch       | Some ghosts will emit a greenish glow under UV light. Lights must be OFF.                                                                                                                 |
+| EMF Level 5    | EMF Meter      | The EMF Meter may spike to level 5 in the presence of certain ghosts.  Keep the meter close to the ghost's area of activity.                                                              |
+| EVP Recording  | Recorder       | The Recorder might capture ghostly voices (Electronic Voice Phenomena). If a EVP Recording is made, [EVP RECORDED] will appear.                                                           |
+| Spirit Box     | Spirit Box     | Screams, whispers, or other paranormal sounds may be heard through the Spirit Box when close to the breach and in relative darkness.                                                      |
+| RL Presence    | Red Torch      | Some ghosts glow orange under red light.  Lights must be OFF.                                                                                                                             |
+| 500+ cpm       | Geiger Counter | The Geiger Counter measures radiation levels. Some ghosts emit high radiation, registering over 500 counts per minute (cpm). It takes time for the Geiger counter to settle into a value. |
 
 ## Basic Strategy
 
