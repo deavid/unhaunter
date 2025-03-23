@@ -74,10 +74,10 @@ impl Difficulty {
     /// A higher value indicates a faster ghost.
     pub fn ghost_speed(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.4,
-            Difficulty::AdeptInvestigator => 0.6,
-            Difficulty::SeniorInvestigator => 0.8,
-            Difficulty::ExpertInvestigator => 1.0,
+            Difficulty::NoviceInvestigator => 1.0,
+            Difficulty::AdeptInvestigator => 1.05,
+            Difficulty::SeniorInvestigator => 1.1,
+            Difficulty::ExpertInvestigator => 1.15,
             Difficulty::AdeptSpecialist => 1.2,
             Difficulty::LeadSpecialist => 1.3,
             Difficulty::ExpertSpecialist => 1.4,

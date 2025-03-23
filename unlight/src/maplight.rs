@@ -453,10 +453,11 @@ pub fn apply_lighting(
                             for (flpos, fldir, flpower, flcolor, fltype, flvismap) in
                                 flashlights.iter()
                             {
+                                let fldir = fldir.with_max_dist(100.0);
                                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
-                                let mut lpos = lpos.unrotate_by_dir(fldir);
-                                let mut rpos = rpos.unrotate_by_dir(fldir);
+                                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
+                                let mut lpos = lpos.unrotate_by_dir(&fldir);
+                                let mut rpos = rpos.unrotate_by_dir(&fldir);
                                 rpos.x -= lpos.x;
                                 rpos.y -= lpos.y;
                                 lpos.x = 0.0;

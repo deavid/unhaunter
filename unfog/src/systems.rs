@@ -80,7 +80,7 @@ pub fn spawn_miasma(
     mut commands: Commands,
 ) {
     let measure = metrics::SPAWN_MIASMA.time_measure();
-    const THRESHOLD: f32 = 0.01;
+    const THRESHOLD: f32 = 0.000001;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
     let mut rng = random_seed::rng();
