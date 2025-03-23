@@ -79,8 +79,7 @@ pub enum AudioLevel {
     /// 40% volume.
     #[strum(to_string = "40%")]
     Vol040,
-    /// 50% volume (default).
-    #[default]
+    /// 50% volume.
     #[strum(to_string = "50%")]
     Vol050,
     /// 60% volume.
@@ -89,7 +88,8 @@ pub enum AudioLevel {
     /// 70% volume.
     #[strum(to_string = "70%")]
     Vol070,
-    /// 80% volume.
+    /// 80% volume (default).
+    #[default]
     #[strum(to_string = "80%")]
     Vol080,
     /// 90% volume.
