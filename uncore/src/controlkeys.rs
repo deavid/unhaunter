@@ -55,7 +55,7 @@ impl ControlKeys {
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
         run: KeyCode::ShiftLeft,
-        left_hand_look: KeyCode::ShiftLeft,
+        left_hand_look: KeyCode::ControlLeft,
         left_hand_toggle: KeyCode::CapsLock,
     };
     pub const ARROWS: Self = ControlKeys {
@@ -72,7 +72,7 @@ impl ControlKeys {
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
         run: KeyCode::ShiftLeft,
-        left_hand_look: KeyCode::ShiftLeft,
+        left_hand_look: KeyCode::ControlLeft,
         left_hand_toggle: KeyCode::CapsLock,
     };
     pub const IJKL: Self = ControlKeys {

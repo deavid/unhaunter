@@ -70,7 +70,7 @@ pub fn setup_ui(
         // For now a reminder of the keys:
         let ch_control = game_settings.character_controls.to_string();
         p.spawn(Text::new(format!(
-            "[{ch_control}]: Movement - [Shift]: Sprint/Left Hand - [E]: Interact - [F]: Grab/Move - [G]: Drop - [Q]: Next - [T]: Swap Hands - [C]: Change Evidence"
+            "[{ch_control}]: Movement  -  [Shift]: Sprint  -  [Ctrl]: Left Hand  -  [E]: Interact  -  [F]: Grab/Move  -  [G]: Drop  -  [Q]: Next  -  [T]: Swap Hands  -  [C]: Change Evidence"
         )))
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
@@ -212,10 +212,11 @@ pub fn setup_ui(
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
             border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
-            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)),
+            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)).with_bottom(Val::Px(15.0 * UI_SCALE)),
             flex_grow: 0.0,
             ..Default::default()
         })
+        .insert(BackgroundColor(colors::PANEL_BGCOLOR))
         .with_children(key_legend);
 
         // Bottom side - inventory and stats
