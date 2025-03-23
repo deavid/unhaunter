@@ -26,6 +26,14 @@ impl Direction {
         }
     }
 
+    pub fn to_vec3(&self) -> Vec3 {
+        Vec3 {
+            x: self.dx,
+            y: self.dy,
+            z: self.dz,
+        }
+    }
+
     pub fn add_to_position(&self, rhs: &Position) -> Position {
         Position {
             x: self.dx + rhs.x,

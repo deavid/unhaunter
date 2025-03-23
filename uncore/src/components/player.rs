@@ -40,14 +40,14 @@ impl Default for Stamina {
             exhausted: false,
             depletion_rate: 0.8, // Depletes by 0.8 per frame while running
             recovery_rate: 0.3,  // Recovers by 0.3 per frame when not running
-            min_to_run: 10.0,    // Need at least 10% stamina to start running again
+            min_to_run: 30.0,    // Need at least 30% stamina to start running again
         }
     }
 }
 
 impl Stamina {
     pub fn is_able_to_run(&self) -> bool {
-        !self.exhausted && self.current >= self.min_to_run
+        !self.exhausted && self.current >= 0.0
     }
 
     pub fn update(&mut self, dt: f32, wants_to_run: bool) -> f32 {
