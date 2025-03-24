@@ -69,30 +69,43 @@ pub fn setup_ui(
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let ch_control = game_settings.character_controls.to_string();
-        p.spawn(Text::new(format!(
-            "[{ch_control}]: Movement  -  [Shift]: Sprint  -  [Ctrl]: Left Hand  -  [E]: Interact  -  [F]: Grab/Move  -  [G]: Drop  -  [Q]: Next  -  [T]: Swap Hands  -  [C]: Change Evidence"
-        )))
-        .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-        })
-        // .insert(TextLayout::new_with_justify(JustifyText::Right))
-        .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(0.4)))
-        .insert(Node {
-            // height: Val::Percent(100.0),
-            align_self: AlignSelf::End,
-            justify_self: JustifySelf::End,
-            justify_content: JustifyContent::End,
-            // max_width: Val::Px(160.0),
-            margin: UiRect::new(
-                Val::Px(4.0 * UI_SCALE),
-                Val::Px(4.0 * UI_SCALE),
-                Val::Px(5.0 * UI_SCALE),
-                Val::Px(-5.0 * UI_SCALE),
-            ),
-            ..default()
-        });
+        let controls = vec![
+            format!("[{ch_control}]: Movement"),
+            "[Shift]: Sprint".to_string(),
+            "[Ctrl]: Left Hand".to_string(),
+            "[E]: Interact".to_string(),
+            "[F]: Grab/Move".to_string(),
+            "[G]: Drop".to_string(),
+            "[Q]: Next".to_string(),
+            "[T]: Swap Hands".to_string(),
+            "[C]: Change Evidence".to_string(),
+        ];
+        for ctrl in controls {
+            p.spawn(Node {
+                padding: UiRect::all(Val::Px(6.0 * UI_SCALE)),
+                margin: UiRect::right(Val::Px(6.0 * UI_SCALE)),
+                ..default()
+            })
+            .insert(BackgroundColor(css::BLACK.with_alpha(0.3).into()))
+            .with_children(|p| {
+                p.spawn(Text::new(ctrl))
+                    .insert(TextFont {
+                        font: handles.fonts.chakra.w300_light.clone(),
+                        font_size: 16.0 * FONT_SCALE,
+                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    })
+                    .insert(TextLayout::new_with_justify(JustifyText::Center))
+                    .insert(TextColor(colors::INVENTORY_STATS_COLOR))
+                    .insert(Node {
+                        align_self: AlignSelf::Center,
+                        justify_self: JustifySelf::Center,
+                        justify_content: JustifyContent::Center,
+                        margin: UiRect::bottom(Val::Px(-6.0 * UI_SCALE)),
+                        padding: UiRect::all(Val::Px(4.0 * UI_SCALE)),
+                        ..default()
+                    });
+            });
+        }
     };
     let evidence = |p: Cb| setup_ui_evidence(p, &handles);
     let inv_left = |p: Cb| setup_ui_gear_inv_left(p, &handles);
@@ -212,7 +225,7 @@ pub fn setup_ui(
             align_items: AlignItems::Start,
             justify_content: JustifyContent::Start,
             border: UiRect::all(Val::Px(1.0 * UI_SCALE)),
-            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)).with_bottom(Val::Px(15.0 * UI_SCALE)),
+            padding: UiRect::all(Val::Px(6.0 * UI_SCALE)), // .with_bottom(Val::Px(15.0 * UI_SCALE)),
             flex_grow: 0.0,
             ..Default::default()
         })
