@@ -24,6 +24,7 @@ use unstd::plugins::root::UnhaunterRootPlugin;
 use unstd::plugins::summary::UnhaunterSummaryPlugin;
 use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
+use unwalkie::plugin::UnhaunterWalkiePlugin;
 
 pub fn app_run() {
     let mut app = App::new();
@@ -71,6 +72,7 @@ pub fn app_run() {
         UnhaunterSettingsPlugin,
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,
+        UnhaunterWalkiePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     app.run();

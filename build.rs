@@ -9,6 +9,7 @@ fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
         ("maps", vec!["tmx", "tsx"]),
         ("music", vec!["ogg"]),
         ("sounds", vec!["ogg"]),
+        ("walkie", vec!["ogg"]),
         ("manual", vec!["png"]),
         ("phrasebooks", vec!["yaml"]),
     ]

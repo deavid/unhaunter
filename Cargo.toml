@@ -18,6 +18,7 @@ members = [
     "unsettings",
     "unmenusettings",
     "unfog",
+    "unwalkie",
 ]
 resolver = "3"
 
@@ -90,6 +91,7 @@ unnpc = { path = "unnpc" }
 untmxmap = { path = "untmxmap" }
 unsettings = { path = "unsettings" }
 unmenusettings = { path = "unmenusettings" }
+unwalkie = { path = "unwalkie" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }

@@ -65,9 +65,11 @@ impl AudioSettingsMenu {
         #[allow(clippy::match_single_binding)]
         match self {
             // <-- add here the events for specific menus
-            Self::VolumeMaster | Self::VolumeEffects | Self::VolumeMusic | Self::VolumeAmbient => {
-                MenuEvent::EditAudioSetting(*self)
-            }
+            Self::VolumeMaster
+            | Self::VolumeEffects
+            | Self::VolumeMusic
+            | Self::VolumeAmbient
+            | Self::VolumeVoiceChat => MenuEvent::EditAudioSetting(*self),
             Self::SoundOutput => MenuEvent::EditAudioSetting(*self),
             _ => MenuEvent::None,
         }
@@ -128,6 +130,14 @@ impl AudioSettingsMenu {
                     (
                         to_string(s, &audio_settings.volume_ambient),
                         MenuEvent::SaveAudioSetting(AudioSettingsValue::volume_ambient(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            AudioSettingsMenu::VolumeVoiceChat => AudioLevel::iter()
+                .map(|s| {
+                    (
+                        to_string(s, &audio_settings.volume_voice_chat),
+                        MenuEvent::SaveAudioSetting(AudioSettingsValue::volume_voice_chat(s)),
                     )
                 })
                 .collect::<Vec<_>>(),

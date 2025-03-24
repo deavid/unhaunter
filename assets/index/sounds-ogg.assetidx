@@ -40,6 +40,8 @@ sounds/item-drop-clunk.ogg
 sounds/item-move-scrape.ogg
 sounds/item-pickup-whoosh.ogg
 sounds/quartz_crack.ogg
+sounds/radio-off-zzt.ogg
+sounds/radio-on-zzt.ogg
 sounds/sage_activation.ogg
 sounds/salt_drop.ogg
 sounds/switch-off-1.ogg

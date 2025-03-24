@@ -8,3 +8,4 @@ pub mod roomdb;
 pub mod summary_data;
 pub mod visibility_data;
 pub mod looking_gear;
+pub mod walkie;

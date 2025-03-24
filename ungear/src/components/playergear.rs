@@ -44,7 +44,9 @@ impl PlayerGear {
             }
         }
     }
-
+    pub fn empty_right_handed(&self) -> bool {
+        matches!(self.right_hand.kind, GearKind::None)
+    }
     // TODO: Remove this code as it is unused.
     // pub fn new() -> Self {
     //     use super::prelude::Flashlight;

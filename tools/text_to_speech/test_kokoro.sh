@@ -29,25 +29,32 @@ The cold typically spreads throughout the haunted location so you should be able
 "
 TEXT09A="The ghost is not happy. It's throwing objects around. Be careful."
 TEXT10A="The ghost is angry. It's hunting you. You need to hide."
-TEXT11A="Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty."
 TEXT12A="Bingo! We have a ghost room! The thermometer is showing a cold spot. 
 Let's set up the gear."
+
+TEXT11A="Your gear is in the van. Are you sure you want to go in without it?"
+TEXT11B="Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty."
+TEXT11C="Wait a minute, you left your kit in the truck! You might want to go back and collect your gear."
+TEXT11D="Wait! Where's your equipment? You need to grab it from the van before going in."
+TEXT11E="Hold on a second! Did you remember to pick up your gear from the truck?"
+TEXT11F="You might want to double-check the van. It seems like you're missing some essential tools."
+TEXT11G="Don't forget to equip yourself from the van before heading inside!"
 
 # VOICE="bf_emma" # quite good.
 # VOICE="bm_fable" # acceptable
 VOICE="bf_emma"
-TEXT="$TEXT12A"
+TEXT="$TEXT11G"
 
 # Run kokoro to generate speech
 echo "Kokoro is generating speech..."
-kokoro -m "$VOICE" -o speech.wav -t "$TEXT" || exit 1
+kokoro -m "$VOICE" --speed 0.9 -o speech.wav -t "$TEXT" || exit 1
 
 # Apply audio effects using ffmpeg
 echo "FFMPEG is applying audio effects..."
 ffmpeg -y -i speech.wav -i reverb-clap-room-2.wav -f lavfi -i "anoisesrc=c=brown:a=1,highpass=f=200,lowpass=f=3000" -filter_complex "
   [0][2]amix=inputs=2:duration=shortest:weights=100 1[audio];
-  [audio]highpass=f=600,highpass=f=700,alimiter=limit=0.063,asoftclip=type=atan:threshold=0.02:oversample=4,
-  lowpass=f=2000,lowpass=f=1500,afir,volume=20dB,alimiter=limit=0.063:level_out=0.9
+  [audio]highpass=f=600,highpass=f=700,alimiter=limit=0.063,asoftclip=type=atan:threshold=0.04:oversample=4,
+  lowpass=f=1800,lowpass=f=1500,afir,volume=20dB,alimiter=limit=0.063:level_out=0.9
 " -c:a libvorbis -ab 32k -ar 11025 speech-eq-noise.ogg || exit 1
 
 # Play the processed audio

@@ -4912,6 +4912,7 @@ dependencies = [
  "unstd",
  "untmxmap",
  "untruck",
+ "unwalkie",
  "walkdir",
  "wasm-bindgen",
 ]
@@ -5125,6 +5126,18 @@ dependencies = [
  "ungearitems",
  "unsettings",
  "unstd",
+]
+
+[[package]]
+name = "unwalkie"
+version = "0.2.7-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "rand 0.9.0",
+ "uncore",
+ "ungear",
+ "unsettings",
 ]
 
 [[package]]
