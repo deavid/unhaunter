@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Represents the audio settings for the game.
-#[derive(Resource, Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Resource, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AudioSettings {
     /// The master volume level.
     pub volume_master: AudioLevel,
@@ -22,6 +22,22 @@ pub struct AudioSettings {
     pub feedback_delay: FeedbackDelay,
     /// The feedback EQ setting.
     pub feedback_eq: FeedbackEQ,
+}
+
+impl Default for AudioSettings {
+    fn default() -> Self {
+        Self {
+            volume_master: Default::default(),
+            volume_music: AudioLevel::Vol050,
+            volume_effects: Default::default(),
+            volume_ambient: Default::default(),
+            volume_voice_chat: Default::default(),
+            sound_output: Default::default(),
+            audio_positioning: Default::default(),
+            feedback_delay: Default::default(),
+            feedback_eq: Default::default(),
+        }
+    }
 }
 
 /// Represents the different settings available for the audio
