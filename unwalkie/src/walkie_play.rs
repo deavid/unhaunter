@@ -1,8 +1,11 @@
-use bevy::{audio::Volume, prelude::*};
+use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
 use uncore::{
-    components::{board::position::Position, game_config::GameConfig, player_sprite::PlayerSprite},
+    components::{
+        board::position::Position, game_config::GameConfig, game_ui::WalkieText,
+        player_sprite::PlayerSprite,
+    },
     difficulty::CurrentDifficulty,
     events::{loadlevel::LevelReadyEvent, walkie::WalkieEvent},
     random_seed,
@@ -20,6 +23,8 @@ pub fn player_forgot_equipment(
     roomdb: Res<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
     gc: Res<GameConfig>,
+    mut stopwatch: Local<Stopwatch>,
+    time: Res<Time>,
 ) {
     if difficulty.0.tutorial_chapter.is_none() {
         // Not in tutorial mode, no need to remind the player.
@@ -39,6 +44,7 @@ pub fn player_forgot_equipment(
 
     if roomdb.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, no need to remind them.
+        stopwatch.reset();
         return;
     }
     if !player_gear.empty_right_handed() {
@@ -46,7 +52,12 @@ pub fn player_forgot_equipment(
         walkie_play.mark(WalkieEvent::GearInVan);
         return;
     }
-
+    stopwatch.tick(time.delta());
+    if stopwatch.elapsed().as_secs_f32() < 1.0 {
+        // Wait before reminding the player.
+        return;
+    }
+    stopwatch.reset();
     walkie_play.set(WalkieEvent::GearInVan);
 }
 
@@ -66,7 +77,10 @@ pub fn walkie_talk(
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
     q_sound_state: Query<&WalkieSoundState>,
+    mut qt: Query<&mut Text, With<WalkieText>>,
 ) {
+    let mut rng = random_seed::rng();
+
     let Some(walkie_event) = walkie_play.event.clone() else {
         return;
     };
@@ -75,28 +89,50 @@ pub fn walkie_talk(
         return;
     }
     let mut walkie_volume = 1.0;
+    let mut talking_sound_file = "sounds/radio-on-zzt.ogg";
     let new_state = match walkie_play.state {
-        None => WalkieSoundState::Intro,
-        Some(WalkieSoundState::Intro) => WalkieSoundState::Talking,
-        Some(WalkieSoundState::Talking) => WalkieSoundState::Outro,
-        Some(WalkieSoundState::Outro) => {
-            walkie_play.event = None;
-            walkie_play.state = None;
-            return;
+        None => Some(WalkieSoundState::Intro),
+        Some(WalkieSoundState::Intro) => {
+            let files = walkie_event.sound_file_list();
+            talking_sound_file = files
+                .choose(&mut rng)
+                .copied()
+                .unwrap_or("sounds/radio-on-zzt.ogg");
+            Some(WalkieSoundState::Talking)
         }
+        Some(WalkieSoundState::Talking) => Some(WalkieSoundState::Outro),
+        Some(WalkieSoundState::Outro) => None,
     };
-    walkie_play.state = Some(new_state.clone());
-    let mut rng = random_seed::rng();
+
+    for mut text in qt.iter_mut() {
+        text.0 = match new_state {
+            Some(WalkieSoundState::Intro) => "**bzzrt**".to_string(),
+            Some(WalkieSoundState::Talking) => {
+                format!(
+                    "{}  {}",
+                    text.0,
+                    WalkieEvent::voice_text(talking_sound_file)
+                )
+            }
+            Some(WalkieSoundState::Outro) => format!("{} **bzzrt**", text.0),
+            None => "".to_string(),
+        };
+    }
+
+    walkie_play.state = new_state.clone();
+    if new_state.is_none() {
+        // Done playing
+        walkie_play.event = None;
+        return;
+    }
+
+    let new_state = new_state.unwrap();
 
     let sound_file = match new_state {
         WalkieSoundState::Intro => "sounds/radio-on-zzt.ogg",
         WalkieSoundState::Talking => {
             walkie_volume = 0.5;
-            let files = walkie_event.sound_file_list();
-            files
-                .choose(&mut rng)
-                .copied()
-                .unwrap_or("sounds/radio-on-zzt.ogg")
+            talking_sound_file
         }
         WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg",
     };

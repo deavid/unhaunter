@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
-    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI,
+    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
 };
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -183,9 +183,7 @@ pub fn setup_ui(
     let game_ui = |p: Cb| {
         // Top row (Game title)
         p.spawn(Node {
-            width: Val::Percent(20.0),
             height: Val::Percent(5.0),
-            min_width: Val::Px(0.0),
             min_height: Val::Px(16.0),
             justify_content: JustifyContent::FlexStart,
             align_items: AlignItems::FlexStart,
@@ -201,13 +199,33 @@ pub fn setup_ui(
                 })
                 .insert(Node {
                     aspect_ratio: Some(130.0 / 17.0),
-                    width: Val::Percent(80.0),
+                    width: Val::Percent(20.0),
                     height: Val::Auto,
-                    max_width: Val::Percent(80.0),
+                    max_width: Val::Percent(20.0),
                     max_height: Val::Percent(100.0),
                     flex_shrink: 1.0,
+                    flex_grow: 0.0,
                     ..default()
                 });
+            parent
+                .spawn(Text::new(""))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w400i_regular.clone(),
+                    font_size: 18.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextLayout::new_with_justify(JustifyText::Center))
+                .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
+                .insert(Node {
+                    align_self: AlignSelf::Center,
+                    justify_self: JustifySelf::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_grow: 1.0,
+                    margin: UiRect::bottom(Val::Px(-6.0 * UI_SCALE)),
+                    padding: UiRect::all(Val::Px(4.0 * UI_SCALE)),
+                    ..default()
+                })
+                .insert(WalkieText);
         });
 
         // Main game viewport - middle
