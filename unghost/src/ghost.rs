@@ -443,6 +443,7 @@ fn ghost_enrage(
         avg_angry.push_len(angry, dt);
         let rage_limit =
             400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
+        ghost.rage_limit = rage_limit;
         if timer.just_finished() && DEBUG_HUNTS {
             info!(
                 "Ghost calm time: {:.1}, rage: {:.1}, rage limit: {:.1}, hunting: {:.1}, warn act: {:.1}, warning int: {:.1}, warning timer: {:.1}",
