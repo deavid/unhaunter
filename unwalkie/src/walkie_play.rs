@@ -13,11 +13,12 @@ use uncore::{
         roomdb::RoomDB,
         walkie::{WalkiePlay, WalkieSoundState},
     },
+    states::{AppState, GameState},
 };
 use ungear::components::playergear::PlayerGear;
 use unsettings::audio::AudioSettings;
 
-pub fn player_forgot_equipment(
+fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     roomdb: Res<RoomDB>,
@@ -28,6 +29,10 @@ pub fn player_forgot_equipment(
 ) {
     if difficulty.0.tutorial_chapter.is_none() {
         // Not in tutorial mode, no need to remind the player.
+        return;
+    }
+    if !walkie_play.truck_accessed {
+        // The player didn't had a chance to grab stuff, so don't tell them to.
         return;
     }
     // Find the active player's position
@@ -61,7 +66,7 @@ pub fn player_forgot_equipment(
     walkie_play.set(WalkieEvent::GearInVan);
 }
 
-pub fn on_game_load(
+fn on_game_load(
     mut ev_level_ready: EventReader<LevelReadyEvent>,
     mut walkie_play: ResMut<WalkiePlay>,
 ) {
@@ -71,7 +76,17 @@ pub fn on_game_load(
     }
 }
 
-pub fn walkie_talk(
+fn state_tracking(
+    mut walkie_play: ResMut<WalkiePlay>,
+    _app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+) {
+    if *game_state.get() == GameState::Truck {
+        walkie_play.truck_accessed = true;
+    }
+}
+
+fn walkie_talk(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     audio_settings: Res<Persistent<AudioSettings>>,
@@ -152,4 +167,11 @@ pub fn walkie_talk(
             spatial_scale: None,
         })
         .insert(new_state);
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, player_forgot_equipment)
+        .add_systems(Update, walkie_talk)
+        .add_systems(Update, on_game_load)
+        .add_systems(Update, state_tracking);
 }

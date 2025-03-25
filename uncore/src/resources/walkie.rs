@@ -6,6 +6,7 @@ pub struct WalkiePlay {
     pub event: Option<WalkieEvent>,
     pub played_events: HashSet<WalkieEvent>,
     pub state: Option<WalkieSoundState>,
+    pub truck_accessed: bool,
 }
 
 impl WalkiePlay {
@@ -31,9 +32,8 @@ impl WalkiePlay {
 
     /// Reset all the state of the walkie play, so it will play again on a new mission.
     pub fn reset(&mut self) {
-        self.event = None;
-        self.played_events.clear();
-        self.state = None;
+        let new_self = Self::default();
+        *self = new_self;
     }
 }
 
