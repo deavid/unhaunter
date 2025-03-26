@@ -75,6 +75,10 @@ pub fn app_run() {
         UnhaunterWalkiePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        app.add_systems(Startup, set_window_icon);
+    }
     app.run();
 }
 
@@ -82,4 +86,35 @@ fn default_resolution() -> WindowResolution {
     let height = 800.0 * plt::UI_SCALE;
     let width = height * plt::ASPECT_RATIO;
     WindowResolution::new(width, height)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+use bevy::winit::WinitWindows;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn set_window_icon(
+    // we have to use `NonSend` here
+    windows: NonSend<WinitWindows>,
+) {
+    // This only works on native. WASM uses the HTML icon.
+    {
+        use winit::window::Icon;
+
+        // here we use the `image` crate to load our icon data from a png file
+        // this is not a very bevy-native solution, but it will do
+        let (icon_rgba, icon_width, icon_height) = {
+            let image = image::open("favicon-512x512.png")
+                .expect("Failed to open icon path")
+                .into_rgba8();
+            let (width, height) = image.dimensions();
+            let rgba = image.into_raw();
+            (rgba, width, height)
+        };
+        let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+
+        // do it for all windows
+        for window in windows.windows.values() {
+            window.set_window_icon(Some(icon.clone()));
+        }
+    }
 }

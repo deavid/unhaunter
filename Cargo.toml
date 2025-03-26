@@ -23,7 +23,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.2.7-dev"
+version = "0.2.7"
 edition = "2024"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"
@@ -64,6 +64,9 @@ bevy_framepace = "0.18"
 bevy_dylib = "0.15"
 ndarray = "0.16.1"
 
+# winit is not for WASM, and needs to be in sync with bevy version
+winit = "0.30"
+
 [package]
 name = "unhaunter"
 default-run = "unhaunter_game"
@@ -96,9 +99,8 @@ unwalkie = { path = "unwalkie" }
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
 ordered-float = { workspace = true }
-
-[build-dependencies]
 walkdir = { workspace = true }
+anyhow = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"
@@ -113,9 +115,13 @@ path = "unhaunter/src/lib.rs"
 [target.'cfg(target_os = "linux")'.dependencies]
 bevy_dylib = { workspace = true }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+winit = { workspace = true }
+image = { workspace = true }
+
 [profile.dev]
 opt-level = "s"
-lto = "thin"
+lto = false
 debug-assertions = true
 overflow-checks = true
 

@@ -1,3 +1,45 @@
+### Version 0.2.7 - 2025-03-26
+
+**Features:**
+
+*   **Walkie Talkie Buddy:** Introduced an NPC companion who provides hints and commentary
+  via walkie-talkie, primarily aimed at assisting players on easier difficulties. #94
+    *   Includes UI text display accompanying the audio messages.
+    *   Provides contextual messages for events like:
+        *   starting a mission
+        *   forgetting gear
+        *   pre-hunt warnings
+    *   Added more message variety and tuned activation conditions.
+*   **Hold-to-Activate Truck Buttons :** Implemented a hold duration requirement for critical
+  truck UI buttons (Craft Repellent, End Mission) to prevent accidental activation.
+  Includes visual progress bar and audio feedback during the hold. #32
+*   **Auto-Hiding Mouse Cursor:** The mouse cursor now automatically hides after a short
+  period of inactivity during gameplay, enhancing immersion. #74
+*   **Basic Spatial Audio:** Implemented initial spatial audio (volume-based positioning) 
+  for sound effects, providing better directional awareness. #54
+*   **Look at left hand:** `Left Control` now allows to focus and see the left hand gear,
+  and set the evidence on the left hand. #27
+
+**Changes:**
+
+*   **Music volume:** Increased music volume, which allows for a very loud music at 100%. #92
+*   **Snappier Camera:** Adjusted for a faster, snappier feel and improved responsiveness. #93
+*   **WASM now allows for resizing:** Improved WASM CSS handling so in-browser gaming uses the full browser window. #63
+  
+**Fixes:**
+
+*   **UI:** Corrected visibility issues with the in-game control key legend.
+*   **Gear - Recorder:** Removed an experimental false reading mechanic that could be confusing.
+*   **Spirit Box:** Limited the effective range of the Spirit Box to require closer proximity to the ghost. #68
+*   **Replaced duplicate ghosts:** Domovoi and Wisp were duplicates so they have been renamed to new unique ghosts. #87
+  
+**Other:**
+
+*   **Tools:** Added an internal `ghost_list` developer tool for viewing ghost/evidence statistics. #86
+*   **Kokoro TTS:** Added notes and setup instructions for Text-to-Speech tooling experimentation.
+*   **Documentation:** Updated README and internal developer notes. #37
+*   **Wiki:** Added the basis for the wiki on GitHub with pages for evidence, ghosts, etc. #38 #40
+
 ### Version 0.2.6 - 2025-03-09
 
 **Features:**
