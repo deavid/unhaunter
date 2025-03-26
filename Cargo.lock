@@ -1671,18 +1671,18 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.32"
+version = "4.5.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6088f3ae8c3608d19260cd7445411865a485688711b78b5be70d78cd96136f83"
+checksum = "e2c80cae4c3350dd8f1272c73e83baff9a6ba550b8bfbe651b3c45b78cd1751e"
 dependencies = [
  "clap_builder",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.5.32"
+version = "4.5.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22a7ef7f676155edfb82daa97f99441f3ebf4a58d5e32f295a56259f1b6facc8"
+checksum = "0123e386f691c90aa228219b5b1ee72d465e8e231c79e9c82324f016a62a741c"
 dependencies = [
  "anstream",
  "anstyle",
@@ -4736,7 +4736,6 @@ dependencies = [
  "base64 0.22.1",
  "flate2",
  "xml-rs",
- "zstd",
 ]
 
 [[package]]
@@ -4945,7 +4944,7 @@ checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
 
 [[package]]
 name = "uncore"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4965,7 +4964,7 @@ dependencies = [
 
 [[package]]
 name = "unfog"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "ndarray",
@@ -4977,7 +4976,7 @@ dependencies = [
 
 [[package]]
 name = "ungame"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -4994,7 +4993,7 @@ dependencies = [
 
 [[package]]
 name = "ungear"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5009,7 +5008,7 @@ dependencies = [
 
 [[package]]
 name = "ungearitems"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -5022,7 +5021,7 @@ dependencies = [
 
 [[package]]
 name = "unghost"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "ordered-float",
@@ -5035,7 +5034,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -5126,7 +5125,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "unlight"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5144,7 +5143,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -5163,7 +5162,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5174,7 +5173,7 @@ dependencies = [
 
 [[package]]
 name = "unmenusettings"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5187,7 +5186,7 @@ dependencies = [
 
 [[package]]
 name = "unnpc"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "uncore",
@@ -5196,7 +5195,7 @@ dependencies = [
 
 [[package]]
 name = "unplayer"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5217,7 +5216,7 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsettings"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5230,7 +5229,7 @@ dependencies = [
 
 [[package]]
 name = "unstd"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -5247,7 +5246,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "glob",
@@ -5261,7 +5260,7 @@ dependencies = [
 
 [[package]]
 name = "untruck"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5277,7 +5276,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie"
-version = "0.2.7"
+version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -6320,34 +6319,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "zstd"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
-dependencies = [
- "zstd-safe",
-]
-
-[[package]]
-name = "zstd-safe"
-version = "7.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f49c4d5f0abb602a93fb8736af2a4f4dd9512e36f7f570d66e65ff867ed3b9d"
-dependencies = [
- "zstd-sys",
-]
-
-[[package]]
-name = "zstd-sys"
-version = "2.0.15+zstd.1.5.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb81183ddd97d0c74cedf1d50d85c8d08c1b8b68ee863bdee9e706eedba1a237"
-dependencies = [
- "cc",
- "pkg-config",
 ]
 
 [[package]]
