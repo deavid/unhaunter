@@ -27,3 +27,6 @@ impl DamageBackground {
 pub struct HeldObjectUI;
 #[derive(Component, Debug)]
 pub struct RightSideGearUI;
+
+#[derive(Component, Debug)]
+pub struct WalkieText;

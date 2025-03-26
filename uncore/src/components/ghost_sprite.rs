@@ -35,6 +35,8 @@ pub struct GhostSprite {
     /// The ghost's current rage level, which influences its hunting behavior. Higher
     /// rage increases the likelihood of a hunt.
     pub rage: f32,
+    /// Export of the rage limit for other systems to consider.
+    pub rage_limit: f32,
     /// The ghost's hunting state. A value greater than 0 indicates that the ghost is
     /// actively hunting a player.
     pub hunting: f32,
@@ -92,6 +94,7 @@ impl GhostSprite {
             salty_effect_timer,
             salty_trace_spawn_timer: Timer::from_seconds(0.3, TimerMode::Repeating),
             rage_limit_multiplier: 1.0,
+            rage_limit: 100.0,
             hunt_warning_active: false,
             hunt_warning_timer: 0.0,
             hunt_warning_intensity: 0.0,

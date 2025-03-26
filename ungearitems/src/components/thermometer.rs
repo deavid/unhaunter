@@ -185,20 +185,34 @@ pub fn temperature_update(
         let bpos = pos.to_board_position();
         let prev_temp = bf.temperature_field[bpos.ndidx()];
         let k = (f32::tanh((19.0 - prev_temp) / 5.0) + 1.0) / 2.0;
-        let t_out = h_out * k * 0.5 * difficulty.0.light_heat;
+        let t_out = h_out * k * 0.2 * difficulty.0.light_heat;
         bf.temperature_field[bpos.ndidx()] += t_out;
     }
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
-        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -5.0 } else { 1.0 });
-        const GHOST_MAX_POWER: f32 = 0.0002;
-        const BREACH_MAX_POWER: f32 = 0.2;
-        for npos in bpos.iter_xy_neighbors_nosize(1) {
+        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -3.0 } else { 1.0 });
+        const GHOST_MAX_POWER: f32 = 2.0;
+        const BREACH_MAX_POWER: f32 = 20.0;
+        let ghost_in_room = roomdb.room_tiles.get(&bpos);
+        let breach_in_room = roomdb.room_tiles.get(&gs.spawn_point);
+        for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
+            if ghost_in_room != roomdb.room_tiles.get(&npos)
+                || !bf.collision_field[npos.ndidx()].player_free
+            {
+                // Only make current room colder
+                continue;
+            }
             let t = &mut bf.temperature_field[npos.ndidx()];
             *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
         }
-        for npos in gs.spawn_point.iter_xy_neighbors_nosize(2) {
+        for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
+            if breach_in_room != roomdb.room_tiles.get(&gs.spawn_point)
+                || !bf.collision_field[npos.ndidx()].player_free
+            {
+                // Only make current room colder
+                continue;
+            }
             let t = &mut bf.temperature_field[npos.ndidx()];
             *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
         }
@@ -216,16 +230,16 @@ pub fn temperature_update(
             }
         })
         .collect();
-    const OUTSIDE_CONDUCTIVITY: f32 = 100.0;
-    const INSIDE_CONDUCTIVITY: f32 = 50.0;
+    const OUTSIDE_CONDUCTIVITY: f32 = 1000000.0;
+    const INSIDE_CONDUCTIVITY: f32 = 80000.0;
 
     // Closed Doors
-    const OTHER_CONDUCTIVITY: f32 = 2.0;
-    const WALL_CONDUCTIVITY: f32 = 0.1;
-    let smooth: f32 = 4.0 / difficulty.0.temperature_spread_speed;
+    const OTHER_CONDUCTIVITY: f32 = 2000.0;
+    const WALL_CONDUCTIVITY: f32 = 0.00001;
+    let smooth: f32 = 1.00 / difficulty.0.temperature_spread_speed;
     for (p, temp) in old_temps.into_iter() {
         let cp = &bf.collision_field[p];
-        let free = (cp.player_free, cp.ghost_free);
+        let free = (cp.player_free, cp.player_free || cp.is_dynamic);
 
         let mut self_k = match free {
             (true, true) => INSIDE_CONDUCTIVITY,
@@ -234,7 +248,7 @@ pub fn temperature_update(
         };
         let bpos = BoardPosition::from_ndidx(p);
         let is_outside = roomdb.room_tiles.get(&bpos).is_none();
-        if is_outside {
+        if is_outside && cp.player_free {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
 
@@ -246,7 +260,7 @@ pub fn temperature_update(
         let Some(neigh_free) = bf
             .collision_field
             .get(neigh_ndidx)
-            .map(|ncp| (ncp.player_free, ncp.ghost_free))
+            .map(|ncp| (ncp.player_free, cp.player_free || cp.is_dynamic))
         else {
             continue;
         };
@@ -257,7 +271,7 @@ pub fn temperature_update(
             _ => OTHER_CONDUCTIVITY,
         };
         let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
-        if nis_outside {
+        if nis_outside && neigh_free.0 {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
         let neigh_temp = bf
@@ -265,10 +279,31 @@ pub fn temperature_update(
             .get(neigh_ndidx)
             .copied()
             .unwrap_or(bf.ambient_temp);
-        let mid_temp = (temp * self_k + neigh_temp * neigh_k) / (self_k + neigh_k);
+        let mid_temp = (temp * self_k.min(10.0) + neigh_temp * neigh_k.min(10.0))
+            / (self_k.min(10.0) + neigh_k.min(10.0));
         let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
-        let new_temp1 = (temp + mid_temp * conductivity) / (conductivity + 1.0);
-        let new_temp2 = temp - new_temp1 + neigh_temp;
+        let diff = (temp + mid_temp * conductivity) / (conductivity + 1.0) - temp;
+        let mut new_temp1: f32;
+        let mut new_temp2: f32;
+        // Break conservation of energy to make a tendency of temps to go cold (by not going warm)
+        const COLD_EFFECT: f32 = 0.3;
+        let filter_cold_effect = kelvin_to_celsius(mid_temp - 5.0).clamp(0.0, 20.0) / 20.0;
+        let cold: f32 =
+            1.0 + COLD_EFFECT * filter_cold_effect.powi(2) * if is_outside { 0.0 } else { 1.0 };
+        if diff > 0.0 {
+            new_temp1 = temp + diff / cold;
+            new_temp2 = neigh_temp - diff;
+        } else {
+            new_temp1 = temp + diff;
+            new_temp2 = neigh_temp - diff / cold;
+        }
+
+        if is_outside || nis_outside {
+            let k: f32 = 0.2;
+            new_temp1 = (new_temp1 + bf.ambient_temp * k) / (1.00 + k);
+            new_temp2 = (new_temp2 + bf.ambient_temp * k) / (1.00 + k);
+        }
+
         bf.temperature_field[p] = new_temp1;
         bf.temperature_field[neigh_ndidx] = new_temp2;
     }

@@ -443,9 +443,10 @@ fn ghost_enrage(
         avg_angry.push_len(angry, dt);
         let rage_limit =
             400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
+        ghost.rage_limit = rage_limit;
         if timer.just_finished() && DEBUG_HUNTS {
             info!(
-                "Ghost calm time: {}, Ghost rage: {}, Ghost rage limit: {}, Ghost hunting: {}, Hunt warning active: {}, Hunt warning intensity: {}, Hunt warning timer: {}",
+                "Ghost calm time: {:.1}, rage: {:.1}, rage limit: {:.1}, hunting: {:.1}, warn act: {:.1}, warning int: {:.1}, warning timer: {:.1}",
                 ghost.calm_time_secs,
                 ghost.rage,
                 rage_limit,
@@ -505,20 +506,20 @@ fn calculate_destination_score(
 
     // Iterate through objects with GhostInfluence
     for (object_position, ghost_influence) in object_query.iter() {
-        let distance = potential_destination.distance(object_position);
+        let distance2 = potential_destination.distance2(object_position);
 
         // Apply influence based on distance and charge value
         match ghost_influence.influence_type {
             InfluenceType::Attractive => {
                 // Add to score for Attractive objects, weighted by attractive_influence_multiplier
                 score += config.attractive_influence_multiplier * ghost_influence.charge_value
-                    / (distance + 1.0);
+                    / (distance2 + 1.0);
             }
             InfluenceType::Repulsive => {
                 // Subtract from score for Repulsive objects, weighted by
                 // repulsive_influence_multiplier
                 score -= config.repulsive_influence_multiplier * ghost_influence.charge_value
-                    / (distance + 1.0);
+                    / (distance2 + 1.0);
             }
         }
     }

@@ -29,6 +29,10 @@ pub struct ControlKeys {
     pub change_evidence: KeyCode,
     /// Key for running (hold to move faster).
     pub run: KeyCode,
+    /// Key for temporarily looking on the left hand gear
+    pub left_hand_look: KeyCode,
+    /// Key for toggling looking on the left hand gear
+    pub left_hand_toggle: KeyCode,
 }
 
 /// System for handling player movement, interaction, and collision.
@@ -51,6 +55,8 @@ impl ControlKeys {
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
         run: KeyCode::ShiftLeft,
+        left_hand_look: KeyCode::ControlLeft,
+        left_hand_toggle: KeyCode::CapsLock,
     };
     pub const ARROWS: Self = ControlKeys {
         up: KeyCode::ArrowUp,
@@ -66,6 +72,8 @@ impl ControlKeys {
         grab: KeyCode::KeyF,
         change_evidence: KeyCode::KeyC,
         run: KeyCode::ShiftLeft,
+        left_hand_look: KeyCode::ControlLeft,
+        left_hand_toggle: KeyCode::CapsLock,
     };
     pub const IJKL: Self = ControlKeys {
         up: KeyCode::KeyI,
@@ -81,6 +89,8 @@ impl ControlKeys {
         trigger: KeyCode::NonConvert,
         change_evidence: KeyCode::NonConvert,
         run: KeyCode::ShiftRight,
+        left_hand_look: KeyCode::ShiftRight,
+        left_hand_toggle: KeyCode::Enter,
     };
     pub const NONE: Self = ControlKeys {
         up: KeyCode::NonConvert,
@@ -96,5 +106,7 @@ impl ControlKeys {
         trigger: KeyCode::NonConvert,
         change_evidence: KeyCode::NonConvert,
         run: KeyCode::NonConvert,
+        left_hand_look: KeyCode::NonConvert,
+        left_hand_toggle: KeyCode::NonConvert,
     };
 }

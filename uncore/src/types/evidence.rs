@@ -1,6 +1,6 @@
 use bevy::utils::HashSet;
-use enum_iterator::all;
 use enum_iterator::Sequence;
+use enum_iterator::all;
 use std::fmt::Display;
 use thiserror::Error;
 
@@ -36,19 +36,30 @@ impl Evidence {
 
     pub fn help_text(&self) -> &'static str {
         match self {
-            Evidence
-            ::FreezingTemp => "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
-            Evidence::FloatingOrbs => "Check if the breach lights up under Night vision.\nLights need to be off.",
-            Evidence::UVEctoplasm => "Check if the ghost turns green under UV.\nLights need to be off.",
-            Evidence
-            ::EMFLevel5 => "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading.",
-            Evidence
-            ::EVPRecording => "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear.",
-            Evidence
-            ::SpiritBox => "Some ghosts talk trough the SpiritBox.\nIf you hear the ghost talking through it, mark this evidence.",
-            Evidence::RLPresence => "Some ghosts glow orange under red light.\nLights need to be off.",
-            Evidence
-            ::CPM500 => "Some ghosts are radioactive and will register above than 500cpm.\nIt takes time for the Geiger counter to settle into a value.",
+            Evidence::FreezingTemp => {
+                "The ghost and breach makes the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC."
+            }
+            Evidence::FloatingOrbs => {
+                "Check if the breach lights up under Night vision.\nLights need to be off."
+            }
+            Evidence::UVEctoplasm => {
+                "Check if the ghost turns green under UV.\nLights need to be off."
+            }
+            Evidence::EMFLevel5 => {
+                "Some ghosts will register EMF5 on the meter.\nFollow the ghost close by and keep an eye on the reading."
+            }
+            Evidence::EVPRecording => {
+                "Some ghost leave recordings. Keep an eye on the recorder.\nIf a EVP Recording is made, [EVP RECORDED] will appear."
+            }
+            Evidence::SpiritBox => {
+                "Some ghosts talk trough the SpiritBox, specially near the breach and in darkness.\nIf you hear the ghost talking through it, mark this evidence."
+            }
+            Evidence::RLPresence => {
+                "Some ghosts glow orange under red light.\nLights need to be off."
+            }
+            Evidence::CPM500 => {
+                "Some ghosts are radioactive and will register above than 500cpm.\nIt takes time for the Geiger counter to settle into a value."
+            }
         }
     }
 

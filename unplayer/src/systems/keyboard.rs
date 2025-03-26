@@ -46,13 +46,16 @@ pub fn keyboard_player(
     difficulty: Res<CurrentDifficulty>,
     game_settings: Res<Persistent<GameplaySettings>>,
     board_data: Res<BoardData>,
+    mut avg_running: Local<f32>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
-    const RUN_ADD_MULTIPLIER: f32 = 0.9; // Add Multiplier for running speed
+    const RUN_ADD_MULTIPLIER: f32 = 1.3; // Add Multiplier for running speed
     const DIR_MIN: f32 = 5.0;
-    const DIR_MAX: f32 = 80.0;
+    const DIR_MAX: f32 = 40.0;
     const DIR_STEPS: f32 = 15.0;
     const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
+    // DIR_MAG3 controls the camera to get it even further ahead when the player is running.
+    const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
     const DIR_RED: f32 = 1.001;
     let dt = time.delta_secs() * 60.0;
     for (mut pos, mut dir, player, mut anim, player_gear, hiding, mut stamina) in players.iter_mut()
@@ -145,10 +148,18 @@ pub fn keyboard_player(
         }
 
         // Apply speed penalty and run multiplier
-        pos.x +=
+        let pdx =
             PLAYER_SPEED * d.dx * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
-        pos.y +=
+        let pdy =
             PLAYER_SPEED * d.dy * dt * speed_penalty * difficulty.0.player_speed * run_multiplier;
+
+        *avg_running = (*avg_running + is_running * dt) / (1.0 + dt);
+
+        dir.dx += DIR_MAG3 * d.dx * (*avg_running + 0.5);
+        dir.dy += DIR_MAG3 * d.dy * (*avg_running + 0.5);
+
+        pos.x += pdx;
+        pos.y += pdy;
 
         // Update player animation - make animations faster when running
         let animation_speed_factor = if run_multiplier > 1.0 { 1.5 } else { 1.0 };

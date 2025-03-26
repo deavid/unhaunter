@@ -1,10 +1,11 @@
 use bevy::{
-    color::{palettes::css, Color},
+    color::{Color, palettes::css},
     ui::BorderColor,
 };
 
 pub const DEBUG_BCOLOR: BorderColor = BorderColor(Color::srgba(0.0, 1.0, 1.0, 0.0003));
 pub const INVENTORY_STATS_COLOR: Color = Color::srgba(0.7, 0.7, 0.7, 0.9);
+pub const WALKIE_TALKIE_COLOR: Color = Color::srgba(1.0, 1.0, 0.5, 0.9);
 pub const PANEL_BGCOLOR: Color = Color::srgba(0.1, 0.1, 0.1, 0.5);
 pub const TRUCKUI_BGCOLOR: Color = Color::srgba(0.082, 0.094, 0.118, 0.6);
 pub const TRUCKUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);

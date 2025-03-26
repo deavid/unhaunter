@@ -16,6 +16,8 @@ sounds/effects-radio-answer2.ogg
 sounds/effects-radio-answer3.ogg
 sounds/effects-radio-answer4.ogg
 sounds/effects-radio-scan.ogg
+sounds/fadein-progress-1000ms.ogg
+sounds/fadein-progress-1500ms.ogg
 sounds/ghost-effect-1.ogg
 sounds/ghost-effect-2.ogg
 sounds/ghost-effect-3.ogg
@@ -38,6 +40,8 @@ sounds/item-drop-clunk.ogg
 sounds/item-move-scrape.ogg
 sounds/item-pickup-whoosh.ogg
 sounds/quartz_crack.ogg
+sounds/radio-off-zzt.ogg
+sounds/radio-on-zzt.ogg
 sounds/sage_activation.ogg
 sounds/salt_drop.ogg
 sounds/switch-off-1.ogg

@@ -41,7 +41,6 @@ use uncore::controlkeys::ControlKeys;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
 use uncore::events::roomchanged::RoomChangedEvent;
-use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
@@ -51,9 +50,11 @@ use uncore::types::game::SoundType;
 use uncore::types::quadcc::QuadCC;
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::tiledmap::map::MapLayerType;
+use uncore::{celsius_to_kelvin, random_seed};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unlight::prebake::prebake_lighting_field;
+use unsettings::audio::AudioSettings;
 use unsettings::game::{CharacterControls, GameplaySettings};
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
@@ -75,6 +76,7 @@ pub struct LoadLevelSystemParam<'w> {
     roomdb: ResMut<'w, RoomDB>,
     difficulty: Res<'w, CurrentDifficulty>,
     game_settings: Res<'w, Persistent<GameplaySettings>>,
+    audio_settings: Res<'w, Persistent<AudioSettings>>,
 }
 
 /// Loads a new level based on the `LoadLevelEvent`.
@@ -137,9 +139,10 @@ pub fn load_level_handler(
     map_min_x -= MAP_MARGIN;
     map_min_y -= MAP_MARGIN;
 
+    // Margin is added here again to give extra on the positive edge too
     let map_size = (
-        (map_max_x - map_min_x + 1) as usize,
-        (map_max_y - map_min_y + 1) as usize,
+        (map_max_x - map_min_x + 1 + MAP_MARGIN) as usize,
+        (map_max_y - map_min_y + 1 + MAP_MARGIN) as usize,
         1,
     );
 
@@ -502,6 +505,10 @@ pub fn load_level_handler(
                 // .with_sanity(p.difficulty.0.starting_sanity)
                 .with_controls(control_keys),
         )
+        // Update the SpatialListener to use the ear offset from audio settings
+        .insert(SpatialListener::new(
+            -p.audio_settings.sound_output.to_ear_offset(),
+        ))
         .insert(SpriteType::Player)
         .insert(player_position)
         .insert(Direction::new_right())
@@ -570,6 +577,7 @@ fn after_level_ready(
     mut bf: ResMut<BoardData>,
     mut ev: EventReader<LevelReadyEvent>,
     mut ev_room: EventWriter<RoomChangedEvent>,
+    roomdb: Res<RoomDB>,
     mut next_game_state: ResMut<NextState<AppState>>,
 ) {
     if ev.is_empty() {
@@ -580,45 +588,52 @@ fn after_level_ready(
     next_game_state.set(AppState::InGame);
     // Create temperature field
     let ambient_temp = bf.ambient_temp;
-
+    let breach_room = roomdb.room_tiles.get(&bf.breach_pos.to_board_position());
     // Randomize initial temperatures so the player cannot exploit the fact that the
     // data is "flat" at the beginning
-    for temperature in bf.temperature_field.iter_mut() {
-        let ambient = ambient_temp + rng.random_range(-10.0..10.0);
-        *temperature = ambient;
+    for (idxpos, temperature) in bf.temperature_field.indexed_iter_mut() {
+        let room = roomdb.room_tiles.get(&BoardPosition::from_ndidx(idxpos));
+        if room == breach_room {
+            *temperature = celsius_to_kelvin(0.5);
+        } else {
+            let ambient = ambient_temp + rng.random_range(-3.0..3.0);
+            *temperature = ambient;
+        }
     }
     ev_room.send(RoomChangedEvent::init(open_van));
     // Smoothen after first initialization so it is not as jumpy.
     warn!(
-        "Computing 16x{:?} = {}",
+        "Computing 32x{:?} = {}",
         bf.map_size,
-        16 * bf.map_size.0 * bf.map_size.1 * bf.map_size.2
+        32 * bf.map_size.0 * bf.map_size.1 * bf.map_size.2
     );
-    for _ in 0..16 {
+    for _ in 0..32 {
+        let temp_snap = bf.temperature_field.clone();
         for z in 0..bf.map_size.2 {
             for y in 0..bf.map_size.1 {
                 for x in 0..bf.map_size.0 {
                     let p = (x, y, z);
-                    let free_tot = bf.collision_field[p].player_free;
+                    let free_tot =
+                        bf.collision_field[p].player_free || bf.collision_field[p].is_dynamic;
                     if !free_tot {
                         continue;
                     }
                     let bpos = BoardPosition::from_ndidx(p);
-                    let nbors = bpos.iter_xy_neighbors_nosize(1);
-                    let mut t_temp = 0.0;
-                    let mut count = 0.0;
+                    let nbors = bpos.iter_xy_neighbors(1, bf.map_size);
+                    let mut t_temp = temp_snap.get(p).copied().unwrap_or(ambient_temp);
+                    let mut count = 1.0;
+                    if t_temp < celsius_to_kelvin(1.0) {
+                        // Don't warm up the cold ghost room during init.
+                        continue;
+                    }
                     for npos in nbors {
                         let free = bf
                             .collision_field
                             .get(npos.ndidx())
-                            .map(|x| x.player_free)
+                            .map(|x| x.player_free || x.is_dynamic)
                             .unwrap_or(true);
                         if free {
-                            t_temp += bf
-                                .temperature_field
-                                .get(npos.ndidx())
-                                .copied()
-                                .unwrap_or(ambient_temp);
+                            t_temp += temp_snap.get(npos.ndidx()).copied().unwrap_or(ambient_temp);
                             count += 1.0;
                         }
                     }

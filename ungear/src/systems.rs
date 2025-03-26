@@ -1,5 +1,6 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
+use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::board::position::Position;
@@ -7,10 +8,11 @@ use uncore::components::game_config::GameConfig;
 use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::sound::SoundEvent;
+use uncore::resources::looking_gear::LookingGear;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
-use uncore::types::gear::equipmentposition::EquipmentPosition;
-use unsettings::audio::AudioSettings;
+use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
+use unsettings::audio::{AudioSettings, SoundOutput};
 
 /// System for updating the internal state of all gear carried by the player.
 ///
@@ -59,59 +61,62 @@ pub fn sound_playback_system(
     mut sound_events: EventReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(Entity, &Position, &PlayerSprite)>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
-        // Get player position (Match against the player ID from GameConfig)
-        let Some((player_position, _)) = qp.iter().find(|(_, p)| p.id == gc.player_id) else {
+        // Get player position
+        let Some((_player_entity, player_position, _)) =
+            qp.iter().find(|(_, _, p)| p.id == gc.player_id)
+        else {
             return;
         };
-        let adjusted_volume = match sound_event.position {
-            Some(position) => {
-                const MIN_DIST: f32 = 25.0;
-
-                // Calculate distance from player to sound source
-                let distance2 = player_position.distance2(&position) + MIN_DIST;
-                let distance = distance2.powf(0.7) + MIN_DIST;
-
-                // Calculate adjusted volume based on distance and audio settings
-                (sound_event.volume / distance2 * MIN_DIST
-                    + sound_event.volume / distance * MIN_DIST)
-                    .clamp(0.0, 1.0)
-            }
-            None => sound_event.volume,
-        };
+        let dist = sound_event
+            .position
+            .map(|pos| player_position.distance(&pos))
+            .unwrap_or(0.0);
+        let mut adjusted_volume = (sound_event.volume * (1.0 + dist * 0.2)).clamp(0.0, 1.0);
+        if audio_settings.sound_output == SoundOutput::Mono {
+            adjusted_volume /= 1.0 + dist * 0.4;
+        }
 
         // Spawn an AudioBundle with the adjusted volume
-        commands
-            .spawn(AudioPlayer::<AudioSource>(
-                asset_server.load(sound_event.sound_file.clone()),
-            ))
-            .insert(PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Despawn,
-                volume: bevy::audio::Volume::new(
-                    adjusted_volume
-                        * audio_settings.volume_effects.as_f32()
-                        * audio_settings.volume_master.as_f32(),
-                ),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            });
+
+        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
+            asset_server.load(sound_event.sound_file.clone()),
+        ));
+        sound.insert(PlaybackSettings {
+            mode: bevy::audio::PlaybackMode::Despawn,
+            volume: bevy::audio::Volume::new(
+                adjusted_volume
+                    * audio_settings.volume_effects.as_f32()
+                    * audio_settings.volume_master.as_f32(),
+            ),
+            speed: 1.0,
+            paused: false,
+            spatial: sound_event.position.is_some()
+                && audio_settings.sound_output != SoundOutput::Mono,
+            spatial_scale: Some(SpatialScale::new(0.005)),
+        });
+
+        if let Some(position) = sound_event.position {
+            let mut spos_vec = position.to_screen_coord();
+            spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
+            sound.insert(Transform::from_translation(spos_vec));
+        }
     }
 }
 
 pub fn keyboard_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    looking_gear: Res<LookingGear>,
     mut gs: GearStuff,
 ) {
     for (ps, mut playergear) in q_gear.iter_mut() {
         if keyboard_input.just_pressed(ps.controls.cycle) {
-            playergear.cycle();
+            playergear.cycle(&looking_gear.hand());
         }
         if keyboard_input.just_pressed(ps.controls.swap) {
             playergear.swap();
@@ -129,8 +134,9 @@ pub fn update_gear_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
-    mut qs: Query<&mut Text, With<InventoryStats>>,
+    mut qs: Query<(&mut Text, &mut Node, &InventoryStats)>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
+    looking_gear: Res<LookingGear>,
 ) {
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
@@ -141,10 +147,20 @@ pub fn update_gear_ui(
                     imgnode.texture_atlas.as_mut().unwrap().index = idx;
                 }
             }
+            let left_hand_status = playergear.left_hand.get_status();
             let right_hand_status = playergear.right_hand.get_status();
-            for mut txt in qs.iter_mut() {
-                if txt.0 != right_hand_status {
-                    txt.0.clone_from(&right_hand_status);
+            for (mut txt, mut node, istats) in qs.iter_mut() {
+                let hand_status = match istats.hand {
+                    Hand::Left => left_hand_status.clone(),
+                    Hand::Right => right_hand_status.clone(),
+                };
+                let display = looking_gear.hand() == istats.hand;
+                node.display = match display {
+                    false => Display::None,
+                    true => Display::Block,
+                };
+                if txt.0 != hand_status {
+                    txt.0.clone_from(&hand_status);
                 }
             }
             for (inv, mut imgnode) in qin.iter_mut() {

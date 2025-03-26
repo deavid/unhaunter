@@ -7,41 +7,72 @@ use uncore::types::root::game_assets::GameAssets;
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
     // Leftmost side panel - inventory
-    p.spawn(ImageNode {
-        image: handles.images.gear.clone(),
-        texture_atlas: Some(TextureAtlas {
-            index: GearSpriteID::Flashlight2 as usize,
-            layout: handles.images.gear_atlas.clone(),
-        }),
-        ..default()
+    p.spawn(Node {
+        flex_direction: FlexDirection::Column,
+        // Vertical alignment
+        align_items: AlignItems::Center,
+        margin: UiRect::left(Val::Px(6.0 * UI_SCALE)),
+        ..Default::default()
     })
-    .insert(Node {
-        width: Val::Px(80.0 * UI_SCALE),
-        margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
-        ..default()
-    })
-    .insert(Inventory::new_left());
-    p.spawn(Text::new("[TAB]: T.Aux"))
+    .with_children(|p| {
+        p.spawn(ImageNode {
+            image: handles.images.gear.clone(),
+            texture_atlas: Some(TextureAtlas {
+                index: GearSpriteID::Flashlight2 as usize,
+                layout: handles.images.gear_atlas.clone(),
+            }),
+            ..default()
+        })
+        .insert(Node {
+            width: Val::Px(80.0 * UI_SCALE),
+            margin: UiRect::all(Val::Px(-8.0 * UI_SCALE)),
+            ..default()
+        })
+        .insert(Inventory::new_left());
+        p.spawn(Text::new("[TAB]: T.Aux"))
+            .insert(TextFont {
+                font: handles.fonts.chakra.w300_light.clone(),
+                font_size: 16.0 * FONT_SCALE,
+                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            })
+            .insert(TextColor(colors::INVENTORY_STATS_COLOR))
+            .insert(Node {
+                margin: UiRect::new(
+                    Val::Px(-8.0 * UI_SCALE),
+                    Val::Px(-8.0 * UI_SCALE),
+                    Val::Px(9.0 * UI_SCALE),
+                    Val::Px(-9.0 * UI_SCALE),
+                ),
+                align_self: AlignSelf::Center,
+                justify_self: JustifySelf::Center,
+                align_content: AlignContent::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            })
+            .insert(TextLayout::default());
+    });
+    p.spawn(Text::new("-"))
         .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * FONT_SCALE,
+            font: handles.fonts.victormono.w600_semibold.clone(),
+            font_size: 15.0 * FONT_SCALE,
             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(Node {
-            margin: UiRect::new(
-                Val::Px(-8.0 * UI_SCALE),
-                Val::Px(-8.0 * UI_SCALE),
-                Val::Px(9.0 * UI_SCALE),
-                Val::Px(-9.0 * UI_SCALE),
-            ),
-            align_self: AlignSelf::Center,
-            justify_self: JustifySelf::Center,
-            align_content: AlignContent::Center,
             justify_content: JustifyContent::Center,
+            margin: UiRect::new(
+                Val::Px(0.0 * UI_SCALE),
+                Val::Px(8.0 * UI_SCALE),
+                Val::Px(4.0 * UI_SCALE),
+                Val::Px(-16.0 * UI_SCALE),
+            ),
+            width: Val::Percent(100.0),
+            min_width: Val::Px(300.0),
+            flex_grow: 1.0,
             ..default()
         })
-        .insert(TextLayout::default());
+        .insert(TextLayout::default())
+        .insert(InventoryStats::left());
 }
 
 pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
@@ -104,34 +135,32 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
                     Val::Px(4.0 * UI_SCALE),
                     Val::Px(-16.0 * UI_SCALE),
                 ),
-                width: Val::Percent(100.0),
+                min_width: Val::Px(300.0),
                 flex_grow: 1.0,
                 ..default()
             })
             .insert(TextLayout::default())
-            .insert(InventoryStats);
+            .insert(InventoryStats::right());
     });
-    p.spawn(Text::new(
-        "[Q]: Next  [R]: M.Toggle  [T]: Swap Hands  [C]: Change Evidence",
-    ))
-    .insert(TextFont {
-        font: handles.fonts.chakra.w300_light.clone(),
-        font_size: 16.0 * FONT_SCALE,
-        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-    })
-    .insert(TextColor(colors::INVENTORY_STATS_COLOR))
-    .insert(Node {
-        margin: UiRect::new(
-            Val::Px(16.0 * UI_SCALE),
-            Val::Px(-8.0 * UI_SCALE),
-            Val::Px(-8.0 * UI_SCALE),
-            Val::Px(0.0 * UI_SCALE),
-        ),
-        align_content: AlignContent::End,
-        justify_content: JustifyContent::End,
-        align_self: AlignSelf::End,
-        justify_self: JustifySelf::End,
-        ..default()
-    })
-    .insert(TextLayout::default());
+    p.spawn(Text::new("[R]: M.Toggle"))
+        .insert(TextFont {
+            font: handles.fonts.chakra.w300_light.clone(),
+            font_size: 16.0 * FONT_SCALE,
+            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+        })
+        .insert(TextColor(colors::INVENTORY_STATS_COLOR))
+        .insert(Node {
+            margin: UiRect::new(
+                Val::Px(16.0 * UI_SCALE),
+                Val::Px(-8.0 * UI_SCALE),
+                Val::Px(-8.0 * UI_SCALE),
+                Val::Px(0.0 * UI_SCALE),
+            ),
+            align_content: AlignContent::Start,
+            justify_content: JustifyContent::Start,
+            align_self: AlignSelf::Start,
+            justify_self: JustifySelf::Start,
+            ..default()
+        })
+        .insert(TextLayout::default());
 }

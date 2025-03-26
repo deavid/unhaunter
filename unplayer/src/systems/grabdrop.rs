@@ -8,6 +8,7 @@ use uncore::components::player::HeldObject;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::traits::gear_usable::GearUsable;
+use uncore::types::gear::equipmentposition::Hand;
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
@@ -207,7 +208,7 @@ pub fn deploy_gear(
                     .insert(DeployedGearData {
                         gear: player_gear.right_hand.take(),
                     });
-                player_gear.cycle();
+                player_gear.cycle(&Hand::Right);
 
                 // Play "Drop Item" sound effect (reused for gear deployment)
                 gs.play_audio("sounds/item-drop-clunk.ogg".into(), 1.0, player_pos);

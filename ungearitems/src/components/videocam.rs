@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore::components::board::position::Position;
 use uncore::random_seed;
-use ungear::components::playergear::EquipmentPosition;
+use uncore::types::gear::equipmentposition::EquipmentPosition;
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct Videocam {
