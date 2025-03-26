@@ -5,5 +5,7 @@ pub mod pause_ui;
 pub mod plugin;
 pub mod roomchanged;
 pub mod systems;
-pub mod ui;
+pub mod game_ui;
 pub mod boardfield_update;
+pub mod looking_gear;
+pub mod hide_mouse;

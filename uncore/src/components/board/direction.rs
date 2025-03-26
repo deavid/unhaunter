@@ -26,6 +26,14 @@ impl Direction {
         }
     }
 
+    pub fn to_vec3(&self) -> Vec3 {
+        Vec3 {
+            x: self.dx,
+            y: self.dy,
+            z: self.dz,
+        }
+    }
+
     pub fn add_to_position(&self, rhs: &Position) -> Position {
         Position {
             x: self.dx + rhs.x,
@@ -42,7 +50,17 @@ impl Direction {
     pub fn distance2(&self) -> f32 {
         self.dx * self.dx + self.dy * self.dy + self.dz * self.dz
     }
-
+    pub fn with_max_dist(&self, max_dist: f32) -> Self {
+        let dst = self.distance() + 0.000000001;
+        if dst < max_dist {
+            return *self;
+        }
+        Self {
+            dx: self.dx * max_dist / dst,
+            dy: self.dy * max_dist / dst,
+            dz: self.dz * max_dist / dst,
+        }
+    }
     pub fn normalized(&self) -> Self {
         let dst = self.distance() + 0.000000001;
         Self {

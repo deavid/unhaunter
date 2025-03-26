@@ -2,7 +2,7 @@ use crate::components::truck_ui_button::TruckUIButton;
 use crate::types::{evidence::Evidence, ghost::types::GhostType};
 
 /// Represents the type of a button in the truck UI.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TruckButtonType {
     /// A button for selecting or discarding a piece of evidence.
     Evidence(Evidence),

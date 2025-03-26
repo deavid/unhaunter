@@ -1,4 +1,4 @@
-use super::{uibutton::TruckButtonType, TruckUIGhostGuess};
+use super::{TruckUIGhostGuess, uibutton::TruckButtonType};
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::difficulty::CurrentDifficulty;
@@ -225,8 +225,10 @@ pub fn setup_journal_ui(
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
+            position_type: PositionType::Relative,
             ..default()
         })
+        .insert(ZIndex(20))
         .insert(BackgroundColor(Color::NONE))
         .insert(BorderColor(Color::NONE))
         .insert(Interaction::None)

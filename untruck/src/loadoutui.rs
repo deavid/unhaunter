@@ -3,23 +3,25 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
+use uncore::components::player_inventory::{Inventory, InventoryNext};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::traits::gear_usable::GearUsable;
 use uncore::types::evidence::Evidence;
 use uncore::types::evidence_status::EvidenceStatus;
+use uncore::types::gear::equipmentposition::Hand;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::root::game_assets::GameAssets;
-use ungear::components::playergear::{self, PlayerGear};
+use ungear::components::playergear::PlayerGear;
 use ungear::types::gear::Gear;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {
-    Inventory(playergear::Inventory),
-    InventoryNext(playergear::InventoryNext),
+    Inventory(Inventory),
+    InventoryNext(InventoryNext),
     Van(Gear),
 }
 
@@ -115,29 +117,24 @@ pub fn setup_loadout_ui(
         .with_children(|p| {
             p.spawn(equipment_frame(materials)).with_children(|p| {
                 p.spawn(button())
-                    .insert(LoadoutButton::Inventory(playergear::Inventory::new_left()))
+                    .insert(LoadoutButton::Inventory(Inventory::new_left()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
-                            .insert(playergear::Inventory::new_left());
+                        p.spawn(equipment_def()).insert(Inventory::new_left());
                     });
             });
             p.spawn(equipment_frame(materials)).with_children(|p| {
                 p.spawn(button())
-                    .insert(LoadoutButton::Inventory(playergear::Inventory::new_right()))
+                    .insert(LoadoutButton::Inventory(Inventory::new_right()))
                     .with_children(|p| {
-                        p.spawn(equipment_def())
-                            .insert(playergear::Inventory::new_right());
+                        p.spawn(equipment_def()).insert(Inventory::new_right());
                     });
             });
             p.spawn(equipment_frame(materials)).with_children(|p| {
                 for i in 0..2 {
                     p.spawn(button())
-                        .insert(LoadoutButton::InventoryNext(
-                            playergear::InventoryNext::new(i),
-                        ))
+                        .insert(LoadoutButton::InventoryNext(InventoryNext::new(i)))
                         .with_children(|p| {
-                            p.spawn(equipment_def())
-                                .insert(playergear::InventoryNext::new(i));
+                            p.spawn(equipment_def()).insert(InventoryNext::new(i));
                         });
                 }
             });
@@ -314,8 +311,8 @@ pub fn update_loadout_buttons(
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                playergear::Hand::Left => "(Click to remove the item from your Left Hand)",
-                playergear::Hand::Right => "(Click to remove the item from your Right Hand)",
+                Hand::Left => "(Click to remove the item from your Left Hand)",
+                Hand::Right => "(Click to remove the item from your Right Hand)",
             },
             LoadoutButton::InventoryNext(_) => "(Click to remove the item from your Backpack)",
             LoadoutButton::Van(_) => "(Click to add the item to your Inventory's first empty slot)",
@@ -377,10 +374,9 @@ pub fn button_clicked(
     let Some(ev) = ev_clk.read().next() else {
         return;
     };
-    let Some(mut p_gear) =
-        q_gear
-            .iter_mut()
-            .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
+    let Some(mut p_gear) = q_gear
+        .iter_mut()
+        .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
     else {
         return;
     };

@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header, summary_text};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -11,7 +11,7 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
     let grid = vec![
         (
             &handles.images.manual_spirit_box,
-            "*1. New Gear: Spirit Box:* A modified AM Radio that constantly scans through radio frequencies. Some believe that ghosts can manipulate these frequencies to communicate directly.",
+            "*1. New Gear: Spirit Box:* A modified AM Radio that constantly scans through radio frequencies. If the ghosts talk though it, this is the evidence **Spirit Box**.  It is best if used near the breach and in darkness.",
         ),
         (
             &handles.images.manual_red_torch,

@@ -26,7 +26,8 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     commands
         .spawn(Camera2d)
         .insert(projection)
-        .insert(GCameraArena);
+        .insert(GCameraArena)
+        .insert(Direction::zero());
 }
 
 pub fn cleanup(
@@ -57,7 +58,7 @@ pub fn keyboard(
     game_state: Res<State<GameState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut camera: Query<&mut Transform, With<GCameraArena>>,
+    mut camera: Query<(&mut Transform, &mut Direction), With<GCameraArena>>,
     gc: Res<GameConfig>,
     pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
     time: Res<Time>,
@@ -74,26 +75,33 @@ pub fn keyboard(
     if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
         game_next_state.set(GameState::Pause);
     }
-    for mut transform in camera.iter_mut() {
+    for (mut transform, mut cam_dir) in camera.iter_mut() {
         for (player, p_transform, p_dir) in pc.iter() {
             if player.id != gc.player_id {
                 continue;
             }
-
             // Camera movement
             let mut ref_point = p_transform.translation;
             let sc_dir = p_dir.to_screen_coord();
-            const CAMERA_AHEAD_FACTOR: f32 = 0.11;
+            const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
             ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
             ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;
             ref_point.z = transform.translation.z;
             let dist = (transform.translation.distance(ref_point) - 1.0).max(0.00001);
             let mut delta = ref_point - transform.translation;
             delta.z = 0.0;
-            const RED: f32 = 120.0;
-            const MEAN_DIST: f32 = 120.0;
-            let vector = delta.normalize() * ((dist / MEAN_DIST).powf(2.2) * MEAN_DIST);
-            transform.translation += vector / RED * dt;
+            const RED: f32 = 120.0 * 2.0;
+            const MEAN_DIST: f32 = 120.0 / 15.0;
+            const MAX_DIST: f32 = 1000.0;
+            let strength = ((dist.min(MAX_DIST) / MEAN_DIST).powf(1.4) * MEAN_DIST) / RED
+                * (delta.dot(cam_dir.to_vec3()).clamp(0.2, 1.0));
+            let vector = delta.normalize() * strength;
+            let f_strength: f32 = 0.05;
+            cam_dir.dx = (cam_dir.dx + vector.x * f_strength * dt) / (1.0 + f_strength * dt);
+            cam_dir.dy = (cam_dir.dy + vector.y * f_strength * dt) / (1.0 + f_strength * dt);
+            cam_dir.dz = (cam_dir.dz + vector.z * f_strength * dt) / (1.0 + f_strength * dt);
+
+            transform.translation += cam_dir.to_vec3() * dt;
         }
         if in_game && game_settings.camera_controls.on() {
             let controls = match game_settings.character_controls {

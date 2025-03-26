@@ -152,7 +152,7 @@ pub fn despawn_sound(
             vol / 1.02
         } else {
             let desired_vol =
-                audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32() / 20.0;
+                audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
             const STEPS: f32 = 120.0;
             if vol < desired_vol / 2.0 {
                 vol * 1.02
@@ -198,8 +198,7 @@ pub fn manage_title_song(
             .insert(PlaybackSettings {
                 mode: bevy::audio::PlaybackMode::Loop,
                 volume: bevy::audio::Volume::new(
-                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32()
-                        / 20.0,
+                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32(),
                 ),
                 speed: 1.0,
                 paused: false,

@@ -23,7 +23,7 @@ impl GhostSet {
             ],
             Self::Twenty => vec![
                 Curupira, LaLlorona, Phooka, Obayifo, Maresca, Dybbuk, Caoilte, Orla, Jorogumo,
-                Mider, Wisp, Cairbre, Ceara, Widow, BeanSidhe, Bugbear, Dullahan, Domovoi,
+                Mider, Aswang, Cairbre, Ceara, Widow, BeanSidhe, Bugbear, Dullahan, BaobhanSith,
                 Muirgheas, Namahage,
             ],
             Self::All => GhostType::all().collect(),

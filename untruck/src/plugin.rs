@@ -26,11 +26,13 @@ impl Plugin for UnhaunterTruckPlugin {
             .add_systems(
                 Update,
                 (
-                    systems::truckui_event_handle,
+                    systems::hold_button_system,
+                    systems::truckui_event_handle.after(systems::hold_button_system),
                     ui::update_tab_interactions,
                     loadoutui::update_loadout_buttons,
                     loadoutui::button_clicked,
-                ),
+                )
+                    .run_if(in_state(GameState::Truck)),
             );
         evidence::app_setup(app);
     }

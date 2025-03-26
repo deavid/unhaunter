@@ -5,3 +5,4 @@ pub mod npc_help;
 pub mod roomchanged;
 pub mod sound;
 pub mod truck;
+pub mod walkie;

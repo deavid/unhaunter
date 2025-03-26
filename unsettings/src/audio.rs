@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Represents the audio settings for the game.
-#[derive(Resource, Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Resource, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AudioSettings {
     /// The master volume level.
     pub volume_master: AudioLevel,
@@ -22,6 +22,22 @@ pub struct AudioSettings {
     pub feedback_delay: FeedbackDelay,
     /// The feedback EQ setting.
     pub feedback_eq: FeedbackEQ,
+}
+
+impl Default for AudioSettings {
+    fn default() -> Self {
+        Self {
+            volume_master: Default::default(),
+            volume_music: AudioLevel::Vol050,
+            volume_effects: Default::default(),
+            volume_ambient: Default::default(),
+            volume_voice_chat: Default::default(),
+            sound_output: Default::default(),
+            audio_positioning: Default::default(),
+            feedback_delay: Default::default(),
+            feedback_eq: Default::default(),
+        }
+    }
 }
 
 /// Represents the different settings available for the audio
@@ -79,8 +95,7 @@ pub enum AudioLevel {
     /// 40% volume.
     #[strum(to_string = "40%")]
     Vol040,
-    /// 50% volume (default).
-    #[default]
+    /// 50% volume.
     #[strum(to_string = "50%")]
     Vol050,
     /// 60% volume.
@@ -89,7 +104,8 @@ pub enum AudioLevel {
     /// 70% volume.
     #[strum(to_string = "70%")]
     Vol070,
-    /// 80% volume.
+    /// 80% volume (default).
+    #[default]
     #[strum(to_string = "80%")]
     Vol080,
     /// 90% volume.
@@ -148,12 +164,23 @@ impl AudioLevel {
 pub enum SoundOutput {
     /// Mono sound output.
     Mono,
-    /// Headphones sound output (default).
+    HalfStereo,
+    Stereo,
     #[default]
-    Headphones,
-    /// Speakers sound output.
-    Speakers,
+    WideStereo,
 }
+
+impl SoundOutput {
+    pub fn to_ear_offset(&self) -> f32 {
+        match self {
+            SoundOutput::Mono => 0.1,
+            SoundOutput::HalfStereo => 1.0,
+            SoundOutput::Stereo => 3.0,
+            SoundOutput::WideStereo => 10.0,
+        }
+    }
+}
+
 /// Represents the different audio positioning modes.
 #[derive(
     Serialize,

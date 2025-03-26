@@ -33,6 +33,7 @@ use uncore::resources::visibility_data::VisibilityData;
 use uncore::types::board::fielddata::CollisionFieldData;
 use uncore::types::evidence::Evidence;
 use uncore::types::game::SoundType;
+use uncore::types::gear::equipmentposition::EquipmentPosition;
 use uncore::types::gear_kind::GearKind;
 use uncore::utils::light::{compute_color_exposure, lerp_color};
 use uncore::{
@@ -43,7 +44,6 @@ use uncore::{components::board::boardposition::BoardPosition, utils::PrintingTim
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
-use ungear::components::playergear::EquipmentPosition;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
 use unsettings::audio::AudioSettings;
@@ -311,7 +311,7 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors_nosize(1) {
+        for npos in cursor_pos.iter_xy_neighbors(1, board_dim) {
             let lf = &bf.light_field[npos.ndidx()];
             cursor_exp += lf.lux.powf(gamma_exp);
             exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
@@ -453,10 +453,11 @@ pub fn apply_lighting(
                             for (flpos, fldir, flpower, flcolor, fltype, flvismap) in
                                 flashlights.iter()
                             {
+                                let fldir = fldir.with_max_dist(100.0);
                                 let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
-                                let lpos = *flpos + *fldir / (100.0 / focus + 20.0);
-                                let mut lpos = lpos.unrotate_by_dir(fldir);
-                                let mut rpos = rpos.unrotate_by_dir(fldir);
+                                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
+                                let mut lpos = lpos.unrotate_by_dir(&fldir);
+                                let mut rpos = rpos.unrotate_by_dir(&fldir);
                                 rpos.x -= lpos.x;
                                 rpos.y -= lpos.y;
                                 lpos.x = 0.0;

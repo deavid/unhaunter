@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::{Read, Write};
 use walkdir::WalkDir;
@@ -9,27 +10,28 @@ fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
         ("maps", vec!["tmx", "tsx"]),
         ("music", vec!["ogg"]),
         ("sounds", vec!["ogg"]),
+        ("walkie", vec!["ogg"]),
         ("manual", vec!["png"]),
         ("phrasebooks", vec!["yaml"]),
     ]
 }
 
-fn get_asset_list() -> Vec<String> {
+fn get_asset_list() -> Result<Vec<String>> {
     let mut list = vec![];
     let assets_dir = "assets/";
     for entry in WalkDir::new(assets_dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path.is_file() {
-            let relative_path = path.strip_prefix(assets_dir).unwrap();
+            let relative_path = path.strip_prefix(assets_dir)?;
             list.push(relative_path.to_string_lossy().to_string());
         }
     }
     list.sort();
-    list
+    Ok(list)
 }
 
-fn main() {
-    let asset_list = get_asset_list();
+pub fn update_assetidx_files() -> Result<()> {
+    let asset_list = get_asset_list()?;
     let asset_types = get_asset_types();
 
     for (folder_name, ext_list) in asset_types {
@@ -45,18 +47,19 @@ fn main() {
             if let Ok(mut file) = File::open(&asset_list_path) {
                 let mut buf = String::new();
                 file.read_to_string(&mut buf)
-                    .expect("Failed to read assetidx");
+                    .with_context(|| "Failed to read assetidx")?;
                 if buf == expected_file_contents {
                     continue;
                 }
             }
             eprintln!("Updating assetidx: {}", asset_list_path);
             let mut asset_list_file =
-                File::create(&asset_list_path).expect("Failed to create assetidx");
+                File::create(&asset_list_path).with_context(|| "Failed to create assetidx")?;
 
             asset_list_file
                 .write_all(expected_file_contents.as_bytes())
-                .expect("Failed to write to assetidx");
+                .with_context(|| "Failed to write to assetidx")?;
         }
     }
+    Ok(())
 }

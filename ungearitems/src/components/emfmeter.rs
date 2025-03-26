@@ -166,13 +166,13 @@ impl GearUsable for EMFMeter {
         }
         self.miasma_pressure_2 = self.miasma_pressure_2 * F + self.miasma_pressure * (1.0 - F);
 
-        let pos = Position {
+        let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
             z: pos.z,
             global_z: pos.global_z,
         };
-        let bpos = pos.to_board_position();
+        let bpos = posk.to_board_position();
 
         let temperature = gs.bf.temperature_field[bpos.ndidx()];
         let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
@@ -213,13 +213,13 @@ impl GearUsable for EMFMeter {
                 self.last_sound_secs = sec;
                 match ep {
                     EquipmentPosition::Hand(_) => {
-                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, &pos)
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, pos)
                     }
                     EquipmentPosition::Stowed => {
-                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, &pos)
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, pos)
                     }
                     EquipmentPosition::Deployed => {
-                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, &pos)
+                        gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, pos)
                     }
                 }
             }
@@ -231,7 +231,7 @@ impl GearUsable for EMFMeter {
 
             // Play static/interference sound when glitching
             if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.5 {
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, &pos);
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, pos);
             }
         }
 
