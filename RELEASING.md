@@ -1,31 +1,34 @@
 # RELEASE DIST PROCESS
 
+These are just "dirty" notes on how to make the builds for releasing.
+
+I will try to automate a script later on.
 
 
-deavid@deavws:~/git/rust$ cd unhaunter_dist/
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/assets/ . -R
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/*.md .
-deavid@deavws:~/git/rust/unhaunter_dist$ ls
+rust_unhaunter$ cd unhaunter_dist/
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/assets/ . -R
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.md .
+rust_unhaunter/unhaunter_dist$ ls
 assets  CHANGELOG.md  NOTES.md  PROJECT_FILE_DESCRIPTIONS.md  README.md
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/*.png .
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/*.ico .
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/*.html .
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/LICENSE .
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/screenshots . -R
-deavid@deavws:~/git/rust/unhaunter_dist$ 
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.png .
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.ico .
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.html .
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/LICENSE .
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/screenshots . -R
+rust_unhaunter/unhaunter_dist$ 
 
 # Linux x64
 
 cargo build --release
 
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/target/release/unhaunter_game unhaunter_game_linux_x64
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/release/unhaunter_game unhaunter_game_linux_x64
 
 
 # WASM
 
-deavid@deavws:~/git/rust/unhaunter$ wasm-pack build --release --target web
+rust_unhaunter/unhaunter$ wasm-pack build --release --target web
 
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/pkg . -R
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/pkg . -R
 
 # Windows builds:
 # https://bevy-cheatbook.github.io/setup/cross/linux-windows.html
@@ -35,9 +38,9 @@ deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/pkg . -R
 # :: If mingw-w64 is missing: error: Error calling dlltool 'x86_64-w64-mingw32-dlltool': No such file or directory (os error 2)
 # sudo apt install mingw-w64
 
-deavid@deavws:~/git/rust/unhaunter$ cargo build --target x86_64-pc-windows-gnu --release
+rust_unhaunter/unhaunter$ cargo build --target x86_64-pc-windows-gnu --release
 
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-gnu/release/un
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-gnu/release/un
 haunter_game.exe unhaunter_game_windows_x64_gnu.exe 
 
 # Windows x64 - MSVC
@@ -69,14 +72,16 @@ This crate is brought by Tiled for de-compression purposes.
 # Asking for "wasm" was asking for zstd. This is only for zlib compression. Not needed.
 # Now it builds.
 
-deavid@deavws:~/git/rust/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-msvc/release/unhaunter_game.exe unhaunter_game_windows_x64_msvc.exe 
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-msvc/release/unhaunter_game.exe unhaunter_game_windows_x64_msvc.exe 
 
 
 ###### Packaging
 
-deavid@deavws:~/git/rust/unhaunter_dist$ cd ..
-deavid@deavws:~/git/rust$ ln -s unhaunter_dist unhaunter_v0_2_7
+rust_unhaunter/unhaunter_dist$ cd ..
+rust_unhaunter$ ln -s unhaunter_dist unhaunter_v0_2_7
 
-deavid@deavws:~/git/rust$ zip -r unhaunter_v0_2_7_wasm_windows_linux.zip unhaunter_v0_2_7
+rust_unhaunter$ zip -r unhaunter_v0_2_7_wasm_windows_linux.zip unhaunter_v0_2_7
+
+rust_unhaunter$ unlink unhaunter_v0_2_7
 
 Resulting ZIP in the parent folder.
