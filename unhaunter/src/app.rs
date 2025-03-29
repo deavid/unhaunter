@@ -99,13 +99,19 @@ fn set_window_icon(
     // This only works on native. WASM uses the HTML icon.
     {
         use winit::window::Icon;
-
+        let Some(assets_path) = crate::utils::find_assets_directory() else {
+            warn!("Assets directory not found.");
+            return;
+        };
         // here we use the `image` crate to load our icon data from a png file
         // this is not a very bevy-native solution, but it will do
+        let Ok(img) = image::open(assets_path.join("favicon-512x512.png")) else {
+            warn!("Failed to load icon image.");
+            return;
+        };
+
         let (icon_rgba, icon_width, icon_height) = {
-            let image = image::open("favicon-512x512.png")
-                .expect("Failed to open icon path")
-                .into_rgba8();
+            let image = img.into_rgba8();
             let (width, height) = image.dimensions();
             let rgba = image.into_raw();
             (rgba, width, height)
