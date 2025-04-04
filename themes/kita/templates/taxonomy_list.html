@@ -1,0 +1,26 @@
+{% extends "index.html" %}<!---->
+{% block main %}
+<!-- Taxonomy Title -->
+<h1 class="mb-16">{{ taxonomy.name | title }}</h1>
+<!-- Taxonomies -->
+<div class="not-prose grid grid-cols-1 gap-4 md:grid-cols-2">
+  {% for term in terms %}
+  <div class="block-bg flex h-full flex-col rounded-lg px-5 pb-2 md:min-h-[18rem]">
+    <h3 class="my-4 text-xl font-bold text-black dark:text-white">
+      <a class="primary-link" href="{{ term.permalink }}"> #{{ term.name }} </a>
+      <sup class="opacity-60">{{ term.page_count }}</sup>
+    </h3>
+
+    {%for page in term.pages | slice(end=5) %}
+    <a class="secondary-link my-0.5" href="{{ page.permalink }}">{{ page.title }}</a>
+    {% endfor %}<!---->
+
+    {% if term.pages | length > 5 %}
+    <span class="flex justify-end">
+      <a class="secondary-link mt-1 pr-2" href="{{ term.permalink }}">More >></a>
+    </span>
+    {% endif %}<!---->
+  </div>
+  {% endfor %}<!---->
+</div>
+{% endblock main %}

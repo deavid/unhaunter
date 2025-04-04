@@ -1,0 +1,18 @@
+{% if page.lower or page.higher %}
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  {% if page.higher %}
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="{{ page.higher.permalink }}"
+    ><span class="mr-1.5">←</span><span>{{ page.higher.title }}</span></a
+  >
+  {% endif %}<!---->
+  {% if page.lower %}
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="{{ page.lower.permalink }}"
+    ><span>{{ page.lower.title }}</span><span class="ml-1.5">→</span></a
+  >
+  {% endif %}
+</nav>
+{% endif %}

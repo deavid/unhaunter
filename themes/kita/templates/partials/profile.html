@@ -1,0 +1,40 @@
+{% if config.extra.profile.avatar_url or config.extra.profile.name %}
+<div class="mb-16 flex items-start">
+  {% if config.extra.profile.avatar_url %}
+  <div
+    class="not-prose mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow dark:bg-white/[15%]"
+  >
+    <img
+      class="{% if config.extra.profile.avatar_invert %}dark:invert{% endif %} my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin"
+      src="{{ get_url(path=config.extra.profile.avatar_url) }}"
+      alt="{{ config.extra.profile.name | default(value=config.title) }}"
+    />
+  </div>
+  {% endif %}<!---->
+
+  {% if config.extra.profile.name %}
+  <div>
+    <h1 class="mb-2 text-3xl font-bold">{{ config.extra.profile.name }}</h1>
+    <div class="mb-2 break-words">
+      {{ config.extra.profile.bio | default(value=`A blog by ` ~ config.extra.profile.name) }}
+    </div>
+
+    {% if config.extra.profile.social %}
+    <nav class="flex justify-start space-x-3 dark:invert">
+      {% for social in config.extra.profile.social %}
+      <a
+        class="primary-link h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat]"
+        style="--url: url({{ macros::get_social_icon(icon=social.name) }})"
+        href="{{ social.url | replace(from=`$BASE_URL`, to=config.base_url) | safe  }}"
+        target="_blank"
+        rel="{% if social.name == `rss` %}alternate{% else %}me{% endif %}"
+      >
+        {{ social.name }}
+      </a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

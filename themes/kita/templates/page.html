@@ -1,0 +1,44 @@
+{% extends "index.html" %}<!---->
+{% block main %}
+<article>
+  <!-- Page Start inject -->
+  {% include "injects/page_start.html" ignore missing %}
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">{{ page.title }}</h1>
+    {% include "partials/page_info.html" %}
+  </header>
+
+  {% if page.extra.cover.image %}<!---->
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="{{ get_url(path=page.extra.cover.image) }}"
+      alt="{{ page.extra.cover.alt | default(value='cover') }}"
+    />
+  </figure>
+  {% endif %}
+
+  <!-- TOC -->
+  {% include "partials/toc.html" %}<!---->
+
+  <!-- Content -->
+  <section>{{ page.content | safe }}</section>
+
+  <hr />
+
+  <!-- Post Taxonomies -->
+  {% include "partials/post_taxonomies.html" %}<!---->
+
+  <!-- Post Nav -->
+  {% include "partials/post_navigation.html" %}<!---->
+
+  <!-- Comment -->
+  {% if page.extra.comment | default(value=config.extra.comment) %}<!---->
+  {% include "partials/comment.html" %}<!---->
+  {% endif %}
+
+  <!-- Page End inject -->
+  {% include "injects/page_end.html" ignore missing %}
+</article>
+{% endblock main %}

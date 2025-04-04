@@ -1,0 +1,20 @@
+{% if config.extra.giscus.repo %}
+<div class="giscus mt-12"></div>
+<script
+  src="https://giscus.app/client.js"
+  data-repo="{{ config.extra.giscus.repo }}"
+  data-repo-id="{{ config.extra.giscus.repo_id }}"
+  data-category="{{ config.extra.giscus.category }}"
+  data-category-id="{{ config.extra.giscus.category_id }}"
+  data-mapping="{{ config.extra.giscus.mapping | default(value=`pathname`) }}"
+  data-strict="{{ config.extra.giscus.strict | default(value=`1`) }}"
+  data-reactions-enabled="{{ config.extra.giscus.reactions_enabled | default(value=`0`) }}"
+  data-emit-metadata="{{ config.extra.giscus.emit_metadata | default(value=`0`) }}"
+  data-input-position="{{ config.extra.giscus.input_position | default(value=`top`) }}"
+  data-theme="{{ config.extra.giscus.theme | default(value=`light`) }}"
+  data-lang="{{ config.extra.giscus.lang | default(value=`en`) }}"
+  data-loading="{{ config.extra.giscus.loading | default(value=`lazy`) }}"
+  crossorigin="anonymous"
+  async
+></script>
+{% endif %}<!---->

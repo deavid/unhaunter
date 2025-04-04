@@ -1,0 +1,30 @@
+<footer class="mx-auto flex max-w-3xl flex-wrap items-center px-8 py-4 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+    {% set current_year = now() | date(format="%Y") | int %}<!---->
+    {% if config.extra.footer.since and config.extra.footer.since != current_year %}<!---->
+    &copy; {{ config.extra.footer.since }} - {{ current_year }}<!---->
+    {% else %}<!---->
+    &copy; {{ current_year }}<!---->
+    {% endif %}
+    <a class="link" href="{{ get_url(path=``) }}">
+      {{ config.author | default(value=config.title) }}
+    </a>
+    {% if config.extra.footer.license %} |<!---->
+    {% if config.extra.footer.license_url %}<!---->
+    <a class="link" href="{{ config.extra.footer.license_url }}" rel="noopener" target="_blank">
+      {{ config.extra.footer.license }}
+    </a>
+    {% else %}<!---->
+    {{ config.extra.footer.license }}<!---->
+    {% endif %}<!---->
+    {% endif %}
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <a class="link mr-6 lg:ml-6" href="https://www.getzola.org/" rel="noopener" target="_blank">
+      Powered by Zola
+    </a>
+    <a class="link" href="https://github.com/st1020/kita" rel="noopener" target="_blank">✎ Kita</a>
+  </div>
+  <!-- Footer inject -->
+  {% include "injects/footer.html" ignore missing %}
+</footer>

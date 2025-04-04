@@ -1,0 +1,35 @@
+{% extends "index.html" %}<!---->
+{% block main %}<!---->
+
+{% for asset in page.assets %}<!---->
+{% if asset is ending_with("data.toml") %}<!---->
+{% set_global data = load_data(path=asset, format="toml") %}<!---->
+{% endif %}<!---->
+{% endfor %}<!---->
+
+<h1 class="mb-16">{{ page.title }}</h1>
+{% for project in data.project %}
+<div class="not-prose block-bg my-4 flex w-full flex-col rounded-lg px-5 py-1.5">
+  <h3 class="my-2 text-xl font-bold text-black dark:text-white">{{ project.name }}</h3>
+  <p>{{ project.desc }}</p>
+  <div class="my-2 flex flex-wrap items-center justify-between">
+    <div class="flex flex-wrap gap-x-2 text-sm opacity-60">
+      {% for tag in project.tags %}
+      <span>#{{ tag }}</span>
+      {% endfor %}
+    </div>
+    <div class="flex flex-wrap gap-x-2">
+      {% for link in project.links %}
+      <a
+        class="underline"
+        href="{{ link.url | replace(from=`$BASE_URL`, to=config.base_url) | safe  }}"
+        rel="noopener"
+        target="_blank"
+        >{{ link.name }}</a
+      >
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endfor %}<!---->
+{% endblock main %}
