@@ -1,0 +1,13 @@
+{% extends "index.html" %}
+
+{% block main %}
+
+<!-- Profile -->
+{% if paginator is undefined or paginator.current_index == 1 %}
+{% include "partials/profile.html" %}
+{% endif %}
+
+<!-- Page List -->
+{% include "partials/page_list.html" %}
+
+{% endblock main %}
