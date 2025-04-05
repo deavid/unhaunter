@@ -5,11 +5,11 @@
     <div class="flex justify-between">
       <div class="flex items-center">
         <a class="text-2xl font-semibold" href="{{ get_url(path=``) }}">{{ config.title }}</a>
-        <div
+        <!-- <div
           class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] [background:url(./icons/theme.svg)_left_center/cover_no-repeat] dark:invert dark:[background-position:right]"
           role="button"
           aria-label="Dark"
-        ></div>
+        ></div> -->
       </div>
       {% if config.extra.menu %}
       <div
@@ -74,6 +74,7 @@
           <a
             class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
             href="{{ menu.url | replace(from=`$BASE_URL`, to=config.base_url) | safe }}"
+            {% if menu.new_window %}target="_blank" rel="noopener noreferrer"{% endif %}
             >{{ menu.name }}</a
           >
         </li>

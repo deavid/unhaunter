@@ -3,8 +3,12 @@ base_url = "https://www.unhaunter.com"
 
 
 # The site title and description; used in feeds by default.
-title = "Unhaunter"
-description = "A game about paranormal investigation and exploration of haunted places."
+title = "Unhaunter Official Website"
+description = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
+Find 8 distinct evidence types to narrow down the ghost's identity.
+Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
+Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+"""
 
 # The default site author.
 author = "deavidsedice"
@@ -55,16 +59,20 @@ highlight_theme = "base16-ocean-dark"
 # Put all your custom variables here
 
 # The URL of social image.
-social_image = "icons/github.svg"
+social_image = "icons/unhaunter-logo.png"
 
 
 # The profile on home page.
 [extra.profile]
 name = "Unhaunter"
-bio = "Unhaunter is a game about paranormal investigation and exploration of haunted places."
+bio = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
+Find 8 distinct evidence types to narrow down the ghost's identity.
+Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
+Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+"""
 
 # The URL of avatar.
-avatar_url = "icons/github.svg"
+avatar_url = "icons/unhaunter-logo.png"
 
 [[extra.profile.social]]
 name = "github"
@@ -88,20 +96,9 @@ name = "Blog"
 url = "$BASE_URL/blog"
 
 [[extra.menu]]
-name = "Projects"
-url = "$BASE_URL/projects"
-
-[[extra.menu]]
-name = "Archive"
-url = "$BASE_URL/archive"
-
-[[extra.menu]]
-name = "Tags"
-url = "$BASE_URL/tags"
-
-[[extra.menu]]
-name = "About"
-url = "$BASE_URL/about"
+name = "Play in Browser"
+url = "$BASE_URL/wasm/main/"
+new_window = true
 
 
 # The page footer options.
