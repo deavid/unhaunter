@@ -3,11 +3,18 @@
 {% block main %}
 
 <!-- Profile -->
-{% if paginator is undefined or paginator.current_index == 1 %}
 {% include "partials/profile.html" %}
-{% endif %}
+
+{% set news_section = get_section(path="news/_index.md") %}
+{% set blog_section = get_section(path="blog/_index.md") %}
+
+{% set all_pages = [news_section.pages[0]] | concat(with=[blog_section.pages[0]]) %}
+
 
 <!-- Page List -->
-{% include "partials/page_list.html" %}
+{% set pages = all_pages %}
+{% set prefer_summary = true %}
+
+{% include "partials/page_list_unpaginated.html" %}
 
 {% endblock main %}

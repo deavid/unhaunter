@@ -1,7 +1,6 @@
 +++
-title = "Placeholder Text 4"
-date = "2023-10-20"
-description = "Lorem Ipsum Dolor Si Amet"
+title = "First people tried Unhaunter blindly"
+description = "People from Mastodon and Reddit tried Unhaunter"
 [taxonomies]
 tags = ["markdown", "text"]
 +++

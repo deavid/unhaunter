@@ -1,0 +1,27 @@
+<!-- Pages -->
+{% if pages is defined %}<!---->
+{% elif paginator is defined %}<!---->
+{% set pages = paginator.pages %}<!---->
+{% elif term is defined %}<!---->
+{% set pages = term.pages %}<!---->
+{% elif section is defined %}<!---->
+{% set pages = section.pages %}<!---->
+{% endif %}<!---->
+
+{% for page in pages %}
+{% include "partials/page_list_item.html" %}
+{% endfor %}
+
+<!-- Main Nav -->
+{% if paginator is defined %}
+<nav class="mt-16 flex">
+  {% if paginator.previous %}
+  <a class="rounded-full bg-black px-4 py-3 text-sm text-white no-underline shadow duration-100 active:scale-95 dark:bg-white/80 dark:text-black"
+    href="{{ paginator.previous }}">← Prev Page</a>
+  {% endif %}<!---->
+  {% if paginator.next %}
+  <a class="ml-auto rounded-full bg-black px-4 py-3 text-sm text-white no-underline shadow duration-100 active:scale-95 dark:bg-white/80 dark:text-black"
+    href="{{ paginator.next }}">Next Page →</a>
+  {% endif %}
+</nav>
+{% endif %}
