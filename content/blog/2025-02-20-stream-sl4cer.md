@@ -1,7 +1,6 @@
 +++
-title = "Placeholder Text 2"
-date = "2023-10-20"
-description = "Lorem Ipsum Dolor Si Amet"
+title = "Stream by sl4cer"
+description = "An amazing look at the game!"
 [taxonomies]
 tags = ["markdown", "text"]
 +++

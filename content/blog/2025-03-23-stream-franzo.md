@@ -1,7 +1,6 @@
 +++
-title = "Placeholder Text 5"
-date = "2023-10-20"
-description = "Lorem Ipsum Dolor Si Amet"
+title = "Streamed by Franzo"
+description = "OpenSourceGaming streamed Unhaunter"
 [taxonomies]
 tags = ["markdown", "text"]
 +++
@@ -20,7 +19,6 @@ Rursus nulli murmur; hastile inridet ut ab gravi sententia! Nomine potitus silen
 3. Flumen querellas
 4. Arcanaque montibus omnes
 5. Quidem et
-
 
 # Vagus elidunt
 

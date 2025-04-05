@@ -84,6 +84,10 @@ name = "News"
 url = "$BASE_URL/news"
 
 [[extra.menu]]
+name = "Blog"
+url = "$BASE_URL/blog"
+
+[[extra.menu]]
 name = "Projects"
 url = "$BASE_URL/projects"
 
@@ -103,5 +107,5 @@ url = "$BASE_URL/about"
 # The page footer options.
 [extra.footer]
 since = 2023
-license = "Apache License, Version 2.0"
+license = "Apache-2.0 License"
 license_url = "https://www.apache.org/licenses/LICENSE-2.0"

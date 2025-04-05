@@ -1,7 +1,6 @@
 +++
-title = "Placeholder Text 1"
-date = "2023-10-20"
-description = "Lorem Ipsum Dolor Si Amet"
+title = "First playtests of the game"
+description = "0lhi and Sl4cer tried the game on its early versions"
 [taxonomies]
 tags = ["markdown", "text"]
 +++
@@ -20,6 +19,7 @@ Rursus nulli murmur; hastile inridet ut ab gravi sententia! Nomine potitus silen
 3. Flumen querellas
 4. Arcanaque montibus omnes
 5. Quidem et
+
 
 # Vagus elidunt
 
