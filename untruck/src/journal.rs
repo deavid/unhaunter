@@ -1,6 +1,6 @@
 use super::{
-    uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
     GhostGuess, TruckUIEvent, TruckUIGhostGuess,
+    uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
 };
 use bevy::{prelude::*, utils::HashSet};
 use uncore::components::game_config::GameConfig;

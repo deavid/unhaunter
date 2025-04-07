@@ -19,6 +19,7 @@ members = [
     "unmenusettings",
     "unfog",
     "unwalkie",
+    "uncoremenu",
 ]
 resolver = "3"
 
@@ -40,7 +41,7 @@ rand = { version = "0.9", default-features = false, features = [
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ron = "0.9"
+ron = "0.10"
 image = "0.25"
 regex = "1.7"
 clap = "4.5"
@@ -59,7 +60,7 @@ dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
 
-bevy = "0.15"
+bevy = { version = "0.15", features = ["jpeg"] }
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
@@ -96,6 +97,7 @@ untmxmap = { path = "untmxmap" }
 unsettings = { path = "unsettings" }
 unmenusettings = { path = "unmenusettings" }
 unwalkie = { path = "unwalkie" }
+uncoremenu = { path = "uncoremenu" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
@@ -148,7 +150,7 @@ overflow-checks = false
 lto = "thin"
 codegen-units = 1
 
-# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE. 
+# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE.
 # This will allow us to have a custom profile for WASM builds, and then make it much more aggressive.
 
 [profile.release.package."*"]

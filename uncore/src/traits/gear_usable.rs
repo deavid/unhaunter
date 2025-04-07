@@ -57,17 +57,17 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
         _dt: f32,
     ) {
     }
-    
+
     /// Electromagnetic interference
     fn apply_electromagnetic_interference(&mut self, _warning_level: f32, _distance: f32) {
         // Default implementation - override in electronic gear
         // Default: no effect
     }
-    
+
     /// Helper to check if gear is electronic (susceptible to EMI)
     fn is_electronic(&self) -> bool {
         false
-    }    
+    }
 }
 
 impl Clone for Box<dyn GearUsable> {

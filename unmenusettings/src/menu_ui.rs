@@ -4,6 +4,8 @@ use bevy::prelude::*;
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
+use uncoremenu::components::MenuRoot;
+use uncoremenu::templates;
 
 pub fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
@@ -30,16 +32,12 @@ pub fn setup_ui_main_cat(
         commands.entity(e).despawn_recursive();
     }
 
-    // Create new UI
-    let mut menu_idx = 0;
-
-    commands
+    // Create new UI with uncoremenu templates
+    let root_entity = commands
         .spawn(Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
-            padding: UiRect::all(Val::Percent(10.0)),
-            justify_content: JustifyContent::Center,
-            flex_direction: FlexDirection::Column,
+            position_type: PositionType::Absolute,
             ..default()
         })
         .insert(SettingsMenu {
@@ -47,109 +45,122 @@ pub fn setup_ui_main_cat(
             selected_item_idx: 0,
         })
         .with_children(|parent| {
-            // Header
-            parent
-                .spawn(Text::new(title))
-                .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 38.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(Color::WHITE));
+            // Background
+            templates::create_background(parent, &handles);
 
-            parent.spawn(Node {
-                flex_grow: 0.01,
-                min_height: Val::Px(18.0 * UI_SCALE),
-                ..default()
+            // Logo
+            templates::create_logo(parent, &handles);
+
+            // Create breadcrumb navigation with title
+            templates::create_breadcrumb_navigation(
+                parent,
+                &handles,
+                title,
+                "" // No subtitle for this level
+            );
+
+            // Create content area for settings items
+            let mut content_area_entity = templates::create_selectable_content_area(
+                parent,
+                &handles,
+                0 // Initial selection
+            );
+
+            let content_area = content_area_entity.insert(MenuRoot {
+                selected_item: 0,
             });
 
-            let create_menu_item =
-                |parent: &mut ChildBuilder<'_>, title: &str, idx: &mut usize, menu_event: MenuEvent| {
-                    let mut menu_item = parent.spawn((
-                        Text::new(title),
-                        TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                        },
-                        Node {
-                            min_height: Val::Px(40.0 * UI_SCALE),
-                            align_self: AlignSelf::Start,
-                            justify_self: JustifySelf::Start,
-                            padding: UiRect::left(Val::Px(15.0)),
-                            ..default()
-                        },
-                    ));
-                    if menu_event.is_none() {
-                        menu_item.insert(
-                            TextColor(colors::MENU_ITEM_COLOR_OFF.with_alpha(0.1)),
-                        );
-                    } else {
-                        menu_item.insert(
-                            (
-                                MenuItem::new(*idx, menu_event),
-                                TextColor(colors::MENU_ITEM_COLOR_OFF),
-                            )
-                        );
-                        *idx += 1;
-                    }
-                };
-
-            // Menu Items
-            parent
-                .spawn(Node {
-                    width: Val::Percent(80.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::FlexStart,
-                    flex_direction: FlexDirection::Column,
-                    flex_grow: 1.0,
-                    ..default()
-                })
-                .with_children(|parent| {
-                    for (item, event) in menu_items.iter() {
-                        create_menu_item(parent, item, &mut menu_idx, *event);
-                    }
-                    parent.spawn(Node {
-                        min_height: Val::Px(40.0 * UI_SCALE),
+            // Add a column container inside the content area for vertical layout
+            content_area.with_children(|content| {
+                content
+                    .spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::FlexStart,
+                        justify_content: JustifyContent::FlexStart,
+                        overflow: Overflow::scroll_y(),
                         ..default()
-                    });
-                    create_menu_item(
-                        parent,
-                        "Go Back",
-                        &mut menu_idx,
-                        MenuEvent::Back(MenuEvBack),
-                    );
-                });
-            parent
-                .spawn(Text::new("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back"))
-                .insert(TextFont {
-                    font: handles.fonts.chakra.w300_light.clone(),
-                    font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))
-                .insert(Node {
-                    align_self: AlignSelf::End,
-                    justify_self: JustifySelf::End,
-                    margin: UiRect::all(Val::Px(15.0 * UI_SCALE)),
-                    ..default()
-                });
-        });
+                    })
+                    .with_children(|menu_list| {
+                        let mut idx = 0;
 
-    info!("Settings UI initialized");
+                        // Add each menu item
+                        for (item_text, event) in menu_items.iter() {
+                            if !event.is_none() {
+                                templates::create_content_item(
+                                    menu_list,
+                                    item_text,
+                                    idx,
+                                    idx == 0, // First item selected by default
+                                    &handles
+                                )
+                                .insert(MenuItem::new(idx, *event));
+                                idx += 1;
+                            } else {
+                                // Add disabled item with gray color
+                                menu_list
+                                    .spawn(Node {
+                                        width: Val::Percent(100.0),
+                                        padding: UiRect::all(Val::Px(10.0 * UI_SCALE)),
+                                        margin: UiRect::vertical(Val::Px(2.0 * UI_SCALE)),
+                                        ..default()
+                                    })
+                                    .with_children(|parent| {
+                                        parent
+                                            .spawn(Text::new(item_text))
+                                            .insert(TextFont {
+                                                font: handles.fonts.titillium.w600_semibold.clone(),
+                                                font_size: 24.0 * FONT_SCALE,
+                                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                            })
+                                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)));
+                                    });
+                            }
+                        }
+
+                        // Add "Go Back" option
+                        templates::create_content_item(
+                            menu_list,
+                            "Go Back",
+                            idx,
+                            false,
+                            &handles
+                        )
+                        .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
+                    });
+            });
+
+            // Help text
+            templates::create_help_text(
+                parent,
+                &handles,
+                Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
+            );
+        })
+        .id();
+
+    info!("Settings UI initialized with entity: {:?}", root_entity);
 }
 
 pub fn cleanup(
     mut commands: Commands,
     qtui: Query<Entity, With<SettingsMenu>>,
     qc: Query<Entity, With<SCamera>>,
+    qtimer: Query<Entity, With<SettingsStateTimer>>,
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
     }
 
+    // Clean up menu entities
     for e in qtui.iter() {
+        commands.entity(e).despawn_recursive();
+    }
+
+    // Clean up timer
+    for e in qtimer.iter() {
         commands.entity(e).despawn_recursive();
     }
 }

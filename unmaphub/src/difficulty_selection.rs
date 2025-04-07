@@ -1,107 +1,193 @@
 use bevy::prelude::*;
+use std::time::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::loadlevel::LoadLevelEvent;
-use uncore::events::map_selected::MapSelectedEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::difficulty_state::DifficultySelectionState;
 use uncore::resources::maps::Maps;
 use uncore::states::AppState;
 use uncore::states::MapHubState;
 use uncore::types::root::game_assets::GameAssets;
+use uncoremenu::{
+    components::*,
+    systems::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
+    templates,
+};
 
+/// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
 pub struct DifficultySelectionUI;
+
+/// UI component marker for the difficulty description text
 #[derive(Component, Debug)]
 pub struct DifficultyDescriptionUI;
 
-#[derive(Component, Debug)]
+/// Component that associates a menu item with a specific difficulty level
+#[derive(Component, Debug, Clone, Copy)]
 pub struct DifficultySelectionItem {
     pub difficulty: Difficulty,
 }
 
-// New event for confirming difficulty selection
-#[derive(Debug, Clone, Event)]
-pub struct DifficultyConfirmedEvent;
-
+/// Registers all systems needed for the difficulty selection screen
 pub fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(MapHubState::DifficultySelection), setup_systems)
         .add_systems(OnExit(MapHubState::DifficultySelection), cleanup_systems)
         .add_systems(
             Update,
-            (keyboard, handle_difficulty_selection, update_item_colors)
+            (
+                handle_difficulty_click,
+                update_difficulty_description,
+                handle_difficulty_escape,
+            )
                 .run_if(in_state(MapHubState::DifficultySelection)),
-        )
-        // Register the new event
-        .add_event::<DifficultyConfirmedEvent>();
+        );
 }
 
-pub fn setup_systems(
-    mut commands: Commands,
-    // Access MapSelectedEvent
-    mut ev_map_selected: EventReader<MapSelectedEvent>,
-    handles: Res<GameAssets>,
-) {
-    // Create the UI for the difficulty selection screen
+/// Sets up the difficulty selection screen UI and initializes the difficulty state
+pub fn setup_systems(mut commands: Commands, handles: Res<GameAssets>) {
     setup_ui(&mut commands, &handles);
-
-    // Initialize the DifficultySelectionState resource
-    let mut difficulty_selection_state = DifficultySelectionState::default();
-
-    // Get the selected map index from the MapSelectedEvent
-    if let Some(event) = ev_map_selected.read().next() {
-        difficulty_selection_state.selected_map_idx = event.map_idx;
-    }
-    commands.insert_resource(difficulty_selection_state);
+    let default_difficulty = Difficulty::all().next().unwrap_or_default();
+    commands.insert_resource(DifficultySelectionState {
+        selected_difficulty: default_difficulty,
+        selected_map_idx: 0,
+        state_entered_at: Instant::now(),
+    });
 }
 
+/// Cleans up the difficulty selection screen UI
+/// Note: DifficultySelectionState is kept as map_selection needs selected_map_idx
 pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<DifficultySelectionUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
     }
 }
 
-// Handle the DifficultyConfirmedEvent
-pub fn handle_difficulty_selection(
-    mut ev_difficulty_confirmed: EventReader<DifficultyConfirmedEvent>,
+/// Handles clicks on difficulty options and the "Go Back" button
+/// - On difficulty selection: Sets the global difficulty and loads the level or manual
+/// - On "Go Back": Returns to map selection
+pub fn handle_difficulty_click(
+    mut ev_menu_clicks: EventReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
-    mut difficulty: ResMut<CurrentDifficulty>,
-    difficulty_selection_state: Res<DifficultySelectionState>,
-    maps: Res<Maps>,
-    ev_load_level: EventWriter<LoadLevelEvent>,
-    next_state: ResMut<NextState<AppState>>,
-) {
-    if ev_difficulty_confirmed.read().next().is_none() {
-        return;
-    }
-
-    difficulty.0 = difficulty_selection_state
-        .selected_difficulty
-        .create_difficulty_struct();
-
-    start_preplay_manual_system(
-        difficulty.into(),
-        next_state,
-        difficulty_selection_state,
-        maps,
-        ev_load_level,
-    );
-
-    next_hub_state.set(MapHubState::None);
-}
-
-fn start_preplay_manual_system(
-    difficulty: Res<CurrentDifficulty>,
-    mut next_game_state: ResMut<NextState<AppState>>,
+    mut difficulty_resource: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<Maps>,
     mut ev_load_level: EventWriter<LoadLevelEvent>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
 ) {
-    if difficulty.0.tutorial_chapter.is_none() {
+    // Grace period to prevent accidental clicks
+    if difficulty_selection_state
+        .state_entered_at
+        .elapsed()
+        .as_secs_f32()
+        < 0.1
+    {
+        ev_menu_clicks.clear();
+        return;
+    }
+
+    for ev in ev_menu_clicks.read() {
+        let total_difficulties = Difficulty::all().count();
+
+        if let Some((item_data, _)) = q_items
+            .iter()
+            .find(|(_, interactive)| interactive.identifier == ev.0)
+        {
+            difficulty_resource.0 = item_data.difficulty.create_difficulty_struct();
+
+            start_preplay_manual_or_load(
+                &difficulty_resource.0,
+                &mut next_app_state,
+                &difficulty_selection_state,
+                &maps,
+                &mut ev_load_level,
+            );
+
+            next_hub_state.set(MapHubState::None);
+            break;
+        } else if ev.0 == total_difficulties {
+            next_hub_state.set(MapHubState::MapSelection);
+            break;
+        }
+    }
+}
+
+/// Updates the description text when a different difficulty is selected
+/// Must preserve state between difficulty hovers to fix description not updating
+pub fn update_difficulty_description(
+    mut ev_menu_selection: EventReader<MenuItemSelected>,
+    mut difficulty_selection_state: ResMut<DifficultySelectionState>,
+    mut q_desc_text: Query<(&mut Text, &mut TextColor), With<DifficultyDescriptionUI>>,
+    q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
+) {
+    if difficulty_selection_state
+        .state_entered_at
+        .elapsed()
+        .as_secs_f32()
+        < 0.1
+    {
+        ev_menu_selection.clear();
+        return;
+    }
+
+    for ev in ev_menu_selection.read() {
+        let total_difficulties = Difficulty::all().count();
+
+        if let Ok((mut text, mut text_color)) = q_desc_text.get_single_mut() {
+            if ev.0 == total_difficulties {
+                // "Go Back" item selected
+                text.0 = "Select a difficulty...".to_string();
+                text_color.0 = colors::MENU_ITEM_COLOR_OFF;
+                continue;
+            }
+
+            // Find the difficulty associated with the selected menu item
+            if let Some((item_data, _)) = q_items
+                .iter()
+                .find(|(_, interactive)| interactive.identifier == ev.0)
+            {
+                let selected_difficulty = item_data.difficulty;
+                let dif_struct = selected_difficulty.create_difficulty_struct();
+
+                let new_text = format!(
+                    "Difficulty <{}>:\n{}\n\nScore Bonus: {:.2}x",
+                    dif_struct.difficulty_name,
+                    dif_struct.difficulty_description,
+                    dif_struct.difficulty_score_multiplier
+                );
+
+                text.0 = new_text;
+                text_color.0 = colors::MENU_ITEM_COLOR_OFF;
+                difficulty_selection_state.selected_difficulty = selected_difficulty;
+            }
+        }
+    }
+}
+
+/// Handles ESC key press to return to map selection
+pub fn handle_difficulty_escape(
+    mut ev_escape: EventReader<MenuEscapeEvent>,
+    mut next_state: ResMut<NextState<MapHubState>>,
+) {
+    if ev_escape.read().next().is_some() {
+        next_state.set(MapHubState::MapSelection);
+    }
+}
+
+/// Helper function to either load the level directly or show the preplay manual
+/// based on the selected difficulty's tutorial chapter
+fn start_preplay_manual_or_load(
+    difficulty_struct: &uncore::difficulty::DifficultyStruct,
+    next_game_state: &mut ResMut<NextState<AppState>>,
+    difficulty_selection_state: &Res<DifficultySelectionState>,
+    maps: &Res<Maps>,
+    ev_load_level: &mut EventWriter<LoadLevelEvent>,
+) {
+    if difficulty_struct.tutorial_chapter.is_none() {
         let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
             .path
             .clone();
-
         ev_load_level.send(LoadLevelEvent { map_filepath });
         next_game_state.set(AppState::Loading);
     } else {
@@ -109,229 +195,116 @@ fn start_preplay_manual_system(
     }
 }
 
-pub fn keyboard(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut difficulty_selection_state: ResMut<DifficultySelectionState>,
-    mut ev_difficulty_confirmed: EventWriter<DifficultyConfirmedEvent>,
-    mut next_state: ResMut<NextState<MapHubState>>,
-) {
-    if keyboard_input.just_pressed(KeyCode::ArrowUp) {
-        for _ in 0..4 {
-            difficulty_selection_state.selected_difficulty =
-                difficulty_selection_state.selected_difficulty.prev();
-        }
-    } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-        for _ in 0..4 {
-            difficulty_selection_state.selected_difficulty =
-                difficulty_selection_state.selected_difficulty.next();
-        }
-    } else if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-        difficulty_selection_state.selected_difficulty =
-            difficulty_selection_state.selected_difficulty.prev();
-    } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-        difficulty_selection_state.selected_difficulty =
-            difficulty_selection_state.selected_difficulty.next();
-    } else if keyboard_input.just_pressed(KeyCode::Enter) {
-        // Send the confirmation event only if a valid difficulty is selected
-        ev_difficulty_confirmed.send(DifficultyConfirmedEvent);
-    } else if keyboard_input.just_pressed(KeyCode::Escape) {
-        // Transition back to the map selection screen
-        next_state.set(MapHubState::MapSelection);
-    }
-}
-
-// Update item colors based on selected difficulty
-pub fn update_item_colors(
-    mut q_items: Query<(&DifficultySelectionItem, &Children)>,
-    difficulty_selection_state: Res<DifficultySelectionState>,
-    mut q_textcolor: Query<&mut TextColor>,
-    mut q_text: Query<&mut Text>,
-    q_desc: Query<Entity, With<DifficultyDescriptionUI>>,
-) {
-    if !difficulty_selection_state.is_changed() {
-        return;
-    }
-    let sel_difficulty = difficulty_selection_state.selected_difficulty;
-    for (difficulty_item, children) in q_items.iter_mut() {
-        if let Ok(mut textcolor) = q_textcolor.get_mut(children[0]) {
-            let new_color = if difficulty_item.difficulty == sel_difficulty {
-                colors::MENU_ITEM_COLOR_ON
-            } else {
-                colors::MENU_ITEM_COLOR_OFF
-            };
-            if new_color != textcolor.0 {
-                textcolor.0 = new_color;
-            }
-        }
-    }
-    let dif = sel_difficulty.create_difficulty_struct();
-    for entity in q_desc.iter() {
-        if let Ok(mut text) = q_text.get_mut(entity) {
-            let name = &dif.difficulty_name;
-            let description = &dif.difficulty_description;
-            let score_mult = dif.difficulty_score_multiplier;
-            let new_text = [
-                format!("Difficulty <{name}>: {description}"),
-                format!("Score Bonus: {score_mult:.2}x"),
-            ];
-            text.0 = new_text.join("\n");
-        }
-    }
-}
-
+/// Creates the UI for the difficulty selection screen using templates
 pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
-    const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
-    let main_color = Color::Srgba(Srgba {
-        red: 0.2,
-        green: 0.2,
-        blue: 0.2,
-        alpha: 0.05,
-    });
+    let initial_difficulty = Difficulty::all().next().unwrap_or_default();
+    let initial_dif_struct = initial_difficulty.create_difficulty_struct();
+    let initial_desc = format!(
+        "Difficulty <{}>:\n{}\n\nScore Bonus: {:.2}x",
+        initial_dif_struct.difficulty_name,
+        initial_dif_struct.difficulty_description,
+        initial_dif_struct.difficulty_score_multiplier
+    );
+
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
-            flex_direction: FlexDirection::Column,
-            padding: UiRect {
-                left: Val::Percent(10.0),
-                right: Val::Percent(10.0),
-                top: Val::Percent(5.0),
-                bottom: Val::Percent(5.0),
-            },
-            flex_grow: 1.0,
+            position_type: PositionType::Absolute,
             ..default()
         })
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
-            parent
-                .spawn(Node {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(20.0),
-                    min_width: Val::Px(0.0),
-                    min_height: Val::Px(64.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::FlexStart,
-                    ..default()
-                })
-                .with_children(|parent| {
-                    // logo
-                    parent
-                        .spawn(ImageNode {
-                            image: handles.images.title.clone(),
-                            ..default()
-                        })
-                        .insert(Node {
-                            aspect_ratio: Some(130.0 / 17.0),
-                            width: Val::Percent(80.0),
-                            height: Val::Auto,
-                            max_width: Val::Percent(80.0),
-                            max_height: Val::Percent(100.0),
-                            flex_shrink: 1.0,
-                            ..default()
-                        });
-                });
-            parent.spawn(Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(20.0),
-                ..default()
-            });
-            parent
-                .spawn(Node {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(60.0),
-                    justify_content: JustifyContent::SpaceEvenly,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                })
-                .insert(BackgroundColor(main_color))
-                .with_children(|parent| {
-                    // text
-                    parent
-                        .spawn(Text::new("Map Hub - Select Difficulty"))
-                        .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 38.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                        })
-                        .insert(TextColor(Color::WHITE));
-                    parent.spawn(Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(10.0),
+            templates::create_background(parent, handles);
+            templates::create_logo(parent, handles);
+            templates::create_breadcrumb_navigation(
+                parent,
+                handles,
+                "New Game",
+                "Select Difficulty",
+            );
+
+            let mut content_area = templates::create_selectable_content_area(parent, handles, 0);
+
+            content_area.with_children(|content| {
+                // Left column: difficulty list
+                content
+                    .spawn(Node {
+                        width: Val::Percent(50.0),
+                        height: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::FlexStart,
+                        justify_content: JustifyContent::FlexStart,
+                        overflow: Overflow::scroll_y(),
+                        padding: UiRect::right(Val::Px(10.0 * UI_SCALE)),
                         ..default()
+                    })
+                    .with_children(|list_column| {
+                        let difficulties: Vec<Difficulty> = Difficulty::all().collect();
+                        for (idx, difficulty) in difficulties.iter().enumerate() {
+                            templates::create_content_item(
+                                list_column,
+                                difficulty.difficulty_name(),
+                                idx,
+                                idx == 0,
+                                handles,
+                            )
+                            .insert(DifficultySelectionItem {
+                                difficulty: *difficulty,
+                            })
+                            .insert(MenuItemInteractive {
+                                identifier: idx,
+                                selected: idx == 0,
+                            });
+                        }
+
+                        templates::create_content_item(
+                            list_column,
+                            "Go Back",
+                            difficulties.len(),
+                            false,
+                            handles,
+                        )
+                        .insert(MenuItemInteractive {
+                            identifier: difficulties.len(),
+                            selected: false,
+                        });
                     });
 
-                    // Difficulty buttons in a 3-column grid
-                    parent
-                        .spawn(Node {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(80.0),
-                            justify_content: JustifyContent::SpaceEvenly,
-                            align_items: AlignItems::Center,
-                            display: Display::Grid,
-                            // 4 equal columns
-                            grid_template_columns: RepeatedGridTrack::flex(4, 1.0),
-                            grid_auto_rows: GridTrack::auto(),
-                            row_gap: Val::Px(10.0 * UI_SCALE),
-                            column_gap: Val::Px(20.0 * UI_SCALE),
-                            ..default()
-                        })
-                        .insert(BackgroundColor(main_color))
-                        .with_children(|parent| {
-                            for difficulty in Difficulty::all() {
-                                parent
-                                    .spawn(Button)
-                                    .insert(Node {
-                                        min_height: Val::Px(30.0 * UI_SCALE),
-                                        border: UiRect::all(Val::Px(0.9 * UI_SCALE)),
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        flex_direction: FlexDirection::Column,
-                                        align_items: AlignItems::Center,
-                                        margin: UiRect::all(Val::Percent(MARGIN_PERCENT)),
-                                        ..default()
-                                    })
-                                    .insert(DifficultySelectionItem { difficulty })
-                                    .with_children(|btn| {
-                                        btn.spawn(Text::new(difficulty.difficulty_name()))
-                                            .insert(TextFont {
-                                                font: handles.fonts.londrina.w300_light.clone(),
-                                                font_size: 28.0 * FONT_SCALE,
-                                                font_smoothing:
-                                                    bevy::text::FontSmoothing::AntiAliased,
-                                            })
-                                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));
-                                    });
-                            }
-                        });
-                    parent.spawn(Node {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(10.0),
+                // Right column: difficulty description
+                content
+                    .spawn(Node {
+                        width: Val::Percent(50.0),
+                        height: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        padding: UiRect::left(Val::Px(10.0 * UI_SCALE)),
                         ..default()
+                    })
+                    .with_children(|desc_column| {
+                        desc_column.spawn((
+                            Text::new(initial_desc),
+                            TextFont {
+                                font: handles.fonts.titillium.w300_light.clone(),
+                                font_size: 19.0 * FONT_SCALE,
+                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            },
+                            TextColor(colors::MENU_ITEM_COLOR_OFF),
+                            Node {
+                                margin: UiRect::top(Val::Px(15.0 * UI_SCALE)),
+                                ..default()
+                            },
+                            DifficultyDescriptionUI,
+                        ));
                     });
-                });
-            parent
-                .spawn(Text::new("Difficulty <>: Description"))
-                .insert(TextFont {
-                    font: handles.fonts.titillium.w300_light.clone(),
-                    font_size: 19.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
-                .insert(Node {
-                    padding: UiRect::all(Val::Percent(5.0 * UI_SCALE)),
-                    align_content: AlignContent::Center,
-                    align_self: AlignSelf::Center,
-                    justify_content: JustifyContent::Center,
-                    justify_self: JustifySelf::Center,
-                    flex_grow: 0.0,
-                    flex_shrink: 0.0,
-                    flex_basis: Val::Px(155.0 * UI_SCALE),
-                    max_height: Val::Px(155.0 * UI_SCALE),
-                    ..default()
-                })
-                .insert(DifficultyDescriptionUI);
+            });
+
+            templates::create_help_text(
+                parent,
+                handles,
+                Some(
+                    "[Up]/[Down]: Change Difficulty    |    [Enter]: Select    |    [ESC]: Go Back"
+                        .to_string(),
+                ),
+            );
         });
-    info!("MapHub - Difficulty menu loaded");
 }

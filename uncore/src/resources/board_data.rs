@@ -75,4 +75,3 @@ impl FromWorld for BoardData {
         }
     }
 }
-

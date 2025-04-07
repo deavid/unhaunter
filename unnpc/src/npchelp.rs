@@ -9,8 +9,8 @@ use uncore::states::GameState;
 use uncore::types::root::game_assets::GameAssets;
 use uncore::{
     behavior::{
-        component::{Interactive, NpcHelpDialog},
         Behavior,
+        component::{Interactive, NpcHelpDialog},
     },
     components::game_config::GameConfig,
 };

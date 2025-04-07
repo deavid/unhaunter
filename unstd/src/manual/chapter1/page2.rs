@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header, summary_text};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -12,7 +12,7 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
     let grid = vec![
         (
             &handles.images.manual_movement_wasd,
-            "*1. Movement:* Use the *[W][A][S][D]* keys to move your character around the environment. Explore every corner of the haunted location!"
+            "*1. Movement:* Use the *[W][A][S][D]* keys to move your character around the environment. Explore every corner of the haunted location!",
         ),
         (
             &handles.images.manual_interacting_objects,
@@ -30,7 +30,7 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
             &handles.images.manual_switch_item,
             "*5. Inventory Cycling (Right Hand):* Press *[Q]* to cycle through the items stored in your right hand's inventory slots. Quickly switch between essential tools.",
         ),
-        // TODO: [F] and [G] keys are to be explained in chapter2. In there we should also explain [T] Swap hands, and the hiding mechanic. 
+        // TODO: [F] and [G] keys are to be explained in chapter2. In there we should also explain [T] Swap hands, and the hiding mechanic.
         (
             &handles.images.manual_quick_evidence,
             "*6.  Quick Evidence:* Press *[C]* to mark the current evidence type displayed by the equipment in your right hand. Quickly tag the evidence you've found without needing to return to the truck.",
