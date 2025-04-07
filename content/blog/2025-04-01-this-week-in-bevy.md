@@ -5,6 +5,10 @@ description = "We got the game in the highlights of the week!"
 tags = ["markdown", "text", "in-the-wild"]
 +++
 
+https://youtu.be/6nGsplMt5iw?si=bN3KBcWmYUjQ-C8M&t=226
+
+https://thisweekinbevy.com/issue/2025-03-31-0160-rc2-breakout-on-game-boy-advance-and-bevyecs-for-static-sites
+
 Lorem est tota propiore conpellat pectoribus de pectora summo. <!--more-->Redit teque digerit hominumque toris verebor lumina non cervice subde tollit usus habet Arctonque, furores quas nec ferunt. Quoque montibus nunc caluere tempus inhospita parcite confusaque translucet patri vestro qui optatis lumine cognoscere flos nubis! Fronde ipsamque patulos Dryopen deorum.
 
 1. Exierant elisi ambit vivere dedere
