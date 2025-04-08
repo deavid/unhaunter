@@ -1,4 +1,4 @@
-use std::time::Instant;
+use bevy::utils::Instant;
 
 use bevy::prelude::*;
 use unsettings::{audio::AudioSettingsValue, game::GameplaySettingsValue};

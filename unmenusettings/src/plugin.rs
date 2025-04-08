@@ -1,4 +1,4 @@
-use std::time::Instant;
+use bevy::utils::Instant;
 
 use crate::components::{
     AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuSettingClassSelected,

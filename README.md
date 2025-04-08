@@ -215,6 +215,7 @@ Install deps
 ```bash
 rustup target install wasm32-unknown-unknown
 cargo install wasm-server-runner
+cargo install wasm-pack
 ```
 
 Run with:
@@ -242,7 +243,7 @@ Instead, if you're interested, you can edit `~/.cargo/config.toml` (create the f
 [target.x86_64-unknown-linux-gnu]
 linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
-```  
+```
 
 You'll need to install `mold` and `clang`.
 
