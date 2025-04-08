@@ -1,6 +1,6 @@
 pub mod app;
-pub mod report_timer;
 pub mod assetidx_updater;
+pub mod report_timer;
 pub mod utils;
 
 use wasm_bindgen::prelude::wasm_bindgen;

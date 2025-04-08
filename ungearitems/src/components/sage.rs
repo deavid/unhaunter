@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::{
     components::{
         board::{direction::Direction, position::Position},
@@ -16,7 +17,6 @@ use uncore::{
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
 };
-use uncore::random_seed;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

@@ -1,6 +1,8 @@
+use std::time::Instant;
+
 use crate::components::{
     AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuSettingClassSelected,
-    SaveAudioSetting, SaveGameplaySetting, SettingsState,
+    SaveAudioSetting, SaveGameplaySetting, SettingsState, SettingsStateTimer,
 };
 use crate::{menu_ui, systems};
 use bevy::prelude::*;
@@ -13,7 +15,16 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
         app.init_state::<SettingsState>()
             .add_systems(
                 OnEnter(AppState::SettingsMenu),
-                (menu_ui::setup_ui_cam, menu_ui::setup_ui_main_cat_system).chain(),
+                (
+                    menu_ui::setup_ui_cam,
+                    menu_ui::setup_ui_main_cat_system,
+                    |mut commands: Commands| {
+                        commands.spawn(SettingsStateTimer {
+                            state_entered_at: Instant::now(),
+                        });
+                    },
+                )
+                    .chain(),
             )
             .add_systems(OnExit(AppState::SettingsMenu), menu_ui::cleanup)
             .add_systems(
@@ -28,6 +39,7 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
                     systems::menu_save_audio_setting,
                     systems::menu_gameplay_setting_selected,
                     systems::menu_save_gameplay_setting,
+                    systems::menu_integration_system,
                 )
                     .run_if(in_state(AppState::SettingsMenu)),
             )

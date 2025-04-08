@@ -52,8 +52,8 @@ pub enum Difficulty {
 
 impl Difficulty {
     /// Returns an iterator over all difficulty levels.
-    pub fn all() -> enum_iterator::All<Self> {
-        all()
+    pub fn all() -> impl Iterator<Item = Difficulty> {
+        all().filter(|x: &Difficulty| x.is_enabled())
     }
 
     /// Returns the next difficulty level, wrapping around to the beginning if at the
@@ -66,6 +66,27 @@ impl Difficulty {
     /// beginning.
     pub fn prev(&self) -> Self {
         enum_iterator::previous_cycle(self)
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        match self {
+            Difficulty::NoviceInvestigator => true,
+            Difficulty::AdeptInvestigator => true,
+            Difficulty::SeniorInvestigator => true,
+            Difficulty::ExpertInvestigator => true,
+            Difficulty::AdeptSpecialist => true,
+            Difficulty::LeadSpecialist => true,
+            Difficulty::ExpertSpecialist => false,
+            Difficulty::MasterSpecialist => true,
+            Difficulty::InitiateOccultist => false,
+            Difficulty::AdeptOccultist => false,
+            Difficulty::ExpertOccultist => true,
+            Difficulty::MasterOccultist => false,
+            Difficulty::AdeptGuardian => false,
+            Difficulty::LeadGuardian => true,
+            Difficulty::ExpertGuardian => false,
+            Difficulty::MasterGuardian => true,
+        }
     }
 
     // --- Ghost Behavior ---
@@ -687,22 +708,22 @@ impl Difficulty {
     /// Returns the display name for the difficulty level.
     pub fn difficulty_name(&self) -> &'static str {
         match self {
-            Difficulty::NoviceInvestigator => "Novice Investigator",
-            Difficulty::AdeptInvestigator => "Adept Investigator",
-            Difficulty::SeniorInvestigator => "Senior Investigator",
-            Difficulty::ExpertInvestigator => "Expert Investigator",
-            Difficulty::AdeptSpecialist => "Adept Specialist",
-            Difficulty::LeadSpecialist => "Lead Specialist",
+            Difficulty::NoviceInvestigator => "New Hire Investigator",
+            Difficulty::AdeptInvestigator => "Intern Investigator",
+            Difficulty::SeniorInvestigator => "Apprentice Investigator",
+            Difficulty::ExpertInvestigator => "Junior Investigator",
+            Difficulty::AdeptSpecialist => "Associate Investigator",
+            Difficulty::LeadSpecialist => "Staff Investigator",
             Difficulty::ExpertSpecialist => "Expert Specialist",
-            Difficulty::MasterSpecialist => "Master Specialist",
+            Difficulty::MasterSpecialist => "Senior Specialist",
             Difficulty::InitiateOccultist => "Initiate Occultist",
             Difficulty::AdeptOccultist => "Adept Occultist",
-            Difficulty::ExpertOccultist => "Expert Occultist",
-            Difficulty::MasterOccultist => "Master Occultist",
+            Difficulty::ExpertOccultist => "Initiate Occultist",
+            Difficulty::MasterOccultist => "Initiate Occultist",
             Difficulty::AdeptGuardian => "Adept Guardian",
-            Difficulty::LeadGuardian => "Lead Guardian",
+            Difficulty::LeadGuardian => "Expert Occultist",
             Difficulty::ExpertGuardian => "Expert Guardian",
-            Difficulty::MasterGuardian => "Master Guardian",
+            Difficulty::MasterGuardian => "Master of the Paranormal",
         }
     }
 
@@ -710,100 +731,111 @@ impl Difficulty {
         match self {
             Difficulty::NoviceInvestigator => {
                 "
-                For those new to the paranormal.
-                Friendly ghosts, minimal equipment, no risk of attacks. 
-                Focus on mastering the basics with Thermometer and EMF Reader. (2/44 Ghosts)"
-            },
+For those new to the paranormal.
+Friendly ghosts and minimal risks.
+Start with essential tools: Flashlight, Thermometer, and EMF Reader.
+Learn the basics of ghost hunting with simple evidence types.
+(2/44 Ghosts)"
+            }
             Difficulty::AdeptInvestigator => {
                 "
-                You've handled a few cases.
-                Friendly ghosts, low risk, limited equipment.
-                Add the UV Torch to your arsenal and learn to interpret its readings. (3/44 Ghosts)"
-            },
+You've handled your first cases.
+Still friendly ghosts with low risk.
+Add UV Torch and Video Camera to your toolkit.
+Learn to spot UV traces and visual evidence.
+(3/44 Ghosts)"
+            }
             Difficulty::SeniorInvestigator => {
                 "
-                You're becoming familiar with the unseen.
-                Access to standard equipment, low risk.
-                Time to face a wider variety of ghosts and hone your investigative skills. (9/44 Ghosts)"
-            },
+You're becoming familiar with the unseen.
+Access to Voice Recorder and Geiger Counter.
+Time to face a wider variety of ghosts and gather more complex evidence.
+(9/44 Ghosts)"
+            }
             Difficulty::ExpertInvestigator => {
                 "
-                Your mind is strong, but the darkness lingers.
-                Full equipment, low risk, slower sanity drain.
-                Delve deeper into the mysteries and uncover the truth. (22/44 Ghosts)"
-            },
+Your mind is strong, but the darkness lingers.
+Full basic equipment including Spirit Box and Red Torch.
+Delve deeper into communication with the other side.
+(22/44 Ghosts)"
+            }
             Difficulty::AdeptSpecialist => {
                 "
-                The veil thins, and the dangers increase.
-                Average sanity drain, risk of ghostly attacks, haunted objects begin to manifest.
-                Prepare for a true challenge. (All 44 Ghosts)"
-            },
+The veil thins, and the dangers increase.
+Access to advanced tools: Salt, Quartz Stone, and Sage Bundle.
+Learn to protect yourself and manipulate ghost behavior.
+(All 44 Ghosts)"
+            }
             Difficulty::LeadSpecialist => {
                 "
-                Your senses are tested, shadows play tricks.
-                The unseen becomes harder to perceive, testing your observation skills and your courage.
-                (All 44 Ghosts)"
-            },
+Your senses are tested, shadows play tricks.
+Access to all standard equipment.
+The unseen becomes harder to perceive, testing your skills with familiar tools.
+(All 44 Ghosts)"
+            }
             Difficulty::ExpertSpecialist => {
                 "
-                The line blurs between the real and the spectral.
-                Ghostly apparitions become more vivid, blurring the lines between sanity and madness.
-                (All 44 Ghosts)"
-            },
+The line blurs between the real and the spectral.
+Ghostly apparitions become more vivid, blurring the lines between sanity and madness.
+(All 44 Ghosts)"
+            }
             Difficulty::MasterSpecialist => {
                 "
-                You walk a tightrope between worlds.
-                The spirit realm intrudes upon reality, challenging your perception and your resolve. 
-                (All 44 Ghosts)"
-            },
+You walk a tightrope between worlds.
+The spirit realm intrudes upon reality, challenging your perception and your resolve.
+(All 44 Ghosts)"
+            }
             Difficulty::InitiateOccultist => {
                 "
-                The whispers of the ancients call to you.
-                You arrive with a touch of madness, embracing the unknown. 
-                Sanity drains faster, the unseen beckons. (All 44 Ghosts)"
-            },
+The whispers of the ancients call to you.
+You arrive with a touch of madness, embracing the unknown.
+Sanity drains faster, the unseen beckons.
+(All 44 Ghosts)"
+            }
             Difficulty::AdeptOccultist => {
                 "
-                Ancient knowledge grants power, but at a cost.
-                You start with a significant sanity deficit.
-                Tread carefully, for the abyss gazes also into you. (All 44 Ghosts)"
-            },
+Ancient knowledge grants power, but at a cost.
+You start with a significant sanity deficit.
+Tread carefully, for the abyss gazes also into you.
+(All 44 Ghosts)"
+            }
             Difficulty::ExpertOccultist => {
                 "
-                The whispers become screams, sanity teeters on the edge. 
-                You begin deeply affected by the spirit world.  
-                Only the most experienced should venture here. (All 44 Ghosts)"
-            },
+The whispers become screams, sanity teeters on the edge.
+You begin deeply affected by the spirit world.
+Only the most experienced should venture here.
+(All 44 Ghosts)"
+            }
             Difficulty::MasterOccultist => {
                 "
-                Embrace the madness, for it holds the key. 
-                Your sanity is a fragile thread, but your understanding of the paranormal is unmatched. 
-                (All 44 Ghosts)"
-            },
+Embrace the madness, for it holds the key.
+Your sanity is a fragile thread, but your understanding of the paranormal is unmatched.
+(All 44 Ghosts)"
+            }
             Difficulty::AdeptGuardian => {
                 "
-                You stand as a shield against the darkness, but it takes its toll.
-                Face relentless attacks, but your equipment is more attuned to the unseen. 
-                (All 44 Ghosts)"
-            },
+You stand as a shield against the darkness, but it takes its toll.
+Face relentless attacks, but your equipment is more attuned to the unseen.
+(All 44 Ghosts)"
+            }
             Difficulty::LeadGuardian => {
                 "
-                The spirits sense your strength and respond in kind.
-                Prepare for intense confrontations, for your presence draws them out. 
-                (All 44 Ghosts)"
-            },
+The spirits sense your strength and respond in kind.
+Prepare for intense confrontations, for your presence draws them out.
+(All 44 Ghosts)"
+            }
             Difficulty::ExpertGuardian => {
                 "
-                Your spirit shines brightly, a beacon in the night.
-                The darkness seeks to extinguish your light, but your determination is unyielding.
-                (All 44 Ghosts)"
-            },
+Your spirit shines brightly, a beacon in the night.
+The darkness seeks to extinguish your light, but your determination is unyielding.
+(All 44 Ghosts)"
+            }
             Difficulty::MasterGuardian => {
                 "
-                You are a master of both worlds, walking the path between. 
-                Face the ultimate challenges, for the fate of reality rests in your hands. 
-                (All 44 Ghosts)"
-            },
+You are a master of both worlds, walking the path between.
+Face the ultimate challenges, for the fate of reality rests in your hands.
+(All 44 Ghosts)"
+            }
         }
     }
 

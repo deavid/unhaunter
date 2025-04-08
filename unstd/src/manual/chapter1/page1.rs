@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header, summary_text};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -12,7 +12,7 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
     let grid = vec![
         (
             &handles.images.manual_investigate,
-            "*1. Explore the location* and use your equipment (Thermometer, etc) to detect paranormal activity."
+            "*1. Explore the location* and use your equipment (Thermometer, etc) to detect paranormal activity.",
         ),
         (
             &handles.images.manual_locate_ghost,

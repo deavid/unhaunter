@@ -1,5 +1,5 @@
 use bevy::utils::HashSet;
-use enum_iterator::{all, Sequence};
+use enum_iterator::{Sequence, all};
 
 use crate::types::evidence::Evidence;
 

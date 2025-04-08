@@ -1,4 +1,4 @@
-use super::{draw_manual_page, CurrentManualPage, Manual};
+use super::{CurrentManualPage, Manual, draw_manual_page};
 use bevy::prelude::*;
 use uncore::platform::plt::FONT_SCALE;
 use uncore::states::AppState;
@@ -125,10 +125,28 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,
             padding: UiRect::all(Val::Px(2.0)),
+            position_type: PositionType::Absolute,
             ..default()
         })
         .insert(UserManualUI)
-        .with_children(page_content);
+        .with_children(|parent| {
+            // Add menu background first
+            parent
+                .spawn(ImageNode {
+                    image: handles.images.menu_background_low_contrast.clone(),
+                    ..default()
+                })
+                .insert(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    position_type: PositionType::Absolute,
+                    ..default()
+                })
+                .insert(ZIndex(-10));
+
+            // Then add the content on top
+            page_content(parent);
+        });
 }
 
 pub fn user_manual_system(

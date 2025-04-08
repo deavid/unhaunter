@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 uncore = { path = "../uncore" }
+uncoremenu = { path = "../uncoremenu" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

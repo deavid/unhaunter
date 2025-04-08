@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore::behavior::component::RoomState;
 use uncore::behavior::Behavior;
+use uncore::behavior::component::RoomState;
 use uncore::components::board::position::Position;
 use uncore::components::game::GCameraArena;
 use uncore::components::game_config::GameConfig;

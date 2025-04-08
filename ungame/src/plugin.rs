@@ -1,6 +1,6 @@
 use crate::{boardfield_update, hide_mouse::system_hide_mouse, looking_gear};
 
-use super::{level, object_charge, pause_ui, roomchanged, systems, game_ui};
+use super::{game_ui, level, object_charge, pause_ui, roomchanged, systems};
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
 use uncore::states::AppState;

@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -29,7 +29,7 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
         ),
         (
             &handles.images.manual_truck_endmission,
-             "*6. End Mission:* When you are sure that you have expelled all of the ghosts, click \"End Mission\" on the truck to receive your score.",
+            "*6. End Mission:* When you are sure that you have expelled all of the ghosts, click \"End Mission\" on the truck to receive your score.",
         ),
     ];
 

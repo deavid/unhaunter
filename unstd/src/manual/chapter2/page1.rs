@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -21,7 +21,7 @@ pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
         ),
         (
             &handles.images.manual_left_hand_videocam,
-            "*4. Left Hand:* The Videocam can be used with *[TAB]* too if it's placed on the left hand slot."
+            "*4. Left Hand:* The Videocam can be used with *[TAB]* too if it's placed on the left hand slot.",
         ),
         (
             &handles.images.manual_floating_orbs,

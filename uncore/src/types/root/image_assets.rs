@@ -9,6 +9,8 @@ pub struct ImageAssets {
     pub gear_atlas: Handle<TextureAtlasLayout>,
     pub vignette: Handle<Image>,
     pub miasma: Handle<Image>,
+    pub menu_background: Handle<Image>,
+    pub menu_background_low_contrast: Handle<Image>,
     // --- Manual Images ---
     // Chapter 1: Page 1:
     pub manual_investigate: Handle<Image>,

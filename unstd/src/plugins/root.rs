@@ -65,6 +65,8 @@ fn load_assets(
             )),
             vignette: server.load("img/vignette.png"),
             miasma: server.load("img/miasma-base-01.png"),
+            menu_background: server.load("img/menu-background.jpg"),
+            menu_background_low_contrast: server.load("img/menu-background-low-contrast.jpg"),
             // --- Manual Images ---
             // Chapter 1: Page 1:
             manual_investigate: ch1("investigate.png"),

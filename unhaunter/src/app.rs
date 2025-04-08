@@ -5,6 +5,7 @@ use std::time::Duration;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::plugin::UnhaunterCorePlugin;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
@@ -73,6 +74,7 @@ pub fn app_run() {
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,
         UnhaunterWalkiePlugin,
+        UnhaunterCoreMenuPlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     #[cfg(not(target_arch = "wasm32"))]
