@@ -68,7 +68,8 @@
   {% endif %}
 
   <!-- CSS & JS -->
-  <link rel="preload stylesheet" as="style" href="{{ get_url(path=`main.css`) }}" />
+  <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}">
+
   <style>
     :root {
       --bg: {{ config.extra.style.bg_color | default(value="#f4f4f5") }};

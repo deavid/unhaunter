@@ -1,0 +1,629 @@
+/* ==========================================================================
+   Variables
+   ========================================================================== */
+
+// Colors
+$black: #000;
+$white: #fff;
+$gray-100: #f4f4f5;
+$gray-300: #d1d5db;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Theme colors
+$header-light: #e4e4e7;  // Add this
+$header-dark: #27272a;   // Add this if not already defined
+$dark-bg: #18181b;
+$dark-bg-contrast: #27272a;
+$dark-text-primary: #d1d5db;
+$dark-text-secondary: #9ca3af;
+$dark-text-headings: #fff;
+$dark-text-quotes: #f3f4f6;  // Add this
+$dark-borders: #374151;
+$dark-bullets: #4b5563;
+$dark-code-bg: rgb(0 0 0 / 50%);
+
+// Admonition Colors
+$admonition-note-bg: rgba(68, 138, 255, 0.1);
+$admonition-abstract-bg: rgba(0, 176, 255, 0.1);
+$admonition-info-bg: rgba(83, 211, 230, 0.1);
+$admonition-tip-bg: rgba(0, 191, 165, 0.1);
+$admonition-success-bg: rgba(0, 200, 83, 0.1);
+$admonition-question-bg: rgba(100, 221, 23, 0.1);
+$admonition-warning-bg: rgba(255, 145, 0, 0.1);
+$admonition-failure-bg: rgba(255, 82, 82, 0.1);
+$admonition-danger-bg: rgba(255, 23, 68, 0.1);
+$admonition-bug-bg: rgba(255, 23, 68, 0.1);
+$admonition-example-bg: rgba(101, 31, 255, 0.1);
+$admonition-quote-bg: rgba(159, 159, 159, 0.1);
+
+// Typography
+$font-family-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-sm: 0.875rem;
+$line-height-base: 1.75;
+
+// Breakpoints & Layout
+$breakpoint-lg: 1024px;
+$breakpoint-md: 768px;
+$max-width-content: 48rem;
+$max-width-header-footer: 56rem;
+$header-height: 3.5rem;
+
+/* ==========================================================================
+   Mixins
+   ========================================================================== */
+
+@mixin dark-mode {
+  .dark & {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: $gray-300;
+}
+
+html {
+  line-height: $line-height-base;
+  -webkit-text-size-adjust: 100%;
+  font-family: $font-family-sans;
+  height: 100%;
+  
+  // Theme variables
+  --bg: #{$gray-100};
+  --bg-dark: #{$dark-bg};
+  --header: #{$header-light};      // Now this will work
+  --header-dark: #{$dark-bg-contrast};
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  color: $gray-700;
+  background: var(--bg);
+  transition: background-color 0.2s ease-out, color 0.2s ease-out;
+
+  @include dark-mode {
+    color: $dark-text-primary;
+    background: var(--bg-dark);
+  }
+}
+
+// Add the .prose class styles
+.prose {
+  color: $gray-700;
+  max-width: 65ch;
+  
+  @include dark-mode {
+    color: $dark-text-primary;
+  }
+
+  h1, h2, h3, h4 {
+    color: $gray-900;
+    font-weight: 600;
+    @include dark-mode {
+      color: $dark-text-headings;
+    }
+  }
+
+  p {
+    margin: 1.25em 0;
+  }
+
+  a {
+    color: $gray-900;
+    text-decoration: underline;
+    font-weight: 500;
+    &:hover { opacity: 0.8; }
+    @include dark-mode { color: $dark-text-headings; }
+  }
+
+  ul, ol {
+    margin: 1.25em 0;
+    padding-left: 1.625em;
+  }
+
+  ul { list-style-type: disc; }
+  ol { list-style-type: decimal; }
+
+  li {
+    margin: 0.5em 0;
+    &::marker {
+      font-weight: 400;
+      color: $gray-500;
+      @include dark-mode { color: $dark-text-secondary; }
+    }
+  }
+
+  blockquote {
+    font-weight: 500;
+    font-style: italic;
+    color: $gray-900;
+    border-left: 0.25rem solid $gray-300;
+    quotes: "\201C""\201D""\2018""\2019";
+    margin: 1.6em 0;
+    padding-left: 1em;
+
+    @include dark-mode {
+      color: $dark-text-quotes;
+      border-left-color: $dark-borders;
+    }
+  }
+
+  pre {
+    color: $dark-text-primary;
+    background-color: $gray-800;
+    overflow-x: auto;
+    font-size: 0.875em;
+    line-height: 1.7142857;
+    margin: 1.7142857em 0;
+    border-radius: 0.5rem;
+    padding: 0 1.1428571em;
+
+    @include dark-mode {
+      background-color: $dark-code-bg;
+    }
+  }
+
+  code {
+    color: $gray-900;
+    font-weight: 600;
+    font-size: 0.875em;
+    background-color: $gray-100;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+
+    @include dark-mode {
+      color: $dark-text-headings;
+      background-color: $dark-bg-contrast;
+    }
+  }
+}
+
+/* ==========================================================================
+   Layout Components
+   ========================================================================== */
+
+.main-container {
+  position: relative;
+  max-width: $max-width-content;
+  margin: 0 auto;
+  padding: ($header-height + 4rem) 1rem 4rem;
+  min-height: calc(100% - 9rem);
+}
+
+.header-container {
+  width: 100%;
+  min-height: $header-height;
+  position: fixed;
+  top: 0;
+  z-index: 40;
+  background-color: var(--header);
+  
+  @include dark-mode {
+    background-color: var(--header-dark);
+  }
+}
+
+.header-inner {
+  width: 100%;
+  max-width: $max-width-header-footer;
+  margin: 0 auto;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-nav {
+  display: flex;
+  width: 100%;
+  align-items: center;
+
+  @include lg {
+    width: auto;
+  }
+
+  .nav-wrapper {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    padding: 0.5rem 0;
+
+    @include lg {
+      display: flex;
+      width: auto;
+      flex-direction: row;
+      padding: 0;
+    }
+
+    &.open {
+      display: flex;
+      position: fixed;
+      top: $header-height;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba($black, 0.8);
+      padding-top: 2rem;
+
+      @include dark-mode {
+        background-color: rgba($dark-bg, 0.9);
+      }
+    }
+
+    a {
+      display: block;
+      padding: 0.5rem 0;
+      text-align: center;
+      font-size: $font-size-lg;
+      font-weight: 500;
+      color: $gray-900;
+
+      @include lg {
+        padding: 0 0.75rem;
+      }
+
+      @include dark-mode {
+        color: $dark-text-headings;
+      }
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+
+// Header Components
+.site-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $gray-900;
+  
+  @include dark-mode {
+    color: $dark-text-headings;
+  }
+}
+
+// Page Components
+.page-list-item {
+  background-color: rgba($black, 0.03);
+  position: relative;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: transform 0.1s;
+
+  @include dark-mode {
+    background-color: rgba($white, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  h2 {
+    margin: 0;
+    padding-bottom: 0.25rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .page-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    p { margin: 0.25rem 0; }
+  }
+
+  .page-info {
+    font-size: $font-size-sm;
+    opacity: 0.6;
+  }
+}
+
+// Footer Components
+.footer-container {
+  max-width: $max-width-header-footer;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: $font-size-sm;
+  opacity: 0.6;
+}
+
+.footer-left {
+  margin-right: auto;
+  flex-basis: 100%;
+
+  @include lg {
+    flex-basis: 50%;
+  }
+}
+
+.footer-right {
+  display: flex;
+  flex-basis: 100%;
+  margin-top: 0.5rem;
+
+  @include lg {
+    flex-basis: 50%;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  a {
+    margin-left: 1.5rem;
+    &:first-child {
+      margin-left: 0;
+      @include lg {
+        margin-left: 1.5rem;
+      }
+    }
+  }
+}
+
+// Admonition Component
+.admonition {
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  background-color: var(--admonition-bg);
+
+  .admonition-title {
+    display: flex;
+    align-items: center;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    padding: 0.25rem;
+
+    .admonition-icon {
+      margin: 0 0.5rem;
+      height: 1rem;
+      width: 1rem;
+      font-size: 0;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+
+      @include dark-mode {
+        filter: invert(1);
+      }
+    }
+  }
+
+  .admonition-content {
+    padding: 0.5rem 1rem 1rem;
+    > *:first-child { margin-top: 0; }
+    > *:last-child { margin-bottom: 0; }
+  }
+}
+
+/* ==========================================================================
+   Additional Components
+   ========================================================================== */
+
+// Profile Section
+.profile-section {
+  margin-bottom: 4rem;
+  display: flex;
+  align-items: flex-start;
+
+  .profile-avatar-wrapper {
+    margin-right: 1.25rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 0.5px solid rgba($black, 0.1);
+    background-color: rgba($white, 0.5);
+    padding: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+
+    @include dark-mode {
+      background-color: rgba($white, 0.15);
+      border-color: rgba($white, 0.1);
+    }
+  }
+
+  .profile-avatar {
+    display: block;
+    aspect-ratio: 1 / 1;
+    width: 4rem;
+    border-radius: 9999px;
+    background-color: rgba($black, 0.05) !important;
+    margin: 0;
+
+    &:hover {
+      animation: spin 1s linear infinite;
+    }
+
+    &.invert-dark {
+      @include dark-mode {
+        filter: invert(1);
+      }
+    }
+  }
+}
+
+// Table of Contents
+.toc-container {
+  background-color: rgba($black, 0.03);
+  margin-bottom: 3rem;
+  display: flex;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-size: $font-size-lg;
+
+  @include dark-mode {
+    background-color: rgba($white, 0.08);
+  }
+
+  details {
+    width: 100%;
+    summary {
+      cursor: pointer;
+      padding: 0.25rem 0 0.25rem 1rem;
+      list-style: none;
+      &::-webkit-details-marker { display: none; }
+    }
+    .toc-content {
+      padding: 0 0.5rem;
+      ul {
+        list-style: none;
+        padding-left: 1rem;
+        margin: 0.5rem 0;
+      }
+      li { margin: 0.25rem 0; }
+      a {
+        text-decoration: none;
+        color: $gray-700;
+        &:hover { text-decoration: underline; }
+        @include dark-mode { color: $dark-text-primary; }
+      }
+    }
+  }
+}
+
+// Post Navigation
+.post-navigation {
+  background-color: rgba($black, 0.03);
+  margin-top: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  border-radius: 0.5rem;
+  font-size: $font-size-lg;
+
+  @include dark-mode {
+    background-color: rgba($white, 0.08);
+  }
+
+  a {
+    transition: background-color 0.1s;
+    display: flex;
+    min-width: 50%;
+    flex-grow: 1;
+    align-items: center;
+    padding: 1.5rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      background-color: rgba($black, 0.02);
+      @include dark-mode {
+        background-color: rgba($white, 0.03);
+      }
+    }
+
+    &.prev-link {
+      border-radius: 0.5rem 0 0 0.5rem;
+      padding-right: 0.75rem;
+      span:first-child { margin-right: 0.375rem; }
+    }
+
+    &.next-link {
+      border-radius: 0 0.5rem 0.5rem 0;
+      margin-left: auto;
+      justify-content: flex-end;
+      padding-left: 0.75rem;
+      span:last-child { margin-left: 0.375rem; }
+    }
+  }
+}
+
+// Menu Toggle Button
+.menu-toggle {
+  position: relative;
+  z-index: 50;
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+
+  @include lg {
+    display: none;
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    display: block;
+    height: 2px;
+    width: 1.25rem;
+    background-color: $black;
+    transition: transform 0.2s, width 0.2s;
+
+    @include dark-mode {
+      filter: invert(1);
+    }
+  }
+}
+
+.open {
+  overflow: hidden;
+
+  .menu-toggle {
+    &::before {
+      width: 1.5rem;
+      transform: translateY(5.5px) rotate(45deg);
+    }
+    &::after {
+      width: 1.5rem;
+      transform: translateY(-5.5px) rotate(-45deg);
+    }
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.hidden {
+  display: none;
+}
+
+// Add more utilities as needed...
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

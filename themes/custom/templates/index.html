@@ -1,30 +1,25 @@
 {% import "macros.html" as macros %}
 <!doctype html>
-<html class="not-ready lg:text-base" lang="{{ lang }}">
+<html class="not-ready" lang="{{ lang | default(value='en') }}">
   {% include "partials/head.html" %}
-  <body class="text-black duration-200 ease-out dark:text-white">
+  <body>
     {% include "partials/header.html" %}
 
-    <!-- Body Start inject -->
     {% include "injects/body_start.html" ignore missing %}
 
-    <main
-      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-3xl break-words px-4 pb-16 pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg"
-    >
+    <main class="main-container">
       {% block main %}
+      {% if paginator is undefined or paginator.current_index == 1 %}
+      {% include "partials/profile.html" %}
+      {% endif %}
 
-      <!-- Profile -->
-      {% if paginator is undefined or paginator.current_index == 1 %}<!---->
-      {% include "partials/profile.html" %}<!---->
-      {% endif %}<!---->
-
-      {% include "partials/page_list.html" %}<!---->
+      <div class="prose">
+        {% include "partials/page_list.html" %}
+      </div>
       {% endblock main %}
     </main>
 
     {% include "partials/footer.html" %}
-
-    <!-- Body End inject -->
     {% include "injects/body_end.html" ignore missing %}
   </body>
 </html>

@@ -1,7 +1,8 @@
-{% extends "index.html" %}<!---->
+{% extends "index.html" %}
 {% block main %}
-<!-- Term Title -->
-<h1 class="mb-16">#{{ term.name }}</h1>
-<!-- Pages -->
-{% include "partials/page_list.html" %}<!---->
+<h1 class="page-title">#{{ term.name }}</h1>
+
+<div class="prose">
+  {% include "partials/page_list.html" %}
+</div>
 {% endblock main %}
