@@ -1,36 +1,67 @@
 +++
 title = "First playtests of the game"
-description = "0lhi and Sl4cer tried the game on its early versions"
+description = "Close friends tried the game on its early versions"
 [taxonomies]
-tags = ["markdown", "text"]
+tags = ["playtesting"]
 +++
 
-Lorem est tota propiore conpellat pectoribus de pectora summo. <!--more-->Redit teque digerit hominumque toris verebor lumina non cervice subde tollit usus habet Arctonque, furores quas nec ferunt. Quoque montibus nunc caluere tempus inhospita parcite confusaque translucet patri vestro qui optatis lumine cognoscere flos nubis! Fronde ipsamque patulos Dryopen deorum.
+Sl4cer and Lucía tested the game in it's first version that was playable. The results are promising
+but also there is a lot of things to do.
 
-1. Exierant elisi ambit vivere dedere
-2. Duce pollice
-3. Eris modo
-4. Spargitque ferrea quos palude
+<!--more-->
 
-Rursus nulli murmur; hastile inridet ut ab gravi sententia! Nomine potitus silentia flumen, sustinet placuit petis in dilapsa erat sunt. Atria tractus malis.
+The game just reached a basic playability state six days ago. 8 pieces of evidence, and the gear works.
+I've done several playtests myself and a mission takes around 5 minutes to resolve.
 
-1. Comas hunc haec pietate fetum procerum dixit
-2. Post torum vates letum Tiresia
-3. Flumen querellas
-4. Arcanaque montibus omnes
-5. Quidem et
+I find that the difficulty leans towards trivial. Too easy.
+
+However, I'm pretty sure that new players will have a much harder time than me to figure out how the
+evidence works. So I think I will add a big list of difficulties to make sure we can guide the new players
+until they get confident.
+
+There's still just one map, and I feel this is the major factor that makes the game feel boring.
+
+The other factor is the lack of thrill, because you cannot be hurt by the ghost, there’s no risk. The plan was to implement some sort of sanity system, but I haven’t started yet on that. Probably it is the next step.
+
+I managed to do two playtest sessions in private with other people:
+
+## Playtest with Sl4cer (2024-03-06)
+
+We did a playtest session with sl4cer, and we found a lot of interesting stuff:
+
+* The time from the van to the front door is too long.
+  * Performance bugs made the game too slow.
+  * When the game slows down it doesn’t compensate and everything is slower.
+  * The map design needs to take care of placing the van closer to the location entrance.
+
+* Noting down the evidence exclusively in the van is a hassle. Hard to remember.
+  * Instead we should place them in the bottom UI, associating them to the gear, so with
+    a single button we can set the evidence of the current gear.
+  * We could also use that space to add helpful descriptions on how to obtain evidence or what makes
+    evidence, so players are not lost in the game.
+  * Of course, the evidence can be still tweaked on the van too.
+
+* Ideas for ghost attacks
+  * Apparitions or spawns of creatures just for the attack.
+  * Dark fog that removes all illumination
+
+I should note that Sl4cer is on Linux but on PowerPC, and the game built and ran perfectly there.
+
+The main problem with this platform is that it is aimed for a lot of threads/cores, but a single core is
+not that powerful, so the game was not able to keep up.
 
 
-# Vagus elidunt
+## Playtest with Lucía (2024-03-10)
 
-<svg class="canon" xmlns="http://www.w3.org/2000/svg" overflow="visible" viewBox="0 0 496 373" height="373" width="496"><g fill="none"><path stroke="#000" stroke-width=".75" d="M.599 372.348L495.263 1.206M.312.633l494.95 370.853M.312 372.633L247.643.92M248.502.92l246.76 370.566M330.828 123.869V1.134M330.396 1.134L165.104 124.515"></path><path stroke="#ED1C24" stroke-width=".75" d="M275.73 41.616h166.224v249.05H275.73zM54.478 41.616h166.225v249.052H54.478z"></path><path stroke="#000" stroke-width=".75" d="M.479.375h495v372h-495zM247.979.875v372"></path><ellipse cx="498.729" cy="177.625" rx=".75" ry="1.25"></ellipse><ellipse cx="247.229" cy="377.375" rx=".75" ry="1.25"></ellipse></g></svg>
+I also got my wife to play the game a bit, wasn't too bad considering she almost never plays any game.
 
-[The Van de Graaf Canon](https://en.wikipedia.org/wiki/Canons_of_page_construction#Van_de_Graaf_canon)
+But we found that it is easy to trigger accidentally the lights when going for a door.
+Probably we need a way to highlight the item that (E) activates on.
+The door most likely needs more range/priority than the switch. It is typical and needed to place switches close to doors.
 
-## Mane refeci capiebant unda mulcebat
+Some users might find it easier to use the mouse instead, Unhaunter could alternatively be a point-and-click game for them, to select on the screen what to actuate. That would make the game slower to play though.
 
-Victa caducifer, malo vulnere contra dicere aurato, ludit regale, voca! Retorsit colit est profanae esse virescere furit nec; iaculi matertera et visa est, viribus. Divesque creatis, tecta novat collumque vulnus est, parvas. **Faces illo pepulere** tempus adest. Tendit flamma, ab opes virum sustinet, sidus sequendo urbis.
+Some of the easy modes will need to accommodate for slower gameplay. Or training.
 
-Iubar proles corpore raptos vero auctor imperium; sed et huic: manus caeli Lelegas tu lux. Verbis obstitit intus oblectamina fixis linguisque ausus sperare Echionides cornuaque tenent clausit possit. Omnia putatur. Praeteritae refert ausus; ferebant e primus lora nutat, vici quae mea ipse. Et iter nil spectatae vulnus haerentia iuste et exercebat, sui et.
-
-Eurytus Hector, materna ipsumque ut Politen, nec, nate, ignari, vernum cohaesit sequitur. Vel **mitis temploque** vocatus, inque alis, _oculos nomen_ non silvis corpore coniunx ne displicet illa. Crescunt non unus, vidit visa quantum inmiti flumina mortis facto sic: undique a alios vincula sunt iactata abdita! Suspenderat ego fuit tendit: luna, ante urbem Propoetides **parte**.
+Overall I'm quite happy because the game feels kind of done in the sense that it does work and it's properly
+playable. Still a far cry from a game being really done, but the path is clear. It needs work, a lot of work.
