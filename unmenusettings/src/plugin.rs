@@ -30,7 +30,6 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
             .add_systems(
                 Update,
                 (
-                    systems::handle_input,
                     systems::item_highlight_system,
                     systems::menu_routing_system,
                     systems::menu_back_event,
@@ -40,6 +39,7 @@ impl Plugin for UnhaunterMenuSettingsPlugin {
                     systems::menu_gameplay_setting_selected,
                     systems::menu_save_gameplay_setting,
                     systems::menu_integration_system,
+                    systems::handle_escape,
                 )
                     .run_if(in_state(AppState::SettingsMenu)),
             )
