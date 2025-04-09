@@ -42,7 +42,7 @@ compile_sass = true
 # Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
 
-theme = "kita"
+theme = "custom"
 
 [markdown]
 # Whether to do syntax highlighting
@@ -60,6 +60,10 @@ highlight_theme = "base16-ocean-dark"
 
 # The URL of social image.
 social_image = "icons/unhaunter-logo.png"
+
+# Primary colors
+#[extra.style]
+#bg_dark_color = "red"
 
 
 # The profile on home page.

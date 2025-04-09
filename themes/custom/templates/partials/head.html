@@ -1,0 +1,147 @@
+{% import "macros.html" as macros %}
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Title -->
+  <title>
+    {% if page.title %}{{ page.title }} - {{ config.title }}{% else %}{{ config.title }}{% endif %}
+  </title>
+
+  <!-- Meta -->
+  <meta name="theme-color" />
+
+  {% if page %}
+  <!-- Author -->
+  {% set page_title = page.title | default(value=config.title) %}
+  <!---->
+  {% set description = page.description | default(value=page_title) %}
+  <!---->
+  {% if page.authors | length > 0 %}
+  <!---->
+  {% set author = page.authors | join(sep=", ") %}
+  <!---->
+  {% else %}
+  <!---->
+  {% set author = config.author | default(value=config.title) %}
+  <!---->
+  {% endif %}
+  <!---->
+  <meta name="description" content="{{ description }}" />
+  <meta name="author" content="{{ author }}" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ page_title }}" />
+  <meta property="og:site_name" content="{{ config.title }}" />
+  <meta property="og:description" content="{{ description }}" />
+  <meta property="og:url" content="{{ page.permalink }}" />
+  {% if page.extra.cover.image %}
+  <!---->
+  {% set image = page.extra.cover.image %}
+  <!---->
+  {% elif config.extra.social_image %}
+  <!---->
+  {% set image = config.extra.social_image %}
+  <!---->
+  {% endif %}
+  <!---->
+  {% if image %}
+  <meta property="og:image" content="{{ get_url(path=image) }}" />
+  {% endif %}
+  <!---->
+  {% else %}
+  <!-- Author -->
+  {% set description = config.description | default(value="A personal blog") %}
+  <!---->
+  <meta name="description" content="{{ description }}" />
+  <meta name="author" content="{{ config.author | default(value=config.title) }}" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ config.title }}" />
+  <meta property="og:description" content="{{ description }}" />
+  <meta property="og:url" content="{{ get_url(path=``) }}" />
+  {% if config.extra.social_image %}
+  <meta property="og:image" content="{{ get_url(path=config.extra.social_image) }}" />
+  {% endif %}
+  <!---->
+  {% endif %}
+
+  <!-- CSS & JS -->
+  <link rel="preload stylesheet" as="style" href="{{ get_url(path=`main.css`) }}" />
+  <style>
+    :root {
+      --bg: {{ config.extra.style.bg_color | default(value="#f4f4f5") }};
+      --bg-dark: {{ config.extra.style.bg_dark_color | default(value="#18181b") }};
+      --header: {{ config.extra.style.header_color | default(value="#e4e4e7") }};
+      --header-dark: {{ config.extra.style.header_dark_color | default(value="#27272a") }};
+    }
+  </style>
+
+  {% if section.path is defined and section.path == "/" %}
+  <!-- Avatar -->
+  {% if config.extra.profile.avatar_url %}
+  <link rel="preload" as="image" href="{{ get_url(path=config.extra.profile.avatar_url) }}" />
+  {% endif %}
+
+  <!-- Social List -->
+  {% if config.extra.profile.social %}
+  <!---->
+  {% for social in config.extra.profile.social %}
+  <link rel="preload" as="image" href="{{ macros::get_social_icon(icon=social.name) }}" />
+  {% endfor %}
+  <!---->
+  {% endif %}
+  <!---->
+  {% endif %}
+
+  <!-- Dark Icon -->
+  <link rel="preload" as="image" href="{{ get_url(path=`icons/theme.svg`) }}" />
+
+  <!-- Math -->
+  {% if page.extra.math | default(value=config.extra.math) %}
+  <!---->
+  {% include "partials/math.html" %}
+  <!---->
+  {% endif %}
+  <!---->
+
+  <!-- Mermaid -->
+  {% if page.extra.mermaid | default(value=config.extra.mermaid) %}
+  <!---->
+  {% include "partials/mermaid.html" %}
+  <!---->
+  {% endif %}
+  <!---->
+
+  <!-- Favicon -->
+  <link rel="icon" href="{{ get_url(path=`favicon.ico`) }}" />
+  <link rel="apple-touch-icon" href="{{ get_url(path=`apple-touch-icon.png`) }}" />
+
+  <!-- Feeds -->
+  {% if config.generate_feed %}
+  <!---->
+  {% if "atom.xml" in config.feed_filenames %}
+  <link
+    rel="alternate"
+    type="application/atom+xml"
+    title="Atom"
+    href="{{ get_url(path=`atom.xml`) }}"
+  />
+  {% endif %} {% if "rss.xml" in config.feed_filenames %}
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title="RSS"
+    href="{{ get_url(path=`rss.xml`) }}"
+  />
+  {% endif %}
+  <!---->
+  {% endif %}
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ page.permalink | default(value=get_url(path=``)) }}" />
+
+  <!-- Head inject -->
+  {% include "injects/head.html" ignore missing %}
+</head>
