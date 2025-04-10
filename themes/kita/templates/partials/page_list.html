@@ -1,0 +1,59 @@
+<!-- Pages -->
+{% if pages is defined %}<!---->
+{% elif paginator is defined %}<!---->
+{% set pages = paginator.pages %}<!---->
+{% elif term is defined %}<!---->
+{% set pages = term.pages %}<!---->
+{% elif section is defined %}<!---->
+{% set pages = section.pages %}<!---->
+{% endif %}<!---->
+
+{% for page in pages %}
+<section
+  class="block-bg relative mb-4 rounded-lg p-4 first-of-type:mt-0 last-of-type:mb-0 active:scale-95 lg:mb-6 lg:p-6"
+>
+  {% if page.extra.cover.image %}
+  <figure class="mb-4 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="{{ get_url(path=page.extra.cover.image) }}"
+      alt="{{ page.extra.cover.alt | default(value='cover') }}"
+    />
+  </figure>
+  {% endif %}<!---->
+
+  <h2 class="!my-0 pb-1 font-bold !leading-none">{{ page.title }}</h2>
+
+  <div class="not-prose my-1 truncate">
+    {% if page.description %}
+    <p>{{ page.description }}</p>
+    {% elif page.summary %}<!---->
+    {{ page.summary | safe }}<!---->
+    {% endif %}
+  </div>
+
+  {% include "partials/page_info.html" %}
+
+  <a class="absolute inset-0 text-[0]" href="{{ page.permalink }}">{{ page.title }}</a>
+</section>
+{% endfor %}
+
+<!-- Main Nav -->
+{% if paginator is defined %}
+<nav class="mt-16 flex">
+  {% if paginator.previous %}
+  <a
+    class="rounded-full bg-black px-4 py-3 text-sm text-white no-underline shadow duration-100 active:scale-95 dark:bg-white/80 dark:text-black"
+    href="{{ paginator.previous }}"
+    >← Prev Page</a
+  >
+  {% endif %}<!---->
+  {% if paginator.next %}
+  <a
+    class="ml-auto rounded-full bg-black px-4 py-3 text-sm text-white no-underline shadow duration-100 active:scale-95 dark:bg-white/80 dark:text-black"
+    href="{{ paginator.next }}"
+    >Next Page →</a
+  >
+  {% endif %}
+</nav>
+{% endif %}

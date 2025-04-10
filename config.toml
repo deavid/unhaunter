@@ -1,0 +1,107 @@
+# The URL the site will be built for
+base_url = "https://www.unhaunter.com"
+
+
+# The site title and description; used in feeds by default.
+title = "Unhaunter"
+description = "A game about paranormal investigation and exploration of haunted places."
+
+# The default site author.
+author = "deavidsedice"
+
+# The default language; used in feeds.
+default_language = "en"
+
+# When set to "true", a feed is automatically generated.
+generate_feeds = true
+
+# The filenames to use for the feeds. Used as the template filenames, too.
+# Defaults to ["atom.xml"], which has a built-in template that renders an Atom 1.0 feed.
+# There is also a built-in template "rss.xml" that renders an RSS 2.0 feed.
+feed_filenames = ["atom.xml"]
+
+# The taxonomies to be rendered for the site and their configuration of the default languages
+# Example:
+#     taxonomies = [
+#       {name = "tags", feed = true}, # each tag will have its own feed
+#       {name = "tags"}, # you can have taxonomies with the same name in multiple languages
+#       {name = "categories", paginate_by = 5},  # 5 items per page for a term
+#       {name = "authors"}, # Basic definition: no feed or pagination
+#     ]
+#
+taxonomies = [{ name = "tags", rss = true, paginate_by = 5 }]
+
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+theme = "kita"
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+
+# A list of directories used to search for additional `.sublime-syntax` and `.tmTheme` files.
+extra_syntaxes_and_themes = []
+
+# The theme to use for code highlighting.
+highlight_theme = "base16-ocean-dark"
+
+[extra]
+# Put all your custom variables here
+
+# The URL of social image.
+social_image = "icons/github.svg"
+
+
+# The profile on home page.
+[extra.profile]
+name = "Unhaunter"
+bio = "Unhaunter is a game about paranormal investigation and exploration of haunted places."
+
+# The URL of avatar.
+avatar_url = "icons/github.svg"
+
+[[extra.profile.social]]
+name = "github"
+url = "https://github.com/deavid/unhaunter"
+
+[[extra.profile.social]]
+name = "reddit"
+url = "https://www.reddit.com/r/Unhaunter/"
+
+[[extra.profile.social]]
+name = "rss"
+url = "$BASE_URL/atom.xml"
+
+# The top menu.
+[[extra.menu]]
+name = "News"
+url = "$BASE_URL/news"
+
+[[extra.menu]]
+name = "Projects"
+url = "$BASE_URL/projects"
+
+[[extra.menu]]
+name = "Archive"
+url = "$BASE_URL/archive"
+
+[[extra.menu]]
+name = "Tags"
+url = "$BASE_URL/tags"
+
+[[extra.menu]]
+name = "About"
+url = "$BASE_URL/about"
+
+
+# The page footer options.
+[extra.footer]
+since = 2023
+license = "Apache License, Version 2.0"
+license_url = "https://www.apache.org/licenses/LICENSE-2.0"

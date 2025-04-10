@@ -1,0 +1,29 @@
+{% if type == "note" %} {% set admonition_bg = "rgba(68, 138, 255, 0.1)" %}<!---->
+{% elif type == "abstract" %} {% set admonition_bg = "rgba(0, 176, 255, 0.1)" %}<!---->
+{% elif type == "info" %} {% set admonition_bg = "rgba(83, 211, 230, 0.1)" %}<!---->
+{% elif type == "tip" %} {% set admonition_bg = "rgba(0, 191, 165, 0.1)" %}<!---->
+{% elif type == "success" %} {% set admonition_bg = "rgba(0, 200, 83, 0.1)" %}<!---->
+{% elif type == "question" %} {% set admonition_bg = "rgba(100, 221, 23, 0.1)" %}<!---->
+{% elif type == "warning" %} {% set admonition_bg = "rgba(255, 145, 0, 0.1)" %}<!---->
+{% elif type == "failure" %} {% set admonition_bg = "rgba(255, 82, 82, 0.1)" %}<!---->
+{% elif type == "danger" %} {% set admonition_bg = "rgba(255, 23, 68, 0.1)" %}<!---->
+{% elif type == "bug" %} {% set admonition_bg = "rgba(255, 23, 68, 0.1)" %}<!---->
+{% elif type == "example" %} {% set admonition_bg = "rgba(101, 31, 255, 0.1)" %}<!---->
+{% elif type == "quote" %} {% set admonition_bg = "rgba(159, 159, 159, 0.1)" %}<!---->
+{% endif %}
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: {{ admonition_bg }}"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/{{ type }}.svg)"
+    >
+      {{ type | safe }}
+    </div>
+    <span><strong>{{ title | default(value=type | title) }}</strong></span>
+  </div>
+  <div class="pl-4">{{ body | markdown | safe }}</div>
+</div>

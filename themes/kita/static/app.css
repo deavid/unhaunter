@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply h-full;
+  }
+
+  html {
+    --bg: transparent;
+    --bg-dark: transparent;
+    --header: transparent;
+    --header-dark: transparent;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+    background: var(--bg);
+  }
+
+  .dark body {
+    background: var(--bg-dark);
+  }
+
+  *,
+  ::before,
+  ::after {
+    /* Auto direction for text */
+    unicode-bidi: plaintext;
+  }
+
+  /* Code block */
+  pre mark {
+    @apply block text-inherit;
+    margin: 0 -18px;
+    padding: 0 18px;
+  }
+
+  pre table {
+    @apply !m-0 !w-full border-collapse;
+  }
+
+  pre table tr {
+    @apply !border-0 !border-none;
+  }
+
+  pre table td {
+    @apply !p-0;
+  }
+
+  pre table td:nth-of-type(1) {
+    @apply min-w-4 select-none;
+  }
+
+  .prose .footnote-definition {
+    @apply flex;
+  }
+
+  .prose .footnote-definition p {
+    @apply m-0;
+  }
+
+  .prose .footnote-definition .footnote-definition-label {
+    @apply static mr-2 text-base;
+  }
+
+  .prose .footnote-definition .footnote-definition-label::after {
+    content: ".";
+  }
+}
+
+@layer utilities {
+  .not-ready * {
+    @apply !transition-none;
+  }
+
+  .btn-menu::before,
+  .btn-menu::after {
+    @apply block h-[2px] w-5 bg-black duration-200 content-[''] dark:invert;
+  }
+
+  .open {
+    @apply overflow-hidden;
+  }
+
+  .open .btn-menu::before {
+    @apply w-6 translate-y-[5.5px] rotate-45;
+  }
+
+  .open .btn-menu::after {
+    @apply w-6 -translate-y-[5.5px] -rotate-45;
+  }
+
+  .nav-wrapper {
+    @apply hidden lg:flex;
+  }
+
+  .open .nav-wrapper {
+    @apply flex;
+  }
+
+  article {
+    @apply text-lg;
+  }
+
+  .header {
+    background-color: var(--header);
+  }
+
+  .dark .header {
+    background: var(--header-dark);
+  }
+
+  .blur-header {
+    @apply bg-black/10 backdrop-blur dark:bg-white/10;
+  }
+
+  .block-bg {
+    @apply bg-black/[3%] dark:bg-white/[8%];
+  }
+
+  .block-hover {
+    @apply hover:bg-black/[5%] dark:hover:bg-white/[11%];
+  }
+
+  .block-hover-mask {
+    @apply hover:bg-black/[2%] dark:hover:bg-white/[3%];
+  }
+
+  .primary-link {
+    @apply text-black no-underline hover:opacity-80 dark:text-white;
+  }
+
+  .secondary-link {
+    @apply text-[var(--tw-prose-body)] no-underline hover:text-black dark:hover:text-white;
+  }
+}
