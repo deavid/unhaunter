@@ -5,8 +5,9 @@
 // Colors
 $black: #000;
 $white: #fff;
+// Removed light mode gray color variables
 $gray-100: #f4f4f5;
-$gray-300: #d1d5db;
+$gray-300: #d1d5db;  // Can be used for subtle contrast on dark backgrounds, keep for now - double check usages
 $gray-500: #6b7280;
 $gray-600: #4b5563;
 $gray-700: #374151;
@@ -14,17 +15,17 @@ $gray-800: #1f2937;
 $gray-900: #111827;
 
 // Theme colors
-$header-light: #e4e4e7;  // Add this
-$header-dark: #27272a;   // Add this if not already defined
-$dark-bg: #18181b;
-$dark-bg-contrast: #27272a;
-$dark-text-primary: #d1d5db;
-$dark-text-secondary: #9ca3af;
-$dark-text-headings: #fff;
-$dark-text-quotes: #f3f4f6;  // Add this
-$dark-borders: #374151;
-$dark-bullets: #4b5563;
-$dark-code-bg: rgb(0 0 0 / 50%);
+$header-bg: #27272a;  // Use darker background
+$body-bg: #18181b;    // Use darker background
+$text-primary: #d1d5db;
+$text-secondary: #9ca3af;
+$text-headings: #fff;
+$text-quotes: #f3f4f6;
+$borders: #374151;
+$bullets: #4b5563;
+$code-bg: rgb(0 0 0 / 50%);
+$action-color: #3b82f6; // Blue-500
+$action-color-hover: #2563eb; // Blue-600
 
 // Admonition Colors
 $admonition-note-bg: rgba(68, 138, 255, 0.1);
@@ -59,11 +60,8 @@ $header-height: 3.5rem;
    Mixins
    ========================================================================== */
 
-@mixin dark-mode {
-  .dark & {
-    @content;
-  }
-}
+// Removed Dark Mode Mixin - No longer needed
+
 
 @mixin lg {
   @media (min-width: $breakpoint-lg) {
@@ -87,7 +85,7 @@ $header-height: 3.5rem;
   box-sizing: border-box;
   border-width: 0;
   border-style: solid;
-  border-color: $gray-300;
+  border-color: $borders;
 }
 
 html {
@@ -95,42 +93,29 @@ html {
   -webkit-text-size-adjust: 100%;
   font-family: $font-family-sans;
   height: 100%;
-  
-  // Theme variables
-  --bg: #{$gray-100};
-  --bg-dark: #{$dark-bg};
-  --header: #{$header-light};      // Now this will work
-  --header-dark: #{$dark-bg-contrast};
+
+  /* ==========================================================================
+    Applying directly all the changes.
+   ========================================================================== */
+   --bg: #{$body-bg};
+   --header: #{$header-bg};
 }
 
 body {
   margin: 0;
   height: 100%;
-  color: $gray-700;
+  color: $text-primary;
   background: var(--bg);
-  transition: background-color 0.2s ease-out, color 0.2s ease-out;
-
-  @include dark-mode {
-    color: $dark-text-primary;
-    background: var(--bg-dark);
-  }
 }
 
 // Add the .prose class styles
 .prose {
-  color: $gray-700;
+  color: $text-primary;
   max-width: 65ch;
-  
-  @include dark-mode {
-    color: $dark-text-primary;
-  }
 
   h1, h2, h3, h4 {
-    color: $gray-900;
+    color: $text-headings;
     font-weight: 600;
-    @include dark-mode {
-      color: $dark-text-headings;
-    }
   }
 
   p {
@@ -138,11 +123,10 @@ body {
   }
 
   a {
-    color: $gray-900;
+    color: $text-headings;
     text-decoration: underline;
     font-weight: 500;
     &:hover { opacity: 0.8; }
-    @include dark-mode { color: $dark-text-headings; }
   }
 
   ul, ol {
@@ -157,53 +141,38 @@ body {
     margin: 0.5em 0;
     &::marker {
       font-weight: 400;
-      color: $gray-500;
-      @include dark-mode { color: $dark-text-secondary; }
+      color: $text-secondary;
     }
   }
 
   blockquote {
     font-weight: 500;
     font-style: italic;
-    color: $gray-900;
-    border-left: 0.25rem solid $gray-300;
+    color: $text-quotes;
+    border-left: 0.25rem solid $borders;
     quotes: "\201C""\201D""\2018""\2019";
     margin: 1.6em 0;
     padding-left: 1em;
-
-    @include dark-mode {
-      color: $dark-text-quotes;
-      border-left-color: $dark-borders;
-    }
   }
 
   pre {
-    color: $dark-text-primary;
-    background-color: $gray-800;
+    color: $text-primary;
+    background-color: $code-bg;
     overflow-x: auto;
     font-size: 0.875em;
     line-height: 1.7142857;
     margin: 1.7142857em 0;
     border-radius: 0.5rem;
     padding: 0 1.1428571em;
-
-    @include dark-mode {
-      background-color: $dark-code-bg;
-    }
   }
 
   code {
-    color: $gray-900;
+    color: $text-headings;
     font-weight: 600;
     font-size: 0.875em;
-    background-color: $gray-100;
+    background-color: #444;
     padding: 0.2em 0.4em;
     border-radius: 0.25rem;
-
-    @include dark-mode {
-      color: $dark-text-headings;
-      background-color: $dark-bg-contrast;
-    }
   }
 }
 
@@ -226,10 +195,6 @@ body {
   top: 0;
   z-index: 40;
   background-color: var(--header);
-  
-  @include dark-mode {
-    background-color: var(--header-dark);
-  }
 }
 
 .header-inner {
@@ -256,6 +221,7 @@ body {
     width: 100%;
     flex-direction: column;
     padding: 0.5rem 0;
+    list-style: none;
 
     @include lg {
       display: flex;
@@ -273,10 +239,6 @@ body {
       bottom: 0;
       background-color: rgba($black, 0.8);
       padding-top: 2rem;
-
-      @include dark-mode {
-        background-color: rgba($dark-bg, 0.9);
-      }
     }
 
     a {
@@ -285,21 +247,47 @@ body {
       text-align: center;
       font-size: $font-size-lg;
       font-weight: 500;
-      color: $gray-900;
+      color: $text-headings;
+      text-decoration: none;
 
       @include lg {
         padding: 0 0.75rem;
+        margin: 0 0.5rem;
       }
 
-      @include dark-mode {
-        color: $dark-text-headings;
+      &,
+      &:after,
+      &:before {
+        transition: all 0.2s;
       }
 
-      &:hover {
-        opacity: 0.8;
-      }
+      
     }
-  }
+
+        a {
+          position: relative; // Crucial for positioning the ::after element
+          /* ::after pseudo-element for the stroke */
+          &:after {
+            position: absolute;
+            bottom: 0; // Position the line at the bottom
+            left: 0;
+            right: 0;
+            margin: auto; // Center the line horizontally
+            width: 0%; // Start with zero width
+            content: '.'; // Needs content to exist
+            color: transparent; // Hide the content character
+            background: $action-color; // Color of the stroke
+            height: 2px; // Thickness of the stroke
+            /* Transition applied from base 'a' rule */
+          }
+
+          /* Hover state for the ::after pseudo-element - expands the stroke */
+          &:hover:after {
+            width: 100%; // Expand the line to full width
+          }
+        }
+      }
+
 }
 
 /* ==========================================================================
@@ -310,25 +298,23 @@ body {
 .site-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: $gray-900;
-  
-  @include dark-mode {
-    color: $dark-text-headings;
+  color: $text-headings;
+
+  a {
+
+    text-decoration: none;
+    color: $text-headings;
   }
 }
 
 // Page Components
 .page-list-item {
-  background-color: rgba($black, 0.03);
+  background-color: rgba($white, 0.08);
   position: relative;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   padding: 1rem;
   transition: transform 0.1s;
-
-  @include dark-mode {
-    background-color: rgba($white, 0.08);
-  }
 
   &:active {
     transform: scale(0.95);
@@ -419,9 +405,7 @@ body {
       background-repeat: no-repeat;
       background-size: contain;
 
-      @include dark-mode {
-        filter: invert(1);
-      }
+      filter: invert(1);
     }
   }
 
@@ -450,11 +434,6 @@ body {
     background-color: rgba($white, 0.5);
     padding: 0.75rem;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-
-    @include dark-mode {
-      background-color: rgba($white, 0.15);
-      border-color: rgba($white, 0.1);
-    }
   }
 
   .profile-avatar {
@@ -470,9 +449,7 @@ body {
     }
 
     &.invert-dark {
-      @include dark-mode {
         filter: invert(1);
-      }
     }
   }
 }
@@ -485,10 +462,6 @@ body {
   border-radius: 0.5rem;
   padding: 0.5rem;
   font-size: $font-size-lg;
-
-  @include dark-mode {
-    background-color: rgba($white, 0.08);
-  }
 
   details {
     width: 100%;
@@ -510,7 +483,6 @@ body {
         text-decoration: none;
         color: $gray-700;
         &:hover { text-decoration: underline; }
-        @include dark-mode { color: $dark-text-primary; }
       }
     }
   }
@@ -525,10 +497,6 @@ body {
   border-radius: 0.5rem;
   font-size: $font-size-lg;
 
-  @include dark-mode {
-    background-color: rgba($white, 0.08);
-  }
-
   a {
     transition: background-color 0.1s;
     display: flex;
@@ -541,9 +509,6 @@ body {
 
     &:hover {
       background-color: rgba($black, 0.02);
-      @include dark-mode {
-        background-color: rgba($white, 0.03);
-      }
     }
 
     &.prev-link {
@@ -586,12 +551,8 @@ body {
     display: block;
     height: 2px;
     width: 1.25rem;
-    background-color: $black;
+    background-color: $white;
     transition: transform 0.2s, width 0.2s;
-
-    @include dark-mode {
-      filter: invert(1);
-    }
   }
 }
 
@@ -617,8 +578,6 @@ body {
 .hidden {
   display: none;
 }
-
-// Add more utilities as needed...
 
 /* ==========================================================================
    Animations

@@ -99,10 +99,10 @@ url = "$BASE_URL/news"
 name = "Blog"
 url = "$BASE_URL/blog"
 
-[[extra.menu]]
-name = "Play in Browser"
-url = "$BASE_URL/wasm/main/"
-new_window = true
+#[[extra.menu]]
+#name = "Play in Browser"
+#url = "$BASE_URL/wasm/main/"
+#new_window = true
 
 
 # The page footer options.
