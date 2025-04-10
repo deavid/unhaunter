@@ -8,7 +8,19 @@
 {% set news_section = get_section(path="news/_index.md") %}
 {% set blog_section = get_section(path="blog/_index.md") %}
 
-{% set all_pages = [news_section.pages[0]] | concat(with=[blog_section.pages[0]]) %}
+{% set filtered_blog_pages = [] %}
+{% set found_recent = false %}
+
+{% for page in blog_section.pages %}
+{% if page.extra.keep_on_home %}
+{% set_global filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %}
+{% elif not page.extra.exclude_from_home and not found_recent %}
+{% set_global filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %}
+{% set_global found_recent = true %}
+{% endif %}
+{% endfor %}
+
+{% set all_pages = [news_section.pages[0]] | concat(with=filtered_blog_pages) %}
 
 
 <!-- Page List -->

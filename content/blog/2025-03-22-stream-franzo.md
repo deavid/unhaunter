@@ -2,7 +2,7 @@
 title = "Stream by OpenSourceGaming"
 description = "OpenSourceGaming streamed Unhaunter"
 [taxonomies]
-tags = ["markdown", "text"]
+tags = ["streams"]
 +++
 
 Franzo streamed Unhaunter too!

@@ -2,7 +2,7 @@
 title = "First people tried Unhaunter blindly"
 description = "People from Mastodon and Reddit tried Unhaunter"
 [taxonomies]
-tags = ["markdown", "text"]
+tags = ["playtesting"]
 +++
 
 So in the end I got 3 people that tried Unhaunter. Thanks a lot for the valuable feedback! But I realize that I missed completely the new player experience. Everyone ended in the tutorial, and stopped there in their first attempt. Seems that a lot of them got the impression that the game was the tutorial. And this is a problem. The tutorial is very basic and shows nothing of the game.

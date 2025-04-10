@@ -2,12 +2,14 @@
 title = "Stream by sl4cer"
 description = "An amazing look at the game!"
 [taxonomies]
-tags = ["markdown", "text"]
+tags = ["streams"]
+[extra]
+keep_on_home = true
 +++
 
-Sl4cer streamed Unhaunter!
+Sl4cer streamed Unhaunter! This is a good showcase of the game if you want to see what is this game about.
 
-[Watch on Odysee](https://odysee.com/@sl4cer:3/zelda-ancient-dungeon:6)
+[Click here to Watch on Odysee](https://odysee.com/@sl4cer:3/zelda-ancient-dungeon:6)
 
 <!--more-->
 

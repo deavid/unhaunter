@@ -104,6 +104,10 @@ url = "$BASE_URL/blog"
 #url = "$BASE_URL/wasm/main/"
 #new_window = true
 
+[[extra.menu]]
+name = "Beta"
+url = "$BASE_URL/beta"
+
 
 # The page footer options.
 [extra.footer]
