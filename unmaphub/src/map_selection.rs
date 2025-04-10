@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use std::time::Instant;
+use bevy::utils::Instant;
 use uncore::events::map_selected::MapSelectedEvent;
 use uncore::resources::maps::Maps;
 use uncore::states::AppState;

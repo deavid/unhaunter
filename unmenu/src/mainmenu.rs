@@ -14,7 +14,6 @@ pub enum MenuID {
     MapHub,
     Manual,
     Settings,
-    #[cfg(not(target_arch = "wasm32"))]
     Quit,
 }
 
@@ -46,10 +45,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(AppState::MainMenu), cleanup)
         .add_systems(Update, menu_event)
         .add_systems(Update, despawn_sound)
-        .add_systems(
-            Update,
-            manage_title_song.run_if(in_state(AppState::MainMenu)),
-        );
+        .add_systems(Update, manage_title_song); // Run in all states to handle transitions
 }
 
 pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
@@ -59,14 +55,13 @@ pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
 
 pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     // Define menu items
-    let mut menu_items = vec![
+    let menu_items = vec![
         (MenuID::MapHub, "New Game".to_string()),
         (MenuID::Manual, "Manual".to_string()),
         (MenuID::Settings, "Settings".to_string()),
+        #[cfg(not(target_arch = "wasm32"))]
+        (MenuID::Quit, "Quit".to_string()),
     ];
-
-    #[cfg(not(target_arch = "wasm32"))]
-    menu_items.push((MenuID::Quit, "Quit".to_string()));
 
     warn!("Setting up main menu with items: {:?}", menu_items);
 

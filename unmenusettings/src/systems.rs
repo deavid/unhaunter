@@ -16,43 +16,6 @@ use uncoremenu::templates;
 use unsettings::audio::AudioSettings;
 use unsettings::game::GameplaySettings;
 
-// We'll rely on the uncoremenu's keyboard system for navigation
-// Keeping this here as a fallback, but we should make sure the MenuItemInteractive
-// components are working with uncoremenu's menu system
-pub fn handle_input(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q: Query<&mut SettingsMenu>,
-    menu_items: Query<&MenuItem>,
-    mut ev_menu: EventWriter<MenuEvent>,
-) {
-    // If we have no menu items, no need to process input
-    if menu_items.is_empty() {
-        return;
-    }
-
-    let mut menu = q.single_mut();
-    let max_menu_idx = menu_items.iter().count();
-
-    if keyboard_input.just_pressed(KeyCode::ArrowUp) {
-        if menu.selected_item_idx == 0 {
-            menu.selected_item_idx = max_menu_idx - 1;
-        } else {
-            menu.selected_item_idx -= 1;
-        }
-    } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-        menu.selected_item_idx = (menu.selected_item_idx + 1) % max_menu_idx;
-    } else if keyboard_input.just_pressed(KeyCode::Enter) {
-        if let Some(menu_item) = menu_items
-            .iter()
-            .find(|item| item.idx == menu.selected_item_idx)
-        {
-            ev_menu.send(menu_item.on_activate);
-        }
-    } else if keyboard_input.just_pressed(KeyCode::Escape) {
-        ev_menu.send(MenuEvent::Back(MenuEvBack));
-    }
-}
-
 pub fn item_highlight_system(
     menu: Query<&SettingsMenu>,
     mut menu_items: Query<(&MenuItem, &mut TextColor)>,
@@ -65,9 +28,6 @@ pub fn item_highlight_system(
         } else {
             MENU_ITEM_COLOR_OFF
         };
-        // Note: these are now handled on creation and disabled items no longer have MenuItem component.
-        // let alpha = if item.on_activate.is_none() { 0.2 } else { 1.0 };
-        // text_color.0 = color.with_alpha(alpha);
         text_color.0 = color;
     }
 }
@@ -512,5 +472,17 @@ pub fn menu_integration_system(
             }
         }
         menu_clicks.clear();
+    }
+}
+
+/// Handles the ESC key events from the core menu system
+pub fn handle_escape(
+    mut escape_events: EventReader<uncoremenu::systems::MenuEscapeEvent>,
+    mut menu_events: EventWriter<MenuEvent>,
+) {
+    if !escape_events.is_empty() {
+        // If ESC was pressed, send a Back event
+        menu_events.send(MenuEvent::Back(MenuEvBack));
+        escape_events.clear();
     }
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use std::time::Instant;
+use bevy::utils::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::loadlevel::LoadLevelEvent;
