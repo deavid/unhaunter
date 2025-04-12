@@ -73,9 +73,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download Latest Beta WASM Game
-        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        if: steps.latest_beta_release.outputs.LATEST_TAG != 'none' && steps.latest_beta_release.outputs.LATEST_TAG != 'null'
         run: |
-          gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
+          gh release download "${{ steps.latest_beta_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
           cp -Rv wasm-release-temp/* static/wasm/beta/
           echo "Latest beta WASM game downloaded and extracted to static/wasm/beta/"
@@ -83,7 +83,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup temp WASM download
-        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        if: steps.latest_beta_release.outputs.LATEST_TAG != 'none' && steps.latest_beta_release.outputs.LATEST_TAG != 'null'
         run: rm -rf wasm-release-temp latest-wasm-release.zip
 
       # === BUILD SITE AND UPLOAD ====
