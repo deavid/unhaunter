@@ -8,3 +8,5 @@ unhaunter_project.txt
 diff.txt
 flamegraph.svg
 */flamegraph.svg
+/releases
+/dist
