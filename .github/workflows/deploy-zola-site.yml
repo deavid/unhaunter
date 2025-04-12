@@ -37,9 +37,6 @@ jobs:
           tool: zola@0.19.1
 
       # === NEW WASM GAME FETCHING STEPS ===
-      - name: Create WASM Output Directory
-        run: mkdir -p static/wasm/main/pkg
-
       - name: Get Latest Stable Release Tag
         id: latest_release
         run: |
@@ -55,9 +52,8 @@ jobs:
         run: |
           gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
-          mkdir -p public/wasm/main/
-          cp -Rv wasm-release-temp/* public/wasm/main/
-          echo "Latest stable WASM game downloaded and extracted to public/wasm/main/"
+          cp -Rv wasm-release-temp/* static/wasm/main/
+          echo "Latest stable WASM game downloaded and extracted to static/wasm/main/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
