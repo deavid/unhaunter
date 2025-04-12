@@ -53,7 +53,7 @@ jobs:
       - name: Download Latest Stable WASM Game
         if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
         run: |
-          gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm*.zip" -O latest-wasm-release.zip
+          gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter*wasm*.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
           # Assuming wasm-pack puts the WASM files in a 'pkg' directory inside the zip
           cp -r wasm-release-temp/pkg/* static/wasm/main/pkg/
