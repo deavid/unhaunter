@@ -1,0 +1,410 @@
+<!doctype html>
+<html class="not-ready lg:text-base" lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Title -->
+  <title>
+    Unhaunter v0.2.3 released - Unhaunter Official Website
+  </title>
+
+  <!-- Meta -->
+  <meta name="theme-color" />
+
+  
+  <!-- Author -->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  <meta name="description" content="Salt, Quartz and Sage; More difficulties" />
+  <meta name="author" content="deavidsedice" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Unhaunter v0.2.3 released" />
+  <meta property="og:site_name" content="Unhaunter Official Website" />
+  <meta property="og:description" content="Salt, Quartz and Sage; More difficulties" />
+  <meta property="og:url" content="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-2-3&#x2F;" />
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <meta property="og:image" content="https://www.unhaunter.com/icons/unhaunter-logo.png" />
+  
+  <!---->
+  
+
+  <!-- CSS & JS -->
+  <link rel="preload stylesheet" as="style" href="https://www.unhaunter.com/main.css" />
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --bg-dark: #18181b;
+      --header: #e4e4e7;
+      --header-dark: #27272a;
+    }
+  </style>
+
+  
+
+  <!-- Dark Icon -->
+  <link rel="preload" as="image" href="https://www.unhaunter.com/icons/theme.svg" />
+
+  <!-- Math -->
+  
+  <!---->
+
+  <!-- Mermaid -->
+  
+  <!---->
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://www.unhaunter.com/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://www.unhaunter.com/apple-touch-icon.png" />
+
+  <!-- Feeds -->
+  
+  <!---->
+  
+  <link
+    rel="alternate"
+    type="application/atom+xml"
+    title="Atom"
+    href="https://www.unhaunter.com/atom.xml"
+  />
+   
+  <!---->
+  
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-2-3&#x2F;" />
+
+  <!-- Head inject -->
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header
+  class="header fixed top-0 z-40 mx-auto min-h-[3.5rem] w-full"
+>
+  <div class="mx-auto w-full max-w-4xl p-3 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center">
+        <a class="text-2xl font-semibold" href="https://www.unhaunter.com">Unhaunter Official Website</a>
+        <!-- <div
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] [background:url(./icons/theme.svg)_left_center/cover_no-repeat] dark:invert dark:[background-position:right]"
+          role="button"
+          aria-label="Dark"
+        ></div> -->
+      </div>
+      
+      <div
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        role="button"
+        aria-label="Menu"
+      ></div>
+      
+    </div>
+    <script>
+      // base
+      const htmlClass = document.documentElement.classList;
+      setTimeout(() => {
+        htmlClass.remove("not-ready");
+      }, 10);
+
+      // mobile menu
+      const btnMenu = document.querySelector(".btn-menu");
+      btnMenu?.addEventListener("click", () => {
+        htmlClass.toggle("open");
+      });
+
+      // dark theme
+      const setDark = (isDark) => {
+        if (isDark) {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "dark" }));
+          htmlClass.add("dark");
+        } else {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "light" }));
+          htmlClass.remove("dark");
+        }
+        localStorage.setItem("dark", isDark);
+      };
+
+      // init
+      const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+      if (htmlClass.contains("dark")) {
+        setDark(true);
+      } else {
+        const darkVal = localStorage.getItem("dark");
+        setDark(darkVal ? darkVal === "true" : darkScheme.matches);
+      }
+
+      // listen system
+      darkScheme.addEventListener("change", (event) => {
+        setDark(event.matches);
+      });
+
+      // manual switch
+      const btnDark = document.querySelector(".btn-dark");
+      btnDark.addEventListener("click", () => {
+        setDark(localStorage.getItem("dark") !== "true");
+      });
+    </script>
+    
+    <nav class="flex w-full items-center lg:w-auto">
+      <ul
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0"
+      >
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/news"
+            
+            >News</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/blog"
+            
+            >Blog</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/beta"
+            
+            >Beta</a
+          >
+        </li>
+        
+      </ul>
+      <!-- Header Nav inject -->
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <!-- Body Start inject -->
+    
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-3xl break-words px-4 pb-16 pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg"
+    >
+      
+<article>
+  <!-- Page Start inject -->
+  
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">Unhaunter v0.2.3 released</h1>
+    <div class="text-sm antialiased opacity-60">
+  
+  <time>2024-06-23</time>
+  <span class="mx-1">&middot;</span>
+  <span>3min</span>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <span class="mx-1">&middot;</span>
+  <span>deavidsedice</span>
+  
+  <!-- Page Info inject -->
+  
+</div>
+
+  </header>
+
+  
+
+  <!-- TOC -->
+  
+<!---->
+
+  <!-- Content -->
+  <section><p>New Consumable Items! Salt, Quartz and Sage. More difficulty options, and added feedback for the
+ghost expulsion. The Truck Journal now filters evidences better.</p>
+<p><a href="https://github.com/deavid/unhaunter/releases/tag/v0.2.3">Download Unhaunter v0.2.3 - Source code only</a></p>
+<span id="continue-reading"></span>
+<p><strong>Features:</strong></p>
+<ul>
+<li><strong>New Consumable Items:</strong>
+<ul>
+<li>Salt: You can drop salt on the ground, and if the ghost walks over it,
+it will leave a trace of salt where it goes. These traces are only visible
+under UV light.</li>
+<li>Quartz Stone: It absorbs the ghost's hunting energy, effectively shortening
+hunts and protecting the player. The stone gradually cracks and eventually
+breaks after repeated uses.</li>
+<li>Sage: Burn it and smoke the ghost, and it will calm it down for 30 seconds.
+During hunts, it will confuse the ghost and make it lose track of the player.</li>
+</ul>
+</li>
+<li><strong>New Menu: Map Hub:</strong>
+<ul>
+<li>Provides a clear and dedicated menu for selecting the map and difficulty
+level before starting a new game.</li>
+<li>Displays all available maps in a list, allowing for easy browsing and selection.</li>
+<li>Presents a separate screen for choosing from a range of 16 difficulty levels,
+each with a description of its unique challenges.</li>
+</ul>
+</li>
+<li><strong>Expanded Difficulty System:</strong>
+<ul>
+<li>Offers 16 distinct difficulty levels, ranging from "Novice Investigator"
+to "Master Guardian", providing a wide range of challenges for players
+of all skill levels.</li>
+<li>Each difficulty level affects various aspects of the game, including
+ghost behavior, environment conditions, player attributes, and scoring.</li>
+<li>Difficulties now customize the available equipment for the player.</li>
+</ul>
+</li>
+<li><strong>Improved Ghost Expulsion Feedback:</strong>
+<ul>
+<li>When a ghost is successfully expelled, it now fades out over 5 seconds
+while emitting smoke particles, creating a more noticeable and satisfying
+visual effect.</li>
+<li>The ghost's breach also fades out, indicating its permanent
+departure from the location.</li>
+<li>Two distinct roar sounds now play during the expulsion, adding to the
+dramatic effect.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Fixes:</strong></p>
+<ul>
+<li><strong>Lighting:</strong> Several adjustments have been made to the lighting system to
+create a more visually appealing and atmospheric environment.</li>
+<li><strong>Quartz Stone:</strong> The Quartz Stone's energy absorption rate is now adjusted
+based on the selected difficulty level, making it more effective at higher difficulty levels.</li>
+<li><strong>Repellent Flask:</strong> The behavior of the Repellent Flask particles has been
+improved. They now spread more realistically, preventing them from clumping
+together or moving in an unnatural way.</li>
+<li><strong>Hiding Mechanics:</strong>
+<ul>
+<li>Players can no longer hide while carrying any items,
+preventing conflicts with other actions.</li>
+<li>The player's sprite now changes color when hiding,
+providing a visual indicator of their hidden state.</li>
+<li>Hiding now requires the player to hold down the "E" key
+for a short duration, reducing accidental triggers.</li>
+</ul>
+</li>
+<li><strong>Truck Journal:</strong> The Truck Journal UI now filters possible evidence more
+effectively based on the selected ghost type, streamlining the evidence selection process.</li>
+</ul>
+</section>
+
+  <hr />
+
+  <!-- Post Taxonomies -->
+  
+<footer class="mt-12 flex flex-col">
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <div class="mb-2 flex flex-wrap">
+    <span class="block-bg mb-1.5 mr-1.5 rounded-lg px-5 py-1.5">Tags </span>
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/release/"
+      >release</a
+    >
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/news/"
+      >news</a
+    >
+    
+  </div>
+  
+</footer>
+
+<!---->
+
+  <!-- Post Nav -->
+  
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;blog&#x2F;blind-playtests&#x2F;"
+    ><span class="mr-1.5">←</span><span>First people tried Unhaunter blindly</span></a
+  >
+  <!---->
+  
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;blog&#x2F;main-song&#x2F;"
+    ><span>Main Menu Song</span><span class="ml-1.5">→</span></a
+  >
+  
+</nav>
+
+<!---->
+
+  <!-- Comment -->
+  
+
+  <!-- Page End inject -->
+  
+</article>
+
+    </main>
+
+    <footer class="mx-auto flex max-w-3xl flex-wrap items-center px-8 py-4 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+    <!---->
+    <!---->
+    &copy; 2023 - 2025<!---->
+    
+    <a class="link" href="https://www.unhaunter.com">
+      deavidsedice
+    </a>
+     |<!---->
+    <!---->
+    <a class="link" href="https:&#x2F;&#x2F;www.apache.org&#x2F;licenses&#x2F;LICENSE-2.0" rel="noopener" target="_blank">
+      Apache-2.0 License
+    </a>
+    <!---->
+    
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <a class="link mr-6 lg:ml-6" href="https://www.getzola.org/" rel="noopener" target="_blank">
+      Powered by Zola
+    </a>
+    <a class="link" href="https://github.com/st1020/kita" rel="noopener" target="_blank">✎ Kita</a>
+  </div>
+  <!-- Footer inject -->
+  
+</footer>
+
+
+    <!-- Body End inject -->
+    
+  </body>
+</html>

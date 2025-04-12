@@ -1,0 +1,1100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Unhaunter Official Website</title>
+    <subtitle>Investigate haunted locations using gear like EMF readers, thermometers, and much more.
+Find 8 distinct evidence types to narrow down the ghost&#x27;s identity.
+Analyze your findings in the truck&#x27;s journal, comparing evidence against 44 unique ghost profiles to make your deduction.
+Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://www.unhaunter.com/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://www.unhaunter.com"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-04-09T00:00:00+00:00</updated>
+    <id>https://www.unhaunter.com/atom.xml</id>
+    <entry xml:lang="en">
+        <title>FieldsBeyond streamed Unhaunter</title>
+        <published>2025-04-09T00:00:00+00:00</published>
+        <updated>2025-04-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/stream-fields-beyond/"/>
+        <id>https://www.unhaunter.com/blog/stream-fields-beyond/</id>
+        
+        <summary type="html">&lt;p&gt;FieldsBeyond streamed their first playthrough of Unhaunter, which is very useful to me to analyze how new
+players approach the game. This is gold!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.twitch.tv&#x2F;videos&#x2F;2428841975&quot;&gt;Watch it on Twitch.tv&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>This Week In Bevy showcased Unhaunter</title>
+        <published>2025-04-01T00:00:00+00:00</published>
+        <updated>2025-04-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/this-week-in-bevy/"/>
+        <id>https://www.unhaunter.com/blog/this-week-in-bevy/</id>
+        
+        <summary type="html">&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;6nGsplMt5iw?si=bN3KBcWmYUjQ-C8M&amp;amp;t=226&quot;&gt;This Week in Bevy - YouTube - chris biscardi&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;thisweekinbevy.com&#x2F;issue&#x2F;2025-03-31-0160-rc2-breakout-on-game-boy-advance-and-bevyecs-for-static-sites&quot;&gt;This Week in Bevy - Blog - 2025-03-31&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.7 released</title>
+        <published>2025-03-26T00:00:00+00:00</published>
+        <updated>2025-03-26T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-7/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-7/</id>
+        
+        <summary type="html">&lt;p&gt;Very proud of this release! The new walkie-talkie buddy aims to help new players (still in progress),
+the new &lt;code&gt;[Ctrl]&lt;&#x2F;code&gt; key to manipulate left hand items, Mouse auto-hide, some basic spatial audio and
+finally the press and hold mechanic for &lt;code&gt;End Mission&lt;&#x2F;code&gt; and &lt;code&gt;Craft Repellent&lt;&#x2F;code&gt; to avoid mistakes.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.7&quot;&gt;Download Unhaunter v0.2.7 - Windows+Linux&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Stream by OpenSourceGaming</title>
+        <published>2025-03-22T00:00:00+00:00</published>
+        <updated>2025-03-22T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/stream-franzo/"/>
+        <id>https://www.unhaunter.com/blog/stream-franzo/</id>
+        
+        <summary type="html">&lt;p&gt;Franzo streamed Unhaunter too!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;video.hardlimit.com&#x2F;w&#x2F;eJ9iWScTV7wQrwbSPzdCSu&quot;&gt;Watch it on Hardlimit.com&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.6 released</title>
+        <published>2025-03-09T00:00:00+00:00</published>
+        <updated>2025-03-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-6/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-6/</id>
+        
+        <summary type="html">&lt;p&gt;A much faster lighting system and lots of other optimizations! Now it runs with a fraction of the CPU.
+Looks similar but now it&#x27;s much more efficient. A new fog (miasma) was added
+mainly for adding more visual interest, and Electromagnetic interference when the ghost starts attacking.
+Also the player now can sprint indefinitely outside, since it only gets out of breath when running over miasma.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.6&quot;&gt;Download Unhaunter v0.2.6 - Source code only&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Stream by sl4cer</title>
+        <published>2025-03-03T00:00:00+00:00</published>
+        <updated>2025-03-03T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/stream-sl4cer/"/>
+        <id>https://www.unhaunter.com/blog/stream-sl4cer/</id>
+        
+        <summary type="html">&lt;p&gt;Sl4cer streamed Unhaunter! This is a good showcase of the game if you want to see what is this game about.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;odysee.com&#x2F;@sl4cer:3&#x2F;zelda-ancient-dungeon:6&quot;&gt;Click here to Watch on Odysee&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.5 released</title>
+        <published>2025-02-08T00:00:00+00:00</published>
+        <updated>2025-02-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-5/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-5/</id>
+        
+        <summary type="html">&lt;p&gt;This release has been mainly refactor, refactor, refactor.
+There&#x27;s the huge upgrade to Bevy 0.15, the split into small crates for faster incremental compile times, and saving settings.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.5&quot;&gt;Download Unhaunter v0.2.5 - Source code only&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.4 released</title>
+        <published>2024-12-30T00:00:00+00:00</published>
+        <updated>2024-12-30T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-4/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-4/</id>
+        
+        <summary type="html">&lt;p&gt;New Manual with 5 chapters! The first difficulties limit the ghost selection and the equipment to ease in
+new players with less things to worry about. Also upgraded to Bevy 0.14 and Tiled 0.12.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.4&quot;&gt;Download Unhaunter v0.2.4 - Source code only&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Main Menu Song</title>
+        <published>2024-10-14T00:00:00+00:00</published>
+        <updated>2024-10-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/main-song/"/>
+        <id>https://www.unhaunter.com/blog/main-song/</id>
+        
+        <summary type="html">&lt;p&gt;I made a main menu theme for Unhaunter!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v=EKqNVxG5CUk&quot;&gt;Unhaunter Main Title Theme - Youtube&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.3 released</title>
+        <published>2024-06-23T00:00:00+00:00</published>
+        <updated>2024-06-23T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-3/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-3/</id>
+        
+        <summary type="html">&lt;p&gt;New Consumable Items! Salt, Quartz and Sage. More difficulty options, and added feedback for the
+ghost expulsion. The Truck Journal now filters evidences better.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.3&quot;&gt;Download Unhaunter v0.2.3 - Source code only&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>First people tried Unhaunter blindly</title>
+        <published>2024-06-08T00:00:00+00:00</published>
+        <updated>2024-06-08T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/blind-playtests/"/>
+        <id>https://www.unhaunter.com/blog/blind-playtests/</id>
+        
+        <summary type="html">&lt;p&gt;So in the end I got 3 people that tried Unhaunter. Thanks a lot for the valuable feedback! But I realize that I missed completely the new player experience. Everyone ended in the tutorial, and stopped there in their first attempt. Seems that a lot of them got the impression that the game was the tutorial. And this is a problem. The tutorial is very basic and shows nothing of the game.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.2 released</title>
+        <published>2024-06-02T00:00:00+00:00</published>
+        <updated>2024-06-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-2/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-2/</id>
+        
+        <summary type="html">&lt;p&gt;We can now deploy our gear to the ground! This will give Unhaunter new ways to play it.
+There&#x27;s also new sound effects, and a basic spatial mono sound
+that controls volume over distance.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;releases&#x2F;tag&#x2F;v0.2.2&quot;&gt;Download Unhaunter v0.2.2 - Source code only&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.1 released</title>
+        <published>2024-05-26T00:00:00+00:00</published>
+        <updated>2024-05-26T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-1/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-1/</id>
+        
+        <summary type="html">&lt;p&gt;We can now move elements of the house around with the new grab &amp;amp; drop function!
+Ghost can now shut doors and flicker lights.
+Also we can hide in closets and other places, and there are new haunted objects that
+change ghost&#x27;s behavior.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.2.0 released</title>
+        <published>2024-04-02T00:00:00+00:00</published>
+        <updated>2024-04-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-2-0/"/>
+        <id>https://www.unhaunter.com/news/release-v0-2-0/</id>
+        
+        <summary type="html">&lt;p&gt;Added a new tutorial map and a pixel-perfect shader to make it look sharp and neat.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Thinking on Tutorials</title>
+        <published>2024-03-26T00:00:00+00:00</published>
+        <updated>2024-03-26T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/tutorial/"/>
+        <id>https://www.unhaunter.com/blog/tutorial/</id>
+        
+        <summary type="html">&lt;p&gt;Unhaunter needs some kind of tutorial because it is not a typical game. It might be somewhat familiar for players of Phasmophobia, but being 2D isometric and with its own quirks, this makes it not straightforward to learn. Also, there are not that many players familiar with the Phasmo genre, so most people will not be able to play the game properly without guidance.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.9 released</title>
+        <published>2024-03-24T00:00:00+00:00</published>
+        <updated>2024-03-24T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-9/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-9/</id>
+        
+        <summary type="html">&lt;p&gt;Mainlfy focused on UI fixes, adding a description of equipment in the loadout page.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.8 released</title>
+        <published>2024-03-23T00:00:00+00:00</published>
+        <updated>2024-03-23T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-8/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-8/</id>
+        
+        <summary type="html">&lt;p&gt;Small release to make WASM smaller and fix issues after &lt;code&gt;cargo update&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.7 released</title>
+        <published>2024-03-21T00:00:00+00:00</published>
+        <updated>2024-03-21T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-7/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-7/</id>
+        
+        <summary type="html">&lt;p&gt;Nothing to see here - just WASM (Play in Browser) is now deployed automatically.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.6 released</title>
+        <published>2024-03-20T00:00:00+00:00</published>
+        <updated>2024-03-20T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-6/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-6/</id>
+        
+        <summary type="html">&lt;p&gt;Several changes about gear, inventory and truck loadout tab.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.5 released</title>
+        <published>2024-03-15T00:00:00+00:00</published>
+        <updated>2024-03-15T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-5/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-5/</id>
+        
+        <summary type="html">&lt;p&gt;Reworked Game UI, next item is shown on screen, and fixes.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.4 released</title>
+        <published>2024-03-14T00:00:00+00:00</published>
+        <updated>2024-03-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-4/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-4/</id>
+        
+        <summary type="html">&lt;p&gt;Added WASM support to play in the browser.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Second playtests of the game</title>
+        <published>2024-03-13T00:00:00+00:00</published>
+        <updated>2024-03-13T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/second-playtests/"/>
+        <id>https://www.unhaunter.com/blog/second-playtests/</id>
+        
+        <summary type="html">&lt;p&gt;After the release of Version 0.1.3, I got Sl4cer to try again, and Lomofear too; and he&#x27;s on Windows.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.3 released</title>
+        <published>2024-03-12T00:00:00+00:00</published>
+        <updated>2024-03-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-3/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-3/</id>
+        
+        <summary type="html">&lt;p&gt;New menu song, two new maps, sanity system, ghost hunting, &lt;code&gt;[C]&lt;&#x2F;code&gt; to record evidence in-game.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>First playtests of the game</title>
+        <published>2024-03-10T00:00:00+00:00</published>
+        <updated>2024-03-10T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/blog/first-playtests/"/>
+        <id>https://www.unhaunter.com/blog/first-playtests/</id>
+        
+        <summary type="html">&lt;p&gt;Sl4cer and Lucía tested the game in it&#x27;s first version that was playable. The results are promising
+but also there is a lot of things to do.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.2 released</title>
+        <published>2024-03-10T00:00:00+00:00</published>
+        <updated>2024-03-10T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-2/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-2/</id>
+        
+        <summary type="html">&lt;p&gt;Ghost can now hunt the player, run!&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.1 released</title>
+        <published>2024-03-09T00:00:00+00:00</published>
+        <updated>2024-03-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-1/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-1/</id>
+        
+        <summary type="html">&lt;p&gt;The game is now kind of playable! The MVP is roughly done!&lt;&#x2F;p&gt;
+&lt;p&gt;This release focuses on adding the Sanity mechanic, improving map loading performance, adding a new School map, and numerous bug fixes and smaller improvements.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Unhaunter v0.1.0 released</title>
+        <published>2024-03-06T00:00:00+00:00</published>
+        <updated>2024-03-06T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/news/release-v0-1-0/"/>
+        <id>https://www.unhaunter.com/news/release-v0-1-0/</id>
+        
+        <content type="html" xml:base="https://www.unhaunter.com/news/release-v0-1-0/">&lt;p&gt;This &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;deavid&#x2F;unhaunter&#x2F;commit&#x2F;ce61e482b9eca14c1379f78941a515562986a94f&quot;&gt;initial commit&lt;&#x2F;a&gt;
+represents the initial work done in 2022 and 2023 to get the game ready for publishing.&lt;&#x2F;p&gt;
+&lt;p&gt;The game most likely started to get designed in documents in April 2022, and the first commits likely were in 2022-07-31.&lt;&#x2F;p&gt;
+&lt;p&gt;From there, a long work was done to get the game ready for the first public release, adding
+license, and making it presentable.&lt;&#x2F;p&gt;
+&lt;p&gt;The first release date is uncertain, but most likely on 2023-12-12. Part of the reason is that v0.1.0 is the default version for a &lt;code&gt;cargo new&lt;&#x2F;code&gt; package.&lt;&#x2F;p&gt;
+&lt;p&gt;The game was most likely unplayable in this state. All it could do is move around in the
+map, and the map did not use Tiled at this stage. The assets were majorly temporary. They
+got changed shortly after in the v0.1.1 release.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Markdown Syntax Guide</title>
+        <published>2022-10-20T00:00:00+00:00</published>
+        <updated>2022-10-20T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/dev/markdown-syntax/"/>
+        <id>https://www.unhaunter.com/dev/markdown-syntax/</id>
+        
+        <summary type="html">&lt;p&gt;This article offers a sample of basic Markdown syntax that can be used in Zola content files, also it shows whether basic HTML elements are decorated with CSS in a Kita theme.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Math Typesetting</title>
+        <published>2022-10-20T00:00:00+00:00</published>
+        <updated>2022-10-20T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/dev/math-typesetting/"/>
+        <id>https://www.unhaunter.com/dev/math-typesetting/</id>
+        
+        <summary type="html">&lt;p&gt;Kita theme support $\LaTeX$ mathematical formulas using &lt;a href=&quot;https:&#x2F;&#x2F;katex.org&#x2F;&quot;&gt;KaTeX&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;</summary>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Shortcodes</title>
+        <published>2022-10-20T00:00:00+00:00</published>
+        <updated>2022-10-20T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/dev/shortcodes/"/>
+        <id>https://www.unhaunter.com/dev/shortcodes/</id>
+        
+        <content type="html" xml:base="https://www.unhaunter.com/dev/shortcodes/">&lt;p&gt;The Kita theme providers multiple shortcodes.&lt;&#x2F;p&gt;
+&lt;p&gt;Never heard of shortcodes? See &lt;a href=&quot;https:&#x2F;&#x2F;www.getzola.org&#x2F;documentation&#x2F;content&#x2F;shortcodes&#x2F;&quot;&gt;Zola documentation&lt;&#x2F;a&gt; for more information.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;mermaid&quot;&gt;Mermaid&lt;&#x2F;h2&gt;
+&lt;p&gt;To use Mermaid in your page, you have to set &lt;code&gt;extra.mermaid = true&lt;&#x2F;code&gt; in the frontmatter of page.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;markdown&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-markdown &quot;&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span&gt;+++
+&lt;&#x2F;span&gt;&lt;span&gt;title = &amp;quot;Your page title&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[extra]
+&lt;&#x2F;span&gt;&lt;span&gt;mermaid = true
+&lt;&#x2F;span&gt;&lt;span&gt;+++
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then you can use the &lt;code&gt;mermaid()&lt;&#x2F;code&gt; shortcodes like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;markdown&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-markdown &quot;&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span&gt;{% mermaid() %}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;graph TD;
+&lt;&#x2F;span&gt;&lt;span&gt;A--&amp;gt;B;
+&lt;&#x2F;span&gt;&lt;span&gt;A--&amp;gt;C;
+&lt;&#x2F;span&gt;&lt;span&gt;B--&amp;gt;D;
+&lt;&#x2F;span&gt;&lt;span&gt;C--&amp;gt;D;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;{% end %}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This will be rendered as:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;mermaid bg-inherit&quot;&gt;
+  graph TD;
+A--&amp;gt;B;
+A--&amp;gt;C;
+B--&amp;gt;D;
+C--&amp;gt;D;
+&lt;&#x2F;pre&gt;
+&lt;p&gt;In addition, you can use code block inside &lt;code&gt;mermaid()&lt;&#x2F;code&gt; shortcodes and the code block will be ignored.&lt;&#x2F;p&gt;
+&lt;p&gt;The code block prevents formatter from breaking mermaid&#x27;s formatting.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;markdown&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-markdown &quot;&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span&gt;{% mermaid() %}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;```&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;mermaid
+&lt;&#x2F;span&gt;&lt;span&gt;sequenceDiagram
+&lt;&#x2F;span&gt;&lt;span&gt;    participant Alice
+&lt;&#x2F;span&gt;&lt;span&gt;    participant Bob
+&lt;&#x2F;span&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;John: Hello John, how are you?
+&lt;&#x2F;span&gt;&lt;span&gt;    loop Healthcheck
+&lt;&#x2F;span&gt;&lt;span&gt;        John-&amp;gt;&amp;gt;John: Fight against hypochondria
+&lt;&#x2F;span&gt;&lt;span&gt;    end
+&lt;&#x2F;span&gt;&lt;span&gt;    Note right of John: Rational thoughts &amp;lt;br&#x2F;&amp;gt;prevail!
+&lt;&#x2F;span&gt;&lt;span&gt;    John--&amp;gt;&amp;gt;Alice: Great!
+&lt;&#x2F;span&gt;&lt;span&gt;    John-&amp;gt;&amp;gt;Bob: How about you?
+&lt;&#x2F;span&gt;&lt;span&gt;    Bob--&amp;gt;&amp;gt;John: Jolly good!
+&lt;&#x2F;span&gt;&lt;span&gt;```
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;{% end %}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This will be rendered as:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;mermaid bg-inherit&quot;&gt;
+  
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice-&amp;gt;&amp;gt;John: Hello John, how are you?
+    loop Healthcheck
+        John-&amp;gt;&amp;gt;John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts &amp;lt;br&amp;#x2F;&amp;gt;prevail!
+    John--&amp;gt;&amp;gt;Alice: Great!
+    John-&amp;gt;&amp;gt;Bob: How about you?
+    Bob--&amp;gt;&amp;gt;John: Jolly good!
+
+&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;admonition&quot;&gt;Admonition&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;admonition()&lt;&#x2F;code&gt; shortcode displays a banner to help you put notice in your page.&lt;&#x2F;p&gt;
+&lt;p&gt;You can use the &lt;code&gt;admonition()&lt;&#x2F;code&gt; shortcode like:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;markdown&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-markdown &quot;&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span&gt;{% admonition(type=&amp;quot;tip&amp;quot;, title=&amp;quot;tip&amp;quot;) %}
+&lt;&#x2F;span&gt;&lt;span&gt;The &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;`tip`&lt;&#x2F;span&gt;&lt;span&gt; admonition.
+&lt;&#x2F;span&gt;&lt;span&gt;{% end %}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The admonition shortcode has 12 different types:&lt;&#x2F;p&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(68, 138, 255, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;note.svg)&quot;
+    &gt;
+      note
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;note&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;note&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(0, 176, 255, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;abstract.svg)&quot;
+    &gt;
+      abstract
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;abstract&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;abstract&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(83, 211, 230, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;info.svg)&quot;
+    &gt;
+      info
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;info&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;info&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(0, 191, 165, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;tip.svg)&quot;
+    &gt;
+      tip
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;tip&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;tip&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(0, 200, 83, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;success.svg)&quot;
+    &gt;
+      success
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;success&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;success&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(100, 221, 23, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;question.svg)&quot;
+    &gt;
+      question
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;question&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;question&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(255, 145, 0, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;warning.svg)&quot;
+    &gt;
+      warning
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;warning&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;warning&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(255, 82, 82, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;failure.svg)&quot;
+    &gt;
+      failure
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;failure&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;failure&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(0, 176, 255, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;abstract.svg)&quot;
+    &gt;
+      abstract
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;danger&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;danger&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(255, 23, 68, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;bug.svg)&quot;
+    &gt;
+      bug
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;bug&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;bug&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(101, 31, 255, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;example.svg)&quot;
+    &gt;
+      example
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;example&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;example&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+ &lt;!----&gt;
+
+
+&lt;div
+  class=&quot;my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]&quot;
+  style=&quot;--admonition-bg: rgba(159, 159, 159, 0.1)&quot;
+&gt;
+  &lt;div class=&quot;flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1&quot;&gt;
+    &lt;div
+      class=&quot;mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert&quot;
+      style=&quot;--url: url(.&#x2F;icons&#x2F;quote.svg)&quot;
+    &gt;
+      quote
+    &lt;&#x2F;div&gt;
+    &lt;span&gt;&lt;strong&gt;quote&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;
+  &lt;&#x2F;div&gt;
+  &lt;div class=&quot;pl-4&quot;&gt;&lt;p&gt;The &lt;code&gt;quote&lt;&#x2F;code&gt; admonition.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;gallery&quot;&gt;Gallery&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;gallery()&lt;&#x2F;code&gt; shortcode is very simple html-only clickable picture gallery that displays all images from the page assets.&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s from &lt;a href=&quot;https:&#x2F;&#x2F;www.getzola.org&#x2F;documentation&#x2F;content&#x2F;image-processing&#x2F;&quot;&gt;Zola documentation&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;markdown&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-markdown &quot;&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span&gt;{{ gallery() }}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;div class=&quot;not-prose flex flex-wrap gap-2&quot;&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;01-zola.png&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;01-zola.e7ec5668e5b67ded.png&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;02-zola-manet.png&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;02-zola-manet.56722169bab85559.png&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;03-zola-cezanne.png&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;03-zola-cezanne.799e1b19487228d0.png&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;04-gutenberg.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;04-gutenberg.92f4e64765e73d13.jpg&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;05-example.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;05-example.80e1906d700e6b01.jpg&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;06-example.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;06-example.bed1c3aa6530d813.jpg&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;07-example.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;07-example.3020ca7937000a5d.jpg&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  &lt;!----&gt;
+  
+  &lt;a href=&quot;https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;08-example.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img class=&quot;rounded-lg&quot; src=&quot;https:&amp;#x2F;&amp;#x2F;www.unhaunter.com&amp;#x2F;processed_images&amp;#x2F;08-example.4bb8584dcf2e382d.jpg&quot; &#x2F;&gt;
+  &lt;&#x2F;a&gt;
+  &lt;!----&gt;
+  
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Theme Config Guide</title>
+        <published>2022-10-20T00:00:00+00:00</published>
+        <updated>2022-10-20T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              deavidsedice
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://www.unhaunter.com/dev/theme-config/"/>
+        <id>https://www.unhaunter.com/dev/theme-config/</id>
+        
+        <content type="html" xml:base="https://www.unhaunter.com/dev/theme-config/">&lt;p&gt;You can customize Kita theme by editing &lt;code&gt;config.toml&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Here are all the kita theme options:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The Kita theme style config.
+&lt;&#x2F;span&gt;&lt;span&gt;[extra]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Enable KaTex math formula support globally.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;math &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Enable mermaid support globally.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;mermaid &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Enable comment support globally.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;comment &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[extra.style]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The custom background color.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# bg_color = &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The custom background color in dark mode.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# bg_dark_color = &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Enable header blur.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# header_blur = true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The custom header color, only available when `header_blur` is false.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# header_color = &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The custom header color in dark mode, only available when `header_blur` is false.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# header_dark_color = &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The profile on home page.
+&lt;&#x2F;span&gt;&lt;span&gt;[extra.profile]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Kita - Zola Theme&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bio &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Kita is a clean, elegant and simple blog theme for Zola.&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The URL of avatar.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;avatar_url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;icons&#x2F;github.svg&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# Invert color in dark mode.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;avatar_invert &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The social icons below the profile on the home page.
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.profile.social]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;github&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;st1020&#x2F;kita&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.profile.social]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;twitter&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;st1020&#x2F;kita&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.profile.social]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rss&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$BASE_URL&#x2F;atom.xml&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The top menu.
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.menu]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Projects&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$BASE_URL&#x2F;projects&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.menu]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Archive&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$BASE_URL&#x2F;archive&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.menu]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Tags&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$BASE_URL&#x2F;tags&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[[extra.menu]]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;name &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;About&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$BASE_URL&#x2F;about&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The page footer options.
+&lt;&#x2F;span&gt;&lt;span&gt;[extra.footer]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;since &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2020
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;license &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;CC BY-SA 4.0&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;license_url &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;https:&#x2F;&#x2F;creativecommons.org&#x2F;licenses&#x2F;by-sa&#x2F;4.0&#x2F;deed&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The giscus comment options, only available when comment is enabled.
+&lt;&#x2F;span&gt;&lt;span&gt;[extra.giscus]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;repo &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;repo_id &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;category &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;category_id &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;mapping &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;pathname&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;strict &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reactions_enabled &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;emit_metadata &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;input_position &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;top&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;theme &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;light&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;lang &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;en&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;loading &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;lazy&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+</content>
+        
+    </entry>
+</feed>

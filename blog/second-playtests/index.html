@@ -1,0 +1,400 @@
+<!doctype html>
+<html class="not-ready lg:text-base" lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Title -->
+  <title>
+    Second playtests of the game - Unhaunter Official Website
+  </title>
+
+  <!-- Meta -->
+  <meta name="theme-color" />
+
+  
+  <!-- Author -->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  <meta name="description" content="First we fix, then we playtest" />
+  <meta name="author" content="deavidsedice" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Second playtests of the game" />
+  <meta property="og:site_name" content="Unhaunter Official Website" />
+  <meta property="og:description" content="First we fix, then we playtest" />
+  <meta property="og:url" content="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;blog&#x2F;second-playtests&#x2F;" />
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <meta property="og:image" content="https://www.unhaunter.com/icons/unhaunter-logo.png" />
+  
+  <!---->
+  
+
+  <!-- CSS & JS -->
+  <link rel="preload stylesheet" as="style" href="https://www.unhaunter.com/main.css" />
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --bg-dark: #18181b;
+      --header: #e4e4e7;
+      --header-dark: #27272a;
+    }
+  </style>
+
+  
+
+  <!-- Dark Icon -->
+  <link rel="preload" as="image" href="https://www.unhaunter.com/icons/theme.svg" />
+
+  <!-- Math -->
+  
+  <!---->
+
+  <!-- Mermaid -->
+  
+  <!---->
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://www.unhaunter.com/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://www.unhaunter.com/apple-touch-icon.png" />
+
+  <!-- Feeds -->
+  
+  <!---->
+  
+  <link
+    rel="alternate"
+    type="application/atom+xml"
+    title="Atom"
+    href="https://www.unhaunter.com/atom.xml"
+  />
+   
+  <!---->
+  
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;blog&#x2F;second-playtests&#x2F;" />
+
+  <!-- Head inject -->
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header
+  class="header fixed top-0 z-40 mx-auto min-h-[3.5rem] w-full"
+>
+  <div class="mx-auto w-full max-w-4xl p-3 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center">
+        <a class="text-2xl font-semibold" href="https://www.unhaunter.com">Unhaunter Official Website</a>
+        <!-- <div
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] [background:url(./icons/theme.svg)_left_center/cover_no-repeat] dark:invert dark:[background-position:right]"
+          role="button"
+          aria-label="Dark"
+        ></div> -->
+      </div>
+      
+      <div
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        role="button"
+        aria-label="Menu"
+      ></div>
+      
+    </div>
+    <script>
+      // base
+      const htmlClass = document.documentElement.classList;
+      setTimeout(() => {
+        htmlClass.remove("not-ready");
+      }, 10);
+
+      // mobile menu
+      const btnMenu = document.querySelector(".btn-menu");
+      btnMenu?.addEventListener("click", () => {
+        htmlClass.toggle("open");
+      });
+
+      // dark theme
+      const setDark = (isDark) => {
+        if (isDark) {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "dark" }));
+          htmlClass.add("dark");
+        } else {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "light" }));
+          htmlClass.remove("dark");
+        }
+        localStorage.setItem("dark", isDark);
+      };
+
+      // init
+      const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+      if (htmlClass.contains("dark")) {
+        setDark(true);
+      } else {
+        const darkVal = localStorage.getItem("dark");
+        setDark(darkVal ? darkVal === "true" : darkScheme.matches);
+      }
+
+      // listen system
+      darkScheme.addEventListener("change", (event) => {
+        setDark(event.matches);
+      });
+
+      // manual switch
+      const btnDark = document.querySelector(".btn-dark");
+      btnDark.addEventListener("click", () => {
+        setDark(localStorage.getItem("dark") !== "true");
+      });
+    </script>
+    
+    <nav class="flex w-full items-center lg:w-auto">
+      <ul
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0"
+      >
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/news"
+            
+            >News</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/blog"
+            
+            >Blog</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/beta"
+            
+            >Beta</a
+          >
+        </li>
+        
+      </ul>
+      <!-- Header Nav inject -->
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <!-- Body Start inject -->
+    
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-3xl break-words px-4 pb-16 pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg"
+    >
+      
+<article>
+  <!-- Page Start inject -->
+  
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">Second playtests of the game</h1>
+    <div class="text-sm antialiased opacity-60">
+  
+  <time>2024-03-13</time>
+  <span class="mx-1">&middot;</span>
+  <span>3min</span>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <span class="mx-1">&middot;</span>
+  <span>deavidsedice</span>
+  
+  <!-- Page Info inject -->
+  
+</div>
+
+  </header>
+
+  
+
+  <!-- TOC -->
+  <!---->
+<div class="block-bg mb-12 flex rounded-lg p-2 text-lg">
+  <details>
+    <summary class="cursor-pointer py-1 pl-4">
+      <span>Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/blog/second-playtests/#playtest-with-sl4cer-0-1-3-2024-03-12"
+            >Playtest with Sl4cer - 0.1.3 - 2024-03-12</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/blog/second-playtests/#playtest-with-lomofear-0-1-3-2024-03-13"
+            >Playtest with Lomofear - 0.1.3 - 2024-03-13</a
+          >
+          
+        </li>
+        
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!---->
+
+  <!-- Content -->
+  <section><p>After the release of Version 0.1.3, I got Sl4cer to try again, and Lomofear too; and he's on Windows.</p>
+<span id="continue-reading"></span><h2 id="playtest-with-sl4cer-0-1-3-2024-03-12">Playtest with Sl4cer - 0.1.3 - 2024-03-12</h2>
+<ul>
+<li>Overall the game was found to be very entertaining with almost no issues to speak of.</li>
+<li>Ghost hunting internal state does not reduce when not hunting. This leads to the player exiting the location, the ghost calming, yet when the player enters again the ghost insta-hunts.</li>
+<li>Sanity was lost during out of the house excursions - not wrong but... unexpected?</li>
+<li>Player was not going back to the van, so sanity was not restored</li>
+<li>Screen becoming red to indicate damage was preventing the player from viewing the game.</li>
+<li>Player had blue light protection on the monitor.</li>
+<li>However, it was very useful to convey risk and make the player flee.</li>
+<li>Health recovery is too strict. Takes too much time to begin healing.</li>
+<li>Typo was found: "breach" misspelled in quick evidence help text.</li>
+<li>Controls might be hard to grasp.</li>
+<li>University map was playable; lighting takes 140ms, which is noticeable if mentioned, but I had to point it out for the player to notice.</li>
+<li>Ghost might be a bit difficult. Maybe "angriness" should mostly reset to 0 or to much lower values so we get a hunt once in a while; right now it seems that the hunts quickly become very recurring.</li>
+<li>Maybe set the angry max level to a random value, and each time it resets, set it to another random value? So we never know if it's going to attack soon or late.</li>
+<li>Craft Repellent still has no feedback.</li>
+<li>Exit truck and end mission might be too close. (This was earlier feedback that was missed)</li>
+<li>Player is worried about misclicking the End mission button.</li>
+<li>Suggestion: Maybe Craft Repellent and End mission should have a "click &amp; hold" mechanic that fills a bar for 1 second, to give feedback and therefore confirm that the user wants to do that?</li>
+<li>Definitely too many items in inventory. The player was scrambling around and looking for a key to cycle inventory in reverse.</li>
+<li>Player attempts too often to run the flashlight in "HI" mode, overheats, and then it does not turn on at all. Probably we should make this mechanic more lenient.</li>
+<li>Ghost was able to go outside the house in the university.</li>
+</ul>
+<p>Additional:</p>
+<ul>
+<li>R and T are "left" and "right" on the keyboard but they map in reverse to the gear in the UI which can be confusing. Maybe instead of changing the UI, switch [T] for [TAB]?</li>
+</ul>
+<p><img src="../2024-03-13-unhaunter-screenshot.jpg" alt="Screenshot of Unhaunter game" /></p>
+<h2 id="playtest-with-lomofear-0-1-3-2024-03-13">Playtest with Lomofear - 0.1.3 - 2024-03-13</h2>
+<ul>
+<li>Building on Windows is easy - just Rustup install, Windows VS Redistributables, Cargo run.</li>
+<li>Player was very fast on picking up the game basics.</li>
+<li>They went to the van very often (sl4cer almost never went).</li>
+<li>First game took 16 minutes, 2 repellent attempts.</li>
+<li>Ghost was hard to see, the Breach wasn't seen at all; it needed to be explained.</li>
+<li>There's a problem since it seems we need to coach players to understand the game.</li>
+<li>WASD controls felt very natural.</li>
+<li>Flashlight in HI turns off and confuses the player - probably should fall back to "LOW".</li>
+</ul>
+</section>
+
+  <hr />
+
+  <!-- Post Taxonomies -->
+  
+<footer class="mt-12 flex flex-col">
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <div class="mb-2 flex flex-wrap">
+    <span class="block-bg mb-1.5 mr-1.5 rounded-lg px-5 py-1.5">Tags </span>
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/playtesting/"
+      >playtesting</a
+    >
+    
+  </div>
+  
+</footer>
+
+<!---->
+
+  <!-- Post Nav -->
+  
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-3&#x2F;"
+    ><span class="mr-1.5">←</span><span>Unhaunter v0.1.3 released</span></a
+  >
+  <!---->
+  
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-4&#x2F;"
+    ><span>Unhaunter v0.1.4 released</span><span class="ml-1.5">→</span></a
+  >
+  
+</nav>
+
+<!---->
+
+  <!-- Comment -->
+  
+
+  <!-- Page End inject -->
+  
+</article>
+
+    </main>
+
+    <footer class="mx-auto flex max-w-3xl flex-wrap items-center px-8 py-4 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+    <!---->
+    <!---->
+    &copy; 2023 - 2025<!---->
+    
+    <a class="link" href="https://www.unhaunter.com">
+      deavidsedice
+    </a>
+     |<!---->
+    <!---->
+    <a class="link" href="https:&#x2F;&#x2F;www.apache.org&#x2F;licenses&#x2F;LICENSE-2.0" rel="noopener" target="_blank">
+      Apache-2.0 License
+    </a>
+    <!---->
+    
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <a class="link mr-6 lg:ml-6" href="https://www.getzola.org/" rel="noopener" target="_blank">
+      Powered by Zola
+    </a>
+    <a class="link" href="https://github.com/st1020/kita" rel="noopener" target="_blank">✎ Kita</a>
+  </div>
+  <!-- Footer inject -->
+  
+</footer>
+
+
+    <!-- Body End inject -->
+    
+  </body>
+</html>

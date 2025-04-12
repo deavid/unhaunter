@@ -1,0 +1,789 @@
+<!doctype html>
+<html class="not-ready lg:text-base" lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Title -->
+  <title>
+    Shortcodes - Unhaunter Official Website
+  </title>
+
+  <!-- Meta -->
+  <meta name="theme-color" />
+
+  
+  <!-- Author -->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  <meta name="description" content="The Kita theme shortcodes." />
+  <meta name="author" content="deavidsedice" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Shortcodes" />
+  <meta property="og:site_name" content="Unhaunter Official Website" />
+  <meta property="og:description" content="The Kita theme shortcodes." />
+  <meta property="og:url" content="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;" />
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <meta property="og:image" content="https://www.unhaunter.com/icons/unhaunter-logo.png" />
+  
+  <!---->
+  
+
+  <!-- CSS & JS -->
+  <link rel="preload stylesheet" as="style" href="https://www.unhaunter.com/main.css" />
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --bg-dark: #18181b;
+      --header: #e4e4e7;
+      --header-dark: #27272a;
+    }
+  </style>
+
+  
+
+  <!-- Dark Icon -->
+  <link rel="preload" as="image" href="https://www.unhaunter.com/icons/theme.svg" />
+
+  <!-- Math -->
+  
+  <!---->
+
+  <!-- Mermaid -->
+  
+  <!---->
+  <script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+  const initMermaid = (isDark) => {
+    mermaid.initialize({
+      theme: isDark ? "dark" : "default",
+      startOnLoad: false,
+    });
+    mermaid.run();
+  };
+
+  // Add data-mermaid-code attribute on all mermaid block.
+  document.querySelectorAll(".mermaid").forEach((element) => {
+    element.setAttribute("data-mermaid-code", element.innerHTML);
+  });
+
+  // Re-render mermaid when theme changed.
+  document.body.addEventListener("set-theme", (e) => {
+    document.querySelectorAll(".mermaid").forEach((element) => {
+      const mermaidCode = element.getAttribute("data-mermaid-code");
+      if (mermaidCode != null) {
+        element.removeAttribute("data-processed");
+        element.innerHTML = mermaidCode;
+      }
+    });
+    initMermaid(e.detail === "dark");
+  });
+
+  // The es module script will load defer, so the localStorage should already be set by script in header.
+  // If this script is loaded first, the script in header will dispatch an event to re-render mermaid, it's works too.
+  initMermaid(localStorage.getItem("dark") === "true");
+</script>
+
+  <!---->
+  
+  <!---->
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://www.unhaunter.com/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://www.unhaunter.com/apple-touch-icon.png" />
+
+  <!-- Feeds -->
+  
+  <!---->
+  
+  <link
+    rel="alternate"
+    type="application/atom+xml"
+    title="Atom"
+    href="https://www.unhaunter.com/atom.xml"
+  />
+   
+  <!---->
+  
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;shortcodes&#x2F;" />
+
+  <!-- Head inject -->
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header
+  class="header fixed top-0 z-40 mx-auto min-h-[3.5rem] w-full"
+>
+  <div class="mx-auto w-full max-w-4xl p-3 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center">
+        <a class="text-2xl font-semibold" href="https://www.unhaunter.com">Unhaunter Official Website</a>
+        <!-- <div
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] [background:url(./icons/theme.svg)_left_center/cover_no-repeat] dark:invert dark:[background-position:right]"
+          role="button"
+          aria-label="Dark"
+        ></div> -->
+      </div>
+      
+      <div
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        role="button"
+        aria-label="Menu"
+      ></div>
+      
+    </div>
+    <script>
+      // base
+      const htmlClass = document.documentElement.classList;
+      setTimeout(() => {
+        htmlClass.remove("not-ready");
+      }, 10);
+
+      // mobile menu
+      const btnMenu = document.querySelector(".btn-menu");
+      btnMenu?.addEventListener("click", () => {
+        htmlClass.toggle("open");
+      });
+
+      // dark theme
+      const setDark = (isDark) => {
+        if (isDark) {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "dark" }));
+          htmlClass.add("dark");
+        } else {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "light" }));
+          htmlClass.remove("dark");
+        }
+        localStorage.setItem("dark", isDark);
+      };
+
+      // init
+      const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+      if (htmlClass.contains("dark")) {
+        setDark(true);
+      } else {
+        const darkVal = localStorage.getItem("dark");
+        setDark(darkVal ? darkVal === "true" : darkScheme.matches);
+      }
+
+      // listen system
+      darkScheme.addEventListener("change", (event) => {
+        setDark(event.matches);
+      });
+
+      // manual switch
+      const btnDark = document.querySelector(".btn-dark");
+      btnDark.addEventListener("click", () => {
+        setDark(localStorage.getItem("dark") !== "true");
+      });
+    </script>
+    
+    <nav class="flex w-full items-center lg:w-auto">
+      <ul
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0"
+      >
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/news"
+            
+            >News</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/blog"
+            
+            >Blog</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/beta"
+            
+            >Beta</a
+          >
+        </li>
+        
+      </ul>
+      <!-- Header Nav inject -->
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <!-- Body Start inject -->
+    
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-3xl break-words px-4 pb-16 pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg"
+    >
+      
+<article>
+  <!-- Page Start inject -->
+  
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">Shortcodes</h1>
+    <div class="text-sm antialiased opacity-60">
+  
+  <time>2022-10-20</time>
+  <span class="mx-1">&middot;</span>
+  <span>2min</span>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <span class="mx-1">&middot;</span>
+  <span>deavidsedice</span>
+  
+  <!-- Page Info inject -->
+  
+</div>
+
+  </header>
+
+  
+
+  <!-- TOC -->
+  <!---->
+<div class="block-bg mb-12 flex rounded-lg p-2 text-lg">
+  <details>
+    <summary class="cursor-pointer py-1 pl-4">
+      <span>Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/dev/shortcodes/#mermaid"
+            >Mermaid</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/dev/shortcodes/#admonition"
+            >Admonition</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/dev/shortcodes/#gallery"
+            >Gallery</a
+          >
+          
+        </li>
+        
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!---->
+
+  <!-- Content -->
+  <section><p>The Kita theme providers multiple shortcodes.</p>
+<p>Never heard of shortcodes? See <a href="https://www.getzola.org/documentation/content/shortcodes/">Zola documentation</a> for more information.</p>
+<h2 id="mermaid">Mermaid</h2>
+<p>To use Mermaid in your page, you have to set <code>extra.mermaid = true</code> in the frontmatter of page.</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span>+++
+</span><span>title = &quot;Your page title&quot;
+</span><span>
+</span><span>[extra]
+</span><span>mermaid = true
+</span><span>+++
+</span></code></pre>
+<p>Then you can use the <code>mermaid()</code> shortcodes like:</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span>{% mermaid() %}
+</span><span>
+</span><span>graph TD;
+</span><span>A--&gt;B;
+</span><span>A--&gt;C;
+</span><span>B--&gt;D;
+</span><span>C--&gt;D;
+</span><span>
+</span><span>{% end %}
+</span></code></pre>
+<p>This will be rendered as:</p>
+<pre class="mermaid bg-inherit">
+  graph TD;
+A--&gt;B;
+A--&gt;C;
+B--&gt;D;
+C--&gt;D;
+</pre>
+<p>In addition, you can use code block inside <code>mermaid()</code> shortcodes and the code block will be ignored.</p>
+<p>The code block prevents formatter from breaking mermaid's formatting.</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span>{% mermaid() %}
+</span><span>
+</span><span>```</span><span style="color:#d08770;">mermaid
+</span><span>sequenceDiagram
+</span><span>    participant Alice
+</span><span>    participant Bob
+</span><span>    Alice-&gt;&gt;John: Hello John, how are you?
+</span><span>    loop Healthcheck
+</span><span>        John-&gt;&gt;John: Fight against hypochondria
+</span><span>    end
+</span><span>    Note right of John: Rational thoughts &lt;br/&gt;prevail!
+</span><span>    John--&gt;&gt;Alice: Great!
+</span><span>    John-&gt;&gt;Bob: How about you?
+</span><span>    Bob--&gt;&gt;John: Jolly good!
+</span><span>```
+</span><span>
+</span><span>{% end %}
+</span></code></pre>
+<p>This will be rendered as:</p>
+<pre class="mermaid bg-inherit">
+  
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice-&gt;&gt;John: Hello John, how are you?
+    loop Healthcheck
+        John-&gt;&gt;John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts &lt;br&#x2F;&gt;prevail!
+    John--&gt;&gt;Alice: Great!
+    John-&gt;&gt;Bob: How about you?
+    Bob--&gt;&gt;John: Jolly good!
+
+</pre>
+<h2 id="admonition">Admonition</h2>
+<p>The <code>admonition()</code> shortcode displays a banner to help you put notice in your page.</p>
+<p>You can use the <code>admonition()</code> shortcode like:</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span>{% admonition(type=&quot;tip&quot;, title=&quot;tip&quot;) %}
+</span><span>The </span><span style="color:#a3be8c;">`tip`</span><span> admonition.
+</span><span>{% end %}
+</span></code></pre>
+<p>The admonition shortcode has 12 different types:</p>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(68, 138, 255, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/note.svg)"
+    >
+      note
+    </div>
+    <span><strong>note</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>note</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(0, 176, 255, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/abstract.svg)"
+    >
+      abstract
+    </div>
+    <span><strong>abstract</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>abstract</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(83, 211, 230, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/info.svg)"
+    >
+      info
+    </div>
+    <span><strong>info</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>info</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(0, 191, 165, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/tip.svg)"
+    >
+      tip
+    </div>
+    <span><strong>tip</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>tip</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(0, 200, 83, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/success.svg)"
+    >
+      success
+    </div>
+    <span><strong>success</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>success</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(100, 221, 23, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/question.svg)"
+    >
+      question
+    </div>
+    <span><strong>question</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>question</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(255, 145, 0, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/warning.svg)"
+    >
+      warning
+    </div>
+    <span><strong>warning</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>warning</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(255, 82, 82, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/failure.svg)"
+    >
+      failure
+    </div>
+    <span><strong>failure</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>failure</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(0, 176, 255, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/abstract.svg)"
+    >
+      abstract
+    </div>
+    <span><strong>danger</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>danger</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(255, 23, 68, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/bug.svg)"
+    >
+      bug
+    </div>
+    <span><strong>bug</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>bug</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(101, 31, 255, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/example.svg)"
+    >
+      example
+    </div>
+    <span><strong>example</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>example</code> admonition.</p>
+</div>
+</div>
+ <!---->
+
+
+<div
+  class="my-4 flex flex-col rounded-lg bg-[var(--admonition-bg)]"
+  style="--admonition-bg: rgba(159, 159, 159, 0.1)"
+>
+  <div class="flex items-center rounded-t-lg bg-[var(--admonition-bg)] p-1">
+    <div
+      class="mx-2 h-4 w-4 text-[0] [background:var(--url)_center_center_no-repeat] dark:invert"
+      style="--url: url(./icons/quote.svg)"
+    >
+      quote
+    </div>
+    <span><strong>quote</strong></span>
+  </div>
+  <div class="pl-4"><p>The <code>quote</code> admonition.</p>
+</div>
+</div>
+<h2 id="gallery">Gallery</h2>
+<p>The <code>gallery()</code> shortcode is very simple html-only clickable picture gallery that displays all images from the page assets.</p>
+<p>It's from <a href="https://www.getzola.org/documentation/content/image-processing/">Zola documentation</a></p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span>{{ gallery() }}
+</span></code></pre>
+<div class="not-prose flex flex-wrap gap-2">
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/01-zola.png" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;01-zola.e7ec5668e5b67ded.png" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/02-zola-manet.png" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;02-zola-manet.56722169bab85559.png" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/03-zola-cezanne.png" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;03-zola-cezanne.799e1b19487228d0.png" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/04-gutenberg.jpg" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;04-gutenberg.92f4e64765e73d13.jpg" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/05-example.jpg" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;05-example.80e1906d700e6b01.jpg" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/06-example.jpg" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;06-example.bed1c3aa6530d813.jpg" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/07-example.jpg" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;07-example.3020ca7937000a5d.jpg" />
+  </a>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <a href="https://www.unhaunter.com/dev/shortcodes/08-example.jpg" target="_blank">
+    <img class="rounded-lg" src="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;processed_images&#x2F;08-example.4bb8584dcf2e382d.jpg" />
+  </a>
+  <!---->
+  
+</div>
+</section>
+
+  <hr />
+
+  <!-- Post Taxonomies -->
+  
+<footer class="mt-12 flex flex-col">
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <div class="mb-2 flex flex-wrap">
+    <span class="block-bg mb-1.5 mr-1.5 rounded-lg px-5 py-1.5">Tags </span>
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/markdown/"
+      >markdown</a
+    >
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/css/"
+      >css</a
+    >
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/html/"
+      >html</a
+    >
+    
+  </div>
+  
+</footer>
+
+<!---->
+
+  <!-- Post Nav -->
+  
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;theme-config&#x2F;"
+    ><span class="mr-1.5">←</span><span>Theme Config Guide</span></a
+  >
+  <!---->
+  
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;dev&#x2F;math-typesetting&#x2F;"
+    ><span>Math Typesetting</span><span class="ml-1.5">→</span></a
+  >
+  
+</nav>
+
+<!---->
+
+  <!-- Comment -->
+  
+
+  <!-- Page End inject -->
+  
+</article>
+
+    </main>
+
+    <footer class="mx-auto flex max-w-3xl flex-wrap items-center px-8 py-4 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+    <!---->
+    <!---->
+    &copy; 2023 - 2025<!---->
+    
+    <a class="link" href="https://www.unhaunter.com">
+      deavidsedice
+    </a>
+     |<!---->
+    <!---->
+    <a class="link" href="https:&#x2F;&#x2F;www.apache.org&#x2F;licenses&#x2F;LICENSE-2.0" rel="noopener" target="_blank">
+      Apache-2.0 License
+    </a>
+    <!---->
+    
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <a class="link mr-6 lg:ml-6" href="https://www.getzola.org/" rel="noopener" target="_blank">
+      Powered by Zola
+    </a>
+    <a class="link" href="https://github.com/st1020/kita" rel="noopener" target="_blank">✎ Kita</a>
+  </div>
+  <!-- Footer inject -->
+  
+</footer>
+
+
+    <!-- Body End inject -->
+    
+  </body>
+</html>

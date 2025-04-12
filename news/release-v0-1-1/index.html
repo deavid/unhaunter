@@ -1,0 +1,533 @@
+<!doctype html>
+<html class="not-ready lg:text-base" lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <!-- Title -->
+  <title>
+    Unhaunter v0.1.1 released - Unhaunter Official Website
+  </title>
+
+  <!-- Meta -->
+  <meta name="theme-color" />
+
+  
+  <!-- Author -->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  <meta name="description" content="MVP near complete" />
+  <meta name="author" content="deavidsedice" />
+  <!-- The Open Graph protocol -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Unhaunter v0.1.1 released" />
+  <meta property="og:site_name" content="Unhaunter Official Website" />
+  <meta property="og:description" content="MVP near complete" />
+  <meta property="og:url" content="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-1&#x2F;" />
+  
+  <!---->
+  
+  <!---->
+  
+  <!---->
+  
+  <meta property="og:image" content="https://www.unhaunter.com/icons/unhaunter-logo.png" />
+  
+  <!---->
+  
+
+  <!-- CSS & JS -->
+  <link rel="preload stylesheet" as="style" href="https://www.unhaunter.com/main.css" />
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --bg-dark: #18181b;
+      --header: #e4e4e7;
+      --header-dark: #27272a;
+    }
+  </style>
+
+  
+
+  <!-- Dark Icon -->
+  <link rel="preload" as="image" href="https://www.unhaunter.com/icons/theme.svg" />
+
+  <!-- Math -->
+  
+  <!---->
+
+  <!-- Mermaid -->
+  
+  <!---->
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://www.unhaunter.com/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://www.unhaunter.com/apple-touch-icon.png" />
+
+  <!-- Feeds -->
+  
+  <!---->
+  
+  <link
+    rel="alternate"
+    type="application/atom+xml"
+    title="Atom"
+    href="https://www.unhaunter.com/atom.xml"
+  />
+   
+  <!---->
+  
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-1&#x2F;" />
+
+  <!-- Head inject -->
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header
+  class="header fixed top-0 z-40 mx-auto min-h-[3.5rem] w-full"
+>
+  <div class="mx-auto w-full max-w-4xl p-3 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center">
+        <a class="text-2xl font-semibold" href="https://www.unhaunter.com">Unhaunter Official Website</a>
+        <!-- <div
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] [background:url(./icons/theme.svg)_left_center/cover_no-repeat] dark:invert dark:[background-position:right]"
+          role="button"
+          aria-label="Dark"
+        ></div> -->
+      </div>
+      
+      <div
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        role="button"
+        aria-label="Menu"
+      ></div>
+      
+    </div>
+    <script>
+      // base
+      const htmlClass = document.documentElement.classList;
+      setTimeout(() => {
+        htmlClass.remove("not-ready");
+      }, 10);
+
+      // mobile menu
+      const btnMenu = document.querySelector(".btn-menu");
+      btnMenu?.addEventListener("click", () => {
+        htmlClass.toggle("open");
+      });
+
+      // dark theme
+      const setDark = (isDark) => {
+        if (isDark) {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "dark" }));
+          htmlClass.add("dark");
+        } else {
+          document.body.dispatchEvent(new CustomEvent("set-theme", { detail: "light" }));
+          htmlClass.remove("dark");
+        }
+        localStorage.setItem("dark", isDark);
+      };
+
+      // init
+      const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+      if (htmlClass.contains("dark")) {
+        setDark(true);
+      } else {
+        const darkVal = localStorage.getItem("dark");
+        setDark(darkVal ? darkVal === "true" : darkScheme.matches);
+      }
+
+      // listen system
+      darkScheme.addEventListener("change", (event) => {
+        setDark(event.matches);
+      });
+
+      // manual switch
+      const btnDark = document.querySelector(".btn-dark");
+      btnDark.addEventListener("click", () => {
+        setDark(localStorage.getItem("dark") !== "true");
+      });
+    </script>
+    
+    <nav class="flex w-full items-center lg:w-auto">
+      <ul
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0"
+      >
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/news"
+            
+            >News</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/blog"
+            
+            >Blog</a
+          >
+        </li>
+        
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://www.unhaunter.com/beta"
+            
+            >Beta</a
+          >
+        </li>
+        
+      </ul>
+      <!-- Header Nav inject -->
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <!-- Body Start inject -->
+    
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-9rem)] max-w-3xl break-words px-4 pb-16 pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg"
+    >
+      
+<article>
+  <!-- Page Start inject -->
+  
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">Unhaunter v0.1.1 released</h1>
+    <div class="text-sm antialiased opacity-60">
+  
+  <time>2024-03-09</time>
+  <span class="mx-1">&middot;</span>
+  <span>6min</span>
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <span class="mx-1">&middot;</span>
+  <span>deavidsedice</span>
+  
+  <!-- Page Info inject -->
+  
+</div>
+
+  </header>
+
+  
+
+  <!-- TOC -->
+  <!---->
+<div class="block-bg mb-12 flex rounded-lg p-2 text-lg">
+  <details>
+    <summary class="cursor-pointer py-1 pl-4">
+      <span>Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#sparkles-features"
+            >✨ Features</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#rocket-performance"
+            >🚀 Performance</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#bug-bug-fixes"
+            >🐛 Bug Fixes</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#chart-with-upwards-trend-improvements"
+            >📈 Improvements</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#loud-sound-audio"
+            >🔊 Audio</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#recycle-refactoring-chores"
+            >♻️ Refactoring &amp; Chores</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#books-documentation"
+            >📚 Documentation</a
+          >
+          
+        </li>
+        
+        <li>
+          <a class="no-underline hover:underline" href="https://www.unhaunter.com/news/release-v0-1-1/#art-assets"
+            >🎨 Assets</a
+          >
+          
+        </li>
+        
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!---->
+
+  <!-- Content -->
+  <section><p>The game is now kind of playable! The MVP is roughly done!</p>
+<p>This release focuses on adding the Sanity mechanic, improving map loading performance, adding a new School map, and numerous bug fixes and smaller improvements.</p>
+<span id="continue-reading"></span><h3 id="sparkles-features">✨ Features</h3>
+<ul>
+<li><strong>(Sanity)</strong> Implemented a new player Sanity system. (<code>c901757</code>)</li>
+<li><strong>(UI)</strong> Added average sanity display to the end-of-mission summary screen. (<code>5704829</code>)</li>
+<li><strong>(UI)</strong> Player sanity level is now displayed in the truck UI. (<code>c901757</code>)</li>
+<li><strong>(Maps)</strong> Added map selection screen, allowing players to choose from available maps. (<code>f7a5cb3</code>)</li>
+<li><strong>(Maps)</strong> Added a new map: School. (<code>c930ad5</code>)</li>
+<li><strong>(Maps)</strong> Added a second house map. (<code>ce47bbc</code>)</li>
+<li><strong>(Pathfinding)</strong> Implemented hierarchical pathfinding for potential AI improvements. (<code>e49aa26</code>)</li>
+<li><strong>(Evidence)</strong> Added UV light, Red light, and Night Vision as evidence mechanics/tools. (<code>4f6d226</code>)</li>
+<li><strong>(Gear)</strong> Added Geiger Counter gear for ghost identification. (<code>2f30d7c</code>)</li>
+<li><strong>(Gear)</strong> Enabled EMF Meter, Recorder, and Spirit Box to contribute to classifying the ghost type. (<code>3736364</code>)</li>
+<li><strong>(Gameplay)</strong> Implemented functionality for the repellent item to "unhaunt" or affect the ghost. (<code>919eaaa</code>)</li>
+<li><strong>(Gameplay)</strong> Added a pause screen accessible during gameplay. (<code>1a6bd70</code>)</li>
+<li><strong>(Gameplay)</strong> Added an initial version of the mission summary screen with scoring logic. (<code>f3ca521</code>, <code>bc53292</code>, <code>90039d5</code>)</li>
+<li><strong>(Gameplay)</strong> Implemented basic behavior for the ghost repellent item. (<code>675d8dd</code>, <code>145b193</code>)</li>
+<li><strong>(Gameplay)</strong> Implemented freezing temperatures as evidence for specific ghost types. (<code>0e2a348</code>)</li>
+<li><strong>(Gameplay)</strong> Added internal representation of ghost types for game logic. (<code>8ca1600</code>)</li>
+<li><strong>(UI)</strong> Implemented logic for filtering possible ghost types based on collected evidence in the truck UI. (<code>1040445</code>, <code>f53694e</code>)</li>
+<li><strong>(UI)</strong> Added a visual indicator in the truck UI to show the currently selected ghost guess. (<code>4b6c4e7</code>)</li>
+<li><strong>(UI)</strong> Added UI elements in the truck for displaying collected evidence and selecting ghost types. (<code>59ab002</code>)</li>
+<li><strong>(UI)</strong> Developed initial drafts and proof-of-concept for the Truck/Van user interface. (<code>6cb2ace</code>, <code>114981e</code>, <code>9d601c2</code>)</li>
+<li><strong>(Interaction)</strong> Made elements within the van/truck interactable. (<code>2da80e2</code>)</li>
+<li><strong>(Interaction)</strong> Implemented collision detection for the van/truck area. (<code>68b049a</code>)</li>
+<li><strong>(Gear)</strong> Implemented functionality for the audio recorder gear. (<code>45af529</code>)</li>
+<li><strong>(Gear)</strong> Added different torch types (UV, Red Light) besides the standard flashlight. (<code>6825a51</code>)</li>
+<li><strong>(Gear)</strong> Added an initial functional version of the EMF Meter gear, including sound effects. (<code>3ef381c</code>)</li>
+<li><strong>(Gameplay)</strong> Implemented the mechanic where ghosts actively lower the temperature in rooms they inhabit. (<code>e7f82b2</code>)</li>
+<li><strong>(Gear)</strong> Developed the thermometer gear, enabling it to measure room temperatures based on ghost presence/activity. (<code>72ffdec</code>, <code>49c3073</code>, <code>84d9716</code>, <code>e7f82b2</code>)</li>
+<li><strong>(Gear)</strong> Added customization options or behaviors for the flashlight. (<code>38b3993</code>)</li>
+<li><strong>(Gear)</strong> Connected flashlight state/information to relevant game systems (e.g., UI, lighting). (<code>51ed352</code>)</li>
+<li><strong>(Gear)</strong> Created initial placeholder implementations for all planned gear types. (<code>a379786</code>)</li>
+<li><strong>(Gear)</strong> Implemented the first fully usable gear item (likely flashlight or EMF). (<code>0119c18</code>)</li>
+<li><strong>(UI)</strong> Added on-screen reminders for key bindings or controls. (<code>9ff233b</code>)</li>
+<li><strong>(Gear)</strong> Implemented the ability to cycle through available gear in the inventory. (<code>2d519eb</code>)</li>
+<li><strong>(UI)</strong> Added UI elements to display the player's current gear on the main game screen. (<code>c9ebe51</code>)</li>
+<li><strong>(Gear)</strong> Created the initial implementation and assets for the player's gear inventory system. (<code>7863758</code>)</li>
+<li><strong>(Gameplay)</strong> Implemented basic ghost movement AI/behavior. (<code>d1935ba</code>)</li>
+<li><strong>(Gameplay)</strong> Added a basic ghost entity to the game world. (<code>c93eac2</code>)</li>
+<li><strong>(Gear)</strong> Implemented the ability to turn the flashlight/torch on and off. (<code>6949476</code>)</li>
+<li><strong>(Interaction)</strong> Implemented interaction logic for doors (opening/closing) and lights (turning on/off). (<code>53762e3</code>)</li>
+<li><strong>(Interaction)</strong> Added the ability for doors to be opened and closed by the player. (<code>519d784</code>)</li>
+<li><strong>(Map Loading)</strong> Implemented system for parsing entity behaviors from Tiled map data. (<code>14c6dbf</code>, <code>ede10c3</code>)</li>
+<li><strong>(Map Loading)</strong> Implemented a basic visibility/fog-of-war system. (<code>15d7047</code>)</li>
+<li><strong>(Gameplay)</strong> Re-implemented basic collision and lighting after Tiled map loading refactor. (<code>8ea2a49</code>)</li>
+<li><strong>(Map Loading)</strong> Implemented the initial system for loading maps directly from Tiled <code>.tmx</code> files, including layers, tilesets, objects, and sprite flipping. (<code>565711d</code>, <code>bf2d936</code>, <code>b6dcbd4</code>, <code>7a4e44f</code>, <code>4f3a184</code>, etc.)</li>
+</ul>
+<h3 id="rocket-performance">🚀 Performance</h3>
+<ul>
+<li>Improved performance of map preloading. (<code>5b741b4</code>)</li>
+<li>Included various optimizations alongside the new school map. (<code>c930ad5</code>)</li>
+<li>Implemented additional performance optimizations. (<code>2d831f0</code>)</li>
+<li>Addressed various performance issues across the game. (<code>651598f</code>)</li>
+<li>Prevented invisible tiles from being rendered. (<code>099489f</code>)</li>
+<li>Implemented rendering optimizations. (<code>b3af601</code>)</li>
+</ul>
+<h3 id="bug-bug-fixes">🐛 Bug Fixes</h3>
+<ul>
+<li>Fixed rendering issues in the top-left corner of maps. (<code>ba47b19</code>)</li>
+<li>Fixed issues with gear display in the user interface. (<code>0cd082d</code>)</li>
+<li>Corrected issues with the player's spritesheet atlas. (<code>7abe7e9</code>)</li>
+<li>Fixed problems with displaying gear statistics accurately. (<code>bb6b7ec</code>, <code>20e0b25</code>)</li>
+<li>Fixed a rendering bug related to the wgpu backend. (<code>fbe6db6</code>)</li>
+<li>Ensured only one ghost type can be selected as the guess at a time in the truck UI. (<code>c21b4fa</code>)</li>
+<li>Fixed an issue with improper camera initialization. (<code>ca0cbad</code>)</li>
+<li>Included a small visual fix related to the van. (<code>2da80e2</code>)</li>
+<li>Ensured the player character remains visually discernible in dark areas. (<code>4e2bd47</code>)</li>
+<li>Addressed several other minor bugs alongside van collision implementation. (<code>68b049a</code>)</li>
+<li>Implemented various minor bug fixes. (<code>6343a83</code>)</li>
+<li>Fixed issues related to sound playback and ghost temperature mechanics. (<code>6c5ee3b</code>)</li>
+<li>Fixed issues related to the lighting system, ensuring all light sources function correctly. (<code>7d7f20d</code>)</li>
+<li>Improved alpha blending for transparent sprites/materials. (<code>81b4b90</code>)</li>
+<li>Corrected sprite Z-ordering (depth) and visibility issues related to the new Tiled map loader. (<code>5fa7cbf</code>)</li>
+<li>Minor fixes related to rendering and shaders. (<code>3bd67da</code>)</li>
+<li>Addressed various visual glitches. (<code>b3af601</code>)</li>
+</ul>
+<h3 id="chart-with-upwards-trend-improvements">📈 Improvements</h3>
+<ul>
+<li>Adjusted sanity mechanics/values. (<code>4625deb</code>)</li>
+<li>Made revisions and improvements to the second house map. (<code>d0869bf</code>)</li>
+<li>Improved the visual displays for various gear items (EMF, flashlight, etc.). (<code>7634f55</code>)</li>
+<li>Adjusted and tuned the game's lighting system. (<code>901244a</code>)</li>
+<li>Adjusted the color output/filter for the video camera. (<code>193c58d</code>)</li>
+<li>Made minor adjustments to the EMF meter's behavior or readings. (<code>81b39f8</code>)</li>
+<li>Tuned temperature parameters, potentially making temperature readings easier to interpret. (<code>ab5cb17</code>, <code>d03d81f</code>)</li>
+<li>Made adjustments to visibility calculations or rendering. (<code>88a914f</code>)</li>
+</ul>
+<h3 id="loud-sound-audio">🔊 Audio</h3>
+<ul>
+<li>Added background music to the main menu. (<code>037a428</code>)</li>
+<li>Added sound effects for the Spirit Box gear. (<code>666a404</code>)</li>
+<li>Added sound effects for opening and closing doors. (<code>823a51b</code>)</li>
+<li>Added various ambient background sounds (house noises, birds, etc.). (<code>4a5617a</code>)</li>
+</ul>
+<h3 id="recycle-refactoring-chores">♻️ Refactoring &amp; Chores</h3>
+<ul>
+<li>Refactored code by splitting player-specific logic from <code>game.rs</code> into <code>player.rs</code>. (<code>8e778dd</code>)</li>
+<li>Renamed <code>ghosts.rs</code> to <code>ghost_definitions.rs</code> for clarity. (<code>6619fa6</code>)</li>
+<li>Started migration to Bevy engine version 0.13. (<code>36a405d</code>)</li>
+<li>Created a dedicated module (<code>ghosts.rs</code>, later <code>ghost_definitions.rs</code>) for ghost definitions and logic. (<code>64cf080</code>)</li>
+<li>Performed significant refactoring of the gear system and individual gear implementations. (<code>c78d167</code>, <code>eab5b13</code>, <code>32484dd</code>, <code>38b3993</code>)</li>
+<li>Removed an unused/outdated dependency related to XCF (GIMP image format) loading. (<code>d02b897</code>)</li>
+<li>Refactored collision detection logic using Bevy's SystemParam. (<code>e4f0643</code>)</li>
+<li>Changed loading order to ensure sprites are loaded before the map attempts to use them. (<code>1da12eb</code>)</li>
+<li>Performed extensive code cleanup and refactoring across multiple modules. (<code>2e7446f</code>, <code>2b2a037</code>, <code>0bc882c</code>, <code>cc8fc28</code>, <code>e01695e</code>, <code>3b5b110</code>)</li>
+<li>Cleaned up compiler warnings. (<code>70e4610</code>)</li>
+<li>Switched map/sprite rendering to use a custom Bevy material/shader for more control. (<code>a3c217b</code>)</li>
+<li>Added debugging tools to investigate rendering performance. (<code>4af42a1</code>)</li>
+<li>Changed the application window title. (<code>6fb4a7e</code>)</li>
+<li>Removed debug print statements (<code>dbg!</code>). (<code>0fa7868</code>)</li>
+<li>Updated various project dependencies (<code>Cargo.lock</code>, <code>Cargo.toml</code>). (<code>acb0bd4</code>, <code>870c6c0</code>, <code>d4f7220</code>, <code>cfb7552</code>, <code>4543b93</code>, <code>452d9c9</code>, <code>2a740c6</code>, etc.)</li>
+</ul>
+<h3 id="books-documentation">📚 Documentation</h3>
+<ul>
+<li>Added instructions for profiling the game to README. (<code>2f8f56d</code>)</li>
+<li>Made significant updates and improvements to the README file. (<code>1c0bc2e</code>, <code>b9ebabb</code>, <code>76d6732</code>, <code>3609ced</code>, <code>f54466e</code>)</li>
+</ul>
+<h3 id="art-assets">🎨 Assets</h3>
+<ul>
+<li>Added new monospaced fonts (Kode Mono, Victor Mono) for UI elements. (<code>eb2f7ec</code>)</li>
+<li>Added several new fonts (Chakra Petch, Overlock, Syne, Titillium Web) for UI and text rendering. (<code>16f43a1</code>)</li>
+<li>Made various updates to game assets (sprites, maps). (<code>6063ee4</code>, <code>e47607d</code>, <code>8ff0eacc</code>)</li>
+</ul>
+</section>
+
+  <hr />
+
+  <!-- Post Taxonomies -->
+  
+<footer class="mt-12 flex flex-col">
+  <!---->
+  <!---->
+  <!---->
+  <!---->
+  
+  <div class="mb-2 flex flex-wrap">
+    <span class="block-bg mb-1.5 mr-1.5 rounded-lg px-5 py-1.5">Tags </span>
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/release/"
+      >release</a
+    >
+    
+    <a
+      class="block-bg block-hover mb-1.5 mr-1.5 rounded-lg px-5 py-1.5 no-underline"
+      href="https://www.unhaunter.com/tags/news/"
+      >news</a
+    >
+    
+  </div>
+  
+</footer>
+
+<!---->
+
+  <!-- Post Nav -->
+  
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-0&#x2F;"
+    ><span class="mr-1.5">←</span><span>Unhaunter v0.1.0 released</span></a
+  >
+  <!---->
+  
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https:&#x2F;&#x2F;www.unhaunter.com&#x2F;news&#x2F;release-v0-1-2&#x2F;"
+    ><span>Unhaunter v0.1.2 released</span><span class="ml-1.5">→</span></a
+  >
+  
+</nav>
+
+<!---->
+
+  <!-- Comment -->
+  
+
+  <!-- Page End inject -->
+  
+</article>
+
+    </main>
+
+    <footer class="mx-auto flex max-w-3xl flex-wrap items-center px-8 py-4 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+    <!---->
+    <!---->
+    &copy; 2023 - 2025<!---->
+    
+    <a class="link" href="https://www.unhaunter.com">
+      deavidsedice
+    </a>
+     |<!---->
+    <!---->
+    <a class="link" href="https:&#x2F;&#x2F;www.apache.org&#x2F;licenses&#x2F;LICENSE-2.0" rel="noopener" target="_blank">
+      Apache-2.0 License
+    </a>
+    <!---->
+    
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <a class="link mr-6 lg:ml-6" href="https://www.getzola.org/" rel="noopener" target="_blank">
+      Powered by Zola
+    </a>
+    <a class="link" href="https://github.com/st1020/kita" rel="noopener" target="_blank">✎ Kita</a>
+  </div>
+  <!-- Footer inject -->
+  
+</footer>
+
+
+    <!-- Body End inject -->
+    
+  </body>
+</html>
