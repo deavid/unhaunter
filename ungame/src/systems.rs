@@ -7,9 +7,9 @@ use uncore::{
         game_config::GameConfig,
         player_sprite::PlayerSprite,
     },
-    controlkeys::ControlKeys,
     states::{AppState, GameState},
 };
+use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
 
 pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
@@ -63,6 +63,7 @@ pub fn keyboard(
     pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
     time: Res<Time>,
     game_settings: Res<Persistent<GameplaySettings>>,
+    control_settings: Res<Persistent<ControlKeys>>,
 ) {
     if *app_state.get() != AppState::InGame {
         return;
@@ -104,20 +105,16 @@ pub fn keyboard(
             transform.translation += cam_dir.to_vec3() * dt;
         }
         if in_game && game_settings.camera_controls.on() {
-            let controls = match game_settings.character_controls {
-                unsettings::game::CharacterControls::WASD => ControlKeys::ARROWS,
-                unsettings::game::CharacterControls::Arrows => ControlKeys::WASD,
-            };
-            if keyboard_input.pressed(controls.right) {
+            if keyboard_input.pressed(control_settings.camera_right) {
                 transform.translation.x += 2.0 * dt;
             }
-            if keyboard_input.pressed(controls.left) {
+            if keyboard_input.pressed(control_settings.camera_left) {
                 transform.translation.x -= 2.0 * dt;
             }
-            if keyboard_input.pressed(controls.up) {
+            if keyboard_input.pressed(control_settings.camera_up) {
                 transform.translation.y += 2.0 * dt;
             }
-            if keyboard_input.pressed(controls.down) {
+            if keyboard_input.pressed(control_settings.camera_down) {
                 transform.translation.y -= 2.0 * dt;
             }
             if keyboard_input.pressed(KeyCode::NumpadAdd) {

@@ -60,7 +60,8 @@ dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
 
-bevy = { version = "0.15", features = ["jpeg"] }
+
+bevy = { version = "0.15", features = ["jpeg", "serialize"] }
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
