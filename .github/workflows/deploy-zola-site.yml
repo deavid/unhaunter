@@ -39,7 +39,9 @@ jobs:
           override: true
 
       - name: Install Zola CLI
-        run: cargo install zola --locked
+        uses: taiki-e/install-action@v2
+        with:
+          tool: zola@0.19.1
 
       - name: Build Zola site
         run: zola build
