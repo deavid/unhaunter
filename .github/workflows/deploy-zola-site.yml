@@ -55,9 +55,8 @@ jobs:
         run: |
           gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
-          # Assuming wasm-pack puts the WASM files in a 'pkg' directory inside the zip
-          cp -r wasm-release-temp/pkg/* static/wasm/main/pkg/
-          echo "Latest stable WASM game downloaded and extracted to static/wasm/main/pkg"
+          cp -Rv wasm-release-temp/* public/wasm/main/
+          echo "Latest stable WASM game downloaded and extracted to public/wasm/main/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
