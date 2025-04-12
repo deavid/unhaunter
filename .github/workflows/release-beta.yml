@@ -29,6 +29,10 @@ jobs:
         run: |
           sudo apt-get install -y mingw-w64 zip
 
+      - name: Install WASM deps
+        run: |
+          cargo install wasm-pack
+
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -57,8 +61,6 @@ jobs:
         run: |
           gh release create $TAG_NAME \
             --prerelease \
-            --title "Unhaunter Beta $TAG_NAME" \
+            --title "Pre-release Unhaunter Beta $TAG_NAME" \
             --notes "Beta release build based on tag $TAG_NAME" \
-            releases/unhaunter-*-linux-x86_64.tar.gz \
-            releases/unhaunter-*-windows-x86_64.zip \
-            releases/unhaunter-*-wasm.zip
+            releases/unhaunter-*
