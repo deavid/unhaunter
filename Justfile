@@ -61,6 +61,7 @@ package-linux: build-linux package-common
     rm -rf {{_dist_dir}}/linux/*
     cp {{_dist_dir}}/common/* {{_dist_dir}}/linux/ -R
     cp {{_target_dir}}/x86_64-unknown-linux-gnu/release/unhaunter_game {{_dist_dir}}/linux/unhaunter_game
+    unlink {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz || true
     tar -czvf {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz -C {{_dist_dir}}/linux .
     echo "Linux package created: {{_releases_dir}}/unhaunter-{{_version}}-linux-x86_64.tar.gz"
 
@@ -70,6 +71,7 @@ package-windows: build-windows package-common
     rm -rf {{_dist_dir}}/windows/*
     cp {{_dist_dir}}/common/* {{_dist_dir}}/windows/ -R
     cp {{_target_dir}}/x86_64-pc-windows-gnu/release/unhaunter_game.exe {{_dist_dir}}/windows/unhaunter_game.exe
+    unlink {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip || true
     cd {{_dist_dir}}/windows && zip -r ../../{{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip *
     cd ../../
     echo "Windows package created: {{_releases_dir}}/unhaunter-{{_version}}-windows-x86_64.zip"
@@ -81,6 +83,7 @@ package-wasm: build-wasm package-common
     cp {{_dist_dir}}/common/* {{_dist_dir}}/wasm/ -R
     cp -r pkg {{_dist_dir}}/wasm/pkg
     cp index.html {{_dist_dir}}/wasm/index.html
+    unlink {{_releases_dir}}/unhaunter-{{_version}}-wasm.zip || true
     cd {{_dist_dir}}/wasm && zip -r ../../{{_releases_dir}}/unhaunter-{{_version}}-wasm.zip *
     cd ../../
     echo "WASM package created: {{_releases_dir}}/unhaunter-{{_version}}-wasm.zip"
