@@ -1,0 +1,64 @@
+name: Release Beta Build
+
+on:
+  push:
+    tags:
+      - 'v*-beta*' # Trigger on tags like v0.3.0-beta1, v0.3.1-beta2
+
+permissions:
+  contents: write # Required for gh release upload
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (tagged commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }} # Checkout the specific tag
+
+      - name: Update APT
+        run: |
+          sudo apt-get update
+
+      - name: Install Linux Build Dependencies (if any)
+        run: |
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
+      - name: Install Windows Cross-Compile Dependencies (mingw)
+        run: |
+          sudo apt-get install -y mingw-w64 zip
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Set up Rust (Windows)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Build and Package Artifacts (justfile)
+        run: just package-all
+
+
+      - name: Create GitHub Pre-Release and Upload Artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release create $TAG_NAME \
+            --prerelease \
+            --title "Unhaunter Beta $TAG_NAME" \
+            --notes "Beta release build based on tag $TAG_NAME" \
+            releases/unhaunter-*-linux-x86_64.tar.gz \
+            releases/unhaunter-*-windows-x86_64.zip \
+            releases/unhaunter-*-wasm.zip
