@@ -44,7 +44,7 @@ jobs:
         id: latest_release
         run: |
           # Get the latest release tag (excluding pre-releases)
-          LATEST_TAG=$(gh release list --limit 1 --exclude-prereleases --json tagName --jq '.[0].tagName' || echo "none")
+          LATEST_TAG=$(gh release list --limit 1 --exclude-pre-releases --json tagName --jq '.[0].tagName' || echo "none")
           echo "Latest Release Tag: $LATEST_TAG"
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
         env:
