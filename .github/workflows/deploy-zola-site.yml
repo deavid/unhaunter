@@ -66,25 +66,25 @@ jobs:
         id: latest_beta_release
         run: |
           # Get the latest release tag (including pre-releases)
-          LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "none")
-          echo "Latest Release Tag: $LATEST_TAG"
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          BETA_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "none")
+          echo "Latest Release Tag: $BETA_TAG"
+          echo "BETA_TAG=$BETA_TAG" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download Latest Beta WASM Game
-        if: steps.latest_beta_release.outputs.LATEST_TAG != 'none' && steps.latest_beta_release.outputs.LATEST_TAG != 'null'
+        if: steps.latest_beta_release.outputs.BETA_TAG != 'none' && steps.latest_beta_release.outputs.BETA_TAG != 'null'
         run: |
-          gh release download "${{ steps.latest_beta_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
-          unzip latest-wasm-release.zip -d wasm-release-temp
-          cp -Rv wasm-release-temp/* static/wasm/beta/
+          gh release download "${{ steps.latest_beta_release.outputs.BETA_TAG }}" --pattern "unhaunter-*wasm.zip" -O beta-wasm-release.zip
+          unzip beta-wasm-release.zip -d wasm-beta-temp
+          cp -Rv wasm-beta-temp/* static/wasm/beta/
           echo "Latest beta WASM game downloaded and extracted to static/wasm/beta/"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup temp WASM download
-        if: steps.latest_beta_release.outputs.LATEST_TAG != 'none' && steps.latest_beta_release.outputs.LATEST_TAG != 'null'
-        run: rm -rf wasm-release-temp latest-wasm-release.zip
+        if: steps.latest_beta_release.outputs.BETA_TAG != 'none' && steps.latest_beta_release.outputs.BETA_TAG != 'null'
+        run: rm -rf wasm-beta-temp beta-wasm-release.zip
 
       # === BUILD SITE AND UPLOAD ====
       - name: Build Zola site
