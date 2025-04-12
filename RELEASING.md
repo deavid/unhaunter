@@ -1,5 +1,7 @@
 # RELEASE DIST PROCESS
 
+**NOTE:** These are being migrated to "Justfile" which runs with the 'just' command.
+
 These are just "dirty" notes on how to make the builds for releasing.
 
 I will try to automate a script later on.
@@ -15,7 +17,7 @@ rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.ico .
 rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.html .
 rust_unhaunter/unhaunter_dist$ cp ../unhaunter/LICENSE .
 rust_unhaunter/unhaunter_dist$ cp ../unhaunter/screenshots . -R
-rust_unhaunter/unhaunter_dist$ 
+rust_unhaunter/unhaunter_dist$
 
 # Linux x64
 
@@ -41,7 +43,7 @@ rust_unhaunter/unhaunter_dist$ cp ../unhaunter/pkg . -R
 rust_unhaunter/unhaunter$ cargo build --target x86_64-pc-windows-gnu --release
 
 rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-gnu/release/un
-haunter_game.exe unhaunter_game_windows_x64_gnu.exe 
+haunter_game.exe unhaunter_game_windows_x64_gnu.exe
 
 # Windows x64 - MSVC
 # rustup target add x86_64-pc-windows-msvc
@@ -72,7 +74,7 @@ This crate is brought by Tiled for de-compression purposes.
 # Asking for "wasm" was asking for zstd. This is only for zlib compression. Not needed.
 # Now it builds.
 
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-msvc/release/unhaunter_game.exe unhaunter_game_windows_x64_msvc.exe 
+rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-msvc/release/unhaunter_game.exe unhaunter_game_windows_x64_msvc.exe
 
 
 ###### Packaging
