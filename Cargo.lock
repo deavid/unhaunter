@@ -4963,7 +4963,7 @@ checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
 
 [[package]]
 name = "uncore"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4983,7 +4983,7 @@ dependencies = [
 
 [[package]]
 name = "uncoremenu"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "uncore",
@@ -4991,7 +4991,7 @@ dependencies = [
 
 [[package]]
 name = "unfog"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "ndarray",
@@ -5003,7 +5003,7 @@ dependencies = [
 
 [[package]]
 name = "ungame"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5020,7 +5020,7 @@ dependencies = [
 
 [[package]]
 name = "ungear"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5035,7 +5035,7 @@ dependencies = [
 
 [[package]]
 name = "ungearitems"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "enum-iterator",
@@ -5048,7 +5048,7 @@ dependencies = [
 
 [[package]]
 name = "unghost"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "ordered-float",
@@ -5061,7 +5061,7 @@ dependencies = [
 
 [[package]]
 name = "unhaunter"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -5153,7 +5153,7 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "unlight"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5171,7 +5171,7 @@ dependencies = [
 
 [[package]]
 name = "unmaphub"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -5191,7 +5191,7 @@ dependencies = [
 
 [[package]]
 name = "unmenu"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -5205,7 +5205,7 @@ dependencies = [
 
 [[package]]
 name = "unmenusettings"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5219,7 +5219,7 @@ dependencies = [
 
 [[package]]
 name = "unnpc"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "uncore",
@@ -5228,7 +5228,7 @@ dependencies = [
 
 [[package]]
 name = "unplayer"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5249,7 +5249,7 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsettings"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5262,7 +5262,7 @@ dependencies = [
 
 [[package]]
 name = "unstd"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -5279,7 +5279,7 @@ dependencies = [
 
 [[package]]
 name = "untmxmap"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "glob",
@@ -5293,7 +5293,7 @@ dependencies = [
 
 [[package]]
 name = "untruck"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",
@@ -5309,7 +5309,7 @@ dependencies = [
 
 [[package]]
 name = "unwalkie"
-version = "0.3.0-beta0-test1"
+version = "0.3.0-beta1"
 dependencies = [
  "bevy",
  "bevy-persistent",

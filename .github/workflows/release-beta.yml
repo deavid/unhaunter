@@ -34,18 +34,10 @@ jobs:
           cargo install wasm-pack
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          profile: minimal
-          override: true
-
-      - name: Set up Rust (Windows)
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: x86_64-pc-windows-gnu
-          override: true
+          target: x86_64-pc-windows-gnu,wasm32-unknown-unknown
 
       - name: Install just
         uses: extractions/setup-just@v3
