@@ -36,7 +36,7 @@ jobs:
         with:
           tool: zola@0.19.1
 
-      # === NEW WASM GAME FETCHING STEPS ===
+      # === WASM STABLE GAME FETCHING STEPS ===
       - name: Get Latest Stable Release Tag
         id: latest_release
         run: |
@@ -61,6 +61,32 @@ jobs:
         if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
         run: rm -rf wasm-release-temp latest-wasm-release.zip
 
+      # === WASM BETA GAME FETCHING STEPS ===
+      - name: Get Latest Beta Release Tag
+        id: latest_beta_release
+        run: |
+          # Get the latest release tag (including pre-releases)
+          LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "none")
+          echo "Latest Release Tag: $LATEST_TAG"
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Latest Beta WASM Game
+        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        run: |
+          gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
+          unzip latest-wasm-release.zip -d wasm-release-temp
+          cp -Rv wasm-release-temp/* static/wasm/beta/
+          echo "Latest beta WASM game downloaded and extracted to static/wasm/beta/"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup temp WASM download
+        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        run: rm -rf wasm-release-temp latest-wasm-release.zip
+
+      # === BUILD SITE AND UPLOAD ====
       - name: Build Zola site
         run: zola build
         # Zola will now include the WASM game from static/wasm/main/pkg
