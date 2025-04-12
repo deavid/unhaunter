@@ -1,37 +1,30 @@
-# .github/workflows/deploy-zola-site.yml
-name: Deploy Zola Website to GitHub Pages
+# .github/workflows/deploy-zola-site.yml (Modified - Stage 1: Include WASM)
+name: Deploy Zola Website with WASM to GitHub Pages
 
 on:
-  # Runs on pushes targeting the 'website' branch
   push:
     branches:
       - website
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout website branch
         uses: actions/checkout@v4
-        # No 'ref' needed here, as it defaults to the triggering branch ('website')
+        # No 'ref' needed, defaults to 'website'
 
-      - name: Set up Rust
+      - name: Set up Rust (for Zola)
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -43,9 +36,38 @@ jobs:
         with:
           tool: zola@0.19.1
 
+      # === NEW WASM GAME FETCHING STEPS ===
+      - name: Create WASM Output Directory
+        run: mkdir -p static/wasm/main/pkg
+
+      - name: Get Latest Stable Release Tag
+        id: latest_release
+        run: |
+          # Get the latest release tag (excluding pre-releases)
+          LATEST_TAG=$(gh release list --limit 1 --exclude-prereleases --json tagName --jq '.[0].tagName' || echo "none")
+          echo "Latest Release Tag: $LATEST_TAG"
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Latest Stable WASM Game
+        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        run: |
+          gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
+          unzip latest-wasm-release.zip -d wasm-release-temp
+          # Assuming wasm-pack puts the WASM files in a 'pkg' directory inside the zip
+          cp -r wasm-release-temp/pkg/* static/wasm/main/pkg/
+          echo "Latest stable WASM game downloaded and extracted to static/wasm/main/pkg"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup temp WASM download
+        if: steps.latest_release.outputs.LATEST_TAG != 'none' && steps.latest_release.outputs.LATEST_TAG != 'null'
+        run: rm -rf wasm-release-temp latest-wasm-release.zip
+
       - name: Build Zola site
         run: zola build
-        # Zola builds to the 'public' directory by default
+        # Zola will now include the WASM game from static/wasm/main/pkg
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -53,10 +75,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload content from the 'public' directory
-          path: ./public
+          path: ./public # Upload 'public' directory
 
-  # Deployment job
   deploy:
     environment:
       name: github-pages
