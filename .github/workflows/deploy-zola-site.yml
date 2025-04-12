@@ -55,6 +55,7 @@ jobs:
         run: |
           gh release download "${{ steps.latest_release.outputs.LATEST_TAG }}" --pattern "unhaunter-*wasm.zip" -O latest-wasm-release.zip
           unzip latest-wasm-release.zip -d wasm-release-temp
+          mkdir -p public/wasm/main/
           cp -Rv wasm-release-temp/* public/wasm/main/
           echo "Latest stable WASM game downloaded and extracted to public/wasm/main/"
         env:
