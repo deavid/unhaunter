@@ -1,7 +1,9 @@
 <header class="header-container {% if config.extra.style.header_blur %}blur-header{% endif %}">
   <div class="header-inner">
     <div class="site-title">
-      <a href="{{ get_url(path=``) | safe }}">{{ config.title }}</a>
+      <a href="{{ get_url(path=``) | safe }}" >
+        <img src="{{ get_url(path=config.extra.profile.title_url) }}" type=""/>
+      </a>
     </div>
 
     {% if config.extra.menu %}

@@ -52,7 +52,7 @@ $line-height-base: 1.75;
 // Breakpoints & Layout
 $breakpoint-lg: 1024px;
 $breakpoint-md: 768px;
-$max-width-content: 48rem;
+$max-width-content: 65%;
 $max-width-header-footer: 56rem;
 $header-height: 3.5rem;
 
@@ -103,7 +103,7 @@ html {
 
 body {
   margin: 0;
-  height: 100%;
+  min-height: 100dvh;
   color: $text-primary;
   background: var(--bg);
 }
@@ -201,7 +201,7 @@ body {
   width: 100%;
   max-width: $max-width-header-footer;
   margin: 0 auto;
-  padding: 0.75rem;
+  // padding: 0.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -294,16 +294,42 @@ body {
    Components
    ========================================================================== */
 
+.profile-container {
+  background-color: red;
+
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  align-items: top;
+  justify-content: center;
+
+  h1 {
+    font-size: 2.5em;
+    padding: 0;
+    margin: 0;
+    display: block;
+  }
+
+  // width: 1500px;
+
+}
+
 // Header Components
 .site-title {
-  font-size: 1.5rem;
+  // font-size: 1.5rem;
   font-weight: 600;
   color: $text-headings;
 
-  a {
+  * {
+    display: block;
+  }
 
+  a {
     text-decoration: none;
     color: $text-headings;
+  }
+
+  img {
+    width: 17rem;
   }
 }
 
