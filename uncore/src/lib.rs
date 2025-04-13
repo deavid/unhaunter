@@ -2,7 +2,6 @@ pub mod assets;
 pub mod behavior;
 pub mod colors;
 pub mod components;
-pub mod controlkeys;
 pub mod difficulty;
 pub mod events;
 pub mod metric_recorder;

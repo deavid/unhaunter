@@ -1,4 +1,4 @@
-use crate::controlkeys::ControlKeys;
+use unsettings::controls::ControlKeys;
 use bevy::prelude::*;
 
 /// Represents a player character in the game world.
