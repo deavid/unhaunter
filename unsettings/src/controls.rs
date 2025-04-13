@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Defines the keyboard controls for a player.
-#[derive(Debug, Clone)]
+#[derive(Resource, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ControlKeys {
     /// Key for moving up.
     pub up: KeyCode,
@@ -33,6 +34,40 @@ pub struct ControlKeys {
     pub left_hand_look: KeyCode,
     /// Key for toggling looking on the left hand gear
     pub left_hand_toggle: KeyCode,
+    /// Key for moving the camera up.
+    pub camera_up: KeyCode,
+    /// Key for moving the camera down.
+    pub camera_down: KeyCode,
+    /// Key for moving the camera left.
+    pub camera_left: KeyCode,
+    /// Key for moving the camera right.
+    pub camera_right: KeyCode,
+}
+
+impl Default for ControlKeys {
+    fn default() -> Self {
+        Self {
+            up: KeyCode::KeyW,
+            down: KeyCode::KeyS,
+            left: KeyCode::KeyA,
+            right: KeyCode::KeyD,
+            activate: KeyCode::KeyE,
+            trigger: KeyCode::KeyR,
+            torch: KeyCode::Tab,
+            cycle: KeyCode::KeyQ,
+            swap: KeyCode::KeyT,
+            drop: KeyCode::KeyG,
+            grab: KeyCode::KeyF,
+            change_evidence: KeyCode::KeyC,
+            run: KeyCode::ShiftLeft,
+            left_hand_look: KeyCode::ControlLeft,
+            left_hand_toggle: KeyCode::CapsLock,
+            camera_up: KeyCode::ArrowUp,
+            camera_down: KeyCode::ArrowDown,
+            camera_left: KeyCode::ArrowLeft,
+            camera_right: KeyCode::ArrowRight,
+        }
+    }
 }
 
 /// System for handling player movement, interaction, and collision.
@@ -57,6 +92,10 @@ impl ControlKeys {
         run: KeyCode::ShiftLeft,
         left_hand_look: KeyCode::ControlLeft,
         left_hand_toggle: KeyCode::CapsLock,
+        camera_up: KeyCode::ArrowUp,
+        camera_down: KeyCode::ArrowDown,
+        camera_left: KeyCode::ArrowLeft,
+        camera_right: KeyCode::ArrowRight,
     };
     pub const ARROWS: Self = ControlKeys {
         up: KeyCode::ArrowUp,
@@ -74,6 +113,10 @@ impl ControlKeys {
         run: KeyCode::ShiftLeft,
         left_hand_look: KeyCode::ControlLeft,
         left_hand_toggle: KeyCode::CapsLock,
+        camera_up: KeyCode::ArrowUp,
+        camera_down: KeyCode::ArrowDown,
+        camera_left: KeyCode::ArrowLeft,
+        camera_right: KeyCode::ArrowRight,
     };
     pub const IJKL: Self = ControlKeys {
         up: KeyCode::KeyI,
@@ -91,6 +134,10 @@ impl ControlKeys {
         run: KeyCode::ShiftRight,
         left_hand_look: KeyCode::ShiftRight,
         left_hand_toggle: KeyCode::Enter,
+        camera_up: KeyCode::ArrowUp,
+        camera_down: KeyCode::ArrowDown,
+        camera_left: KeyCode::ArrowLeft,
+        camera_right: KeyCode::ArrowRight,
     };
     pub const NONE: Self = ControlKeys {
         up: KeyCode::NonConvert,
@@ -108,5 +155,9 @@ impl ControlKeys {
         run: KeyCode::NonConvert,
         left_hand_look: KeyCode::NonConvert,
         left_hand_toggle: KeyCode::NonConvert,
+        camera_up: KeyCode::NonConvert,
+        camera_down: KeyCode::NonConvert,
+        camera_left: KeyCode::NonConvert,
+        camera_right: KeyCode::NonConvert,
     };
 }
