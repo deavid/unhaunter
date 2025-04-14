@@ -294,6 +294,8 @@ pub enum Class {
     Window,
     InvisibleWall,
     CornerWall,
+    StairsUp,
+    StairsDown,
     #[allow(clippy::upper_case_acronyms)]
     NPC,
     FakeGhost,
@@ -570,6 +572,8 @@ impl SpriteConfig {
                     "sounds/effects-dongdongdong.ogg",
                 ))
                 .insert(component::FloorItemCollidable),
+            Class::StairsDown => entity,
+            Class::StairsUp => entity,
         };
     }
 
@@ -701,6 +705,12 @@ impl SpriteConfig {
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::StairsDown => {
+                p.display.global_z = (0.000005).try_into().unwrap();
+            }
+            Class::StairsUp => {
+                p.display.global_z = (0.000005).try_into().unwrap();
             }
             Class::None => {}
         }

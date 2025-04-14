@@ -112,7 +112,6 @@ pub fn bevy_load_map(
     let grp = MapLayerGroup { layers: map_layers };
     let layers: Vec<(usize, MapLayer)> = grp
         .iter()
-        .filter(|x| x.visible)
         .enumerate()
         .map(|(n, l)| (n, l.clone()))
         .collect();
