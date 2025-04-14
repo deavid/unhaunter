@@ -12,7 +12,14 @@ impl Plugin for UnhaunterGamePlugin {
         app.init_resource::<GameConfig>()
             .add_systems(OnEnter(AppState::InGame), systems::setup)
             .add_systems(OnExit(AppState::InGame), systems::cleanup)
-            .add_systems(Update, (systems::keyboard, system_hide_mouse));
+            .add_systems(
+                Update,
+                (
+                    systems::keyboard,
+                    systems::keyboard_floor_switch,
+                    system_hide_mouse,
+                ),
+            );
         boardfield_update::app_setup(app);
         level::app_setup(app);
         game_ui::app_setup(app);

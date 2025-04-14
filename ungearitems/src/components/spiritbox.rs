@@ -139,7 +139,7 @@ impl GearUsable for SpiritBox {
         let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
         let bpos = posk.to_board_position();

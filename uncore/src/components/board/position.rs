@@ -112,7 +112,7 @@ impl Position {
         BoardPosition {
             x: self.x.round() as i64,
             y: self.y.round() as i64,
-            z: 0,
+            z: self.z.round() as i64,
         }
     }
 
