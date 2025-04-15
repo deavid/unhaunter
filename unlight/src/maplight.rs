@@ -129,6 +129,24 @@ pub fn compute_visibility(
             } else {
                 *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
             }
+            if ncf.stair_offset != 0 {
+                // Move up/down stairs too
+                let n2pos = BoardPosition {
+                    x: npos.x,
+                    y: npos.y,
+                    z: npos.z + ncf.stair_offset as i64,
+                };
+                let pos2 = BoardPosition {
+                    x: pos.x,
+                    y: pos.y,
+                    z: pos.z + ncf.stair_offset as i64,
+                };
+                let vf_np = &mut vis_field[n2pos.ndidx()];
+                if *vf_np < -0.000001 {
+                    *vf_np = dst_f / 2.0;
+                    queue.push_front((n2pos, pos2));
+                }
+            }
         }
     }
     measure.end_ms();
@@ -395,27 +413,35 @@ pub fn apply_lighting(
 
     let update_radius: usize = rng.random_range(8..16);
     let player_bpos = player_pos.to_board_position();
-    let (map_width, map_height, _map_depth) = bf.map_size;
+    let (map_width, map_height, map_depth) = bf.map_size;
     let player_ndidx = player_bpos.ndidx();
     let min_x = (player_ndidx.0).saturating_sub(update_radius);
     let max_x = (player_ndidx.0 + update_radius).min(map_width - 1);
     let min_y = (player_ndidx.1).saturating_sub(update_radius);
     let max_y = (player_ndidx.1 + update_radius).min(map_height - 1);
-    let z = player_ndidx.2;
+    let min_z = player_ndidx.2.saturating_sub(1);
+    let max_z = (player_ndidx.2 + 1).min(map_depth - 1);
     let mut entities = Vec::with_capacity(256);
-    for x in min_x..=max_x {
-        for y in min_y..=max_y {
-            let n = x + y * max_x;
-            let dist = ((player_ndidx.0 as isize - x as isize).abs()
-                + (player_ndidx.1 as isize - y as isize).abs()) as usize;
-            let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
-            if min_threshold * dist / 20 > update_radius.saturating_sub(dist + 2) {
-                continue;
-            }
 
-            entities.extend_from_slice(&bf.map_entity_field[(x, y, z)]);
+    for z in min_z..=max_z {
+        for x in min_x..=max_x {
+            for y in min_y..=max_y {
+                let n = x + y * max_x + z * map_width * map_height;
+                let dist = ((player_ndidx.0 as isize - x as isize).abs()
+                    + (player_ndidx.1 as isize - y as isize).abs()
+                    + (player_ndidx.2 as isize - z as isize).abs())
+                    as usize;
+                let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
+                if min_threshold * dist / 20 > update_radius.saturating_sub(dist + 2) {
+                    continue;
+                }
+                if vf.visibility_field[(x, y, z)] > 0.00001 {
+                    entities.extend_from_slice(&bf.map_entity_field[(x, y, z)]);
+                }
+            }
         }
     }
+
     for e in visible.iter() {
         if rng.random_range(0..100) < 5 {
             entities.push(e.to_owned());

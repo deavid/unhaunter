@@ -264,6 +264,7 @@ pub struct Movement {
     // it can cover an area of 3x3 board tiles. collision_map: [[bool; 9]; 9],
     /// Indicates that this will make collision dynamic. This is used for doors.
     pub is_dynamic: bool,
+    pub stair_offset: i32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -708,9 +709,11 @@ impl SpriteConfig {
             }
             Class::StairsDown => {
                 p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = -1;
             }
             Class::StairsUp => {
                 p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = 1;
             }
             Class::None => {}
         }

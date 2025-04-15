@@ -17,7 +17,7 @@ impl CollisionHandler<'_> {
     const PILLAR_SZ: f32 = 0.3;
     const PLAYER_SZ: f32 = 0.5;
     // Threshold to determine when a position is considered "between floors"
-    const FLOOR_TRANSITION_THRESHOLD: f32 = 0.5;
+    const FLOOR_TRANSITION_THRESHOLD: f32 = 0.49;
 
     pub fn delta(&self, pos: &Position) -> Vec3 {
         let mut delta = Vec3::ZERO;
