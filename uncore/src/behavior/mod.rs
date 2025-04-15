@@ -572,8 +572,8 @@ impl SpriteConfig {
                     "sounds/effects-dongdongdong.ogg",
                 ))
                 .insert(component::FloorItemCollidable),
-            Class::StairsDown => entity,
-            Class::StairsUp => entity,
+            Class::StairsDown => entity.insert(component::Stairs { z: -1 }),
+            Class::StairsUp => entity.insert(component::Stairs { z: 1 }),
         };
     }
 

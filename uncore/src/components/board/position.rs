@@ -70,7 +70,9 @@ impl Position {
     pub fn to_screen_coord(self) -> Vec3 {
         let x = self.x * PERSPECTIVE_X[0] + self.y * PERSPECTIVE_Y[0] + self.z * PERSPECTIVE_Z[0];
         let y = self.x * PERSPECTIVE_X[1] + self.y * PERSPECTIVE_Y[1] + self.z * PERSPECTIVE_Z[1];
-        let z = self.x * PERSPECTIVE_X[2] + self.y * PERSPECTIVE_Y[2] + self.z * PERSPECTIVE_Z[2];
+        let z = self.x * PERSPECTIVE_X[2]
+            + self.y * PERSPECTIVE_Y[2]
+            + self.z.round() * PERSPECTIVE_Z[2];
         Vec3::new(x, y, z + self.global_z)
     }
 

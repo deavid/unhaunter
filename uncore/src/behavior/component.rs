@@ -16,6 +16,10 @@ pub struct Light;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Door;
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
+pub struct Stairs {
+    pub z: i32,
+}
+#[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct FloorItemCollidable;
 
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
