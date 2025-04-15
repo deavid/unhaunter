@@ -234,6 +234,7 @@ pub fn stairs_player(
         return;
     };
     let player_bpos = player_pos.to_board_position();
+    let mut in_stairs = false;
 
     for (stair_pos, stair) in &stairs {
         let stair_bpos = stair_pos.to_board_position();
@@ -249,6 +250,11 @@ pub fn stairs_player(
             } else {
                 player_pos.z = player_pos.z.clamp(stair_pos.z - 1.0, stair_pos.z);
             }
+            in_stairs = true;
         }
+    }
+
+    if !in_stairs && player_pos.z.fract().abs() > 0.001 {
+        player_pos.z = player_bpos.z as f32;
     }
 }
