@@ -69,7 +69,7 @@ pub fn rebuild_collision_data(
     );
     bf.collision_field.fill(CollisionFieldData::default());
 
-    for (_entity, pos, _behavior) in qt.iter().filter(|(_e, _p, b)| b.p.movement.walkable) {
+    for (_entity, pos, behavior) in qt.iter().filter(|(_e, _p, b)| b.p.movement.walkable) {
         let bpos = pos.to_board_position();
         let colfd = CollisionFieldData {
             player_free: true,
@@ -77,6 +77,7 @@ pub fn rebuild_collision_data(
             see_through: true,
             wall_orientation: Orientation::None,
             is_dynamic: false,
+            stair_offset: behavior.p.movement.stair_offset,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
     }
@@ -92,7 +93,15 @@ pub fn rebuild_collision_data(
             see_through: behavior.p.light.see_through,
             wall_orientation: behavior.orientation(),
             is_dynamic: behavior.p.movement.is_dynamic,
+            stair_offset: behavior.p.movement.stair_offset,
         };
         bf.collision_field[bpos.ndidx()] = colfd;
+    }
+    for (_entity, pos, behavior) in qt
+        .iter()
+        .filter(|(_e, _p, b)| b.p.movement.stair_offset != 0)
+    {
+        let bpos = pos.to_board_position();
+        bf.collision_field[bpos.ndidx()].stair_offset = behavior.p.movement.stair_offset;
     }
 }

@@ -3,6 +3,7 @@ use bevy::utils::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::events::map_selected::MapSelectedEvent; // Add this import
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::difficulty_state::DifficultySelectionState;
 use uncore::resources::maps::Maps;
@@ -45,12 +46,24 @@ pub fn app_setup(app: &mut App) {
 }
 
 /// Sets up the difficulty selection screen UI and initializes the difficulty state
-pub fn setup_systems(mut commands: Commands, handles: Res<GameAssets>) {
+pub fn setup_systems(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    mut map_selected_events: EventReader<MapSelectedEvent>,
+) {
     setup_ui(&mut commands, &handles);
     let default_difficulty = Difficulty::all().next().unwrap_or_default();
+
+    // Get the selected map index from the most recent MapSelectedEvent
+    let selected_map_idx = map_selected_events
+        .read()
+        .last()
+        .map(|event| event.map_idx)
+        .unwrap_or(0); // Default to 0 if no event is found
+
     commands.insert_resource(DifficultySelectionState {
         selected_difficulty: default_difficulty,
-        selected_map_idx: 0,
+        selected_map_idx,
         state_entered_at: Instant::now(),
     });
 }

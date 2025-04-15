@@ -72,6 +72,8 @@ pub struct MapLayer {
     pub user_class: Option<String>,
     pub user_properties: HashMap<String, tiled::PropertyValue>,
     pub data: MapLayerType,
+    pub floor_number: Option<i32>, // The floor number this layer belongs to
+    pub parent_floor_name: Option<String>, // The name of the parent floor group
 }
 
 /// Iterator for layers. This iterator will search recursively for layers of type

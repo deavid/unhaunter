@@ -26,6 +26,8 @@ pub fn load_tile_layer_iter<'a>(
             user_properties,
             opacity: layer.opacity,
             data: load_tile_layer(layer),
+            floor_number: None,
+            parent_floor_name: None,
         };
         ret.push(map_layer);
     }

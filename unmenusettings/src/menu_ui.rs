@@ -46,15 +46,15 @@ pub fn setup_ui_main_cat(
         })
         .with_children(|parent| {
             // Background
-            templates::create_background(parent, &handles);
+            templates::create_background(parent, handles);
 
             // Logo
-            templates::create_logo(parent, &handles);
+            templates::create_logo(parent, handles);
 
             // Create breadcrumb navigation with title
             templates::create_breadcrumb_navigation(
                 parent,
-                &handles,
+                handles,
                 title,
                 "" // No subtitle for this level
             );
@@ -62,7 +62,7 @@ pub fn setup_ui_main_cat(
             // Create content area for settings items
             let mut content_area_entity = templates::create_selectable_content_area(
                 parent,
-                &handles,
+                handles,
                 0 // Initial selection
             );
 
@@ -93,7 +93,7 @@ pub fn setup_ui_main_cat(
                                     item_text,
                                     idx,
                                     idx == 0, // First item selected by default
-                                    &handles
+                                    handles
                                 )
                                 .insert(MenuItem::new(idx, *event));
                                 idx += 1;
@@ -125,7 +125,7 @@ pub fn setup_ui_main_cat(
                             "Go Back",
                             idx,
                             false,
-                            &handles
+                            handles
                         )
                         .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
                     });
@@ -134,7 +134,7 @@ pub fn setup_ui_main_cat(
             // Help text
             templates::create_help_text(
                 parent,
-                &handles,
+                handles,
                 Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
             );
         })

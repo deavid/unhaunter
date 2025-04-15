@@ -2,11 +2,12 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_persistent::Persistent;
 use uncore::{
     components::{
-        board::direction::Direction,
+        board::{direction::Direction, position::Position},
         game::{GCameraArena, GameSound, GameSprite},
         game_config::GameConfig,
         player_sprite::PlayerSprite,
     },
+    resources::board_data::BoardData,
     states::{AppState, GameState},
 };
 use unsettings::controls::ControlKeys;
@@ -87,7 +88,6 @@ pub fn keyboard(
             const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
             ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
             ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;
-            ref_point.z = transform.translation.z;
             let dist = (transform.translation.distance(ref_point) - 1.0).max(0.00001);
             let mut delta = ref_point - transform.translation;
             delta.z = 0.0;
@@ -125,6 +125,93 @@ pub fn keyboard(
                 transform.scale.x *= 1.02_f32.powf(dt);
                 transform.scale.y *= 1.02_f32.powf(dt);
             }
+        }
+    }
+}
+
+/// System to handle temporary floor switching using Y and H keys
+///
+/// Y key: Move up one floor
+/// H key: Move down one floor
+///
+/// This is a temporary debugging system for testing multi-floor maps
+pub fn keyboard_floor_switch(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<(&PlayerSprite, &mut Position)>,
+    board_data: Res<BoardData>,
+    game_config: Res<GameConfig>,
+) {
+    // Only act when Y or H key is just pressed
+    let go_up = keyboard_input.just_pressed(KeyCode::KeyY);
+    let go_down = keyboard_input.just_pressed(KeyCode::KeyH);
+
+    if !go_up && !go_down {
+        return;
+    }
+
+    warn!(
+        "Floor switch: Trying to switch floors (up: {}, down: {})",
+        go_up, go_down
+    );
+
+    // Find the player entity matching the active player ID
+    let mut player_position = None;
+    for (player, pos) in player_query.iter_mut() {
+        if player.id == game_config.player_id {
+            player_position = Some(pos);
+            break;
+        }
+    }
+
+    // If we didn't find the player or there's no floor mapping data, exit
+    let Some(mut player_pos) = player_position else {
+        warn!("Floor switch: Player not found");
+        return;
+    };
+
+    if board_data.floor_z_map.is_empty() || board_data.z_floor_map.is_empty() {
+        warn!("Floor switch: No floor mapping data available");
+        return;
+    }
+
+    // Get the current z position (should be an integer value)
+    let current_z = player_pos.z.round() as usize;
+
+    // Calculate the target floor z based on the key pressed
+    let target_z = if go_up {
+        // Find the next higher floor if it exists
+        if current_z + 1 < board_data.map_size.2 {
+            current_z + 1
+        } else {
+            warn!("Floor switch: Already at the highest floor ({})", current_z);
+            current_z
+        }
+    } else {
+        // Find the next lower floor if it exists
+        if current_z > 0 {
+            current_z - 1
+        } else {
+            warn!("Floor switch: Already at the lowest floor ({})", current_z);
+            current_z
+        }
+    };
+
+    // Update the player's z position if we're changing floors
+    if current_z != target_z {
+        // Convert from usize to f32 for Position.z
+        player_pos.z = target_z as f32;
+
+        // Log the floor change for debugging
+        if let Some(tiled_floor) = board_data.z_floor_map.get(&target_z) {
+            warn!(
+                "Floor switch: Moving to z={} (Tiled floor number: {})",
+                target_z, tiled_floor
+            );
+        } else {
+            warn!(
+                "Floor switch: Moving to z={} (unknown Tiled floor)",
+                target_z
+            );
         }
     }
 }

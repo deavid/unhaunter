@@ -151,7 +151,7 @@ impl GearUsable for Recorder {
         let pos = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
 

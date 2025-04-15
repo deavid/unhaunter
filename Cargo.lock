@@ -5021,6 +5021,7 @@ dependencies = [
  "ndarray",
  "ordered-float",
  "rand 0.9.0",
+ "tiled",
  "uncore",
  "ungear",
  "ungearitems",

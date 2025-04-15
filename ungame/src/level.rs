@@ -53,8 +53,8 @@ use uncore::{celsius_to_kelvin, random_seed};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unlight::prebake::prebake_lighting_field;
-use unsettings::controls::ControlKeys;
 use unsettings::audio::AudioSettings;
+use unsettings::controls::ControlKeys;
 use unstd::board::spritedb::SpriteDB;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use unstd::materials::CustomMaterial1;
@@ -75,7 +75,7 @@ pub struct LoadLevelSystemParam<'w> {
     roomdb: ResMut<'w, RoomDB>,
     difficulty: Res<'w, CurrentDifficulty>,
     audio_settings: Res<'w, Persistent<AudioSettings>>,
-    control_settings: Res<'w, Persistent<ControlKeys>>
+    control_settings: Res<'w, Persistent<ControlKeys>>,
 }
 
 /// Loads a new level based on the `LoadLevelEvent`.
@@ -98,9 +98,7 @@ pub fn load_level_handler(
         return;
     };
     let layers = &loaded_event.layers;
-
-    // Consume all events, just in case to prevent double loading.
-    let _ = ev_iter.count();
+    let floor_mapping = &loaded_event.floor_mapping;
 
     // Despawn sprites just in case
     for gs in qgs.iter() {
@@ -138,11 +136,23 @@ pub fn load_level_handler(
     map_min_x -= MAP_MARGIN;
     map_min_y -= MAP_MARGIN;
 
+    // Use the floor mapping directly from the event rather than re-detecting
+    // Instead of re-detecting floors, use the precalculated mapping from bevy_load_map
+    p.bf.floor_z_map = floor_mapping.floor_to_z.clone();
+    p.bf.z_floor_map = floor_mapping.z_to_floor.clone();
+
+    warn!(
+        "Floor mapping from event: {:?} floors found",
+        p.bf.floor_z_map.len()
+    );
+    warn!("Floor z-map: {:?}", p.bf.floor_z_map);
+    warn!("Z-floor map: {:?}", p.bf.z_floor_map);
+
     // Margin is added here again to give extra on the positive edge too
     let map_size = (
         (map_max_x - map_min_x + 1 + MAP_MARGIN) as usize,
         (map_max_y - map_min_y + 1 + MAP_MARGIN) as usize,
-        1,
+        p.bf.floor_z_map.len(), // Use the number of floors for the z dimension
     );
 
     info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
@@ -332,6 +342,13 @@ pub fn load_level_handler(
             None
         }
     }) {
+        // Get floor z-index directly from the layer's floor_number
+        let floor_z = if let Some(floor_num) = layer.floor_number {
+            p.bf.floor_z_map.get(&floor_num).copied().unwrap_or(0)
+        } else {
+            0 // Default to ground floor if no floor number is set
+        };
+
         for tile in &maptiles.v {
             let mt = p
                 .sdb
@@ -377,7 +394,7 @@ pub fn load_level_handler(
             let mut pos = Position {
                 x: t_x,
                 y: t_y,
-                z: 0.0,
+                z: floor_z as f32, // Assign the correct z value based on the floor mapping
                 global_z: 0.0,
             };
             c += 0.000000001;
