@@ -478,7 +478,7 @@ pub fn apply_lighting(
             let bpos_tl = bpos.left();
 
             // minimum distance for flashlight
-            const FL_MIN_DST: f32 = 7.0;
+            const FL_MIN_DST: f32 = 0.1;
 
             // behavior.p.movement.walkable
             let fpos_gamma_color = |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
@@ -703,24 +703,31 @@ pub fn apply_lighting(
             map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
-        let ld_mag;
-        let ld;
-        if let Some(ld_abs) = lightdata_map.get(&bpos) {
-            ld_mag = ld_abs.magnitude();
-            ld = ld_abs.normalize();
-        } else {
-            let ld_abs = LightData {
-                visible: 0.0001,
-                red: 0.0,
-                infrared: 0.0,
-                ultraviolet: 0.0,
-            };
-            ld_mag = ld_abs.magnitude();
-            ld = ld_abs.normalize();
-            if opacity > 0.0001 {
-                // Skip updating if it was not selected for update
-                continue;
+        let mut light_v = vec![LightData {
+            visible: 0.000000001,
+            red: 0.0,
+            infrared: 0.0,
+            ultraviolet: 0.0,
+        }];
+        for nbpos in bpos.iter_xy_neighbors(1, bf.map_size) {
+            if let Some(ld_abs) = lightdata_map.get(&nbpos) {
+                light_v.push(ld_abs.clone());
             }
+        }
+        let light_sz = light_v.len() as f32;
+        let ld_abs = LightData {
+            visible: light_v.iter().map(|x| x.visible).sum::<f32>() / light_sz,
+            red: light_v.iter().map(|x| x.red).sum::<f32>() / light_sz,
+            infrared: light_v.iter().map(|x| x.infrared).sum::<f32>() / light_sz,
+            ultraviolet: light_v.iter().map(|x| x.ultraviolet).sum::<f32>() / light_sz,
+        };
+
+        let ld_mag = ld_abs.magnitude();
+        let ld = ld_abs.normalize();
+
+        if light_sz < 3.0 && opacity > 0.0001 {
+            // Skip updating if it was not selected for update
+            continue;
         }
         let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
@@ -902,7 +909,18 @@ pub fn apply_lighting(
         dst_color.set_alpha(
             ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
         );
-        sprite.color = dst_color;
+        let src_linear = sprite.color.to_linear();
+        let dst_linear = dst_color.to_linear();
+        let f = if sprite_type == SpriteType::Player {
+            0.01
+        } else {
+            0.11
+        }; // Smoothing factor
+        let smooth_color = LinearRgba::from_vec4(
+            (src_linear.to_vec4() * (1.0 - f) + dst_linear.to_vec4() * f)
+                .clamp(Vec4::ZERO, Vec4::ONE),
+        );
+        sprite.color = smooth_color.into();
     }
     for (bpos, ld) in lightdata_map.into_iter() {
         bf.light_field[bpos.ndidx()].additional = ld;
