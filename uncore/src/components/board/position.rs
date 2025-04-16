@@ -96,17 +96,29 @@ impl Position {
         self.distance2(other).sqrt()
     }
 
+    pub fn distance_zf(&self, other: &Self, zf: f32) -> f32 {
+        self.distance2_zf(other, zf).sqrt()
+    }
+
     pub fn distance2(&self, other: &Self) -> f32 {
+        self.distance2_zf(other, 6.0)
+    }
+
+    pub fn distance2_zf(&self, other: &Self, zf: f32) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
-        let dz = self.z - other.z;
+        let dz = (self.z - other.z) * zf;
         dx * dx + dy * dy + dz * dz
     }
 
     pub fn distance_taxicab(&self, other: &Self) -> f32 {
+        self.distance_taxicab_zf(other, 6.0)
+    }
+
+    pub fn distance_taxicab_zf(&self, other: &Self, zf: f32) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
-        let dz = self.z - other.z;
+        let dz = (self.z - other.z) * zf;
         dx.abs() + dy.abs() + dz.abs()
     }
 
@@ -115,6 +127,14 @@ impl Position {
             x: self.x.round() as i64,
             y: self.y.round() as i64,
             z: self.z.round() as i64,
+        }
+    }
+
+    pub fn to_board_position_size(self, map_size: (usize, usize, usize)) -> BoardPosition {
+        BoardPosition {
+            x: (self.x.round() as i64).clamp(0, map_size.0 as i64 - 1),
+            y: (self.y.round() as i64).clamp(0, map_size.1 as i64 - 1),
+            z: (self.z.round() as i64).clamp(0, map_size.2 as i64 - 1),
         }
     }
 

@@ -141,10 +141,14 @@ pub fn keyboard_floor_switch(
     board_data: Res<BoardData>,
     game_config: Res<GameConfig>,
 ) {
+    const DEBUG_FLOORS: bool = true;
     // Only act when Y or H key is just pressed
     let go_up = keyboard_input.just_pressed(KeyCode::KeyY);
     let go_down = keyboard_input.just_pressed(KeyCode::KeyH);
 
+    if !DEBUG_FLOORS {
+        return;
+    }
     if !go_up && !go_down {
         return;
     }

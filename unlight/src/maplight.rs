@@ -81,7 +81,7 @@ pub fn compute_visibility(
     queue.push_front((start.clone(), start.clone()));
     vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
-        let pds = pos.to_position().distance(pos_start);
+        let pds = pos.to_position().distance_zf(pos_start, 1.0);
         let p = pos.ndidx();
         let src_f = vis_field[p];
         let cf = &collision_field[p];
@@ -98,7 +98,7 @@ pub fn compute_visibility(
             }
             let np = npos.ndidx();
             let ncf = collision_field[np];
-            let npds = npos.to_position().distance(pos_start);
+            let npds = npos.to_position().distance_zf(pos_start, 1.0);
             let npref = npos.distance(&pos2) / 2.0;
             let f = if npds < 1.5 {
                 1.0
@@ -697,18 +697,31 @@ pub fn apply_lighting(
     // ghost, ghost breach)
     for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
-        let bpos = pos.to_board_position();
-        let Some(ld_abs) = lightdata_map.get(&bpos).cloned() else {
-            // If the given cell was not selected for update, skip updating its color
-            // (otherwise it can blink)
-            continue;
-        };
-        let ld_mag = ld_abs.magnitude();
-        let ld = ld_abs.normalize();
+        let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
         let mut opacity: f32 =
             map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
+
+        let ld_mag;
+        let ld;
+        if let Some(ld_abs) = lightdata_map.get(&bpos) {
+            ld_mag = ld_abs.magnitude();
+            ld = ld_abs.normalize();
+        } else {
+            let ld_abs = LightData {
+                visible: 0.0001,
+                red: 0.0,
+                infrared: 0.0,
+                ultraviolet: 0.0,
+            };
+            ld_mag = ld_abs.magnitude();
+            ld = ld_abs.normalize();
+            if opacity > 0.0001 {
+                // Skip updating if it was not selected for update
+                continue;
+            }
+        }
         let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
         src_color = lerp_color(
