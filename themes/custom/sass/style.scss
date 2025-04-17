@@ -16,7 +16,7 @@ $gray-900: #111827;
 
 // Theme colors
 $header-bg: #27272a;  // Use darker background
-$body-bg: #18181b;    // Use darker background
+$body-bg: #ececf7;    // Use darker background
 $text-primary: #d1d5db;
 $text-secondary: #9ca3af;
 $text-headings: #fff;
@@ -105,7 +105,11 @@ body {
   margin: 0;
   min-height: 100dvh;
   color: $text-primary;
-  background: var(--bg);
+  // background: rgb(141, 138, 138);
+
+
+  display: grid;
+  grid-template-rows: 1fr auto;
 }
 
 // Add the .prose class styles
@@ -368,42 +372,57 @@ body {
 
 // Footer Components
 .footer-container {
-  max-width: $max-width-header-footer;
+  // max-width: $max-width-header-footer;
+  width: 100%;
+  height: 10rem;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  background-color: $header-bg;
+
+  // padding: 1rem 2rem;
   display: flex;
-  flex-wrap: wrap;
+
+  // flex-wrap: wrap;
   align-items: center;
+  justify-content: space-around;
   font-size: $font-size-sm;
   opacity: 0.6;
 }
 
 .footer-left {
-  margin-right: auto;
-  flex-basis: 100%;
+  // margin-right: auto;
+  // flex-basis: 100%;
 
-  @include lg {
-    flex-basis: 50%;
-  }
+  // @include lg {
+  //   flex-basis: 50%;
+  // }
 }
 
 .footer-right {
   display: flex;
-  flex-basis: 100%;
+  // flex-basis: 100%;
   margin-top: 0.5rem;
 
   @include lg {
-    flex-basis: 50%;
+    // flex-basis: 50%;
     justify-content: flex-end;
     margin-top: 0;
   }
 
+  display: flex;
+  gap: 20px;
+
   a {
-    margin-left: 1.5rem;
+    img {
+      color: white;
+      display: block;
+      width: 30px;
+      height: 30px;
+    }
+    // margin-left: 1.5rem;
     &:first-child {
-      margin-left: 0;
+      // margin-left: 0;
       @include lg {
-        margin-left: 1.5rem;
+        // margin-left: 1.5rem;
       }
     }
   }

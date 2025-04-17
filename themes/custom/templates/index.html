@@ -19,7 +19,10 @@
       {% endblock main %}
     </main>
 
-    {% include "partials/footer.html" %}
+    {% block footer %}
+      {% include "partials/footer.html" %}
+    {% endblock footer %}
+    
     {% include "injects/body_end.html" ignore missing %}
   </body>
 </html>

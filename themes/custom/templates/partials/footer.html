@@ -3,9 +3,9 @@
     {% set current_year = now() | date(format="%Y") | int %}
     &copy; {% if config.extra.footer.since and config.extra.footer.since != current_year %}
     {{ config.extra.footer.since }} - {% endif %}{{ current_year }}
-    <a class="footer-link" href="{{ get_url(path=``) | safe }}">
+    <!-- <a class="footer-link" href="{{ get_url(path=``) | safe }}">
       {{ config.author | default(value=config.title) }}
-    </a>
+    </a> -->
     {% if config.extra.footer.license %}
     | {% if config.extra.footer.license_url %}
     <a class="footer-link" href="{{ config.extra.footer.license_url }}" rel="noopener" target="_blank">
@@ -17,9 +17,15 @@
     {% endif %}
   </div>
   <div class="footer-right">
-    <a class="footer-link" href="https://www.getzola.org/" rel="noopener" target="_blank">
-      Powered by Zola
-    </a>
+    {% if config.extra.footer.links %}
+      {% for link in config.extra.footer.links %}
+        <a href="{{ link.url }}" target="_blank">
+          <img src="{{ link.icon }}" type="" alt="{{link.name}}"/>
+          <!-- <img src="" alt="{{link.name}}"> -->
+          <!-- {{ link.name }} -->
+        </a>
+      {% endfor %}
+    {% endif %}
   </div>
   {% include "injects/footer.html" ignore missing %}
 </footer>
