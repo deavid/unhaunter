@@ -135,6 +135,11 @@ name = "portfolio"
 url = "https://deavid.wordpress.com/"
 icon = "icons/portfolio.svg"
 
+[[extra.footer.links]]
+name = "github"
+url = "https://github.com/deavid/unhaunter"
+icon = "icons/github.svg"
+
 # The page footer options.
 [extra.footer]
 since = 2023
