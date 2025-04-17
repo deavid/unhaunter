@@ -483,14 +483,14 @@
  </tile>
  <tile id="30" type="StairsDown">
   <properties>
-   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:orientation" value="XAxis"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Blue"/>
   </properties>
  </tile>
  <tile id="31" type="StairsUp">
   <properties>
-   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:orientation" value="XAxis"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Blue"/>
   </properties>

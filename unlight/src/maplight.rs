@@ -143,7 +143,7 @@ pub fn compute_visibility(
                 };
                 let vf_np = &mut vis_field[n2pos.ndidx()];
                 if *vf_np < -0.000001 {
-                    *vf_np = dst_f / 2.0;
+                    *vf_np = dst_f / 10.0;
                     queue.push_front((n2pos, pos2));
                 }
             }
