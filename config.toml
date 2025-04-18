@@ -4,10 +4,13 @@ base_url = "https://www.unhaunter.com"
 
 # The site title and description; used in feeds by default.
 title = "Unhaunter Official Website"
-description = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
-Find 8 distinct evidence types to narrow down the ghost's identity.
-Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
-Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+description = """Step into the boots of a paranormal investigator in Unhaunter, a 2D isometric ghost hunting game. 
+Explore atmospheric haunted locations, mastering specialized equipment like the EMF Meter, Thermometer, UV Torch, and Spirit Box. 
+Uncover 8 distinct evidence types—from Freezing Temperatures to RL Presence—to identify the ghost. 
+Match the evidence you've gathered against over 44 unique ghost profiles to identify the ghost in a tense deductive challenge.
+Navigate vision-obscuring Miasma, and learn to interpret crucial sound cues. 
+Manage your sanity and health, survive terrifying ghost hunts by hiding, and finally, craft the specific repellent needed to banish the 
+restless spirit. Can you solve the mystery and cleanse the location?
 """
 
 # The default site author.
@@ -70,10 +73,13 @@ social_image = "icons/unhaunter-logo.png"
 # The profile on home page.
 [extra.profile]
 name = "Unhaunter"
-bio = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
-Find 8 distinct evidence types to narrow down the ghost's identity.
-Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
-Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+bio = """Step into the boots of a paranormal investigator in Unhaunter, a 2D isometric ghost hunting game. 
+Explore atmospheric haunted locations, mastering specialized equipment like the EMF Meter, Thermometer, UV Torch, and Spirit Box. 
+Uncover 8 distinct evidence types—from Freezing Temperatures to RL Presence—to identify the ghost. 
+Match the evidence you've gathered against over 44 unique ghost profiles to identify the ghost in a tense deductive challenge.
+Navigate vision-obscuring Miasma, and learn to interpret crucial sound cues. 
+Manage your sanity and health, survive terrifying ghost hunts by hiding, and finally, craft the specific repellent needed to banish the 
+restless spirit. Can you solve the mystery and cleanse the location?
 """
 
 # The URL of avatar.
