@@ -92,22 +92,22 @@ fn ghost_movement(
             if dlen > 1.0 {
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
-                delta.dz /= dlen.sqrt(); // Normalize Z movement too
+                delta.dz /= dlen.sqrt();
             }
             delta.dx *= ghost.warp + 1.0;
             delta.dy *= ghost.warp + 1.0;
-            delta.dz *= ghost.warp + 1.0; // Apply warp to Z movement
+            delta.dz *= ghost.warp + 1.0;
             let mut finalize = false;
             if ghost.hunt_target {
                 if time.elapsed_secs() - ghost.hunt_time_secs > 1.0 {
                     if dlen < 4.0 {
                         delta.dx /= (dlen + 1.5) / 4.0;
                         delta.dy /= (dlen + 1.5) / 4.0;
-                        delta.dz /= (dlen + 1.5) / 4.0; // Apply same scaling to Z
+                        delta.dz /= (dlen + 1.5) / 4.0;
                     }
                     pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
                     pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
-                    pos.z += delta.dz / 70.0 * dt * difficulty.0.ghost_hunting_aggression; // Move in Z direction
+                    pos.z += delta.dz / 10.0 * dt * difficulty.0.ghost_hunting_aggression;
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
@@ -119,8 +119,9 @@ fn ghost_movement(
             } else {
                 pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed;
                 pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed;
-                pos.z += delta.dz / 200.0 * dt * difficulty.0.ghost_speed; // Move in Z direction when not hunting too
+                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed;
             }
+            pos.z = pos.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             if dlen < 0.5 {
                 finalize = true;
             }
@@ -133,13 +134,15 @@ fn ghost_movement(
             let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
-            let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Small Z wandering
+            let dz: f32 = (0..5).map(|_| rng.random_range(-0.05..0.05)).sum(); // Small Z wandering
             let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
             let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
-            target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd; // Set Z target
+            target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
+            // Always land on a specific floor, not midway.
+            target_point.z = target_point.z.round();
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if !ghost.hunt_warning_active
                 && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
@@ -168,10 +171,9 @@ fn ghost_movement(
                         rng.random_range(-search_radius..search_radius),
                         rng.random_range(-search_radius..search_radius),
                     );
-                    let z_offset = rng.random_range(-search_radius / 2.0..search_radius / 2.0);
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
-                    target_point.z = ppos.z + z_offset; // Include Z offset when hunting
+                    target_point.z = ppos.z.round();
                     hunt = true;
                 }
             }
@@ -191,7 +193,8 @@ fn ghost_movement(
                     let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
-                    target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd; // Set Z target
+                    target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
+                    target_point.z = target_point.z.round();
                     let score = 1.0
                         + calculate_destination_score(target_point, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach;
@@ -209,6 +212,7 @@ fn ghost_movement(
                 }
                 target_point = best_destination;
             }
+            target_point.z = target_point.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
             if dstroom.is_some() && bf.collision_field[bpos.ndidx()].ghost_free {

@@ -65,7 +65,7 @@ fn check_ghost_proximity(
     // Iterate through objects with GhostInfluence
     for (entity, object_position, ghost_influence) in &object_query {
         // Calculate distance between object and ghost
-        let distance_to_ghost = ghost_position.distance(object_position);
+        let distance_to_ghost = ghost_position.distance_zf(object_position, 3.0);
 
         // If distance <= object_discharge_radius
         if distance_to_ghost <= config.object_discharge_radius {
@@ -75,7 +75,7 @@ fn check_ghost_proximity(
             // --- Hunt Provocation Logic ---
             if ghost_influence.influence_type == InfluenceType::Repulsive {
                 // Calculate distance between object and breach
-                let distance_to_breach = breach_position.distance(object_position);
+                let distance_to_breach = breach_position.distance_zf(object_position, 3.0);
 
                 // If distance <= hunt_provocation_radius and charge_value is above threshold:
                 if distance_to_breach <= difficulty.0.hunt_provocation_radius

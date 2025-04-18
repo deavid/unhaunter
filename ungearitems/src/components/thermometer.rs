@@ -190,6 +190,9 @@ pub fn temperature_update(
     }
     for (gs, pos) in qg.iter() {
         let bpos = pos.to_board_position();
+        if bpos.z < 0 || bpos.z >= bf.map_size.2 as i64 {
+            continue;
+        }
         let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
         let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -3.0 } else { 1.0 });
         const GHOST_MAX_POWER: f32 = 2.0;
