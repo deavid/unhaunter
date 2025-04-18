@@ -411,7 +411,7 @@ pub fn apply_lighting(
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
 
-    let update_radius: usize = rng.random_range(8..16);
+    let update_radius: usize = rng.random_range(8..32);
     let player_bpos = player_pos.to_board_position();
     let (map_width, map_height, map_depth) = bf.map_size;
     let player_ndidx = player_bpos.ndidx();
@@ -432,7 +432,7 @@ pub fn apply_lighting(
                     + (player_ndidx.2 as isize - z as isize).abs())
                     as usize;
                 let min_threshold = ((n * BIG_PRIME) ^ mask) % VSMALL_PRIME;
-                if min_threshold * dist / 20 > update_radius.saturating_sub(dist + 2) {
+                if min_threshold * dist / 9 > update_radius.saturating_sub(dist + 2) {
                     continue;
                 }
                 if vf.visibility_field[(x, y, z)] > 0.00001 {
