@@ -49,17 +49,27 @@ pub fn rebuild_lighting_field(
     let main_propagation_time = time_main_propagation.elapsed();
 
     // Log light statistics before stair propagation
-    info!(
-        "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-        lfs.slice(s![.., .., 0])
-            .iter()
-            .filter(|x| x.lux > 0.01)
-            .count(),
-        lfs.slice(s![.., .., 1])
-            .iter()
-            .filter(|x| x.lux > 0.01)
-            .count()
-    );
+    if bf.map_size.2 > 1 {
+        info!(
+            "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+            lfs.slice(s![.., .., 0])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count(),
+            lfs.slice(s![.., .., 1])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count()
+        );
+    } else {
+        info!(
+            "Light field before stair propagation - Floor 0: {} lit tiles (no additional floors)",
+            lfs.slice(s![.., .., 0])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count()
+        );
+    }
 
     // Create wave edges from stairs and add them to a temporary list
     let time_stair_preparation = Instant::now();
@@ -91,17 +101,27 @@ pub fn rebuild_lighting_field(
     let stair_propagation_time = time_stair_propagation.elapsed();
 
     // Log light statistics after stair propagation
-    info!(
-        "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-        lfs.slice(s![.., .., 0])
-            .iter()
-            .filter(|x| x.lux > 0.01)
-            .count(),
-        lfs.slice(s![.., .., 1])
-            .iter()
-            .filter(|x| x.lux > 0.01)
-            .count()
-    );
+    if bf.map_size.2 > 1 {
+        info!(
+            "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+            lfs.slice(s![.., .., 0])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count(),
+            lfs.slice(s![.., .., 1])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count()
+        );
+    } else {
+        info!(
+            "Light field after stair propagation - Floor 0: {} lit tiles (no additional floors)",
+            lfs.slice(s![.., .., 0])
+                .iter()
+                .filter(|x| x.lux > 0.01)
+                .count()
+        );
+    }
 
     // Apply ambient light to walls
     let time_ambient = Instant::now();
