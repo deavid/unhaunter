@@ -40,6 +40,10 @@ pub struct BoardData {
     pub prebaked_wave_edges: Vec<WaveEdgeData>,
     pub prebaked_propagation: Vec<Array2<[bool; 4]>>,
 
+    // Floor mapping (Tiled floor number to z-index)
+    pub floor_z_map: HashMap<i32, usize>, // Maps Tiled floor numbers to contiguous z indices
+    pub z_floor_map: HashMap<usize, i32>, // Maps z indices back to Tiled floor numbers
+
     // Ghost warning state
     /// Current warning intensity (0.0-1.0)
     pub ghost_warning_intensity: f32,
@@ -72,6 +76,8 @@ impl FromWorld for BoardData {
             prebaked_propagation: Vec::new(),
             ghost_warning_intensity: 0.0,
             ghost_warning_position: None,
+            floor_z_map: HashMap::new(),
+            z_floor_map: HashMap::new(),
         }
     }
 }

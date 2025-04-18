@@ -102,7 +102,7 @@ impl GearUsable for GeigerCounter {
         let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
         let dist2breach = gs.bf.breach_pos.distance2(&posk) + 10.0;

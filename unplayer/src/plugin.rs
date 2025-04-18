@@ -1,3 +1,5 @@
+use crate::systems::keyboard::stairs_player;
+
 use super::systems::grabdrop::{
     deploy_gear, drop_object, grab_object, retrieve_gear, update_held_object_position,
 };
@@ -26,6 +28,7 @@ impl Plugin for UnhaunterPlayerPlugin {
                 drop_object,
                 hide_player,
                 unhide_player,
+                stairs_player,
             )
                 .run_if(in_state(GameState::None)),
         )

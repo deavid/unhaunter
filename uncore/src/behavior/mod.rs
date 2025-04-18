@@ -264,6 +264,7 @@ pub struct Movement {
     // it can cover an area of 3x3 board tiles. collision_map: [[bool; 9]; 9],
     /// Indicates that this will make collision dynamic. This is used for doors.
     pub is_dynamic: bool,
+    pub stair_offset: i32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -294,6 +295,8 @@ pub enum Class {
     Window,
     InvisibleWall,
     CornerWall,
+    StairsUp,
+    StairsDown,
     #[allow(clippy::upper_case_acronyms)]
     NPC,
     FakeGhost,
@@ -570,6 +573,8 @@ impl SpriteConfig {
                     "sounds/effects-dongdongdong.ogg",
                 ))
                 .insert(component::FloorItemCollidable),
+            Class::StairsDown => entity.insert(component::Stairs { z: -1 }),
+            Class::StairsUp => entity.insert(component::Stairs { z: 1 }),
         };
     }
 
@@ -701,6 +706,14 @@ impl SpriteConfig {
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::StairsDown => {
+                p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = -1;
+            }
+            Class::StairsUp => {
+                p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = 1;
             }
             Class::None => {}
         }

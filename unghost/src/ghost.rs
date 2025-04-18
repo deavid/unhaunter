@@ -92,18 +92,22 @@ fn ghost_movement(
             if dlen > 1.0 {
                 delta.dx /= dlen.sqrt();
                 delta.dy /= dlen.sqrt();
+                delta.dz /= dlen.sqrt();
             }
             delta.dx *= ghost.warp + 1.0;
             delta.dy *= ghost.warp + 1.0;
+            delta.dz *= ghost.warp + 1.0;
             let mut finalize = false;
             if ghost.hunt_target {
                 if time.elapsed_secs() - ghost.hunt_time_secs > 1.0 {
                     if dlen < 4.0 {
                         delta.dx /= (dlen + 1.5) / 4.0;
                         delta.dy /= (dlen + 1.5) / 4.0;
+                        delta.dz /= (dlen + 1.5) / 4.0;
                     }
                     pos.x += delta.dx / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
                     pos.y += delta.dy / 70.0 * dt * difficulty.0.ghost_hunting_aggression;
+                    pos.z += delta.dz / 10.0 * dt * difficulty.0.ghost_hunting_aggression;
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
@@ -115,7 +119,9 @@ fn ghost_movement(
             } else {
                 pos.x += delta.dx / 200.0 * dt * difficulty.0.ghost_speed;
                 pos.y += delta.dy / 200.0 * dt * difficulty.0.ghost_speed;
+                pos.z += delta.dz / 20.0 * dt * difficulty.0.ghost_speed;
             }
+            pos.z = pos.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             if dlen < 0.5 {
                 finalize = true;
             }
@@ -128,11 +134,15 @@ fn ghost_movement(
             let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+            let dz: f32 = (0..5).map(|_| rng.random_range(-0.05..0.05)).sum(); // Small Z wandering
             let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
-            let dd = (dx * dx + dy * dy).sqrt() / dist;
+            let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
+            target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
+            // Always land on a specific floor, not midway.
+            target_point.z = target_point.z.round();
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if !ghost.hunt_warning_active
                 && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
@@ -149,6 +159,7 @@ fn ghost_movement(
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
                     old_target.x += rng.random_range(-search_radius..search_radius);
                     old_target.y += rng.random_range(-search_radius..search_radius);
+                    old_target.z += rng.random_range(-search_radius / 2.0..search_radius / 2.0); // Add small Z randomization
                     let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
                         old_target
                     } else {
@@ -162,6 +173,7 @@ fn ghost_movement(
                     );
                     target_point.x = ppos.x + random_offset.x;
                     target_point.y = ppos.y + random_offset.y;
+                    target_point.z = ppos.z.round();
                     hunt = true;
                 }
             }
@@ -176,10 +188,13 @@ fn ghost_movement(
                         + 0.5;
                     let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
+                    let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Small Z wandering
                     let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
-                    let dd = (dx * dx + dy * dy).sqrt() / dist;
+                    let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
                     target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
                     target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
+                    target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
+                    target_point.z = target_point.z.round();
                     let score = 1.0
                         + calculate_destination_score(target_point, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach;
@@ -197,6 +212,7 @@ fn ghost_movement(
                 }
                 target_point = best_destination;
             }
+            target_point.z = target_point.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
             if dstroom.is_some() && bf.collision_field[bpos.ndidx()].ghost_free {
@@ -344,10 +360,13 @@ fn ghost_enrage(
             ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
         }
 
-        // Calm ghost when players are far away
+        // Calm ghost when players are far away - distance calculation now properly includes Z
         let min_player_dist = qp
             .iter()
-            .map(|(_, ppos)| OrderedFloat(gpos.distance(ppos)))
+            .map(|(_, ppos)| {
+                // Already includes Z coordinate in distance calculation
+                OrderedFloat(calculate_weighted_distance(gpos, ppos))
+            })
             .min()
             .unwrap_or(OrderedFloat(1000.0))
             .into_inner()
@@ -370,7 +389,8 @@ fn ghost_enrage(
 
             let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
             for (mut player, ppos) in &mut qp {
-                let dist2 = gpos.distance2(ppos) + 2.0;
+                // Apply damage based on 3D distance
+                let dist2 = calculate_weighted_distance_squared(gpos, ppos) + 2.0;
                 let dmg = dist2.recip() * difficulty.0.health_drain_rate;
                 player.health -=
                     dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
@@ -409,15 +429,21 @@ fn ghost_enrage(
         for (player, ppos) in &qp {
             let sanity = player.sanity();
             let inv_sanity = (120.0 - sanity) / 100.0;
-            let dist2 = gpos.distance2(ppos) / difficulty.0.hunt_provocation_radius
+
+            // Calculate distance including Z coordinate
+            let dist2 = calculate_weighted_distance_squared(gpos, ppos)
+                / difficulty.0.hunt_provocation_radius
                 * (0.01 + sanity)
                 + 0.1
                 + sanity / 100.0;
+
             let angry2 = dist2.recip() * 1000000.0 / sanity
                 * player.mean_sound
                 * (player.health / 100.0).clamp(0.0, 1.0);
+
             total_angry2 +=
                 angry2 * inv_sanity + player.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+
             let player_board_position = ppos.to_board_position();
             if roomdb.room_tiles.contains_key(&player_board_position) {
                 player_in_room = true;
@@ -536,6 +562,7 @@ fn spawn_salty_trace(
     let mut rng = random_seed::rng();
     pos.x += rng.random_range(-0.2..0.2);
     pos.y += rng.random_range(-0.2..0.2);
+    pos.z += rng.random_range(-0.05..0.05); // Add small Z variation for traces
     commands
         .spawn(Sprite {
             image: asset_server.load("img/salt_particle.png"),
@@ -597,7 +624,7 @@ fn ghost_fade_out_system(
                 .insert(Direction {
                     dx: rng.random_range(-0.9..0.9),
                     dy: rng.random_range(-0.9..0.9),
-                    dz: 0.0,
+                    dz: rng.random_range(-0.5..0.5), // Add Z direction for smoke particles
                 })
                 .insert(MapColor {
                     color: Color::WHITE.with_alpha(0.20),
@@ -655,6 +682,45 @@ fn update_ghost_warning_field(
     let cur_t = time.elapsed_secs_f64();
     let wave = f64::sin(PI * cur_t * 2.0).powi(2);
     board_data.ghost_warning_intensity = max_intensity * wave as f32;
+}
+
+/// Calculate distance with Z component multiplied by 10 if on different floors
+/// This makes the ghost less effective at damaging players across floors
+fn calculate_weighted_distance(ghost_pos: &Position, player_pos: &Position) -> f32 {
+    let dx = player_pos.x - ghost_pos.x;
+    let dy = player_pos.y - ghost_pos.y;
+
+    // Check if they're on different floors by comparing rounded Z values
+    let ghost_floor = ghost_pos.z.round();
+    let player_floor = player_pos.z.round();
+
+    let dz = if ghost_floor != player_floor {
+        // Multiply Z component by 10 when on different floors
+        (player_pos.z - ghost_pos.z) * 10.0
+    } else {
+        player_pos.z - ghost_pos.z
+    };
+
+    (dx * dx + dy * dy + dz * dz).sqrt()
+}
+
+/// Calculate squared distance with Z component multiplied by 10 if on different floors
+fn calculate_weighted_distance_squared(ghost_pos: &Position, player_pos: &Position) -> f32 {
+    let dx = player_pos.x - ghost_pos.x;
+    let dy = player_pos.y - ghost_pos.y;
+
+    // Check if they're on different floors by comparing rounded Z values
+    let ghost_floor = ghost_pos.z.round();
+    let player_floor = player_pos.z.round();
+
+    let dz = if ghost_floor != player_floor {
+        // Multiply Z component by 10 when on different floors
+        (player_pos.z - ghost_pos.z) * 10.0
+    } else {
+        player_pos.z - ghost_pos.z
+    };
+
+    dx * dx + dy * dy + dz * dz
 }
 
 pub fn app_setup(app: &mut App) {

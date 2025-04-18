@@ -19,6 +19,7 @@ unlight = { path = "../unlight" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
+tiled = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
 ndarray = { workspace = true }

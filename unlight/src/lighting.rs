@@ -1,9 +1,12 @@
 use crate::utils::{
-    apply_prebaked_contributions, identify_active_light_sources, is_in_bounds,
-    propagate_from_wave_edges, update_exposure_and_stats,
+    apply_prebaked_contributions, create_stair_wave_edges, identify_active_light_sources,
+    is_in_bounds, propagate_from_wave_edges, update_exposure_and_stats,
 };
-use bevy::{prelude::*, utils::Instant};
-use ndarray::Array3;
+use bevy::{
+    prelude::*,
+    utils::{HashSet, Instant},
+};
+use ndarray::{Array3, s};
 use uncore::{
     behavior::{Behavior, Orientation},
     components::board::position::Position,
@@ -37,19 +40,73 @@ pub fn rebuild_lighting_field(
     let active_source_ids = identify_active_light_sources(bf, qt);
 
     // Apply prebaked contributions from active sources
-    let _initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
+    let initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
+    let prebake_time = build_start_time.elapsed();
 
-    let _dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &active_source_ids);
+    // First pass of light propagation from wave edges
+    let time_main_propagation = Instant::now();
+    let dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &active_source_ids);
+    let main_propagation_time = time_main_propagation.elapsed();
 
-    // info!(
-    //     "Dynamic BFS propagation: {} additional light propagations, {} initial tiles lit in {:?}",
-    //     dynamic_propagation_count,
-    //     initial_tiles_lit,
-    //     time_dynamic_propagation.elapsed()
-    // );
+    // Log light statistics before stair propagation
+    info!(
+        "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+        lfs.slice(s![.., .., 0])
+            .iter()
+            .filter(|x| x.lux > 0.01)
+            .count(),
+        lfs.slice(s![.., .., 1])
+            .iter()
+            .filter(|x| x.lux > 0.01)
+            .count()
+    );
+
+    // Create wave edges from stairs and add them to a temporary list
+    let time_stair_preparation = Instant::now();
+    let stair_wave_edges = create_stair_wave_edges(bf, &lfs);
+    let stair_preparation_time = time_stair_preparation.elapsed();
+
+    // If we found stair wave edges, do a second pass of propagation using those
+    let mut stair_propagation_count = 0;
+    let time_stair_propagation = Instant::now();
+    if !stair_wave_edges.is_empty() {
+        // Save original wave edges
+        let original_wave_edges = bf.prebaked_wave_edges.clone();
+
+        // Temporarily replace wave edges with stair wave edges
+        bf.prebaked_wave_edges = stair_wave_edges.clone();
+
+        // Propagate from the stair wave edges (using all source IDs to ensure our dummy ID is included)
+        let all_sources: HashSet<u32> =
+            (0..=active_source_ids.iter().max().unwrap_or(&0) + 1).collect();
+        info!(
+            "Starting stair light propagation with {} wave edges",
+            stair_wave_edges.len()
+        );
+        stair_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &all_sources);
+
+        // Restore original wave edges
+        bf.prebaked_wave_edges = original_wave_edges;
+    }
+    let stair_propagation_time = time_stair_propagation.elapsed();
+
+    // Log light statistics after stair propagation
+    info!(
+        "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+        lfs.slice(s![.., .., 0])
+            .iter()
+            .filter(|x| x.lux > 0.01)
+            .count(),
+        lfs.slice(s![.., .., 1])
+            .iter()
+            .filter(|x| x.lux > 0.01)
+            .count()
+    );
 
     // Apply ambient light to walls
+    let time_ambient = Instant::now();
     apply_ambient_light_to_walls(bf, &mut lfs);
+    let ambient_time = time_ambient.elapsed();
 
     // Calculate exposure and update board data
     update_exposure_and_stats(bf, &lfs);
@@ -58,8 +115,25 @@ pub fn rebuild_lighting_field(
     let tot_cnt = 4.0;
     avg_time.0 = (avg_time.0 * avg_time.1 + total_time * tot_cnt) / (avg_time.1 + tot_cnt);
     avg_time.1 += 1.0;
+
+    // Log detailed performance metrics
     info!(
-        "BFS light propagation completed in: {:?} (mean {:.2}ms)",
+        "Lighting field rebuild performance: \
+        \n  Prebaking: {:?} ({} tiles) \
+        \n  Main propagation: {:?} ({} propagations) \
+        \n  Stair preparation: {:?} ({} wave edges) \
+        \n  Stair propagation: {:?} ({} propagations) \
+        \n  Ambient light: {:?} \
+        \n  Total time: {:?} (mean {:.2}ms)",
+        prebake_time,
+        initial_tiles_lit,
+        main_propagation_time,
+        dynamic_propagation_count,
+        stair_preparation_time,
+        stair_wave_edges.len(),
+        stair_propagation_time,
+        stair_propagation_count,
+        ambient_time,
         build_start_time.elapsed(),
         avg_time.0 * 1000.0
     );

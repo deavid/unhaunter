@@ -296,7 +296,13 @@ pub fn repellent_update(
         r_pos.z += (rng.random_range(-SPREAD..SPREAD) * rev_factor
             + rng.random_range(-SPREAD_SHORT..SPREAD_SHORT))
             / 10.0;
-        r_pos.z = (r_pos.z * 100.0 + 0.5 * rep.life_factor()) / 101.0;
+
+        // Get the base floor height (integer part of z)
+        let floor_height = r_pos.z.floor();
+        // Apply the floating effect but preserve the floor level
+        let particle_height = (r_pos.z - floor_height) * 100.0 + 0.5 * rep.life_factor();
+        r_pos.z = floor_height + (particle_height / 101.0);
+
         if r_pos
             .to_board_position()
             .ndidx_checked_margin(bf.map_size)
