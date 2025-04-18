@@ -711,7 +711,7 @@ pub fn apply_lighting(
         }];
         for nbpos in bpos.iter_xy_neighbors(1, bf.map_size) {
             if let Some(ld_abs) = lightdata_map.get(&nbpos) {
-                light_v.push(ld_abs.clone());
+                light_v.push(*ld_abs);
             }
         }
         let light_sz = light_v.len() as f32;

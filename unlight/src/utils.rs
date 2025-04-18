@@ -267,6 +267,7 @@ pub fn propagate_from_wave_edges(
 
     let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
+    let mut stair_propagation_count = 0;
 
     // Define directions for propagation
     let directions = [(0, -1, 0), (0, 1, 0), (-1, 0, 0), (1, 0, 0)];
@@ -275,11 +276,27 @@ pub fn propagate_from_wave_edges(
     const IIR_FACTOR_1: f32 = 0.8; // First level of smoothing
     const IIR_FACTOR_2: f32 = 0.8; // Second level of smoothing
 
+    // Log which source IDs are active for debugging
+    info!("Active source IDs for propagation: {:?}", active_source_ids);
+
+    // Track stair wave edges
+    let mut stair_wave_edge_count = 0;
+
     // Add all wave edges to the queue
     for edge_data in bf.prebaked_wave_edges.iter() {
         if !active_source_ids.contains(&edge_data.source_id) {
             continue;
         }
+
+        // Check if this is a stair wave edge (source_id == 0)
+        if edge_data.source_id == 0 {
+            stair_wave_edge_count += 1;
+            info!(
+                "Adding stair wave edge at ({}, {}, {}) with lux: {}",
+                edge_data.position.x, edge_data.position.y, edge_data.position.z, edge_data.lux
+            );
+        }
+
         queue.push_back(InternalWaveEdge {
             position: edge_data.position.clone(),
             wave_edge: edge_data.wave_edge.clone(),
@@ -287,6 +304,11 @@ pub fn propagate_from_wave_edges(
             color: edge_data.color,
         });
     }
+
+    info!(
+        "Added {} stair wave edges to propagation queue",
+        stair_wave_edge_count
+    );
 
     // Process queue using BFS
     while let Some(edge_data) = queue.pop_front() {
@@ -298,18 +320,47 @@ pub fn propagate_from_wave_edges(
         if max_lux_possible < 0.0000001 {
             continue;
         }
-        let Some(allowed_directions) = &bf.prebaked_propagation[edge_data.source_id as usize]
-            .get((pos.x as usize, pos.y as usize))
-        else {
-            continue;
+
+        // Special handling for stair wave edges (source_id == 0)
+        let is_stair_edge = edge_data.source_id == 0;
+
+        // Log propagation from stair wave edges
+        // if is_stair_edge {
+        //     info!(
+        //         "Processing stair wave edge at ({}, {}, {}), max lux possible: {}",
+        //         pos.x, pos.y, pos.z, max_lux_possible
+        //     );
+        // }
+
+        // For stair wave edges, we don't use prebaked propagation directions
+        // For regular wave edges, we check the prebaked propagation directions
+        let allowed_directions = if is_stair_edge {
+            // For stair wave edges, allow all directions
+            [true, true, true, true]
+        } else {
+            // For regular wave edges, use prebaked directions
+            match bf
+                .prebaked_propagation
+                .get(edge_data.source_id as usize)
+                .and_then(|arr| arr.get((pos.x as usize, pos.y as usize)))
+            {
+                Some(dirs) => *dirs,
+                None => {
+                    if is_stair_edge {
+                        info!("No prebaked propagation directions for stair wave edge, skipping");
+                    }
+                    continue;
+                }
+            }
         };
 
         // Process each neighbor direction
-        for (_, &(dx, dy, dz)) in directions
-            .iter()
-            .enumerate()
-            .filter(|(dir_idx, _)| allowed_directions[*dir_idx])
-        {
+        for (dir_idx, &(dx, dy, dz)) in directions.iter().enumerate() {
+            // Skip if not allowed in this direction
+            if !is_stair_edge && !allowed_directions[dir_idx] {
+                continue;
+            }
+
             let nx = pos.x + dx;
             let ny = pos.y + dy;
             let nz = pos.z + dz;
@@ -332,8 +383,11 @@ pub fn propagate_from_wave_edges(
                 continue;
             }
 
-            // If the neighbor was already in the prebaked data, skip
-            if Some(edge_data.source_id) == bf.prebaked_lighting[neighbor_idx].light_info.source_id
+            // For regular wave edges, skip if neighbor was already in prebaked data
+            // For stair wave edges, don't skip
+            if !is_stair_edge
+                && Some(edge_data.source_id)
+                    == bf.prebaked_lighting[neighbor_idx].light_info.source_id
             {
                 continue;
             }
@@ -408,14 +462,21 @@ pub fn propagate_from_wave_edges(
                 turn_penalty += 0.1;
             }
 
-            let transparency =
-                if collision.player_free && collision.see_through && !collision.is_dynamic {
-                    0.98 / turn_penalty.min(1.5)
-                } else if collision.see_through {
-                    0.4
+            // Use higher transparency for stair wave edges
+            let transparency = if is_stair_edge {
+                if collision.see_through {
+                    0.9 // Higher transparency for stairs
                 } else {
-                    0.05
-                };
+                    0.1 // Still need some penalty for walls
+                }
+            } else if collision.player_free && collision.see_through && !collision.is_dynamic {
+                0.98 / turn_penalty.min(1.5)
+            } else if collision.see_through {
+                0.4
+            } else {
+                0.05
+            };
+
             let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
             let distance_travelled = edge_data.wave_edge.distance_travelled;
 
@@ -446,6 +507,15 @@ pub fn propagate_from_wave_edges(
 
             lfs[neighbor_idx].lux += new_lux;
 
+            // Log when adding light to a cell from a stair wave edge
+            if is_stair_edge {
+                // info!(
+                //     "  Stair light propagated to ({}, {}, {}): added lux {} (total now: {})",
+                //     nx, ny, nz, new_lux, lfs[neighbor_idx].lux
+                // );
+                stair_propagation_count += 1;
+            }
+
             // Add neighbor to queue with updated history
             queue.push_back(InternalWaveEdge {
                 position: neighbor_pos,
@@ -458,5 +528,175 @@ pub fn propagate_from_wave_edges(
         }
     }
 
+    info!(
+        "Light propagation: {} total steps, {} from stairs",
+        propagation_count, stair_propagation_count
+    );
     propagation_count
+}
+
+/// Propagates light through stairs between floors
+pub fn propagate_through_stairs(bf: &BoardData, lfs: &mut Array3<LightFieldData>) -> usize {
+    let mut propagation_count = 0;
+    const STAIR_PROPAGATION: f32 = 0.99;
+
+    // Process all stair tiles
+    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
+        // Only process stairs
+        if collision.stair_offset == 0 {
+            continue;
+        }
+
+        let pos = (i, j, k);
+        let stair_lux = lfs[pos].lux;
+        let stair_color = lfs[pos].color;
+
+        // Determine target position (up or down based on stair_offset)
+        let target_z = k as i64 + collision.stair_offset as i64;
+        if target_z < 0 || target_z >= bf.map_size.2 as i64 {
+            continue; // Out of bounds
+        }
+
+        let target_pos = (i, j, target_z as usize);
+
+        // Only update if we're bringing more light to the target
+        if lfs[target_pos].lux < stair_lux * STAIR_PROPAGATION {
+            // Update the target's light
+            let old_lux = lfs[target_pos].lux;
+
+            if old_lux > 0.0 {
+                // Blend with existing light
+                lfs[target_pos].color = blend_colors(
+                    lfs[target_pos].color,
+                    old_lux,
+                    stair_color,
+                    stair_lux * STAIR_PROPAGATION,
+                );
+            } else {
+                // No existing light
+                lfs[target_pos].color = stair_color;
+            }
+
+            // Set new light value
+            lfs[target_pos].lux = stair_lux * STAIR_PROPAGATION;
+            propagation_count += 1;
+        }
+    }
+
+    info!(
+        "Stair light propagation: {} propagations",
+        propagation_count
+    );
+    propagation_count
+}
+
+/// Creates wave edges at stair connections between floors to allow light propagation
+pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> Vec<WaveEdgeData> {
+    let mut wave_edges = Vec::new();
+    let mut stair_tiles_found = 0;
+
+    // Process all stair tiles
+    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
+        // Only process stairs
+        if collision.stair_offset == 0 {
+            continue;
+        }
+
+        stair_tiles_found += 1;
+        info!(
+            "Found stair at ({}, {}, {}) with offset {}",
+            i, j, k, collision.stair_offset
+        );
+
+        let pos = (i, j, k);
+        let stair_lux = lfs[pos].lux;
+
+        // Log stair light info
+        info!("  Stair has lux: {}", stair_lux);
+
+        // Skip if no light
+        if stair_lux <= 0.0 {
+            info!("  Skipped: no light on stair");
+            continue;
+        }
+
+        let stair_color = lfs[pos].color;
+
+        // Determine target position based on stair offset
+        let target_z = k as i64 + collision.stair_offset as i64;
+        if target_z < 0 || target_z >= bf.map_size.2 as i64 {
+            info!("  Skipped: target position out of bounds");
+            continue; // Out of bounds
+        }
+
+        let target_pos = (i, j, target_z as usize);
+        let target_lux = lfs[target_pos].lux;
+        info!("  Target at floor {}: has lux {}", target_z, target_lux);
+
+        // Only create wave edge if we can bring more light
+        if stair_lux <= target_lux {
+            info!("  Skipped: target already has more light than stair");
+            continue;
+        }
+
+        // Create a wave edge at the target position
+        let source_pos = BoardPosition {
+            x: i as i64,
+            y: j as i64,
+            z: k as i64,
+        };
+        let target_board_pos = BoardPosition {
+            x: i as i64,
+            y: j as i64,
+            z: target_z,
+        };
+
+        // Calculate the distance between floors (1.0 for adjacent floors)
+        let distance = 1.0;
+
+        // Create a wave edge with the same relative intensity
+        let wave_edge = WaveEdge {
+            src_light_lux: stair_lux * (distance * distance), // Compensate for distance attenuation
+            distance_travelled: distance,
+            current_pos: (
+                target_board_pos.x as f32,
+                target_board_pos.y as f32,
+                target_board_pos.z as f32,
+            ),
+            iir_mean_pos: (
+                target_board_pos.x as f32,
+                target_board_pos.y as f32,
+                target_board_pos.z as f32,
+            ),
+            iir_mean_iir_mean_pos: (
+                source_pos.x as f32,
+                source_pos.y as f32,
+                source_pos.z as f32,
+            ),
+        };
+
+        // We don't have a specific source ID for this light, so we'll use a dummy ID
+        // that doesn't conflict with existing sources
+        let dummy_source_id = 0; // Special ID for stair propagation
+
+        info!(
+            "  Creating wave edge: src_lux={}, distance={}, src_id={}",
+            wave_edge.src_light_lux, wave_edge.distance_travelled, dummy_source_id
+        );
+
+        wave_edges.push(WaveEdgeData {
+            position: target_board_pos,
+            source_id: dummy_source_id,
+            lux: stair_lux,
+            color: stair_color,
+            wave_edge,
+        });
+    }
+
+    info!(
+        "Stairs: found {} stair tiles, created {} wave edges",
+        stair_tiles_found,
+        wave_edges.len()
+    );
+    wave_edges
 }
