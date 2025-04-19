@@ -1,5 +1,5 @@
-use crate::components::{MenuItemInteractive, MenuRoot};
-use bevy::prelude::*;
+use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
+use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore::colors;
 
 /// Event sent when a menu item is clicked
@@ -14,21 +14,48 @@ pub struct MenuItemSelected(pub usize);
 #[derive(Event, Debug, Clone, Copy)]
 pub struct MenuEscapeEvent;
 
+/// System that detects mouse movement to enable hover selection
+pub fn menu_mouse_movement_system(
+    mut mouse_motion_events: EventReader<MouseMotion>,
+    mut mouse_tracker: Query<&mut MenuMouseTracker>,
+) {
+    // Only process if there was mouse movement
+    if !mouse_motion_events.is_empty() {
+        // Clear the event reader
+        mouse_motion_events.clear();
+
+        // Mark that mouse has moved for all trackers
+        for mut tracker in mouse_tracker.iter_mut() {
+            tracker.mouse_moved = true;
+        }
+    }
+}
+
 /// System that handles mouse interaction with menu items
 pub fn menu_interaction_system(
     mut menu_query: Query<&mut MenuRoot>,
     interaction_query: Query<(&Interaction, &MenuItemInteractive), Changed<Interaction>>,
+    mouse_tracker: Query<&MenuMouseTracker>,
     mut click_events: EventWriter<MenuItemClicked>,
     mut selection_events: EventWriter<MenuItemSelected>,
 ) {
+    // Check if mouse has moved yet
+    let mouse_moved = mouse_tracker
+        .iter()
+        .next()
+        .is_some_and(|tracker| tracker.mouse_moved);
+
     // Process interactions that have changed
     for (interaction, menu_item) in interaction_query.iter() {
         match *interaction {
             Interaction::Hovered => {
-                for mut menu in menu_query.iter_mut() {
-                    if menu.selected_item != menu_item.identifier {
-                        menu.selected_item = menu_item.identifier;
-                        selection_events.send(MenuItemSelected(menu_item.identifier));
+                // Only process hover events if mouse has moved
+                if mouse_moved {
+                    for mut menu in menu_query.iter_mut() {
+                        if menu.selected_item != menu_item.identifier {
+                            menu.selected_item = menu_item.identifier;
+                            selection_events.send(MenuItemSelected(menu_item.identifier));
+                        }
                     }
                 }
             }

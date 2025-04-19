@@ -5,6 +5,7 @@ use uncore::resources::maps::Maps;
 use uncore::states::AppState;
 use uncore::states::MapHubState;
 use uncore::types::root::game_assets::GameAssets;
+use uncoremenu::components::MenuMouseTracker;
 use uncoremenu::systems::{MenuItemClicked, MenuItemSelected};
 use uncoremenu::templates;
 
@@ -141,12 +142,16 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
             );
 
             // Create content area with semi-transparent background
-            templates::create_selectable_content_area(
+            let mut content_area = templates::create_selectable_content_area(
                 parent,
                 handles,
                 0 // Initial selection
-            )
-            .with_children(|content| {
+            );
+
+            // Add mouse tracker to prevent unwanted initial hover selection
+            content_area.insert(MenuMouseTracker::default());
+
+            content_area.with_children(|content| {
                 // Left column for map list
                 content
                     .spawn(Node {

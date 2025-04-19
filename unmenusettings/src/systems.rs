@@ -10,7 +10,7 @@ use bevy_persistent::Persistent;
 use uncore::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
-use uncoremenu::components::{MenuItemInteractive, MenuRoot};
+use uncoremenu::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
 use unsettings::audio::AudioSettings;
@@ -196,6 +196,10 @@ pub fn menu_audio_setting_selected(
                     &handles,
                     0 // Initial selection
                 );
+
+                // Add mouse tracker to prevent unwanted initial hover selection
+                content_area.insert(MenuMouseTracker::default());
+
                 content_area.insert(MenuRoot {
                     selected_item: 0,
                 });
@@ -351,6 +355,10 @@ pub fn menu_gameplay_setting_selected(
                     &handles,
                     0 // Initial selection
                 );
+
+                // Add mouse tracker to prevent unwanted initial hover selection
+                content_area.insert(MenuMouseTracker::default());
+
                 content_area.insert(MenuRoot {
                     selected_item: 0,
                 });

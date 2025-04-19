@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use uncore::colors;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
-use uncoremenu::components::MenuRoot;
+use uncoremenu::components::{MenuMouseTracker, MenuRoot};
 use uncoremenu::templates;
 
 pub fn setup_ui_cam(mut commands: Commands) {
@@ -65,6 +65,9 @@ pub fn setup_ui_main_cat(
                 handles,
                 0 // Initial selection
             );
+
+            // Add mouse tracker to prevent unwanted initial hover selection
+            content_area_entity.insert(MenuMouseTracker::default());
 
             let content_area = content_area_entity.insert(MenuRoot {
                 selected_item: 0,

@@ -16,6 +16,14 @@ pub struct MenuRoot {
     pub selected_item: usize,
 }
 
+/// Component that tracks if mouse has moved since menu was displayed
+/// Used to prevent hover selection on initial render
+#[derive(Component, Debug, Default)]
+pub struct MenuMouseTracker {
+    /// Whether the mouse has moved since the menu was displayed
+    pub mouse_moved: bool,
+}
+
 /// A component that marks an entity as the background for a menu
 #[derive(Component, Debug)]
 pub struct MenuBackground;
