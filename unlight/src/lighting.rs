@@ -174,7 +174,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
     ];
 
     // Threshold for considering a tile "dark"
-    const DARK_THRESHOLD: f32 = 0.000001;
+    const DARK_THRESHOLD: f32 = 0.1;
 
     let src_lfs = lfs.clone();
 
@@ -183,7 +183,10 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
         if src_lfs[(i, j, k)].lux > DARK_THRESHOLD && !collision.is_dynamic {
             continue;
         }
-
+        // Do not process tiles that don't have collision.
+        if collision.player_free {
+            continue;
+        }
         // Collect light from neighbors
         let mut total_lux = 0.0;
         let mut weighted_color_sum = (0.0, 0.0, 0.0);
@@ -203,7 +206,7 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
             let neighbor_light = &src_lfs[n_pos];
 
             // Skip if neighbor has no light
-            if neighbor_light.lux <= 0.001 {
+            if neighbor_light.lux <= 0.000000001 {
                 continue;
             }
 
