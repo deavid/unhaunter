@@ -363,9 +363,16 @@ pub fn load_level_handler(
             // Spawn the base entity
             let mut entity = {
                 let mut b = mt.bundle.clone();
+                let mut beh = mt.behavior.clone();
+
+                // If the sprite is flipped horizontally, mirror the light_recv_offset.x
                 if tile.flip_x {
                     b.transform.scale.x = -1.0;
+                    // Adjust the light receiving offset for flipped sprites
+                    let (ox, oy) = beh.p.display.light_recv_offset;
+                    beh.p.display.light_recv_offset = (-oy, ox);
                 }
+
                 let mut mat = p.materials1.get(&b.material).unwrap().clone();
                 mat.data.color.alpha = 0.0;
                 let mat = p.materials1.add(mat);
