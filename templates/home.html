@@ -1,40 +1,24 @@
-{% extends "index.html" %}
-
-{% block main %}
+{% extends "index.html" %} {% block main %}
 
 <!-- Profile -->
-{% include "partials/profile.html" %}
-
-{% set news_section = get_section(path="news/_index.md") %}
-{% set blog_section = get_section(path="blog/_index.md") %}
-
-{% set filtered_blog_pages = [] %}
-{% set found_recent = false %}
-
-{% for page in blog_section.pages %}
-{% if page.extra.keep_on_home %}
-{% set_global filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %}
-{% elif not page.extra.exclude_from_home and not found_recent %}
-{% set_global filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %}
-{% set_global found_recent = true %}
-{% endif %}
-{% endfor %}
-
-{% set all_pages = [news_section.pages[0]] | concat(with=filtered_blog_pages) %}
-
+{% include "partials/profile.html" %} {% set news_section = get_section(path="news/_index.md") %} {% set blog_section =
+get_section(path="blog/_index.md") %} {% set filtered_blog_pages = [] %} {% set found_recent = false %} {% for page in
+blog_section.pages %} {% if page.extra.keep_on_home %} {% set_global filtered_blog_pages = filtered_blog_pages |
+concat(with=[page]) %} {% elif not page.extra.exclude_from_home and not found_recent %} {% set_global
+filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %} {% set_global found_recent = true %} {% endif %} {%
+endfor %} {% set all_pages = [news_section.pages[0]] | concat(with=filtered_blog_pages) %}
 
 <!-- Page List -->
-{% set pages = all_pages %}
-{% set prefer_summary = true %}
+{% set pages = all_pages %} {% set prefer_summary = true %}
 
-{% include "partials/page_list_unpaginated.html" %}
-<br>
-<div class="mt-8 flex justify-center">
+<div class="list-items">{% include "partials/page_list_unpaginated.html" %}</div>
+<br />
+<!-- <div class="mt-8 flex justify-center">
     <a href="{{ get_url(path='wasm/main') }}" target="_blank" rel="noopener">Play In Browser</a>
     <span class="mx-2">&centerdot;</span>
     <a href="{{ get_url(path='archive') }}">Archive</a>
     <span class="mx-2">&centerdot;</span>
     <a href="{{ get_url(path='tags') }}">Tags</a>
-</div>
+</div> -->
 
 {% endblock main %}

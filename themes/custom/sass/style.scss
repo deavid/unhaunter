@@ -15,8 +15,8 @@ $gray-800: #1f2937;
 $gray-900: #111827;
 
 // Theme colors
-$header-bg: #27272a; // Use darker background
-$body-bg: #313133; // Use darker background
+$header-bg: #313133; // Use darker background
+$body-bg: #1d1d1f; // Use darker background
 $text-primary: #d1d5db;
 $text-secondary: #9ca3af;
 $text-headings: #fff;
@@ -26,6 +26,7 @@ $bullets: #4b5563;
 $code-bg: rgb(0 0 0 / 50%);
 $action-color: #ff4500; // Blue-500
 $action-color-hover: #2563eb; // Blue-600
+$br-standard: 20px;
 
 // Admonition Colors
 $admonition-note-bg: rgba(68, 138, 255, 0.1);
@@ -86,6 +87,12 @@ $header-height: 3.5rem;
     border-width: 0;
     border-style: solid;
     border-color: $borders;
+}
+
+h1,
+h2 {
+    margin: 0;
+    padding: 0;
 }
 
 html {
@@ -189,6 +196,10 @@ body {
     }
 }
 
+a {
+    color: #ffffff;
+}
+
 /* ==========================================================================
    Layout Components
    ========================================================================== */
@@ -199,6 +210,75 @@ body {
     margin: 0 auto;
     padding: ($header-height + 4rem) 1rem 4rem;
     min-height: calc(100% - 9rem);
+}
+
+/* Para pantallas con un ancho máximo de 1200px */
+@media (max-width: 1550px) {
+    .main-container {
+        max-width: 90%; /* Aumenta el ancho al 80% en pantallas más pequeñas */
+    }
+}
+
+/* Para pantallas con un ancho máximo de 768px (típico de tablets) */
+@media (max-width: 768px) {
+    .main-container {
+        max-width: 95%; /* Ocupa casi todo el ancho en tablets */
+    }
+}
+
+/* Para pantallas aún más pequeñas (móviles) */
+@media (max-width: 576px) {
+    .main-container {
+        max-width: 100%; /* Ocupa el ancho completo en móviles */
+        margin: 0; /* Elimina el margen para ocupar todo el ancho */
+    }
+}
+
+.list-items {
+    display: flex;
+    flex-direction: column;
+
+    max-width: 800px;
+    margin: 50px auto 0 auto;
+
+    > section {
+        transition: transform 0.2s; /* Optional smooth transition */
+
+        &:active {
+            transform: scale(0.95);
+        }
+
+        background-color: $header-bg;
+        padding: 1.5em;
+        margin: 20px 0;
+        border-radius: $br-standard;
+
+        position: relative;
+        a {
+            color: #ffffff;
+        }
+
+        .cover-click {
+            inset: 0;
+            position: absolute;
+            font-size: 0px;
+        }
+    }
+}
+
+.page-info {
+    -webkit-font-smoothing: antialiased; /* For WebKit browsers */
+    -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
+    opacity: 0.6;
+    font-size: 0.75rem;
+}
+
+.page-header {
+    h1 {
+        font-size: 2.5rem;
+        padding: 0;
+        margin: 0;
+    }
 }
 
 .header-container {
@@ -320,7 +400,7 @@ body {
 
     [class^="photo-"] {
         // background-color: rgb(223, 157, 157);
-        border-radius: 20px;
+        border-radius: $br-standard;
 
         height: 350px;
         // width: 500px;
@@ -437,37 +517,37 @@ body {
 
 // Page Components
 .page-list-item {
-    background-color: rgba($white, 0.08);
-    position: relative;
-    margin-bottom: 1rem;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    transition: transform 0.1s;
+    // background-color: rgba($white, 0.08);
+    // position: relative;
+    // margin-bottom: 1rem;
+    // border-radius: 0.5rem;
+    // padding: 1rem;
+    // transition: transform 0.1s;
 
-    &:active {
-        transform: scale(0.95);
-    }
+    // &:active {
+    //     transform: scale(0.95);
+    // }
 
-    h2 {
-        margin: 0;
-        padding-bottom: 0.25rem;
-        font-weight: 700;
-        line-height: 1;
-    }
+    // h2 {
+    //     margin: 0;
+    //     padding-bottom: 0.25rem;
+    //     font-weight: 700;
+    //     line-height: 1;
+    // }
 
-    .page-summary {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        p {
-            margin: 0.25rem 0;
-        }
-    }
+    // .page-summary {
+    //     overflow: hidden;
+    //     text-overflow: ellipsis;
+    //     white-space: nowrap;
+    //     p {
+    //         margin: 0.25rem 0;
+    //     }
+    // }
 
-    .page-info {
-        font-size: $font-size-sm;
-        opacity: 0.6;
-    }
+    // .page-info {
+    //     font-size: $font-size-sm;
+    //     opacity: 0.6;
+    // }
 }
 
 // Footer Components

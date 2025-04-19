@@ -119,32 +119,32 @@ url = "$BASE_URL/beta"
 [[extra.footer.links]]
 name = "matrix"
 url = "https://matrix.to/#/#unhaunter:matrix.org"
-icon = "icons/matrix.svg"
+icon = "/icons/matrix.svg"
 
 [[extra.footer.links]]
 name = "youtube"
 url = "https://www.youtube.com/c/DavidMart%C3%ADnezMart%C3%AD"
-icon = "icons/youtube.svg"
+icon = "/icons/youtube.svg"
 
 [[extra.footer.links]]
 name = "reddit"
 url = "https://www.reddit.com/r/Unhaunter/"
-icon = "icons/reddit.svg"
+icon = "/icons/reddit.svg"
 
 [[extra.footer.links]]
 name = "mastodon"
 url = "https://techhub.social/@deavid"
-icon = "icons/mastodon.svg"
+icon = "/icons/mastodon.svg"
 
 [[extra.footer.links]]
 name = "portfolio"
 url = "https://deavid.wordpress.com/"
-icon = "icons/portfolio.svg"
+icon = "/icons/portfolio.svg"
 
 [[extra.footer.links]]
 name = "github"
 url = "https://github.com/deavid/unhaunter"
-icon = "icons/github.svg"
+icon = "/icons/github.svg"
 
 # The page footer options.
 [extra.footer]
