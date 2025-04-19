@@ -78,6 +78,10 @@ pub struct LoadLevelSystemParam<'w> {
     control_settings: Res<'w, Persistent<ControlKeys>>,
 }
 
+/// Marker component to handle ghost influence assignment after level loading is complete
+#[derive(Component)]
+struct AssignGhostInfluenceMarker(Vec<Entity>);
+
 /// Loads a new level based on the `LoadLevelEvent`.
 ///
 /// This function despawns existing game entities, loads the specified TMX map,
@@ -359,9 +363,18 @@ pub fn load_level_handler(
             // Spawn the base entity
             let mut entity = {
                 let mut b = mt.bundle.clone();
+                let mut beh = mt.behavior.clone();
+
+                // If the sprite is flipped horizontally, mirror the light_recv_offset.x
                 if tile.flip_x {
                     b.transform.scale.x = -1.0;
+                    // Adjust the light receiving offset for flipped sprites
+                    let (ox, oy) = beh.p.display.light_recv_offset;
+                    // Adjust the light receiving offset for flipped sprites
+                    // When flipping horizontally, negate the x-offset and swap the components
+                    beh.p.display.light_recv_offset = (ox, -oy);
                 }
+
                 let mut mat = p.materials1.get(&b.material).unwrap().clone();
                 mat.data.color.alpha = 0.0;
                 let mat = p.materials1.add(mat);
@@ -444,8 +457,6 @@ pub fn load_level_handler(
 
     use rand::seq::SliceRandom;
 
-    let mut rng = random_seed::rng();
-
     // --- Map Validation ---
     if movable_objects.len() < 3 {
         warn!(
@@ -454,28 +465,12 @@ pub fn load_level_handler(
     }
 
     // --- Random Property Assignment ---
-    if !movable_objects.is_empty() {
-        // Shuffle the movable objects to ensure random selection
-        movable_objects.shuffle(&mut rng);
+    // Instead of immediately assigning GhostInfluence components to random movable objects,
+    // we'll store the movable object IDs for later processing after room data is fully built
+    // Schedule a separate system to run after level load is complete
+    let movable_objects_clone = movable_objects.clone();
+    commands.spawn(AssignGhostInfluenceMarker(movable_objects_clone));
 
-        // Select up to 3 objects
-        let selected_objects = movable_objects.iter().take(3);
-
-        // Assign properties
-        for (i, &entity) in selected_objects.enumerate() {
-            let influence_type = if i == 0 {
-                InfluenceType::Repulsive
-            } else {
-                InfluenceType::Attractive
-            };
-
-            // Add the GhostInfluence component to the selected entity
-            commands.entity(entity).insert(GhostInfluence {
-                influence_type,
-                charge_value: 0.0,
-            });
-        }
-    }
     player_spawn_points.shuffle(&mut random_seed::rng());
     if player_spawn_points.is_empty() {
         error!(
@@ -578,7 +573,7 @@ pub fn load_level_handler(
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
-    let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
+    let open_van: bool = dist_to_van < 8.0 && p.difficulty.0.van_auto_open;
 
     ev_level_ready.send(LevelReadyEvent { open_van });
     warn!("Done: load_level_handler");
@@ -707,6 +702,64 @@ pub fn load_map_add_prebaked_lighting(
     info!("Map loaded with prebaked lighting data");
 }
 
+/// Assigns GhostInfluence components to movable objects that are inside rooms
+/// This system runs after level loading is complete to ensure room data is available
+fn assign_ghost_influence_system(
+    mut commands: Commands,
+    marker_query: Query<(Entity, &AssignGhostInfluenceMarker)>,
+    position_query: Query<&Position>,
+    roomdb: Res<RoomDB>,
+) {
+    for (marker_entity, marker) in marker_query.iter() {
+        let mut valid_movable_objects = Vec::new();
+
+        // Filter objects to only include those in rooms
+        for &entity in &marker.0 {
+            if let Ok(pos) = position_query.get(entity) {
+                let board_pos = pos.to_board_position();
+
+                // Check if the object is in a valid room
+                if roomdb.room_tiles.contains_key(&board_pos) {
+                    valid_movable_objects.push(entity);
+                }
+            }
+        }
+
+        if valid_movable_objects.is_empty() {
+            warn!(
+                "No movable objects found in valid rooms. Ghost influence system will not work properly."
+            );
+            commands.entity(marker_entity).despawn();
+            continue;
+        }
+
+        // Shuffle the valid movable objects
+        use rand::seq::SliceRandom;
+        let mut rng = random_seed::rng();
+        valid_movable_objects.shuffle(&mut rng);
+
+        // Select up to 3 objects from the valid ones
+        let selected_objects = valid_movable_objects.iter().take(3);
+
+        // Assign GhostInfluence components
+        for (i, &entity) in selected_objects.enumerate() {
+            let influence_type = if i == 0 {
+                InfluenceType::Repulsive
+            } else {
+                InfluenceType::Attractive
+            };
+
+            commands.entity(entity).insert(GhostInfluence {
+                influence_type,
+                charge_value: 0.0,
+            });
+        }
+
+        info!("Successfully assigned ghost influence properties to objects in valid rooms");
+        commands.entity(marker_entity).despawn();
+    }
+}
+
 pub fn app_setup(app: &mut App) {
     app.add_event::<LoadLevelEvent>()
         .add_event::<LevelLoadedEvent>()
@@ -716,5 +769,6 @@ pub fn app_setup(app: &mut App) {
         .add_systems(
             Update,
             load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>),
-        );
+        )
+        .add_systems(Update, assign_ghost_influence_system);
 }

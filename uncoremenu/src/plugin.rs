@@ -13,6 +13,7 @@ impl Plugin for UnhaunterCoreMenuPlugin {
             .add_systems(
                 Update,
                 (
+                    systems::menu_mouse_movement_system,
                     systems::menu_interaction_system,
                     systems::menu_keyboard_system,
                     systems::update_menu_item_visuals,

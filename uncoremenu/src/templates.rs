@@ -188,6 +188,9 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
             // Left strip with menu items
             let mut strip_entity = create_menu_strip(parent, handles, items, selected_item_idx);
 
+            // Add mouse tracker to prevent unwanted initial hover selection
+            strip_entity.insert(MenuMouseTracker::default());
+
             // Add menu items to the strip
             strip_entity.with_children(|strip| {
                 for (idx, (menu_id, text)) in items.iter().enumerate() {
@@ -414,6 +417,7 @@ pub fn create_breadcrumb_navigation<'a>(
         .insert(BackgroundColor(strip_color))
         .insert(ZIndex(-5)) // Behind logo, above background
         .insert(MenuStrip)
+        .insert(MenuMouseTracker::default())
         .with_children(|strip| {
             // Main breadcrumb item (e.g., "New Game")
             strip
@@ -485,7 +489,8 @@ pub fn create_selectable_content_area<'a>(
         .insert(MenuContentArea)
         .insert(MenuRoot {
             selected_item: initial_selection,
-        });
+        })
+        .insert(MenuMouseTracker::default());
 
     entity_cmd
 }

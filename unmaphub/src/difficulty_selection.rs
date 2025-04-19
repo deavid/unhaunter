@@ -239,6 +239,9 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
 
             let mut content_area = templates::create_selectable_content_area(parent, handles, 0);
 
+            // Add mouse tracker to prevent unwanted initial hover selection
+            content_area.insert(MenuMouseTracker::default());
+
             content_area.with_children(|content| {
                 // Left column: difficulty list
                 content

@@ -11,6 +11,15 @@
 * Controls are now fully configurable via config file. (User must edit file manually)
 * Flashlight is now more focused which aids the player to identify the flashlight is on.
 
+**beta 2.1**
+
+* Fix for maps with only 1 floor.
+
+**next**
+
+* Added 3 new maps: The Whispering Shed, Apartment 4A and Crimson Comb.
+* Fix menu mouse hover stealing item selected.
+
 ### Version 0.2.7 - 2025-03-26
 
 **Features:**
