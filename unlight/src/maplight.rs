@@ -77,11 +77,11 @@ pub fn compute_visibility(
     let mut queue = VecDeque::with_capacity(256);
     let start = pos_start.to_board_position();
     let map_size = collision_field.dim();
-
+    const Z_FACTOR: f32 = 2.0;
     queue.push_front((start.clone(), start.clone()));
     vis_field[start.ndidx()] = 1.0;
     while let Some((pos, pos2)) = queue.pop_back() {
-        let pds = pos.to_position().distance_zf(pos_start, 1.0);
+        let pds = pos.to_position().distance_zf(pos_start, Z_FACTOR);
         let p = pos.ndidx();
         let src_f = vis_field[p];
         let cf = &collision_field[p];
@@ -98,7 +98,7 @@ pub fn compute_visibility(
             }
             let np = npos.ndidx();
             let ncf = collision_field[np];
-            let npds = npos.to_position().distance_zf(pos_start, 1.0);
+            let npds = npos.to_position().distance_zf(pos_start, Z_FACTOR);
             let npref = npos.distance(&pos2) / 2.0;
             let f = if npds < 1.5 {
                 1.0
@@ -129,7 +129,7 @@ pub fn compute_visibility(
             } else {
                 *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
             }
-            if ncf.stair_offset != 0 {
+            if ncf.stair_offset != 0 && start.z == npos.z {
                 // Move up/down stairs too
                 let n2pos = BoardPosition {
                     x: npos.x,
@@ -144,6 +144,7 @@ pub fn compute_visibility(
                 let vf_np = &mut vis_field[n2pos.ndidx()];
                 if *vf_np < -0.000001 {
                     *vf_np = dst_f / 10.0;
+                    // info!("stair: {:?}", n2pos);
                     queue.push_front((n2pos, pos2));
                 }
             }
