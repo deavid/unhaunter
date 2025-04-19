@@ -564,7 +564,7 @@ pub fn load_level_handler(
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(ghost_spawn);
-    let open_van: bool = dist_to_van < 4.0 && p.difficulty.0.van_auto_open;
+    let open_van: bool = dist_to_van < 8.0 && p.difficulty.0.van_auto_open;
 
     ev_level_ready.send(LevelReadyEvent { open_van });
     warn!("Done: load_level_handler");
