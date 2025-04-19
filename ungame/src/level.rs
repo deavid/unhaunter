@@ -370,7 +370,9 @@ pub fn load_level_handler(
                     b.transform.scale.x = -1.0;
                     // Adjust the light receiving offset for flipped sprites
                     let (ox, oy) = beh.p.display.light_recv_offset;
-                    beh.p.display.light_recv_offset = (-oy, ox);
+                    // Adjust the light receiving offset for flipped sprites
+                    // When flipping horizontally, negate the x-offset and swap the components
+                    beh.p.display.light_recv_offset = (ox, -oy);
                 }
 
                 let mut mat = p.materials1.get(&b.material).unwrap().clone();
