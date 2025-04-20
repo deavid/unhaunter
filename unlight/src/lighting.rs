@@ -6,7 +6,7 @@ use bevy::{
     prelude::*,
     utils::{HashSet, Instant},
 };
-use ndarray::{Array3, s};
+use ndarray::Array3;
 use uncore::{
     behavior::{Behavior, Orientation},
     components::board::position::Position,
@@ -30,7 +30,7 @@ pub fn rebuild_lighting_field(
     qt: &Query<(&Position, &Behavior)>,
     avg_time: &mut Local<(f32, f32)>,
 ) {
-    info!("Starting rebuild_lighting_field using prebaked data");
+    // info!("Starting rebuild_lighting_field using prebaked data");
     let build_start_time = Instant::now();
 
     // Create a new light field with default values
@@ -49,27 +49,27 @@ pub fn rebuild_lighting_field(
     let main_propagation_time = time_main_propagation.elapsed();
 
     // Log light statistics before stair propagation
-    if bf.map_size.2 > 1 {
-        info!(
-            "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-            lfs.slice(s![.., .., 0])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count(),
-            lfs.slice(s![.., .., 1])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count()
-        );
-    } else {
-        info!(
-            "Light field before stair propagation - Floor 0: {} lit tiles (no additional floors)",
-            lfs.slice(s![.., .., 0])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count()
-        );
-    }
+    // if bf.map_size.2 > 1 {
+    //     info!(
+    //         "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+    //         lfs.slice(s![.., .., 0])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count(),
+    //         lfs.slice(s![.., .., 1])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count()
+    //     );
+    // } else {
+    //     info!(
+    //         "Light field before stair propagation - Floor 0: {} lit tiles (no additional floors)",
+    //         lfs.slice(s![.., .., 0])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count()
+    //     );
+    // }
 
     // Create wave edges from stairs and add them to a temporary list
     let time_stair_preparation = Instant::now();
@@ -89,10 +89,10 @@ pub fn rebuild_lighting_field(
         // Propagate from the stair wave edges (using all source IDs to ensure our dummy ID is included)
         let all_sources: HashSet<u32> =
             (0..=active_source_ids.iter().max().unwrap_or(&0) + 1).collect();
-        info!(
-            "Starting stair light propagation with {} wave edges",
-            stair_wave_edges.len()
-        );
+        // info!(
+        //     "Starting stair light propagation with {} wave edges",
+        //     stair_wave_edges.len()
+        // );
         stair_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &all_sources);
 
         // Restore original wave edges
@@ -101,27 +101,27 @@ pub fn rebuild_lighting_field(
     let stair_propagation_time = time_stair_propagation.elapsed();
 
     // Log light statistics after stair propagation
-    if bf.map_size.2 > 1 {
-        info!(
-            "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-            lfs.slice(s![.., .., 0])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count(),
-            lfs.slice(s![.., .., 1])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count()
-        );
-    } else {
-        info!(
-            "Light field after stair propagation - Floor 0: {} lit tiles (no additional floors)",
-            lfs.slice(s![.., .., 0])
-                .iter()
-                .filter(|x| x.lux > 0.01)
-                .count()
-        );
-    }
+    // if bf.map_size.2 > 1 {
+    //     info!(
+    //         "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
+    //         lfs.slice(s![.., .., 0])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count(),
+    //         lfs.slice(s![.., .., 1])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count()
+    //     );
+    // } else {
+    //     info!(
+    //         "Light field after stair propagation - Floor 0: {} lit tiles (no additional floors)",
+    //         lfs.slice(s![.., .., 0])
+    //             .iter()
+    //             .filter(|x| x.lux > 0.01)
+    //             .count()
+    //     );
+    // }
 
     // Apply ambient light to walls
     let time_ambient = Instant::now();
@@ -161,8 +161,8 @@ pub fn rebuild_lighting_field(
 
 // Applies ambient light to walls based on neighboring lit tiles
 fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>) {
-    let wall_light_start = Instant::now();
-    let mut walls_lit = 0;
+    let _wall_light_start = Instant::now();
+    let mut _walls_lit = 0;
 
     // // Define directions for 4-way connectivity (plus weight)
     let directions = [
@@ -253,13 +253,13 @@ fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>
             let lfs_idx = &mut lfs[(i, j, k)];
             lfs_idx.lux = total_lux;
             lfs_idx.color = avg_color;
-            walls_lit += 1;
+            _walls_lit += 1;
         }
     }
 
-    info!(
-        "Wall ambient light pass: {} walls lit in {:?}",
-        walls_lit,
-        wall_light_start.elapsed()
-    );
+    // info!(
+    //     "Wall ambient light pass: {} walls lit in {:?}",
+    //     walls_lit,
+    //     wall_light_start.elapsed()
+    // );
 }

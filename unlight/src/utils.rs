@@ -105,14 +105,14 @@ pub fn identify_active_light_sources(
             }
         }
     }
-    info!(
-        "Active light sources: {}/{} (prebaked) ",
-        active_source_ids.len(),
-        bf.prebaked_lighting
-            .iter()
-            .filter(|d| d.light_info.source_id.is_some())
-            .count(),
-    );
+    // info!(
+    //     "Active light sources: {}/{} (prebaked) ",
+    //     active_source_ids.len(),
+    //     bf.prebaked_lighting
+    //         .iter()
+    //         .filter(|d| d.light_info.source_id.is_some())
+    //         .count(),
+    // );
 
     active_source_ids
 }
@@ -146,25 +146,25 @@ pub fn apply_prebaked_contributions(
         }
     }
 
-    info!("Applied prebaked light: {} tiles lit", tiles_lit);
+    // info!("Applied prebaked light: {} tiles lit", tiles_lit);
     tiles_lit
 }
 
 /// Update final exposure settings and log statistics
 pub fn update_exposure_and_stats(bf: &mut BoardData, lfs: &Array3<LightFieldData>) {
-    let tiles_with_light = lfs.iter().filter(|x| x.lux > 0.0).count();
+    let _tiles_with_light = lfs.iter().filter(|x| x.lux > 0.0).count();
     let total_tiles = bf.map_size.0 * bf.map_size.1 * bf.map_size.2;
-    let avg_lux = lfs.iter().map(|x| x.lux).sum::<f32>() / total_tiles as f32;
-    let max_lux = lfs.iter().map(|x| x.lux).fold(0.0, f32::max);
+    let _avg_lux = lfs.iter().map(|x| x.lux).sum::<f32>() / total_tiles as f32;
+    let _max_lux = lfs.iter().map(|x| x.lux).fold(0.0, f32::max);
 
-    info!(
-        "Light field stats: {}/{} tiles lit ({:.2}%), avg: {:.6}, max: {:.6}",
-        tiles_with_light,
-        total_tiles,
-        (tiles_with_light as f32 / total_tiles as f32) * 100.0,
-        avg_lux,
-        max_lux
-    );
+    // info!(
+    //     "Light field stats: {}/{} tiles lit ({:.2}%), avg: {:.6}, max: {:.6}",
+    //     tiles_with_light,
+    //     total_tiles,
+    //     (tiles_with_light as f32 / total_tiles as f32) * 100.0,
+    //     avg_lux,
+    //     max_lux
+    // );
 
     // Calculate exposure
     let total_lux: f32 = lfs.iter().map(|x| x.lux).sum();
@@ -173,7 +173,7 @@ pub fn update_exposure_and_stats(bf: &mut BoardData, lfs: &Array3<LightFieldData
     bf.exposure_lux = (avg_lux + 2.0) / 2.0;
     bf.light_field = lfs.clone();
 
-    info!("Final exposure_lux set to: {}", bf.exposure_lux);
+    // info!("Final exposure_lux set to: {}", bf.exposure_lux);
 }
 
 /// Collects information about door states from entity behaviors
@@ -193,7 +193,7 @@ pub fn collect_door_states(
         }
     }
 
-    info!("Collected {} door states", door_states.len());
+    // info!("Collected {} door states", door_states.len());
     door_states
 }
 
@@ -234,7 +234,7 @@ pub fn find_wave_edge_tiles(bf: &BoardData, active_source_ids: &HashSet<u32>) ->
         });
     }
 
-    info!("Found {} wave edge tiles for propagation", wave_edges.len());
+    // info!("Found {} wave edge tiles for propagation", wave_edges.len());
     wave_edges
 }
 
@@ -267,7 +267,7 @@ pub fn propagate_from_wave_edges(
 
     let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
-    let mut stair_propagation_count = 0;
+    let mut _stair_propagation_count = 0;
 
     // Define directions for propagation
     let directions = [(0, -1, 0), (0, 1, 0), (-1, 0, 0), (1, 0, 0)];
@@ -277,10 +277,10 @@ pub fn propagate_from_wave_edges(
     const IIR_FACTOR_2: f32 = 0.8; // Second level of smoothing
 
     // Log which source IDs are active for debugging
-    info!("Active source IDs for propagation: {:?}", active_source_ids);
+    // info!("Active source IDs for propagation: {:?}", active_source_ids);
 
     // Track stair wave edges
-    let mut stair_wave_edge_count = 0;
+    let mut _stair_wave_edge_count = 0;
 
     // Add all wave edges to the queue
     for edge_data in bf.prebaked_wave_edges.iter() {
@@ -290,11 +290,11 @@ pub fn propagate_from_wave_edges(
 
         // Check if this is a stair wave edge (source_id == 0)
         if edge_data.source_id == 0 {
-            stair_wave_edge_count += 1;
-            info!(
-                "Adding stair wave edge at ({}, {}, {}) with lux: {}",
-                edge_data.position.x, edge_data.position.y, edge_data.position.z, edge_data.lux
-            );
+            _stair_wave_edge_count += 1;
+            // info!(
+            //     "Adding stair wave edge at ({}, {}, {}) with lux: {}",
+            //     edge_data.position.x, edge_data.position.y, edge_data.position.z, edge_data.lux
+            // );
         }
 
         queue.push_back(InternalWaveEdge {
@@ -305,10 +305,10 @@ pub fn propagate_from_wave_edges(
         });
     }
 
-    info!(
-        "Added {} stair wave edges to propagation queue",
-        stair_wave_edge_count
-    );
+    // info!(
+    //     "Added {} stair wave edges to propagation queue",
+    //     stair_wave_edge_count
+    // );
 
     // Process queue using BFS
     while let Some(edge_data) = queue.pop_front() {
@@ -347,7 +347,7 @@ pub fn propagate_from_wave_edges(
                 Some(dirs) => *dirs,
                 None => {
                     if is_stair_edge {
-                        info!("No prebaked propagation directions for stair wave edge, skipping");
+                        // info!("No prebaked propagation directions for stair wave edge, skipping");
                     }
                     continue;
                 }
@@ -513,7 +513,7 @@ pub fn propagate_from_wave_edges(
                 //     "  Stair light propagated to ({}, {}, {}): added lux {} (total now: {})",
                 //     nx, ny, nz, new_lux, lfs[neighbor_idx].lux
                 // );
-                stair_propagation_count += 1;
+                _stair_propagation_count += 1;
             }
 
             // Add neighbor to queue with updated history
@@ -528,10 +528,10 @@ pub fn propagate_from_wave_edges(
         }
     }
 
-    info!(
-        "Light propagation: {} total steps, {} from stairs",
-        propagation_count, stair_propagation_count
-    );
+    // info!(
+    //     "Light propagation: {} total steps, {} from stairs",
+    //     propagation_count, stair_propagation_count
+    // );
     propagation_count
 }
 
@@ -583,17 +583,17 @@ pub fn propagate_through_stairs(bf: &BoardData, lfs: &mut Array3<LightFieldData>
         }
     }
 
-    info!(
-        "Stair light propagation: {} propagations",
-        propagation_count
-    );
+    // info!(
+    //     "Stair light propagation: {} propagations",
+    //     propagation_count
+    // );
     propagation_count
 }
 
 /// Creates wave edges at stair connections between floors to allow light propagation
 pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> Vec<WaveEdgeData> {
     let mut wave_edges = Vec::new();
-    let mut stair_tiles_found = 0;
+    let mut _stair_tiles_found = 0;
 
     // Process all stair tiles
     for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
@@ -602,21 +602,21 @@ pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> 
             continue;
         }
 
-        stair_tiles_found += 1;
-        info!(
-            "Found stair at ({}, {}, {}) with offset {}",
-            i, j, k, collision.stair_offset
-        );
+        _stair_tiles_found += 1;
+        // info!(
+        //     "Found stair at ({}, {}, {}) with offset {}",
+        //     i, j, k, collision.stair_offset
+        // );
 
         let pos = (i, j, k);
         let stair_lux = lfs[pos].lux;
 
         // Log stair light info
-        info!("  Stair has lux: {}", stair_lux);
+        // info!("  Stair has lux: {}", stair_lux);
 
         // Skip if no light
         if stair_lux <= 0.0 {
-            info!("  Skipped: no light on stair");
+            // info!("  Skipped: no light on stair");
             continue;
         }
 
@@ -625,17 +625,17 @@ pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> 
         // Determine target position based on stair offset
         let target_z = k as i64 + collision.stair_offset as i64;
         if target_z < 0 || target_z >= bf.map_size.2 as i64 {
-            info!("  Skipped: target position out of bounds");
+            // info!("  Skipped: target position out of bounds");
             continue; // Out of bounds
         }
 
         let target_pos = (i, j, target_z as usize);
         let target_lux = lfs[target_pos].lux;
-        info!("  Target at floor {}: has lux {}", target_z, target_lux);
+        // info!("  Target at floor {}: has lux {}", target_z, target_lux);
 
         // Only create wave edge if we can bring more light
         if stair_lux <= target_lux {
-            info!("  Skipped: target already has more light than stair");
+            // info!("  Skipped: target already has more light than stair");
             continue;
         }
 
@@ -679,10 +679,10 @@ pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> 
         // that doesn't conflict with existing sources
         let dummy_source_id = 0; // Special ID for stair propagation
 
-        info!(
-            "  Creating wave edge: src_lux={}, distance={}, src_id={}",
-            wave_edge.src_light_lux, wave_edge.distance_travelled, dummy_source_id
-        );
+        // info!(
+        //     "  Creating wave edge: src_lux={}, distance={}, src_id={}",
+        //     wave_edge.src_light_lux, wave_edge.distance_travelled, dummy_source_id
+        // );
 
         wave_edges.push(WaveEdgeData {
             position: target_board_pos,
@@ -693,10 +693,10 @@ pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> 
         });
     }
 
-    info!(
-        "Stairs: found {} stair tiles, created {} wave edges",
-        stair_tiles_found,
-        wave_edges.len()
-    );
+    // info!(
+    //     "Stairs: found {} stair tiles, created {} wave edges",
+    //     stair_tiles_found,
+    //     wave_edges.len()
+    // );
     wave_edges
 }

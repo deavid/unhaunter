@@ -19,7 +19,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::utils::hashbrown::HashMap;
+use bevy::utils::HashMap;
 use bevy_persistent::Persistent;
 use ndarray::Array3;
 use ordered_float::OrderedFloat;
@@ -607,6 +607,39 @@ fn after_level_ready(
         }
     }
     ev_room.send(RoomChangedEvent::init(open_van));
+
+    // --- Calculate Usable Haunted Area ---
+    let mut total_usable_area_m2 = 0.0;
+    let mut area_per_floor: HashMap<i64, f32> = HashMap::new();
+    let tile_area = BoardPosition::area_per_tile_m2();
+
+    for bpos in roomdb.room_tiles.keys() {
+        if let Some(cf) = bf.collision_field.get(bpos.ndidx()) {
+            // Exclude static walls (opaque and not dynamic)
+            if cf.see_through || cf.is_dynamic {
+                let floor_area = area_per_floor.entry(bpos.z).or_insert(0.0);
+                *floor_area += tile_area;
+                total_usable_area_m2 += tile_area;
+            }
+        } else {
+            warn!(
+                "Tile at {:?} found in RoomDB but not in behavior_field.",
+                bpos
+            );
+        }
+    }
+
+    info!("--- Usable Haunted Area Calculation ---");
+    let mut sorted_floors: Vec<_> = area_per_floor.keys().collect();
+    sorted_floors.sort();
+    for floor_z in sorted_floors {
+        if let Some(area) = area_per_floor.get(floor_z) {
+            info!("Floor {}: {:.2} m²", floor_z, area);
+        }
+    }
+    info!("Total Usable Area: {:.2} m²", total_usable_area_m2);
+    info!("--------------------------------------");
+
     // Smoothen after first initialization so it is not as jumpy.
     warn!(
         "Computing 32x{:?} = {}",
