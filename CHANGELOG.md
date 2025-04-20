@@ -18,6 +18,7 @@
 **next**
 
 * Added 3 new maps: The Whispering Shed, Apartment 4A and Crimson Comb.
+* Added 2 new maps: The willow Creek Cottage and The Quiet Stacks.
 * Fix menu mouse hover stealing item selected.
 
 ### Version 0.2.7 - 2025-03-26
