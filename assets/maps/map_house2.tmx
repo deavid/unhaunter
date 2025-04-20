@@ -936,7 +936,7 @@
 </data>
   </layer>
  </group>
- <group id="2" name="Ground Level" class="FloorLevel" visible="0">
+ <group id="2" name="Ground Level" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="0"/>
