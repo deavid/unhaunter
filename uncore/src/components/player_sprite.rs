@@ -1,5 +1,5 @@
-use unsettings::controls::ControlKeys;
 use bevy::prelude::*;
+use unsettings::controls::ControlKeys;
 
 /// Represents a player character in the game world.
 ///
