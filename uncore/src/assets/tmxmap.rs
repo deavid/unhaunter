@@ -78,7 +78,15 @@ pub fn naive_tmx_loader(reader: impl BufRead) -> std::io::Result<(Option<String>
             if let Some(valpos) = line.find(VALUE_STR) {
                 let p_line = &line[valpos + VALUE_STR.len()..];
                 if let Some(rpos) = p_line.find('"') {
-                    display_name = Some(p_line[..rpos].to_string());
+                    let raw_name = p_line[..rpos].to_string();
+                    // Basic XML unescaping
+                    let unescaped_name = raw_name
+                        .replace("&amp;", "&")
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                        .replace("&quot;", "\"")
+                        .replace("&apos;", "'");
+                    display_name = Some(unescaped_name);
                 }
             }
         }
