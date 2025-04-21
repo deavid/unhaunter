@@ -4995,7 +4995,10 @@ dependencies = [
 name = "uncoremenu"
 version = "0.3.0-beta2.1-dev"
 dependencies = [
+ "anyhow",
  "bevy",
+ "bevy_picking",
+ "serde",
  "uncore",
 ]
 
@@ -5187,6 +5190,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy-persistent",
+ "bevy_picking",
  "clap",
  "enum-iterator",
  "fastapprox",

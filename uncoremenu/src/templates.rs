@@ -500,11 +500,11 @@ pub fn create_content_item<'a>(
     parent: &'a mut ChildBuilder,
     text: impl Into<String>,
     idx: usize,
-    _is_selected: bool,
+    _is_selected: bool, // Always start unselected, systems will update this
     handles: &GameAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
-    // To avoid UI jumping we always start with not selected, and let the systems update this.
+    // Always start with not selected to avoid UI jumping
     let is_selected = false;
 
     // Define colors and background for items
@@ -520,7 +520,7 @@ pub fn create_content_item<'a>(
     });
 
     entity_cmd
-        .insert(Button) // Add Button component for interactivity
+        .insert(Button)
         .insert(BackgroundColor(if is_selected {
             selected_bg
         } else {
@@ -531,6 +531,11 @@ pub fn create_content_item<'a>(
             identifier: idx,
             selected: is_selected,
         })
+        // Allow mouse wheel scrolling to work through this element
+        .insert(PickingBehavior {
+            should_block_lower: false,
+            ..default()
+        })
         .with_children(|parent| {
             parent
                 .spawn(Text::new(text))
@@ -538,6 +543,11 @@ pub fn create_content_item<'a>(
                     font: handles.fonts.titillium.w600_semibold.clone(),
                     font_size: 23.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                // Allow mouse wheel scrolling to work through text as well
+                .insert(PickingBehavior {
+                    should_block_lower: false,
+                    ..default()
                 })
                 .insert(TextColor(if is_selected {
                     selected_color

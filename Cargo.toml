@@ -65,6 +65,7 @@ bevy = { version = "0.15", features = ["jpeg", "serialize"] }
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
+bevy_picking = "0.15"
 ndarray = "0.16.1"
 
 # winit is not for WASM, and needs to be in sync with bevy version

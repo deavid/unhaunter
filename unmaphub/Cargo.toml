@@ -12,6 +12,7 @@ uncore = { path = "../uncore" }
 uncoremenu = { path = "../uncoremenu" }
 
 bevy = { workspace = true }
+bevy_picking = { workspace = true }
 rand = { workspace = true }
 enum-iterator = { workspace = true }
 serde = { workspace = true }
