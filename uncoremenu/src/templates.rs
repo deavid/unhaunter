@@ -477,8 +477,8 @@ pub fn create_selectable_content_area<'a>(
         position_type: PositionType::Absolute,
         left: Val::Px(350.0 * UI_SCALE), // After menu strip
         top: Val::Px(100.0 * UI_SCALE),  // Below logo
-        width: Val::Percent(60.0),
-        height: Val::Percent(70.0),
+        right: Val::Px(50.0 * UI_SCALE),
+        height: Val::Percent(80.0),
         flex_direction: FlexDirection::Row, // Split into two columns
         padding: UiRect::all(Val::Px(15.0 * UI_SCALE)),
         ..default()

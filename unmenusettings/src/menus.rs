@@ -3,9 +3,7 @@ use bevy_persistent::Persistent;
 use strum::IntoEnumIterator;
 use unsettings::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
-    game::{
-        CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle,
-    },
+    game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
 };
 
 use crate::components::MenuEvent;

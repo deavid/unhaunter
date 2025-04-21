@@ -61,4 +61,10 @@ pub struct ImageAssets {
     pub manual_salt: Handle<Image>,
     pub manual_quartz: Handle<Image>,
     pub manual_sage: Handle<Image>,
+
+    // --- Scrollbar Components ---
+    pub scroll_arrow_up: Handle<Image>,
+    pub scroll_arrow_down: Handle<Image>,
+    pub scroll_thumb: Handle<Image>,
+    pub scroll_track: Handle<Image>,
 }

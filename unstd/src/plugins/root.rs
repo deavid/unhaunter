@@ -117,6 +117,12 @@ fn load_assets(
             manual_salt: ch5("salt.png"),
             manual_quartz: ch5("quartz.png"),
             manual_sage: ch5("sage.png"),
+
+            // --- Scrollbar Components ---
+            scroll_arrow_up: server.load("img/scroll_arrow_up.png"),
+            scroll_arrow_down: server.load("img/scroll_arrow_down.png"),
+            scroll_thumb: server.load("img/scroll_thumb.png"),
+            scroll_track: server.load("img/scroll_track.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {
