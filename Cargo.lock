@@ -5028,6 +5028,7 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unlight",
+ "unmapload",
  "unsettings",
  "unstd",
 ]
@@ -5202,6 +5203,24 @@ dependencies = [
  "serde_json",
  "uncore",
  "uncoremenu",
+]
+
+[[package]]
+name = "unmapload"
+version = "0.3.0-beta2.1-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "ndarray",
+ "ordered-float",
+ "rand 0.9.1",
+ "tiled",
+ "uncore",
+ "ungear",
+ "ungearitems",
+ "unlight",
+ "unsettings",
+ "unstd",
 ]
 
 [[package]]
