@@ -10,7 +10,7 @@
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
- <group id="22" name="Basement" class="FloorLevel" visible="0" offsetx="0" offsety="36">
+ <group id="22" name="Basement" class="FloorLevel" offsetx="0" offsety="36">
   <properties>
    <property name="FloorLevel::display_name" value="Basement"/>
    <property name="FloorLevel::number" type="int" value="-1"/>
