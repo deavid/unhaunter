@@ -503,6 +503,25 @@ pub fn create_content_item<'a>(
     _is_selected: bool, // Always start unselected, systems will update this
     handles: &GameAssets,
 ) -> EntityCommands<'a> {
+    create_content_item_enabled(parent, text, idx, _is_selected, true, handles)
+}
+
+pub fn create_content_item_disabled<'a>(
+    parent: &'a mut ChildBuilder,
+    text: impl Into<String>,
+    handles: &GameAssets,
+) -> EntityCommands<'a> {
+    create_content_item_enabled(parent, text, 0, false, false, handles)
+}
+
+pub fn create_content_item_enabled<'a>(
+    parent: &'a mut ChildBuilder,
+    text: impl Into<String>,
+    idx: usize,
+    _is_selected: bool, // Always start unselected, systems will update this
+    is_enabled: bool,
+    handles: &GameAssets,
+) -> EntityCommands<'a> {
     let text: String = text.into();
     // Always start with not selected to avoid UI jumping
     let is_selected = false;
@@ -514,23 +533,26 @@ pub fn create_content_item<'a>(
 
     let mut entity_cmd = parent.spawn(Node {
         width: Val::Percent(100.0),
-        padding: UiRect::all(Val::Px(8.0 * UI_SCALE)),
+        padding: UiRect::axes(Val::Px(8.0 * UI_SCALE), Val::Px(6.0 * UI_SCALE)),
         margin: UiRect::vertical(Val::Px(2.0 * UI_SCALE)),
         ..default()
     });
+    if is_enabled {
+        entity_cmd
+            .insert(Button)
+            .insert(Interaction::None)
+            .insert(MenuItemInteractive {
+                identifier: idx,
+                selected: is_selected,
+            });
+    }
 
     entity_cmd
-        .insert(Button)
         .insert(BackgroundColor(if is_selected {
             selected_bg
         } else {
             Color::NONE
         }))
-        .insert(Interaction::None)
-        .insert(MenuItemInteractive {
-            identifier: idx,
-            selected: is_selected,
-        })
         // Allow mouse wheel scrolling to work through this element
         .insert(PickingBehavior {
             should_block_lower: false,
@@ -540,8 +562,8 @@ pub fn create_content_item<'a>(
             parent
                 .spawn(Text::new(text))
                 .insert(TextFont {
-                    font: handles.fonts.titillium.w600_semibold.clone(),
-                    font_size: 23.0 * FONT_SCALE,
+                    font: handles.fonts.titillium.w400_regular.clone(),
+                    font_size: 24.0 * FONT_SCALE,
                     font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                 })
                 // Allow mouse wheel scrolling to work through text as well
@@ -549,7 +571,9 @@ pub fn create_content_item<'a>(
                     should_block_lower: false,
                     ..default()
                 })
-                .insert(TextColor(if is_selected {
+                .insert(TextColor(if !is_enabled {
+                    colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)
+                } else if is_selected {
                     selected_color
                 } else {
                     unselected_color
