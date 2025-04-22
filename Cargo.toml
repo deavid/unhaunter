@@ -19,7 +19,7 @@ members = [
     "unmenusettings",
     "unfog",
     "unwalkie",
-    "uncoremenu",
+    "uncoremenu", "unmapload",
 ]
 resolver = "3"
 

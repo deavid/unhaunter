@@ -95,28 +95,28 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="WoodPlanks"/>
+   <property name="sprite:variant" value="DarkCarpet"/>
   </properties>
  </tile>
  <tile id="13" type="Floor">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="WoodPlanks"/>
+   <property name="sprite:variant" value="DarkCarpet"/>
   </properties>
  </tile>
  <tile id="14" type="Floor">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="WoodPlanks"/>
+   <property name="sprite:variant" value="DarkCarpet"/>
   </properties>
  </tile>
  <tile id="15" type="Floor">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="WoodPlanks"/>
+   <property name="sprite:variant" value="DarkCarpet"/>
   </properties>
  </tile>
  <tile id="16" type="Floor">
@@ -175,7 +175,90 @@
    <property name="sprite:variant" value="WhiteTile"/>
   </properties>
  </tile>
- <tile id="24" type="Wall"/>
+ <tile id="24" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BrownCarpet"/>
+  </properties>
+ </tile>
+ <tile id="25" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BrownCarpet"/>
+  </properties>
+ </tile>
+ <tile id="26" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BrownCarpet"/>
+  </properties>
+ </tile>
+ <tile id="27" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BrownCarpet"/>
+  </properties>
+ </tile>
+ <tile id="28" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="29" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="30" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="31" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodPlanks"/>
+  </properties>
+ </tile>
+ <tile id="32" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Gravel"/>
+  </properties>
+ </tile>
+ <tile id="33" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Gravel"/>
+  </properties>
+ </tile>
+ <tile id="34" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Gravel"/>
+  </properties>
+ </tile>
+ <tile id="35" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Gravel"/>
+  </properties>
+ </tile>
  <tile id="36" type="Wall">
   <properties>
    <property name="sprite:orientation" value="YAxis"/>
@@ -400,7 +483,7 @@
   <properties>
    <property name="sprite:orientation" value="XAxis"/>
    <property name="sprite:state" value="Full"/>
-   <property name="sprite:variant" value="Base"/>
+   <property name="sprite:variant" value="GlassWall"/>
   </properties>
  </tile>
  <tile id="53" type="Door">

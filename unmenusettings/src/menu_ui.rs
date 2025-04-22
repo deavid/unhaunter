@@ -1,8 +1,6 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 use uncoremenu::components::{MenuMouseTracker, MenuRoot};
 use uncoremenu::templates;
@@ -102,23 +100,11 @@ pub fn setup_ui_main_cat(
                                 idx += 1;
                             } else {
                                 // Add disabled item with gray color
-                                menu_list
-                                    .spawn(Node {
-                                        width: Val::Percent(100.0),
-                                        padding: UiRect::all(Val::Px(10.0 * UI_SCALE)),
-                                        margin: UiRect::vertical(Val::Px(2.0 * UI_SCALE)),
-                                        ..default()
-                                    })
-                                    .with_children(|parent| {
-                                        parent
-                                            .spawn(Text::new(item_text))
-                                            .insert(TextFont {
-                                                font: handles.fonts.titillium.w600_semibold.clone(),
-                                                font_size: 24.0 * FONT_SCALE,
-                                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                                            })
-                                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF.with_alpha(0.3)));
-                                    });
+                                templates::create_content_item_disabled(
+                                    menu_list,
+                                    item_text,
+                                    handles
+                                );
                             }
                         }
 

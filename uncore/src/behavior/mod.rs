@@ -513,12 +513,20 @@ impl SpriteConfig {
                     "sounds/switch-off-1.ogg",
                 ))
                 .insert(component::RoomState::default()),
-            Class::RoomSwitch => entity
-                .insert(component::Interactive::new(
-                    "sounds/switch-on-1.ogg",
-                    "sounds/switch-off-1.ogg",
-                ))
-                .insert(component::RoomState::new_for_room(&self.orientation)),
+            Class::RoomSwitch => {
+                // Check for opposite_side property
+                let opposite_side = self.properties.get_bool("switch:opposite_side");
+
+                entity
+                    .insert(component::Interactive::new(
+                        "sounds/switch-on-1.ogg",
+                        "sounds/switch-off-1.ogg",
+                    ))
+                    .insert(component::RoomState::with_opposite_side(
+                        &self.orientation,
+                        opposite_side,
+                    ))
+            }
             Class::Breaker => entity.insert(component::Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",

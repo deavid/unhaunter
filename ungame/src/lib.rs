@@ -2,7 +2,6 @@ pub mod boardfield_update;
 pub mod game_ui;
 pub mod gear_ui;
 pub mod hide_mouse;
-pub mod level;
 pub mod looking_gear;
 pub mod object_charge;
 pub mod pause_ui;

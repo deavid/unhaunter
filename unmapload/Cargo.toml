@@ -1,22 +1,20 @@
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [package]
-name = "ungame"
+name = "unmapload"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
+homepage.workspace = true
 
 [dependencies]
 uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
+unlight = { path = "../unlight" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
-unlight = { path = "../unlight" }
-unmapload = { path = "../unmapload" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

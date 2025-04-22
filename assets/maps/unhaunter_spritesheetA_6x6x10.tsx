@@ -525,6 +525,22 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="38" type="RoomSwitch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Off"/>
+   <property name="sprite:variant" value="Opposite"/>
+   <property name="switch:opposite_side" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="39" type="RoomSwitch">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Opposite"/>
+   <property name="switch:opposite_side" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="40" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>

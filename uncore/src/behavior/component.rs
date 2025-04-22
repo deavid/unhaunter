@@ -38,6 +38,22 @@ impl RoomState {
             },
         }
     }
+
+    pub fn with_opposite_side(orientation: &Orientation, opposite_side: bool) -> Self {
+        if !opposite_side {
+            return Self::new_for_room(orientation);
+        }
+
+        // If opposite_side is true, we'll use the opposite direction for the room delta
+        Self {
+            room_delta: match orientation {
+                Orientation::XAxis => BoardPosition { x: -1, y: -1, z: 0 },
+                Orientation::YAxis => BoardPosition { x: -1, y: -1, z: 0 },
+                Orientation::Both => BoardPosition::default(),
+                Orientation::None => BoardPosition::default(),
+            },
+        }
+    }
 }
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
