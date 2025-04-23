@@ -4,6 +4,7 @@ pub mod level_finalization;
 pub mod level_setup;
 pub mod module;
 pub mod plugin;
+pub mod selection;
 pub mod sprite_db;
 pub mod tile_spawning;
 

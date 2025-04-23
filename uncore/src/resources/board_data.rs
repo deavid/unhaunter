@@ -44,6 +44,9 @@ pub struct BoardData {
     pub floor_z_map: HashMap<i32, usize>, // Maps Tiled floor numbers to contiguous z indices
     pub z_floor_map: HashMap<usize, i32>, // Maps z indices back to Tiled floor numbers
 
+    // Complete floor mapping information
+    pub floor_mapping: crate::events::loadlevel::FloorLevelMapping,
+
     // Ghost warning state
     /// Current warning intensity (0.0-1.0)
     pub ghost_warning_intensity: f32,
@@ -78,6 +81,13 @@ impl FromWorld for BoardData {
             ghost_warning_position: None,
             floor_z_map: HashMap::new(),
             z_floor_map: HashMap::new(),
+            floor_mapping: crate::events::loadlevel::FloorLevelMapping {
+                floor_to_z: HashMap::new(),
+                z_to_floor: HashMap::new(),
+                floor_display_names: HashMap::new(),
+                ghost_attracting_objects: HashMap::new(),
+                ghost_repelling_objects: HashMap::new(),
+            },
         }
     }
 }
