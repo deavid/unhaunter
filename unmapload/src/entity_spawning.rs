@@ -126,21 +126,21 @@ pub fn spawn_player(
 pub fn spawn_ghosts(
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
-    ghost_spawn_points: &mut Vec<Position>,
+    ghost_spawn_points: &mut [Position],
 ) {
-    // Clear existing evidence records and shuffle spawn points
+    // Clear existing evidence records and get RNG
     p.bf.evidences.clear();
-    ghost_spawn_points.shuffle(&mut random_seed::rng());
+    let mut rng = random_seed::rng();
 
-    if ghost_spawn_points.is_empty() {
-        error!(
-            "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
-        );
-        return;
-    }
-
-    // Select ghost spawn position
-    let ghost_spawn = ghost_spawn_points.pop().unwrap();
+    // Select a ghost spawn point using the selection function
+    let ghost_spawn = crate::selection::select_ghost_spawn_point(ghost_spawn_points, &mut rng)
+        .unwrap_or_else(|| {
+            error!(
+                "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
+            );
+            // Fallback to a default position if no spawn points are available
+            Position::new_i64(0, 0, 0)
+        });
 
     // Determine ghost type based on difficulty settings
     let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();

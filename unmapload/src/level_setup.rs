@@ -10,6 +10,7 @@ use bevy_persistent::Persistent;
 use ndarray::Array3;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite};
+use uncore::components::ghost_influence::InfluenceType;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use uncore::resources::board_data::BoardData;
@@ -52,6 +53,13 @@ pub struct LoadLevelSystemParam<'w> {
 /// Marker component to handle ghost influence assignment after level loading is complete
 #[derive(Component)]
 pub struct AssignGhostInfluenceMarker(pub Vec<Entity>);
+
+/// Marker to store selected ghost setup from simulation
+#[derive(Component)]
+pub struct GhostSetupSimulationMarker {
+    pub ghost_spawn: Position,
+    pub influence_assignments: Vec<(Entity, InfluenceType)>,
+}
 
 /// Loads a new level based on the `LevelLoadedEvent`.
 ///
@@ -129,6 +137,9 @@ pub fn load_level_handler(
     // Use floor mapping from event
     p.bf.floor_z_map = floor_mapping.floor_to_z.clone();
     p.bf.z_floor_map = floor_mapping.z_to_floor.clone();
+
+    // Store the complete floor mapping in board data
+    p.bf.floor_mapping = floor_mapping.clone();
 
     // Log floor mapping details
     warn!(
@@ -230,8 +241,7 @@ pub fn load_level_handler(
     }
 
     // Schedule ghost influence assignment for after level loading
-    let movable_objects_clone = movable_objects.clone();
-    commands.spawn(AssignGhostInfluenceMarker(movable_objects_clone));
+    commands.spawn(AssignGhostInfluenceMarker(movable_objects.clone()));
 
     // Spawn player entity
     let open_van = entity_spawning::spawn_player(

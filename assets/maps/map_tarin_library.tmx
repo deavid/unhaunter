@@ -11,10 +11,10 @@
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
  <group id="2" name="Third floor" class="FloorLevel" visible="0" offsetx="-53.33" offsety="22">
   <properties>
-   <property name="FloorLevel::display_name" value="Ground floor"/>
+   <property name="FloorLevel::display_name" value="Third floor"/>
    <property name="FloorLevel::number" type="int" value="2"/>
-   <property name="FloorLevel::quantity_ghost_attracting_objects" value="2"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" value="1"/>
+   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="2"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="2"/>
   </properties>
   <layer id="1" name="Floors" width="64" height="64">
    <data encoding="csv">
@@ -427,10 +427,10 @@
  </group>
  <group id="42" name="Second floor" class="FloorLevel" visible="0" offsetx="-53.33" offsety="22">
   <properties>
-   <property name="FloorLevel::display_name" value="Ground floor"/>
+   <property name="FloorLevel::display_name" value="Second floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>
-   <property name="FloorLevel::quantity_ghost_attracting_objects" value="2"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" value="1"/>
+   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="2"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="1"/>
   </properties>
   <layer id="43" name="Floors" width="64" height="64">
    <data encoding="csv">
@@ -845,8 +845,8 @@
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="0"/>
-   <property name="FloorLevel::quantity_ghost_attracting_objects" value="2"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" value="1"/>
+   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="2"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="1"/>
   </properties>
   <layer id="34" name="Floors" width="64" height="64">
    <data encoding="csv">

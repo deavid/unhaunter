@@ -180,13 +180,33 @@ pub fn bevy_load_map(
     let mut floor_to_z: HashMap<i32, usize> = HashMap::new();
     let mut z_to_floor: HashMap<usize, i32> = HashMap::new();
     let mut floor_display_names: HashMap<i32, String> = HashMap::new();
+    let mut ghost_attracting_objects: HashMap<i32, i32> = HashMap::new();
+    let mut ghost_repelling_objects: HashMap<i32, i32> = HashMap::new();
 
     // Create contiguous z-coordinates
     for (z, &floor_num) in sorted_floor_numbers.iter().enumerate() {
         floor_to_z.insert(floor_num, z);
         z_to_floor.insert(z, floor_num);
-        if let Some(level) = &floor_levels.get(&floor_num) {
-            floor_display_names.insert(floor_num, level.display_name.clone());
+
+        // For each floor level, check if there are ghost influence requirements
+        if let Some(floor_level_layer) = grp.layers.iter().find(|l| {
+            l.user_class == Some("FloorLevel".to_string()) && get_floor_number(l) == Some(floor_num)
+        }) {
+            // Extract floor display name
+            if let Some(level) = &floor_levels.get(&floor_num) {
+                floor_display_names.insert(floor_num, level.display_name.clone());
+            }
+
+            // Extract ghost influence requirements
+            if let Some(attracting) = get_floor_ghost_attracting_objects(floor_level_layer) {
+                ghost_attracting_objects.insert(floor_num, attracting);
+                info!("Floor {floor_num} requires {attracting} ghost attracting objects");
+            }
+
+            if let Some(repelling) = get_floor_ghost_repelling_objects(floor_level_layer) {
+                ghost_repelling_objects.insert(floor_num, repelling);
+                info!("Floor {floor_num} requires {repelling} ghost repelling objects");
+            }
         }
     }
 
@@ -217,6 +237,8 @@ pub fn bevy_load_map(
         floor_to_z,
         z_to_floor,
         floor_display_names,
+        ghost_attracting_objects,
+        ghost_repelling_objects,
     };
 
     (layers, mapping)
@@ -242,6 +264,38 @@ fn get_floor_display_name(layer: &MapLayer) -> Option<String> {
         Some(name.clone())
     } else {
         warn!("Incorrect type for FloorLevel::display_name or property not found");
+        None
+    }
+}
+
+/// Helper function to extract the quantity of ghost attracting objects for a floor
+pub fn get_floor_ghost_attracting_objects(layer: &MapLayer) -> Option<i32> {
+    if let Some(value) = layer
+        .user_properties
+        .get("FloorLevel::quantity_ghost_attracting_objects")
+    {
+        match value {
+            tiled::PropertyValue::IntValue(num) => Some(*num),
+            tiled::PropertyValue::StringValue(s) => s.parse::<i32>().ok(),
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+/// Helper function to extract the quantity of ghost repelling objects for a floor
+pub fn get_floor_ghost_repelling_objects(layer: &MapLayer) -> Option<i32> {
+    if let Some(value) = layer
+        .user_properties
+        .get("FloorLevel::quantity_ghost_repelling_objects")
+    {
+        match value {
+            tiled::PropertyValue::IntValue(num) => Some(*num),
+            tiled::PropertyValue::StringValue(s) => s.parse::<i32>().ok(),
+            _ => None,
+        }
+    } else {
         None
     }
 }

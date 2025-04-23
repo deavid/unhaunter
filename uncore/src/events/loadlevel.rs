@@ -21,6 +21,10 @@ pub struct FloorLevelMapping {
     pub z_to_floor: HashMap<usize, i32>,
     /// Display names for each floor
     pub floor_display_names: HashMap<i32, String>,
+    /// Required number of ghost attracting objects for each floor
+    pub ghost_attracting_objects: HashMap<i32, i32>,
+    /// Required number of ghost repelling objects for each floor
+    pub ghost_repelling_objects: HashMap<i32, i32>,
 }
 
 #[derive(Debug, Clone, Event)]
