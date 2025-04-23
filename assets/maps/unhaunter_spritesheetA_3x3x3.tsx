@@ -1309,6 +1309,76 @@
    <property name="sprite:variant" value="L"/>
   </properties>
  </tile>
+ <tile id="216" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Stone"/>
+  </properties>
+ </tile>
+ <tile id="217" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Stone"/>
+  </properties>
+ </tile>
+ <tile id="218" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Stone"/>
+  </properties>
+ </tile>
+ <tile id="219" type="Floor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Stone"/>
+  </properties>
+ </tile>
+ <tile id="240" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="241" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="242" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="Both"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="243">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="244" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="245" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
  <wangsets>
   <wangset name="Unnamed Set" type="corner" tile="-1">
    <wangcolor name="stones" color="#ff0000" tile="-1" probability="1"/>
