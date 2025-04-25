@@ -258,9 +258,10 @@ pub fn select_influence_objects(
 
 /// Calculates a score based on spatial distribution of selected elements
 ///
-/// This function calculates the "product mean" of distances between all relevant
-/// elements (ghost spawn, player spawns, and influence objects) using the logarithmic
-/// approach to avoid overflow issues. Higher scores indicate better spatial distribution.
+/// This function calculates the geometric mean of distances between relevant
+/// elements, focusing on ghost-to-objects and object-to-object distances.
+/// When multiple player spawns exist, we randomly select one for distance calculation.
+/// Higher scores indicate better spatial distribution.
 ///
 /// # Arguments
 /// * `ghost_spawn` - Position of the ghost spawn point
@@ -276,15 +277,24 @@ fn score_ghost_setup(
 ) -> f32 {
     let mut distances = Vec::new();
 
+    // Select a single player spawn point at random if multiple exist
+    let player_pos = if !player_spawns.is_empty() {
+        let mut rng = random_seed::rng();
+        let index = rng.random_range(0..player_spawns.len());
+        Some(&player_spawns[index])
+    } else {
+        None
+    };
+
     // Calculate ghost spawn to influence object distances
     for (_, _, obj_pos) in influence_objects {
         let dist = ghost_spawn.distance(obj_pos);
         distances.push(dist);
     }
 
-    // Calculate ghost spawn to player spawn distances
-    for player_pos in player_spawns {
-        let dist = ghost_spawn.distance(player_pos);
+    // Calculate ghost spawn to selected player spawn distance
+    if let Some(pos) = player_pos {
+        let dist = ghost_spawn.distance(pos);
         distances.push(dist);
     }
 
@@ -292,14 +302,6 @@ fn score_ghost_setup(
     for (i, (_, _, pos1)) in influence_objects.iter().enumerate() {
         for (_, _, pos2) in influence_objects.iter().skip(i + 1) {
             let dist = pos1.distance(pos2);
-            distances.push(dist);
-        }
-    }
-
-    // Calculate influence object to player spawn distances
-    for (_, _, obj_pos) in influence_objects {
-        for player_pos in player_spawns {
-            let dist = obj_pos.distance(player_pos);
             distances.push(dist);
         }
     }
