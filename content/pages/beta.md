@@ -4,10 +4,14 @@ path = "beta"
 template = "beta.html"
 [extra]
 beta_available = true
-beta_version = "v0.3.0-beta2.1"
+beta_version = "v0.3.0-beta3"
 +++
 
 ## New shiny things to test!
+
+**Beta 3**
+
+* 15 New maps! Can you conquer all of them?
 
 **Fix: Beta 2.1**
 
