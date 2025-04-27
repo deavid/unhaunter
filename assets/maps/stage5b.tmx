@@ -10,7 +10,7 @@
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
- <group id="2" name="Ground Level" class="FloorLevel" visible="0">
+ <group id="2" name="Ground Level" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="0"/>
@@ -522,7 +522,7 @@
 </data>
   </layer>
  </group>
- <group id="22" name="Upper Level" class="FloorLevel">
+ <group id="22" name="Upper Level" class="FloorLevel" visible="0">
   <properties>
    <property name="FloorLevel::display_name" value="Upper Level"/>
    <property name="FloorLevel::number" type="int" value="1"/>
@@ -849,7 +849,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
   </layer>
-  <layer id="26" name="Walls-Extra" width="42" height="42">
+  <layer id="26" name="Walls-Extra" width="42" height="42" visible="0">
    <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
