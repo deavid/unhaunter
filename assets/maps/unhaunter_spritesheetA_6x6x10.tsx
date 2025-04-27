@@ -525,6 +525,27 @@
    </object>
   </objectgroup>
  </tile>
+ <tile id="34" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="GreenCouchBack"/>
+  </properties>
+ </tile>
+ <tile id="35" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedSofaBack"/>
+  </properties>
+ </tile>
+ <tile id="36" type="Appliance">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="TVBack"/>
+  </properties>
+ </tile>
  <tile id="38" type="RoomSwitch">
   <properties>
    <property name="sprite:orientation" value="YAxis"/>
@@ -574,6 +595,28 @@
     </properties>
    </object>
   </objectgroup>
+ </tile>
+ <tile id="42" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="30"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="ShelvesEmpty"/>
+  </properties>
+ </tile>
+ <tile id="43" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="30"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="ShelvesQuarterFull"/>
+  </properties>
  </tile>
  <tile id="48" type="Window">
   <properties>
