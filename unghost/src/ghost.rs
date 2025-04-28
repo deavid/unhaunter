@@ -145,7 +145,9 @@ fn ghost_movement(
             target_point.z = target_point.z.round();
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if !ghost.hunt_warning_active
-                && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
+                && rng
+                    .random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt().max(0.000001) * 10.0)
+                    > 10.0
             {
                 let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
