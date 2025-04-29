@@ -104,11 +104,11 @@ pub fn process_and_spawn_tile(
         tile.pos
     );
 
-    // Create position component
+    // Create position component with z-offset applied
     let mut pos = Position {
         x: t_x,
         y: t_y,
-        z: floor_z as f32,
+        z: floor_z as f32 + layer.z_offset, // Apply the z-offset directly
         global_z: 0.0,
     };
 
