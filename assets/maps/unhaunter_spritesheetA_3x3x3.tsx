@@ -486,6 +486,18 @@
    <property name="sprite:variant" value="GlassWall"/>
   </properties>
  </tile>
+ <tile id="52" type="Decor">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Stool"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="WoodenStool"/>
+  </properties>
+ </tile>
  <tile id="53" type="Door">
   <properties>
    <property name="sprite:orientation" value="YAxis"/>
@@ -657,6 +669,30 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="CandleConsumed"/>
+  </properties>
+ </tile>
+ <tile id="70" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Monitor"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Monitor"/>
+  </properties>
+ </tile>
+ <tile id="71" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Computer"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Computer"/>
   </properties>
  </tile>
  <tile id="72" type="Item">
@@ -909,6 +945,30 @@
    <property name="sprite:variant" value="StatueBust1"/>
   </properties>
  </tile>
+ <tile id="93" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Toaster"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Toaster"/>
+  </properties>
+ </tile>
+ <tile id="94" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Coffee Machine"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Coffee Machine"/>
+  </properties>
+ </tile>
  <tile id="96" type="PlayerSpawn">
   <properties>
    <property name="sprite:orientation" value="None"/>
@@ -932,6 +992,54 @@
  </tile>
  <tile id="99" type="FakeGhost"/>
  <tile id="100" type="FakeBreach"/>
+ <tile id="101" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Soap"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Soap"/>
+  </properties>
+ </tile>
+ <tile id="102" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Towel"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Towel1"/>
+  </properties>
+ </tile>
+ <tile id="103" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Green Bottle"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BottleGreen"/>
+  </properties>
+ </tile>
+ <tile id="104" type="Furniture">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Bottles"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="2.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="BottlesRedBlue"/>
+  </properties>
+ </tile>
  <tile id="108" type="RoomDef">
   <properties>
    <property name="sprite:variant" value="Foyer"/>
@@ -1434,6 +1542,90 @@
    <property name="sprite:orientation" value="YAxis"/>
    <property name="sprite:state" value="Partial"/>
    <property name="sprite:variant" value="StoneGrey"/>
+  </properties>
+ </tile>
+ <tile id="246" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="247" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="248" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="Both"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="249" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="250" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="251" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="258" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
+  </properties>
+ </tile>
+ <tile id="259" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
+  </properties>
+ </tile>
+ <tile id="260" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="Both"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
+  </properties>
+ </tile>
+ <tile id="261" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
+  </properties>
+ </tile>
+ <tile id="262" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
+  </properties>
+ </tile>
+ <tile id="263" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="ConcreteBrick"/>
   </properties>
  </tile>
  <wangsets>
