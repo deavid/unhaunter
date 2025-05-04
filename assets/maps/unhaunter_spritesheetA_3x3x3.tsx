@@ -1040,6 +1040,42 @@
    <property name="sprite:variant" value="BottlesRedBlue"/>
   </properties>
  </tile>
+ <tile id="105" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Pink Book"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="0.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="PinkBook"/>
+  </properties>
+ </tile>
+ <tile id="106" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Green book"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="0.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Green Book"/>
+  </properties>
+ </tile>
+ <tile id="107" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Yellow book"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="0.5"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="YellowBook"/>
+  </properties>
+ </tile>
  <tile id="108" type="RoomDef">
   <properties>
    <property name="sprite:variant" value="Foyer"/>
