@@ -730,7 +730,13 @@
    <property name="sprite:variant" value="Petri Dish"/>
   </properties>
  </tile>
- <tile id="129" type="Item"/>
+ <tile id="129" type="WallDecor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="HealthMonitor"/>
+  </properties>
+ </tile>
  <tile id="130" type="Item"/>
  <tile id="131" type="Item"/>
  <tile id="132" type="Item"/>
