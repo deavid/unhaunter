@@ -10,7 +10,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="FileCabinet"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="3" x="35.5556" y="21.3333"/>
@@ -26,10 +26,10 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="WaterCooler"/>
   </properties>
   <objectgroup draworder="index" id="2">
-   <object id="2" type="Shape" x="0" y="0" width="4" height="12">
+   <object id="2" type="Shape" x="-0.0811798" y="-0.243539" width="9.11433" height="12.0812">
     <properties>
      <property name="collision" type="bool" value="false"/>
      <property name="interactive" type="bool" value="true"/>
@@ -41,7 +41,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="Photocopier"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
@@ -56,7 +56,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="Corkboard"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
@@ -71,7 +71,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="MetalTable"/>
   </properties>
   <objectgroup draworder="index" id="3">
    <object id="5" x="42.6667" y="49.7778"/>
@@ -92,7 +92,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ToolCabinet"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="0" width="8" height="8">
@@ -107,7 +107,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="Crib"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="-4" width="12" height="16">
@@ -122,7 +122,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ChangingTable"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" type="Shape" x="0" y="-4" width="12" height="16">
@@ -137,7 +137,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="BarberChair"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="4" width="4" height="12">
@@ -152,7 +152,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="BunkerBed"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="4" height="12">
@@ -167,7 +167,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="HospitalBed"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" x="4" y="4" width="4" height="4">
@@ -228,7 +228,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ThickWoodenTable"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="-3.33333e-06" y="3.33333e-06" width="8" height="12">
@@ -243,14 +243,14 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ThickMetalTable"/>
   </properties>
  </tile>
  <tile id="16" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="Lockers"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="-4" width="16" height="28">
@@ -265,7 +265,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="SurgicalTable"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="16" height="24">
@@ -280,7 +280,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="IVStand"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="2" x="8" y="2.66667"/>
@@ -309,10 +309,6 @@
  </tile>
  <tile id="20" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -328,10 +324,6 @@
  </tile>
  <tile id="21" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -377,13 +369,9 @@
  </tile>
  <tile id="24" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="WaterHeater"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -396,13 +384,9 @@
  </tile>
  <tile id="25" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="GasBoiler"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="4" y="-4" width="12" height="28">
@@ -415,10 +399,6 @@
  </tile>
  <tile id="26" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -434,10 +414,6 @@
  </tile>
  <tile id="27" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -499,7 +475,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="Pew"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="20">
@@ -514,7 +490,7 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="AltarTable"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="20">
@@ -529,14 +505,14 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="TombTop"/>
   </properties>
  </tile>
  <tile id="35" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="MausoleumWall"/>
   </properties>
  </tile>
  <tile id="36" type="Furniture">
@@ -558,7 +534,6 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
-   <property name="switch:opposite_side" type="bool" value="true"/>
   </properties>
  </tile>
  <tile id="39" type="Furniture">
@@ -566,14 +541,13 @@
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
-   <property name="switch:opposite_side" type="bool" value="true"/>
   </properties>
  </tile>
  <tile id="40" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ProjectorWarmLight"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="24">
@@ -586,13 +560,9 @@
  </tile>
  <tile id="41" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="true"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="ProjectorCoolLight"/>
   </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" type="Shape" x="0" y="0" width="12" height="24">
@@ -605,21 +575,13 @@
  </tile>
  <tile id="42" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="Default"/>
+   <property name="sprite:variant" value="HayBale"/>
   </properties>
  </tile>
  <tile id="43" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -627,10 +589,6 @@
  </tile>
  <tile id="44" type="Furniture">
   <properties>
-   <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="false"/>
-   <property name="object:pickable" type="bool" value="false"/>
-   <property name="object:weight" type="float" value="30"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
    <property name="sprite:variant" value="Default"/>
@@ -717,34 +675,57 @@
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="BlankPicture"/>
+   <property name="sprite:variant" value="Default"/>
   </properties>
  </tile>
  <tile id="57" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="GreenPicture"/>
+   <property name="sprite:variant" value="Default"/>
   </properties>
  </tile>
  <tile id="58" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant" value="RedPicture"/>
+   <property name="sprite:variant" value="Default"/>
   </properties>
  </tile>
- <tile id="59" type="Furniture"/>
- <tile id="60" type="Furniture"/>
- <tile id="61" type="Furniture"/>
+ <tile id="59" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Default"/>
+  </properties>
+ </tile>
+ <tile id="60" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Default"/>
+  </properties>
+ </tile>
+ <tile id="61" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Default"/>
+  </properties>
+ </tile>
  <tile id="62" type="Furniture">
   <properties>
    <property name="sprite:orientation" value="None"/>
-   <property name="sprite:state" value="Off"/>
-   <property name="sprite:variant" value="Base"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Default"/>
   </properties>
  </tile>
  <tile id="63" type="Furniture">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Default"/>
+  </properties>
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="24"/>
    <object id="3" x="0" y="0" width="12" height="12"/>
