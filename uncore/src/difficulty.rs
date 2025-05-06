@@ -22,32 +22,19 @@ use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};
 
 /// Represents the different difficulty levels for the Unhaunter game.
-///
-/// Each variant corresponds to a specific difficulty preset with unique settings,
-/// ranging from `Apprentice` (easiest) to `Legend` (hardest).
-///
-/// These difficulty levels impact various gameplay parameters, including ghost
-/// behavior, environment conditions, player attributes, and general gameplay
-/// mechanics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
 pub enum Difficulty {
     #[default]
-    NoviceInvestigator,
-    AdeptInvestigator,
-    SeniorInvestigator,
-    ExpertInvestigator,
-    AdeptSpecialist,
-    LeadSpecialist,
-    ExpertSpecialist,
-    MasterSpecialist,
-    InitiateOccultist,
-    AdeptOccultist,
-    ExpertOccultist,
-    MasterOccultist,
-    AdeptGuardian,
-    LeadGuardian,
-    ExpertGuardian,
-    MasterGuardian,
+    TutorialChapter1, // Formerly NoviceInvestigator
+    TutorialChapter2, // Formerly AdeptInvestigator
+    TutorialChapter3, // Formerly SeniorInvestigator
+    TutorialChapter4, // Formerly ExpertInvestigator
+    TutorialChapter5, // Formerly AdeptSpecialist
+
+    StandardChallenge, // Formerly LeadSpecialist
+    HardChallenge,     // Formerly MasterSpecialist
+    ExpertChallenge,   // Formerly ExpertOccultist
+    MasterChallenge,   // Formerly MasterGuardian
 }
 
 impl Difficulty {
@@ -69,24 +56,29 @@ impl Difficulty {
     }
 
     pub fn is_enabled(&self) -> bool {
-        match self {
-            Difficulty::NoviceInvestigator => true,
-            Difficulty::AdeptInvestigator => true,
-            Difficulty::SeniorInvestigator => true,
-            Difficulty::ExpertInvestigator => true,
-            Difficulty::AdeptSpecialist => true,
-            Difficulty::LeadSpecialist => true,
-            Difficulty::ExpertSpecialist => false,
-            Difficulty::MasterSpecialist => true,
-            Difficulty::InitiateOccultist => false,
-            Difficulty::AdeptOccultist => false,
-            Difficulty::ExpertOccultist => true,
-            Difficulty::MasterOccultist => false,
-            Difficulty::AdeptGuardian => false,
-            Difficulty::LeadGuardian => true,
-            Difficulty::ExpertGuardian => false,
-            Difficulty::MasterGuardian => true,
-        }
+        matches!(
+            self,
+            Difficulty::TutorialChapter1
+                | Difficulty::TutorialChapter2
+                | Difficulty::TutorialChapter3
+                | Difficulty::TutorialChapter4
+                | Difficulty::TutorialChapter5
+                | Difficulty::StandardChallenge
+                | Difficulty::HardChallenge
+                | Difficulty::ExpertChallenge
+                | Difficulty::MasterChallenge
+        )
+    }
+
+    pub fn is_tutorial_difficulty(&self) -> bool {
+        matches!(
+            self,
+            Difficulty::TutorialChapter1
+                | Difficulty::TutorialChapter2
+                | Difficulty::TutorialChapter3
+                | Difficulty::TutorialChapter4
+                | Difficulty::TutorialChapter5
+        )
     }
 
     // --- Ghost Behavior ---
@@ -95,22 +87,15 @@ impl Difficulty {
     /// A higher value indicates a faster ghost.
     pub fn ghost_speed(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.0,
-            Difficulty::AdeptInvestigator => 1.05,
-            Difficulty::SeniorInvestigator => 1.1,
-            Difficulty::ExpertInvestigator => 1.15,
-            Difficulty::AdeptSpecialist => 1.2,
-            Difficulty::LeadSpecialist => 1.3,
-            Difficulty::ExpertSpecialist => 1.4,
-            Difficulty::MasterSpecialist => 1.5,
-            Difficulty::InitiateOccultist => 1.6,
-            Difficulty::AdeptOccultist => 1.7,
-            Difficulty::ExpertOccultist => 1.8,
-            Difficulty::MasterOccultist => 1.9,
-            Difficulty::AdeptGuardian => 2.0,
-            Difficulty::LeadGuardian => 2.1,
-            Difficulty::ExpertGuardian => 2.2,
-            Difficulty::MasterGuardian => 2.5,
+            Difficulty::TutorialChapter1 => 1.0,
+            Difficulty::TutorialChapter2 => 1.05,
+            Difficulty::TutorialChapter3 => 1.1,
+            Difficulty::TutorialChapter4 => 1.15,
+            Difficulty::TutorialChapter5 => 1.2,
+            Difficulty::StandardChallenge => 1.3, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.5,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.8,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 2.5,   // Was MasterGuardian
         }
     }
 
@@ -119,22 +104,15 @@ impl Difficulty {
     /// A higher value means the ghost becomes enraged more quickly.
     pub fn ghost_rage_likelihood(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.3,
-            Difficulty::AdeptInvestigator => 1.3,
-            Difficulty::SeniorInvestigator => 1.3,
-            Difficulty::ExpertInvestigator => 1.3,
-            Difficulty::AdeptSpecialist => 1.3,
-            Difficulty::LeadSpecialist => 1.3,
-            Difficulty::ExpertSpecialist => 1.4,
-            Difficulty::MasterSpecialist => 1.6,
-            Difficulty::InitiateOccultist => 2.0,
-            Difficulty::AdeptOccultist => 2.4,
-            Difficulty::ExpertOccultist => 2.8,
-            Difficulty::MasterOccultist => 3.2,
-            Difficulty::AdeptGuardian => 3.4,
-            Difficulty::LeadGuardian => 3.6,
-            Difficulty::ExpertGuardian => 3.8,
-            Difficulty::MasterGuardian => 4.0,
+            Difficulty::TutorialChapter1 => 1.3,
+            Difficulty::TutorialChapter2 => 1.3,
+            Difficulty::TutorialChapter3 => 1.3,
+            Difficulty::TutorialChapter4 => 1.3,
+            Difficulty::TutorialChapter5 => 1.3,
+            Difficulty::StandardChallenge => 1.3, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.6,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 2.8,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 4.0,   // Was MasterGuardian
         }
     }
 
@@ -143,22 +121,15 @@ impl Difficulty {
     /// A higher value results in more aggressive pursuit of the player.
     pub fn ghost_hunting_aggression(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.1,
-            Difficulty::AdeptInvestigator => 1.1,
-            Difficulty::SeniorInvestigator => 1.1,
-            Difficulty::ExpertInvestigator => 1.1,
-            Difficulty::AdeptSpecialist => 1.2,
-            Difficulty::LeadSpecialist => 1.25,
-            Difficulty::ExpertSpecialist => 1.3,
-            Difficulty::MasterSpecialist => 1.35,
-            Difficulty::InitiateOccultist => 1.5,
-            Difficulty::AdeptOccultist => 1.55,
-            Difficulty::ExpertOccultist => 1.6,
-            Difficulty::MasterOccultist => 1.8,
-            Difficulty::AdeptGuardian => 2.0,
-            Difficulty::LeadGuardian => 2.2,
-            Difficulty::ExpertGuardian => 2.4,
-            Difficulty::MasterGuardian => 2.6,
+            Difficulty::TutorialChapter1 => 1.1,
+            Difficulty::TutorialChapter2 => 1.1,
+            Difficulty::TutorialChapter3 => 1.1,
+            Difficulty::TutorialChapter4 => 1.1,
+            Difficulty::TutorialChapter5 => 1.2,
+            Difficulty::StandardChallenge => 1.25, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.35,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.6,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 2.6,    // Was MasterGuardian
         }
     }
 
@@ -168,22 +139,15 @@ impl Difficulty {
     /// A higher value leads to more frequent paranormal activity.
     pub fn ghost_interaction_frequency(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.9,
-            Difficulty::AdeptInvestigator => 0.9,
-            Difficulty::SeniorInvestigator => 0.9,
-            Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.0,
-            Difficulty::LeadSpecialist => 1.0,
-            Difficulty::ExpertSpecialist => 1.1,
-            Difficulty::MasterSpecialist => 1.1,
-            Difficulty::InitiateOccultist => 1.1,
-            Difficulty::AdeptOccultist => 1.1,
-            Difficulty::ExpertOccultist => 1.1,
-            Difficulty::MasterOccultist => 1.1,
-            Difficulty::AdeptGuardian => 1.1,
-            Difficulty::LeadGuardian => 1.1,
-            Difficulty::ExpertGuardian => 1.1,
-            Difficulty::MasterGuardian => 1.1,
+            Difficulty::TutorialChapter1 => 0.9,
+            Difficulty::TutorialChapter2 => 0.9,
+            Difficulty::TutorialChapter3 => 0.9,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 1.0,
+            Difficulty::StandardChallenge => 1.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.1,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.1,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.1,   // Was MasterGuardian
         }
     }
 
@@ -192,22 +156,15 @@ impl Difficulty {
     /// A higher value results in longer hunts.
     pub fn ghost_hunt_duration(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.5,
-            Difficulty::AdeptInvestigator => 0.7,
-            Difficulty::SeniorInvestigator => 0.9,
-            Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.1,
-            Difficulty::LeadSpecialist => 1.15,
-            Difficulty::ExpertSpecialist => 1.2,
-            Difficulty::MasterSpecialist => 1.25,
-            Difficulty::InitiateOccultist => 1.30,
-            Difficulty::AdeptOccultist => 1.35,
-            Difficulty::ExpertOccultist => 1.4,
-            Difficulty::MasterOccultist => 1.5,
-            Difficulty::AdeptGuardian => 1.6,
-            Difficulty::LeadGuardian => 1.7,
-            Difficulty::ExpertGuardian => 1.8,
-            Difficulty::MasterGuardian => 1.9,
+            Difficulty::TutorialChapter1 => 0.5,
+            Difficulty::TutorialChapter2 => 0.7,
+            Difficulty::TutorialChapter3 => 0.9,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 1.1,
+            Difficulty::StandardChallenge => 1.15, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.25,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.4,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.9,    // Was MasterGuardian
         }
     }
 
@@ -216,22 +173,15 @@ impl Difficulty {
     /// A higher value means longer periods of calm between hunts.
     pub fn ghost_hunt_cooldown(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 6.0,
-            Difficulty::AdeptInvestigator => 5.0,
-            Difficulty::SeniorInvestigator => 4.0,
-            Difficulty::ExpertInvestigator => 3.0,
-            Difficulty::AdeptSpecialist => 2.5,
-            Difficulty::LeadSpecialist => 2.0,
-            Difficulty::ExpertSpecialist => 1.5,
-            Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 0.9,
-            Difficulty::AdeptOccultist => 0.8,
-            Difficulty::ExpertOccultist => 0.7,
-            Difficulty::MasterOccultist => 0.6,
-            Difficulty::AdeptGuardian => 0.4,
-            Difficulty::LeadGuardian => 0.2,
-            Difficulty::ExpertGuardian => 0.1,
-            Difficulty::MasterGuardian => 0.05,
+            Difficulty::TutorialChapter1 => 6.0,
+            Difficulty::TutorialChapter2 => 5.0,
+            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter4 => 3.0,
+            Difficulty::TutorialChapter5 => 2.5,
+            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.7,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.05,  // Was MasterGuardian
         }
     }
 
@@ -241,22 +191,15 @@ impl Difficulty {
     /// lower value allows the ghost to roam more freely.
     pub fn ghost_attraction_to_breach(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 10.0,
-            Difficulty::AdeptInvestigator => 8.0,
-            Difficulty::SeniorInvestigator => 5.0,
-            Difficulty::ExpertInvestigator => 3.0,
-            Difficulty::AdeptSpecialist => 1.5,
-            Difficulty::LeadSpecialist => 1.0,
-            Difficulty::ExpertSpecialist => 0.8,
-            Difficulty::MasterSpecialist => 0.7,
-            Difficulty::InitiateOccultist => 0.6,
-            Difficulty::AdeptOccultist => 0.55,
-            Difficulty::ExpertOccultist => 0.5,
-            Difficulty::MasterOccultist => 0.45,
-            Difficulty::AdeptGuardian => 0.4,
-            Difficulty::LeadGuardian => 0.2,
-            Difficulty::ExpertGuardian => 0.1,
-            Difficulty::MasterGuardian => 0.05,
+            Difficulty::TutorialChapter1 => 10.0,
+            Difficulty::TutorialChapter2 => 8.0,
+            Difficulty::TutorialChapter3 => 5.0,
+            Difficulty::TutorialChapter4 => 3.0,
+            Difficulty::TutorialChapter5 => 1.5,
+            Difficulty::StandardChallenge => 1.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.7,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.5,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.05,  // Was MasterGuardian
         }
     }
 
@@ -264,22 +207,15 @@ impl Difficulty {
     /// can provoke a hunt.
     pub fn hunt_provocation_radius(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.5,
-            Difficulty::AdeptInvestigator => 1.6,
-            Difficulty::SeniorInvestigator => 1.7,
-            Difficulty::ExpertInvestigator => 1.8,
-            Difficulty::AdeptSpecialist => 1.9,
-            Difficulty::LeadSpecialist => 2.0,
-            Difficulty::ExpertSpecialist => 2.2,
-            Difficulty::MasterSpecialist => 2.4,
-            Difficulty::InitiateOccultist => 2.6,
-            Difficulty::AdeptOccultist => 2.8,
-            Difficulty::ExpertOccultist => 3.0,
-            Difficulty::MasterOccultist => 3.3,
-            Difficulty::AdeptGuardian => 3.6,
-            Difficulty::LeadGuardian => 3.8,
-            Difficulty::ExpertGuardian => 4.0,
-            Difficulty::MasterGuardian => 5.0,
+            Difficulty::TutorialChapter1 => 1.5,
+            Difficulty::TutorialChapter2 => 1.6,
+            Difficulty::TutorialChapter3 => 1.7,
+            Difficulty::TutorialChapter4 => 1.8,
+            Difficulty::TutorialChapter5 => 1.9,
+            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 2.4,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 3.0,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 5.0,   // Was MasterGuardian
         }
     }
 
@@ -287,22 +223,15 @@ impl Difficulty {
     /// is removed from the location.
     pub fn attractive_removal_anger_rate(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.02,
-            Difficulty::AdeptInvestigator => 0.03,
-            Difficulty::SeniorInvestigator => 0.04,
-            Difficulty::ExpertInvestigator => 0.05,
-            Difficulty::AdeptSpecialist => 0.06,
-            Difficulty::LeadSpecialist => 0.07,
-            Difficulty::ExpertSpecialist => 0.08,
-            Difficulty::MasterSpecialist => 0.09,
-            Difficulty::InitiateOccultist => 0.1,
-            Difficulty::AdeptOccultist => 0.11,
-            Difficulty::ExpertOccultist => 0.12,
-            Difficulty::MasterOccultist => 0.13,
-            Difficulty::AdeptGuardian => 0.14,
-            Difficulty::LeadGuardian => 0.15,
-            Difficulty::ExpertGuardian => 0.16,
-            Difficulty::MasterGuardian => 0.2,
+            Difficulty::TutorialChapter1 => 0.02,
+            Difficulty::TutorialChapter2 => 0.03,
+            Difficulty::TutorialChapter3 => 0.04,
+            Difficulty::TutorialChapter4 => 0.05,
+            Difficulty::TutorialChapter5 => 0.06,
+            Difficulty::StandardChallenge => 0.07, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.09,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.12,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.2,    // Was MasterGuardian
         }
     }
 
@@ -310,22 +239,15 @@ impl Difficulty {
     /// Returns the base ambient temperature of the location.
     pub fn ambient_temperature(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => celsius_to_kelvin(19.0),
-            Difficulty::AdeptInvestigator => celsius_to_kelvin(18.5),
-            Difficulty::SeniorInvestigator => celsius_to_kelvin(18.0),
-            Difficulty::ExpertInvestigator => celsius_to_kelvin(17.0),
-            Difficulty::AdeptSpecialist => celsius_to_kelvin(16.0),
-            Difficulty::LeadSpecialist => celsius_to_kelvin(15.0),
-            Difficulty::ExpertSpecialist => celsius_to_kelvin(14.0),
-            Difficulty::MasterSpecialist => celsius_to_kelvin(13.0),
-            Difficulty::InitiateOccultist => celsius_to_kelvin(12.0),
-            Difficulty::AdeptOccultist => celsius_to_kelvin(11.0),
-            Difficulty::ExpertOccultist => celsius_to_kelvin(10.0),
-            Difficulty::MasterOccultist => celsius_to_kelvin(9.0),
-            Difficulty::AdeptGuardian => celsius_to_kelvin(8.0),
-            Difficulty::LeadGuardian => celsius_to_kelvin(7.5),
-            Difficulty::ExpertGuardian => celsius_to_kelvin(7.0),
-            Difficulty::MasterGuardian => celsius_to_kelvin(6.0),
+            Difficulty::TutorialChapter1 => celsius_to_kelvin(19.0),
+            Difficulty::TutorialChapter2 => celsius_to_kelvin(18.5),
+            Difficulty::TutorialChapter3 => celsius_to_kelvin(18.0),
+            Difficulty::TutorialChapter4 => celsius_to_kelvin(17.0),
+            Difficulty::TutorialChapter5 => celsius_to_kelvin(16.0),
+            Difficulty::StandardChallenge => celsius_to_kelvin(15.0), // Was LeadSpecialist
+            Difficulty::HardChallenge => celsius_to_kelvin(13.0),     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => celsius_to_kelvin(10.0),   // Was ExpertOccultist
+            Difficulty::MasterChallenge => celsius_to_kelvin(6.0),    // Was MasterGuardian
         }
     }
 
@@ -333,22 +255,15 @@ impl Difficulty {
     /// the environment.
     pub fn temperature_spread_speed(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 3.0,
-            Difficulty::AdeptInvestigator => 2.8,
-            Difficulty::SeniorInvestigator => 2.5,
-            Difficulty::ExpertInvestigator => 2.3,
-            Difficulty::AdeptSpecialist => 2.0,
-            Difficulty::LeadSpecialist => 1.5,
-            Difficulty::ExpertSpecialist => 1.2,
-            Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 1.0,
-            Difficulty::AdeptOccultist => 0.95,
-            Difficulty::ExpertOccultist => 0.9,
-            Difficulty::MasterOccultist => 0.85,
-            Difficulty::AdeptGuardian => 0.8,
-            Difficulty::LeadGuardian => 0.75,
-            Difficulty::ExpertGuardian => 0.7,
-            Difficulty::MasterGuardian => 0.65,
+            Difficulty::TutorialChapter1 => 3.0,
+            Difficulty::TutorialChapter2 => 2.8,
+            Difficulty::TutorialChapter3 => 2.5,
+            Difficulty::TutorialChapter4 => 2.3,
+            Difficulty::TutorialChapter5 => 2.0,
+            Difficulty::StandardChallenge => 1.5, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.9,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.65,  // Was MasterGuardian
         }
     }
 
@@ -357,22 +272,15 @@ impl Difficulty {
     /// A higher value means lights emit more heat.
     pub fn light_heat(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.1,
-            Difficulty::AdeptInvestigator => 0.2,
-            Difficulty::SeniorInvestigator => 0.3,
-            Difficulty::ExpertInvestigator => 0.4,
-            Difficulty::AdeptSpecialist => 0.6,
-            Difficulty::LeadSpecialist => 0.8,
-            Difficulty::ExpertSpecialist => 1.0,
-            Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 1.1,
-            Difficulty::AdeptOccultist => 1.1,
-            Difficulty::ExpertOccultist => 1.2,
-            Difficulty::MasterOccultist => 1.2,
-            Difficulty::AdeptGuardian => 1.3,
-            Difficulty::LeadGuardian => 1.3,
-            Difficulty::ExpertGuardian => 1.3,
-            Difficulty::MasterGuardian => 1.4,
+            Difficulty::TutorialChapter1 => 0.1,
+            Difficulty::TutorialChapter2 => 0.2,
+            Difficulty::TutorialChapter3 => 0.3,
+            Difficulty::TutorialChapter4 => 0.4,
+            Difficulty::TutorialChapter5 => 0.6,
+            Difficulty::StandardChallenge => 0.8, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.2,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.4,   // Was MasterGuardian
         }
     }
 
@@ -382,22 +290,15 @@ impl Difficulty {
     /// in a darker environment overall.
     pub fn darkness_intensity(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.6,
-            Difficulty::AdeptInvestigator => 0.65,
-            Difficulty::SeniorInvestigator => 0.7,
-            Difficulty::ExpertInvestigator => 0.75,
-            Difficulty::AdeptSpecialist => 0.9,
-            Difficulty::LeadSpecialist => 1.00,
-            Difficulty::ExpertSpecialist => 1.1,
-            Difficulty::MasterSpecialist => 1.15,
-            Difficulty::InitiateOccultist => 1.2,
-            Difficulty::AdeptOccultist => 1.25,
-            Difficulty::ExpertOccultist => 1.3,
-            Difficulty::MasterOccultist => 1.35,
-            Difficulty::AdeptGuardian => 1.4,
-            Difficulty::LeadGuardian => 1.45,
-            Difficulty::ExpertGuardian => 1.5,
-            Difficulty::MasterGuardian => 1.6,
+            Difficulty::TutorialChapter1 => 0.6,
+            Difficulty::TutorialChapter2 => 0.65,
+            Difficulty::TutorialChapter3 => 0.7,
+            Difficulty::TutorialChapter4 => 0.75,
+            Difficulty::TutorialChapter5 => 0.9,
+            Difficulty::StandardChallenge => 1.00, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.15,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.3,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.6,    // Was MasterGuardian
         }
     }
 
@@ -407,22 +308,15 @@ impl Difficulty {
     /// highlighting details but creating a less atmospheric look.
     pub fn environment_gamma(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 2.5,
-            Difficulty::AdeptInvestigator => 2.4,
-            Difficulty::SeniorInvestigator => 2.3,
-            Difficulty::ExpertInvestigator => 2.2,
-            Difficulty::AdeptSpecialist => 2.0,
-            Difficulty::LeadSpecialist => 1.7,
-            Difficulty::ExpertSpecialist => 1.4,
-            Difficulty::MasterSpecialist => 1.1,
-            Difficulty::InitiateOccultist => 1.1,
-            Difficulty::AdeptOccultist => 1.1,
-            Difficulty::ExpertOccultist => 1.1,
-            Difficulty::MasterOccultist => 1.0,
-            Difficulty::AdeptGuardian => 0.9,
-            Difficulty::LeadGuardian => 0.8,
-            Difficulty::ExpertGuardian => 0.7,
-            Difficulty::MasterGuardian => 0.6,
+            Difficulty::TutorialChapter1 => 2.5,
+            Difficulty::TutorialChapter2 => 2.4,
+            Difficulty::TutorialChapter3 => 2.3,
+            Difficulty::TutorialChapter4 => 2.2,
+            Difficulty::TutorialChapter5 => 2.0,
+            Difficulty::StandardChallenge => 1.7, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.1,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.1, // Was ExpertOccultist (Kept from old ExpertOccultist)
+            Difficulty::MasterChallenge => 0.6, // Was MasterGuardian
         }
     }
 
@@ -430,22 +324,15 @@ impl Difficulty {
     /// Returns the player's starting sanity level.
     pub fn max_recoverable_sanity(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 100.0,
-            Difficulty::AdeptInvestigator => 100.0,
-            Difficulty::SeniorInvestigator => 100.0,
-            Difficulty::ExpertInvestigator => 100.0,
-            Difficulty::AdeptSpecialist => 100.0,
-            Difficulty::LeadSpecialist => 100.0,
-            Difficulty::ExpertSpecialist => 100.0,
-            Difficulty::MasterSpecialist => 100.0,
-            Difficulty::InitiateOccultist => 90.0,
-            Difficulty::AdeptOccultist => 80.0,
-            Difficulty::ExpertOccultist => 70.0,
-            Difficulty::MasterOccultist => 60.0,
-            Difficulty::AdeptGuardian => 60.0,
-            Difficulty::LeadGuardian => 60.0,
-            Difficulty::ExpertGuardian => 60.0,
-            Difficulty::MasterGuardian => 60.0,
+            Difficulty::TutorialChapter1 => 100.0,
+            Difficulty::TutorialChapter2 => 100.0,
+            Difficulty::TutorialChapter3 => 100.0,
+            Difficulty::TutorialChapter4 => 100.0,
+            Difficulty::TutorialChapter5 => 100.0,
+            Difficulty::StandardChallenge => 100.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 100.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 70.0,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 60.0,    // Was MasterGuardian
         }
     }
 
@@ -454,22 +341,15 @@ impl Difficulty {
     /// A higher value results in faster sanity loss for the player.
     pub fn sanity_drain_rate(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.1,
-            Difficulty::AdeptInvestigator => 0.5,
-            Difficulty::SeniorInvestigator => 0.7,
-            Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.5,
-            Difficulty::LeadSpecialist => 2.0,
-            Difficulty::ExpertSpecialist => 3.0,
-            Difficulty::MasterSpecialist => 4.0,
-            Difficulty::InitiateOccultist => 6.0,
-            Difficulty::AdeptOccultist => 8.0,
-            Difficulty::ExpertOccultist => 10.0,
-            Difficulty::MasterOccultist => 15.0,
-            Difficulty::AdeptGuardian => 20.0,
-            Difficulty::LeadGuardian => 30.0,
-            Difficulty::ExpertGuardian => 50.0,
-            Difficulty::MasterGuardian => 100.0,
+            Difficulty::TutorialChapter1 => 0.1,
+            Difficulty::TutorialChapter2 => 0.5,
+            Difficulty::TutorialChapter3 => 0.7,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 1.5,
+            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 4.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 10.0,  // Was ExpertOccultist
+            Difficulty::MasterChallenge => 100.0, // Was MasterGuardian
         }
     }
 
@@ -478,22 +358,15 @@ impl Difficulty {
     /// A higher value means the player loses health more quickly during hunts.
     pub fn health_drain_rate(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 0.4,
-            Difficulty::AdeptInvestigator => 0.7,
-            Difficulty::SeniorInvestigator => 0.9,
-            Difficulty::ExpertInvestigator => 1.0,
-            Difficulty::AdeptSpecialist => 1.05,
-            Difficulty::LeadSpecialist => 1.10,
-            Difficulty::ExpertSpecialist => 1.15,
-            Difficulty::MasterSpecialist => 1.20,
-            Difficulty::InitiateOccultist => 1.25,
-            Difficulty::AdeptOccultist => 1.30,
-            Difficulty::ExpertOccultist => 1.35,
-            Difficulty::MasterOccultist => 1.40,
-            Difficulty::AdeptGuardian => 1.45,
-            Difficulty::LeadGuardian => 1.5,
-            Difficulty::ExpertGuardian => 1.55,
-            Difficulty::MasterGuardian => 1.6,
+            Difficulty::TutorialChapter1 => 0.4,
+            Difficulty::TutorialChapter2 => 0.7,
+            Difficulty::TutorialChapter3 => 0.9,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 1.05,
+            Difficulty::StandardChallenge => 1.10, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.20,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.35,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.6,    // Was MasterGuardian
         }
     }
 
@@ -502,44 +375,30 @@ impl Difficulty {
     /// A higher value means the player regains health more quickly.
     pub fn health_recovery_rate(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.2,
-            Difficulty::AdeptInvestigator => 1.1,
-            Difficulty::SeniorInvestigator => 1.0,
-            Difficulty::ExpertInvestigator => 0.95,
-            Difficulty::AdeptSpecialist => 0.9,
-            Difficulty::LeadSpecialist => 0.85,
-            Difficulty::ExpertSpecialist => 0.8,
-            Difficulty::MasterSpecialist => 0.75,
-            Difficulty::InitiateOccultist => 0.7,
-            Difficulty::AdeptOccultist => 0.65,
-            Difficulty::ExpertOccultist => 0.6,
-            Difficulty::MasterOccultist => 0.55,
-            Difficulty::AdeptGuardian => 0.5,
-            Difficulty::LeadGuardian => 0.45,
-            Difficulty::ExpertGuardian => 0.4,
-            Difficulty::MasterGuardian => 0.3,
+            Difficulty::TutorialChapter1 => 1.2,
+            Difficulty::TutorialChapter2 => 1.1,
+            Difficulty::TutorialChapter3 => 1.0,
+            Difficulty::TutorialChapter4 => 0.95,
+            Difficulty::TutorialChapter5 => 0.9,
+            Difficulty::StandardChallenge => 0.85, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.75,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.6,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.3,    // Was MasterGuardian
         }
     }
 
     /// Returns the player's movement speed multiplier.
     pub fn player_speed(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.3,
-            Difficulty::AdeptInvestigator => 1.25,
-            Difficulty::SeniorInvestigator => 1.20,
-            Difficulty::ExpertInvestigator => 1.15,
-            Difficulty::AdeptSpecialist => 1.1,
-            Difficulty::LeadSpecialist => 1.05,
-            Difficulty::ExpertSpecialist => 1.02,
-            Difficulty::MasterSpecialist => 1.0,
-            Difficulty::InitiateOccultist => 1.0,
-            Difficulty::AdeptOccultist => 1.0,
-            Difficulty::ExpertOccultist => 1.0,
-            Difficulty::MasterOccultist => 1.0,
-            Difficulty::AdeptGuardian => 1.0,
-            Difficulty::LeadGuardian => 1.0,
-            Difficulty::ExpertGuardian => 1.0,
-            Difficulty::MasterGuardian => 1.0,
+            Difficulty::TutorialChapter1 => 1.3,
+            Difficulty::TutorialChapter2 => 1.25,
+            Difficulty::TutorialChapter3 => 1.20,
+            Difficulty::TutorialChapter4 => 1.15,
+            Difficulty::TutorialChapter5 => 1.1,
+            Difficulty::StandardChallenge => 1.05, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.0,      // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.0,    // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.0,    // Was MasterGuardian
         }
     }
 
@@ -549,22 +408,15 @@ impl Difficulty {
     /// A higher value makes evidence more visible or noticeable.
     pub fn evidence_visibility(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.9,
-            Difficulty::AdeptInvestigator => 1.7,
-            Difficulty::SeniorInvestigator => 1.5,
-            Difficulty::ExpertInvestigator => 1.2,
-            Difficulty::AdeptSpecialist => 1.0,
-            Difficulty::LeadSpecialist => 0.9,
-            Difficulty::ExpertSpecialist => 0.8,
-            Difficulty::MasterSpecialist => 0.7,
-            Difficulty::InitiateOccultist => 0.6,
-            Difficulty::AdeptOccultist => 0.55,
-            Difficulty::ExpertOccultist => 0.5,
-            Difficulty::MasterOccultist => 0.5,
-            Difficulty::AdeptGuardian => 0.5,
-            Difficulty::LeadGuardian => 0.5,
-            Difficulty::ExpertGuardian => 0.5,
-            Difficulty::MasterGuardian => 0.5,
+            Difficulty::TutorialChapter1 => 1.9,
+            Difficulty::TutorialChapter2 => 1.7,
+            Difficulty::TutorialChapter3 => 1.5,
+            Difficulty::TutorialChapter4 => 1.2,
+            Difficulty::TutorialChapter5 => 1.0,
+            Difficulty::StandardChallenge => 0.9, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.7,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.5,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.5,   // Was MasterGuardian
         }
     }
 
@@ -573,22 +425,15 @@ impl Difficulty {
     /// A higher value makes the equipment more responsive to paranormal activity.
     pub fn equipment_sensitivity(&self) -> f32 {
         match self {
-            Difficulty::NoviceInvestigator => 1.3,
-            Difficulty::AdeptInvestigator => 1.2,
-            Difficulty::SeniorInvestigator => 1.1,
-            Difficulty::ExpertInvestigator => 1.05,
-            Difficulty::AdeptSpecialist => 1.0,
-            Difficulty::LeadSpecialist => 0.95,
-            Difficulty::ExpertSpecialist => 0.9,
-            Difficulty::MasterSpecialist => 0.85,
-            Difficulty::InitiateOccultist => 0.82,
-            Difficulty::AdeptOccultist => 0.8,
-            Difficulty::ExpertOccultist => 0.78,
-            Difficulty::MasterOccultist => 0.75,
-            Difficulty::AdeptGuardian => 0.73,
-            Difficulty::LeadGuardian => 0.7,
-            Difficulty::ExpertGuardian => 0.68,
-            Difficulty::MasterGuardian => 0.65,
+            Difficulty::TutorialChapter1 => 1.3,
+            Difficulty::TutorialChapter2 => 1.2,
+            Difficulty::TutorialChapter3 => 1.1,
+            Difficulty::TutorialChapter4 => 1.05,
+            Difficulty::TutorialChapter5 => 1.0,
+            Difficulty::StandardChallenge => 0.95, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.85,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.78,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 0.65,   // Was MasterGuardian
         }
     }
 
@@ -598,26 +443,26 @@ impl Difficulty {
     pub fn van_auto_open(&self) -> bool {
         !matches!(
             self,
-            Difficulty::NoviceInvestigator | Difficulty::AdeptInvestigator
+            Difficulty::TutorialChapter1 | Difficulty::TutorialChapter2
         )
     }
 
     /// Returns the default tab selected in the van UI.
     pub fn default_van_tab(&self) -> TabContents {
         match self {
-            Difficulty::NoviceInvestigator | Difficulty::AdeptInvestigator => TabContents::Journal,
+            Difficulty::TutorialChapter1 | Difficulty::TutorialChapter2 => TabContents::Journal,
             _ => TabContents::Loadout,
         }
     }
 
     pub fn player_gear(&self) -> PlayerGearKind {
         match self {
-            Difficulty::NoviceInvestigator => PlayerGearKind {
+            Difficulty::TutorialChapter1 => PlayerGearKind {
                 left_hand: GearKind::Flashlight,
                 right_hand: GearKind::Thermometer,
                 inventory: vec![GearKind::EMFMeter, GearKind::None],
             },
-            Difficulty::AdeptInvestigator => PlayerGearKind {
+            Difficulty::TutorialChapter2 => PlayerGearKind {
                 left_hand: GearKind::Videocam,
                 right_hand: GearKind::UVTorch,
                 inventory: vec![GearKind::Thermometer, GearKind::EMFMeter],
@@ -632,57 +477,51 @@ impl Difficulty {
 
     pub fn ghost_set(&self) -> GhostSet {
         match self {
-            Difficulty::NoviceInvestigator => GhostSet::TmpEMF,
-            Difficulty::AdeptInvestigator => GhostSet::TmpEMFUVOrbs,
-            Difficulty::SeniorInvestigator => GhostSet::TmpEMFUVOrbsEVPCPM,
-            Difficulty::ExpertInvestigator => GhostSet::Twenty,
-            _ => GhostSet::All,
+            Difficulty::TutorialChapter1 => GhostSet::TmpEMF,
+            Difficulty::TutorialChapter2 => GhostSet::TmpEMFUVOrbs,
+            Difficulty::TutorialChapter3 => GhostSet::TmpEMFUVOrbsEVPCPM,
+            Difficulty::TutorialChapter4 => GhostSet::Twenty,
+            _ => GhostSet::All, // TutorialChapter5 and all Challenges use all ghosts
         }
     }
 
     pub fn truck_gear(&self) -> Vec<GearKind> {
         use crate::types::gear_kind::GearKind::*;
-
         let mut gear = Vec::new();
 
         match self {
-            Difficulty::NoviceInvestigator => {
+            Difficulty::TutorialChapter1 => {
                 gear.push(Flashlight);
                 gear.push(Thermometer);
                 gear.push(EMFMeter);
             }
-            Difficulty::AdeptInvestigator => {
-                gear.extend(Self::NoviceInvestigator.truck_gear());
+            Difficulty::TutorialChapter2 => {
+                gear.extend(Self::TutorialChapter1.truck_gear());
                 gear.push(UVTorch);
                 gear.push(Videocam);
             }
-            Difficulty::SeniorInvestigator => {
-                gear.extend(Self::AdeptInvestigator.truck_gear());
+            Difficulty::TutorialChapter3 => {
+                gear.extend(Self::TutorialChapter2.truck_gear());
                 gear.push(Recorder);
                 gear.push(GeigerCounter);
             }
-            Difficulty::ExpertInvestigator => {
-                gear.extend(Self::SeniorInvestigator.truck_gear());
+            Difficulty::TutorialChapter4 => {
+                gear.extend(Self::TutorialChapter3.truck_gear());
                 gear.push(SpiritBox);
                 gear.push(RedTorch);
             }
-            Difficulty::AdeptSpecialist => {
-                gear.extend(Self::ExpertInvestigator.truck_gear());
+            Difficulty::TutorialChapter5 => {
+                gear.extend(Self::TutorialChapter4.truck_gear());
                 gear.push(Salt);
                 gear.push(QuartzStone);
                 gear.push(SageBundle);
             }
-            Difficulty::LeadSpecialist => {
-                gear.extend(Self::AdeptSpecialist.truck_gear());
-            }
-            Difficulty::ExpertSpecialist => {
-                gear.extend(Self::LeadSpecialist.truck_gear());
-            }
-            Difficulty::MasterSpecialist => {
-                gear.extend(Self::ExpertSpecialist.truck_gear());
-            }
-            _ => {
-                gear = Self::MasterSpecialist.truck_gear();
+            // For StandardChallenge and above, they get all gear from TutorialChapter5
+            Difficulty::StandardChallenge
+            | Difficulty::HardChallenge
+            | Difficulty::ExpertChallenge
+            | Difficulty::MasterChallenge => {
+                gear = Self::TutorialChapter5.truck_gear();
             }
         }
 
@@ -690,7 +529,6 @@ impl Difficulty {
         const ENABLE_INCOMPLETE: bool = false;
         if ENABLE_INCOMPLETE {
             let mut incomplete: Vec<GearKind> = vec![
-                // Incomplete equipment:
                 IonMeter,
                 ThermalImager,
                 Photocam,
@@ -700,7 +538,6 @@ impl Difficulty {
             ];
             gear.append(&mut incomplete);
         }
-
         gear
     }
 
@@ -708,133 +545,46 @@ impl Difficulty {
     /// Returns the display name for the difficulty level.
     pub fn difficulty_name(&self) -> &'static str {
         match self {
-            Difficulty::NoviceInvestigator => "New Hire Investigator",
-            Difficulty::AdeptInvestigator => "Intern Investigator",
-            Difficulty::SeniorInvestigator => "Apprentice Investigator",
-            Difficulty::ExpertInvestigator => "Junior Investigator",
-            Difficulty::AdeptSpecialist => "Associate Investigator",
-            Difficulty::LeadSpecialist => "Staff Investigator",
-            Difficulty::ExpertSpecialist => "Expert Specialist",
-            Difficulty::MasterSpecialist => "Senior Specialist",
-            Difficulty::InitiateOccultist => "Initiate Occultist",
-            Difficulty::AdeptOccultist => "Adept Occultist",
-            Difficulty::ExpertOccultist => "Initiate Occultist",
-            Difficulty::MasterOccultist => "Initiate Occultist",
-            Difficulty::AdeptGuardian => "Adept Guardian",
-            Difficulty::LeadGuardian => "Expert Occultist",
-            Difficulty::ExpertGuardian => "Expert Guardian",
-            Difficulty::MasterGuardian => "Master of the Paranormal",
+            Difficulty::TutorialChapter1 => "Tutorial: Chapter 1",
+            Difficulty::TutorialChapter2 => "Tutorial: Chapter 2",
+            Difficulty::TutorialChapter3 => "Tutorial: Chapter 3",
+            Difficulty::TutorialChapter4 => "Tutorial: Chapter 4",
+            Difficulty::TutorialChapter5 => "Tutorial: Chapter 5",
+            Difficulty::StandardChallenge => "Standard Challenge",
+            Difficulty::HardChallenge => "Hard Challenge",
+            Difficulty::ExpertChallenge => "Expert Challenge",
+            Difficulty::MasterChallenge => "Master Challenge",
         }
     }
 
     pub fn difficulty_description(&self) -> &'static str {
         match self {
-            Difficulty::NoviceInvestigator => {
-                "
-For those new to the paranormal.
-Friendly ghosts and minimal risks.
-Start with essential tools: Flashlight, Thermometer, and EMF Reader.
-Learn the basics of ghost hunting with simple evidence types.
-(2/44 Ghosts)"
+            Difficulty::TutorialChapter1 => {
+                "Basics of investigation. Learn to use essential tools: Flashlight, Thermometer, and EMF Reader. Identify simple ghosts. Ideal for new players starting the campaign."
             }
-            Difficulty::AdeptInvestigator => {
-                "
-You've handled your first cases.
-Still friendly ghosts with low risk.
-Add UV Torch and Video Camera to your toolkit.
-Learn to spot UV traces and visual evidence.
-(3/44 Ghosts)"
+            Difficulty::TutorialChapter2 => {
+                "Continue your training. Add UV Torch and Video Camera to your toolkit. Learn to spot UV traces and visual evidence."
             }
-            Difficulty::SeniorInvestigator => {
-                "
-You're becoming familiar with the unseen.
-Access to Voice Recorder and Geiger Counter.
-Time to face a wider variety of ghosts and gather more complex evidence.
-(9/44 Ghosts)"
+            Difficulty::TutorialChapter3 => {
+                "Advanced tools introduced: Voice Recorder and Geiger Counter. Face a wider variety of ghosts and gather more complex evidence."
             }
-            Difficulty::ExpertInvestigator => {
-                "
-Your mind is strong, but the darkness lingers.
-Full basic equipment including Spirit Box and Red Torch.
-Delve deeper into communication with the other side.
-(22/44 Ghosts)"
+            Difficulty::TutorialChapter4 => {
+                "Further expand your arsenal with the SpiritBox and Red Torch. Delve deeper into communication with the other side and object interactions."
             }
-            Difficulty::AdeptSpecialist => {
-                "
-The veil thins, and the dangers increase.
-Access to advanced tools: Salt, Quartz Stone, and Sage Bundle.
-Learn to protect yourself and manipulate ghost behavior.
-(All 44 Ghosts)"
+            Difficulty::TutorialChapter5 => {
+                "Master protective and manipulative tools: Salt, Quartz Stone, and Sage Bundle. Handle more dangerous paranormal threats."
             }
-            Difficulty::LeadSpecialist => {
-                "
-Your senses are tested, shadows play tricks.
-Access to all standard equipment.
-The unseen becomes harder to perceive, testing your skills with familiar tools.
-(All 44 Ghosts)"
+            Difficulty::StandardChallenge => {
+                "A balanced investigation experience. Ghosts are moderately active and challenging. All gear and ghost types available."
             }
-            Difficulty::ExpertSpecialist => {
-                "
-The line blurs between the real and the spectral.
-Ghostly apparitions become more vivid, blurring the lines between sanity and madness.
-(All 44 Ghosts)"
+            Difficulty::HardChallenge => {
+                "For seasoned investigators. Ghosts are more aggressive, evidence can be trickier, and your resources might feel strained."
             }
-            Difficulty::MasterSpecialist => {
-                "
-You walk a tightrope between worlds.
-The spirit realm intrudes upon reality, challenging your perception and your resolve.
-(All 44 Ghosts)"
+            Difficulty::ExpertChallenge => {
+                "A true test of skill. Ghosts are highly dangerous, sanity drains quickly, and the environment itself can be hostile."
             }
-            Difficulty::InitiateOccultist => {
-                "
-The whispers of the ancients call to you.
-You arrive with a touch of madness, embracing the unknown.
-Sanity drains faster, the unseen beckons.
-(All 44 Ghosts)"
-            }
-            Difficulty::AdeptOccultist => {
-                "
-Ancient knowledge grants power, but at a cost.
-You start with a significant sanity deficit.
-Tread carefully, for the abyss gazes also into you.
-(All 44 Ghosts)"
-            }
-            Difficulty::ExpertOccultist => {
-                "
-The whispers become screams, sanity teeters on the edge.
-You begin deeply affected by the spirit world.
-Only the most experienced should venture here.
-(All 44 Ghosts)"
-            }
-            Difficulty::MasterOccultist => {
-                "
-Embrace the madness, for it holds the key.
-Your sanity is a fragile thread, but your understanding of the paranormal is unmatched.
-(All 44 Ghosts)"
-            }
-            Difficulty::AdeptGuardian => {
-                "
-You stand as a shield against the darkness, but it takes its toll.
-Face relentless attacks, but your equipment is more attuned to the unseen.
-(All 44 Ghosts)"
-            }
-            Difficulty::LeadGuardian => {
-                "
-The spirits sense your strength and respond in kind.
-Prepare for intense confrontations, for your presence draws them out.
-(All 44 Ghosts)"
-            }
-            Difficulty::ExpertGuardian => {
-                "
-Your spirit shines brightly, a beacon in the night.
-The darkness seeks to extinguish your light, but your determination is unyielding.
-(All 44 Ghosts)"
-            }
-            Difficulty::MasterGuardian => {
-                "
-You are a master of both worlds, walking the path between.
-Face the ultimate challenges, for the fate of reality rests in your hands.
-(All 44 Ghosts)"
+            Difficulty::MasterChallenge => {
+                "Only for the most fearless and experienced. Expect relentless paranormal activity, extreme conditions, and a fight for survival."
             }
         }
     }
@@ -846,32 +596,25 @@ Face the ultimate challenges, for the fate of reality rests in your hands.
     /// difficulties.
     pub fn difficulty_score_multiplier(&self) -> f64 {
         match self {
-            Difficulty::NoviceInvestigator => 1.0,
-            Difficulty::AdeptInvestigator => 1.2,
-            Difficulty::SeniorInvestigator => 1.5,
-            Difficulty::ExpertInvestigator => 1.8,
-            Difficulty::AdeptSpecialist => 2.1,
-            Difficulty::LeadSpecialist => 2.4,
-            Difficulty::ExpertSpecialist => 2.7,
-            Difficulty::MasterSpecialist => 3.0,
-            Difficulty::InitiateOccultist => 3.3,
-            Difficulty::AdeptOccultist => 3.6,
-            Difficulty::ExpertOccultist => 3.9,
-            Difficulty::MasterOccultist => 4.2,
-            Difficulty::AdeptGuardian => 4.5,
-            Difficulty::LeadGuardian => 4.8,
-            Difficulty::ExpertGuardian => 5.1,
-            Difficulty::MasterGuardian => 6.0,
+            Difficulty::TutorialChapter1 => 1.0,
+            Difficulty::TutorialChapter2 => 1.2,
+            Difficulty::TutorialChapter3 => 1.5,
+            Difficulty::TutorialChapter4 => 1.8,
+            Difficulty::TutorialChapter5 => 2.1,
+            Difficulty::StandardChallenge => 2.4, // Was LeadSpecialist
+            Difficulty::HardChallenge => 3.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 3.9,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 6.0,   // Was MasterGuardian
         }
     }
 
     pub fn tutorial_chapter(&self) -> Option<ManualChapterIndex> {
         match self {
-            Difficulty::NoviceInvestigator => Some(ManualChapterIndex::Chapter1),
-            Difficulty::AdeptInvestigator => Some(ManualChapterIndex::Chapter2),
-            Difficulty::SeniorInvestigator => Some(ManualChapterIndex::Chapter3),
-            Difficulty::ExpertInvestigator => Some(ManualChapterIndex::Chapter4),
-            Difficulty::AdeptSpecialist => Some(ManualChapterIndex::Chapter5),
+            Difficulty::TutorialChapter1 => Some(ManualChapterIndex::Chapter1),
+            Difficulty::TutorialChapter2 => Some(ManualChapterIndex::Chapter2),
+            Difficulty::TutorialChapter3 => Some(ManualChapterIndex::Chapter3),
+            Difficulty::TutorialChapter4 => Some(ManualChapterIndex::Chapter4),
+            Difficulty::TutorialChapter5 => Some(ManualChapterIndex::Chapter5),
             _ => None,
         }
     }

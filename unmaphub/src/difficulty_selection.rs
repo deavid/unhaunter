@@ -3,7 +3,7 @@ use bevy::utils::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::loadlevel::LoadLevelEvent;
-use uncore::events::map_selected::MapSelectedEvent; // Add this import
+use uncore::events::map_selected::MapSelectedEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::difficulty_state::DifficultySelectionState;
 use uncore::resources::maps::Maps;
@@ -51,15 +51,30 @@ pub fn setup_systems(
     handles: Res<GameAssets>,
     mut map_selected_events: EventReader<MapSelectedEvent>,
 ) {
-    setup_ui(&mut commands, &handles);
-    let default_difficulty = Difficulty::all().next().unwrap_or_default();
+    // Filter for non-tutorial difficulties to display
+    let available_difficulties: Vec<Difficulty> = Difficulty::all()
+        .filter(|d| !d.is_tutorial_difficulty())
+        .collect();
+
+    setup_ui(&mut commands, &handles, &available_difficulties);
+
+    // Default to the first *non-tutorial* difficulty, or a sensible fallback
+    let default_difficulty = available_difficulties
+        .first()
+        .copied()
+        .unwrap_or_else(|| {
+            // Fallback if no non-tutorial difficulties are enabled for some reason
+            // This shouldn't happen if is_enabled() is set up correctly
+            warn!("No non-tutorial difficulties found for Custom Mission. Defaulting to StandardChallenge.");
+            Difficulty::StandardChallenge
+        });
 
     // Get the selected map index from the most recent MapSelectedEvent
     let selected_map_idx = map_selected_events
         .read()
         .last()
         .map(|event| event.map_idx)
-        .unwrap_or(0); // Default to 0 if no event is found
+        .unwrap_or(0);
 
     commands.insert_resource(DifficultySelectionState {
         selected_difficulty: default_difficulty,
@@ -69,7 +84,6 @@ pub fn setup_systems(
 }
 
 /// Cleans up the difficulty selection screen UI
-/// Note: DifficultySelectionState is kept as map_selection needs selected_map_idx
 pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<DifficultySelectionUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
@@ -77,8 +91,6 @@ pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<Difficul
 }
 
 /// Handles clicks on difficulty options and the "Go Back" button
-/// - On difficulty selection: Sets the global difficulty and loads the level or manual
-/// - On "Go Back": Returns to map selection
 pub fn handle_difficulty_click(
     mut ev_menu_clicks: EventReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
@@ -89,7 +101,6 @@ pub fn handle_difficulty_click(
     mut next_app_state: ResMut<NextState<AppState>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
 ) {
-    // Grace period to prevent accidental clicks
     if difficulty_selection_state
         .state_entered_at
         .elapsed()
@@ -100,26 +111,37 @@ pub fn handle_difficulty_click(
         return;
     }
 
+    // Get the list of non-tutorial difficulties actually displayed in the UI
+    let displayed_difficulties: Vec<Difficulty> = Difficulty::all()
+        .filter(|d| !d.is_tutorial_difficulty())
+        .collect();
+
     for ev in ev_menu_clicks.read() {
-        let total_difficulties = Difficulty::all().count();
+        let total_displayed_difficulties = displayed_difficulties.len();
 
         if let Some((item_data, _)) = q_items
             .iter()
             .find(|(_, interactive)| interactive.identifier == ev.0)
         {
-            difficulty_resource.0 = item_data.difficulty.create_difficulty_struct();
+            // Ensure the clicked item is a non-tutorial difficulty
+            if !item_data.difficulty.is_tutorial_difficulty() {
+                difficulty_resource.0 = item_data.difficulty.create_difficulty_struct();
 
-            start_preplay_manual_or_load(
-                &difficulty_resource.0,
-                &mut next_app_state,
-                &difficulty_selection_state,
-                &maps,
-                &mut ev_load_level,
-            );
-
-            next_hub_state.set(MapHubState::None);
+                // For "Custom Mission", we always load the level directly, no pre-play manual.
+                let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
+                    .path
+                    .clone();
+                ev_load_level.send(LoadLevelEvent { map_filepath });
+                next_app_state.set(AppState::Loading);
+                next_hub_state.set(MapHubState::None);
+            } else {
+                warn!(
+                    "Clicked on a tutorial difficulty in Custom Mission mode. This should not happen."
+                );
+            }
             break;
-        } else if ev.0 == total_difficulties {
+        } else if ev.0 == total_displayed_difficulties {
+            // This is the "Go Back" item
             next_hub_state.set(MapHubState::MapSelection);
             break;
         }
@@ -127,7 +149,6 @@ pub fn handle_difficulty_click(
 }
 
 /// Updates the description text when a different difficulty is selected
-/// Must preserve state between difficulty hovers to fix description not updating
 pub fn update_difficulty_description(
     mut ev_menu_selection: EventReader<MenuItemSelected>,
     mut difficulty_selection_state: ResMut<DifficultySelectionState>,
@@ -144,35 +165,44 @@ pub fn update_difficulty_description(
         return;
     }
 
+    // Get the list of non-tutorial difficulties actually displayed in the UI
+    let displayed_difficulties: Vec<Difficulty> = Difficulty::all()
+        .filter(|d| !d.is_tutorial_difficulty())
+        .collect();
+
     for ev in ev_menu_selection.read() {
-        let total_difficulties = Difficulty::all().count();
+        let total_displayed_difficulties = displayed_difficulties.len();
 
         if let Ok((mut text, mut text_color)) = q_desc_text.get_single_mut() {
-            if ev.0 == total_difficulties {
-                // "Go Back" item selected
-                text.0 = "Select a difficulty...".to_string();
+            if ev.0 == total_displayed_difficulties {
+                text.0 = "Select a challenge level for your custom mission.".to_string();
                 text_color.0 = colors::MENU_ITEM_COLOR_OFF;
+                // Reset selected_difficulty to a default non-tutorial one or keep the last valid one
+                difficulty_selection_state.selected_difficulty =
+                    displayed_difficulties.first().copied().unwrap_or_default();
                 continue;
             }
 
-            // Find the difficulty associated with the selected menu item
             if let Some((item_data, _)) = q_items
                 .iter()
                 .find(|(_, interactive)| interactive.identifier == ev.0)
             {
-                let selected_difficulty = item_data.difficulty;
-                let dif_struct = selected_difficulty.create_difficulty_struct();
+                // Ensure the selected item is a non-tutorial difficulty
+                if !item_data.difficulty.is_tutorial_difficulty() {
+                    let selected_difficulty = item_data.difficulty;
+                    let dif_struct = selected_difficulty.create_difficulty_struct();
 
-                let new_text = format!(
-                    "Difficulty <{}>:\n{}\n\nScore Bonus: {:.2}x",
-                    dif_struct.difficulty_name,
-                    dif_struct.difficulty_description,
-                    dif_struct.difficulty_score_multiplier
-                );
+                    let new_text = format!(
+                        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
+                        dif_struct.difficulty_name,
+                        dif_struct.difficulty_description,
+                        dif_struct.difficulty_score_multiplier
+                    );
 
-                text.0 = new_text;
-                text_color.0 = colors::MENU_ITEM_COLOR_OFF;
-                difficulty_selection_state.selected_difficulty = selected_difficulty;
+                    text.0 = new_text;
+                    text_color.0 = colors::MENU_ITEM_COLOR_OFF;
+                    difficulty_selection_state.selected_difficulty = selected_difficulty;
+                }
             }
         }
     }
@@ -188,32 +218,22 @@ pub fn handle_difficulty_escape(
     }
 }
 
-/// Helper function to either load the level directly or show the preplay manual
-/// based on the selected difficulty's tutorial chapter
-fn start_preplay_manual_or_load(
-    difficulty_struct: &uncore::difficulty::DifficultyStruct,
-    next_game_state: &mut ResMut<NextState<AppState>>,
-    difficulty_selection_state: &Res<DifficultySelectionState>,
-    maps: &Res<Maps>,
-    ev_load_level: &mut EventWriter<LoadLevelEvent>,
-) {
-    if difficulty_struct.tutorial_chapter.is_none() {
-        let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
-            .path
-            .clone();
-        ev_load_level.send(LoadLevelEvent { map_filepath });
-        next_game_state.set(AppState::Loading);
-    } else {
-        next_game_state.set(AppState::PreplayManual);
-    }
-}
-
 /// Creates the UI for the difficulty selection screen using templates
-pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
-    let initial_difficulty = Difficulty::all().next().unwrap_or_default();
+/// This now takes a Vec<Difficulty> containing only non-tutorial difficulties.
+pub fn setup_ui(
+    commands: &mut Commands,
+    handles: &GameAssets,
+    available_difficulties: &[Difficulty],
+) {
+    // Use the first available non-tutorial difficulty for initial description
+    let initial_difficulty = available_difficulties.first().copied().unwrap_or_else(|| {
+        warn!("No non-tutorial difficulties passed to setup_ui. Defaulting description.");
+        Difficulty::StandardChallenge // Fallback
+    });
+
     let initial_dif_struct = initial_difficulty.create_difficulty_struct();
     let initial_desc = format!(
-        "Difficulty <{}>:\n{}\n\nScore Bonus: {:.2}x",
+        "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
         initial_dif_struct.difficulty_name,
         initial_dif_struct.difficulty_description,
         initial_dif_struct.difficulty_score_multiplier
@@ -233,17 +253,14 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
             templates::create_breadcrumb_navigation(
                 parent,
                 handles,
-                "New Game",
+                "Custom Mission", // Changed from "New Game"
                 "Select Difficulty",
             );
 
             let mut content_area = templates::create_selectable_content_area(parent, handles, 0);
-
-            // Add mouse tracker to prevent unwanted initial hover selection
             content_area.insert(MenuMouseTracker::default());
 
             content_area.with_children(|content| {
-                // Left column: difficulty list
                 content
                     .spawn(Node {
                         width: Val::Percent(50.0),
@@ -256,8 +273,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
                         ..default()
                     })
                     .with_children(|list_column| {
-                        let difficulties: Vec<Difficulty> = Difficulty::all().collect();
-                        for (idx, difficulty) in difficulties.iter().enumerate() {
+                        // Iterate only over the filtered, non-tutorial difficulties
+                        for (idx, difficulty) in available_difficulties.iter().enumerate() {
                             templates::create_content_item(
                                 list_column,
                                 difficulty.difficulty_name(),
@@ -269,6 +286,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
                                 difficulty: *difficulty,
                             })
                             .insert(MenuItemInteractive {
+                                // Ensure MenuItemInteractive uses the correct index
                                 identifier: idx,
                                 selected: idx == 0,
                             });
@@ -277,17 +295,17 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets) {
                         templates::create_content_item(
                             list_column,
                             "Go Back",
-                            difficulties.len(),
+                            available_difficulties.len(), // Index for "Go Back" is after all difficulties
                             false,
                             handles,
                         )
                         .insert(MenuItemInteractive {
-                            identifier: difficulties.len(),
+                            // Ensure MenuItemInteractive uses the correct index
+                            identifier: available_difficulties.len(),
                             selected: false,
                         });
                     });
 
-                // Right column: difficulty description
                 content
                     .spawn(Node {
                         width: Val::Percent(50.0),

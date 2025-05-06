@@ -33,7 +33,7 @@ pub struct MapSelectionState {
 impl Default for MapSelectionState {
     fn default() -> Self {
         Self {
-            selected_map_idx: 0,
+            selected_map_idx: 0, // Defaulting to the first map
             state_entered_at: Instant::now(),
         }
     }
@@ -58,7 +58,7 @@ pub fn app_setup(app: &mut App) {
             PostUpdate,
             scrollbar::ensure_selected_item_visible.run_if(in_state(MapHubState::MapSelection)),
         )
-        .init_resource::<MapSelectionState>()
+        .init_resource::<MapSelectionState>() // Ensures it's initialized if not already
         .add_event::<MapSelectedEvent>()
         .add_event::<KeyboardNavigate>();
 }
@@ -66,8 +66,9 @@ pub fn app_setup(app: &mut App) {
 /// Creates the initial UI and state for the map selection screen
 pub fn setup_systems(mut commands: Commands, maps: Res<Maps>, handles: Res<GameAssets>) {
     setup_ui(&mut commands, &handles, &maps);
+    // Initialize or re-initialize state upon entering
     commands.insert_resource(MapSelectionState {
-        selected_map_idx: 0,
+        selected_map_idx: 0, // Always start with the first map selected
         state_entered_at: Instant::now(),
     });
 }
@@ -106,10 +107,12 @@ pub fn handle_menu_events(
         let selected_idx = ev.0;
         if selected_idx < maps.maps.len() {
             ev_map_selected.send(MapSelectedEvent {
+                // Send the map index
                 map_idx: selected_idx,
             });
             next_state.set(MapHubState::DifficultySelection);
         } else {
+            // This is the "Go Back" item
             root_next_state.set(AppState::MainMenu);
             next_state.set(MapHubState::None);
         }
@@ -141,13 +144,17 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
         .with_children(|parent| {
             templates::create_background(parent, handles);
             templates::create_logo(parent, handles);
-            templates::create_breadcrumb_navigation(parent, handles, "New Game", "Select Map");
+            templates::create_breadcrumb_navigation(
+                parent,
+                handles,
+                "Custom Mission", // Updated breadcrumb
+                "Select Map",
+            );
 
             let mut content_area = templates::create_selectable_content_area(parent, handles, 0);
-            content_area.insert(MenuMouseTracker::default());
+            content_area.insert(MenuMouseTracker::default()); // Added MenuMouseTracker
 
             content_area.with_children(|content| {
-                // Create a container for both the content and scrollbar
                 content
                     .spawn(Node {
                         width: Val::Percent(50.0),
@@ -157,7 +164,6 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                         ..default()
                     })
                     .with_children(|scrollable_container| {
-                        // Scrollable list container
                         scrollable_container
                             .spawn(Node {
                                 width: Val::Percent(90.0),
@@ -180,7 +186,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                                     flex_basis: Val::Px(16.0),
                                     flex_shrink: 0.0,
                                     ..Default::default()
-                                }).insert(PickingBehavior {
+                                }).insert(PickingBehavior { // Allow picking through for scroll
                                     should_block_lower: false,
                                     ..default()
                                 });
@@ -191,21 +197,20 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                                     min_height: Val::Px(64.0),
                                     flex_basis: Val::Px(64.0),
                                     flex_shrink: 0.0,
-                                    ..Default::default()
-                                }).insert(PickingBehavior {
+                                    ..default()
+                                }).insert(PickingBehavior { // Allow picking through for scroll
                                     should_block_lower: false,
                                     ..default()
                                 });
                             });
-
-                        // Scrollbar container
                         scrollbar::build_scrollbar_ui(scrollable_container, handles);
                     });
-
+                // Placeholder for map preview or description (right column)
                 content.spawn(Node {
                     width: Val::Percent(50.0),
                     height: Val::Percent(100.0),
                     flex_direction: FlexDirection::Column,
+                    // TODO: Add image/text here for map preview if desired
                     ..default()
                 });
             });
@@ -213,7 +218,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
             templates::create_help_text(
                 parent,
                 handles,
-                Some("Select a map to play    |    [Up]/[Down]: Change    |    [Enter]: Select    |    [ESC]: Go Back".into()),
+                Some("Select a map to investigate    |    [Up]/[Down]: Change    |    [Enter]: Select    |    [ESC]: Go Back".into()),
             );
         });
 }
