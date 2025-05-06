@@ -619,8 +619,8 @@
  <tile id="65" type="Item">
   <properties>
    <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="true"/>
-   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:pickable" type="bool" value="false"/>
    <property name="object:weight" type="float" value="0.5"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
@@ -641,8 +641,8 @@
  <tile id="67" type="Item">
   <properties>
    <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="true"/>
-   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:pickable" type="bool" value="false"/>
    <property name="object:weight" type="float" value="0.5"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
@@ -652,8 +652,8 @@
  <tile id="68" type="Item">
   <properties>
    <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="true"/>
-   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:pickable" type="bool" value="false"/>
    <property name="object:weight" type="float" value="0.5"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
@@ -1620,6 +1620,48 @@
    <property name="sprite:orientation" value="XAxis"/>
    <property name="sprite:state" value="Partial"/>
    <property name="sprite:variant" value="OrangeBrick"/>
+  </properties>
+ </tile>
+ <tile id="252" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="YAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="RedWall"/>
+  </properties>
+ </tile>
+ <tile id="253" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="XAxis"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="RedWall"/>
+  </properties>
+ </tile>
+ <tile id="254" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="Both"/>
+   <property name="sprite:state" value="Partial"/>
+   <property name="sprite:variant" value="RedWall"/>
+  </properties>
+ </tile>
+ <tile id="255" type="Wall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedWall"/>
+  </properties>
+ </tile>
+ <tile id="256" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedWall"/>
+  </properties>
+ </tile>
+ <tile id="257" type="LowWall">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="RedWall"/>
   </properties>
  </tile>
  <tile id="258" type="Wall">

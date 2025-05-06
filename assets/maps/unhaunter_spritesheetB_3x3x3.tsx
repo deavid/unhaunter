@@ -58,9 +58,9 @@
  <tile id="4" type="Item">
   <properties>
    <property name="object:hidingspot" type="bool" value="false"/>
-   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:movable" type="bool" value="false"/>
    <property name="object:name" value="Telephone"/>
-   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:pickable" type="bool" value="false"/>
    <property name="object:weight" type="float" value="1"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
@@ -423,9 +423,42 @@
    <property name="sprite:variant" value="AlarmClock"/>
   </properties>
  </tile>
- <tile id="75" type="Item"/>
- <tile id="76" type="Item"/>
- <tile id="77" type="Item"/>
+ <tile id="75" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Newspapaer"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Newspapaer"/>
+  </properties>
+ </tile>
+ <tile id="76" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Desk lamp"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Desk lamp"/>
+  </properties>
+ </tile>
+ <tile id="77" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="true"/>
+   <property name="object:name" value="Flower Pot"/>
+   <property name="object:pickable" type="bool" value="true"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Flower Pot"/>
+  </properties>
+ </tile>
  <tile id="78" type="Item"/>
  <tile id="79" type="Item"/>
  <tile id="80" type="Item"/>
@@ -613,7 +646,18 @@
    <property name="sprite:variant" value="Broken Cardboard"/>
   </properties>
  </tile>
- <tile id="111" type="Item"/>
+ <tile id="111" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Shovel"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Shovel"/>
+  </properties>
+ </tile>
  <tile id="112" type="Item"/>
  <tile id="113" type="Item"/>
  <tile id="114" type="Item"/>
@@ -739,8 +783,30 @@
  </tile>
  <tile id="130" type="Item"/>
  <tile id="131" type="Item"/>
- <tile id="132" type="Item"/>
- <tile id="133" type="Item"/>
+ <tile id="132" type="Item">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Kennel"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Kennel"/>
+  </properties>
+ </tile>
+ <tile id="133" type="Decor">
+  <properties>
+   <property name="object:hidingspot" type="bool" value="false"/>
+   <property name="object:movable" type="bool" value="false"/>
+   <property name="object:name" value="Blood Stain"/>
+   <property name="object:pickable" type="bool" value="false"/>
+   <property name="object:weight" type="float" value="1"/>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Blood Stain"/>
+  </properties>
+ </tile>
  <tile id="134" type="Item"/>
  <tile id="135" type="Item"/>
  <tile id="136" type="Item"/>
@@ -760,15 +826,7 @@
    <property name="object:weight" type="float" value="1"/>
    <property name="sprite:orientation" value="None"/>
    <property name="sprite:state" value="None"/>
-   <property name="sprite:variant">[
-    {
-        &quot;name&quot;: &quot;object:name&quot;,
-        &quot;propertytype&quot;: &quot;&quot;,
-        &quot;type&quot;: &quot;string&quot;,
-        &quot;value&quot;: &quot;Toy Blocks&quot;
-    }
-]
-</property>
+   <property name="sprite:variant" value="Toy Blocks"/>
   </properties>
  </tile>
  <tile id="145" type="Item">
@@ -970,9 +1028,27 @@
  <tile id="213" type="Item"/>
  <tile id="214" type="Item"/>
  <tile id="215" type="Item"/>
- <tile id="216" type="Item"/>
- <tile id="217" type="Item"/>
- <tile id="218" type="Item"/>
+ <tile id="216" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="ChurchFountain"/>
+  </properties>
+ </tile>
+ <tile id="217" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Tombstone"/>
+  </properties>
+ </tile>
+ <tile id="218" type="Decor">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="None"/>
+   <property name="sprite:variant" value="Tombstone"/>
+  </properties>
+ </tile>
  <tile id="219" type="Item"/>
  <tile id="220" type="Item"/>
  <tile id="221" type="Item"/>

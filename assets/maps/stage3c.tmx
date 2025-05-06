@@ -522,7 +522,7 @@
 </data>
   </layer>
  </group>
- <group id="22" name="Upper Level" class="FloorLevel" offsetx="0" offsety="-36">
+ <group id="22" name="Upper Level" class="FloorLevel" visible="0" offsetx="0" offsety="-36">
   <properties>
    <property name="FloorLevel::display_name" value="Upper Floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>

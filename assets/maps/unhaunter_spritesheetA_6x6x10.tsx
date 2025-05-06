@@ -629,6 +629,13 @@
    <property name="sprite:variant" value="WoodenShelves"/>
   </properties>
  </tile>
+ <tile id="47" type="CandleLight">
+  <properties>
+   <property name="sprite:orientation" value="None"/>
+   <property name="sprite:state" value="On"/>
+   <property name="sprite:variant" value="Base"/>
+  </properties>
+ </tile>
  <tile id="48" type="Window">
   <properties>
    <property name="sprite:orientation" value="None"/>
