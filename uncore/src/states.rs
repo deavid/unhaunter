@@ -11,6 +11,7 @@ pub enum AppState {
     MapHub,
     UserManual,
     PreplayManual,
+    CampaignMissionSelect,
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]

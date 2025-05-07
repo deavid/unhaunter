@@ -79,16 +79,9 @@ pub fn tmxmap_preload(
             cleanup_needed = true;
             let path = mapload.path.clone();
             let classname = tmx.class.clone();
-            let display_name = tmx.display_name.clone();
+            let display_name = tmx.props.display_name.clone();
 
-            if classname.is_none() {
-                debug!(
-                    "Ignored TMX {path:?} because it doesn't have a classname (Should be 'UnhaunterMap1')"
-                );
-                continue;
-            }
-
-            if classname != Some("UnhaunterMap1".to_string()) {
+            if classname != "UnhaunterMap1" {
                 warn!(
                     "Unrecognized Class {:?} for map {:?} (Should be 'UnhaunterMap1')",
                     classname, path
@@ -97,7 +90,11 @@ pub fn tmxmap_preload(
             }
 
             let default_name = format!("Unnamed ({})", path.replace("maps/", ""));
-            let display_name = display_name.unwrap_or(default_name);
+            let display_name = if display_name.is_empty() {
+                default_name
+            } else {
+                display_name
+            };
             info!("Found map {display_name:?} at path {path:?}");
             maps.maps.push(Map {
                 name: display_name,

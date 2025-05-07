@@ -10,3 +10,4 @@ pub mod load;
 pub mod load_level;
 pub mod map_loader;
 pub mod plugin;
+pub mod campaign_loader;

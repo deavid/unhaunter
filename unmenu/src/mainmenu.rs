@@ -4,14 +4,15 @@ use bevy_persistent::Persistent;
 use uncore::platform::plt::VERSION;
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
-use uncoremenu::components::*;
-use uncoremenu::systems::*;
+use uncoremenu::components::MenuItemInteractive;
+use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
 use unsettings::audio::AudioSettings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub enum MenuID {
-    MapHub,
+    Campaign,
+    CustomMission,
     Manual,
     Settings,
     Quit,
@@ -20,9 +21,10 @@ pub enum MenuID {
 impl std::fmt::Display for MenuID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match &self {
-            MenuID::MapHub => "New Game",
-            MenuID::Settings => "Settings",
+            MenuID::Campaign => "Campaign",
+            MenuID::CustomMission => "Custom Mission",
             MenuID::Manual => "Manual",
+            MenuID::Settings => "Settings",
             MenuID::Quit => "Quit",
         };
         f.write_str(text)
@@ -45,7 +47,7 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(AppState::MainMenu), cleanup)
         .add_systems(Update, menu_event)
         .add_systems(Update, despawn_sound)
-        .add_systems(Update, manage_title_song); // Run in all states to handle transitions
+        .add_systems(Update, manage_title_song);
 }
 
 pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
@@ -54,13 +56,13 @@ pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
 }
 
 pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
-    // Define menu items
     let menu_items = vec![
-        (MenuID::MapHub, "New Game".to_string()),
-        (MenuID::Manual, "Manual".to_string()),
-        (MenuID::Settings, "Settings".to_string()),
+        (MenuID::Campaign, MenuID::Campaign.to_string()),
+        (MenuID::CustomMission, MenuID::CustomMission.to_string()),
+        (MenuID::Manual, MenuID::Manual.to_string()),
+        (MenuID::Settings, MenuID::Settings.to_string()),
         #[cfg(not(target_arch = "wasm32"))]
-        (MenuID::Quit, "Quit".to_string()),
+        (MenuID::Quit, MenuID::Quit.to_string()),
     ];
 
     warn!("Setting up main menu with items: {:?}", menu_items);
@@ -70,7 +72,7 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
         &mut commands,
         &handles,
         &menu_items,
-        0, // First item selected by default
+        0,
         Some(format!(
             "Unhaunter {}    |    [Up]/[Down]: Change    |    [Enter]: Select",
             VERSION
@@ -101,36 +103,41 @@ pub fn menu_event(
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
 ) {
     for ev in click_events.read() {
-        warn!("Main menu received click event: {:?}", ev);
-        warn!("Number of menu items found: {}", menu_items.iter().count());
-        for (menu_id, item) in menu_items.iter() {
-            warn!("Found menu item {:?} with id {}", menu_id, item.identifier);
-            if item.identifier == ev.0 {
-                warn!("Found matching menu item {:?}!", menu_id);
-                match menu_id {
-                    MenuID::MapHub => {
-                        warn!("Transitioning to MapHub state");
-                        next_app_state.set(AppState::MapHub);
-                    }
-                    MenuID::Manual => {
-                        warn!("Transitioning to UserManual state");
-                        next_app_state.set(AppState::UserManual);
-                    }
-                    MenuID::Settings => {
-                        warn!("Transitioning to SettingsMenu state");
-                        next_app_state.set(AppState::SettingsMenu);
-                    }
-                    MenuID::Quit => {
-                        warn!("Sending exit event");
-                        exit.send(AppExit::default());
-                    }
+        // Find the MenuID associated with the clicked item's identifier (ev.0)
+        if let Some((menu_id, _)) = menu_items
+            .iter()
+            .find(|(_, interactive)| interactive.identifier == ev.0)
+        {
+            match menu_id {
+                MenuID::Campaign => {
+                    // Transition to the new state for campaign mission selection
+                    next_app_state.set(AppState::CampaignMissionSelect);
+                    info!("Transitioning to CampaignMissionSelect state");
+                }
+                MenuID::CustomMission => {
+                    // Transition to the MapHub state (which starts map selection)
+                    next_app_state.set(AppState::MapHub);
+                    info!("Transitioning to MapHub state (for Custom Mission)");
+                }
+                MenuID::Manual => {
+                    next_app_state.set(AppState::UserManual);
+                    info!("Transitioning to UserManual state");
+                }
+                MenuID::Settings => {
+                    next_app_state.set(AppState::SettingsMenu);
+                    info!("Transitioning to SettingsMenu state");
+                }
+                MenuID::Quit => {
+                    info!("Sending AppExit event");
+                    exit.send(AppExit::default());
                 }
             }
+        } else {
+            warn!("Clicked menu item identifier {} not found in query", ev.0);
         }
     }
 }
 
-// Keep the audio management functions unchanged
 pub fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -187,7 +194,7 @@ pub fn despawn_sound(
         sink.set_volume(v);
         if v < 0.001 {
             commands.entity(entity).despawn_recursive();
-            dbg!("Song despawned");
+            info!("Song despawned");
         }
     }
 }
