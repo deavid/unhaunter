@@ -6,6 +6,10 @@
   <property name="flavor_text" value="This suburban house has been empty for months. Neighbors reported strange lights flickering in upstairs windows and sounds echoing from within after the Petersons abruptly moved out. Dust covers the furniture, but an unseen presence remains, tied to the memories held on both floors."/>
   <property name="location_address" value="14 Elmwood Drive"/>
   <property name="location_name" value="The Peterson Residence"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="02C"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter2"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage2c.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

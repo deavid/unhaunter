@@ -6,6 +6,10 @@
   <property name="flavor_text" value="This basement apartment has always felt damp and cold, never quite losing the chill. The previous tenants complained of constant, unsettling noises from the walls and strange vibrations. Maybe it's just the old building settling... or maybe not."/>
   <property name="location_address" value="22 Maple Street, Apt B"/>
   <property name="location_name" value="The Basement Unit"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="03A"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter3"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage3a.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

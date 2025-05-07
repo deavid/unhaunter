@@ -6,6 +6,10 @@
   <property name="flavor_text" value="Nestled beside a quiet creek, this charming old cottage feels peaceful during the day. But as twilight falls, a different atmosphere creeps in. Objects shift when backs are turned, and a heavy chill settles in certain rooms. See if you can uncover the source before night truly falls."/>
   <property name="location_address" value="18 Willow Creek Ln"/>
   <property name="location_name" value="The Willow Creek Cottage"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="02A"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter2"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage2a.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

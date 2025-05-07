@@ -6,6 +6,10 @@
   <property name="flavor_text" value="This old garden shed sits at the back of a neglected property. Locals whisper that after the original owner passed, a strange, cold feeling settled within its walls, and tools seem to move on their own when no one is watching. It's small, but something definitely lingers here."/>
   <property name="location_address" value="27 Briar Patch Rd"/>
   <property name="location_name" value="The Whispering Shed"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="01A"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter1"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage1a.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

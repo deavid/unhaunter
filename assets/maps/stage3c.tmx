@@ -6,6 +6,10 @@
   <property name="flavor_text" value="This community hall used to be the heart of the town, hosting everything from potlucks to town meetings. It's been quiet for years now, officially closed for renovations that never started. Locals avoid it after dark, reporting cold spots that never warm, disembodied voices echoing in the empty hall, and equipment malfunctioning strangely within its walls."/>
   <property name="location_address" value="5 Center Street"/>
   <property name="location_name" value="Old Ashton Community Hall"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="03C"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter3"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage3c.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

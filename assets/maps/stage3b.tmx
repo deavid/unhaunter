@@ -6,6 +6,10 @@
   <property name="flavor_text" value="This downtown office suite has seen better days. After the last firm moved out citing &quot;unusual disturbances&quot; - flickering lights, strange static on phone lines, and files moving on their own - the space has remained empty. An unnerving cold permeates the empty cubicles and private offices."/>
   <property name="location_address" value="Suite 300 - 45 Market Street"/>
   <property name="location_name" value="Albright &amp; Associates"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="03B"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter3"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage3b.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

@@ -6,6 +6,10 @@
   <property name="flavor_text" value="Once the crown jewel of the city's entertainment scene, the Majestic Theatre has stood dark for decades, condemned after a tragic accident during a performance. Dust hangs thick in the air, spotlights rustle inexplicably, and phantom whispers echo from the empty stage and shadowy wings. Some say the show never truly ended."/>
   <property name="location_address" value="1 Grand Boulevard"/>
   <property name="location_name" value="The Majestic Theatre"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="05A"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter5"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage5a.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
