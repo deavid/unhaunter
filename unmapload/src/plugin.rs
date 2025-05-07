@@ -5,9 +5,9 @@ use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEven
 ///
 /// This plugin registers all the necessary systems and resources for map loading,
 /// including level setup, entity spawning, and post-processing.
-pub struct UnMapLoadPlugin;
+pub struct UnhaunterMapLoadPlugin;
 
-impl Plugin for UnMapLoadPlugin {
+impl Plugin for UnhaunterMapLoadPlugin {
     fn build(&self, app: &mut App) {
         // This is essentially the same logic as the previous app_setup
         // but encapsulated in a proper plugin

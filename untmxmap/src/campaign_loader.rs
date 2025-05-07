@@ -26,10 +26,21 @@ pub fn load_campaign_missions_into_resource(
     mut campaign_missions_res: ResMut<CampaignMissionsResource>,
     mut processed_flag: Local<bool>, // Ensures this system effectively runs once.
 ) {
-    // Guard to ensure this system runs its main logic only once.
-    if *processed_flag {
+    // Only consider the system fully processed if we actually found maps
+    if *processed_flag && !maps_resource.maps.is_empty() {
         return;
     }
+
+    // Reset the processed flag if no maps were loaded yet
+    if maps_resource.maps.is_empty() {
+        return;
+    }
+
+    info!("[CAMPAIGN DEBUG] Starting campaign mission loading process...");
+    info!(
+        "[CAMPAIGN DEBUG] Total maps in maps_resource: {}",
+        maps_resource.maps.len()
+    );
 
     let mut collected_missions: Vec<CampaignMissionData> = Vec::new();
     let mut all_tmx_assets_available = true;
@@ -40,9 +51,19 @@ pub fn load_campaign_missions_into_resource(
         // map_entry.path is the path string
         // map_entry.handle is the Handle<TmxMap>
 
+        info!("[CAMPAIGN DEBUG] Checking map: {}", map_entry.path);
+
         if let Some(tmx_asset) = tmx_assets.get(&map_entry.handle) {
             // Access the naively parsed properties directly from the TmxMap asset
             let props = &tmx_asset.props;
+
+            info!(
+                "[CAMPAIGN DEBUG] Map properties - is_campaign_mission: {}, display_name: {}, campaign_order: {}, campaign_difficulty: {}",
+                props.is_campaign_mission,
+                props.display_name,
+                props.campaign_order,
+                props.campaign_difficulty_str
+            );
 
             if props.is_campaign_mission {
                 let difficulty_enum = match props.campaign_difficulty_str.as_str() {
@@ -65,6 +86,11 @@ pub fn load_campaign_missions_into_resource(
                     }
                 };
 
+                info!(
+                    "[CAMPAIGN DEBUG] Adding map as campaign mission: {}",
+                    props.display_name
+                );
+
                 collected_missions.push(CampaignMissionData {
                     id: map_entry.path.clone(), // Use map path as a unique ID
                     map_filepath: map_entry.path.clone(),
@@ -76,6 +102,11 @@ pub fn load_campaign_missions_into_resource(
                     location_name: props.location_name.clone(),
                     location_address: props.location_address.clone(),
                 });
+            } else {
+                info!(
+                    "[CAMPAIGN DEBUG] Skipping map, not a campaign mission: {}",
+                    map_entry.path
+                );
             }
         } else {
             // This case means the TmxMap asset for a path listed in `maps_resource.maps`
@@ -107,9 +138,17 @@ pub fn load_campaign_missions_into_resource(
     );
 
     // Log the order of missions for verification
-    // for (idx, mission) in campaign_missions_res.missions.iter().enumerate() {
-    //     info!("Campaign Mission [{}]: Order '{}' - '{}'", idx, mission.order, mission.display_name);
-    // }
+    if campaign_missions_res.missions.is_empty() {
+        warn!("[CAMPAIGN DEBUG] ⚠️ No campaign missions found! Check map properties.");
+    } else {
+        info!("[CAMPAIGN DEBUG] Campaign missions found:");
+        for (idx, mission) in campaign_missions_res.missions.iter().enumerate() {
+            info!(
+                "[CAMPAIGN DEBUG] Mission [{}]: Order '{}' - '{}' ({})",
+                idx, mission.order, mission.display_name, mission.map_filepath
+            );
+        }
+    }
 
     *processed_flag = true; // Mark as processed.
 }

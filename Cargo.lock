@@ -4972,6 +4972,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
 
 [[package]]
+name = "uncampaign"
+version = "0.3.0-beta3-dev"
+dependencies = [
+ "bevy",
+ "uncore",
+ "uncoremenu",
+ "unsettings",
+]
+
+[[package]]
 name = "uncore"
 version = "0.3.0-beta3-dev"
 dependencies = [
@@ -5083,6 +5093,7 @@ dependencies = [
  "bevy_dylib",
  "image",
  "ordered-float",
+ "uncampaign",
  "uncore",
  "uncoremenu",
  "unfog",
@@ -5092,6 +5103,7 @@ dependencies = [
  "unghost",
  "unlight",
  "unmaphub",
+ "unmapload",
  "unmenu",
  "unmenusettings",
  "unnpc",

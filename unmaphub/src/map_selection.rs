@@ -1,5 +1,5 @@
-use crate::scrollbar;
-use crate::scrollbar::ScrollableListContainer;
+use uncoremenu::scrollbar;
+use uncoremenu::scrollbar::ScrollableListContainer;
 use bevy::prelude::*;
 use bevy::ui::ScrollPosition;
 use bevy::utils::Instant;

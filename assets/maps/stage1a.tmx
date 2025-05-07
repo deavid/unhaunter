@@ -2,14 +2,14 @@
 <map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="37" nextobjectid="15">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter1"/>
+  <property name="campaign_order" value="01A"/>
   <property name="display_name" value="The Whispering Shed - 27 Briar Patch Rd"/>
   <property name="flavor_text" value="This old garden shed sits at the back of a neglected property. Locals whisper that after the original owner passed, a strange, cold feeling settled within its walls, and tools seem to move on their own when no one is watching. It's small, but something definitely lingers here."/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
   <property name="location_address" value="27 Briar Patch Rd"/>
   <property name="location_name" value="The Whispering Shed"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="01A"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter1"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage1a.png"/>
+  <property name="map_preview_image" value="maps/previews/stage1a.png"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -30,7 +30,7 @@
 9,3,3,6,7,9,9,9,8,9,6,8,8,7,9,7,9,9,7,8,8,7,9,7,7,6,8,6,8,8,9,9,9,8,9,6,7,6,6,6,9,6,
 7,3,3,8,7,6,6,8,9,9,6,7,6,7,8,8,7,9,6,7,9,6,7,7,7,8,9,6,6,6,8,7,8,9,8,6,8,9,6,7,7,7,
 7,4,3,7,7,8,6,6,9,9,9,9,6,8,9,8,7,9,9,9,6,7,6,6,7,7,9,9,7,6,9,6,9,8,8,9,9,7,9,9,7,7,
-8,9,4,4,7,6,9,8,2,7,8,3,7,9,8,7,5,3,2,4,3,3,5,2,2,6,7,9,9,6,8,9,7,8,9,6,6,7,7,8,7,9,
+8,9,4,4,7,6,9,8,2,7,8,6,7,9,8,7,5,3,2,4,3,3,5,2,2,6,7,9,9,6,8,9,7,8,9,6,6,7,7,8,7,9,
 8,7,4,2,8,8,9,6,4,6,9,2,8,8,3,8,3,4,5,5,3,4,3,5,2,7,9,7,7,6,6,8,7,9,6,9,8,9,7,6,9,6,
 6,7,4,5,9,6,7,7,2,8,8,5,6,9,3,9,2,3,5,5,5,5,4,5,2,9,7,9,8,6,8,8,6,9,6,7,9,8,7,7,8,6,
 9,8,2,4,7,6,6,9,3,7,8,4,7,6,4,8,5,2,4,3,5,2,5,2,4,8,9,8,7,7,6,9,8,9,7,8,7,6,8,7,6,6,

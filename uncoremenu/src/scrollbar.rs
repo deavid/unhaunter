@@ -4,8 +4,9 @@ use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use uncore::types::root::game_assets::GameAssets;
-use uncoremenu::components::MenuItemInteractive;
-use uncoremenu::events::KeyboardNavigate;
+// Self imports (no longer importing from uncoremenu since this IS uncoremenu)
+use crate::components::MenuItemInteractive;
+use crate::events::KeyboardNavigate;
 
 // Component Definitions
 

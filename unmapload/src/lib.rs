@@ -9,7 +9,7 @@ pub mod sprite_db;
 pub mod tile_spawning;
 
 // Re-export the plugin for easy access
-pub use plugin::UnMapLoadPlugin;
+pub use plugin::UnhaunterMapLoadPlugin;
 
 // Re-export essential functions to maintain compatibility
 pub use module::{

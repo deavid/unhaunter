@@ -1,0 +1,16 @@
+[package]
+name = "uncampaign"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+uncoremenu = { path = "../uncoremenu" }
+unsettings = { path = "../unsettings" }
+
+bevy = { workspace = true }
