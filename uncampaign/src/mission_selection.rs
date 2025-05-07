@@ -74,7 +74,7 @@ fn update_input_debounce(time: Res<Time>, mut query: Query<&mut InputDebounce>) 
 }
 
 // System to clean up UI when exiting this state
-pub fn cleanup_ui(
+fn cleanup_ui(
     mut commands: Commands,
     query: Query<Entity, With<CampaignMissionSelectUI>>,
     camera_query: Query<Entity, With<CampaignCamera>>,
@@ -90,7 +90,7 @@ pub fn cleanup_ui(
 }
 
 // System to handle mission selection clicks or keyboard confirmation (Enter/Escape)
-pub fn handle_selection_input(
+fn handle_selection_input(
     mut ev_menu_clicks: EventReader<MenuItemClicked>,
     mut ev_escape: EventReader<MenuEscapeEvent>, // Use the uncoremenu escape event
     keyboard_input: Res<ButtonInput<KeyCode>>,   // To check for Enter key
