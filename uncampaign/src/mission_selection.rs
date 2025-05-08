@@ -320,7 +320,9 @@ pub fn setup_ui(
                                 width: Val::Percent(90.0), // List takes most space
                                 height: Val::Percent(100.0),
                                 flex_direction: FlexDirection::Column,
-                                overflow: Overflow::clip_y(), // Clip vertically for scrolling
+                                align_items: AlignItems::FlexStart,
+                                justify_content: JustifyContent::Start,
+                                overflow: Overflow::scroll_y(),
                                 ..default()
                             })
                             .insert(ScrollableListContainer) // Mark for scrollbar logic
@@ -337,30 +339,32 @@ pub fn setup_ui(
                                     )
                                     .insert(CampaignMissionItem { mission_index: idx });
                                 }
-                                // Add "Go Back" button at the end
-                                templates::create_content_item(
-                                    mission_list,
-                                    "Go Back",
-                                    campaign_missions.missions.len(),
-                                    false,
-                                    &handles,
-                                )
-                                .insert(MenuItemInteractive { identifier: campaign_missions.missions.len(), selected: false });
+                            mission_list.spawn(Node {
+                                min_height: Val::Px(16.0),
+                                flex_basis: Val::Px(16.0), // Use flex_basis for sizing in flex columns
+                                flex_shrink: 0.0, // Prevent shrinking
+                                ..Default::default()
+                            }).insert(PickingBehavior { should_block_lower: false, ..default() });
 
-                                // Add spacer nodes for scrollbar functionality
-                                mission_list.spawn(Node {
-                                    min_height: Val::Px(16.0),
-                                    flex_basis: Val::Px(16.0),
-                                    flex_shrink: 0.0,
-                                    ..Default::default()
-                                }).insert(PickingBehavior { should_block_lower: false, ..default() });
-                                mission_list.spawn(Node {
-                                    width: Val::Percent(100.0),
-                                    min_height: Val::Px(64.0),
-                                    flex_basis: Val::Px(64.0),
-                                    flex_shrink: 0.0,
-                                    ..default()
-                                }).insert(PickingBehavior { should_block_lower: false, ..default() });
+
+                            // Add "Go Back" button
+                            templates::create_content_item(
+                                mission_list,
+                                "Go Back",
+                                campaign_missions.missions.len(), // Index after last mission
+                                false,
+                                &handles,
+                            )
+                            // Add specific marker or use index check in handler
+                            .insert(MenuItemInteractive { identifier: campaign_missions.missions.len(), selected: false });
+
+                            mission_list.spawn(Node {
+                                width: Val::Percent(100.0),
+                                min_height: Val::Px(64.0),
+                                flex_basis: Val::Px(64.0),
+                                flex_shrink: 0.0,
+                                ..default()
+                            }).insert(PickingBehavior { should_block_lower: false, ..default() });
                             });
 
                         // Build the scrollbar UI (using the function now in uncoremenu::scrollbar)

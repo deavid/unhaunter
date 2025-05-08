@@ -1,5 +1,3 @@
-use uncoremenu::scrollbar;
-use uncoremenu::scrollbar::ScrollableListContainer;
 use bevy::prelude::*;
 use bevy::ui::ScrollPosition;
 use bevy::utils::Instant;
@@ -10,6 +8,8 @@ use uncore::states::MapHubState;
 use uncore::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuMouseTracker;
 use uncoremenu::events::KeyboardNavigate;
+use uncoremenu::scrollbar;
+use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::systems::{MenuItemClicked, MenuItemSelected};
 use uncoremenu::templates;
 

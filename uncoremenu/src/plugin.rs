@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use crate::systems;
-use crate::scrollbar; // Import scrollbar module
+use crate::scrollbar;
+use crate::systems; // Import scrollbar module
 
 /// Plugin that adds all menu component systems to the app
 pub struct UnhaunterCoreMenuPlugin;

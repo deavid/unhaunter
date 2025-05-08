@@ -272,7 +272,13 @@ pub fn update_ui(mut qui: Query<(&SummaryUIType, &mut Text)>, rsd: Res<SummaryDa
             SummaryUIType::RepellentUsed => {
                 text.0 = format!("Repellent charges used: {}", rsd.repellent_used_amt)
             }
-            SummaryUIType::FinalScore => text.0 = format!("Final Score: {}", rsd.final_score),
+            SummaryUIType::FinalScore => {
+                // Format the score calculation using the stored base_score and difficulty_multiplier
+                text.0 = format!(
+                    "Final Score: {} x {:.1} = {}",
+                    rsd.base_score, rsd.difficulty_multiplier, rsd.final_score
+                );
+            }
         }
     }
 }
