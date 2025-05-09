@@ -106,6 +106,8 @@ pub fn load_level_handler(
 
     // Set temperature from difficulty
     p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
+    p.bf.map_path = loaded_event.map_filepath.clone();
+    warn!("BoardData Map path: {:?}", &p.bf.map_path);
 
     // Compute map boundaries by examining all tiles
     let mut map_min_x = i32::MAX;

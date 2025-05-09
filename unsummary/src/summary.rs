@@ -161,7 +161,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Mission Summary"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 32.0 * FONT_SCALE, // Reduced from 42.0
+                            font_size: 32.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -171,7 +171,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Ghost list"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_size: 24.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -181,7 +181,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Time taken: 00.00.00"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_size: 24.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -191,7 +191,7 @@ pub fn setup_ui(
                         .spawn(Text::new("Players Alive: 0/0"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_size: 24.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -217,7 +217,7 @@ pub fn setup_ui(
                         .spawn(Text::new(format!("Grade Achieved: {}", rsd.grade_achieved)))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 28.0 * FONT_SCALE, // Reduced from 36.0
+                            font_size: 28.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -229,7 +229,7 @@ pub fn setup_ui(
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_size: 24.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()))
@@ -253,26 +253,28 @@ pub fn setup_ui(
                     parent
                         .spawn(Text::new(format!(
                             "Base Mission Reward: ${}",
-                            rsd.money_earned
+                            rsd.mission_reward_base
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::BaseReward);
 
                     parent
                         .spawn(Text::new(format!(
-                            "Grade Multiplier: {}x",
-                            rsd.difficulty_multiplier
+                            "Grade Multiplier: {:.1}x",
+                            rsd.grade_multiplier
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::GradeMultiplier);
 
                     parent
                         .spawn(Text::new(format!(
@@ -281,10 +283,11 @@ pub fn setup_ui(
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
-                        .insert(TextColor(css::GRAY.into()));
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::CalculatedEarnings);
 
                     // Separator
                     parent
@@ -308,7 +311,7 @@ pub fn setup_ui(
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()));
@@ -320,7 +323,7 @@ pub fn setup_ui(
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()));
@@ -332,7 +335,7 @@ pub fn setup_ui(
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::GRAY.into()));
@@ -356,7 +359,7 @@ pub fn setup_ui(
                         .spawn(Text::new(format!("Net Change to Bank: ${}", net_change)))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 26.0 * FONT_SCALE, // Reduced from 34.0
+                            font_size: 26.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -365,7 +368,7 @@ pub fn setup_ui(
                         .spawn(Text::new(format!("Final Money in Bank: ${}", final_bank)))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 26.0 * FONT_SCALE, // Reduced from 34.0
+                            font_size: 26.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
@@ -381,7 +384,7 @@ pub fn setup_ui(
                         .spawn(Text::new("[ - Press enter to continue - ]"))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
-                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_size: 22.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(css::ORANGE_RED.into()));
@@ -437,10 +440,11 @@ pub fn update_ui(
                 text.0 = format!("Grade Achieved: {}", rsd.grade_achieved);
             }
             SummaryUIType::BaseReward => {
-                text.0 = format!("Base Mission Reward: ${}", rsd.money_earned);
+                text.0 = format!("Base Mission Reward: ${}", rsd.mission_reward_base);
             }
             SummaryUIType::GradeMultiplier => {
-                text.0 = format!("Grade Multiplier: {:.1}x", rsd.difficulty_multiplier);
+                // Use the stored grade multiplier instead of recalculating
+                text.0 = format!("Grade Multiplier: {:.1}x", rsd.grade_multiplier);
             }
             SummaryUIType::CalculatedEarnings => {
                 text.0 = format!("Calculated Earnings: ${}", rsd.money_earned);
@@ -485,6 +489,18 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>
     sd.final_score += delta;
 }
 
+/// Helper function to calculate grade multiplier based on achieved grade
+fn calculate_grade_multiplier(grade: &str) -> f64 {
+    match grade {
+        "A" => 5.0,
+        "B" => 3.0,
+        "C" => 2.0,
+        "D" => 1.0,
+        "F" => 0.5,
+        _ => 0.0,
+    }
+}
+
 pub fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
     tmx_assets: Res<Assets<TmxMap>>,
@@ -501,6 +517,16 @@ pub fn calculate_rewards_and_grades(
         *sd
     );
 
+    // Ensure we have calculated the base score before proceeding
+    if sd.base_score == 0 {
+        // Calculate the score first to ensure base_score is set
+        sd.calculate_score();
+        info!(
+            "Calculated score before grading. New base_score: {}",
+            sd.base_score
+        );
+    }
+
     // Check if we need to process or if the grade is already a mission status message
     let is_status_message = matches!(
         sd.grade_achieved.as_str(),
@@ -514,42 +540,40 @@ pub fn calculate_rewards_and_grades(
         if let Some(map_data) = maps
             .maps
             .iter()
-            .find(|map| map.name == sd.current_mission_id)
+            .find(|map| map.path == sd.current_mission_id)
         {
             if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
                 let props = &tmx_map.props;
 
                 // Debug: Log TmxMap properties
-                info!("TmxMap properties: {:?}", props);
-
-                let grade = if sd.final_score >= props.grade_a_score_threshold {
+                let base_score = sd.base_score as i64;
+                let grade = if base_score >= props.grade_a_score_threshold {
                     "A"
-                } else if sd.final_score >= props.grade_b_score_threshold {
+                } else if base_score >= props.grade_b_score_threshold {
                     "B"
-                } else if sd.final_score >= props.grade_c_score_threshold {
+                } else if base_score >= props.grade_c_score_threshold {
                     "C"
-                } else if sd.final_score >= props.grade_d_score_threshold {
+                } else if base_score >= props.grade_d_score_threshold {
                     "D"
                 } else {
                     "F"
                 };
 
-                let multiplier = match grade {
-                    "A" => 5.0,
-                    "B" => 3.0,
-                    "C" => 2.0,
-                    "D" => 1.0,
-                    _ => 0.5,
-                };
+                let grade_multiplier = calculate_grade_multiplier(grade);
 
-                let money_earned = (props.mission_reward_base as f64 * multiplier)
+                // Store the mission_reward_base and grade_multiplier in SummaryData for display
+                sd.mission_reward_base = props.mission_reward_base;
+                // Store grade_multiplier as a separate field for display
+                sd.grade_multiplier = grade_multiplier;
+
+                let money_earned = (props.mission_reward_base as f64 * grade_multiplier)
                     .round()
                     .max(0.0) as i64;
 
                 // Debug: Log calculated grade and money earned
                 info!(
-                    "Assigning grade {} with ${} reward for score {}",
-                    grade, money_earned, sd.final_score
+                    "Assigning grade {} with ${} reward for base score {}",
+                    grade, money_earned, sd.base_score
                 );
 
                 sd.grade_achieved = grade.to_string();

@@ -11,6 +11,8 @@ pub struct SummaryData {
     pub final_score: i64,
     pub base_score: u32,
     pub difficulty_multiplier: f64,
+    /// The multiplier based on the achieved grade (A, B, C, D, F)
+    pub grade_multiplier: f64,
     pub difficulty: CurrentDifficulty,
     pub average_sanity: f32,
     pub player_count: usize,

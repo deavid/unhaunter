@@ -40,13 +40,13 @@ pub fn rebuild_lighting_field(
     let active_source_ids = identify_active_light_sources(bf, qt);
 
     // Apply prebaked contributions from active sources
-    let initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
-    let prebake_time = build_start_time.elapsed();
+    let _initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
+    let _prebake_time = build_start_time.elapsed();
 
     // First pass of light propagation from wave edges
     let time_main_propagation = Instant::now();
-    let dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &active_source_ids);
-    let main_propagation_time = time_main_propagation.elapsed();
+    let _dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &active_source_ids);
+    let _main_propagation_time = time_main_propagation.elapsed();
 
     // Log light statistics before stair propagation
     // if bf.map_size.2 > 1 {
@@ -74,10 +74,10 @@ pub fn rebuild_lighting_field(
     // Create wave edges from stairs and add them to a temporary list
     let time_stair_preparation = Instant::now();
     let stair_wave_edges = create_stair_wave_edges(bf, &lfs);
-    let stair_preparation_time = time_stair_preparation.elapsed();
+    let _stair_preparation_time = time_stair_preparation.elapsed();
 
     // If we found stair wave edges, do a second pass of propagation using those
-    let mut stair_propagation_count = 0;
+    let mut _stair_propagation_count = 0;
     let time_stair_propagation = Instant::now();
     if !stair_wave_edges.is_empty() {
         // Save original wave edges
@@ -93,12 +93,12 @@ pub fn rebuild_lighting_field(
         //     "Starting stair light propagation with {} wave edges",
         //     stair_wave_edges.len()
         // );
-        stair_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &all_sources);
+        _stair_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &all_sources);
 
         // Restore original wave edges
         bf.prebaked_wave_edges = original_wave_edges;
     }
-    let stair_propagation_time = time_stair_propagation.elapsed();
+    let _stair_propagation_time = time_stair_propagation.elapsed();
 
     // Log light statistics after stair propagation
     // if bf.map_size.2 > 1 {
@@ -126,7 +126,7 @@ pub fn rebuild_lighting_field(
     // Apply ambient light to walls
     let time_ambient = Instant::now();
     apply_ambient_light_to_walls(bf, &mut lfs);
-    let ambient_time = time_ambient.elapsed();
+    let _ambient_time = time_ambient.elapsed();
 
     // Calculate exposure and update board data
     update_exposure_and_stats(bf, &lfs);
@@ -137,26 +137,26 @@ pub fn rebuild_lighting_field(
     avg_time.1 += 1.0;
 
     // Log detailed performance metrics
-    info!(
-        "Lighting field rebuild performance: \
-        \n  Prebaking: {:?} ({} tiles) \
-        \n  Main propagation: {:?} ({} propagations) \
-        \n  Stair preparation: {:?} ({} wave edges) \
-        \n  Stair propagation: {:?} ({} propagations) \
-        \n  Ambient light: {:?} \
-        \n  Total time: {:?} (mean {:.2}ms)",
-        prebake_time,
-        initial_tiles_lit,
-        main_propagation_time,
-        dynamic_propagation_count,
-        stair_preparation_time,
-        stair_wave_edges.len(),
-        stair_propagation_time,
-        stair_propagation_count,
-        ambient_time,
-        build_start_time.elapsed(),
-        avg_time.0 * 1000.0
-    );
+    // warn!(
+    //     "Lighting field rebuild performance: \
+    //     \n  Prebaking: {:?} ({} tiles) \
+    //     \n  Main propagation: {:?} ({} propagations) \
+    //     \n  Stair preparation: {:?} ({} wave edges) \
+    //     \n  Stair propagation: {:?} ({} propagations) \
+    //     \n  Ambient light: {:?} \
+    //     \n  Total time: {:?} (mean {:.2}ms)",
+    //     prebake_time,
+    //     initial_tiles_lit,
+    //     main_propagation_time,
+    //     dynamic_propagation_count,
+    //     stair_preparation_time,
+    //     stair_wave_edges.len(),
+    //     stair_propagation_time,
+    //     stair_propagation_count,
+    //     ambient_time,
+    //     build_start_time.elapsed(),
+    //     avg_time.0 * 1000.0
+    // );
 }
 
 // Applies ambient light to walls based on neighboring lit tiles
