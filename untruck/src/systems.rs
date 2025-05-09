@@ -276,12 +276,12 @@ pub fn truckui_event_handle(
                 }
 
                 // Set summary_data.current_mission_id from board_data.map_path
-                summary_data.current_mission_id = board_data.map_path.clone();
+                summary_data.map_path = board_data.map_path.clone();
 
                 // Debug: Log the updated value of summary_data.current_mission_id
                 info!(
                     "[EndMission] Set summary_data.current_mission_id to: '{}'",
-                    summary_data.current_mission_id
+                    summary_data.map_path
                 );
 
                 summary_data.deposit_originally_held = initial_deposit_held;
@@ -291,10 +291,11 @@ pub fn truckui_event_handle(
 
                 if summary_data.ghosts_unhaunted == summary_data.ghost_types.len() as u32 {
                     // All ghosts were unhaunted, successful completion
-                    summary_data.grade_achieved = "".to_string(); // Empty string allows proper grade calculation
+                    summary_data.mission_successful = true;
                 } else {
-                    summary_data.grade_achieved = "Mission Aborted".to_string();
+                    summary_data.mission_successful = false;
                 }
+                // grade_achieved is now determined in the summary screen based on mission_successful
 
                 game_next_state.set(GameState::None);
                 next_state.set(AppState::Summary);

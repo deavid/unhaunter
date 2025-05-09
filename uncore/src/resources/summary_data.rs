@@ -18,8 +18,11 @@ pub struct SummaryData {
     pub player_count: usize,
     pub alive_count: usize,
 
-    // NEW FIELDS for v1.0 Bank & Progression
-    pub current_mission_id: String, // e.g., map path
+    /// Path to the map that was played.
+    pub map_path: String,
+
+    /// Indicates if the primary mission objectives were met.
+    pub mission_successful: bool,
 
     /// The total money earned during the mission.
     pub money_earned: i64,
@@ -48,6 +51,7 @@ impl SummaryData {
         Self {
             ghost_types,
             difficulty,
+            mission_successful: false, // Default to false
             ..default()
         }
     }

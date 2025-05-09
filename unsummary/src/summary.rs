@@ -527,25 +527,11 @@ pub fn calculate_rewards_and_grades(
         );
     }
 
-    // Check if we need to process or if the grade is already a mission status message
-    let is_status_message = matches!(
-        sd.grade_achieved.as_str(),
-        "Mission Aborted" | "Partially Complete"
-    );
-
-    // Only assign grades and money if the mission was successfully completed
-    let can_assign_grade = sd.grade_achieved.is_empty() || sd.grade_achieved == "Mission Complete";
-
-    if can_assign_grade && !is_status_message {
-        if let Some(map_data) = maps
-            .maps
-            .iter()
-            .find(|map| map.path == sd.current_mission_id)
-        {
+    if sd.mission_successful {
+        if let Some(map_data) = maps.maps.iter().find(|map| map.path == sd.map_path) {
             if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
                 let props = &tmx_map.props;
 
-                // Debug: Log TmxMap properties
                 let base_score = sd.base_score as i64;
                 let grade = if base_score >= props.grade_a_score_threshold {
                     "A"
@@ -561,18 +547,15 @@ pub fn calculate_rewards_and_grades(
 
                 let grade_multiplier = calculate_grade_multiplier(grade);
 
-                // Store the mission_reward_base and grade_multiplier in SummaryData for display
                 sd.mission_reward_base = props.mission_reward_base;
-                // Store grade_multiplier as a separate field for display
                 sd.grade_multiplier = grade_multiplier;
 
                 let money_earned = (props.mission_reward_base as f64 * grade_multiplier)
                     .round()
                     .max(0.0) as i64;
 
-                // Debug: Log calculated grade and money earned
                 info!(
-                    "Assigning grade {} with ${} reward for base score {}",
+                    "Mission successful. Assigning grade {} with ${} reward for base score {}",
                     grade, money_earned, sd.base_score
                 );
 
@@ -580,20 +563,30 @@ pub fn calculate_rewards_and_grades(
                 sd.money_earned = money_earned;
             } else {
                 warn!(
-                    "TmxMap asset not found for mission ID: {}",
-                    sd.current_mission_id
+                    "TmxMap asset not found for mission ID: {}. Cannot assign grade or rewards.",
+                    sd.map_path
                 );
+                sd.grade_achieved = "N/A".to_string();
+                sd.money_earned = 0;
+                sd.grade_multiplier = 0.0;
             }
         } else {
             warn!(
-                "Mission data not found for mission ID: {}",
-                sd.current_mission_id
+                "Mission data not found for mission ID: {}. Cannot assign grade or rewards.",
+                sd.map_path
             );
+            sd.grade_achieved = "N/A".to_string();
+            sd.money_earned = 0;
+            sd.grade_multiplier = 0.0;
         }
-    } else if is_status_message {
-        info!("Mission not fully completed. Status: {}", sd.grade_achieved);
-        // No money rewards for incomplete missions
+    } else {
+        info!(
+            "Mission not successful. Assigning N/A grade and no monetary reward. Base score: {}",
+            sd.base_score
+        );
+        sd.grade_achieved = "N/A".to_string();
         sd.money_earned = 0;
+        sd.grade_multiplier = 0.0;
     }
 }
 
@@ -613,7 +606,7 @@ pub fn finalize_profile_update(
     player_profile
         .progression
         .completed_missions
-        .insert(sd.current_mission_id.clone());
+        .insert(sd.map_path.clone());
     player_profile.statistics.total_missions_completed += 1;
     player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;
 
@@ -658,7 +651,7 @@ pub fn store_mission_id(
     // Debug: Log initial state of SummaryData and BoardData
     info!(
         "store_mission_id: SummaryData current_mission_id='{}'",
-        sd.current_mission_id
+        sd.map_path
     );
 
     match &board_data {
@@ -670,10 +663,10 @@ pub fn store_mission_id(
     }
 
     // If the current_mission_id is empty but we have board data available, use that
-    if sd.current_mission_id.is_empty() {
+    if sd.map_path.is_empty() {
         if let Some(bd) = board_data {
             info!("Setting mission ID from board_data: {}", bd.map_path);
-            sd.current_mission_id = bd.map_path.clone();
+            sd.map_path = bd.map_path.clone();
         } else {
             warn!("No board data available to set mission ID");
 
@@ -684,6 +677,6 @@ pub fn store_mission_id(
             );
         }
     } else {
-        info!("Using existing mission ID: {}", sd.current_mission_id);
+        info!("Using existing mission ID: {}", sd.map_path);
     }
 }

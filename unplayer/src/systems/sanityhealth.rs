@@ -195,12 +195,12 @@ pub fn handle_player_death(
 
             let current_mission_id = board_data.map_path.clone();
 
-            summary_data.current_mission_id = current_mission_id;
+            summary_data.map_path = current_mission_id;
             summary_data.deposit_originally_held = initial_deposit_held;
             summary_data.deposit_returned_to_bank = 0;
             summary_data.costs_deducted_from_deposit = initial_deposit_held;
             summary_data.money_earned = 0;
-            summary_data.grade_achieved = "F (Deceased)".to_string();
+            summary_data.grade_achieved = "N/A".to_string();
 
             next_app_state.set(AppState::Summary);
 
