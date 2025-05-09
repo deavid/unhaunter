@@ -13,6 +13,7 @@ uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
+unprofile = { path = "../unprofile" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

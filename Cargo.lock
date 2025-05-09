@@ -4976,8 +4976,10 @@ name = "uncampaign"
 version = "0.3.0-beta3-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "uncore",
  "uncoremenu",
+ "unprofile",
  "unsettings",
 ]
 
@@ -5108,8 +5110,10 @@ dependencies = [
  "unmenusettings",
  "unnpc",
  "unplayer",
+ "unprofile",
  "unsettings",
  "unstd",
+ "unsummary",
  "untmxmap",
  "untruck",
  "unwalkie",
@@ -5246,6 +5250,7 @@ dependencies = [
  "serde",
  "uncore",
  "uncoremenu",
+ "unprofile",
  "unsettings",
 ]
 
@@ -5283,8 +5288,21 @@ dependencies = [
  "rand 0.9.1",
  "uncore",
  "ungear",
+ "unprofile",
  "unsettings",
  "unstd",
+]
+
+[[package]]
+name = "unprofile"
+version = "0.3.0-beta3-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "dirs",
+ "ron 0.10.1",
+ "serde",
+ "uncore",
 ]
 
 [[package]]
@@ -5324,6 +5342,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "unsummary"
+version = "0.3.0-beta3-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "uncore",
+ "unprofile",
+]
+
+[[package]]
 name = "untmxmap"
 version = "0.3.0-beta3-dev"
 dependencies = [
@@ -5349,6 +5377,7 @@ dependencies = [
  "uncore",
  "ungear",
  "ungearitems",
+ "unprofile",
  "unsettings",
  "unstd",
 ]

@@ -1,5 +1,5 @@
 [package]
-name = "uncampaign"
+name = "unprofile"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -9,10 +9,9 @@ authors.workspace = true
 homepage.workspace = true
 
 [dependencies]
-uncore = { path = "../uncore" }
-uncoremenu = { path = "../uncoremenu" }
-unsettings = { path = "../unsettings" }
-unprofile = { path = "../unprofile" }
-
 bevy = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 bevy-persistent = { workspace = true }
+dirs = { workspace = true }
+uncore = { path = "../uncore" }
+ron = { workspace = true }

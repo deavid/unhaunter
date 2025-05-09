@@ -22,6 +22,8 @@ members = [
     "uncoremenu",
     "unmapload",
     "uncampaign",
+    "unprofile",
+    "unsummary",
 ]
 resolver = "3"
 
@@ -61,8 +63,6 @@ itertools = "0.14.0"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-
-
 bevy = { version = "0.15", features = ["jpeg", "serialize"] }
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
@@ -104,6 +104,8 @@ unwalkie = { path = "unwalkie" }
 uncoremenu = { path = "uncoremenu" }
 unmapload = { path = "unmapload" }
 uncampaign = { path = "uncampaign" }
+unprofile = { path = "unprofile" }
+unsummary = { path = "unsummary" }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }

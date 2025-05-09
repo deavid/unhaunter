@@ -1,12 +1,15 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncore::colors;
+use uncore::platform::plt::FONT_SCALE;
 use uncore::platform::plt::VERSION;
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuItemInteractive;
 use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
+use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
@@ -55,7 +58,11 @@ pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     info!("Main menu camera setup");
 }
 
-pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
+pub fn setup_ui(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    player_profile_resource: Res<Persistent<PlayerProfileData>>,
+) {
     let menu_items = vec![
         (MenuID::Campaign, MenuID::Campaign.to_string()),
         (MenuID::CustomMission, MenuID::CustomMission.to_string()),
@@ -81,6 +88,31 @@ pub fn setup_ui(mut commands: Commands, handles: Res<GameAssets>) {
     );
 
     warn!("Main menu created with root entity: {:?}", root_id);
+
+    // Add a persistent UI element to display the player's current Bank balance
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Px(30.0),
+            position_type: PositionType::Absolute,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexEnd,
+            ..default()
+        })
+        .insert(MenuUI)
+        .with_children(|parent| {
+            parent
+                .spawn(Text::new(format!(
+                    "Bank: ${} ",
+                    player_profile_resource.get().progression.bank
+                )))
+                .insert(TextFont {
+                    font: handles.fonts.londrina.w300_light.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
+        });
 }
 
 pub fn cleanup(

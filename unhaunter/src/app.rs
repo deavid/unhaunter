@@ -19,12 +19,13 @@ use unmenu::plugin::UnhaunterMenuPlugin;
 use unmenusettings::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
+use unprofile::plugin::UnprofilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
-use unstd::plugins::summary::UnhaunterSummaryPlugin;
+use unsummary::summary::UnhaunterSummaryPlugin;
 use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 use unwalkie::plugin::UnhaunterWalkiePlugin;
@@ -79,6 +80,7 @@ pub fn app_run() {
         UnhaunterCoreMenuPlugin,
         UnhaunterMapLoadPlugin,
         UnhaunterCampaignPlugin,
+        UnprofilePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     #[cfg(not(target_arch = "wasm32"))]

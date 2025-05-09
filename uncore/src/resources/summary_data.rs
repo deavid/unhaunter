@@ -15,6 +15,36 @@ pub struct SummaryData {
     pub average_sanity: f32,
     pub player_count: usize,
     pub alive_count: usize,
+
+    // NEW FIELDS for v1.0 Bank & Progression
+    pub current_mission_id: String, // e.g., map path
+
+    /// The total money earned during the mission.
+    pub money_earned: i64,
+
+    /// The grade achieved for the mission.
+    pub grade_achieved: String,
+
+    /// The required deposit for the mission.
+    pub required_deposit: i64,
+
+    /// The base reward for completing the mission.
+    pub mission_reward_base: i64,
+
+    /// The bonus reward for achieving a high grade.
+    pub mission_reward_bonus: i64,
+
+    /// The penalty applied for failing the mission.
+    pub mission_penalty: i64,
+
+    /// The amount of insurance deposit the player had at the start of mission
+    pub deposit_originally_held: i64,
+
+    /// The amount returned to bank after mission completion
+    pub deposit_returned_to_bank: i64,
+
+    /// Costs deducted from the deposit
+    pub costs_deducted_from_deposit: i64,
 }
 
 impl SummaryData {

@@ -14,4 +14,13 @@ pub enum SummaryUIType {
     AvgSanity,
     PlayersAlive,
     FinalScore,
+    GradeAchieved,
+    BaseReward,
+    GradeMultiplier,
+    CalculatedEarnings,
+    InsuranceDepositHeld,
+    CostsDeducted,
+    DepositReturned,
+    NetChange,
+    FinalBankTotal,
 }

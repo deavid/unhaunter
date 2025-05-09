@@ -27,6 +27,30 @@ pub struct NaivelyParsedProps {
     pub location_name: String,
     /// In-universe address of the location. Parsed from the 'location_address' TMX property.
     pub location_address: String,
+
+    /// The base reward for completing the mission.
+    pub mission_reward_base: i64,
+
+    /// The required deposit for the mission.
+    pub required_deposit: i64,
+
+    /// The bonus reward for achieving a high grade.
+    pub mission_reward_bonus: i64,
+
+    /// The penalty applied for failing the mission.
+    pub mission_penalty: i64,
+
+    /// Score threshold for achieving grade A
+    pub grade_a_score_threshold: i64,
+
+    /// Score threshold for achieving grade B
+    pub grade_b_score_threshold: i64,
+
+    /// Score threshold for achieving grade C
+    pub grade_c_score_threshold: i64,
+
+    /// Score threshold for achieving grade D
+    pub grade_d_score_threshold: i64,
 }
 
 /// Represents a Tiled map asset (`.tmx` file).
@@ -50,18 +74,21 @@ impl TmxMap {
         let props_map = naive_tmx_loader(Cursor::new(&bytes))?;
 
         let class = props_map.get("$class$").cloned().unwrap_or_default();
-
-        // display_name is now part of NaivelyParsedProps, populated from the map or defaulted.
         let display_name_from_map = props_map.get("display_name").cloned().unwrap_or_default();
-
         let is_campaign_mission = props_map
             .get("is_campaign_mission")
             .is_some_and(|s| s == "true");
 
-        // Populate NaivelyParsedProps, including display_name
-        let parsed_props = NaivelyParsedProps {
+        let parse_i64 = |key: &str, default: i64| -> i64 {
+            props_map
+                .get(key)
+                .and_then(|s| s.parse::<i64>().ok())
+                .unwrap_or(default)
+        };
+
+        let mut parsed_props = NaivelyParsedProps {
             is_campaign_mission,
-            display_name: display_name_from_map, // Use the value extracted from props_map
+            display_name: display_name_from_map,
             flavor_text: props_map.get("flavor_text").cloned().unwrap_or_default(),
             campaign_order: props_map.get("campaign_order").cloned().unwrap_or_default(),
             campaign_difficulty_str: props_map
@@ -77,14 +104,131 @@ impl TmxMap {
                 .get("location_address")
                 .cloned()
                 .unwrap_or_default(),
+            mission_reward_base: parse_i64("mission_reward_base", 0),
+            required_deposit: parse_i64("required_deposit", 0),
+            mission_reward_bonus: parse_i64("mission_reward_bonus", 0),
+            mission_penalty: parse_i64("mission_penalty", 0),
+            grade_a_score_threshold: parse_i64("grade_a_score_threshold", 1000),
+            grade_b_score_threshold: parse_i64("grade_b_score_threshold", 500),
+            grade_c_score_threshold: parse_i64("grade_c_score_threshold", 250),
+            grade_d_score_threshold: parse_i64("grade_d_score_threshold", 125),
         };
+
+        // Ensure grade thresholds are fully initialized
+        let (grade_a, grade_b, grade_c, grade_d) = Self::calculate_grade_thresholds(&parsed_props);
+        parsed_props.grade_a_score_threshold = grade_a;
+        parsed_props.grade_b_score_threshold = grade_b;
+        parsed_props.grade_c_score_threshold = grade_c;
+        parsed_props.grade_d_score_threshold = grade_d;
 
         Ok(Self {
             bytes,
             class,
-            props: parsed_props, // Store the populated NaivelyParsedProps
+            props: parsed_props,
         })
     }
+
+    fn calculate_grade_thresholds(props: &NaivelyParsedProps) -> (i64, i64, i64, i64) {
+        const GOLDEN_RATIO: f32 = 1.618;
+        const DEFAULT_A: i64 = 1000;
+        const DEFAULT_B: i64 = 500;
+        const DEFAULT_C: i64 = 250;
+        const DEFAULT_D: i64 = 125;
+
+        let mut grade_a = Some(props.grade_a_score_threshold);
+        let mut grade_b = Some(props.grade_b_score_threshold);
+        let mut grade_c = Some(props.grade_c_score_threshold);
+        let mut grade_d = Some(props.grade_d_score_threshold);
+
+        if grade_a.is_none() && grade_b.is_none() && grade_c.is_none() && grade_d.is_none() {
+            grade_a = Some(DEFAULT_A);
+            grade_b = Some(DEFAULT_B);
+            grade_c = Some(DEFAULT_C);
+            grade_d = Some(DEFAULT_D);
+        } else if let Some(a_val) = grade_a {
+            if grade_b.is_none() {
+                grade_b = Some((a_val as f32 / GOLDEN_RATIO).round() as i64);
+            }
+            if let Some(b_val) = grade_b {
+                if grade_c.is_none() {
+                    grade_c = Some((b_val as f32 / GOLDEN_RATIO).round() as i64);
+                }
+            }
+            if let Some(c_val) = grade_c {
+                if grade_d.is_none() {
+                    grade_d = Some((c_val as f32 / GOLDEN_RATIO).round() as i64);
+                }
+            }
+        } else if let Some(d_val) = grade_d {
+            if grade_c.is_none() {
+                grade_c = Some((d_val as f32 * GOLDEN_RATIO).round() as i64);
+            }
+            if let Some(c_val) = grade_c {
+                if grade_b.is_none() {
+                    grade_b = Some((c_val as f32 * GOLDEN_RATIO).round() as i64);
+                }
+            }
+            if let Some(b_val) = grade_b {
+                if grade_a.is_none() {
+                    grade_a = Some((b_val as f32 * GOLDEN_RATIO).round() as i64);
+                }
+            }
+        }
+
+        (
+            grade_a.unwrap_or(DEFAULT_A),
+            grade_b.unwrap_or(DEFAULT_B),
+            grade_c.unwrap_or(DEFAULT_C),
+            grade_d.unwrap_or(DEFAULT_D),
+        )
+    }
+
+    /// Parse an i64 value from a string property.
+    /// Returns the default value if the string is empty or cannot be parsed.
+    pub fn parse_i64_property(
+        &self,
+        val_str: Option<&str>,
+        property_name: &str,
+        default_value: i64,
+    ) -> i64 {
+        let Some(val_str) = val_str else {
+            return default_value;
+        };
+
+        if val_str.is_empty() {
+            return default_value;
+        }
+
+        val_str.parse::<i64>().unwrap_or_else(|e| {
+            warn!(
+                "TMX property '{}' ('{}') parse error: {:?}. Defaulting to {}.",
+                property_name, val_str, e, default_value
+            );
+            default_value
+        })
+    }
+
+    /// Get the mission reward base value, parsed to i64
+    pub fn mission_reward_base(&self) -> i64 {
+        self.props.mission_reward_base
+    }
+
+    /// Get the required deposit value, parsed to i64
+    pub fn required_deposit(&self) -> i64 {
+        self.props.required_deposit
+    }
+
+    /// Get the mission reward bonus value, parsed to i64
+    pub fn mission_reward_bonus(&self) -> i64 {
+        self.props.mission_reward_bonus
+    }
+
+    /// Get the mission penalty value, parsed to i64
+    pub fn mission_penalty(&self) -> i64 {
+        self.props.mission_penalty
+    }
+
+    // Removed the `get_grade_thresholds` method as it is no longer needed.
 }
 
 /// Errors that can occur during the loading of a `TmxMap` asset.

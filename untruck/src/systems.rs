@@ -6,10 +6,13 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::truck::TruckUI;
 use uncore::components::truck_ui_button::TruckUIButton;
 use uncore::events::truck::TruckUIEvent;
+use uncore::resources::board_data::BoardData;
 use uncore::resources::ghost_guess::GhostGuess;
+use uncore::resources::summary_data::SummaryData;
 use uncore::states::{AppState, GameState};
-use uncore::types::truck_button::TruckButtonType; // Add this import
+use uncore::types::truck_button::TruckButtonType;
 use ungear::components::playergear::PlayerGear;
+use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
 // Component to mark the progress bar for hold buttons
@@ -250,10 +253,49 @@ pub fn truckui_event_handle(
     gc: Res<GameConfig>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     audio_settings: Res<Persistent<AudioSettings>>,
+    mut summary_data: ResMut<SummaryData>,
+    board_data: Res<BoardData>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
+                // Debug: Log the current state of board_data.map_path
+                info!(
+                    "[EndMission] Current board_data.map_path: '{}'",
+                    board_data.map_path
+                );
+
+                let initial_deposit_held = player_profile.progression.insurance_deposit;
+
+                player_profile.progression.bank += initial_deposit_held;
+                player_profile.progression.insurance_deposit = 0;
+
+                if let Err(e) = player_profile.persist() {
+                    panic!("Failed to persist PlayerProfileData: {:?}", e);
+                }
+
+                // Set summary_data.current_mission_id from board_data.map_path
+                summary_data.current_mission_id = board_data.map_path.clone();
+
+                // Debug: Log the updated value of summary_data.current_mission_id
+                info!(
+                    "[EndMission] Set summary_data.current_mission_id to: '{}'",
+                    summary_data.current_mission_id
+                );
+
+                summary_data.deposit_originally_held = initial_deposit_held;
+                summary_data.deposit_returned_to_bank = initial_deposit_held;
+                summary_data.costs_deducted_from_deposit = 0;
+                summary_data.money_earned = 0;
+
+                if summary_data.ghosts_unhaunted == summary_data.ghost_types.len() as u32 {
+                    // All ghosts were unhaunted, successful completion
+                    summary_data.grade_achieved = "".to_string(); // Empty string allows proper grade calculation
+                } else {
+                    summary_data.grade_achieved = "Mission Aborted".to_string();
+                }
+
                 game_next_state.set(GameState::None);
                 next_state.set(AppState::Summary);
             }

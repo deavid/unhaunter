@@ -1,0 +1,665 @@
+use bevy::{color::palettes::css, prelude::*};
+use bevy_persistent::Persistent;
+use uncore::assets::tmxmap::TmxMap;
+use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
+use uncore::difficulty::CurrentDifficulty;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::resources::maps::Maps;
+use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
+use uncore::states::GameState;
+use uncore::types::root::game_assets::GameAssets;
+use uncore::utils::time::format_time;
+use unprofile::data::PlayerProfileData;
+
+pub fn setup(mut commands: Commands) {
+    // ui camera
+    commands.spawn(Camera2d).insert(SCamera);
+    info!("Summary camera setup");
+}
+
+pub fn cleanup(
+    mut commands: Commands,
+    qc: Query<Entity, With<SCamera>>,
+    qu: Query<Entity, With<SummaryUI>>,
+) {
+    // Despawn old camera if exists
+    for cam in qc.iter() {
+        commands.entity(cam).despawn_recursive();
+    }
+
+    // Despawn UI if not used
+    for ui_entity in qu.iter() {
+        commands.entity(ui_entity).despawn_recursive();
+    }
+}
+
+pub fn update_time(
+    time: Res<Time>,
+    mut sd: ResMut<SummaryData>,
+    game_state: Res<State<GameState>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
+    qp: Query<&PlayerSprite>,
+    difficulty: Res<CurrentDifficulty>,
+) {
+    if *game_state == GameState::Pause {
+        return;
+    }
+    sd.difficulty = difficulty.clone();
+    sd.time_taken_secs += time.delta_secs();
+    let total_sanity: f32 = qp.iter().map(|x| x.sanity()).sum();
+    let player_count = qp.iter().count();
+    let alive_count = qp.iter().filter(|x| x.health > 0.0).count();
+    sd.player_count = player_count;
+    sd.alive_count = alive_count;
+    if player_count > 0 {
+        sd.average_sanity = total_sanity / player_count as f32;
+    }
+    if alive_count == 0 {
+        app_next_state.set(AppState::Summary);
+    }
+}
+
+pub fn keyboard(
+    app_state: Res<State<AppState>>,
+    mut app_next_state: ResMut<NextState<AppState>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if *app_state.get() != AppState::Summary {
+        return;
+    }
+    if keyboard_input.just_pressed(KeyCode::Escape)
+        | keyboard_input.just_pressed(KeyCode::NumpadEnter)
+        | keyboard_input.just_pressed(KeyCode::Enter)
+    {
+        app_next_state.set(AppState::MainMenu);
+    }
+}
+pub fn setup_ui(
+    mut commands: Commands,
+    handles: Res<GameAssets>,
+    rsd: Res<SummaryData>,
+    player_profile_resource: Res<Persistent<PlayerProfileData>>,
+) {
+    let main_color = Color::Srgba(Srgba {
+        red: 0.2,
+        green: 0.2,
+        blue: 0.2,
+        alpha: 0.05,
+    });
+
+    // Calculate net change to bank
+    let net_change = rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
+
+    // Calculate projected final bank total
+    let final_bank = player_profile_resource.get().progression.bank + net_change;
+
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect {
+                left: Val::Percent(10.0),
+                right: Val::Percent(10.0),
+                top: Val::Percent(5.0),
+                bottom: Val::Percent(5.0),
+            },
+            flex_grow: 1.0,
+            ..default()
+        })
+        .insert(BackgroundColor(main_color))
+        .insert(SummaryUI)
+        .with_children(|parent| {
+            parent
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(20.0),
+                    min_width: Val::Px(0.0),
+                    min_height: Val::Px(64.0 * UI_SCALE),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexStart,
+                    ..default()
+                })
+                .with_children(|parent| {
+                    // logo
+                    parent
+                        .spawn(ImageNode {
+                            image: handles.images.title.clone(),
+                            ..default()
+                        })
+                        .insert(Node {
+                            aspect_ratio: Some(130.0 / 17.0),
+                            width: Val::Percent(80.0),
+                            height: Val::Auto,
+                            max_width: Val::Percent(80.0),
+                            max_height: Val::Percent(100.0),
+                            flex_shrink: 1.0,
+                            ..default()
+                        });
+                });
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(5.0),
+                ..default()
+            });
+            parent
+                .spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(70.0),
+                    justify_content: JustifyContent::SpaceEvenly,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                })
+                .insert(BackgroundColor(main_color))
+                .with_children(|parent| {
+                    // Header
+                    parent
+                        .spawn(Text::new("Mission Summary"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 32.0 * FONT_SCALE, // Reduced from 42.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+
+                    // Ghost and mission details
+                    parent
+                        .spawn(Text::new("Ghost list"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::GhostList);
+
+                    parent
+                        .spawn(Text::new("Time taken: 00.00.00"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::TimeTaken);
+
+                    parent
+                        .spawn(Text::new("Players Alive: 0/0"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::PlayersAlive);
+
+                    // Separator
+                    parent
+                        .spawn(Node {
+                            width: Val::Percent(80.0),
+                            height: Val::Px(2.0),
+                            margin: UiRect {
+                                top: Val::Px(15.0),
+                                bottom: Val::Px(15.0),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .insert(BackgroundColor(css::GRAY.into()));
+
+                    // Performance and financial details
+                    // Grade and Score
+                    parent
+                        .spawn(Text::new(format!("Grade Achieved: {}", rsd.grade_achieved)))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 28.0 * FONT_SCALE, // Reduced from 36.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+
+                    parent
+                        .spawn(Text::new(format!(
+                            "Final Score: {} x {:.1} = {}",
+                            rsd.base_score, rsd.difficulty_multiplier, rsd.final_score
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE, // Reduced from 32.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::FinalScore);
+
+                    // Separator
+                    parent
+                        .spawn(Node {
+                            width: Val::Percent(80.0),
+                            height: Val::Px(2.0),
+                            margin: UiRect {
+                                top: Val::Px(10.0),
+                                bottom: Val::Px(10.0),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .insert(BackgroundColor(css::GRAY.into()));
+
+                    // Financial details
+                    parent
+                        .spawn(Text::new(format!(
+                            "Base Mission Reward: ${}",
+                            rsd.money_earned
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    parent
+                        .spawn(Text::new(format!(
+                            "Grade Multiplier: {}x",
+                            rsd.difficulty_multiplier
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    parent
+                        .spawn(Text::new(format!(
+                            "Calculated Earnings: ${}",
+                            rsd.money_earned
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    // Separator
+                    parent
+                        .spawn(Node {
+                            width: Val::Percent(60.0),
+                            height: Val::Px(1.0),
+                            margin: UiRect {
+                                top: Val::Px(5.0),
+                                bottom: Val::Px(5.0),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .insert(BackgroundColor(css::DARK_GRAY.into()));
+
+                    // Insurance details
+                    parent
+                        .spawn(Text::new(format!(
+                            "Insurance Deposit Held: ${}",
+                            rsd.deposit_originally_held
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    parent
+                        .spawn(Text::new(format!(
+                            "Costs/Penalties Deducted: ${}",
+                            rsd.costs_deducted_from_deposit
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    parent
+                        .spawn(Text::new(format!(
+                            "Deposit Returned to Bank: ${}",
+                            rsd.deposit_returned_to_bank
+                        )))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()));
+
+                    // Separator
+                    parent
+                        .spawn(Node {
+                            width: Val::Percent(80.0),
+                            height: Val::Px(2.0),
+                            margin: UiRect {
+                                top: Val::Px(10.0),
+                                bottom: Val::Px(10.0),
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .insert(BackgroundColor(css::GRAY.into()));
+
+                    // Final calculations
+                    parent
+                        .spawn(Text::new(format!("Net Change to Bank: ${}", net_change)))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 26.0 * FONT_SCALE, // Reduced from 34.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+
+                    parent
+                        .spawn(Text::new(format!("Final Money in Bank: ${}", final_bank)))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 26.0 * FONT_SCALE, // Reduced from 34.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(Color::WHITE));
+
+                    // Press enter prompt
+                    parent.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(5.0),
+                        ..default()
+                    });
+
+                    parent
+                        .spawn(Text::new("[ - Press enter to continue - ]"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 22.0 * FONT_SCALE, // Reduced from 30.0
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::ORANGE_RED.into()));
+                });
+        });
+    info!("Main menu loaded");
+}
+
+pub fn update_ui(
+    mut qui: Query<(&SummaryUIType, &mut Text)>,
+    rsd: Res<SummaryData>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
+) {
+    for (sui, mut text) in &mut qui {
+        match &sui {
+            SummaryUIType::GhostList => {
+                text.0 = format!(
+                    "Ghost: {}",
+                    rsd.ghost_types
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+            SummaryUIType::TimeTaken => {
+                text.0 = format!("Time taken: {}", format_time(rsd.time_taken_secs))
+            }
+            SummaryUIType::AvgSanity => {
+                text.0 = format!("Average Sanity: {:.1}%", rsd.average_sanity)
+            }
+            SummaryUIType::GhostUnhaunted => {
+                text.0 = format!(
+                    "Ghosts unhaunted: {}/{}",
+                    rsd.ghosts_unhaunted,
+                    rsd.ghost_types.len()
+                )
+            }
+            SummaryUIType::PlayersAlive => {
+                text.0 = format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
+            }
+            SummaryUIType::RepellentUsed => {
+                text.0 = format!("Repellent charges used: {}", rsd.repellent_used_amt)
+            }
+            SummaryUIType::FinalScore => {
+                // Format the score calculation using the stored base_score and difficulty_multiplier
+                text.0 = format!(
+                    "Final Score: {} x {:.1} = {}",
+                    rsd.base_score, rsd.difficulty_multiplier, rsd.final_score
+                );
+            }
+            SummaryUIType::GradeAchieved => {
+                text.0 = format!("Grade Achieved: {}", rsd.grade_achieved);
+            }
+            SummaryUIType::BaseReward => {
+                text.0 = format!("Base Mission Reward: ${}", rsd.money_earned);
+            }
+            SummaryUIType::GradeMultiplier => {
+                text.0 = format!("Grade Multiplier: {:.1}x", rsd.difficulty_multiplier);
+            }
+            SummaryUIType::CalculatedEarnings => {
+                text.0 = format!("Calculated Earnings: ${}", rsd.money_earned);
+            }
+            SummaryUIType::InsuranceDepositHeld => {
+                text.0 = format!("Insurance Deposit Held: ${}", rsd.deposit_originally_held);
+            }
+            SummaryUIType::CostsDeducted => {
+                text.0 = format!(
+                    "Costs/Penalties Deducted: ${}",
+                    rsd.costs_deducted_from_deposit
+                );
+            }
+            SummaryUIType::DepositReturned => {
+                text.0 = format!(
+                    "Deposit Returned to Bank: ${}",
+                    rsd.deposit_returned_to_bank
+                );
+            }
+            SummaryUIType::NetChange => {
+                let net_change =
+                    rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
+                text.0 = format!("Net Change to Bank: ${}", net_change);
+            }
+            SummaryUIType::FinalBankTotal => {
+                let net_change =
+                    rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
+                let final_bank = player_profile.get().progression.bank + net_change;
+                text.0 = format!("Final Bank Total: ${}", final_bank);
+            }
+        }
+    }
+}
+
+pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>) {
+    if *app_state != AppState::Summary {
+        return;
+    }
+    let desired_score = sd.calculate_score();
+    let max_delta = desired_score - sd.final_score;
+    let delta = (max_delta / 200).max(10).min(max_delta);
+    sd.final_score += delta;
+}
+
+pub fn calculate_rewards_and_grades(
+    mut sd: ResMut<SummaryData>,
+    tmx_assets: Res<Assets<TmxMap>>,
+    maps: Res<Maps>,
+    app_state: Res<State<AppState>>,
+) {
+    if *app_state != AppState::Summary {
+        return;
+    }
+
+    // Debug: Log current state of SummaryData
+    info!(
+        "Calculating rewards and grades. Current SummaryData: {:?}",
+        *sd
+    );
+
+    // Check if we need to process or if the grade is already a mission status message
+    let is_status_message = matches!(
+        sd.grade_achieved.as_str(),
+        "Mission Aborted" | "Partially Complete"
+    );
+
+    // Only assign grades and money if the mission was successfully completed
+    let can_assign_grade = sd.grade_achieved.is_empty() || sd.grade_achieved == "Mission Complete";
+
+    if can_assign_grade && !is_status_message {
+        if let Some(map_data) = maps
+            .maps
+            .iter()
+            .find(|map| map.name == sd.current_mission_id)
+        {
+            if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
+                let props = &tmx_map.props;
+
+                // Debug: Log TmxMap properties
+                info!("TmxMap properties: {:?}", props);
+
+                let grade = if sd.final_score >= props.grade_a_score_threshold {
+                    "A"
+                } else if sd.final_score >= props.grade_b_score_threshold {
+                    "B"
+                } else if sd.final_score >= props.grade_c_score_threshold {
+                    "C"
+                } else if sd.final_score >= props.grade_d_score_threshold {
+                    "D"
+                } else {
+                    "F"
+                };
+
+                let multiplier = match grade {
+                    "A" => 5.0,
+                    "B" => 3.0,
+                    "C" => 2.0,
+                    "D" => 1.0,
+                    _ => 0.5,
+                };
+
+                let money_earned = (props.mission_reward_base as f64 * multiplier)
+                    .round()
+                    .max(0.0) as i64;
+
+                // Debug: Log calculated grade and money earned
+                info!(
+                    "Assigning grade {} with ${} reward for score {}",
+                    grade, money_earned, sd.final_score
+                );
+
+                sd.grade_achieved = grade.to_string();
+                sd.money_earned = money_earned;
+            } else {
+                warn!(
+                    "TmxMap asset not found for mission ID: {}",
+                    sd.current_mission_id
+                );
+            }
+        } else {
+            warn!(
+                "Mission data not found for mission ID: {}",
+                sd.current_mission_id
+            );
+        }
+    } else if is_status_message {
+        info!("Mission not fully completed. Status: {}", sd.grade_achieved);
+        // No money rewards for incomplete missions
+        sd.money_earned = 0;
+    }
+}
+
+pub fn finalize_profile_update(
+    sd: Res<SummaryData>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+    app_state: Res<State<AppState>>,
+) {
+    if *app_state != AppState::Summary {
+        return;
+    }
+
+    if sd.money_earned > 0 {
+        player_profile.progression.bank += sd.money_earned;
+    }
+
+    player_profile
+        .progression
+        .completed_missions
+        .insert(sd.current_mission_id.clone());
+    player_profile.statistics.total_missions_completed += 1;
+    player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;
+
+    // Add final score to player XP
+    player_profile.progression.player_xp += sd.final_score;
+
+    if let Err(e) = player_profile.persist() {
+        error!("Failed to persist player profile: {:?}", e);
+    }
+}
+
+pub struct UnhaunterSummaryPlugin;
+
+impl Plugin for UnhaunterSummaryPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SummaryData>()
+            .add_systems(
+                OnEnter(AppState::Summary),
+                (
+                    setup,
+                    store_mission_id, // Add this system to preserve the mission ID
+                    calculate_rewards_and_grades,
+                    setup_ui,
+                    finalize_profile_update,
+                )
+                    .chain(),
+            )
+            .add_systems(OnExit(AppState::Summary), cleanup)
+            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                (keyboard, update_ui, update_score).run_if(in_state(AppState::Summary)),
+            );
+    }
+}
+
+// Add a new system to ensure the mission ID is preserved and correctly set
+pub fn store_mission_id(
+    mut sd: ResMut<SummaryData>,
+    board_data: Option<Res<uncore::resources::board_data::BoardData>>,
+) {
+    // Debug: Log initial state of SummaryData and BoardData
+    info!(
+        "store_mission_id: SummaryData current_mission_id='{}'",
+        sd.current_mission_id
+    );
+
+    match &board_data {
+        Some(bd) => info!(
+            "store_mission_id: BoardData is available, map_path='{}'",
+            bd.map_path
+        ),
+        None => info!("store_mission_id: BoardData is NOT available (resource not found)"),
+    }
+
+    // If the current_mission_id is empty but we have board data available, use that
+    if sd.current_mission_id.is_empty() {
+        if let Some(bd) = board_data {
+            info!("Setting mission ID from board_data: {}", bd.map_path);
+            sd.current_mission_id = bd.map_path.clone();
+        } else {
+            warn!("No board data available to set mission ID");
+
+            // For debugging - examine SummaryData to see what ghost types exist
+            info!(
+                "Ghost types in SummaryData: {:?}, unhaunted: {}",
+                sd.ghost_types, sd.ghosts_unhaunted
+            );
+        }
+    } else {
+        info!("Using existing mission ID: {}", sd.current_mission_id);
+    }
+}

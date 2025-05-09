@@ -96,6 +96,7 @@ pub fn tmxmap_preload(
                 display_name
             };
             info!("Found map {display_name:?} at path {path:?}");
+
             maps.maps.push(Map {
                 name: display_name,
                 path,
@@ -115,7 +116,6 @@ pub fn tmxmap_preload(
         }
     }
     if cleanup_needed {
-        // Remove processed ones to avoid iterating them every frame.
         mapsidx.maps.retain(|x| !x.processed);
         mapsidx.sheets.retain(|x| !x.processed);
     }

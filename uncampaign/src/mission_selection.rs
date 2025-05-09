@@ -3,6 +3,7 @@ use bevy::picking::PickingBehavior;
 use bevy::prelude::*;
 use bevy::ui::ScrollPosition; // Needed for scrollbar
 
+use uncore::assets::tmxmap::TmxMap;
 use uncore::colors;
 use uncore::platform::plt::FONT_SCALE; // For UI scaling
 use uncore::states::AppState;
@@ -18,8 +19,10 @@ use uncoremenu::{
 };
 
 // Add new imports for mission selection logic
+use bevy_persistent::Persistent;
 use uncore::difficulty::CurrentDifficulty; // To set difficulty on load
 use uncore::events::loadlevel::LoadLevelEvent; // To trigger level loading
+use uncore::resources::maps::Maps;
 
 // Component to delay input processing to avoid immediate selection
 #[derive(Component, Default)]
@@ -101,6 +104,10 @@ fn handle_selection_input(
     mut difficulty_resource: ResMut<CurrentDifficulty>, // To set the chosen difficulty
     mut ev_load_level: EventWriter<LoadLevelEvent>, // To trigger level load
     mut next_app_state: ResMut<NextState<AppState>>, // To change AppState
+    maps_resource: Res<Maps>,              // Access maps resource
+    tmx_assets: Res<Assets<TmxMap>>,       // Added Res<Assets<TmxMap>>
+    mut player_profile_resource: ResMut<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
+    mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
 ) {
     // Check if we should ignore input events
     if let Ok(debounce) = debounce_query.get_single() {
@@ -156,13 +163,66 @@ fn handle_selection_input(
                     mission.difficulty
                 );
 
-                // Send event to load the selected level
+                // Retrieve the selected mission's data
+                let mission = &campaign_missions.missions[identifier];
+                let map_filepath = &mission.map_filepath;
+
+                // Access the mission configuration from Res<Maps>
+                let map_data = maps_resource
+                    .maps
+                    .iter()
+                    .find(|map| map.path == *map_filepath)
+                    .expect("Map not found in Res<Maps>");
+
+                let tmx_asset = tmx_assets
+                    .get(&map_data.handle)
+                    .expect("TmxMap asset not found for selected map");
+
+                let desired_total_deposit = tmx_asset.props.required_deposit;
+
+                // Access the player's profile
+                let player_profile = player_profile_resource.get_mut();
+                let current_held_deposit = player_profile.progression.insurance_deposit;
+                let additional_bank_needed = desired_total_deposit - current_held_deposit;
+
+                // Handle the deposit based on what's needed
+                match additional_bank_needed.cmp(&0) {
+                    std::cmp::Ordering::Greater => {
+                        if player_profile.progression.bank >= additional_bank_needed {
+                            player_profile.progression.bank -= additional_bank_needed;
+                            player_profile.progression.insurance_deposit += additional_bank_needed;
+                        } else {
+                            warn!(
+                                "Insufficient money in bank for deposit. Required: ${}, Available: ${}",
+                                desired_total_deposit, player_profile.progression.bank
+                            );
+                            if let Ok(mut text) = q_desc_text.get_single_mut() {
+                                text.0 = format!(
+                                    "Insufficient Money in Bank for deposit. Required: ${}, Available: ${}",
+                                    desired_total_deposit, player_profile.progression.bank
+                                );
+                            }
+                            return;
+                        }
+                    }
+                    std::cmp::Ordering::Less => {
+                        let refund_to_bank = -additional_bank_needed;
+                        player_profile.progression.bank += refund_to_bank;
+                        player_profile.progression.insurance_deposit -= refund_to_bank;
+                    }
+                    std::cmp::Ordering::Equal => {}
+                }
+
+                // Persist the updated player profile
+                if let Err(e) = player_profile_resource.persist() {
+                    error!("Failed to persist PlayerProfileData: {:?}", e);
+                    panic!("Profile persistence failed!");
+                }
+
+                // Proceed with loading the mission
                 ev_load_level.send(LoadLevelEvent {
                     map_filepath: mission.map_filepath.clone(),
                 });
-                info!("Loading campaign map: {}", mission.map_filepath);
-
-                // Transition to Loading state
                 next_app_state.set(AppState::Loading);
                 return; // Exit early after starting load
             }
@@ -186,6 +246,8 @@ pub fn update_mission_selection(
     asset_server: Res<AssetServer>,                       // To load images
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
     mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>, // Query preview image (using ImageNode for Bevy 0.15)
+    maps_resource: Res<Maps>,                                              // Access maps resource
+    tmx_assets: Res<Assets<TmxMap>>,                                       // Access TmxMap assets
 ) {
     for ev in ev_menu_selection.read() {
         let selected_idx = ev.0; // Get the index from the event
@@ -196,12 +258,32 @@ pub fn update_mission_selection(
 
             // Update Description Text
             if let Ok(mut text) = q_desc_text.get_single_mut() {
+                let map_data = maps_resource
+                    .maps
+                    .iter()
+                    .find(|map| map.path == mission.map_filepath)
+                    .expect("Map not found");
+                let tmx_asset = tmx_assets
+                    .get(&map_data.handle)
+                    .expect("TmxMap asset not found");
+
+                let required_deposit = tmx_asset.props.required_deposit;
+                let base_reward = tmx_asset.props.mission_reward_base;
+                let potential_reward_range = format!(
+                    "${:.0} - ${:.0}",
+                    base_reward as f64 * 0.5,
+                    base_reward as f64 * 5.0
+                );
+
                 text.0 = format!(
-                    "Mission: <{}>\nLocation: {}\n{}\n\n{}",
+                    "Mission: <{}>\nLocation: {}\n{}\n\n{}\n\nRequired Deposit: ${}\nReward: ${} ({})",
                     mission.display_name,
                     mission.location_name,
                     mission.location_address,
                     mission.flavor_text,
+                    required_deposit,
+                    base_reward,
+                    potential_reward_range,
                 );
             } else {
                 warn!("MissionDescriptionText not found in UI.");
@@ -230,6 +312,7 @@ pub fn setup_ui(
     handles: Res<GameAssets>,
     campaign_missions: Res<CampaignMissionsResource>,
     asset_server: Res<AssetServer>, // Needed for loading preview images
+    player_profile_resource: Res<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
 ) {
     info!("Setting up CampaignMissionSelectUI...");
 
@@ -400,18 +483,29 @@ pub fn setup_ui(
                             ));
 
                         // Spawn the Description Text node using Text::new and components
-                        desc_column.spawn(Text::new(initial_desc))
-                            .insert(TextFont { // TextFont component
-                                font: handles.fonts.titillium.w300_light.clone(),
-                                font_size: 19.0 * FONT_SCALE,
-                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                            })
-                            .insert(TextColor(colors::MENU_ITEM_COLOR_OFF)) // TextColor component
-                            .insert(TextLayout { // TextLayout component
-                                justify: JustifyText::Left, // Justify left
+                        desc_column
+                            .spawn(Node {
+                                // Background container with black semi-transparent background
+                                width: Val::Percent(100.0),
+                                padding: UiRect::all(Val::Px(10.0)),
                                 ..default()
                             })
-                            .insert(MissionDescriptionText); // Marker component
+                            .insert(BackgroundColor(colors::PANEL_BGCOLOR.with_alpha(0.95)))
+                            .with_children(|text_container| {
+                                text_container
+                                    .spawn(Text::new(initial_desc))
+                                    .insert(TextFont { // TextFont component
+                                        font: handles.fonts.titillium.w300_light.clone(),
+                                        font_size: 19.0 * FONT_SCALE,
+                                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                    })
+                                    .insert(TextColor(colors::MENU_DESC_TEXT_COLOR)) // TextColor component
+                                    .insert(TextLayout { // TextLayout component
+                                        justify: JustifyText::Left, // Justify left
+                                        ..default()
+                                    })
+                                    .insert(MissionDescriptionText); // Marker component
+                            });
                     });
             });
 
@@ -424,5 +518,30 @@ pub fn setup_ui(
                         .to_string(),
                 ),
             );
+        });
+
+    // Add a persistent UI element to display the player's current Bank balance
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Px(30.0),
+            position_type: PositionType::Absolute,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexEnd,
+            ..default()
+        })
+        .insert(CampaignMissionSelectUI)
+        .with_children(|parent| {
+            parent
+                .spawn(Text::new(format!(
+                    "Bank: ${} ",
+                    player_profile_resource.get().progression.bank
+                )))
+                .insert(TextFont {
+                    font: handles.fonts.londrina.w300_light.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
         });
 }
