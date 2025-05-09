@@ -33,12 +33,6 @@ pub struct SummaryData {
     /// The base reward for completing the mission.
     pub mission_reward_base: i64,
 
-    /// The bonus reward for achieving a high grade.
-    pub mission_reward_bonus: i64,
-
-    /// The penalty applied for failing the mission.
-    pub mission_penalty: i64,
-
     /// The amount of insurance deposit the player had at the start of mission
     pub deposit_originally_held: i64,
 

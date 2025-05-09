@@ -34,12 +34,6 @@ pub struct NaivelyParsedProps {
     /// The required deposit for the mission.
     pub required_deposit: i64,
 
-    /// The bonus reward for achieving a high grade.
-    pub mission_reward_bonus: i64,
-
-    /// The penalty applied for failing the mission.
-    pub mission_penalty: i64,
-
     /// Score threshold for achieving grade A
     pub grade_a_score_threshold: i64,
 
@@ -106,8 +100,6 @@ impl TmxMap {
                 .unwrap_or_default(),
             mission_reward_base: parse_i64("mission_reward_base", 0),
             required_deposit: parse_i64("required_deposit", 0),
-            mission_reward_bonus: parse_i64("mission_reward_bonus", 0),
-            mission_penalty: parse_i64("mission_penalty", 0),
             grade_a_score_threshold: parse_i64("grade_a_score_threshold", 1000),
             grade_b_score_threshold: parse_i64("grade_b_score_threshold", 500),
             grade_c_score_threshold: parse_i64("grade_c_score_threshold", 250),
@@ -216,16 +208,6 @@ impl TmxMap {
     /// Get the required deposit value, parsed to i64
     pub fn required_deposit(&self) -> i64 {
         self.props.required_deposit
-    }
-
-    /// Get the mission reward bonus value, parsed to i64
-    pub fn mission_reward_bonus(&self) -> i64 {
-        self.props.mission_reward_bonus
-    }
-
-    /// Get the mission penalty value, parsed to i64
-    pub fn mission_penalty(&self) -> i64 {
-        self.props.mission_penalty
     }
 
     // Removed the `get_grade_thresholds` method as it is no longer needed.
