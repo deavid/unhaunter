@@ -81,7 +81,7 @@ pub fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     rsd: Res<SummaryData>,
-    player_profile_resource: Res<Persistent<PlayerProfileData>>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     let main_color = Color::Srgba(Srgba {
         red: 0.2,
@@ -94,7 +94,7 @@ pub fn setup_ui(
     let net_change = rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
 
     // Calculate projected final bank total
-    let final_bank = player_profile_resource.get().progression.bank + net_change;
+    let final_bank = player_profile.progression.bank + net_change;
 
     commands
         .spawn(Node {
@@ -473,7 +473,7 @@ pub fn update_ui(
             SummaryUIType::FinalBankTotal => {
                 let net_change =
                     rsd.money_earned + rsd.deposit_returned_to_bank - rsd.deposit_originally_held;
-                let final_bank = player_profile.get().progression.bank + net_change;
+                let final_bank = player_profile.progression.bank + net_change;
                 text.0 = format!("Final Bank Total: ${}", final_bank);
             }
         }

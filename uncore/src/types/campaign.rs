@@ -1,8 +1,7 @@
 use crate::difficulty::Difficulty;
-use bevy::prelude::Resource; // If CampaignMissions will be a Resource
-use serde::{Deserialize, Serialize}; // If you plan to serialize this later (optional for now) // Assuming Difficulty is in uncore::difficulty
+use bevy::prelude::Resource;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)] // Add Serialize/Deserialize if you might save/load this directly later
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CampaignMissionData {
     /// Unique identifier for the mission, could be derived from file path or an explicit ID.
     /// For now, let's use the map file path as a simple unique ID.

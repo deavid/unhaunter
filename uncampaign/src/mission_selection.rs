@@ -109,7 +109,7 @@ fn handle_selection_input(
     mut next_app_state: ResMut<NextState<AppState>>, // To change AppState
     maps_resource: Res<Maps>,              // Access maps resource
     tmx_assets: Res<Assets<TmxMap>>,       // Added Res<Assets<TmxMap>>
-    mut player_profile_resource: ResMut<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
+    mut player_profile: ResMut<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
 ) {
     // Check if we should ignore input events
@@ -183,8 +183,7 @@ fn handle_selection_input(
 
                 let desired_total_deposit = tmx_asset.props.required_deposit;
 
-                // Access the player's profile
-                let player_profile = player_profile_resource.get_mut();
+                // Access the player's profile directly
                 let current_held_deposit = player_profile.progression.insurance_deposit;
                 let additional_bank_needed = desired_total_deposit - current_held_deposit;
 
@@ -217,7 +216,7 @@ fn handle_selection_input(
                 }
 
                 // Persist the updated player profile
-                if let Err(e) = player_profile_resource.persist() {
+                if let Err(e) = player_profile.persist() {
                     error!("Failed to persist PlayerProfileData: {:?}", e);
                     panic!("Profile persistence failed!");
                 }
@@ -324,7 +323,7 @@ pub fn setup_ui(
     // Add a camera for the UI
     commands.spawn(Camera2d).insert(CampaignCamera);
 
-    let player_level = player_profile_resource.get().progression.player_level;
+    let player_level = player_profile_resource.progression.player_level;
 
     // Filter missions based on player level
     let available_missions: Vec<_> = campaign_missions_res
@@ -503,7 +502,7 @@ pub fn setup_ui(
                                             // Grade badge (right-aligned)
                                             if let Some(map) = map_data {
                                                 // Get the player's statistics for this map, if any
-                                                let player_stats = player_profile_resource.get()
+                                                let player_stats = player_profile_resource
                                                     .map_statistics
                                                     .get(&map.path);
 
@@ -623,7 +622,7 @@ pub fn setup_ui(
             );
 
             // Add the persistent player status bar
-            templates::create_player_status_bar(parent, &handles, player_profile_resource.get());
+            templates::create_player_status_bar(parent, &handles, &player_profile_resource);
         });
 
     // REMOVED persistent UI element for player status from here, will be added to mainmenu.rs

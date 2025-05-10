@@ -51,18 +51,14 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, manage_title_song);
 }
 
-pub fn setup(
-    mut commands: Commands,
-    mut player_profile_resource: ResMut<Persistent<PlayerProfileData>>,
-) {
+pub fn setup(mut commands: Commands, mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
     commands.spawn(Camera2d).insert(MCamera);
 
     // Ensure player level is updated based on XP when main menu loads
-    let player_profile = player_profile_resource.get_mut();
     player_profile.progression.update_level();
 
     // Persist the updated player profile
-    if let Err(e) = player_profile_resource.persist() {
+    if let Err(e) = player_profile.persist() {
         error!("Failed to persist PlayerProfileData: {:?}", e);
     }
 
@@ -72,7 +68,7 @@ pub fn setup(
 pub fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
-    player_profile_resource: Res<Persistent<PlayerProfileData>>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     let menu_items = vec![
         (MenuID::Campaign, MenuID::Campaign.to_string()),
@@ -114,7 +110,7 @@ pub fn setup_ui(
 
     // Add the persistent player status bar as a child of root_entity
     commands.entity(root_entity).with_children(|parent| {
-        templates::create_player_status_bar(parent, &handles, player_profile_resource.get());
+        templates::create_player_status_bar(parent, &handles, &player_profile);
     });
 
     warn!("Main menu created with root entity: {:?}", root_entity);
