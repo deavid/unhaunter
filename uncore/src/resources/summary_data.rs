@@ -1,5 +1,6 @@
 use crate::difficulty::CurrentDifficulty;
 use crate::types::ghost::types::GhostType;
+use crate::types::grade::Grade;
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Resource, Default)]
@@ -28,7 +29,7 @@ pub struct SummaryData {
     pub money_earned: i64,
 
     /// The grade achieved for the mission.
-    pub grade_achieved: String,
+    pub grade_achieved: Grade,
 
     /// The required deposit for the mission.
     pub required_deposit: i64,

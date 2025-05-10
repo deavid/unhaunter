@@ -6,6 +6,7 @@ pub mod game;
 pub mod gear;
 pub mod gear_kind;
 pub mod ghost;
+pub mod grade;
 pub mod manual;
 pub mod miasma;
 pub mod quadcc;

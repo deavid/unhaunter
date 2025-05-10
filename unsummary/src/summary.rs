@@ -9,6 +9,7 @@ use uncore::resources::maps::Maps;
 use uncore::resources::summary_data::SummaryData;
 use uncore::states::AppState;
 use uncore::states::GameState;
+use uncore::types::grade::Grade;
 use uncore::types::root::game_assets::GameAssets;
 use uncore::utils::time::format_time;
 use unprofile::data::PlayerProfileData;
@@ -489,18 +490,6 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>
     sd.final_score += delta;
 }
 
-/// Helper function to calculate grade multiplier based on achieved grade
-fn calculate_grade_multiplier(grade: &str) -> f64 {
-    match grade {
-        "A" => 5.0,
-        "B" => 3.0,
-        "C" => 2.0,
-        "D" => 1.0,
-        "F" => 0.5,
-        _ => 0.0,
-    }
-}
-
 pub fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
     tmx_assets: Res<Assets<TmxMap>>,
@@ -513,13 +502,13 @@ pub fn calculate_rewards_and_grades(
 
     // Debug: Log current state of SummaryData
     info!(
-        "Calculating rewards and grades. Current SummaryData: {:?}",
+        "Calculating rewards and grades. Initial SummaryData: {:?}",
         *sd
     );
 
     // Ensure we have calculated the base score before proceeding
-    if sd.base_score == 0 {
-        // Calculate the score first to ensure base_score is set
+    if sd.base_score == 0 && sd.mission_successful {
+        // Only calculate if not already done and mission was potentially successful
         sd.calculate_score();
         info!(
             "Calculated score before grading. New base_score: {}",
@@ -527,67 +516,74 @@ pub fn calculate_rewards_and_grades(
         );
     }
 
+    // Initialize grade and base reward assuming failure or N/A case first
+    // sd.mission_reward_base is defaulted to 0 from SummaryData, which is fine for these cases.
+    sd.grade_achieved = Grade::NA;
+
     if sd.mission_successful {
         if let Some(map_data) = maps.maps.iter().find(|map| map.path == sd.map_path) {
             if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
                 let props = &tmx_map.props;
-
                 let base_score = sd.base_score as i64;
-                let grade = if base_score >= props.grade_a_score_threshold {
-                    "A"
-                } else if base_score >= props.grade_b_score_threshold {
-                    "B"
-                } else if base_score >= props.grade_c_score_threshold {
-                    "C"
-                } else if base_score >= props.grade_d_score_threshold {
-                    "D"
-                } else {
-                    "F"
-                };
 
-                let grade_multiplier = calculate_grade_multiplier(grade);
-
+                // Determine grade for successful mission
+                sd.grade_achieved = Grade::from_score(
+                    base_score,
+                    props.grade_a_score_threshold,
+                    props.grade_b_score_threshold,
+                    props.grade_c_score_threshold,
+                    props.grade_d_score_threshold,
+                );
+                // Set base reward only if mission was successful and map data found
                 sd.mission_reward_base = props.mission_reward_base;
-                sd.grade_multiplier = grade_multiplier;
-
-                let money_earned = (props.mission_reward_base as f64 * grade_multiplier)
-                    .round()
-                    .max(0.0) as i64;
 
                 info!(
-                    "Mission successful. Assigning grade {} with ${} reward for base score {}",
-                    grade, money_earned, sd.base_score
+                    "Mission successful path: Base score {}, Determined grade {}. Base reward ${}",
+                    sd.base_score, sd.grade_achieved, sd.mission_reward_base
                 );
-
-                sd.grade_achieved = grade.to_string();
-                sd.money_earned = money_earned;
             } else {
                 warn!(
-                    "TmxMap asset not found for mission ID: {}. Cannot assign grade or rewards.",
+                    "TmxMap asset not found for mission ID: {}. Grade remains NA.",
                     sd.map_path
                 );
-                sd.grade_achieved = "N/A".to_string();
-                sd.money_earned = 0;
-                sd.grade_multiplier = 0.0;
+                // sd.grade_achieved is already Grade::NA
+                // sd.mission_reward_base remains default (0)
             }
         } else {
             warn!(
-                "Mission data not found for mission ID: {}. Cannot assign grade or rewards.",
+                "Mission data not found for mission ID: {}. Grade remains NA.",
                 sd.map_path
             );
-            sd.grade_achieved = "N/A".to_string();
-            sd.money_earned = 0;
-            sd.grade_multiplier = 0.0;
+            // sd.grade_achieved is already Grade::NA
+            // sd.mission_reward_base remains default (0)
         }
     } else {
         info!(
-            "Mission not successful. Assigning N/A grade and no monetary reward. Base score: {}",
+            "Mission not successful. Grade remains NA. Base score: {}",
             sd.base_score
         );
-        sd.grade_achieved = "N/A".to_string();
-        sd.money_earned = 0;
-        sd.grade_multiplier = 0.0;
+        // sd.grade_achieved is already Grade::NA
+        // sd.mission_reward_base remains default (0)
     }
+
+    // Consistently set grade_multiplier from the determined grade_achieved
+    sd.grade_multiplier = sd.grade_achieved.multiplier();
+
+    // Calculate money_earned based on the final grade, mission success, and base reward
+    if sd.mission_successful && sd.grade_achieved != Grade::NA {
+        // Only earn money if mission was successful AND a valid grade (not NA) was achieved
+        // (which implies map data and tmx were found, and mission_reward_base was set)
+        sd.money_earned = (sd.mission_reward_base as f64 * sd.grade_multiplier)
+            .round()
+            .max(0.0) as i64;
+    } else {
+        sd.money_earned = 0; // No earnings if mission failed or grade is NA (multiplier would be 0)
+    }
+
+    info!(
+        "Finalized grade: {}, multiplier: {:.1}, money_earned: ${}, base_reward_used: ${}",
+        sd.grade_achieved, sd.grade_multiplier, sd.money_earned, sd.mission_reward_base
+    );
 }
 
 pub fn finalize_profile_update(
@@ -603,11 +599,28 @@ pub fn finalize_profile_update(
         player_profile.progression.bank += sd.money_earned;
     }
 
-    player_profile
-        .progression
-        .completed_missions
-        .insert(sd.map_path.clone());
-    player_profile.statistics.total_missions_completed += 1;
+    // Update map statistics for this particular map
+    let map_path = sd.map_path.clone();
+    let map_stats = player_profile.map_statistics.entry(map_path).or_default();
+
+    // Update mission completion stats
+    map_stats.total_play_time_seconds += sd.time_taken_secs as f64;
+
+    // If mission was successful, update completion time
+    if sd.mission_successful {
+        map_stats.total_missions_completed += 1;
+        map_stats.total_mission_completed_time_seconds += sd.time_taken_secs as f64;
+    }
+
+    // Update best score and grade
+    map_stats.best_score = map_stats.best_score.max(sd.final_score);
+    map_stats.best_grade = map_stats.best_grade.max(sd.grade_achieved);
+
+    if sd.mission_successful {
+        // Update global statistics
+        player_profile.statistics.total_missions_completed += 1;
+    }
+
     player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;
 
     // Add final score to player XP

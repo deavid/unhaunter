@@ -7,6 +7,7 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
+use uncore::types::grade::Grade;
 use uncore::utils::PrintingTimer;
 use uncore::utils::light::lerp_color;
 
@@ -200,7 +201,7 @@ pub fn handle_player_death(
             summary_data.deposit_returned_to_bank = 0;
             summary_data.costs_deducted_from_deposit = initial_deposit_held;
             summary_data.money_earned = 0;
-            summary_data.grade_achieved = "N/A".to_string();
+            summary_data.grade_achieved = Grade::NA;
 
             next_app_state.set(AppState::Summary);
 
