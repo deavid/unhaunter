@@ -1,13 +1,13 @@
 use bevy::prelude::*;
-// No HashSet or AssetId needed if the system runs once reliably after all assets are loaded.
 
-// Use existing uncore types
 use uncore::{
-    assets::tmxmap::TmxMap, // TmxMap now contains NaivelyParsedProps
+    assets::tmxmap::TmxMap,
     difficulty::Difficulty,
-    resources::maps::Maps, // Your existing Maps resource holding Vec<uncore::types::root::map::Map>
+    resources::maps::Maps,
     types::campaign::{CampaignMissionData, CampaignMissionsResource},
 };
+
+use crate::init_maps::MapAssetIndexHandle;
 
 /// Bevy system to parse TMX assets and populate the `CampaignMissionsResource`.
 ///
@@ -16,23 +16,19 @@ use uncore::{
 /// and creates `CampaignMissionData` for those flagged as campaign missions.
 pub fn load_campaign_missions_into_resource(
     tmx_assets: Res<Assets<TmxMap>>,
-    maps_resource: Res<Maps>, // Your existing struct that lists all map paths and handles
-    // campaign_missions_res_opt: Option<ResMut<CampaignMissionsResource>>, // Use Option for robust init
-    // Let's make it simpler: if the resource doesn't exist, create it. If it does, clear and repopulate.
-    // This requires the system to be infallibly run only once, or manage state with a Local.
-    // For simplicity with a one-shot system (e.g. OnEnter(AppState::MainMenu)), we can do this:
-    // Alternatively, query for the resource and only proceed if it's not yet populated,
-    // or clear it if it is. Let's assume ResMut for now and the system is guarded.
+    maps_resource: Res<Maps>,
+    mapsidx: Res<MapAssetIndexHandle>,
     mut campaign_missions_res: ResMut<CampaignMissionsResource>,
-    mut processed_flag: Local<bool>, // Ensures this system effectively runs once.
+    mut processed_flag: Local<bool>,
 ) {
-    // Only consider the system fully processed if we actually found maps
-    if *processed_flag && !maps_resource.maps.is_empty() {
+    // Only run once if already processed
+    if *processed_flag {
         return;
     }
 
-    // Reset the processed flag if no maps were loaded yet
-    if maps_resource.maps.is_empty() {
+    // Wait until all maps are processed
+    if !mapsidx.all_processed() {
+        info!("[CAMPAIGN DEBUG] Waiting for all maps to be processed...");
         return;
     }
 
@@ -79,10 +75,10 @@ pub fn load_campaign_missions_into_resource(
                     // Add any other consolidated difficulty names here
                     _ => {
                         warn!(
-                            "Unknown campaign_difficulty string '{}' in map '{}'. Defaulting to TutorialChapter1.",
+                            "Unknown campaign_difficulty string '{}' in map '{}'. Defaulting to StandardChallenge.",
                             props.campaign_difficulty_str, map_entry.path
                         );
-                        Difficulty::TutorialChapter1 // Sensible default
+                        Difficulty::StandardChallenge // Sensible default
                     }
                 };
 

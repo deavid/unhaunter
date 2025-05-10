@@ -20,6 +20,34 @@ pub struct MapAssetIndexHandle {
     sheets: Vec<PreLoad<TsxSheet>>,
 }
 
+impl MapAssetIndexHandle {
+    /// Returns true if all maps and sheets have been processed
+    pub fn all_processed(&self) -> bool {
+        if !self.idxprocessed {
+            warn!(
+                "Index not processed: maps:{:?} processed:{}",
+                self.maps.len(),
+                self.idxprocessed
+            );
+            return false;
+        }
+
+        // If there are any unprocessed maps, return false
+        if let Some(map) = self.maps.iter().find(|map| !map.processed) {
+            warn!("Map {} is not processed", map.path);
+            return false;
+        }
+
+        // Check if all sheets are processed
+        if let Some(sheet) = self.sheets.iter().find(|sheet| !sheet.processed) {
+            warn!("Sheet {} is not processed", sheet.path);
+            return false;
+        }
+
+        true
+    }
+}
+
 pub fn init_maps(asset_server: Res<AssetServer>, mut mapsidx: ResMut<MapAssetIndexHandle>) {
     mapsidx.tmxidx = asset_server.load("index/maps-tmx.assetidx");
     mapsidx.tsxidx = asset_server.load("index/maps-tsx.assetidx");
