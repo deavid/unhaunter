@@ -5013,6 +5013,7 @@ dependencies = [
  "bevy_picking",
  "serde",
  "uncore",
+ "unprofile",
 ]
 
 [[package]]
@@ -5220,6 +5221,7 @@ dependencies = [
  "serde_json",
  "uncore",
  "uncoremenu",
+ "unprofile",
 ]
 
 [[package]]

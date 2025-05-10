@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy::ui::ScrollPosition;
 use bevy::utils::Instant;
+use bevy_persistent::Persistent; // Added for player profile
+use uncore::assets::tmxmap::TmxMap; // Added for TMX map assets
 use uncore::events::map_selected::MapSelectedEvent;
+use uncore::platform::plt::FONT_SCALE; // Added for FONT_SCALE
 use uncore::resources::maps::Maps;
 use uncore::states::AppState;
 use uncore::states::MapHubState;
@@ -12,6 +15,7 @@ use uncoremenu::scrollbar;
 use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::systems::{MenuItemClicked, MenuItemSelected};
 use uncoremenu::templates;
+use unprofile::data::PlayerProfileData; // Added for player profile data // Added for TextColor, though Color::WHITE is used directly.
 
 /// UI component marker for the map selection screen
 #[derive(Component, Debug)]
@@ -64,8 +68,14 @@ pub fn app_setup(app: &mut App) {
 }
 
 /// Creates the initial UI and state for the map selection screen
-pub fn setup_systems(mut commands: Commands, maps: Res<Maps>, handles: Res<GameAssets>) {
-    setup_ui(&mut commands, &handles, &maps);
+pub fn setup_systems(
+    mut commands: Commands,
+    maps: Res<Maps>,
+    handles: Res<GameAssets>,
+    player_profile: Res<Persistent<PlayerProfileData>>, // Added player_profile
+    tmx_assets: Res<Assets<TmxMap>>,                    // Added tmx_assets
+) {
+    setup_ui(&mut commands, &handles, &maps, &player_profile, &tmx_assets); // Pass new resources
     // Initialize or re-initialize state upon entering
     commands.insert_resource(MapSelectionState {
         selected_map_idx: 0, // Always start with the first map selected
@@ -85,10 +95,12 @@ pub fn handle_menu_events(
     mut menu_selection: EventReader<MenuItemSelected>,
     mut menu_clicks: EventReader<MenuItemClicked>,
     mut map_selection_state: ResMut<MapSelectionState>,
-    maps: Res<Maps>,
+    maps_res: Res<Maps>, // Renamed from maps to maps_res to avoid conflict
     mut next_state: ResMut<NextState<MapHubState>>,
     mut root_next_state: ResMut<NextState<AppState>>,
     mut ev_map_selected: EventWriter<MapSelectedEvent>,
+    player_profile: Res<Persistent<PlayerProfileData>>, // Added player_profile
+    tmx_assets: Res<Assets<TmxMap>>,                    // Added tmx_assets
 ) {
     const GRACE_PERIOD_SECS: f32 = 0.1;
     let time_in_state = map_selection_state.state_entered_at.elapsed().as_secs_f32();
@@ -99,20 +111,40 @@ pub fn handle_menu_events(
         return;
     }
 
+    // Filter maps based on player level first
+    let player_level = player_profile.get().progression.player_level;
+    let available_maps: Vec<_> = maps_res
+        .maps
+        .iter()
+        .enumerate()
+        .filter(|(_, map_data)| {
+            if let Some(tmx_asset) = tmx_assets.get(&map_data.handle) {
+                player_level >= tmx_asset.props.min_player_level
+            } else {
+                true // If TMX asset not found, include it (or handle error)
+            }
+        })
+        .map(|(original_idx, map_data)| (original_idx, map_data.clone())) // Keep original index
+        .collect();
+
     for ev in menu_selection.read() {
-        map_selection_state.selected_map_idx = ev.0;
+        // ev.0 is the index in the *filtered* list (available_maps)
+        if ev.0 < available_maps.len() {
+            map_selection_state.selected_map_idx = ev.0; // Store filtered list index
+        }
     }
 
     for ev in menu_clicks.read() {
-        let selected_idx = ev.0;
-        if selected_idx < maps.maps.len() {
+        let selected_filtered_idx = ev.0;
+        if selected_filtered_idx < available_maps.len() {
+            // Get the original map index from the filtered list
+            let original_map_idx = available_maps[selected_filtered_idx].0;
             ev_map_selected.send(MapSelectedEvent {
-                // Send the map index
-                map_idx: selected_idx,
+                map_idx: original_map_idx, // Send the original map index
             });
             next_state.set(MapHubState::DifficultySelection);
         } else {
-            // This is the "Go Back" item
+            // This is the "Go Back" item, its index is available_maps.len()
             root_next_state.set(AppState::MainMenu);
             next_state.set(MapHubState::None);
         }
@@ -132,8 +164,14 @@ pub fn handle_esc_key(
 }
 
 /// Creates the map selection UI layout including background, logo, breadcrumb navigation, and scrollable list
-pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
-    commands
+pub fn setup_ui(
+    commands: &mut Commands,
+    handles: &GameAssets,
+    maps_res: &Maps,                                // Renamed from maps to maps_res
+    player_profile: &Persistent<PlayerProfileData>, // Added player_profile
+    tmx_assets: &Assets<TmxMap>,                    // Added tmx_assets
+) {
+    let root_entity = commands
         .spawn(Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
@@ -141,7 +179,9 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
             ..default()
         })
         .insert(MapSelectionUI)
-        .with_children(|parent| {
+        .id();
+
+    commands.entity(root_entity).with_children(|parent| {
             templates::create_background(parent, handles);
             templates::create_logo(parent, handles);
             templates::create_breadcrumb_navigation(
@@ -177,9 +217,33 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                             .insert(ScrollableListContainer)
                             .insert(ScrollPosition::default())
                             .with_children(|map_list| {
-                                for (idx, map) in maps.maps.iter().enumerate() {
+                                let player_level = player_profile.get().progression.player_level;
+                                let available_maps: Vec<_> = maps_res
+                                    .maps
+                                    .iter()
+                                    .filter(|map_data| {
+                                        if let Some(tmx_asset) = tmx_assets.get(&map_data.handle) {
+                                            player_level >= tmx_asset.props.min_player_level
+                                        } else {
+                                            true // If TMX asset not found, include it (or handle error)
+                                        }
+                                    })
+                                    .collect();
+
+                                if available_maps.is_empty() {
+                                    // Optional: Display a message if no maps are available
+                                    map_list.spawn(Text::new("No maps available for your current level."))
+                                        .insert(TextFont { // Use TextFont component
+                                            font: handles.fonts.londrina.w300_light.clone(),
+                                            font_size: 20.0 * FONT_SCALE, // Apply FONT_SCALE
+                                            font_smoothing: bevy::text::FontSmoothing::AntiAliased, // Add for consistency
+                                        })
+                                        .insert(TextColor(Color::WHITE)); // Use TextColor component
+                                }
+
+                                for (idx, map) in available_maps.iter().enumerate() {
                                     templates::create_content_item(map_list, map.name.clone(), idx, idx == 0, handles)
-                                        .insert(MapSelectionItem { map_idx: idx });
+                                        .insert(MapSelectionItem { map_idx: idx }); // map_idx now refers to index in available_maps
                                 }
                                 map_list.spawn(Node {
                                     min_height: Val::Px(16.0),
@@ -191,7 +255,7 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                                     ..default()
                                 });
 
-                                templates::create_content_item(map_list, "Go Back", maps.maps.len(), false, handles);
+                                templates::create_content_item(map_list, "Go Back", available_maps.len(), false, handles);
                                 map_list.spawn(Node {
                                     width: Val::Percent(100.0),
                                     min_height: Val::Px(64.0),
@@ -220,5 +284,8 @@ pub fn setup_ui(commands: &mut Commands, handles: &GameAssets, maps: &Maps) {
                 handles,
                 Some("Select a map to investigate    |    [Up]/[Down]: Change    |    [Enter]: Select    |    [ESC]: Go Back".into()),
             );
+
+            // Add the persistent player status bar
+            templates::create_player_status_bar(parent, handles, player_profile.get());
         });
 }

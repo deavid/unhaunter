@@ -1,8 +1,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::colors;
-use uncore::platform::plt::FONT_SCALE;
 use uncore::platform::plt::VERSION;
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
@@ -53,9 +51,22 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, manage_title_song);
 }
 
-pub fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
+pub fn setup(
+    mut commands: Commands,
+    mut player_profile_resource: ResMut<Persistent<PlayerProfileData>>,
+) {
     commands.spawn(Camera2d).insert(MCamera);
-    info!("Main menu camera setup");
+
+    // Ensure player level is updated based on XP when main menu loads
+    let player_profile = player_profile_resource.get_mut();
+    player_profile.progression.update_level();
+
+    // Persist the updated player profile
+    if let Err(e) = player_profile_resource.persist() {
+        error!("Failed to persist PlayerProfileData: {:?}", e);
+    }
+
+    info!("Main menu camera setup and player level updated");
 }
 
 pub fn setup_ui(
@@ -75,7 +86,18 @@ pub fn setup_ui(
     warn!("Setting up main menu with items: {:?}", menu_items);
 
     // Create standard menu layout using templates
-    let root_id = templates::create_standard_menu_layout(
+    let root_entity = commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            position_type: PositionType::Absolute,
+            ..default()
+        })
+        .insert(MenuUI) // Mark for cleanup
+        .id();
+
+    // Call create_standard_menu_layout directly with commands, not with parent
+    let menu_layout_entity = templates::create_standard_menu_layout(
         &mut commands,
         &handles,
         &menu_items,
@@ -84,35 +106,18 @@ pub fn setup_ui(
             "Unhaunter {}    |    [Up]/[Down]: Change    |    [Enter]: Select",
             VERSION
         )),
-        MenuUI,
+        MenuUI, // Pass the marker component
     );
 
-    warn!("Main menu created with root entity: {:?}", root_id);
+    // Parent the menu layout to our root entity
+    commands.entity(root_entity).add_child(menu_layout_entity);
 
-    // Add a persistent UI element to display the player's current Bank balance
-    commands
-        .spawn(Node {
-            width: Val::Percent(100.0),
-            height: Val::Px(30.0),
-            position_type: PositionType::Absolute,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::FlexEnd,
-            ..default()
-        })
-        .insert(MenuUI)
-        .with_children(|parent| {
-            parent
-                .spawn(Text::new(format!(
-                    "Bank: ${} ",
-                    player_profile_resource.get().progression.bank
-                )))
-                .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
-        });
+    // Add the persistent player status bar as a child of root_entity
+    commands.entity(root_entity).with_children(|parent| {
+        templates::create_player_status_bar(parent, &handles, player_profile_resource.get());
+    });
+
+    warn!("Main menu created with root entity: {:?}", root_entity);
 }
 
 pub fn cleanup(

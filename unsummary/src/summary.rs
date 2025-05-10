@@ -620,6 +620,9 @@ pub fn finalize_profile_update(
     // Add final score to player XP
     player_profile.progression.player_xp += sd.full_score;
 
+    // Update player level
+    player_profile.progression.update_level();
+
     if let Err(e) = player_profile.persist() {
         error!("Failed to persist player profile: {:?}", e);
     }

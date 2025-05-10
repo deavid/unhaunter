@@ -10,6 +10,7 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "../uncore" }
 uncoremenu = { path = "../uncoremenu" }
+unprofile = { path = "../unprofile" }
 
 bevy = { workspace = true }
 bevy_picking = { workspace = true }

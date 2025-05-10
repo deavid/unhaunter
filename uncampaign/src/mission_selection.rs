@@ -248,7 +248,7 @@ pub fn update_mission_selection(
     campaign_missions: Res<CampaignMissionsResource>,     // Access mission data
     asset_server: Res<AssetServer>,                       // To load images
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
-    mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>, // Query preview image (using ImageNode for Bevy 0.15)
+    mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>, // Query preview image using ImageNode
     maps_resource: Res<Maps>,                                              // Access maps resource
     tmx_assets: Res<Assets<TmxMap>>,                                       // Access TmxMap assets
 ) {
@@ -292,9 +292,9 @@ pub fn update_mission_selection(
                 warn!("MissionDescriptionText not found in UI.");
             }
 
-            // Update Preview Image (using ImageNode instead of UiImage for Bevy 0.15)
-            if let Ok(mut image_node) = q_preview_image.get_single_mut() {
-                image_node.image = asset_server.load(&mission.preview_image_path);
+            // Update Preview Image (using ImageNode for Bevy 0.15)
+            if let Ok(mut image) = q_preview_image.get_single_mut() {
+                image.image = asset_server.load(&mission.preview_image_path);
             } else {
                 warn!("MissionPreviewImage not found in UI.");
             }
@@ -313,18 +313,43 @@ pub fn update_mission_selection(
 pub fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
-    campaign_missions: Res<CampaignMissionsResource>,
+    campaign_missions_res: Res<CampaignMissionsResource>,
     asset_server: Res<AssetServer>, // Needed for loading preview images
     player_profile_resource: Res<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
-    maps_resource: Res<Maps>, // Access maps resource
+    maps_resource: Res<Maps>,        // Access maps resource
+    tmx_assets: Res<Assets<TmxMap>>, // Access TmxMap assets
 ) {
     info!("Setting up CampaignMissionSelectUI...");
 
     // Add a camera for the UI
     commands.spawn(Camera2d).insert(CampaignCamera);
 
-    if campaign_missions.missions.is_empty() {
-        warn!("No campaign missions found in CampaignMissionsResource. Cannot build selection UI.");
+    let player_level = player_profile_resource.get().progression.player_level;
+
+    // Filter missions based on player level
+    let available_missions: Vec<_> = campaign_missions_res
+        .missions
+        .iter()
+        .filter(|mission| {
+            if let Some(map_data) = maps_resource
+                .maps
+                .iter()
+                .find(|m| m.path == mission.map_filepath)
+            {
+                if let Some(tmx_asset) = tmx_assets.get(&map_data.handle) {
+                    return player_level >= tmx_asset.props.min_player_level;
+                }
+            }
+            true // If map data or tmx_asset is not found, include it by default (or handle error)
+        })
+        .cloned()
+        .collect();
+
+    if available_missions.is_empty() {
+        warn!(
+            "No campaign missions available for player level {}. Cannot build selection UI.",
+            player_level
+        );
         // Spawn a message indicating no missions are available
         commands
             .spawn(Node {
@@ -350,7 +375,7 @@ pub fn setup_ui(
         return;
     }
 
-    let initial_mission = &campaign_missions.missions[0];
+    let initial_mission = &available_missions[0];
     let initial_desc = format!(
         "Mission: <{}>\nLocation: {}\n{}\n\n{}",
         initial_mission.display_name,
@@ -361,18 +386,21 @@ pub fn setup_ui(
     // Default preview image path
     let initial_preview_image_path = initial_mission.preview_image_path.clone();
 
-    commands
-        .spawn(Node { // Root node for the UI screen
+    let root_entity = commands
+        .spawn(Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             position_type: PositionType::Absolute,
             ..default()
         })
         .insert(CampaignMissionSelectUI) // Marker for cleanup
-        .insert(InputDebounce { // Add InputDebounce component
+        .insert(InputDebounce {
+            // Add InputDebounce component
             timer: Timer::from_seconds(0.5, TimerMode::Once), // 0.5 seconds debounce
         })
-        .with_children(|parent| {
+        .id();
+
+    commands.entity(root_entity).with_children(|parent| {
             templates::create_background(parent, &handles);
             templates::create_logo(parent, &handles);
             templates::create_breadcrumb_navigation(
@@ -415,8 +443,8 @@ pub fn setup_ui(
                             .insert(ScrollableListContainer) // Mark for scrollbar logic
                             .insert(ScrollPosition::default()) // Add ScrollPosition component
                             .with_children(|mission_list| {
-                                // Populate list items from CampaignMissionsResource
-                                for (idx, mission) in campaign_missions.missions.iter().enumerate() {
+                                // Populate list items from available_missions
+                                for (idx, mission) in available_missions.iter().enumerate() {
                                     // Create a custom menu item with map name on left and badge on right
                                     let selected = idx == 0;
                                     let mut entity = mission_list.spawn(Node {
@@ -509,12 +537,12 @@ pub fn setup_ui(
                             templates::create_content_item(
                                 mission_list,
                                 "Go Back",
-                                campaign_missions.missions.len(), // Index after last mission
+                                available_missions.len(), // Index after last mission
                                 false,
                                 &handles,
                             )
                             // Add specific marker or use index check in handler
-                            .insert(MenuItemInteractive { identifier: campaign_missions.missions.len(), selected: false });
+                            .insert(MenuItemInteractive { identifier: available_missions.len(), selected: false });
 
                             mission_list.spawn(Node {
                                 width: Val::Percent(100.0),
@@ -593,30 +621,10 @@ pub fn setup_ui(
                         .to_string(),
                 ),
             );
+
+            // Add the persistent player status bar
+            templates::create_player_status_bar(parent, &handles, player_profile_resource.get());
         });
 
-    // Add a persistent UI element to display the player's current Bank balance
-    commands
-        .spawn(Node {
-            width: Val::Percent(100.0),
-            height: Val::Px(30.0),
-            position_type: PositionType::Absolute,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::FlexEnd,
-            ..default()
-        })
-        .insert(CampaignMissionSelectUI)
-        .with_children(|parent| {
-            parent
-                .spawn(Text::new(format!(
-                    "Bank: ${} ",
-                    player_profile_resource.get().progression.bank
-                )))
-                .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
-                    font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
-        });
+    // REMOVED persistent UI element for player status from here, will be added to mainmenu.rs
 }

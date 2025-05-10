@@ -16,6 +16,7 @@
   <property name="grade_b_score_threshold" type="int" value="400"/>
   <property name="grade_c_score_threshold" type="int" value="300"/>
   <property name="grade_d_score_threshold" type="int" value="170"/>
+  <property name="min_player_level" type="int" value="5"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

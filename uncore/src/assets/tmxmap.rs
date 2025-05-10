@@ -45,6 +45,9 @@ pub struct NaivelyParsedProps {
 
     /// Score threshold for achieving grade D
     pub grade_d_score_threshold: i64,
+
+    /// Minimum player level required for this map. Parsed from the 'min_player_level' TMX property. Defaults to 0.
+    pub min_player_level: i32,
 }
 
 /// Represents a Tiled map asset (`.tmx` file).
@@ -79,6 +82,13 @@ impl TmxMap {
                 .and_then(|s| s.parse::<i64>().ok())
                 .unwrap_or(default)
         };
+        let parse_i32 = |key: &str, default: i32| -> i32 {
+            // Helper for i32
+            props_map
+                .get(key)
+                .and_then(|s| s.parse::<i32>().ok())
+                .unwrap_or(default)
+        };
 
         let mut parsed_props = NaivelyParsedProps {
             is_campaign_mission,
@@ -100,10 +110,13 @@ impl TmxMap {
                 .unwrap_or_default(),
             mission_reward_base: parse_i64("mission_reward_base", 0),
             required_deposit: parse_i64("required_deposit", 0),
+            // FIXME: The default values for these properties should be computed by `calculate_grade_thresholds`.
+            // This is a temporary fix to ensure they are initialized.
             grade_a_score_threshold: parse_i64("grade_a_score_threshold", 1000),
             grade_b_score_threshold: parse_i64("grade_b_score_threshold", 500),
             grade_c_score_threshold: parse_i64("grade_c_score_threshold", 250),
             grade_d_score_threshold: parse_i64("grade_d_score_threshold", 125),
+            min_player_level: parse_i32("min_player_level", 0), // Parse min_player_level
         };
 
         // Ensure grade thresholds are fully initialized
@@ -282,7 +295,7 @@ pub fn naive_tmx_loader(reader: impl BufRead) -> std::io::Result<HashMap<String,
             in_map_properties_section = true;
         } else if line.starts_with("</properties>") {
             break;
-        } else if in_map_properties_section && line.starts_with("<property name=") {
+        } else if in_map_properties_section && line.starts_with("<property name=\"") {
             let get_attribute_value = |prop_line: &str, attr_name: &str| -> Option<String> {
                 let marker = format!("{}=\"", attr_name);
                 if let Some(start) = prop_line.find(&marker) {
