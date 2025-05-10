@@ -226,7 +226,7 @@ pub fn setup_ui(
                     parent
                         .spawn(Text::new(format!(
                             "Final Score: {} x {:.1} = {}",
-                            rsd.base_score, rsd.difficulty_multiplier, rsd.final_score
+                            rsd.base_score, rsd.difficulty_multiplier, rsd.animated_final_score
                         )))
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
@@ -434,7 +434,7 @@ pub fn update_ui(
                 // Format the score calculation using the stored base_score and difficulty_multiplier
                 text.0 = format!(
                     "Final Score: {} x {:.1} = {}",
-                    rsd.base_score, rsd.difficulty_multiplier, rsd.final_score
+                    rsd.base_score, rsd.difficulty_multiplier, rsd.animated_final_score
                 );
             }
             SummaryUIType::GradeAchieved => {
@@ -485,9 +485,9 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>
         return;
     }
     let desired_score = sd.calculate_score();
-    let max_delta = desired_score - sd.final_score;
+    let max_delta = desired_score - sd.animated_final_score;
     let delta = (max_delta / 200).max(10).min(max_delta);
-    sd.final_score += delta;
+    sd.animated_final_score += delta;
 }
 
 pub fn calculate_rewards_and_grades(
@@ -524,7 +524,7 @@ pub fn calculate_rewards_and_grades(
         if let Some(map_data) = maps.maps.iter().find(|map| map.path == sd.map_path) {
             if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
                 let props = &tmx_map.props;
-                let base_score = sd.base_score as i64;
+                let base_score = sd.base_score;
 
                 // Determine grade for successful mission
                 sd.grade_achieved = Grade::from_score(
@@ -546,24 +546,18 @@ pub fn calculate_rewards_and_grades(
                     "TmxMap asset not found for mission ID: {}. Grade remains NA.",
                     sd.map_path
                 );
-                // sd.grade_achieved is already Grade::NA
-                // sd.mission_reward_base remains default (0)
             }
         } else {
             warn!(
                 "Mission data not found for mission ID: {}. Grade remains NA.",
                 sd.map_path
             );
-            // sd.grade_achieved is already Grade::NA
-            // sd.mission_reward_base remains default (0)
         }
     } else {
         info!(
             "Mission not successful. Grade remains NA. Base score: {}",
             sd.base_score
         );
-        // sd.grade_achieved is already Grade::NA
-        // sd.mission_reward_base remains default (0)
     }
 
     // Consistently set grade_multiplier from the determined grade_achieved
@@ -613,7 +607,7 @@ pub fn finalize_profile_update(
     }
 
     // Update best score and grade
-    map_stats.best_score = map_stats.best_score.max(sd.final_score);
+    map_stats.best_score = map_stats.best_score.max(sd.full_score);
     map_stats.best_grade = map_stats.best_grade.max(sd.grade_achieved);
 
     if sd.mission_successful {
@@ -624,7 +618,7 @@ pub fn finalize_profile_update(
     player_profile.statistics.total_play_time_seconds += sd.time_taken_secs as f64;
 
     // Add final score to player XP
-    player_profile.progression.player_xp += sd.final_score;
+    player_profile.progression.player_xp += sd.full_score;
 
     if let Err(e) = player_profile.persist() {
         error!("Failed to persist player profile: {:?}", e);
@@ -640,7 +634,7 @@ impl Plugin for UnhaunterSummaryPlugin {
                 OnEnter(AppState::Summary),
                 (
                     setup,
-                    store_mission_id, // Add this system to preserve the mission ID
+                    store_mission_id,
                     calculate_rewards_and_grades,
                     setup_ui,
                     finalize_profile_update,

@@ -9,8 +9,8 @@ pub struct SummaryData {
     pub ghost_types: Vec<GhostType>,
     pub repellent_used_amt: u32,
     pub ghosts_unhaunted: u32,
-    pub final_score: i64,
-    pub base_score: u32,
+    pub animated_final_score: i64,
+    pub base_score: i64,
     pub difficulty_multiplier: f64,
     /// The multiplier based on the achieved grade (A, B, C, D, F)
     pub grade_multiplier: f64,
@@ -18,6 +18,7 @@ pub struct SummaryData {
     pub average_sanity: f32,
     pub player_count: usize,
     pub alive_count: usize,
+    pub full_score: i64,
 
     /// Path to the map that was played.
     pub map_path: String,
@@ -84,10 +85,11 @@ impl SummaryData {
         let score = base_score.round() * difficulty_multiplier;
 
         // Store the rounded base score
-        self.base_score = base_score.round() as u32;
+        self.base_score = base_score.round() as i64;
         self.difficulty_multiplier = difficulty_multiplier;
 
         // Ensure score is within a reasonable range and return
-        score.clamp(0.0, 1000000.0) as i64
+        self.full_score = score.clamp(0.0, 1000000.0).round() as i64;
+        self.full_score
     }
 }

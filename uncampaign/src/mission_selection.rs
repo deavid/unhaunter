@@ -8,7 +8,9 @@ use uncore::colors;
 use uncore::platform::plt::FONT_SCALE; // For UI scaling
 use uncore::states::AppState;
 use uncore::types::campaign::CampaignMissionsResource;
+use uncore::types::grade::Grade; // For map grade badges
 use uncore::types::root::game_assets::GameAssets;
+// Import BadgeUtils from unmaphub crate
 use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::{
     components::{MenuItemInteractive, MenuRoot},
@@ -17,6 +19,7 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked}, // For click/escape handling
     templates,
 };
+use unmaphub::badge_utils::BadgeUtils;
 
 // Add new imports for mission selection logic
 use bevy_persistent::Persistent;
@@ -313,6 +316,7 @@ pub fn setup_ui(
     campaign_missions: Res<CampaignMissionsResource>,
     asset_server: Res<AssetServer>, // Needed for loading preview images
     player_profile_resource: Res<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
+    maps_resource: Res<Maps>, // Access maps resource
 ) {
     info!("Setting up CampaignMissionSelectUI...");
 
@@ -413,22 +417,93 @@ pub fn setup_ui(
                             .with_children(|mission_list| {
                                 // Populate list items from CampaignMissionsResource
                                 for (idx, mission) in campaign_missions.missions.iter().enumerate() {
-                                    templates::create_content_item(
-                                        mission_list,
-                                        mission.display_name.clone(),
-                                        idx,
-                                        idx == 0,
-                                        &handles,
-                                    )
-                                    .insert(CampaignMissionItem { mission_index: idx });
-                                }
-                            mission_list.spawn(Node {
-                                min_height: Val::Px(16.0),
-                                flex_basis: Val::Px(16.0), // Use flex_basis for sizing in flex columns
-                                flex_shrink: 0.0, // Prevent shrinking
-                                ..Default::default()
-                            }).insert(PickingBehavior { should_block_lower: false, ..default() });
+                                    // Create a custom menu item with map name on left and badge on right
+                                    let selected = idx == 0;
+                                    let mut entity = mission_list.spawn(Node {
+                                        width: Val::Percent(100.0),
+                                        padding: UiRect::axes(Val::Px(8.0 * FONT_SCALE), Val::Px(6.0 * FONT_SCALE)),
+                                        margin: UiRect::vertical(Val::Px(2.0 * FONT_SCALE)),
+                                        ..default()
+                                    });
 
+                                    // Add interactive behavior components
+                                    let item = entity.insert(MenuItemInteractive {
+                                        identifier: idx,
+                                        selected,
+                                    })
+                                    .insert(Button)
+                                    .insert(Interaction::None)
+                                    .insert(BackgroundColor(if selected {
+                                        Color::srgba(0.3, 0.3, 0.3, 0.1)
+                                    } else {
+                                        Color::NONE
+                                    }))
+                                    .insert(CampaignMissionItem { mission_index: idx });
+
+                                    // Find the map data to get grade information
+                                    let map_data = maps_resource
+                                        .maps
+                                        .iter()
+                                        .find(|map| map.path == mission.map_filepath);
+
+                                    // Create a layout with name on left and badge on right
+                                    item.with_children(|parent| {
+                                        // Container for the content with space-between justification
+                                        parent.spawn(Node {
+                                            width: Val::Percent(100.0),
+                                            flex_direction: FlexDirection::Row,
+                                            justify_content: JustifyContent::SpaceBetween,
+                                            align_items: AlignItems::Center,
+                                            ..default()
+                                        })
+                                        .with_children(|row| {
+                                            // Mission name (left-aligned)
+                                            row.spawn((
+                                                Text::new(mission.display_name.clone()),
+                                                TextFont {
+                                                    font: handles.fonts.titillium.w400_regular.clone(),
+                                                    font_size: 24.0 * FONT_SCALE,
+                                                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                                },
+                                                TextColor(if !selected {
+                                                    colors::MENU_ITEM_COLOR_OFF
+                                                } else {
+                                                    colors::MENU_ITEM_COLOR_ON
+                                                }),
+                                            ));
+
+                                            // Grade badge (right-aligned)
+                                            if let Some(map) = map_data {
+                                                // Get the player's statistics for this map, if any
+                                                let player_stats = player_profile_resource.get()
+                                                    .map_statistics
+                                                    .get(&map.path);
+
+                                                // If the player has completed this mission before, show their best grade
+                                                // Otherwise, show NA grade
+                                                let grade = if let Some(stats) = player_stats {
+                                                    if stats.total_missions_completed > 0 {
+                                                        stats.best_grade
+                                                    } else {
+                                                        Grade::NA
+                                                    }
+                                                } else {
+                                                    Grade::NA
+                                                };
+
+                                                // Create the badge for the mission's grade
+                                                BadgeUtils::create_badge(row, &handles, grade, 32.0, false);
+                                            }
+                                        });
+                                    });
+                                }
+
+                                mission_list.spawn(Node {
+                                    min_height: Val::Px(16.0),
+                                    flex_basis: Val::Px(16.0),
+                                    flex_shrink: 0.0,
+                                    ..Default::default()
+                                }).insert(PickingBehavior { should_block_lower: false, ..default() });
 
                             // Add "Go Back" button
                             templates::create_content_item(

@@ -4979,6 +4979,7 @@ dependencies = [
  "bevy-persistent",
  "uncore",
  "uncoremenu",
+ "unmaphub",
  "unprofile",
  "unsettings",
 ]
