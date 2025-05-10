@@ -11,6 +11,9 @@ pub struct ImageAssets {
     pub miasma: Handle<Image>,
     pub menu_background: Handle<Image>,
     pub menu_background_low_contrast: Handle<Image>,
+    // --- Map Badge Images ---
+    pub badges: Handle<Image>,
+    pub badges_atlas: Handle<TextureAtlasLayout>,
     // --- Manual Images ---
     // Chapter 1: Page 1:
     pub manual_investigate: Handle<Image>,

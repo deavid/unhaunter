@@ -5,13 +5,19 @@ use std::fmt;
 /// Represents mission performance grades, ordered from highest (A) to lowest (N/A)
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Grade {
+    /// Excellent performance
     A,
+    /// Very good performance
     B,
+    /// Good performance
     C,
+    /// Below average performance
     D,
+    /// Poor performance
     F,
+    /// N/A (Not Applicable) - i.e. either not attempted or failed to remove the ghost
     #[default]
-    NA, // N/A (Not Applicable)
+    NA,
 }
 
 impl Grade {
@@ -24,6 +30,44 @@ impl Grade {
             Grade::D => 1.0,
             Grade::F => 0.5,
             Grade::NA => 0.0,
+        }
+    }
+
+    /// Returns the index in the badge spritesheet for this grade
+    pub fn badge_index(&self) -> usize {
+        match self {
+            Grade::A => 0,
+            Grade::B => 1,
+            Grade::C => 2,
+            Grade::D => 3,
+            Grade::F => 4,
+            Grade::NA => 5,
+        }
+    }
+
+    /// Returns a color associated with this grade for UI elements
+    pub fn color(&self) -> bevy::prelude::Color {
+        use bevy::prelude::Color;
+
+        match self {
+            Grade::A => Color::srgb(0.0, 0.8, 0.0),  // Green
+            Grade::B => Color::srgb(0.5, 0.8, 0.0),  // Light green
+            Grade::C => Color::srgb(1.0, 0.8, 0.0),  // Yellow
+            Grade::D => Color::srgb(1.0, 0.5, 0.0),  // Orange
+            Grade::F => Color::srgb(1.0, 0.0, 0.0),  // Red
+            Grade::NA => Color::srgb(0.5, 0.5, 0.5), // Gray
+        }
+    }
+
+    /// Returns a descriptive text for this grade
+    pub fn description(&self) -> &'static str {
+        match self {
+            Grade::A => "Excellent",
+            Grade::B => "Very Good",
+            Grade::C => "Good",
+            Grade::D => "Below Average",
+            Grade::F => "Poor Performance",
+            Grade::NA => "N/A",
         }
     }
 
