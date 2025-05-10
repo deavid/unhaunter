@@ -1,6 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
-use uncore::assets::tmxmap::TmxMap;
+
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 use uncore::difficulty::CurrentDifficulty;
@@ -492,7 +492,6 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>
 
 pub fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
-    tmx_assets: Res<Assets<TmxMap>>,
     maps: Res<Maps>,
     app_state: Res<State<AppState>>,
 ) {
@@ -521,35 +520,30 @@ pub fn calculate_rewards_and_grades(
     sd.grade_achieved = Grade::NA;
 
     if sd.mission_successful {
-        if let Some(map_data) = maps.maps.iter().find(|map| map.path == sd.map_path) {
-            if let Some(tmx_map) = tmx_assets.get(&map_data.handle) {
-                let props = &tmx_map.props;
-                let base_score = sd.base_score;
+        if let Some(map) = maps.maps.iter().find(|map| map.path == sd.map_path) {
+            // Use mission_data from the map instead of TmxMap properties directly
+            let mission_data = &map.mission_data;
+            let base_score = sd.base_score;
 
-                // Determine grade for successful mission
-                sd.grade_achieved = Grade::from_score(
-                    base_score,
-                    props.grade_a_score_threshold,
-                    props.grade_b_score_threshold,
-                    props.grade_c_score_threshold,
-                    props.grade_d_score_threshold,
-                );
-                // Set base reward only if mission was successful and map data found
-                sd.mission_reward_base = props.mission_reward_base;
+            // Determine grade for successful mission using mission data
+            sd.grade_achieved = Grade::from_score(
+                base_score,
+                mission_data.grade_a_score_threshold,
+                mission_data.grade_b_score_threshold,
+                mission_data.grade_c_score_threshold,
+                mission_data.grade_d_score_threshold,
+            );
 
-                info!(
-                    "Mission successful path: Base score {}, Determined grade {}. Base reward ${}",
-                    sd.base_score, sd.grade_achieved, sd.mission_reward_base
-                );
-            } else {
-                warn!(
-                    "TmxMap asset not found for mission ID: {}. Grade remains NA.",
-                    sd.map_path
-                );
-            }
+            // Set base reward only if mission was successful and mission data found
+            sd.mission_reward_base = mission_data.mission_reward_base;
+
+            info!(
+                "Mission successful path: Base score {}, Determined grade {}. Base reward ${}",
+                sd.base_score, sd.grade_achieved, sd.mission_reward_base
+            );
         } else {
             warn!(
-                "Mission data not found for mission ID: {}. Grade remains NA.",
+                "Map not found for mission ID: {}. Grade remains NA.",
                 sd.map_path
             );
         }
@@ -566,7 +560,7 @@ pub fn calculate_rewards_and_grades(
     // Calculate money_earned based on the final grade, mission success, and base reward
     if sd.mission_successful && sd.grade_achieved != Grade::NA {
         // Only earn money if mission was successful AND a valid grade (not NA) was achieved
-        // (which implies map data and tmx were found, and mission_reward_base was set)
+        // (which implies map data and mission data were found, and mission_reward_base was set)
         sd.money_earned = (sd.mission_reward_base as f64 * sd.grade_multiplier)
             .round()
             .max(0.0) as i64;

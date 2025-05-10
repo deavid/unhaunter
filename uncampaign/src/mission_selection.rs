@@ -1,31 +1,25 @@
-// uncampaign/src/mission_selection.rs
 use bevy::picking::PickingBehavior;
 use bevy::prelude::*;
-use bevy::ui::ScrollPosition; // Needed for scrollbar
+use bevy::ui::ScrollPosition;
+use bevy_persistent::Persistent;
 
-use uncore::assets::tmxmap::TmxMap;
 use uncore::colors;
-use uncore::platform::plt::FONT_SCALE; // For UI scaling
+use uncore::difficulty::CurrentDifficulty;
+use uncore::events::loadlevel::LoadLevelEvent;
+use uncore::platform::plt::FONT_SCALE;
+use uncore::resources::maps::Maps;
 use uncore::states::AppState;
-use uncore::types::campaign::CampaignMissionsResource;
-use uncore::types::grade::Grade; // For map grade badges
+use uncore::types::grade::Grade;
 use uncore::types::root::game_assets::GameAssets;
-// Import BadgeUtils from unmaphub crate
 use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::{
     components::{MenuItemInteractive, MenuRoot},
-    scrollbar,                                   // Import scrollbar module
-    systems::MenuItemSelected,                   // Event for selection changes
-    systems::{MenuEscapeEvent, MenuItemClicked}, // For click/escape handling
+    scrollbar,
+    systems::MenuItemSelected,
+    systems::{MenuEscapeEvent, MenuItemClicked},
     templates,
 };
 use unmaphub::badge_utils::BadgeUtils;
-
-// Add new imports for mission selection logic
-use bevy_persistent::Persistent;
-use uncore::difficulty::CurrentDifficulty; // To set difficulty on load
-use uncore::events::loadlevel::LoadLevelEvent; // To trigger level loading
-use uncore::resources::maps::Maps;
 
 // Component to delay input processing to avoid immediate selection
 #[derive(Component, Default)]
@@ -41,7 +35,7 @@ pub struct CampaignMissionSelectUI;
 #[derive(Component)]
 struct CampaignCamera;
 
-// Component to link a UI list item to a specific CampaignMissionData index
+// Component to link a UI list item to a specific Map with MissionData
 #[derive(Component, Debug)]
 pub struct CampaignMissionItem {
     pub mission_index: usize,
@@ -103,12 +97,10 @@ fn handle_selection_input(
     menu_root: Query<&MenuRoot>,                 // To get the currently selected item for Enter key
     debounce_query: Query<&InputDebounce>,       // To check if input is ready
     _q_items: Query<&CampaignMissionItem>, // Query items to get mission index (optional, can use identifier directly)
-    campaign_missions: Res<CampaignMissionsResource>, // Access mission data
+    maps_resource: Res<Maps>,              // Access maps resource
     mut difficulty_resource: ResMut<CurrentDifficulty>, // To set the chosen difficulty
     mut ev_load_level: EventWriter<LoadLevelEvent>, // To trigger level load
     mut next_app_state: ResMut<NextState<AppState>>, // To change AppState
-    maps_resource: Res<Maps>,              // Access maps resource
-    tmx_assets: Res<Assets<TmxMap>>,       // Added Res<Assets<TmxMap>>
     mut player_profile: ResMut<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
 ) {
@@ -147,41 +139,34 @@ fn handle_selection_input(
     // Clear the escape events reader
     ev_escape.clear();
 
+    // Get campaign missions
+    let campaign_maps: Vec<_> = maps_resource
+        .maps
+        .iter()
+        .filter(|map| map.mission_data.is_campaign_mission)
+        .collect();
+
     // Process the identified action (click or Enter)
     if let Some(identifier) = selected_identifier {
         // Use match statement instead of if chain as suggested by clippy
-        match identifier.cmp(&campaign_missions.missions.len()) {
+        match identifier.cmp(&campaign_maps.len()) {
             std::cmp::Ordering::Equal => {
                 // It's the "Go Back" button
                 go_back = true;
             }
             std::cmp::Ordering::Less => {
                 // It's a mission selection
-                let mission = &campaign_missions.missions[identifier];
+                let map = &campaign_maps[identifier];
+                let mission_data = &map.mission_data;
 
                 // Set the CurrentDifficulty based on the mission's fixed difficulty
-                difficulty_resource.0 = mission.difficulty.create_difficulty_struct();
+                difficulty_resource.0 = mission_data.difficulty.create_difficulty_struct();
                 info!(
                     "Setting difficulty for campaign mission: {:?}",
-                    mission.difficulty
+                    mission_data.difficulty
                 );
 
-                // Retrieve the selected mission's data
-                let mission = &campaign_missions.missions[identifier];
-                let map_filepath = &mission.map_filepath;
-
-                // Access the mission configuration from Res<Maps>
-                let map_data = maps_resource
-                    .maps
-                    .iter()
-                    .find(|map| map.path == *map_filepath)
-                    .expect("Map not found in Res<Maps>");
-
-                let tmx_asset = tmx_assets
-                    .get(&map_data.handle)
-                    .expect("TmxMap asset not found for selected map");
-
-                let desired_total_deposit = tmx_asset.props.required_deposit;
+                let desired_total_deposit = mission_data.required_deposit;
 
                 // Access the player's profile directly
                 let current_held_deposit = player_profile.progression.insurance_deposit;
@@ -223,7 +208,7 @@ fn handle_selection_input(
 
                 // Proceed with loading the mission
                 ev_load_level.send(LoadLevelEvent {
-                    map_filepath: mission.map_filepath.clone(),
+                    map_filepath: mission_data.map_filepath.clone(),
                 });
                 next_app_state.set(AppState::Loading);
                 return; // Exit early after starting load
@@ -244,33 +229,30 @@ fn handle_selection_input(
 // System to update the mission description and image when selection changes
 pub fn update_mission_selection(
     mut ev_menu_selection: EventReader<MenuItemSelected>, // Read selection events
-    campaign_missions: Res<CampaignMissionsResource>,     // Access mission data
     asset_server: Res<AssetServer>,                       // To load images
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>, // Query description text
-    mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>, // Query preview image using ImageNode
-    maps_resource: Res<Maps>,                                              // Access maps resource
-    tmx_assets: Res<Assets<TmxMap>>,                                       // Access TmxMap assets
+    mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>, // Query preview image
+    maps_resource: Res<Maps>,                             // Access maps resource
 ) {
+    // Get campaign missions
+    let campaign_maps: Vec<_> = maps_resource
+        .maps
+        .iter()
+        .filter(|map| map.mission_data.is_campaign_mission)
+        .collect();
+
     for ev in ev_menu_selection.read() {
         let selected_idx = ev.0; // Get the index from the event
 
         // Check if the index is within the bounds of loaded missions
-        if selected_idx < campaign_missions.missions.len() {
-            let mission = &campaign_missions.missions[selected_idx];
+        if selected_idx < campaign_maps.len() {
+            let map = &campaign_maps[selected_idx];
+            let mission_data = &map.mission_data;
 
             // Update Description Text
             if let Ok(mut text) = q_desc_text.get_single_mut() {
-                let map_data = maps_resource
-                    .maps
-                    .iter()
-                    .find(|map| map.path == mission.map_filepath)
-                    .expect("Map not found");
-                let tmx_asset = tmx_assets
-                    .get(&map_data.handle)
-                    .expect("TmxMap asset not found");
-
-                let required_deposit = tmx_asset.props.required_deposit;
-                let base_reward = tmx_asset.props.mission_reward_base;
+                let base_reward = mission_data.mission_reward_base;
+                let required_deposit = mission_data.required_deposit;
                 let potential_reward_range = format!(
                     "${:.0} - ${:.0}",
                     base_reward as f64 * 0.5,
@@ -279,10 +261,10 @@ pub fn update_mission_selection(
 
                 text.0 = format!(
                     "Mission: <{}>\nLocation: {}\n{}\n\n{}\n\nRequired Deposit: ${}\nReward: ${} ({})",
-                    mission.display_name,
-                    mission.location_name,
-                    mission.location_address,
-                    mission.flavor_text,
+                    mission_data.display_name,
+                    mission_data.location_name,
+                    mission_data.location_address,
+                    mission_data.flavor_text,
                     required_deposit,
                     base_reward,
                     potential_reward_range,
@@ -293,7 +275,7 @@ pub fn update_mission_selection(
 
             // Update Preview Image (using ImageNode for Bevy 0.15)
             if let Ok(mut image) = q_preview_image.get_single_mut() {
-                image.image = asset_server.load(&mission.preview_image_path);
+                image.image = asset_server.load(&mission_data.preview_image_path);
             } else {
                 warn!("MissionPreviewImage not found in UI.");
             }
@@ -312,11 +294,9 @@ pub fn update_mission_selection(
 pub fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
-    campaign_missions_res: Res<CampaignMissionsResource>,
     asset_server: Res<AssetServer>, // Needed for loading preview images
     player_profile_resource: Res<Persistent<unprofile::data::PlayerProfileData>>, // Player profile data
-    maps_resource: Res<Maps>,        // Access maps resource
-    tmx_assets: Res<Assets<TmxMap>>, // Access TmxMap assets
+    maps_resource: Res<Maps>, // Access maps resource
 ) {
     info!("Setting up CampaignMissionSelectUI...");
 
@@ -325,23 +305,14 @@ pub fn setup_ui(
 
     let player_level = player_profile_resource.progression.player_level;
 
-    // Filter missions based on player level
-    let available_missions: Vec<_> = campaign_missions_res
-        .missions
+    // Filter and collect maps that have campaign mission data
+    let available_missions: Vec<_> = maps_resource
+        .maps
         .iter()
-        .filter(|mission| {
-            if let Some(map_data) = maps_resource
-                .maps
-                .iter()
-                .find(|m| m.path == mission.map_filepath)
-            {
-                if let Some(tmx_asset) = tmx_assets.get(&map_data.handle) {
-                    return player_level >= tmx_asset.props.min_player_level;
-                }
-            }
-            true // If map data or tmx_asset is not found, include it by default (or handle error)
+        .filter(|map| {
+            map.mission_data.is_campaign_mission
+                && player_level >= map.mission_data.min_player_level
         })
-        .cloned()
         .collect();
 
     if available_missions.is_empty() {
@@ -374,7 +345,15 @@ pub fn setup_ui(
         return;
     }
 
-    let initial_mission = &available_missions[0];
+    // Sort missions by order (for campaign progression)
+    let mut sorted_missions = available_missions.clone();
+    sorted_missions.sort_by(|a, b| {
+        let a_order = a.mission_data.order.as_str();
+        let b_order = b.mission_data.order.as_str();
+        a_order.cmp(b_order)
+    });
+
+    let initial_mission = &sorted_missions[0].mission_data;
     let initial_desc = format!(
         "Mission: <{}>\nLocation: {}\n{}\n\n{}",
         initial_mission.display_name,
@@ -442,8 +421,9 @@ pub fn setup_ui(
                             .insert(ScrollableListContainer) // Mark for scrollbar logic
                             .insert(ScrollPosition::default()) // Add ScrollPosition component
                             .with_children(|mission_list| {
-                                // Populate list items from available_missions
-                                for (idx, mission) in available_missions.iter().enumerate() {
+                                // Populate list items from sorted_missions
+                                for (idx, map) in sorted_missions.iter().enumerate() {
+                                    let mission_data = &map.mission_data;
                                     // Create a custom menu item with map name on left and badge on right
                                     let selected = idx == 0;
                                     let mut entity = mission_list.spawn(Node {
@@ -467,12 +447,6 @@ pub fn setup_ui(
                                     }))
                                     .insert(CampaignMissionItem { mission_index: idx });
 
-                                    // Find the map data to get grade information
-                                    let map_data = maps_resource
-                                        .maps
-                                        .iter()
-                                        .find(|map| map.path == mission.map_filepath);
-
                                     // Create a layout with name on left and badge on right
                                     item.with_children(|parent| {
                                         // Container for the content with space-between justification
@@ -486,7 +460,7 @@ pub fn setup_ui(
                                         .with_children(|row| {
                                             // Mission name (left-aligned)
                                             row.spawn((
-                                                Text::new(mission.display_name.clone()),
+                                                Text::new(mission_data.display_name.clone()),
                                                 TextFont {
                                                     font: handles.fonts.titillium.w400_regular.clone(),
                                                     font_size: 24.0 * FONT_SCALE,
@@ -499,28 +473,25 @@ pub fn setup_ui(
                                                 }),
                                             ));
 
-                                            // Grade badge (right-aligned)
-                                            if let Some(map) = map_data {
-                                                // Get the player's statistics for this map, if any
-                                                let player_stats = player_profile_resource
-                                                    .map_statistics
-                                                    .get(&map.path);
+                                            // Get the player's statistics for this map, if any
+                                            let player_stats = player_profile_resource
+                                                .map_statistics
+                                                .get(&map.path);
 
-                                                // If the player has completed this mission before, show their best grade
-                                                // Otherwise, show NA grade
-                                                let grade = if let Some(stats) = player_stats {
-                                                    if stats.total_missions_completed > 0 {
-                                                        stats.best_grade
-                                                    } else {
-                                                        Grade::NA
-                                                    }
+                                            // If the player has completed this mission before, show their best grade
+                                            // Otherwise, show NA grade
+                                            let grade = if let Some(stats) = player_stats {
+                                                if stats.total_missions_completed > 0 {
+                                                    stats.best_grade
                                                 } else {
                                                     Grade::NA
-                                                };
+                                                }
+                                            } else {
+                                                Grade::NA
+                                            };
 
-                                                // Create the badge for the mission's grade
-                                                BadgeUtils::create_badge(row, &handles, grade, 32.0, false);
-                                            }
+                                            // Create the badge for the mission's grade
+                                            BadgeUtils::create_badge(row, &handles, grade, 32.0, false);
                                         });
                                     });
                                 }
@@ -536,12 +507,12 @@ pub fn setup_ui(
                             templates::create_content_item(
                                 mission_list,
                                 "Go Back",
-                                available_missions.len(), // Index after last mission
+                                sorted_missions.len(), // Index after last mission
                                 false,
                                 &handles,
                             )
                             // Add specific marker or use index check in handler
-                            .insert(MenuItemInteractive { identifier: available_missions.len(), selected: false });
+                            .insert(MenuItemInteractive { identifier: sorted_missions.len(), selected: false });
 
                             mission_list.spawn(Node {
                                 width: Val::Percent(100.0),
@@ -624,6 +595,4 @@ pub fn setup_ui(
             // Add the persistent player status bar
             templates::create_player_status_bar(parent, &handles, &player_profile_resource);
         });
-
-    // REMOVED persistent UI element for player status from here, will be added to mainmenu.rs
 }

@@ -1,5 +1,5 @@
 pub mod board;
-pub mod campaign;
+pub mod mission_data;
 pub mod evidence;
 pub mod evidence_status;
 pub mod game;

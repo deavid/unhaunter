@@ -5,7 +5,6 @@
 //! library. Currently serve as an example on how to load/store data.
 
 pub mod bevy;
-pub mod campaign_loader;
 pub mod init_maps;
 pub mod load;
 pub mod load_level;
