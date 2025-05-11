@@ -2,7 +2,8 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::platform::plt::VERSION;
-use uncore::states::AppState;
+use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
+use uncore::states::{AppState, MapHubState};
 use uncore::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuItemInteractive;
 use uncoremenu::systems::MenuItemClicked;
@@ -133,6 +134,8 @@ pub fn menu_event(
     mut click_events: EventReader<MenuItemClicked>,
     mut exit: EventWriter<AppExit>,
     mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_map_hub_state: ResMut<NextState<MapHubState>>,
+    mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
 ) {
     for ev in click_events.read() {
@@ -143,14 +146,17 @@ pub fn menu_event(
         {
             match menu_id {
                 MenuID::Campaign => {
-                    // Transition to the new state for campaign mission selection
-                    next_app_state.set(AppState::CampaignMissionSelect);
-                    info!("Transitioning to CampaignMissionSelect state");
+                    // Set the mission select mode to Campaign
+                    current_mission_select_mode.0 = MissionSelectMode::Campaign;
+                    // Transition to the unified mission selection state
+                    next_app_state.set(AppState::MissionSelect);
+                    info!("Transitioning to MissionSelect state (for Campaign)");
                 }
                 MenuID::CustomMission => {
-                    // Transition to the MapHub state (which starts map selection)
+                    // For custom missions, we go to difficulty selection first
                     next_app_state.set(AppState::MapHub);
-                    info!("Transitioning to MapHub state (for Custom Mission)");
+                    next_map_hub_state.set(MapHubState::DifficultySelection);
+                    info!("Transitioning to MapHub/DifficultySelection state (for Custom Mission)");
                 }
                 MenuID::Manual => {
                     next_app_state.set(AppState::UserManual);

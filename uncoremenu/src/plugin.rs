@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::events::KeyboardNavigate;
 use crate::scrollbar;
 use crate::systems; // Import scrollbar module
 
@@ -11,6 +12,7 @@ impl Plugin for UnhaunterCoreMenuPlugin {
         app.add_event::<systems::MenuItemClicked>()
             .add_event::<systems::MenuItemSelected>()
             .add_event::<systems::MenuEscapeEvent>()
+            .add_event::<KeyboardNavigate>() // Register the KeyboardNavigate event
             .add_systems(
                 Update,
                 (

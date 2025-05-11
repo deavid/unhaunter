@@ -2,11 +2,10 @@ use bevy::prelude::*;
 use bevy::utils::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
-use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::events::map_selected::MapSelectedEvent;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::difficulty_state::DifficultySelectionState;
-use uncore::resources::maps::Maps;
+use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore::states::AppState;
 use uncore::states::MapHubState;
 use uncore::types::root::game_assets::GameAssets;
@@ -96,10 +95,9 @@ pub fn handle_difficulty_click(
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
-    maps: Res<Maps>,
-    mut ev_load_level: EventWriter<LoadLevelEvent>,
     mut next_app_state: ResMut<NextState<AppState>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
+    mut mission_select_mode: ResMut<CurrentMissionSelectMode>,
 ) {
     if difficulty_selection_state
         .state_entered_at
@@ -125,15 +123,20 @@ pub fn handle_difficulty_click(
         {
             // Ensure the clicked item is a non-tutorial difficulty
             if !item_data.difficulty.is_tutorial_difficulty() {
+                // Set the difficulty based on selection
                 difficulty_resource.0 = item_data.difficulty.create_difficulty_struct();
 
-                // For "Custom Mission", we always load the level directly, no pre-play manual.
-                let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
-                    .path
-                    .clone();
-                ev_load_level.send(LoadLevelEvent { map_filepath });
-                next_app_state.set(AppState::Loading);
+                // Set the mission select mode to Custom
+                mission_select_mode.0 = MissionSelectMode::Custom;
+
+                // Instead of loading directly, transition to the unified mission selection screen
+                next_app_state.set(AppState::MissionSelect);
                 next_hub_state.set(MapHubState::None);
+
+                info!(
+                    "Selected difficulty: {:?}, transitioning to MissionSelect",
+                    item_data.difficulty
+                );
             } else {
                 warn!(
                     "Clicked on a tutorial difficulty in Custom Mission mode. This should not happen."
@@ -142,7 +145,8 @@ pub fn handle_difficulty_click(
             break;
         } else if ev.0 == total_displayed_difficulties {
             // This is the "Go Back" item
-            next_hub_state.set(MapHubState::MapSelection);
+            next_app_state.set(AppState::MainMenu);
+            next_hub_state.set(MapHubState::None);
             break;
         }
     }
@@ -208,13 +212,16 @@ pub fn update_difficulty_description(
     }
 }
 
-/// Handles ESC key press to return to map selection
+/// Handles ESC key press to return to main menu
 pub fn handle_difficulty_escape(
     mut ev_escape: EventReader<MenuEscapeEvent>,
-    mut next_state: ResMut<NextState<MapHubState>>,
+    mut next_hub_state: ResMut<NextState<MapHubState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
 ) {
     if ev_escape.read().next().is_some() {
-        next_state.set(MapHubState::MapSelection);
+        // Go back to main menu since map selection no longer exists
+        next_app_state.set(AppState::MainMenu);
+        next_hub_state.set(MapHubState::None);
     }
 }
 

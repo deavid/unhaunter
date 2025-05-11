@@ -1,5 +1,5 @@
-pub mod mission_selection;
 pub mod plugin;
+pub mod unified_mission_selection;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
