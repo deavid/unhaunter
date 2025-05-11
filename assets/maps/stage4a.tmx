@@ -6,6 +6,17 @@
   <property name="flavor_text" value="This old brick firehouse served the town faithfully for nearly a century before being decommissioned. Now it stands silent, but late-night passersby report seeing lights flicker in the upper windows and hearing faint echoes, like disembodied voices calling out over static. They say the chill inside never truly leaves, regardless of the season."/>
   <property name="location_address" value="19 Ladder Lane"/>
   <property name="location_name" value="Ashton Falls Firehouse No. 3"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="04A"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter4"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage4a.png"/>
+  <property name="required_deposit" type="int" value="737"/>
+  <property name="mission_reward_base" type="int" value="384"/>
+  <property name="grade_a_score_threshold" type="int" value="800"/>
+  <property name="grade_b_score_threshold" type="int" value="550"/>
+  <property name="grade_c_score_threshold" type="int" value="350"/>
+  <property name="grade_d_score_threshold" type="int" value="200"/>
+  <property name="min_player_level" type="int" value="10"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

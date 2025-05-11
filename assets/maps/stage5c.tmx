@@ -6,7 +6,18 @@
   <property name="flavor_text" value="This isolated farmstead has been in the Black family for generations, but the current descendants refuse to set foot on the property. They speak of an oppressive presence, strange occurrences escalating over the years – from phantom footsteps in the dead of night to farm equipment malfunctioning violently. The farm feels ancient, weathered, and deeply unwelcoming."/>
   <property name="location_address" value="99 Old Mill Road"/>
   <property name="location_name" value="Black Creek Farmstead"/>
- </properties>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="05C"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter5"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage5c.png"/>
+  <property name="required_deposit" type="int" value="5807"/>
+  <property name="mission_reward_base" type="int" value="2919"/>
+  <property name="grade_a_score_threshold" type="int" value="500"/>
+  <property name="grade_b_score_threshold" type="int" value="400"/>
+  <property name="grade_c_score_threshold" type="int" value="300"/>
+  <property name="grade_d_score_threshold" type="int" value="150"/>
+  <property name="min_player_level" type="int" value="15"/>
+</properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>

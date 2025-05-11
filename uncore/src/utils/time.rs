@@ -17,6 +17,6 @@ pub struct PrintingTimer(Timer);
 
 impl Default for PrintingTimer {
     fn default() -> Self {
-        Self(Timer::from_seconds(10.0, TimerMode::Repeating))
+        Self(Timer::from_seconds(60.0, TimerMode::Repeating))
     }
 }

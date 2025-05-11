@@ -22,7 +22,11 @@ impl Plugin for UnhaunterTmxMapPlugin {
             .add_systems(Startup, init_maps)
             .add_systems(
                 Update,
-                (map_index_preload, tmxmap_preload, load_level_handler),
+                (
+                    map_index_preload,
+                    tmxmap_preload,
+                    load_level_handler,
+                ),
             );
     }
 }

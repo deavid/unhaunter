@@ -6,6 +6,16 @@
   <property name="flavor_text" value="This small community library hasn't seen visitors in years. The books gather dust on silent shelves, yet a strange energy occasionally rustles pages and makes the old card catalog drawers slide open. Is a lonely spirit still looking for a good read?"/>
   <property name="location_address" value="7 Quiet Lane"/>
   <property name="location_name" value="The Quiet Stacks"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="02B"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter2"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage2b.png"/>
+  <property name="required_deposit" type="int" value="69"/>
+  <property name="mission_reward_base" type="int" value="51"/>
+  <property name="grade_a_score_threshold" type="int" value="900"/>
+  <property name="grade_b_score_threshold" type="int" value="600"/>
+  <property name="grade_c_score_threshold" type="int" value="400"/>
+  <property name="grade_d_score_threshold" type="int" value="160"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

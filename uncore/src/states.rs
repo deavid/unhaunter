@@ -11,6 +11,7 @@ pub enum AppState {
     MapHub,
     UserManual,
     PreplayManual,
+    MissionSelect, // Unified mission selection state for both Campaign and Custom missions
 }
 
 #[derive(Debug, Default, States, Copy, Clone, Eq, PartialEq, Hash)]
@@ -24,7 +25,6 @@ pub enum GameState {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default)]
 pub enum MapHubState {
-    MapSelection,
     DifficultySelection,
     #[default]
     None,

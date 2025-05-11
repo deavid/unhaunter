@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
+use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::plugin::UnhaunterCorePlugin;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
@@ -13,16 +14,18 @@ use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
 use unlight::plugin::UnhaunterLightPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
+use unmapload::plugin::UnhaunterMapLoadPlugin;
 use unmenu::plugin::UnhaunterMenuPlugin;
 use unmenusettings::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
+use unprofile::plugin::UnprofilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
-use unstd::plugins::summary::UnhaunterSummaryPlugin;
+use unsummary::summary::UnhaunterSummaryPlugin;
 use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 use unwalkie::plugin::UnhaunterWalkiePlugin;
@@ -75,6 +78,9 @@ pub fn app_run() {
         UnhaunterFogPlugin,
         UnhaunterWalkiePlugin,
         UnhaunterCoreMenuPlugin,
+        UnhaunterMapLoadPlugin,
+        UnhaunterCampaignPlugin,
+        UnprofilePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     #[cfg(not(target_arch = "wasm32"))]

@@ -43,6 +43,6 @@ pub struct ReportTimer(Timer);
 
 impl Default for ReportTimer {
     fn default() -> Self {
-        Self(Timer::new(Duration::from_secs(10), TimerMode::Repeating))
+        Self(Timer::new(Duration::from_secs(60), TimerMode::Repeating))
     }
 }

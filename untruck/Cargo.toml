@@ -13,6 +13,7 @@ unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
+unprofile = { path = "../unprofile" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

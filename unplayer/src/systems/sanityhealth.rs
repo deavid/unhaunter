@@ -7,10 +7,15 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
+use uncore::types::grade::Grade;
 use uncore::utils::PrintingTimer;
 use uncore::utils::light::lerp_color;
 
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
+use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
+use unprofile::data::PlayerProfileData;
 
 #[derive(Default)]
 pub struct MeanSound(f32);
@@ -167,6 +172,40 @@ pub fn update_player_stamina(
             // Reset to default rates based on difficulty
             stamina.depletion_rate = 0.8 * difficulty.0.health_recovery_rate;
             stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate;
+        }
+    }
+}
+
+pub fn handle_player_death(
+    mut player_query: Query<&mut PlayerSprite>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+    mut summary_data: ResMut<SummaryData>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    board_data: Res<BoardData>,
+) {
+    for player in player_query.iter_mut() {
+        if player.health <= 0.0 {
+            let initial_deposit_held = player_profile.progression.insurance_deposit;
+
+            player_profile.progression.insurance_deposit = 0;
+            player_profile.statistics.total_deaths += 1;
+
+            if let Err(e) = player_profile.persist() {
+                panic!("Failed to persist PlayerProfileData: {:?}", e);
+            }
+
+            let current_mission_id = board_data.map_path.clone();
+
+            summary_data.map_path = current_mission_id;
+            summary_data.deposit_originally_held = initial_deposit_held;
+            summary_data.deposit_returned_to_bank = 0;
+            summary_data.costs_deducted_from_deposit = initial_deposit_held;
+            summary_data.money_earned = 0;
+            summary_data.grade_achieved = Grade::NA;
+
+            next_app_state.set(AppState::Summary);
+
+            break;
         }
     }
 }

@@ -63,6 +63,15 @@ fn load_assets(
                 Some(UVec2::new(0, 0)),
                 Some(UVec2::new(0, 0)),
             )),
+            // Load badges spritesheet (32x32 px per badge, no padding)
+            badges: server.load("img/badges.png"),
+            badges_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
+                UVec2::new(32, 32), // 32x32 pixels per badge
+                5,                   // 5 columns (limited to just the grade badges for now)
+                1,                   // 1 row
+                Some(UVec2::new(0, 0)),
+                Some(UVec2::new(0, 0)),
+            )),
             vignette: server.load("img/vignette.png"),
             miasma: server.load("img/miasma-base-01.png"),
             menu_background: server.load("img/menu-background.jpg"),

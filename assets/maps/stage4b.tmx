@@ -6,6 +6,17 @@
   <property name="flavor_text" value="This small-town vet clinic closed suddenly after Dr. Black passed away under mysterious circumstances. Locals whisper about strange animal-like sounds coming from the empty building at night, equipment activating on its own, and an unsettling feeling of being watched by unseen eyes. The place feels cold and heavy with unspoken stories."/>
   <property name="location_address" value="24 Paws Way"/>
   <property name="location_name" value="Black Creek Animal Clinic"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="04B"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter4"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage4b.png"/>
+  <property name="required_deposit" type="int" value="1121"/>
+  <property name="mission_reward_base" type="int" value="577"/>
+  <property name="grade_a_score_threshold" type="int" value="700"/>
+  <property name="grade_b_score_threshold" type="int" value="550"/>
+  <property name="grade_c_score_threshold" type="int" value="350"/>
+  <property name="grade_d_score_threshold" type="int" value="170"/>
+  <property name="min_player_level" type="int" value="10"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

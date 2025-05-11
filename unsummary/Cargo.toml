@@ -1,0 +1,15 @@
+[package]
+name = "unsummary"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+uncore = { path = "../uncore" }
+bevy-persistent = { workspace = true }
+unprofile = { path = "../unprofile" }

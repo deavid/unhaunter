@@ -15,8 +15,7 @@ use ungear::components::playergear::PlayerGear;
 /// This system checks if the player is pressing the 'activate' key and is near a
 /// valid hiding spot. If so, the player character enters the hiding spot, becoming
 /// partially hidden. A visual overlay is added to the hiding spot to indicate the
-/// player's presence. Note that the player's transparency while hiding is not yet
-/// fully implemented.
+/// player's presence.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
 pub fn hide_player(
     mut commands: Commands,
