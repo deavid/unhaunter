@@ -39,6 +39,10 @@ impl BadgeUtils {
                     ..default()
                 },
             ))
+            .insert(PickingBehavior {
+                should_block_lower: false,
+                ..default()
+            })
             .id();
 
         Some(entity)

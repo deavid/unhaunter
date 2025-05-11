@@ -236,7 +236,7 @@ pub fn update_scrollbar(
                     // Instead, adjust the visible track area that the thumb can move in
 
                     // Get the actual thumb height from the node
-                    let thumb_height = 80.0;
+                    let thumb_height = 150.0;
 
                     // Calculate scroll percentage using the actual content_height
                     let max_scroll = content_height - container_height; // Use actual content height
@@ -404,6 +404,10 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildBuilder, handles: &GameAssets) {
                             align_content: AlignContent::Center,
                             align_self: AlignSelf::Center,
                             justify_self: JustifySelf::Center,
+                            ..default()
+                        })
+                        .insert(PickingBehavior {
+                            should_block_lower: false,
                             ..default()
                         });
 

@@ -569,7 +569,8 @@ pub fn setup_ui(
                                     }).insert(PickingBehavior { should_block_lower: false, ..default() });
                                 }
 
-                                for (_original_idx, map) in sorted_locked_maps.iter().map(|(idx, map)| (*idx, map)) {
+                                // Add locked missions - but just the first one because we just want to show the player that there are locked missions
+                                if let Some((_original_idx, map)) = sorted_locked_maps.iter().map(|(idx, map)| (*idx, map)).next() {
                                     let mission_data = &map.mission_data;
 
                                     create_locked_mission_item(mission_list, &handles, mission_data);
@@ -706,6 +707,10 @@ fn create_mission_list_item(
         } else {
             Color::NONE
         }))
+        .insert(PickingBehavior {
+            should_block_lower: false,
+            ..default()
+        })
         .with_children(|parent| {
             parent
                 .spawn(Node {
@@ -713,6 +718,10 @@ fn create_mission_list_item(
                     flex_direction: FlexDirection::Row,
                     justify_content: JustifyContent::SpaceBetween,
                     align_items: AlignItems::Center,
+                    ..default()
+                })
+                .insert(PickingBehavior {
+                    should_block_lower: false,
                     ..default()
                 })
                 .with_children(|row| {
@@ -728,7 +737,11 @@ fn create_mission_list_item(
                         } else {
                             colors::MENU_ITEM_COLOR_ON
                         }),
-                    ));
+                    ))
+                    .insert(PickingBehavior {
+                        should_block_lower: false,
+                        ..default()
+                    });
 
                     let player_stats = player_profile.map_statistics.get(map_path);
 
@@ -764,6 +777,10 @@ fn create_locked_mission_item(
             ..default()
         })
         .insert(BackgroundColor(Color::NONE))
+        .insert(PickingBehavior {
+            should_block_lower: false,
+            ..default()
+        })
         .with_children(|parent| {
             parent
                 .spawn(Node {
@@ -773,11 +790,15 @@ fn create_locked_mission_item(
                     align_items: AlignItems::Center,
                     ..default()
                 })
+                .insert(PickingBehavior {
+                    should_block_lower: false,
+                    ..default()
+                })
                 .with_children(|row| {
                     row.spawn((
                         Text::new(format!(
-                            "{} (Level {} required)",
-                            mission_data.display_name, mission_data.min_player_level
+                            "Unlock Level {} for more missions",
+                            mission_data.min_player_level
                         )),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
@@ -785,7 +806,11 @@ fn create_locked_mission_item(
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)),
-                    ));
+                    ))
+                    .insert(PickingBehavior {
+                        should_block_lower: false,
+                        ..default()
+                    });
 
                     row.spawn(Text::new("🔒"))
                         .insert(TextFont {
@@ -794,6 +819,10 @@ fn create_locked_mission_item(
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)));
+                })
+                .insert(PickingBehavior {
+                    should_block_lower: false,
+                    ..default()
                 });
         });
 }
