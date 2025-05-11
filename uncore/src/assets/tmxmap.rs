@@ -222,8 +222,6 @@ impl TmxMap {
     pub fn required_deposit(&self) -> i64 {
         self.props.required_deposit
     }
-
-    // Removed the `get_grade_thresholds` method as it is no longer needed.
 }
 
 /// Errors that can occur during the loading of a `TmxMap` asset.
