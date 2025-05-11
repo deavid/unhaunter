@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::resources::manual::Manual;
 
@@ -31,7 +32,7 @@ impl ManualChapter {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ManualChapterIndex {
     Chapter1,
     Chapter2,

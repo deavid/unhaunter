@@ -13,7 +13,6 @@ use uncore::utils::light::lerp_color;
 
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::difficulty::Difficulty;
 use uncore::resources::summary_data::SummaryData;
 use uncore::states::AppState;
 use unprofile::data::PlayerProfileData; // Added import
@@ -183,7 +182,7 @@ pub fn handle_player_death(
     mut summary_data: ResMut<SummaryData>,
     mut next_app_state: ResMut<NextState<AppState>>,
     board_data: Res<BoardData>,
-    difficulty_res: Res<CurrentDifficulty>, // Added CurrentDifficulty resource
+    difficulty_res: Res<CurrentDifficulty>,
 ) {
     for player in player_query.iter_mut() {
         if player.health <= 0.0 {
@@ -194,33 +193,22 @@ pub fn handle_player_death(
 
             // Record death for specific map and difficulty
             let map_path_str = board_data.map_path.clone();
-            let difficulty_name_str = &difficulty_res.0.difficulty_name;
 
-            let current_difficulty_variant = Difficulty::all()
-                .find(|d| d.difficulty_name() == difficulty_name_str)
-                .unwrap_or_else(|| {
-                    warn!(
-                        "Unknown difficulty name '{}' in CurrentDifficulty, defaulting to StandardChallenge for death stats.",
-                        difficulty_name_str
-                    );
-                    Difficulty::StandardChallenge
-                });
+            let current_difficulty_variant = difficulty_res.0.difficulty;
 
             let map_specific_stats = player_profile
                 .map_statistics
-                .entry(map_path_str.clone()) // map_path_str is String
+                .entry(map_path_str.clone())
                 .or_default()
                 .entry(current_difficulty_variant)
                 .or_default();
             map_specific_stats.total_deaths += 1;
 
             if let Err(e) = player_profile.persist() {
-                error!("Failed to persist PlayerProfileData after death: {:?}", e); // Changed panic to error
-                // Depending on game design, you might not want to panic here.
-                // Consider how to handle save failures.
+                error!("Failed to persist PlayerProfileData after death: {:?}", e);
             }
 
-            summary_data.map_path = map_path_str; // Use the cloned map_path_str
+            summary_data.map_path = map_path_str;
             summary_data.deposit_originally_held = initial_deposit_held;
             summary_data.deposit_returned_to_bank = 0;
             summary_data.costs_deducted_from_deposit = initial_deposit_held;

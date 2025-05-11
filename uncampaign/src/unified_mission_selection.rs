@@ -21,7 +21,6 @@ use bevy_persistent::Persistent;
 
 use uncore::colors;
 use uncore::difficulty::CurrentDifficulty;
-use uncore::difficulty::Difficulty;
 use uncore::events::loadlevel::LoadLevelEvent;
 use uncore::platform::plt::FONT_SCALE;
 use uncore::resources::maps::Maps;
@@ -759,15 +758,7 @@ fn create_mission_list_item(
 
                     let target_difficulty_for_badge = match mission_select_mode.0 {
                         MissionSelectMode::Campaign => mission_data.difficulty,
-                        MissionSelectMode::Custom => Difficulty::all()
-                            .find(|d| d.difficulty_name() == difficulty_resource.0.difficulty_name)
-                            .unwrap_or_else(|| {
-                                warn!(
-                                    "Custom mode: Unknown difficulty name '{}' for badge, defaulting to StandardChallenge.",
-                                    difficulty_resource.0.difficulty_name
-                                );
-                                Difficulty::StandardChallenge
-                            }),
+                        MissionSelectMode::Custom => difficulty_resource.0.difficulty,
                     };
 
                     let grade = if let Some(map_difficulties_stats) =
