@@ -121,7 +121,8 @@ pub fn create_menu_item<'a>(
                     selected_color
                 } else {
                     unselected_color
-                }));
+                }))
+                .insert(PrincipalMenuText);
         });
 
     entity_cmd
@@ -579,7 +580,8 @@ pub fn create_content_item_enabled<'a>(
                     selected_color
                 } else {
                     unselected_color
-                }));
+                }))
+                .insert(PrincipalMenuText);
         });
 
     entity_cmd

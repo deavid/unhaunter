@@ -363,7 +363,9 @@ pub fn apply_lighting(
     }
     let mut qt = sprite_set.p0();
     cursor_exp /= exp_count;
-    cursor_exp = (cursor_exp / center_exp).powf(center_exp_gamma.recip()) * center_exp + 0.00001;
+    // Ensure the base is not negative before applying the power function
+    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
     // Account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might

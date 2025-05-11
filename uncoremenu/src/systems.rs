@@ -1,4 +1,4 @@
-use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
+use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
 use crate::events::KeyboardNavigate;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore::colors;
@@ -127,7 +127,10 @@ pub fn update_menu_item_visuals(
         &Interaction,
         &Children,
     )>,
-    mut text_query: Query<&mut TextColor>,
+    mut text_queries: ParamSet<(
+        Query<&mut TextColor>,
+        Query<(&mut TextColor, &Parent), With<PrincipalMenuText>>,
+    )>,
 ) {
     // Skip if there are no menus
     let Ok(menu) = menu_query.get_single() else {
@@ -152,18 +155,36 @@ pub fn update_menu_item_visuals(
             bg_color.0 = target_bg_color;
         }
 
-        // Find and update text color for the child text element
-        if let Some(child) = children.first() {
-            if let Ok(mut text_color) = text_query.get_mut(*child) {
-                let target_text_color = match (is_selected, is_hovered) {
-                    (true, true) => colors::MENU_ITEM_COLOR_ON.with_alpha(1.0), // Selected and hovered
-                    (true, false) => colors::MENU_ITEM_COLOR_ON,                // Selected
-                    (false, true) => colors::MENU_ITEM_COLOR_OFF.with_alpha(0.8), // Just hovered
-                    (false, false) => colors::MENU_ITEM_COLOR_OFF,              // Neither
-                };
+        // Calculate the target text color based on selection and hover state
+        let target_text_color = match (is_selected, is_hovered) {
+            (true, true) => colors::MENU_ITEM_COLOR_ON.with_alpha(1.0), // Selected and hovered
+            (true, false) => colors::MENU_ITEM_COLOR_ON,                // Selected
+            (false, true) => colors::MENU_ITEM_COLOR_OFF.with_alpha(0.8), // Just hovered
+            (false, false) => colors::MENU_ITEM_COLOR_OFF,              // Neither
+        };
 
+        // First, try to find a child with the PrincipalMenuText marker
+        let mut updated = false;
+        let mut principal_query = text_queries.p1();
+        for (mut text_color, parent) in principal_query.iter_mut() {
+            // Check if this principal text's parent is in our children list
+            if children.iter().any(|&child_id| parent.get() == child_id) {
                 if text_color.0 != target_text_color {
                     text_color.0 = target_text_color;
+                }
+                updated = true;
+                break;
+            }
+        }
+
+        // If we didn't find any PrincipalMenuText, fall back to the old behavior
+        if !updated {
+            if let Some(child) = children.first() {
+                let mut standard_query = text_queries.p0();
+                if let Ok(mut text_color) = standard_query.get_mut(*child) {
+                    if text_color.0 != target_text_color {
+                        text_color.0 = target_text_color;
+                    }
                 }
             }
         }

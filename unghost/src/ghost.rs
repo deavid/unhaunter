@@ -226,8 +226,11 @@ fn ghost_movement(
                     score +=
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach.max(0.1); // Scale object influence
-                    score += calculate_movement_penalties(candidate_dest, &pos, &bf, &difficulty);
-
+                    let penalty = 1.0
+                        + calculate_movement_penalties(candidate_dest, &pos, &bf, &difficulty)
+                            .abs()
+                            / 10.0;
+                    score /= penalty;
                     potential_destinations.push((score, candidate_dest));
                 }
 
@@ -236,21 +239,6 @@ fn ghost_movement(
                 best_destination.z = pos.z.round().clamp(0.0, (bf.map_size.2 - 1) as f32); // Default to current floor
 
                 let mut best_score = f32::MIN;
-
-                // Consider staying put as a baseline if current position is valid
-                let current_bpos = pos.to_board_position();
-                if current_bpos.is_valid(bf.map_size)
-                    && bf.collision_field[current_bpos.ndidx()].player_free
-                {
-                    let mut score_for_staying_put = 1.0; // Base
-                    score_for_staying_put +=
-                        calculate_object_influence_score(*pos, &object_query, &config)
-                            / difficulty.0.ghost_attraction_to_breach.max(0.1);
-                    // No movement penalties for staying put.
-                    best_score = score_for_staying_put;
-                    best_destination = *pos;
-                    best_destination.z = pos.z.round();
-                }
 
                 for (score, point) in potential_destinations {
                     if score > best_score {
@@ -590,7 +578,7 @@ fn calculate_object_influence_score(
     let mut score = 0.0;
     // Iterate through objects with GhostInfluence
     for (object_position, ghost_influence) in object_query.iter() {
-        let distance2 = potential_destination.distance2(object_position);
+        let distance2 = potential_destination.distance2_zf(object_position, 20.0);
 
         // Apply influence based on distance and charge value
         match ghost_influence.influence_type {
