@@ -588,26 +588,27 @@ pub fn finalize_profile_update(
         player_profile.progression.bank += sd.money_earned;
     }
 
-    // Get the mission data to find the difficulty enum
-    let difficulty = if let Some(map) = maps.maps.iter().find(|map| map.path == sd.map_path) {
-        // Use the mission_data's difficulty as the key for map statistics
-        map.mission_data.difficulty
-    } else {
-        // If we can't find the map, use the difficulty enum directly from SummaryData's CurrentDifficulty
+    // Always use the actual played difficulty from SummaryData (which is sourced from CurrentDifficulty)
+    // as the key for map statistics. This ensures custom difficulty settings are respected.
+    let difficulty_to_save_stats_under = sd.difficulty.0.difficulty;
+
+    // Log if the map definition wasn't found in the Maps resource,
+    // but this doesn't prevent saving stats under the played difficulty.
+    if !maps.maps.iter().any(|map_def| map_def.path == sd.map_path) {
         warn!(
-            "Map not found for mission ID: {}. Using current difficulty from summary data.",
-            sd.map_path
+            "Map definition not found in Maps resource for mission path: '{}'. \\
+            Statistics will still be saved under the played difficulty ({:?}).",
+            sd.map_path, difficulty_to_save_stats_under
         );
-        sd.difficulty.0.difficulty
-    };
+    }
 
     // Update map statistics for this particular map and difficulty
-    let map_path = sd.map_path.clone();
+    let map_path_key = sd.map_path.clone();
     let map_stats = player_profile
         .map_statistics
-        .entry(map_path)
+        .entry(map_path_key)
         .or_default()
-        .entry(difficulty)
+        .entry(difficulty_to_save_stats_under) // Use the actual played difficulty as the second key
         .or_default();
 
     // Update mission completion stats
