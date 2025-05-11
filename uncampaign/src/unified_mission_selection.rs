@@ -751,6 +751,8 @@ fn create_mission_list_item(
                         } else {
                             colors::MENU_ITEM_COLOR_ON
                         }),
+                        // Add the PrincipalMenuText marker for visual state updates
+                        uncoremenu::components::PrincipalMenuText,
                     ))
                     .insert(PickingBehavior {
                         should_block_lower: false,
@@ -831,6 +833,8 @@ fn create_locked_mission_item(
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)),
+                        // Add the PrincipalMenuText marker for visual state updates
+                        uncoremenu::components::PrincipalMenuText,
                     ))
                     .insert(PickingBehavior {
                         should_block_lower: false,
