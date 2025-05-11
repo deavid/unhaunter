@@ -1,9 +1,10 @@
 use crate::types::evidence::{Evidence, EvidenceError};
+use serde::{Deserialize, Serialize}; // Add this
 
 /// Represents the different types of gear available in the game.
 ///
 /// Each variant holds a specific gear struct with its own attributes and behavior.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)] // Add Serialize, Deserialize, PartialEq
 pub enum GearKind {
     Thermometer,
     EMFMeter,
@@ -67,7 +68,7 @@ impl TryFrom<&GearKind> for Evidence {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct PlayerGearKind {
     pub left_hand: GearKind,
     pub right_hand: GearKind,

@@ -1,8 +1,10 @@
 use bevy::{prelude::Resource, utils::HashMap};
 use serde::{Deserialize, Serialize};
+use uncore::difficulty::Difficulty;
 use uncore::types::grade::Grade;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct ProgressionData {
     pub bank: i64,
     #[serde(default)]
@@ -44,12 +46,14 @@ impl ProgressionData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields)]
 pub struct AchievementData {
     #[serde(default)]
     pub expelled_first_ghost: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields)]
 pub struct StatisticsData {
     #[serde(default)]
     pub total_missions_completed: u32,
@@ -60,6 +64,7 @@ pub struct StatisticsData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields)]
 pub struct MapStatisticsData {
     #[serde(default)]
     pub total_missions_completed: u32,
@@ -85,5 +90,5 @@ pub struct PlayerProfileData {
     #[serde(default)]
     pub statistics: StatisticsData,
     #[serde(default)]
-    pub map_statistics: HashMap<String, MapStatisticsData>,
+    pub map_statistics: HashMap<String, HashMap<Difficulty, MapStatisticsData>>,
 }

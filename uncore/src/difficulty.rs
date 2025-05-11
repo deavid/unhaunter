@@ -22,7 +22,7 @@ use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};
 
 /// Represents the different difficulty levels for the Unhaunter game.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
 pub enum Difficulty {
     #[default]
     TutorialChapter1, // Formerly NoviceInvestigator
@@ -597,14 +597,14 @@ impl Difficulty {
     pub fn difficulty_score_multiplier(&self) -> f64 {
         match self {
             Difficulty::TutorialChapter1 => 1.0,
-            Difficulty::TutorialChapter2 => 1.5,
-            Difficulty::TutorialChapter3 => 2.0,
-            Difficulty::TutorialChapter4 => 3.0,
-            Difficulty::TutorialChapter5 => 4.0,
-            Difficulty::StandardChallenge => 6.0,
-            Difficulty::HardChallenge => 8.0,
-            Difficulty::ExpertChallenge => 12.0,
-            Difficulty::MasterChallenge => 16.0,
+            Difficulty::TutorialChapter2 => 2.0,
+            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter4 => 6.0,
+            Difficulty::TutorialChapter5 => 8.0,
+            Difficulty::StandardChallenge => 10.0,
+            Difficulty::HardChallenge => 20.0,
+            Difficulty::ExpertChallenge => 50.0,
+            Difficulty::MasterChallenge => 100.0,
         }
     }
 
@@ -651,7 +651,8 @@ impl Difficulty {
             default_van_tab: self.default_van_tab(),
             player_gear: self.player_gear(),
             ghost_set: self.ghost_set(),
-            difficulty_name: self.difficulty_name().to_owned(),
+            difficulty: *self,
+            difficulty_name: self.difficulty_name().to_string(),
             difficulty_description: self.difficulty_description().to_owned(),
             difficulty_score_multiplier: self.difficulty_score_multiplier(),
             tutorial_chapter: self.tutorial_chapter(),
@@ -661,7 +662,10 @@ impl Difficulty {
 }
 
 /// Holds the concrete values for a specific difficulty level.
-#[derive(Debug, Clone)]
+///
+/// This struct is assembled by the `create_difficulty_struct` method in the
+/// `Difficulty` enum.
+#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq)]
 pub struct DifficultyStruct {
     // --- Ghost Behavior ---
     pub ghost_speed: f32,
@@ -699,6 +703,7 @@ pub struct DifficultyStruct {
     pub ghost_set: GhostSet,
     // --- UI and Scoring ---
     pub difficulty_name: String,
+    pub difficulty: Difficulty,
     pub difficulty_description: String,
     pub difficulty_score_multiplier: f64,
     /// The range of manual pages associated with this difficulty.
@@ -706,11 +711,30 @@ pub struct DifficultyStruct {
     pub truck_gear: Vec<GearKind>,
 }
 
-#[derive(Debug, Resource, Clone)]
+impl Default for DifficultyStruct {
+    fn default() -> Self {
+        Difficulty::default().create_difficulty_struct()
+    }
+}
+
+/// Represents the currently selected difficulty level.
+///
+/// This resource is used to store the difficulty settings that are currently
+/// active in the game. It is updated when the player changes the difficulty
+/// in the game settings or when a new mission with a specific difficulty is
+/// loaded.
+#[derive(Debug, Clone, Serialize, Deserialize, Resource, PartialEq, Default)]
 pub struct CurrentDifficulty(pub DifficultyStruct);
 
-impl Default for CurrentDifficulty {
-    fn default() -> Self {
-        Self(Difficulty::default().create_difficulty_struct())
+impl CurrentDifficulty {
+    /// Creates a new `CurrentDifficulty` resource with the specified difficulty
+    /// level.
+    pub fn new(difficulty: Difficulty) -> Self {
+        CurrentDifficulty(difficulty.create_difficulty_struct())
     }
+}
+
+/// Returns the `DifficultyStruct` for the specified difficulty level.
+pub fn get_difficulty_struct(difficulty: Difficulty) -> DifficultyStruct {
+    difficulty.create_difficulty_struct()
 }

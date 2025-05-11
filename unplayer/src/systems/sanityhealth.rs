@@ -15,7 +15,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::resources::summary_data::SummaryData;
 use uncore::states::AppState;
-use unprofile::data::PlayerProfileData;
+use unprofile::data::PlayerProfileData; // Added import
 
 #[derive(Default)]
 pub struct MeanSound(f32);
@@ -182,21 +182,33 @@ pub fn handle_player_death(
     mut summary_data: ResMut<SummaryData>,
     mut next_app_state: ResMut<NextState<AppState>>,
     board_data: Res<BoardData>,
+    difficulty_res: Res<CurrentDifficulty>,
 ) {
     for player in player_query.iter_mut() {
         if player.health <= 0.0 {
             let initial_deposit_held = player_profile.progression.insurance_deposit;
 
             player_profile.progression.insurance_deposit = 0;
-            player_profile.statistics.total_deaths += 1;
+            player_profile.statistics.total_deaths += 1; // Global deaths
+
+            // Record death for specific map and difficulty
+            let map_path_str = board_data.map_path.clone();
+
+            let current_difficulty_variant = difficulty_res.0.difficulty;
+
+            let map_specific_stats = player_profile
+                .map_statistics
+                .entry(map_path_str.clone())
+                .or_default()
+                .entry(current_difficulty_variant)
+                .or_default();
+            map_specific_stats.total_deaths += 1;
 
             if let Err(e) = player_profile.persist() {
-                panic!("Failed to persist PlayerProfileData: {:?}", e);
+                error!("Failed to persist PlayerProfileData after death: {:?}", e);
             }
 
-            let current_mission_id = board_data.map_path.clone();
-
-            summary_data.map_path = current_mission_id;
+            summary_data.map_path = map_path_str;
             summary_data.deposit_originally_held = initial_deposit_held;
             summary_data.deposit_returned_to_bank = 0;
             summary_data.costs_deducted_from_deposit = initial_deposit_held;

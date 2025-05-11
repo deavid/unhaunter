@@ -36,7 +36,7 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked},
     templates,
 };
-use unmaphub::badge_utils::BadgeUtils;
+use unmaphub::badge_utils::BadgeUtils; // Added import
 
 /// Component to delay input processing to avoid immediate selection
 #[derive(Component, Default)]
@@ -564,6 +564,8 @@ pub fn setup_ui(
                                         &player_profile_resource,
                                         current_ui_index,
                                         selected,
+                                        &mission_select_mode, // Added
+                                        &difficulty_resource, // Added
                                     );
 
                                     current_ui_index += 1;
@@ -694,6 +696,8 @@ fn create_mission_list_item(
     player_profile: &unprofile::data::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,
+    mission_select_mode: &CurrentMissionSelectMode, // Added
+    difficulty_resource: &CurrentDifficulty,        // Added
 ) -> Entity {
     let mission_data = &map.mission_data;
     let map_path = &map.path;
@@ -752,16 +756,27 @@ fn create_mission_list_item(
                         ..default()
                     });
 
-                    let player_stats = player_profile.map_statistics.get(map_path);
+                    let target_difficulty_for_badge = match mission_select_mode.0 {
+                        MissionSelectMode::Campaign => mission_data.difficulty,
+                        MissionSelectMode::Custom => difficulty_resource.0.difficulty,
+                    };
 
-                    let grade = if let Some(stats) = player_stats {
-                        if stats.total_missions_completed > 0 {
-                            stats.best_grade
+                    let grade = if let Some(map_difficulties_stats) =
+                        player_profile.map_statistics.get(map_path)
+                    {
+                        if let Some(stats_for_target_difficulty) =
+                            map_difficulties_stats.get(&target_difficulty_for_badge)
+                        {
+                            if stats_for_target_difficulty.total_missions_completed > 0 {
+                                stats_for_target_difficulty.best_grade
+                            } else {
+                                Grade::NA
+                            }
                         } else {
-                            Grade::NA
+                            Grade::NA // No stats for this specific difficulty
                         }
                     } else {
-                        Grade::NA
+                        Grade::NA // No stats for this map at all
                     };
 
                     BadgeUtils::create_badge(row, handles, grade, 32.0, false);

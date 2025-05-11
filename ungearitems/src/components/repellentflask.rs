@@ -271,7 +271,8 @@ pub fn repellent_update(
             .mul(0.999);
 
         for nb in bpos.iter_xy_neighbors(1, bf.map_size) {
-            if !bf.collision_field[nb.ndidx()].player_free {
+            let coll_tile_data = &bf.collision_field[nb.ndidx()];
+            if !coll_tile_data.player_free && !coll_tile_data.see_through {
                 // Collision with walls
                 let wall_pos = nb.to_position();
                 let delta = r_pos.delta(wall_pos);
