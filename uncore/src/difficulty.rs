@@ -597,14 +597,14 @@ impl Difficulty {
     pub fn difficulty_score_multiplier(&self) -> f64 {
         match self {
             Difficulty::TutorialChapter1 => 1.0,
-            Difficulty::TutorialChapter2 => 1.5,
-            Difficulty::TutorialChapter3 => 2.0,
-            Difficulty::TutorialChapter4 => 3.0,
-            Difficulty::TutorialChapter5 => 4.0,
-            Difficulty::StandardChallenge => 6.0,
-            Difficulty::HardChallenge => 8.0,
-            Difficulty::ExpertChallenge => 12.0,
-            Difficulty::MasterChallenge => 16.0,
+            Difficulty::TutorialChapter2 => 2.0,
+            Difficulty::TutorialChapter3 => 4.0,
+            Difficulty::TutorialChapter4 => 6.0,
+            Difficulty::TutorialChapter5 => 8.0,
+            Difficulty::StandardChallenge => 10.0,
+            Difficulty::HardChallenge => 20.0,
+            Difficulty::ExpertChallenge => 50.0,
+            Difficulty::MasterChallenge => 100.0,
         }
     }
 

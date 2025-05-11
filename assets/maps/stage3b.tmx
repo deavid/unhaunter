@@ -12,10 +12,10 @@
   <property name="map_preview_image" type="string" value="maps/previews/stage3b.png"/>
   <property name="required_deposit" type="int" value="310"/>
   <property name="mission_reward_base" type="int" value="171"/>
-  <property name="grade_a_score_threshold" type="int" value="800"/>
+  <property name="grade_a_score_threshold" type="int" value="700"/>
   <property name="grade_b_score_threshold" type="int" value="550"/>
   <property name="grade_c_score_threshold" type="int" value="350"/>
-  <property name="grade_d_score_threshold" type="int" value="170"/>
+  <property name="grade_d_score_threshold" type="int" value="100"/>
   <property name="min_player_level" type="int" value="5"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
