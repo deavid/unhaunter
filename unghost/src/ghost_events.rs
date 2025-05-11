@@ -70,7 +70,7 @@ pub fn trigger_ghost_events(
                 0 => GhostEvent::DoorSlam,
                 _ => GhostEvent::LightFlicker,
             };
-            warn!("Event: {:?}", event);
+            // warn!("Event: {:?}", event);
             match event {
                 GhostEvent::DoorSlam => {
                     // Find doors in the player's room
@@ -123,7 +123,7 @@ pub fn trigger_ghost_events(
                                 collision: true,
                             });
                         }
-                        warn!("Slamming door: {:?}", door_to_slam);
+                        // warn!("Slamming door: {:?}", door_to_slam);
                     }
                 }
                 GhostEvent::LightFlicker => {
@@ -149,7 +149,7 @@ pub fn trigger_ghost_events(
                                         0.5,
                                         TimerMode::Once,
                                     )));
-                                warn!("Flickering light: {:?}", entity);
+                                // warn!("Flickering light: {:?}", entity);
                                 flicker = true;
                             }
                         }

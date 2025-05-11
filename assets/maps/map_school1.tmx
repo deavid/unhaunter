@@ -2,6 +2,7 @@
 <map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="12" nextobjectid="1">
  <properties>
   <property name="display_name" value="99 Unicorn Way University"/>
+  <property name="min_player_level" type="int" value="10"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="265" source="unhaunter_spritesheetA_6x6x10.tsx"/>

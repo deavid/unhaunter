@@ -290,6 +290,7 @@ pub enum Class {
     WallDecor,
     CeilingLight,
     StreetLight,
+    CandleLight,
     Appliance,
     Van,
     Window,
@@ -566,6 +567,7 @@ impl SpriteConfig {
                 .insert(component::RoomState::default())
                 .insert(component::Light),
             Class::StreetLight => entity.insert(component::Light),
+            Class::CandleLight => entity.insert(component::Light),
             Class::Appliance => entity.insert(component::FloorItemCollidable),
             Class::Van => entity,
             Class::Window => entity,
@@ -703,6 +705,13 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = true;
                 p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
+            }
+            Class::CandleLight => {
+                p.display.disable = true;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = true;
+                p.light.emission_power = (-0.5).try_into().unwrap();
+                p.light.heat_coef = 6;
             }
             Class::Appliance => {
                 p.display.global_z = (0.000070).try_into().unwrap();

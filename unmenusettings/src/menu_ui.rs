@@ -25,7 +25,6 @@ pub fn setup_ui_main_cat(
     title: impl Into<String>,
     menu_items: &[(String, MenuEvent)],
 ) {
-    // Clean up old UI:
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
     }

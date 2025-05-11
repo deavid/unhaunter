@@ -24,6 +24,12 @@ pub struct MenuMouseTracker {
     pub mouse_moved: bool,
 }
 
+/// A component that marks a text entity as the principal text for a menu item
+/// This is used by the update_menu_item_visuals system to find which text entity
+/// to update when the item's selection state changes
+#[derive(Component, Debug)]
+pub struct PrincipalMenuText;
+
 /// A component that marks an entity as the background for a menu
 #[derive(Component, Debug)]
 pub struct MenuBackground;

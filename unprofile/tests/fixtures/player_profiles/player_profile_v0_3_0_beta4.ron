@@ -1,0 +1,58 @@
+PlayerProfileData(
+    progression: ProgressionData(
+        bank: 1942,
+        insurance_deposit: 0,
+        player_xp: 10665,
+        player_level: 12,
+    ),
+    achievements: AchievementData(
+        expelled_first_ghost: false,
+    ),
+    statistics: StatisticsData(
+        total_missions_completed: 4,
+        total_deaths: 0,
+        total_play_time_seconds: 520.261474609375,
+    ),
+    map_statistics: {
+        "maps/stage1a.tmx": {
+            TutorialChapter1: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 78.5994873046875,
+                total_mission_completed_time_seconds: 78.5994873046875,
+                best_score: 1169,
+                best_grade: A,
+            ),
+        },
+        "maps/stage4a.tmx": {
+            TutorialChapter4: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 217.39736938476563,
+                total_mission_completed_time_seconds: 217.39736938476563,
+                best_score: 3690,
+                best_grade: B,
+            ),
+        },
+        "maps/stage3a.tmx": {
+            TutorialChapter3: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 111.86564636230469,
+                total_mission_completed_time_seconds: 111.86564636230469,
+                best_score: 3820,
+                best_grade: A,
+            ),
+        },
+        "maps/stage2a.tmx": {
+            TutorialChapter2: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 112.39897155761719,
+                total_mission_completed_time_seconds: 112.39897155761719,
+                best_score: 1986,
+                best_grade: A,
+            ),
+        },
+    },
+)

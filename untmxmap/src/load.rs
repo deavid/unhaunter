@@ -18,6 +18,13 @@ pub fn load_tile_layer_iter<'a>(
         for (k, v) in &layer.properties {
             user_properties.insert(k.clone(), v.clone());
         }
+
+        // Parse z_offset property if it exists, default to 0.0
+        let z_offset = match layer.properties.get("z_offset") {
+            Some(tiled::PropertyValue::FloatValue(value)) => *value,
+            _ => 0.0,
+        };
+
         let map_layer = MapLayer {
             name: layer.name.to_string(),
             visible: layer.visible,
@@ -28,6 +35,7 @@ pub fn load_tile_layer_iter<'a>(
             data: load_tile_layer(layer),
             floor_number: None,
             parent_floor_name: None,
+            z_offset,
         };
         ret.push(map_layer);
     }

@@ -4,6 +4,7 @@ pub mod ghost_guess;
 pub mod looking_gear;
 pub mod manual;
 pub mod maps;
+pub mod mission_select_mode;
 pub mod object_interaction;
 pub mod roomdb;
 pub mod summary_data;

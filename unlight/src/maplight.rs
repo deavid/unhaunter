@@ -363,7 +363,9 @@ pub fn apply_lighting(
     }
     let mut qt = sprite_set.p0();
     cursor_exp /= exp_count;
-    cursor_exp = (cursor_exp / center_exp).powf(center_exp_gamma.recip()) * center_exp + 0.00001;
+    // Ensure the base is not negative before applying the power function
+    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
     // Account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might
@@ -965,13 +967,13 @@ pub fn ambient_sound_system(
 
     // Calculate bounds for our slice
     let player_ndidx = player_bpos.ndidx();
-    let (map_width, map_height, _map_depth) = vf.visibility_field.dim();
+    let (map_width, map_height, map_depth) = vf.visibility_field.dim();
 
     let min_x = player_ndidx.0.saturating_sub(RADIUS);
     let max_x = (player_ndidx.0 + RADIUS).min(map_width - 1);
     let min_y = player_ndidx.1.saturating_sub(RADIUS);
     let max_y = (player_ndidx.1 + RADIUS).min(map_height - 1);
-    let z = player_ndidx.2;
+    let z = player_ndidx.2.clamp(0, map_depth - 1);
 
     // Calculate total_vis only for the subslice
     let total_vis: f32 = vf

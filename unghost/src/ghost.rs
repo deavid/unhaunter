@@ -30,6 +30,10 @@ use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = true;
 
+// Constants for movement penalties
+const WALL_AVOIDANCE_PENALTY: f32 = -100.0; // Negative because it's added to score
+const FLOOR_CHANGE_PENALTY_BASE: f32 = -50.0; // Negative, base penalty for changing floors
+
 #[derive(Component)]
 struct FadeOut {
     pub timer: Timer,
@@ -134,18 +138,30 @@ fn ghost_movement(
             let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
             let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
             let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
-            let dz: f32 = (0..5).map(|_| rng.random_range(-0.05..0.05)).sum(); // Small Z wandering
+            // Initial Z wandering: prefer staying on the same floor.
+            let dz: f32 = (0..5)
+                .map(|_| {
+                    if rng.random_range(0.0..1.0) < 0.1 {
+                        // 10% chance for a non-trivial dz component
+                        rng.random_range(-0.1..0.1) // Small Z wander
+                    } else {
+                        0.0 // Most of the time, no Z wander component from this
+                    }
+                })
+                .sum();
             let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
-            let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
+            let dd = ((dx * dx + dy * dy + dz * dz).sqrt() / dist.max(0.01)).max(0.01); // Include Z, ensure dd is not zero
+
             let mut hunt = false;
             target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
             target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
             target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
-            // Always land on a specific floor, not midway.
             target_point.z = target_point.z.round();
             let ghbonus = if ghost.hunt_target { 10000.0 } else { 0.0001 };
             if !ghost.hunt_warning_active
-                && rng.random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt() * 10.0) > 10.0
+                && rng
+                    .random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt().max(0.000001) * 10.0)
+                    > 10.0
             {
                 let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
                     .iter()
@@ -181,37 +197,65 @@ fn ghost_movement(
             // --- Sample Potential Destinations and Calculate Scores ---
             if !hunt {
                 let mut potential_destinations: Vec<(f32, Position)> = Vec::new();
+
                 for _ in 0..config.num_destination_points_to_sample {
-                    let mut target_point = ghost.spawn_point.to_position();
-                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0
-                        / difficulty.0.ghost_attraction_to_breach
-                        + 0.5;
+                    let mut candidate_dest = ghost.spawn_point.to_position(); // Base for wandering
+                    let wander: f32 = rng.random_range(0.001..1.0_f32).powf(6.0) * 12.0 + 0.5;
                     let dx: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
                     let dy: f32 = (0..5).map(|_| rng.random_range(-1.0..1.0)).sum();
-                    let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Small Z wandering
-                    let dist: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
-                    let dd = (dx * dx + dy * dy + dz * dz).sqrt() / dist; // Include Z in normalization
-                    target_point.x = (target_point.x + pos.x * wander) / (1.0 + wander) + dx / dd;
-                    target_point.y = (target_point.y + pos.y * wander) / (1.0 + wander) + dy / dd;
-                    target_point.z = (target_point.z + pos.z * wander) / (1.0 + wander) + dz / dd;
-                    target_point.z = target_point.z.round();
-                    let score = 1.0
-                        + calculate_destination_score(target_point, &object_query, &config)
-                            / difficulty.0.ghost_attraction_to_breach;
-                    potential_destinations.push((score, target_point));
+                    let dz: f32 = (0..5).map(|_| rng.random_range(-0.5..0.5)).sum(); // Allow Z exploration for samples
+                    let dist_norm_factor: f32 = (0..5).map(|_| rng.random_range(0.2..wander)).sum();
+                    let dd_sample = ((dx * dx + dy * dy + dz * dz).sqrt()
+                        / dist_norm_factor.max(0.01))
+                    .max(0.01);
+
+                    candidate_dest.x =
+                        (candidate_dest.x + pos.x * wander) / (1.0 + wander) + dx / dd_sample;
+                    candidate_dest.y =
+                        (candidate_dest.y + pos.y * wander) / (1.0 + wander) + dy / dd_sample;
+                    candidate_dest.z =
+                        (candidate_dest.z + pos.z * wander) / (1.0 + wander) + dz / dd_sample;
+                    candidate_dest.z = candidate_dest.z.round(); // Snap to floor
+
+                    // Clamp candidate destination to map bounds before scoring
+                    candidate_dest.x = candidate_dest.x.clamp(0.0, (bf.map_size.0 - 1) as f32);
+                    candidate_dest.y = candidate_dest.y.clamp(0.0, (bf.map_size.1 - 1) as f32);
+                    candidate_dest.z = candidate_dest.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
+
+                    let mut score = 1.0; // Base score
+                    score +=
+                        calculate_object_influence_score(candidate_dest, &object_query, &config)
+                            / difficulty.0.ghost_attraction_to_breach.max(0.1); // Scale object influence
+                    let penalty = 1.0
+                        + calculate_movement_penalties(candidate_dest, &pos, &bf, &difficulty)
+                            .abs()
+                            / 10.0;
+                    score /= penalty;
+                    potential_destinations.push((score, candidate_dest));
                 }
 
-                // --- Select Destination with Highest Score --- Default to spawn point
+                // --- Select Destination with Highest Score ---
                 let mut best_destination = ghost.spawn_point.to_position();
+                best_destination.z = pos.z.round().clamp(0.0, (bf.map_size.2 - 1) as f32); // Default to current floor
+
                 let mut best_score = f32::MIN;
+
                 for (score, point) in potential_destinations {
                     if score > best_score {
-                        best_score = score;
-                        best_destination = point;
+                        let point_bpos = point.to_board_position();
+                        if point_bpos.is_valid(bf.map_size)
+                            && bf.collision_field[point_bpos.ndidx()].player_free
+                        {
+                            best_score = score;
+                            best_destination = point;
+                        }
                     }
                 }
                 target_point = best_destination;
             }
+            // Clamp final target_point to map bounds (important if not from sampling or if sampling failed)
+            target_point.x = target_point.x.clamp(0.0, (bf.map_size.0 - 1) as f32);
+            target_point.y = target_point.y.clamp(0.0, (bf.map_size.1 - 1) as f32);
             target_point.z = target_point.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
@@ -224,7 +268,11 @@ fn ghost_movement(
                 } else if ghost.hunt_target {
                     warn!("Hunt temporarily ended (remaining) {:.1}s", ghost.hunting);
                 }
-                ghost.target_point = Some(target_point);
+                // Final check to ensure the chosen bpos is valid before assigning.
+                // This is somewhat redundant with checks in sampling, but good for safety.
+                if bpos.is_valid(bf.map_size) && bf.collision_field[bpos.ndidx()].ghost_free {
+                    ghost.target_point = Some(target_point);
+                }
                 ghost.hunt_target = hunt;
             } else if ghost
                 .target_point
@@ -521,18 +569,16 @@ fn ghost_enrage(
     measure.end_ms();
 }
 
-/// Calculates the desirability score of a potential destination point for the
-/// ghost, considering the influence of nearby charged objects.
-fn calculate_destination_score(
+/// Calculates the score contribution from object influences.
+fn calculate_object_influence_score(
     potential_destination: Position,
     object_query: &Query<(&Position, &GhostInfluence)>,
     config: &Res<ObjectInteractionConfig>,
 ) -> f32 {
     let mut score = 0.0;
-
     // Iterate through objects with GhostInfluence
     for (object_position, ghost_influence) in object_query.iter() {
-        let distance2 = potential_destination.distance2(object_position);
+        let distance2 = potential_destination.distance2_zf(object_position, 20.0);
 
         // Apply influence based on distance and charge value
         match ghost_influence.influence_type {
@@ -550,6 +596,36 @@ fn calculate_destination_score(
         }
     }
     score
+}
+
+/// Calculates penalties for movement choices (walls, floor changes).
+fn calculate_movement_penalties(
+    potential_destination: Position,
+    current_ghost_pos: &Position,
+    bf: &Res<BoardData>,
+    _difficulty: &Res<CurrentDifficulty>, // Available for future use if penalties scale with difficulty
+) -> f32 {
+    let mut penalty_score = 0.0;
+    let dest_bpos = potential_destination.to_board_position();
+
+    // Bounds check (should be redundant if candidate generation is correct, but good for safety)
+    if !dest_bpos.is_valid(bf.map_size) {
+        return f32::MIN / 2.0; // Heavily penalize out-of-bounds
+    }
+
+    // Wall Avoidance Penalty
+    // Penalize if the destination tile itself is not player_free (we don't use ghost_free here because that would be for future use on pathfinding)
+    if !bf.collision_field[dest_bpos.ndidx()].player_free {
+        penalty_score += WALL_AVOIDANCE_PENALTY;
+    }
+
+    // Floor Change Penalty
+    // Penalize if the destination is on a different floor (rounded Z)
+    if potential_destination.z.round() != current_ghost_pos.z.round() {
+        penalty_score += FLOOR_CHANGE_PENALTY_BASE;
+    }
+
+    penalty_score
 }
 
 /// Spawns a `SaltyTrace` entity at the given `tile_position`.

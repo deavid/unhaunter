@@ -6,29 +6,30 @@ use uncore::types::root::game_assets::GameAssets;
 
 /// Creates a standard menu background with the background image
 pub fn create_background(parent: &mut ChildBuilder, handles: &GameAssets) {
-    parent
-        .spawn(ImageNode {
+    parent.spawn((
+        ImageNode {
             image: handles.images.menu_background.clone(),
             ..default()
-        })
-        .insert(Node {
+        },
+        Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             position_type: PositionType::Absolute,
             ..default()
-        })
-        .insert(ZIndex(-10)) // Ensure it's behind other elements
-        .insert(MenuBackground);
+        },
+        ZIndex(-10), // Ensure it's behind other elements
+        MenuBackground,
+    ));
 }
 
 /// Creates a standard menu logo
 pub fn create_logo(parent: &mut ChildBuilder, handles: &GameAssets) {
-    parent
-        .spawn(ImageNode {
+    parent.spawn((
+        ImageNode {
             image: handles.images.title.clone(),
             ..default()
-        })
-        .insert(Node {
+        },
+        Node {
             position_type: PositionType::Absolute,
             left: Val::Px(16.0 * UI_SCALE),
             top: Val::Px(16.0 * UI_SCALE),
@@ -36,8 +37,9 @@ pub fn create_logo(parent: &mut ChildBuilder, handles: &GameAssets) {
             height: Val::Auto,
             aspect_ratio: Some(130.0 / 17.0), // Maintain logo aspect ratio
             ..default()
-        })
-        .insert(ZIndex(0));
+        },
+        ZIndex(0),
+    ));
 }
 
 /// Creates a standard menu left strip
@@ -119,7 +121,8 @@ pub fn create_menu_item<'a>(
                     selected_color
                 } else {
                     unselected_color
-                }));
+                }))
+                .insert(PrincipalMenuText);
         });
 
     entity_cmd
@@ -577,8 +580,98 @@ pub fn create_content_item_enabled<'a>(
                     selected_color
                 } else {
                     unselected_color
-                }));
+                }))
+                .insert(PrincipalMenuText);
         });
 
     entity_cmd
+}
+
+/// Creates a persistent player status bar displaying Level, XP progress, and Bank.
+/// Should be added to a root UI node of a menu screen.
+pub fn create_player_status_bar(
+    parent: &mut ChildBuilder,
+    handles: &GameAssets,
+    player_profile: &unprofile::data::PlayerProfileData,
+) {
+    parent
+        .spawn(Node {
+            // Node now directly contains style properties
+            width: Val::Percent(100.0),
+            height: Val::Px(40.0),
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(10.0),
+            left: Val::Px(0.0),
+            padding: UiRect::horizontal(Val::Px(10.0)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::FlexStart,
+            flex_direction: FlexDirection::Row,
+            ..default()
+        })
+        .with_children(|status_bar_content| {
+            // Player Level Text
+            status_bar_content
+                .spawn(Text::new(format!(
+                    "Lv {} ",
+                    player_profile.progression.player_level
+                )))
+                .insert(TextFont {
+                    font: handles.fonts.londrina.w300_light.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(colors::MENU_ITEM_COLOR_ON))
+                .insert(Node {
+                    // Using Node for styling the text element's layout
+                    margin: UiRect {
+                        right: Val::Px(5.0),
+                        ..default()
+                    },
+                    ..default()
+                });
+
+            // Progress Bar Container
+            status_bar_content
+                .spawn(Node {
+                    // Node for progress bar container with direct style props
+                    width: Val::Px(50.0),
+                    height: Val::Px(10.0),
+                    border: UiRect::all(Val::Px(1.0)),
+                    margin: UiRect {
+                        right: Val::Px(10.0),
+                        ..default()
+                    },
+                    align_items: AlignItems::Stretch,
+                    justify_content: JustifyContent::FlexStart,
+                    ..default()
+                })
+                .insert(BackgroundColor(colors::PANEL_BGCOLOR.with_alpha(0.5)))
+                .insert(BorderColor(colors::MENU_ITEM_COLOR_OFF))
+                .with_children(|progress_bar_container| {
+                    // Actual Progress Fill
+                    progress_bar_container
+                        .spawn(Node {
+                            // Node for progress fill with direct style props
+                            width: Val::Percent(
+                                player_profile.progression.get_level_progress() * 100.0,
+                            ),
+                            height: Val::Percent(100.0),
+                            ..default()
+                        })
+                        .insert(BackgroundColor(colors::MENU_ITEM_COLOR_ON));
+                });
+
+            // Bank Balance Text
+            status_bar_content
+                .spawn(Text::new(format!(
+                    "Bank: ${} ",
+                    player_profile.progression.bank
+                )))
+                .insert(TextFont {
+                    font: handles.fonts.londrina.w300_light.clone(),
+                    font_size: 20.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
+        });
 }

@@ -4,7 +4,6 @@ use super::{game_ui, object_charge, pause_ui, roomchanged, systems};
 use bevy::prelude::*;
 use uncore::components::game_config::GameConfig;
 use uncore::states::AppState;
-use unmapload::UnMapLoadPlugin;
 
 pub struct UnhaunterGamePlugin;
 
@@ -20,8 +19,7 @@ impl Plugin for UnhaunterGamePlugin {
                     systems::keyboard_floor_switch,
                     system_hide_mouse,
                 ),
-            )
-            .add_plugins(UnMapLoadPlugin);
+            );
 
         boardfield_update::app_setup(app);
         game_ui::app_setup(app);

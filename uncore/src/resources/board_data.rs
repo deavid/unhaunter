@@ -52,6 +52,8 @@ pub struct BoardData {
     pub ghost_warning_intensity: f32,
     /// Source position of warning
     pub ghost_warning_position: Option<Position>,
+
+    pub map_path: String, // Path to the current map file
 }
 
 impl FromWorld for BoardData {
@@ -88,6 +90,7 @@ impl FromWorld for BoardData {
                 ghost_attracting_objects: HashMap::new(),
                 ghost_repelling_objects: HashMap::new(),
             },
+            map_path: String::new(), // Initialize map_path with an empty string
         }
     }
 }

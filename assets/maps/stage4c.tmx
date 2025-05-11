@@ -6,6 +6,17 @@
   <property name="flavor_text" value="This rambling old house has rented rooms for over a century, each holding countless untold stories. Recent caretakers quit, unnerved by doors slamming shut, footsteps echoing from empty hallways on all three floors, and the feeling of unseen tenants lingering. The air is thick with history... and something else."/>
   <property name="location_address" value="8 Shadow Lane"/>
   <property name="location_name" value="The Blackwood Rooms"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="campaign_order" type="string" value="04C"/>
+  <property name="campaign_difficulty" type="string" value="TutorialChapter4"/>
+  <property name="map_preview_image" type="string" value="maps/previews/stage4c.png"/>
+  <property name="required_deposit" type="int" value="1698"/>
+  <property name="mission_reward_base" type="int" value="865"/>
+  <property name="grade_a_score_threshold" type="int" value="600"/>
+  <property name="grade_b_score_threshold" type="int" value="450"/>
+  <property name="grade_c_score_threshold" type="int" value="350"/>
+  <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="min_player_level" type="int" value="7"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>

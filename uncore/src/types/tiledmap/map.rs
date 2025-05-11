@@ -74,6 +74,7 @@ pub struct MapLayer {
     pub data: MapLayerType,
     pub floor_number: Option<i32>, // The floor number this layer belongs to
     pub parent_floor_name: Option<String>, // The name of the parent floor group
+    pub z_offset: f32, // Vertical offset for placing objects above floor level (default 0.0)
 }
 
 /// Iterator for layers. This iterator will search recursively for layers of type

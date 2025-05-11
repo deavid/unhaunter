@@ -1,18 +1,12 @@
-use super::{TruckUIGhostGuess, uibutton::TruckButtonType};
+use super::{TruckUIGhostGuess, uibutton::TruckButtonType}; // Assuming TruckUIGhostGuess and uibutton are still relevant here
 use bevy::prelude::*;
 use uncore::colors;
-use uncore::difficulty::CurrentDifficulty;
+use uncore::difficulty::CurrentDifficulty; // Use CurrentDifficulty
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::evidence::Evidence;
 use uncore::types::root::game_assets::GameAssets;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
-const MARGIN: UiRect = UiRect::percent(
-    MARGIN_PERCENT,
-    MARGIN_PERCENT,
-    MARGIN_PERCENT,
-    MARGIN_PERCENT,
-);
 
 pub fn setup_journal_ui(
     p: &mut ChildBuilder,
@@ -37,7 +31,6 @@ pub fn setup_journal_ui(
     // Evidence selection
     p.spawn(Node {
         justify_content: JustifyContent::FlexStart,
-        // flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap,
         row_gap: Val::Px(4.0 * UI_SCALE),
         column_gap: Val::Px(4.0 * UI_SCALE),
         display: Display::Grid,
@@ -79,7 +72,7 @@ pub fn setup_journal_ui(
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
-                        TextLayout::default(),
+                        TextLayout::default(), // Ensure TextLayout is added
                     ));
                 });
         }
@@ -116,31 +109,35 @@ pub fn setup_journal_ui(
     // Ghost selection
     p.spawn(Node {
         justify_content: JustifyContent::FlexStart,
-        // row_gap: Val::Px(4.0), column_gap: Val::Px(4.0),
         display: Display::Grid,
         grid_template_columns: vec![
+            // Define columns for the grid
             GridTrack::auto(),
             GridTrack::auto(),
             GridTrack::auto(),
             GridTrack::auto(),
             GridTrack::auto(),
         ],
-        grid_auto_rows: GridTrack::flex(1.0),
+        grid_auto_rows: GridTrack::auto(), // Rows will adjust height automatically
+        row_gap: Val::Px(2.0 * UI_SCALE),  // Reduced gap
+        column_gap: Val::Px(2.0 * UI_SCALE), // Reduced gap
         flex_grow: 1.0,
+        padding: UiRect::all(Val::Px(2.0 * UI_SCALE)), // Added padding
         ..default()
     })
     .insert(BackgroundColor(colors::TRUCKUI_BGCOLOR))
     .with_children(|ghost_selection| {
+        // Use difficulty.0 (DifficultyStruct) to get the ghost_set
         for ghost_type in difficulty.0.ghost_set.as_vec() {
             ghost_selection
                 .spawn(Button)
                 .insert(Node {
                     min_width: Val::Px(0.0),
-                    min_height: Val::Px(20.0 * UI_SCALE),
+                    min_height: Val::Px(18.0 * UI_SCALE), // Slightly reduced height
                     border: UiRect::all(Val::Px(0.9)),
                     justify_content: JustifyContent::Center,
-                    padding: UiRect::new(Val::Px(5.0), Val::Px(2.0), Val::Px(0.0), Val::Px(2.0)),
-                    display: Display::Grid,
+                    padding: UiRect::new(Val::Px(4.0), Val::Px(2.0), Val::Px(0.0), Val::Px(2.0)), // Adjusted padding
+                    display: Display::Flex, // Changed to Flex for better centering
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     ..default()
@@ -154,10 +151,11 @@ pub fn setup_journal_ui(
                         Text::new(ghost_type.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 16.0 * FONT_SCALE,
+                            font_size: 15.0 * FONT_SCALE, // Slightly reduced font size
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
+                        TextLayout::default(), // Ensure TextLayout is added
                     ));
                 });
         }
@@ -217,10 +215,9 @@ pub fn setup_journal_ui(
     p.spawn(Button)
         .insert(Node {
             min_width: Val::Px(0.0),
-            // FIXME: This needs to be more automatic, will fail on small windows.
             max_width: Val::Percent(60.0),
             min_height: Val::Px(30.0 * UI_SCALE),
-            border: MARGIN,
+            border: UiRect::all(Val::Px(MARGIN_PERCENT)),
             margin: UiRect::all(Val::Px(30.0 * UI_SCALE)).with_left(Val::Percent(20.0)),
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,

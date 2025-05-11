@@ -5,6 +5,7 @@
   <property name="display_name" value="89ab Tarin Library"/>
   <property name="flavor_text" value="The library got haunted since the last incident"/>
   <property name="location_address" value="89ab Hollow Street"/>
+  <property name="min_player_level" type="int" value="10"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
