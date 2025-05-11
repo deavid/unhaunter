@@ -65,7 +65,8 @@ pub struct MissionPreviewImage;
 /// after filtering and sorting operations are applied
 #[derive(Resource, Debug, Default)]
 pub struct UIMissionMapping {
-    pub ui_to_map_index: Vec<usize>, // Maps UI index to original map index in maps_resource.maps
+    /// Maps UI index to original map index in maps_resource.maps
+    pub ui_to_map_index: Vec<usize>,
 }
 
 /// Setup function for unified mission selection systems
@@ -696,8 +697,8 @@ fn create_mission_list_item(
     player_profile: &unprofile::data::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,
-    mission_select_mode: &CurrentMissionSelectMode, // Added
-    difficulty_resource: &CurrentDifficulty,        // Added
+    mission_select_mode: &CurrentMissionSelectMode,
+    difficulty_resource: &CurrentDifficulty,
 ) -> Entity {
     let mission_data = &map.mission_data;
     let map_path = &map.path;
