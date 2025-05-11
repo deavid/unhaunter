@@ -1,5 +1,4 @@
 pub mod board;
-pub mod mission_data;
 pub mod evidence;
 pub mod evidence_status;
 pub mod game;
@@ -9,6 +8,7 @@ pub mod ghost;
 pub mod grade;
 pub mod manual;
 pub mod miasma;
+pub mod mission_data;
 pub mod quadcc;
 pub mod root;
 pub mod tiledmap;

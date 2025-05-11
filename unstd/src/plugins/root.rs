@@ -67,8 +67,8 @@ fn load_assets(
             badges: server.load("img/badges.png"),
             badges_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
                 UVec2::new(32, 32), // 32x32 pixels per badge
-                5,                   // 5 columns (limited to just the grade badges for now)
-                1,                   // 1 row
+                5,                  // 5 columns (limited to just the grade badges for now)
+                1,                  // 1 row
                 Some(UVec2::new(0, 0)),
                 Some(UVec2::new(0, 0)),
             )),
