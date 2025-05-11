@@ -14,15 +14,6 @@ impl Plugin for UnprofilePlugin {
                 Path::new("local").join("config")
             });
 
-        if !config_dir_path.exists() {
-            std::fs::create_dir_all(&config_dir_path).unwrap_or_else(|e| {
-                panic!(
-                    "Failed to create config directory at {:?}: {:?}",
-                    config_dir_path, e
-                )
-            });
-        }
-
         let player_profile_persistence = Persistent::<PlayerProfileData>::builder()
             .name("player_profile")
             .format(StorageFormat::RonPrettyWithStructNames)
