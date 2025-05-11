@@ -301,7 +301,13 @@ pub fn update_mission_selection(
             }
 
             if let Ok(mut image) = q_preview_image.get_single_mut() {
-                image.image = asset_server.load(&mission_data.preview_image_path);
+                let initial_preview = if mission_data.preview_image_path.is_empty() {
+                    "img/placeholder_mission.png".to_string()
+                } else {
+                    mission_data.preview_image_path.clone()
+                };
+
+                image.image = asset_server.load(&initial_preview);
             } else {
                 warn!("MissionPreviewImage not found in UI.");
             }
@@ -474,7 +480,11 @@ pub fn setup_ui(
             initial_mission.mission_reward_base,
         );
 
-        let initial_preview = initial_mission.preview_image_path.clone();
+        let initial_preview = if initial_mission.preview_image_path.is_empty() {
+            "img/placeholder_mission.png".to_string()
+        } else {
+            initial_mission.preview_image_path.clone()
+        };
         (initial_description, initial_preview)
     } else {
         let mode_name = match mission_select_mode.0 {
@@ -490,7 +500,6 @@ pub fn setup_ui(
             "img/placeholder_mission.png".to_string(),
         )
     };
-
     let title_text = match mission_select_mode.0 {
         MissionSelectMode::Campaign => "Campaign",
         MissionSelectMode::Custom => "Custom Mission",
@@ -499,7 +508,7 @@ pub fn setup_ui(
     let subtitle_text = match mission_select_mode.0 {
         MissionSelectMode::Campaign => "Select Mission".to_string(),
         MissionSelectMode::Custom => {
-            format!("Select Map ({})", difficulty_resource.0.difficulty_name)
+            format!("Select Map\n  ({})", difficulty_resource.0.difficulty_name)
         }
     };
 
