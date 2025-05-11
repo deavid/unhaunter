@@ -173,6 +173,15 @@ impl BoardPosition {
         }
     }
 
+    pub fn is_valid(&self, map_size: (usize, usize, usize)) -> bool {
+        self.x >= 0
+            && self.x < map_size.0 as i64
+            && self.y >= 0
+            && self.y < map_size.1 as i64
+            && self.z >= 0
+            && self.z < map_size.2 as i64
+    }
+
     pub fn iter_xy_neighbors_nosize(&self, dist: i64) -> NeighborsIterator {
         NeighborsIterator::new(self, dist, (0, 0), (2048, 2048))
     }
