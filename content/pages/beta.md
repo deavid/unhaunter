@@ -4,10 +4,19 @@ path = "beta"
 template = "beta.html"
 [extra]
 beta_available = true
-beta_version = "v0.3.0-beta3"
+beta_version = "v0.3.0-beta4"
 +++
 
 ## New shiny things to test!
+
+**Beta 4**
+
+* New Campaign mode
+* Player leveling up by gaining Score (EXP)
+* Unlock maps as you progress
+* Money system. Earn money and risk losing it when you die.
+* Grades and Badges for completing missions. Do it really well, get an A. Do it badly, get an F.
+* Reworked the old "New Game" menu into Custom Mission, simplified and more elegant.
 
 **Beta 3**
 
