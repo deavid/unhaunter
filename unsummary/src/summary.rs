@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
-use uncore::difficulty::CurrentDifficulty;
+use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::resources::maps::Maps;
 use uncore::resources::summary_data::SummaryData;
@@ -578,6 +578,7 @@ pub fn finalize_profile_update(
     sd: Res<SummaryData>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     app_state: Res<State<AppState>>,
+    maps: Res<Maps>,
 ) {
     if *app_state != AppState::Summary {
         return;
@@ -587,9 +588,31 @@ pub fn finalize_profile_update(
         player_profile.progression.bank += sd.money_earned;
     }
 
-    // Update map statistics for this particular map
+    // Get the mission data to find the difficulty enum
+    let difficulty = if let Some(map) = maps.maps.iter().find(|map| map.path == sd.map_path) {
+        // Use the mission_data's difficulty as the key for map statistics
+        map.mission_data.difficulty
+    } else {
+        // If we can't find the map, use a default difficulty based on what's in SummaryData
+        // This is a fallback in case the map isn't found
+        warn!(
+            "Map not found for mission ID: {}. Using current difficulty from summary data.",
+            sd.map_path
+        );
+        // Using the first difficulty that matches the name or defaulting to StandardChallenge
+        Difficulty::all()
+            .find(|d| d.difficulty_name() == sd.difficulty.0.difficulty_name)
+            .unwrap_or(Difficulty::StandardChallenge)
+    };
+
+    // Update map statistics for this particular map and difficulty
     let map_path = sd.map_path.clone();
-    let map_stats = player_profile.map_statistics.entry(map_path).or_default();
+    let map_stats = player_profile
+        .map_statistics
+        .entry(map_path)
+        .or_default()
+        .entry(difficulty)
+        .or_default();
 
     // Update mission completion stats
     map_stats.total_play_time_seconds += sd.time_taken_secs as f64;
@@ -634,7 +657,7 @@ impl Plugin for UnhaunterSummaryPlugin {
                     store_mission_id,
                     calculate_rewards_and_grades,
                     setup_ui,
-                    finalize_profile_update,
+                    finalize_profile_update, // Corrected this line
                 )
                     .chain(),
             )

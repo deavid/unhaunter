@@ -22,7 +22,7 @@ use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};
 
 /// Represents the different difficulty levels for the Unhaunter game.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Default)]
 pub enum Difficulty {
     #[default]
     TutorialChapter1, // Formerly NoviceInvestigator
