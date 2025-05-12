@@ -13,7 +13,7 @@ or if it will be discarded later on.
 Apache 2.0 license, fairly modern and powerful. It sounds fairly realistic,
 and it could be enough to replace some cases where a human voice is needed.
 
-The [HexGrad Kokoro GitHub](https://github.com/hexgrad/kokoro) contains the 
+The [HexGrad Kokoro GitHub](https://github.com/hexgrad/kokoro) contains the
 basic tooling to make this work.
 
 However, this is not something we'd ever want to run on the player end. This is
@@ -47,10 +47,10 @@ of stuff to get in place before this works.
 
 1. Create a Python Virtual Environment here. I will assume it is named `myenv`.
 
-This assumes you're in the `unhaunter/tools/text_to_speech` folder.
+This assumes you're in the `tools/text_to_speech` folder.
 
 ```
-apt install python-venv
+apt install python3-venv
 python3 -m venv myenv
 ```
 
@@ -65,6 +65,12 @@ pip3 install kokoro
 
 ```
 apt install ffmpeg
+```
+
+4. For hearing the voice after generation we need `paplay`:
+
+```
+apt install pulseaudio-utils
 ```
 
 Running Kokoro to generate voices
@@ -84,7 +90,7 @@ file, and other voices can be tested manually.
 The file `reverb-clap-room-2.wav` is a recording of me clapping once on my own
 room, this is used for making ffmpeg create a soft reverb.
 
-I haven't found how to ask for the voice list, but 
+I haven't found how to ask for the voice list, but
 [app.py](https://github.com/hexgrad/kokoro/blob/main/demo/app.py) does contain
 a good list inside the CHOICES dict.
 
