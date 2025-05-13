@@ -1,6 +1,6 @@
-// unwalkiecore/src/resources.rs
 use crate::events::WalkieEvent;
 use bevy::{prelude::*, utils::HashMap};
+use unwalkie_types::VoiceLineData;
 
 #[derive(Clone, Debug, Default)]
 pub struct WalkieEventStats {
@@ -13,6 +13,7 @@ pub struct WalkiePlay {
     pub event: Option<WalkieEvent>,
     pub played_events: HashMap<WalkieEvent, WalkieEventStats>,
     pub state: Option<WalkieSoundState>,
+    pub current_voice_line: Option<VoiceLineData>,
     pub last_message_time: f64,
     pub truck_accessed: bool,
 }
@@ -23,6 +24,7 @@ impl Default for WalkiePlay {
             event: Default::default(),
             played_events: Default::default(),
             state: Default::default(),
+            current_voice_line: Default::default(),
             // Set to a negative value so the first message can be played immediately
             last_message_time: -100.0,
             truck_accessed: Default::default(),
@@ -60,6 +62,8 @@ impl WalkiePlay {
             },
         );
         self.state = None;
+        // Ensure this is reset:
+        self.current_voice_line = None;
         true
     }
 
@@ -72,6 +76,8 @@ impl WalkiePlay {
     pub fn reset(&mut self) {
         let new_self = Self::default();
         *self = new_self;
+        // Ensure current_voice_line is also reset, though Default::default() handles it.
+        self.current_voice_line = None;
     }
 }
 

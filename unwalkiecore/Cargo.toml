@@ -9,5 +9,6 @@ authors.workspace = true
 homepage.workspace = true
 
 [dependencies]
-bevy = { workspace = true }
 unwalkie_types = { path = "../unwalkie_types" }
+
+bevy = { workspace = true }

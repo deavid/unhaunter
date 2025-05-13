@@ -12,9 +12,10 @@ use uncore::{
     resources::roomdb::RoomDB,
     states::{AppState, GameState},
 };
-use unwalkiecore::{WalkieEvent, WalkiePlay, WalkieSoundState};
 use ungear::components::playergear::PlayerGear;
 use unsettings::audio::AudioSettings;
+use unwalkie_types::VoiceLineData;
+use unwalkiecore::{WalkieEvent, WalkiePlay, WalkieSoundState};
 
 fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
@@ -163,7 +164,8 @@ fn ghost_near_hunt(
         return;
     }
     for ghost in q_ghost.iter() {
-        if ghost.rage > ghost.rage_limit * 0.8 && !ghost.hunt_warning_active && !ghost.hunt_target {
+        if (ghost.rage > ghost.rage_limit * 0.8) && !ghost.hunt_warning_active && !ghost.hunt_target
+        {
             walkie_play.set(WalkieEvent::GhostNearHunt, time.elapsed_secs_f64());
             return;
         }
@@ -191,22 +193,27 @@ fn walkie_talk(
         return;
     }
     let mut walkie_volume = 1.0;
-    let mut talking_sound_file = "sounds/radio-on-zzt.ogg";
+
     let new_state = match walkie_play.state {
         None => Some(WalkieSoundState::Intro),
         Some(WalkieSoundState::Intro) => {
-            let files = walkie_event.sound_file_list();
-            talking_sound_file = files
-                .choose(&mut rng)
-                .copied()
-                .unwrap_or("sounds/radio-on-zzt.ogg");
+            let voice_lines: Vec<VoiceLineData> = walkie_event.sound_file_list();
+            if let Some(chosen_line) = voice_lines.choose(&mut rng).cloned() {
+                walkie_play.current_voice_line = Some(chosen_line);
+            } else {
+                walkie_play.current_voice_line = Some(VoiceLineData {
+                    ogg_path: "sounds/radio-on-zzt.ogg".to_string(),
+                    subtitle_text: "[NO SUBTITLE AVAILABLE]".to_string(),
+                    tags: vec![],
+                    length_seconds: 2,
+                });
+            }
             Some(WalkieSoundState::Talking)
         }
         Some(WalkieSoundState::Talking) => Some(WalkieSoundState::Outro),
         Some(WalkieSoundState::Outro) => {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed().as_secs_f32() < 2.0 {
-                // Wait before releasing the sound - so the player can read it on the screen and to avoid too many messages too fast.
                 return;
             }
             None
@@ -218,11 +225,11 @@ fn walkie_talk(
         text.0 = match new_state {
             Some(WalkieSoundState::Intro) => "**bzzrt**".to_string(),
             Some(WalkieSoundState::Talking) => {
-                format!(
-                    "{}  {}",
-                    text.0,
-                    WalkieEvent::voice_text(talking_sound_file)
-                )
+                if let Some(voice_line) = &walkie_play.current_voice_line {
+                    format!("{}  {}", text.0, voice_line.subtitle_text)
+                } else {
+                    format!("{}  [ERROR: Missing subtitle]", text.0)
+                }
             }
             Some(WalkieSoundState::Outro) => format!("{} **bzzrt**", text.0),
             None => "".to_string(),
@@ -231,25 +238,32 @@ fn walkie_talk(
 
     walkie_play.state = new_state.clone();
     if new_state.is_none() {
-        // Done playing
         walkie_play.event = None;
+        walkie_play.current_voice_line = None;
         walkie_play.last_message_time = time.elapsed_secs_f64();
         return;
     }
 
-    let new_state = new_state.unwrap();
+    let new_state_unwrapped = new_state.unwrap();
 
-    let sound_file = match new_state {
+    let sound_file = match new_state_unwrapped {
         WalkieSoundState::Intro => "sounds/radio-on-zzt.ogg",
         WalkieSoundState::Talking => {
             walkie_volume = 0.2;
-            talking_sound_file
+            if let Some(voice_line) = &walkie_play.current_voice_line {
+                &voice_line.ogg_path
+            } else {
+                "sounds/radio-on-zzt.ogg"
+            }
         }
         WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg",
     };
 
+    // For Bevy 0.15, we need to use AudioPlayer with the audio source asset
+    let audio_source = asset_server.load(sound_file);
+
     commands
-        .spawn(AudioPlayer::new(asset_server.load(sound_file)))
+        .spawn(AudioPlayer::new(audio_source)) // Use AudioPlayer constructor with Handle<AudioSource>
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Despawn,
             volume: Volume::new(
@@ -262,7 +276,7 @@ fn walkie_talk(
             spatial: false,
             spatial_scale: None,
         })
-        .insert(new_state);
+        .insert(new_state_unwrapped);
 }
 
 pub(crate) fn app_setup(app: &mut App) {
