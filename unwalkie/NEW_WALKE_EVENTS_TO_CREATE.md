@@ -105,23 +105,6 @@ Trigger events for voices
 
 **RON File: `locomotion_and_interaction.ron`**
 
-**1. `WalkieEventConceptEntry: PlayerStuckAtStart`**
-
-*   **Scenario Description (Recap):** Player hasn't moved significantly from the van/starting point for an extended period (e.g., 20-30 seconds) after the mission begins.
-*   **Goal of Hint:** Gently encourage the player to leave the van/starting area and begin exploring the mission location.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None` (i.e., player is in the level, not in menus/truck UI).
-    *   `Time.elapsed_seconds_since_level_ready > X` (e.g., 20-30s, tunable).
-    *   Player's `Position` is still within a small radius of their initial spawn point (or a designated "VanArea").
-    *   `WalkiePlay.can_play(WalkieEvent::PlayerStuckAtStart, current_time)` returns true (this encapsulates count < max_plays and cooldown logic).
-*   **Key Game Data/Resources Needed:** `GameState`, `Time` (since `LevelReadyEvent`), Player `Position`, initial player spawn `Position`, `WalkiePlay` resource.
-*   **`WalkieEvent` Enum Variant:** `PlayerStuckAtStart`
-*   **Primary `WalkieTag`(s) for Line Selection:** `GentleProd`, `FirstTimeHint`, `Encouraging`.
-*   **Repetition Strategy:** Max 1-2 times per mission attempt. Cooldown managed by `WalkiePlay.time_to_play`, likely a long cooldown after first play.
-*   **Priority/Severity:** Medium. Important for onboarding new players.
-
----
-
 **2. `WalkieEventConceptEntry: ErraticMovementEarly`**
 
 *   **Scenario Description (Recap):** Player exhibits erratic movement (frequent, small, directionless movements or repeatedly bumping into the van/immediate environment) within the first ~30-45 seconds of mission start, suggesting difficulty with isometric controls.

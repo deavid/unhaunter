@@ -16,6 +16,7 @@ pub struct WalkiePlay {
     pub current_voice_line: Option<VoiceLineData>,
     pub last_message_time: f64,
     pub truck_accessed: bool,
+    pub urgent_pending: bool,
 }
 
 impl Default for WalkiePlay {
@@ -28,6 +29,7 @@ impl Default for WalkiePlay {
             // Set to a negative value so the first message can be played immediately
             last_message_time: -100.0,
             truck_accessed: Default::default(),
+            urgent_pending: Default::default(),
         }
     }
 }
@@ -35,9 +37,13 @@ impl Default for WalkiePlay {
 impl WalkiePlay {
     /// Try to set the event to be played. If it's not ready, the system needs to keep retrying.
     pub fn set(&mut self, event: WalkieEvent, time: f64) -> bool {
-        if self.event.is_some() {
+        if let Some(in_event) = &self.event {
+            if event.priority().is_urgent() && !in_event.priority().is_urgent() {
+                self.urgent_pending = true;
+            }
             return false;
         }
+        self.urgent_pending = false;
         let mut count = 0;
         if let Some(event_stats) = self.played_events.get(&event) {
             count = event_stats.count;
@@ -47,7 +53,9 @@ impl WalkiePlay {
                 return false;
             }
         }
-        if time - self.last_message_time < 10.0 + count as f64 * 20.0 {
+        let min_delay_mult = event.priority().time_factor() as f64;
+
+        if time - self.last_message_time < (10.0 + count as f64 * 20.0) * min_delay_mult {
             // Wait between messages
             return false;
         }

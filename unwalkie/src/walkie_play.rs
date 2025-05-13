@@ -177,7 +177,7 @@ fn walkie_talk(
     asset_server: Res<AssetServer>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    q_sound_state: Query<&WalkieSoundState>,
+    q_sound_state: Query<(Entity, &WalkieSoundState)>,
     mut qt: Query<&mut Text, With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
@@ -190,6 +190,21 @@ fn walkie_talk(
     };
     if q_sound_state.iter().count() > 0 {
         // Already playing a sound
+        if walkie_play.urgent_pending {
+            // Stop all sounds, clean up the state.
+            walkie_play.event = None;
+            walkie_play.state = None;
+            walkie_play.current_voice_line = None;
+            walkie_play.urgent_pending = false;
+            for mut text in qt.iter_mut() {
+                text.0 = "".to_string();
+            }
+            stopwatch.reset();
+            // Also despawn the sound
+            for (entity, _sound_state) in q_sound_state.iter() {
+                commands.entity(entity).despawn();
+            }
+        }
         return;
     }
     let mut walkie_volume = 1.0;

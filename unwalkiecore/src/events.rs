@@ -4,6 +4,36 @@ use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcep
 use bevy::prelude::Event;
 use unwalkie_types::VoiceLineData;
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum WalkieEventPriority {
+    Low,
+    Medium,
+    High,
+    Urgent,
+}
+
+impl WalkieEventPriority {
+    pub fn value(&self) -> f32 {
+        match self {
+            WalkieEventPriority::Low => 0.1,
+            WalkieEventPriority::Medium => 1.0,
+            WalkieEventPriority::High => 10.0,
+            WalkieEventPriority::Urgent => 100.0,
+        }
+    }
+    pub fn time_factor(&self) -> f32 {
+        match self {
+            WalkieEventPriority::Low => 1.5,
+            WalkieEventPriority::Medium => 1.0,
+            WalkieEventPriority::High => 0.2,
+            WalkieEventPriority::Urgent => 0.05,
+        }
+    }
+    pub fn is_urgent(&self) -> bool {
+        matches!(self, WalkieEventPriority::Urgent)
+    }
+}
+
 /// Sending this event will cause the walkie to play a message.
 #[derive(Clone, Debug, Event, PartialEq, Eq, Hash)]
 pub enum WalkieEvent {
@@ -78,5 +108,31 @@ impl WalkieEvent {
     /// Get the list of voice line data for the event.
     pub fn sound_file_list(&self) -> Vec<VoiceLineData> {
         self.to_concept().get_lines()
+    }
+
+    pub fn priority(&self) -> WalkieEventPriority {
+        match self {
+            WalkieEvent::GearInVan => WalkieEventPriority::Low,
+            WalkieEvent::GhostNearHunt => WalkieEventPriority::Urgent,
+            WalkieEvent::MissionStartEasy => WalkieEventPriority::Medium,
+
+            // --- Locomotion and Interaction ---
+            WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
+            WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
+            WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::High,
+            WalkieEvent::BumpingInDarkness => WalkieEventPriority::Low,
+            WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Low,
+            WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
+        }
+    }
+    /// This is just a prototype function that needs to be replaced, the idea being
+    /// that whenever a voice line needs to add extra hints visually for the player,
+    /// we send some kind of Bevy Event to an hypothetical hint system that will highlight
+    /// the controls or the objects that are relevant to the voice line.
+    pub fn _hint_event(&self) -> &'static str {
+        match &self {
+            WalkieEvent::PlayerStuckAtStart => "highlight WASD controls",
+            _ => "",
+        }
     }
 }
