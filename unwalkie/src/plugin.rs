@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use uncore::{events::walkie::WalkieEvent, resources::walkie::WalkiePlay};
+// Update imports to use unwalkiecore
+use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 pub struct UnhaunterWalkiePlugin;
 

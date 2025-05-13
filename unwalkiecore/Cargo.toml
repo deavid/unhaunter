@@ -1,0 +1,13 @@
+[package]
+name = "unwalkiecore"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+unwalkie_types = { path = "../unwalkie_types" }

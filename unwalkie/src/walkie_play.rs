@@ -7,14 +7,12 @@ use uncore::{
         ghost_sprite::GhostSprite, player_sprite::PlayerSprite,
     },
     difficulty::CurrentDifficulty,
-    events::{loadlevel::LevelReadyEvent, walkie::WalkieEvent},
+    events::loadlevel::LevelReadyEvent,
     random_seed,
-    resources::{
-        roomdb::RoomDB,
-        walkie::{WalkiePlay, WalkieSoundState},
-    },
+    resources::roomdb::RoomDB,
     states::{AppState, GameState},
 };
+use unwalkiecore::{WalkieEvent, WalkiePlay, WalkieSoundState};
 use ungear::components::playergear::PlayerGear;
 use unsettings::audio::AudioSettings;
 

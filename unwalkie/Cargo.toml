@@ -8,11 +8,12 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore = { path = "../uncore" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
+unwalkiecore = { path = "../unwalkiecore" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
 bevy-persistent = { workspace = true }
+uncore = { path = "../uncore" }

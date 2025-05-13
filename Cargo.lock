@@ -5480,6 +5480,7 @@ dependencies = [
  "ungear",
  "unsettings",
  "unwalkie_types",
+ "unwalkiecore",
 ]
 
 [[package]]
@@ -5488,6 +5489,14 @@ version = "0.1.0"
 dependencies = [
  "ron 0.10.1",
  "serde",
+]
+
+[[package]]
+name = "unwalkiecore"
+version = "0.3.0-beta4-dev"
+dependencies = [
+ "bevy",
+ "unwalkie_types",
 ]
 
 [[package]]

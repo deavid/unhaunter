@@ -6,8 +6,8 @@
 pub const WALKIE_PHRASES_DIR: &str = "tools/text_to_speech/walkie_phrases/";
 /// Directory where generated OGG audio assets will be stored.
 pub const GENERATED_ASSETS_DIR: &str = "assets/walkie/generated/";
-/// Directory where generated Rust code (for unwalkie crate) will be stored.
-pub const GENERATED_RUST_DIR: &str = "unwalkie/src/generated/";
+/// Directory where generated Rust code (for unwalkiecore crate) will be stored.
+pub const GENERATED_RUST_DIR: &str = "unwalkiecore/src/generated/";
 /// Filename for the manifest that tracks generated audio files and their metadata.
 pub const MANIFEST_FILENAME: &str = "manifest.ron";
 /// Path to the shell script responsible for TTS and audio effects generation.

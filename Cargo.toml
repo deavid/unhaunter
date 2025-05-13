@@ -25,6 +25,7 @@ members = [
     "uncampaign",
     "unprofile",
     "unsummary",
+    "unwalkiecore",
 ]
 resolver = "3"
 
