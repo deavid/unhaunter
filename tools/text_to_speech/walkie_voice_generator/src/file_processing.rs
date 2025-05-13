@@ -27,9 +27,10 @@ pub struct AudioGenerationTask {
     pub line_entry: WalkieLineEntry, // Contains tts_text, subtitle_text, tags
     pub script_hash: String,
     pub force_regenerate_pattern: Option<String>,
-    pub ogg_base_filename: String,
-    pub ogg_path_relative_to_generated_dir: String,
-    pub ogg_path_absolute: PathBuf,
+    pub ron_file_sub_dir: String,            // New field: e.g., "base1"
+    pub line_specific_filename_stem: String, // New field: e.g., "concept_line_01"
+    pub ogg_path_relative_to_generated_dir: String, // e.g., "base1/concept_line_01.ogg"
+    pub ogg_path_absolute: PathBuf,          // Full absolute path to the OGG file
     pub detailed_manifest_key: String,
 }
 
@@ -38,7 +39,8 @@ pub struct AudioGenerationTask {
 ///
 /// # Arguments
 /// * `tts_text` - The text to synthesize.
-/// * `ogg_base_filename` - The base name for the output files (e.g., "concept_line_01"),
+/// * `ron_file_sub_dir` - The subdirectory for the output files (e.g., "base1").
+/// * `line_specific_filename_stem` - The base name for the output files (e.g., "concept_line_01"),
 ///   `.wav` and `.ogg` extensions will be appended.
 ///
 /// # Returns
@@ -46,13 +48,28 @@ pub struct AudioGenerationTask {
 /// and final OGG path respectively, or an `anyhow::Error` if script execution fails.
 pub fn generate_audio_for_line(
     tts_text: &str,
-    ogg_base_filename: &str,
+    ron_file_sub_dir: &str,            // e.g., "base1"
+    line_specific_filename_stem: &str, // e.g., "concept_line_01"
 ) -> Result<(PathBuf, PathBuf), anyhow::Error> {
     // Define paths for temporary WAV and final OGG files.
-    let temp_wav_filename = format!("{}.wav", ogg_base_filename);
+    // Temporary WAV can still be flat in TEMP_AUDIO_DIR for simplicity,
+    // as it's deleted by the script.
+    let temp_wav_filename = format!("{}.wav", line_specific_filename_stem);
     let temp_wav_path = Path::new(TEMP_AUDIO_DIR).join(temp_wav_filename);
-    let final_ogg_filename = format!("{}.ogg", ogg_base_filename);
-    let final_ogg_path = Path::new(GENERATED_ASSETS_DIR).join(final_ogg_filename);
+
+    // Final OGG path will be in a subdirectory.
+    let final_ogg_dir = Path::new(GENERATED_ASSETS_DIR).join(ron_file_sub_dir);
+    let final_ogg_filename = format!("{}.ogg", line_specific_filename_stem);
+    let final_ogg_path = final_ogg_dir.join(final_ogg_filename);
+
+    // Ensure the target directory for the OGG file exists.
+    fs::create_dir_all(&final_ogg_dir).map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to create directory {}: {}",
+            final_ogg_dir.display(),
+            e
+        )
+    })?;
 
     // Ensure the generation script is executable. This is important on some systems or
     // if permissions were reset.
@@ -176,11 +193,12 @@ pub fn get_audio_duration(ogg_path: &Path) -> Result<u32, anyhow::Error> {
 /// Deletes unused OGG files from the `generated_assets_dir`.
 /// An OGG file is considered unused if it exists in the directory but its relative path
 /// is not present in the `active_ogg_paths` set (which is populated from the manifest).
+/// This function will also delete empty subdirectories after removing OGG files.
 ///
 /// # Arguments
 /// * `generated_assets_dir_str` - The directory to scan for OGG files.
-/// * `active_ogg_paths` - A set of OGG file paths (relative to `generated_assets_dir`)
-///   that are currently in use according to the manifest.
+/// * `active_ogg_paths` - A set of OGG file paths (relative to `generated_assets_dir`,
+///   including subdirectories like `base1/file.ogg`) that are currently in use.
 ///
 /// # Returns
 /// `Ok(())` on success, or an `anyhow::Error` if directory traversal or file deletion fails.
@@ -192,8 +210,8 @@ pub fn cleanup_unused_files(
         "Checking for unused OGG files in {} to delete...",
         generated_assets_dir_str
     );
-    let dir = Path::new(generated_assets_dir_str);
-    if !dir.exists() {
+    let root_dir = Path::new(generated_assets_dir_str);
+    if !root_dir.exists() {
         println!(
             "Generated assets directory {} does not exist, nothing to clean up.",
             generated_assets_dir_str
@@ -201,51 +219,102 @@ pub fn cleanup_unused_files(
         return Ok(());
     }
 
-    let mut deleted_count = 0;
-    // Iterate over files in the generated_assets_dir (non-recursive).
-    for entry in WalkDir::new(dir)
-        .min_depth(1) // Don't include the directory itself.
-        .max_depth(1) // Only files directly in the directory.
+    let mut deleted_ogg_count = 0;
+    let mut potentially_empty_dirs: HashSet<PathBuf> = HashSet::new();
+
+    // Iterate recursively to find all OGG files
+    for entry in WalkDir::new(root_dir)
+        .min_depth(1) // Don't include the root_dir itself in this primary scan for files.
         .into_iter()
         .filter_map(|e| e.ok())
     // Filter out read errors.
     {
         let path = entry.path();
-        // Check if it's an OGG file.
         if path.is_file() && path.extension() == Some(OsStr::new("ogg")) {
-            // Get the filename part to compare with active_ogg_paths.
-            let file_name = path
-                .file_name()
-                .ok_or_else(|| anyhow::anyhow!("Path has no filename: {:?}", path))?
+            // Get the path relative to generated_assets_dir_str
+            let relative_path = path
+                .strip_prefix(root_dir)?
                 .to_str()
-                .ok_or_else(|| anyhow::anyhow!("Filename is not valid UTF-8: {:?}", path))?
-                .to_string();
+                .ok_or_else(|| anyhow::anyhow!("Path is not valid UTF-8: {:?}", path))?
+                .replace('\\', "/"); // Ensure consistent path separators
 
-            if !active_ogg_paths.contains(&file_name) {
+            if !active_ogg_paths.contains(&relative_path) {
                 println!("Deleting unused OGG file: {:?}", path);
                 fs::remove_file(path).map_err(|e| {
                     anyhow::anyhow!("Failed to delete unused file {:?}: {}", path, e)
                 })?;
-                deleted_count += 1;
+                deleted_ogg_count += 1;
+                // Add parent directory to the set of potentially empty dirs
+                if let Some(parent_dir) = path.parent() {
+                    if parent_dir != root_dir {
+                        // Don't add the root itself
+                        potentially_empty_dirs.insert(parent_dir.to_path_buf());
+                    }
+                }
             }
         }
     }
 
-    if deleted_count > 0 {
-        println!("Cleanup of {} unused OGG files complete.", deleted_count);
+    if deleted_ogg_count > 0 {
+        println!(
+            "Cleanup of {} unused OGG files complete.",
+            deleted_ogg_count
+        );
     } else {
         println!("No unused OGG files found to delete.");
     }
+
+    // Attempt to delete now potentially empty subdirectories
+    let mut deleted_dir_count = 0;
+    // Sort directories by depth (descending) to delete children before parents
+    let mut sorted_dirs: Vec<PathBuf> = potentially_empty_dirs.into_iter().collect();
+    sorted_dirs.sort_by_key(|p| std::cmp::Reverse(p.components().count()));
+
+    for dir_path in sorted_dirs {
+        // Check if directory is empty
+        match fs::read_dir(&dir_path) {
+            Ok(mut iter) => {
+                if iter.next().is_none() {
+                    // Directory is empty
+                    println!("Deleting empty directory: {:?}", &dir_path);
+                    fs::remove_dir(&dir_path).map_err(|e| {
+                        anyhow::anyhow!("Failed to delete empty directory {:?}: {}", dir_path, e)
+                    })?;
+                    deleted_dir_count += 1;
+                } else {
+                    println!("Directory {:?} is not empty, not deleting.", &dir_path);
+                }
+            }
+            Err(e) => {
+                // It might have been deleted if it was a child of another deleted dir
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    return Err(anyhow::anyhow!(
+                        "Failed to read directory {:?} for cleanup check: {}",
+                        dir_path,
+                        e
+                    ));
+                }
+            }
+        }
+    }
+
+    if deleted_dir_count > 0 {
+        println!(
+            "Cleanup of {} empty subdirectories complete.",
+            deleted_dir_count
+        );
+    }
+
     Ok(())
 }
 
 /// Warns about unused OGG files in the `generated_assets_dir` without deleting them.
-/// This is similar to `cleanup_unused_files` but only prints warnings.
+/// This is similar to `cleanup_unused_files` but only prints warnings and checks recursively.
 ///
 /// # Arguments
 /// * `generated_assets_dir_str` - The directory to scan for OGG files.
-/// * `active_ogg_paths` - A set of OGG file paths (relative to `generated_assets_dir`)
-///   that are currently in use according to the manifest.
+/// * `active_ogg_paths` - A set of OGG file paths (relative to `generated_assets_dir`,
+///   including subdirectories) that are currently in use according to the manifest.
 ///
 /// # Returns
 /// `Ok(())` on success, or an `anyhow::Error` if directory traversal fails.
@@ -257,8 +326,8 @@ pub fn warn_unused_files(
         "Checking for unused OGG files (warnings only) in {}...",
         generated_assets_dir_str
     );
-    let dir = Path::new(generated_assets_dir_str);
-    if !dir.exists() {
+    let root_dir = Path::new(generated_assets_dir_str);
+    if !root_dir.exists() {
         println!(
             "Generated assets directory {} does not exist, nothing to check.",
             generated_assets_dir_str
@@ -267,22 +336,20 @@ pub fn warn_unused_files(
     }
 
     let mut found_unused_count = 0;
-    for entry in WalkDir::new(dir)
-        .min_depth(1)
-        .max_depth(1)
+    for entry in WalkDir::new(root_dir)
+        .min_depth(1) // Don't include the root_dir itself.
         .into_iter()
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
         if path.is_file() && path.extension() == Some(OsStr::new("ogg")) {
-            let file_name = path
-                .file_name()
-                .ok_or_else(|| anyhow::anyhow!("Path has no filename: {:?}", path))?
+            let relative_path = path
+                .strip_prefix(root_dir)?
                 .to_str()
-                .ok_or_else(|| anyhow::anyhow!("Filename is not valid UTF-8: {:?}", path))?
-                .to_string();
+                .ok_or_else(|| anyhow::anyhow!("Path is not valid UTF-8: {:?}", path))?
+                .replace('\\', "/"); // Ensure consistent path separators
 
-            if !active_ogg_paths.contains(&file_name) {
+            if !active_ogg_paths.contains(&relative_path) {
                 println!("Warning: Unused OGG file found: {:?}", path);
                 found_unused_count += 1;
             }
@@ -315,6 +382,14 @@ pub fn collect_audio_generation_tasks(
             .ok_or_else(|| anyhow::anyhow!("RON filename is not valid UTF-8: {:?}", ron_path))?
             .to_string();
 
+        let ron_file_sub_dir = ron_path
+            .file_stem()
+            .ok_or_else(|| anyhow::anyhow!("RON path has no filestem: {:?}", ron_path))?
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("RON filestem is not valid UTF-8: {:?}", ron_path))?
+            .to_lowercase() // Ensure consistent directory naming
+            .replace('-', "_"); // Replace hyphens with underscores for directory name
+
         let mut file = File::open(ron_path)
             .map_err(|e| anyhow::anyhow!("Failed to open RON file {:?}: {}", ron_path, e))?;
         let mut contents = String::new();
@@ -327,21 +402,19 @@ pub fn collect_audio_generation_tasks(
             for (line_idx, line_entry) in concept_entry.lines.into_iter().enumerate() {
                 let conceptual_id = concept_entry.name.clone();
 
-                let ogg_base_filename = format!(
-                    "{}_{}_{:02}",
-                    ron_path
-                        .file_stem()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_lowercase()
-                        .replace('-', "_"),
+                // This will be the actual filename stem, e.g., "myconcept_01"
+                let line_specific_filename_stem = format!(
+                    "{}_{:02}",
                     conceptual_id.to_lowercase().replace('-', "_"),
                     line_idx + 1
                 );
-                let ogg_filename = format!("{}.ogg", ogg_base_filename);
-                let ogg_path_relative_to_generated_dir = ogg_filename.clone();
-                let ogg_path_absolute = Path::new(GENERATED_ASSETS_DIR).join(&ogg_filename);
+
+                // Relative path will include the subdirectory, e.g., "base1/myconcept_01.ogg"
+                let ogg_path_relative_to_generated_dir =
+                    format!("{}/{}.ogg", ron_file_sub_dir, line_specific_filename_stem);
+
+                let ogg_path_absolute =
+                    Path::new(GENERATED_ASSETS_DIR).join(&ogg_path_relative_to_generated_dir);
 
                 let detailed_manifest_key =
                     format!("{}/{}/{}", ron_filename_str, conceptual_id, line_idx);
@@ -353,7 +426,8 @@ pub fn collect_audio_generation_tasks(
                     line_entry,
                     script_hash: script_hash.to_string(),
                     force_regenerate_pattern: force_regenerate_pattern.map(String::from),
-                    ogg_base_filename,
+                    ron_file_sub_dir: ron_file_sub_dir.clone(), // Store the sub_dir
+                    line_specific_filename_stem,                // Store the line-specific stem
                     ogg_path_relative_to_generated_dir,
                     ogg_path_absolute,
                     detailed_manifest_key,
@@ -409,8 +483,11 @@ pub fn process_audio_generation_task(
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
 
-        let (_temp_wav_path, final_ogg_path) =
-            generate_audio_for_line(&task.line_entry.tts_text, &task.ogg_base_filename)?;
+        let (_temp_wav_path, final_ogg_path) = generate_audio_for_line(
+            &task.line_entry.tts_text,
+            &task.ron_file_sub_dir,
+            &task.line_specific_filename_stem,
+        )?;
         let duration_seconds = get_audio_duration(&final_ogg_path)?;
 
         let mut tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
@@ -489,8 +566,11 @@ pub fn process_audio_generation_task_single_thread(
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
 
-        let (_temp_wav_path, final_ogg_path) =
-            generate_audio_for_line(&task.line_entry.tts_text, &task.ogg_base_filename)?;
+        let (_temp_wav_path, final_ogg_path) = generate_audio_for_line(
+            &task.line_entry.tts_text,
+            &task.ron_file_sub_dir,
+            &task.line_specific_filename_stem,
+        )?;
         let duration_seconds = get_audio_duration(&final_ogg_path)?;
 
         let mut tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
