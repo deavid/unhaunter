@@ -10,6 +10,7 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "../uncore" }
 ungear = { path = "../ungear" }
+ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkiecore = { path = "../unwalkiecore" }
