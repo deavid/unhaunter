@@ -1,0 +1,201 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "SanityDroppedBelowThresholdDarkness", // Player sanity drops below threshold (e.g., 70%) for 1st time, primarily due to being in dark rooms
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Feeling a bit... on edge, are we? Staring into the dark for too long can play tricks on the mind. A bit of light usually helps.",
+          subtitle_text: "Feeling a bit... on edge, are we? Staring into the dark for too long can play tricks on the mind. A bit of light usually helps.",
+          tags: [FirstTimeHint, Guidance, ConcernedWarning, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The darkness can start to get to you after a while. If you are feeling a bit jittery, try to find a lit area or head back to the truck for a breather.",
+          subtitle_text: "The darkness can start to get to you after a while. If you're feeling a bit jittery, try to find a lit area or head back to the truck for a breather.",
+          tags: [FirstTimeHint, Guidance, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just a heads up, prolonged time in unlit areas will wear down your nerves. Keep an eye on how you are feeling.",
+          subtitle_text: "Just a heads-up, prolonged time in unlit areas will wear down your nerves. Keep an eye on how you're feeling.",
+          tags: [ReminderLow, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Starting to feel the strain of the darkness? Remember, room lights are your friend for keeping your wits about you.",
+          subtitle_text: "Starting to feel the strain of the darkness? Remember, room lights are your friend for keeping your wits about you.",
+          tags: [Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That gloomy atmosphere can really do a number on your composure. A quick trip to the well lit van can work wonders.",
+          subtitle_text: "That gloomy atmosphere can really do a number on your composure. A quick trip to the well-lit van can work wonders.",
+          tags: [FriendlyReminder, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If the shadows are starting to dance a bit too much, it might be your sanity taking a dip. Find some light, or the truck.",
+          subtitle_text: "If the shadows are starting to dance a bit too much, it might be your sanity taking a dip. Find some light, or the truck.",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is natural to feel a bit unnerved in these dark places. Your torch helps you see, but proper room lighting helps you think clearly.",
+          subtitle_text: "It's natural to feel a bit unnerved in these dark places. Your torch helps you see, but proper room lighting helps you think clearly.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The longer you spend in the pitch black, the more your sanity will fray. Try to keep rooms lit where possible.",
+          subtitle_text: "The longer you spend in the pitch black, the more your sanity will fray. Try to keep rooms lit where possible.",
+          tags: [ReminderMedium, ConcernedWarning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feeling a bit spooky yourself? Too much darkness is not good for the nerves. Light sources are key.",
+          subtitle_text: "Feeling a bit spooky yourself? Too much darkness isn't good for the nerves. Light sources are key.",
+          tags: [Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your senses can play tricks in the dark. Keep an eye on your mental state; the van is always a safe spot to recover.",
+          subtitle_text: "Your senses can play tricks in the dark. Keep an eye on your mental state; the van is always a safe spot to recover.",
+          tags: [Guidance, ConcernedWarning, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "SanityDroppedBelowThresholdGhost", // Player sanity drops below threshold (e.g., 70%) for 1st time, primarily due to ghost proximity/events
+      lines: [
+        WalkieLineEntry(
+          tts_text: "This thing is really giving off some bad vibes, is it not? If you are feeling woozy, a trip back to the truck might be in order.",
+          subtitle_text: "This thing is really giving off some bad vibes, is it not? If you're feeling woozy, a trip back to the truck might be in order.",
+          tags: [FirstTimeHint, Guidance, ConcernedWarning, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Being close to these entities can really mess with your head. If you feel your sanity slipping, do not hesitate to pull back to the van.",
+          subtitle_text: "Being close to these entities can really mess with your head. If you feel your sanity slipping, don't hesitate to pull back to the van.",
+          tags: [FirstTimeHint, Guidance, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That last encounter seems to have rattled you a bit. Remember the truck is a safe zone to regain your composure.",
+          subtitle_text: "That last encounter seems to have rattled you a bit. Remember the truck is a safe zone to regain your composure.",
+          tags: [DelayedObservation, Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The closer you are to the paranormal, the more it can affect your mind. Keep an eye on your sanity levels.",
+          subtitle_text: "The closer you are to the paranormal, the more it can affect your mind. Keep an eye on your sanity levels.",
+          tags: [ReminderLow, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If the ghost's presence is making you feel uneasy or disoriented, that is your sanity taking a hit. The truck is your friend.",
+          subtitle_text: "If the ghost's presence is making you feel uneasy or disoriented, that's your sanity taking a hit. The truck is your friend.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "These things can really wear you down mentally. If you need to, step out to the van and clear your head.",
+          subtitle_text: "These things can really wear you down mentally. If you need to, step out to the van and clear your head.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A drop in sanity is normal when dealing with the likes of these. Just do not let it get too low before retreating to the truck.",
+          subtitle_text: "A drop in sanity is normal when dealing with the likes of these. Just don't let it get too low before retreating to the truck.",
+          tags: [NeutralObservation, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That ghost is potent! If you are feeling the mental strain, the van offers a safe haven to recover.",
+          subtitle_text: "That ghost is potent! If you're feeling the mental strain, the van offers a safe haven to recover.",
+          tags: [ConcernedWarning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Direct exposure to paranormal activity like that will affect your sanity. Take a break in the truck if needed.",
+          subtitle_text: "Direct exposure to paranormal activity like that will affect your sanity. Take a break in the truck if needed.",
+          tags: [ReminderMedium, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The more active the ghost, the faster your sanity can drop. Keep that in mind and use the truck to keep it topped up.",
+          subtitle_text: "The more active the ghost, the faster your sanity can drop. Keep that in mind and use the truck to keep it topped up.",
+          tags: [Guidance, ConcernedWarning, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "VeryLowSanityNoTruckReturn", // Player sanity critically low (e.g., <30%), visual/audio insanity effects active, player not heading to truck
+      lines: [
+        WalkieLineEntry(
+          tts_text: "You are looking like you have seen a ghost... oh, wait. Seriously though, your sanity is dangerously low. You need to get back to the truck, now!",
+          subtitle_text: "You're looking like you've seen a ghost... oh, wait. Seriously though, your sanity is dangerously low. You NEED to get back to the truck, NOW!",
+          tags: [UrgentReminder, DirectHint, ConcernedWarning, PlayerStruggling, MediumLength, SnarkyHumor], // UrgentReminder = ReminderHigh
+        ),
+        WalkieLineEntry(
+          tts_text: "Your sanity is in the red! If you do not get to the truck soon, you are going to lose it completely. And that is never pretty.",
+          subtitle_text: "Your sanity is in the red! If you don't get to the truck soon, you're going to lose it completely. And that's never pretty.",
+          tags: [UrgentReminder, ConcernedWarning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I can barely understand you, your sanity is shot! The truck, now! Before you start talking to the walls for real.",
+          subtitle_text: "I can barely understand you, your sanity is shot! The truck, now! Before you start talking to the walls for real.",
+          tags: [SlightlyImpatient, UrgentReminder, ConcernedWarning, SnarkyHumor, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You are on the verge of a complete mental breakdown. Get to the safety of the van immediately, or I am not responsible for what happens.",
+          subtitle_text: "You're on the verge of a complete mental breakdown. Get to the safety of the van immediately, or I'm not responsible for what happens.",
+          tags: [DirectHint, UrgentReminder, ConcernedWarning, PlayerStruggling, LongDetailed],
+        ),
+        WalkieLineEntry(
+          tts_text: "Forget the ghost, you are becoming the main attraction! Your sanity is critical. Van. Now. That is an order.",
+          subtitle_text: "Forget the ghost, you're becoming the main attraction! Your sanity is critical. Van. Now. That's an order.",
+          tags: [SnarkyHumor, UrgentReminder, DirectHint, PlayerStruggling, SlightlyImpatient, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you stay in there any longer with your sanity that low, you will be seeing more than just one ghost. Head for the truck!",
+          subtitle_text: "If you stay in there any longer with your sanity that low, you'll be seeing more than just one ghost. Head for the truck!",
+          tags: [ConcernedWarning, UrgentReminder, PlayerStruggling, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your grip on reality is slipping fast. The truck is your only chance to pull yourself together. Go!",
+          subtitle_text: "Your grip on reality is slipping fast. The truck is your only chance to pull yourself together. Go!",
+          tags: [DirectHint, UrgentReminder, PlayerStruggling, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "At this rate, you will be joining our spectral friend. Your sanity is almost gone. Please, get to the van.",
+          subtitle_text: "At this rate, you'll be joining our spectral friend. Your sanity is almost gone. Please, get to the van.",
+          tags: [ConcernedWarning, UrgentReminder, PlayerStruggling, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is not a drill, your mental state is critical! The van is your only refuge now. Do not delay!",
+          subtitle_text: "This is not a drill, your mental state is critical! The van is your only refuge now. Don't delay!",
+          tags: [UrgentReminder, ConcernedWarning, DirectHint, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You are pushing your luck with sanity that low. One more scare and you might not make it back. Get to the truck, that is your priority.",
+          subtitle_text: "You're pushing your luck with sanity that low. One more scare and you might not make it back. Get to the truck, that's your priority.",
+          tags: [ConcernedWarning, UrgentReminder, DirectHint, PlayerStruggling, LongDetailed],
+        ),
+      ],
+    ),
+    // Health-related hints are generally tied to hunts, which are covered in ghost_behavior_and_hunting.ron
+    // If specific "low health outside of hunt" scenarios become a thing, we can add them here.
+    // For now, one placeholder scenario.
+    WalkieEventConceptEntry(
+      name: "LowHealthGeneralWarning",
+      lines: [
+        WalkieLineEntry(tts_text: "You are looking a bit worse for wear. Remember the truck is a good place to patch yourself up if you get hurt.", subtitle_text: "You're looking a bit worse for wear. Remember the truck is a good place to patch yourself up if you get hurt.", tags: [FriendlyReminder, ConcernedWarning, Guidance, MediumLength]),
+        WalkieLineEntry(tts_text: "Took a knock there, did you? Keep an eye on your health. The van can help you recover.", subtitle_text: "Took a knock there, did you? Keep an eye on your health. The van can help you recover.", tags: [ConcernedWarning, Guidance, MediumLength]),
+        WalkieLineEntry(tts_text: "If you are injured, do not push it too hard. A quick retreat to the truck can prevent things from getting worse.", subtitle_text: "If you're injured, don't push it too hard. A quick retreat to the truck can prevent things from getting worse.", tags: [ConcernedWarning, DirectHint, MediumLength]),
+        WalkieLineEntry(tts_text: "That looked like it hurt. Your health will regenerate in the truck if you need a top up.", subtitle_text: "That looked like it hurt. Your health will regenerate in the truck if you need a top-up.", tags: [NeutralObservation, Guidance, MediumLength]),
+        WalkieLineEntry(tts_text: "Physical injuries can impair your ability to investigate. The truck is equipped for basic first aid, so to speak.", subtitle_text: "Physical injuries can impair your ability to investigate. The truck is equipped for basic first aid, so to speak.", tags: [Guidance, MediumLength]),
+        WalkieLineEntry(tts_text: "Do not be a hero. If your health is low, get back to the van and recover. We need you in one piece.",
+          subtitle_text: "Don't be a hero. If your health is low, get back to the van and recover. We need you in one piece.",
+          tags: [SlightlyImpatient, ConcernedWarning, DirectHint, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "A reminder that the truck is not just for evidence, it is also your medical bay. Use it if you are hurt.",
+          subtitle_text: "A reminder that the truck isn't just for evidence, it's also your medical bay. Use it if you're hurt.",
+          tags: [FriendlyReminder, Guidance, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "Looking a bit battered there. Your health will improve if you spend some time in the safety of the van.",
+          subtitle_text: "Looking a bit battered there. Your health will improve if you spend some time in the safety of the van.",
+          tags: [NeutralObservation, Guidance, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "Do not let your health get too low. Retreat to the truck if you need to recover from any encounters.",
+          subtitle_text: "Don't let your health get too low. Retreat to the truck if you need to recover from any encounters.",
+          tags: [ReminderMedium, ConcernedWarning, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "If you have taken damage, remember that the truck provides a safe place to recuperate. Do not risk getting knocked out.",
+          subtitle_text: "If you've taken damage, remember that the truck provides a safe place to recuperate. Don't risk getting knocked out.",
+          tags: [Guidance, ConcernedWarning, MediumLength]),
+      ],
+    ),
+  ],
+)

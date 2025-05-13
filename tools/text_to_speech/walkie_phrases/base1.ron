@@ -31,7 +31,7 @@
         (
           tts_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
           subtitle_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
-          tags: [ReminderLow, ObservationNeutral, MediumLength],
+          tags: [ReminderLow, NeutralObservation, MediumLength],
         ),
         (
           tts_text: "Don't forget to equip yourself from the van before heading inside!",
@@ -56,7 +56,7 @@
         (
           tts_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
           subtitle_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
-          tags: [ConcernedWarning, ObservationNeutral, MediumLength],
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
         ),
         (
           tts_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",

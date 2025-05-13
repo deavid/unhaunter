@@ -88,7 +88,7 @@
         subtitle_text: "You might want to double-check the van. It seems like you\'re missing some essential tools.",
         tags: [
             MediumLength,
-            ObservationNeutral,
+            NeutralObservation,
             ReminderLow,
         ],
         ogg_path: "base1_gearinvan_06.ogg",
@@ -153,7 +153,7 @@
         tags: [
             ConcernedWarning,
             MediumLength,
-            ObservationNeutral,
+            NeutralObservation,
         ],
         ogg_path: "base1_ghostnearhunt_03.ogg",
         length_seconds: 6,

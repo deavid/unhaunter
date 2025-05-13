@@ -5,40 +5,49 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Enum representing various tags to categorize walkie-talkie voice lines.
-/// These tags help in selecting appropriate lines based on game context,
-/// player state, desired tone, and other characteristics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WalkieTag {
-    // Gameplay & Player State
+    // --- Gameplay & Player State ---
     /// For mechanics the player might be encountering for the first time.
     FirstTimeHint,
-    /// Gentle reminder for a commonly known mechanic.
-    ReminderLow,
-    /// Slightly more insistent reminder.
-    ReminderMedium,
-    /// Urgent reminder, player might be in danger or missing something critical.
-    ReminderHigh,
+    /// A general hint or piece of advice related to gameplay mechanics.
+    Guidance,
+    /// A gentle nudge if the player is inactive or seems unsure how to proceed.
+    GentleProd,
+    /// Player seems to be having trouble (e.g., repeated fails, low sanity, bumping into things).
+    PlayerStruggling,
     /// Player hasn't made progress or performed key actions for a while.
     StuckOrInactive,
     /// Positive reinforcement or less hand-holding.
-    PositiveReinforcement, // Renamed from PlayerPerformingWell to match review's list more closely
-    /// Player seems to be having trouble (e.g., repeated fails, low sanity).
-    PlayerStruggling,
-    /// A more direct hint or suggestion for the player.
-    DirectHint,
-    /// A question or prompt to the player, possibly to elicit a response.
+    PositiveReinforcement,
+    /// A question or prompt to the player, possibly to elicit a response or make them think.
     Questioning,
-    /// A more neutral observation, not necessarily positive or negative.
-    ObservationNeutral,
+    /// A more direct hint or suggestion for the player, often when stuck or missing something obvious.
+    DirectHint,
+    /// A hint or reminder related to a specific tutorial or training session.
+    TutorialSpecific,
 
-    // Timing & Contextual
+    // --- Reminder Severity ---
+    /// A reminder for a critical mechanic or event that the player might have forgotten.
+    UrgentReminder,
+    /// Gentle reminder for a commonly known or recently taught mechanic.
+    ReminderLow,
+    /// Slightly more insistent reminder if a previous low reminder was ignored.
+    ReminderMedium,
+    /// Urgent reminder, player might be in danger or missing something critical.
+    ReminderHigh,
+    /// A very gentle, often positive, reminder.
+    FriendlyReminder,
+
+    // --- Timing & Contextual ---
     /// A direct and immediate reaction to a player action or game event.
     ImmediateResponse,
     /// An observation made after some time has passed or a situation has developed.
     DelayedObservation,
+    /// The hint is specifically relevant to the player's current location or environmental context.
+    ContextualHint,
 
-    // Line Characteristics
+    // --- Line Characteristics ---
     /// Line is very short and to the point (e.g., during intense moments).
     ShortBrevity,
     /// Standard length voice line.
@@ -46,17 +55,36 @@ pub enum WalkieTag {
     /// More detailed explanation or observation.
     LongDetailed,
 
-    // Personality & Tone
+    // --- Personality & Tone ---
     /// Objective observation of the situation.
     NeutralObservation,
     /// Expressing concern or warning about potential danger.
     ConcernedWarning,
-    /// Positive and encouraging tone.
+    /// Positive and encouraging tone, aimed at building confidence.
     Encouraging,
-    /// Buddy is getting a bit fed up or impatient.
+    /// Buddy is getting a bit fed up or impatient; use sparingly for repeated errors.
     SlightlyImpatient,
-    /// Characteristic snarky/humorous tone.
+    /// Characteristic snarky/humorous tone; generally for more experienced players or less critical situations.
     SnarkyHumor,
+    /// A purely humorous or light-hearted comment, not necessarily a hint.
+    Humorous,
+    /// A more formal or serious tone, possibly for critical situations.
+    FormalishReminder,
+
+    // --- Tool Specificity Tags (NEW) ---
+    /// Suggests player should *stop* primarily using the Thermometer for now.
+    SuggestStopThermometer,
+    /// Suggests player should *start* using the Thermometer.
+    SuggestUseThermometer,
+    /// Suggests player should *stop* primarily using the EMF Meter for now.
+    SuggestStopEMFMeter,
+    /// Suggests player should *start* using the EMF Meter.
+    SuggestUseEMFMeter,
+    /// Suggests player should *stop* primarily using the Flashlight (e.g., it's on but not needed).
+    SuggestStopFlashlight,
+    /// Suggests player should *start* using the Flashlight.
+    SuggestUseFlashlight,
+    // (We can add more for UVTorch, Videocam, Recorder, Geiger, etc. as needed for later chapters)
 }
 
 /// Holds metadata for a single generated voice line.

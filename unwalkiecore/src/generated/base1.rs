@@ -49,7 +49,7 @@ impl Base1Concept {
                 VoiceLineData {
                     ogg_path: "walkie/generated/base1_gearinvan_06.ogg".to_string(),
                     subtitle_text: "You might want to double-check the van. It seems like you're missing some essential tools.".to_string(),
-                    tags: vec![WalkieTag::MediumLength, WalkieTag::ObservationNeutral, WalkieTag::ReminderLow],
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderLow],
                     length_seconds: 6,
                 },
                 VoiceLineData {
@@ -75,7 +75,7 @@ impl Base1Concept {
                 VoiceLineData {
                     ogg_path: "walkie/generated/base1_ghostnearhunt_03.ogg".to_string(),
                     subtitle_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.".to_string(),
-                    tags: vec![WalkieTag::ConcernedWarning, WalkieTag::MediumLength, WalkieTag::ObservationNeutral],
+                    tags: vec![WalkieTag::ConcernedWarning, WalkieTag::MediumLength, WalkieTag::NeutralObservation],
                     length_seconds: 6,
                 },
                 VoiceLineData {

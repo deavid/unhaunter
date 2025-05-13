@@ -1,0 +1,64 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "FirstMissionPlayerNotEnteringCabin", // Player starts first ever mission, stays in van/immediate vicinity for ~45-60 seconds without heading to the location entrance.
+      lines: [
+        // Only a few variations needed as this is a very specific, early trigger.
+        WalkieLineEntry(
+          tts_text: "Right then, this is it. Your first proper job. The reported activity is in that building over there. Best head on over and see what is what.",
+          subtitle_text: "Right then, this is it. Your first proper job. The reported activity is in that building over there. Best head on over and see what's what.",
+          tags: [FirstTimeHint, DirectHint, Encouraging, MediumLength, TutorialSpecific], // TutorialSpecific NEW tag
+        ),
+        WalkieLineEntry(
+          tts_text: "Okay, rookie. Your mission, should you choose to actually start it, is inside that structure. Time to make your way to the door.",
+          subtitle_text: "Okay, rookie. Your mission, should you choose to actually start it, is inside that structure. Time to make your way to the door.",
+          tags: [FirstTimeHint, SnarkyHumor, DirectHint, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "The paranormal excitement is not going to come to the van, I am afraid. You will need to venture into the location itself.",
+          subtitle_text: "The paranormal excitement isn't going to come to the van, I'm afraid. You'll need to venture into the location itself.",
+          tags: [FirstTimeHint, Humorous, Guidance, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "First step of any investigation is, well, investigating. That means heading into the place with the reported spook.",
+          subtitle_text: "First step of any investigation is, well, investigating. That means heading into the place with the reported spook.",
+          tags: [FirstTimeHint, Guidance, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "The objective is inside the building. Whenever you are ready to begin your ghost hunting career, that is your starting point.",
+          subtitle_text: "The objective is inside the building. Whenever you're ready to begin your ghost-hunting career, that's your starting point.",
+          tags: [FirstTimeHint, Encouraging, DirectHint, MediumLength, TutorialSpecific],
+        ),
+        // Adding 5 more to reach 10, focusing on slight variations or different angles of encouragement/prod
+        WalkieLineEntry(
+          tts_text: "Do not worry, the van will still be here when you get back. The adventure, however, is in there.",
+          subtitle_text: "Don't worry, the van will still be here when you get back. The adventure, however, is in there.",
+          tags: [FirstTimeHint, Encouraging, Humorous, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is your first case, so let us start with the basics. Step one: approach the haunted location.",
+          subtitle_text: "This is your first case, so let's start with the basics. Step one: approach the haunted location.",
+          tags: [FirstTimeHint, DirectHint, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "All your fancy gear is for use inside the affected area. So, best head on over there to make use of it.",
+          subtitle_text: "All your fancy gear is for use inside the affected area. So, best head on over there to make use of it.",
+          tags: [FirstTimeHint, Guidance, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost is unlikely to pay us a visit in the truck. You will need to go to it. Towards the building, please.",
+          subtitle_text: "The ghost is unlikely to pay us a visit in the truck. You'll need to go to it. Towards the building, please.",
+          tags: [FirstTimeHint, SlightlyImpatient, DirectHint, MediumLength, TutorialSpecific],
+        ),
+        WalkieLineEntry(
+          tts_text: "Ready to make your grand debut as an Unhaunter? The stage is set... inside that building.",
+          subtitle_text: "Ready to make your grand debut as an Unhaunter? The stage is set... inside that building.",
+          tags: [FirstTimeHint, Encouraging, Humorous, MediumLength, TutorialSpecific],
+        ),
+      ],
+    ),
+    // We could add more here if other *extremely specific first-time-ever* scenarios come up,
+    // but for now, "Not Entering Cabin" is the most obvious one.
+    // Other early hints are covered by `FirstTimeHint` tags in the other functional RON files.
+  ],
+)

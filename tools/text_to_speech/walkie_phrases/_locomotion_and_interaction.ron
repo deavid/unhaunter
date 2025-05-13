@@ -1,0 +1,336 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "PlayerStuckAtStart",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Alright, settling in, are we? The spooky stuff is usually inside the building, just so you know.",
+          subtitle_text: "Alright, settling in, are we? The spooky stuff's usually *inside* the building, just so you know.",
+          tags: [GentleProd, FirstTimeHint, Humorous, MediumLength, Encouraging],
+        ),
+        WalkieLineEntry(
+          tts_text: "Everything alright out there? The vans comfy, I get it, but the jobs waiting.",
+          subtitle_text: "Everything alright out there? The van's comfy, I get it, but the job's waiting.",
+          tags: [GentleProd, FirstTimeHint, Questioning, MediumLength, Encouraging],
+        ),
+        WalkieLineEntry(
+          tts_text: "Taking a moment to admire the scenery? Fair enough. Whenever you are ready to tackle the actual haunting...",
+          subtitle_text: "Taking a moment to admire the scenery? Fair enough. Whenever you're ready to tackle the actual haunting...",
+          tags: [GentleProd, Humorous, DelayedObservation, MediumLength, SlightlyImpatient],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just checking in... you still with us? The ghosts are not going to evict themselves, more is the pity.",
+          subtitle_text: "Just checking in... you still with us? The ghosts aren't going to evict themselves, more's the pity.",
+          tags: [GentleProd, Questioning, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Deep breaths. First job can be a bit daunting. Just take it one step at a time, starting with, well, a step.",
+          subtitle_text: "Deep breaths. First job can be a bit daunting. Just take it one step at a time, starting with, well, a step.",
+          tags: [Encouraging, GentleProd, FirstTimeHint, MediumLength, PositiveReinforcement],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are waiting for a formal invitation from our resident spook, I would not hold your breath.",
+          subtitle_text: "If you're waiting for a formal invitation from our resident spook, I wouldn't hold your breath.",
+          tags: [Humorous, GentleProd, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The initial survey usually involves... well, surveying. Moving about a bit. Just a thought.",
+          subtitle_text: "The initial survey usually involves... well, surveying. Moving about a bit. Just a thought.",
+          tags: [Guidance, GentleProd, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Is the van door stuck? Or just particularly fascinating today?",
+          subtitle_text: "Is the van door stuck? Or just particularly fascinating today?",
+          tags: [Questioning, Humorous, SnarkyHumor, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember the plan? Investigate the spooky place? That usually starts with heading towards it.",
+          subtitle_text: "Remember the plan? Investigate the spooky place? That usually starts with heading towards it.",
+          tags: [ReminderLow, DirectHint, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Okay, team. Clocks ticking. Lets make a move towards the lovely haunted establishment, shall we?",
+          subtitle_text: "Okay, team. Clock's ticking. Let's make a move towards the lovely haunted establishment, shall we?",
+          tags: [Encouraging, GentleProd, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "ErraticMovementEarly",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Whoa there, steady on! These old vans, bit of a bumpy ride, eh? You will get your land legs soon enough.",
+          subtitle_text: "Whoa there, steady on! These old vans, bit of a bumpy ride, eh? You'll get your land legs soon enough.",
+          tags: [Encouraging, Humorous, FirstTimeHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Heads up! Looks like you are still getting the feel for the controls. Take your time, no rush.",
+          subtitle_text: "Heads up! Looks like you're still getting the feel for the controls. Take your time, no rush.",
+          tags: [Encouraging, NeutralObservation, FirstTimeHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Bit of a dance routine you have got going on there. Do not worry, happens to the best of us first time out.",
+          subtitle_text: "Bit of a dance routine you've got going on there. Don't worry, happens to the best of us first time out.",
+          tags: [Humorous, Encouraging, FirstTimeHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Easy does it. The perspective can be a bit wonky til you are used to it. You will be gliding in no time.",
+          subtitle_text: "Easy does it. The perspective can be a bit wonky 'til you're used to it. You'll be gliding in no time.",
+          tags: [Encouraging, Guidance, FirstTimeHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you trying to redecorate the van with your shins? Just focus on where you want to go, nice and smooth.",
+          subtitle_text: "Are you trying to redecorate the van with your shins? Just focus on where you want to go, nice and smooth.",
+          tags: [SnarkyHumor, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is like watching a baby deer on ice sometimes. You will find your rhythm.",
+          subtitle_text: "It's like watching a baby deer on ice sometimes. You'll find your rhythm.",
+          tags: [SnarkyHumor, Encouraging, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just a heads up, the walls are generally less forgiving than I am.",
+          subtitle_text: "Just a heads-up, the walls are generally less forgiving than I am.",
+          tags: [SnarkyHumor, ConcernedWarning, PlayerStruggling, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Take a sec, get your bearings. No need to rush into things... or walls.",
+          subtitle_text: "Take a sec, get your bearings. No need to rush into things... or walls.",
+          tags: [Guidance, Encouraging, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is not a demolition derby, love. Gentle inputs, that is the key.",
+          subtitle_text: "This isn't a demolition derby, love. Gentle inputs, that's the key.",
+          tags: [SnarkyHumor, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you keep bumping into things, the ghost will hear you coming a mile off. Try for a bit more... finesse.",
+          subtitle_text: "If you keep bumping into things, the ghost will hear you coming a mile off. Try for a bit more... finesse.",
+          tags: [ConcernedWarning, Guidance, SnarkyHumor, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "DoorInteractionHesitation",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Well, are you going to stand there admiring the woodwork all day, or are we going in?",
+          subtitle_text: "Well, are you going to stand there admiring the woodwork all day, or are we going in?",
+          tags: [SlightlyImpatient, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Pretty sure the ghosts are on the other side of that door. Just a hunch.",
+          subtitle_text: "Pretty sure the ghosts are on the *other* side of that door. Just a hunch.",
+          tags: [SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is not going to open itself, you know. Unless this place is really advanced.",
+          subtitle_text: "It's not going to open itself, you know. Unless this place is *really* advanced.",
+          tags: [Humorous, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Knock knock. Who is there? Not us, if you do not try the handle.",
+          subtitle_text: "Knock knock. Who's there? Not us, if you don't try the handle.",
+          tags: [SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is the bit where you usually... you know... open the door?",
+          subtitle_text: "This is the bit where you usually... you know... open the door?",
+          tags: [SlightlyImpatient, DirectHint, ShortBrevity, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Maybe it is a push? Or a pull? Or just... interacting with it might do the trick.",
+          subtitle_text: "Maybe it's a push? Or a pull? Or just... interacting with it might do the trick.",
+          tags: [Guidance, Questioning, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not be shy. Doors are for opening. Most of the time.",
+          subtitle_text: "Don't be shy. Doors are for opening. Most of the time.",
+          tags: [Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Is there a secret password for this one I do not know about?",
+          subtitle_text: "Is there a secret password for this one I don't know about?",
+          tags: [Questioning, SnarkyHumor, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Right, the grand entrance. Or, you know, just open the door.",
+          subtitle_text: "Right, the grand entrance. Or, you know, just open the door.",
+          tags: [Humorous, DirectHint, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Lets see what horrors await. Assuming we can get past this formidable... door.",
+          subtitle_text: "Let's see what horrors await. Assuming we can get past this formidable... door.",
+          tags: [SnarkyHumor, Encouraging, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "BumpingInDarkness",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Trying to navigate by smell now, are we? Or perhaps you have developed echo location I was not briefed on. A light might prove less... clumsy.",
+          subtitle_text: "Trying to navigate by smell now, are we? Or perhaps you've developed echo-location I wasn't briefed on. A light might prove less... clumsy.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Sounding like a one person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          subtitle_text: "Sounding like a one-person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          tags: [SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This pinball wizard approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          subtitle_text: "This 'pinball wizard' approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are trying to find things by bumping into them, you are going to have a very long night. And a lot of bruises.",
+          subtitle_text: "If you're trying to find things by bumping into them, you're going to have a very long night. And a lot of bruises.",
+          tags: [SnarkyHumor, ConcernedWarning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "My instruments are picking up a lot of... well, you hitting things. A little illumination might help your shins.",
+          subtitle_text: "My instruments are picking up a lot of... well, *you* hitting things. A little illumination might help your shins.",
+          tags: [SnarkyHumor, NeutralObservation, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are we playing Marco Polo with the furniture? Because I do not think it is going to shout Polo back.",
+          subtitle_text: "Are we playing 'Marco Polo' with the furniture? Because I don't think it's going to shout 'Polo' back.",
+          tags: [SnarkyHumor, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Honestly, it is like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          subtitle_text: "Honestly, it's like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          tags: [SnarkyHumor, SlightlyImpatient, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I can hear you stumbling about from here. You do have a torch, right? And this place has switches?",
+          subtitle_text: "I can hear you stumbling about from here. You *do* have a torch, right? And this place has switches?",
+          tags: [NeutralObservation, PlayerStruggling, Questioning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Let me guess, you are methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          subtitle_text: "Let me guess, you're methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          subtitle_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          tags: [SlightlyImpatient, SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "StrugglingWithGrabDrop",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "See that small item there? You might be able to pick that up, you know. Could be useful, or just in the way.",
+          subtitle_text: "See that small item there? You might be able to pick that up, you know. Could be useful, or just in the way.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength, Encouraging],
+        ),
+        WalkieLineEntry(
+          tts_text: "Some of the lighter bits and bobs around here can be shifted. If something's blocking your view, or you think it's important, try giving it a nudge.",
+          subtitle_text: "Some of the lighter bits and bobs around here can be shifted. If something's blocking your view, or you think it's important, try giving it a nudge.",
+          tags: [FirstTimeHint, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember, you can interact with smaller objects to pick them up. And if you need your hands free, you can always put them back down.",
+          subtitle_text: "Remember, you can interact with smaller objects to pick them up. And if you need your hands free, you can always put them back down.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That looks like it might be movable. Could be worth trying to pick it up if you need to get a better look at something behind it.",
+          subtitle_text: "That looks like it might be movable. Could be worth trying to pick it up if you need to get a better look at something behind it.",
+          tags: [ContextualHint, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are trying to get a clear shot or reach something, remember some of these items are not nailed down.",
+          subtitle_text: "If you're trying to get a clear shot or reach something, remember some of these items aren't nailed down.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        // More snarky/reminder if player repeatedly fails to move an obviously movable blocking item
+        WalkieLineEntry(
+          tts_text: "Still trying to peer through that plant pot, are we? You know you can move some of this stuff, right?",
+          subtitle_text: "Still trying to peer through that plant pot, are we? You know you can move some of this stuff, right?",
+          tags: [SnarkyHumor, ReminderMedium, PlayerStruggling, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just a thought, but if you are carrying something and need to use your gear, you will need to put it down first.",
+          subtitle_text: "Just a thought, but if you're carrying something and need to use your gear, you'll need to put it down first.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Some of the smaller decor pieces might be useful for, shall we say, 'rearranging' the ghost's feng shui.",
+          subtitle_text: "Some of the smaller decor pieces might be useful for, shall we say, 'rearranging' the ghost's feng shui.",
+          tags: [Humorous, Guidance, MediumLength, ContextualHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Having trouble interacting with something because you are holding an item? Try putting it down first.",
+          subtitle_text: "Having trouble interacting with something because you're holding an item? Try putting it down first.",
+          tags: [PlayerStruggling, Guidance, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "You can carry one small item at a time. Useful for getting a closer look or moving things that might be... significant.",
+          subtitle_text: "You can carry one small item at a time. Useful for getting a closer look or moving things that might be... significant.",
+          tags: [FirstTimeHint, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "StrugglingWithHideUnhide",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "If things get a bit too intense, some of the larger furniture might offer a bit of cover. Worth a try if you need to disappear for a moment.",
+          subtitle_text: "If things get a bit too intense, some of the larger furniture might offer a bit of cover. Worth a try if you need to disappear for a moment.",
+          tags: [FirstTimeHint, Guidance, MediumLength, Encouraging],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feeling a bit exposed? See that bed or table? Might make a decent hiding spot if our friend gets grumpy.",
+          subtitle_text: "Feeling a bit exposed? See that bed or table? Might make a decent hiding spot if our friend gets grumpy.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember, if a hunt starts, you can try to hide. Look for sturdy furniture like beds or tables.",
+          subtitle_text: "Remember, if a hunt starts, you can try to hide. Look for sturdy furniture like beds or tables.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When you are hidden, you will need to choose your moment to pop back out. Do not stay put forever.",
+          subtitle_text: "When you're hidden, you'll need to choose your moment to pop back out. Don't stay put forever.",
+          tags: [Guidance, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Hiding is an option when things get dicey. Just find a suitable spot and try to interact with it.",
+          subtitle_text: "Hiding is an option when things get dicey. Just find a suitable spot and try to interact with it.",
+          tags: [FirstTimeHint, Guidance, MediumLength],
+        ),
+        // If player successfully hides but then immediately unhides during a hunt
+        WalkieLineEntry(
+          tts_text: "Changed your mind already? It is still out there, you know! Best stay hidden a moment longer.",
+          subtitle_text: "Changed your mind already? It's still out there, you know! Best stay hidden a moment longer.",
+          tags: [PlayerStruggling, ConcernedWarning, ImmediateResponse, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good spot to lay low for a bit. Just make sure the coast is actually clear before you venture out again.",
+          subtitle_text: "Good spot to lay low for a bit. Just make sure the coast is actually clear before you venture out again.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You can not hide if you are carrying something bulky, by the way. Hands free for proper sneaking.",
+          subtitle_text: "You can't hide if you're carrying something bulky, by the way. Hands free for proper sneaking.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Trying to hide under that tiny vase, are we? Aim for something a bit more substantial, love.",
+          subtitle_text: "Trying to hide under that tiny vase, are we? Aim for something a bit more substantial, love.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, ContextualHint, MediumLength], // If player tries to hide near a non-hiding spot
+        ),
+        WalkieLineEntry(
+          tts_text: "Once you are tucked away, you will need to interact again to come out. Do not get too comfy.",
+          subtitle_text: "Once you're tucked away, you'll need to interact again to come out. Don't get too comfy.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)
