@@ -1,3 +1,107 @@
+State that we know exists:
+=============================
+
+Done:
+------
+
+`GameState` is `GameState::None` -> Use game_state: `Res<State<GameState>>` - in uncore.
+
+Time.elapsed_seconds_since_level_ready -> BoardData.level_ready_time (use Res<Time> to compute the delta and know the actual seconds passed)
+
+Player's `Position` is still within a small radius of their initial spawn point (or a designated "VanArea") -> PlayerSprite now includes spawn_position:Position.
+
+`WalkiePlay.can_play(WalkieEvent::PlayerStuckAtStart, current_time)` -> this check is done automatically. We can forget on these.
+
+"MainEntranceDoor" entity `Position` and `Behavior` -> Just check all doors by component, filter those that are inside a RoomDB and at the same time have a neighbor that is outside the room (no room). behavior::component::Door exists.
+
+BumpingInDarkness: The trigger here should be much easier, if the flashlight or equivalent is on, the area would be brighter already. There's no need to check the state of the flashlight. There's no need to query if the room has the lights on or off - we just need to check the exposure level.
+
+
+Not Done:
+-------------
+
+Player `Direction` (or input state) -> For this we probably want some component to track the average length of the Direction vector over 5 seconds or so.
+
+collision events with van boundaries -> For this we probably want a component to track the amount of collision (magnitude, float) over the last 5-10 seconds. We really don't care if it's a van boundary or not.
+
+Breach visibility: We need to compute in maplight and store somewhere the current visibility of the breach, taking into account color brightness, transparency, and player visibility field.
+
+Ghost visibility: We need to compute in maplight and store somewhere the current visibility of the ghost, taking into account transparency, and player visibility field.
+
+Breach and Ghost reverse visibility trigger: When we trigger the voice line, we need to send some kind of event or state to make them be super visible for 10 seconds or so.
+
+RoomLightsOnGearNeedsDark: Probably we need to make the gear inform that they need darkness somehow; locating what gear is used is tricky, so it's easier if the gear pushes the state somewhere. But only if it's active and on hand, not stowed or on the ground. Knowing that the room is lit might be a bit trickier? first of all, which room? the gear needs to explain what is the target here - is it the breach or the ghost? we could filter by knowing if we have the correct target visible; and then locating in which room we are and looking up the light state; but it would be even better if we look at the cached lighting, because that includes other stuff that aren't the lights of the room.
+
+GearSelectedNotActivated: This seems it would benefit from using the trait we have for gear, we need to know if the item is enabled, if it is gear, and if it can be enabled. Probably we need to tweak the trait here.
+
+
+
+Other:
+-------------
+
+StrugglingWithGrabDrop: This trigger is quite unclear on how to really implement - the voice lines suggest plenty of different stuff for different scenarios. We need to leave this for later on.
+
+StrugglingWithHideUnhide: This needs more work. Probably this is several separate triggers; "Struggling" is too generic here.
+  - event when the player should be looking for a place to hide.
+  - event for when the player went out of hiding too early.
+  - event for when the player tries to hide in places that are not valid.
+
+DarkRoomNoLightUsed: Isn't this just a variation of "BumpingInDarkness"?
+
+IgnoredObviousBreach: We can't know when the player ignores the breach. All we need to do is to point out when the breach becomes highly visible.
+
+WildFlashlightSweeping: I don't get this one. Doesn't feel applicable. The flashlight is very wide, the player naturally when moving will swing it. This feels like it needs to be removed.
+
+FlashlightOnInLitRoom: This one can be done much simpler by looking at the lighting data (the cached one, the permanent one), and seeing how lit is the tile we're on before applying the flashlight on top. That's enough to do this.
+
+
+
+--- environmental_awareness
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `PlayerGear`, `Flashlight.status`, `BoardData.light_field`, `RoomDB`, state of `Interactive` light switches in the current room, local timer, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `Direction`, `GhostBreach` entity `Position` & `Visibility`, `VisibilityData`, `WalkiePlay`, current mission/tutorial stage.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `Direction` & `PlayerGear` (to check for gear activation), `GhostSprite` `Position` & visibility state & `hunting` state, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `PlayerGear` & `Flashlight.status`, `PlayerSprite.direction` (and its rate of change), `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `PlayerGear` (and specific gear states), `RoomDB` (or `Interactive` light switch states), `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `PlayerGear` & `Flashlight.status`, `RoomDB`, `BoardData.light_field`, `WalkiePlay`.
+
+--- basic_gear_usage
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (and internal states of specific gear like `Thermometer.enabled`, `Flashlight.status`), local timer, `WalkiePlay`, potentially `BoardData.light_field`, `RoomDB`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear`, `Thermometer.enabled` & `Thermometer.temp`, `RoomDB` (for ghost room context), local timer for this state, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear`, `EMFMeter.enabled` & `EMFMeter.emf_level`, `RoomDB`, local timer, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (and states of Thermometer/EMF), `RoomDB`, breach `Position`, local timer, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear`, local timer for gear cycling, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `Difficulty`, `PlayerGear` (and specific gear states), local timers per new gear type, `WalkiePlay`, potentially `RoomDB`/`BoardData` for context.
+
+--- evidence_gathering_and_logic
+
+*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (and specific gear states like `Thermometer.temp`, `EMFMeter.emf_level`, `Recorder.evp_recorded_display`), local timer, current mission's evidence state (from `TruckUI` or a shared resource), `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, Player `Position`, `RoomDB`, internal flag for new evidence, local timer, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `TruckUI` active tab state, internal count/flag of evidence found, local timer, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `TruckUI` active tab & evidence states, journal's internal ghost filtering logic result, `WalkiePlay`.
+
+*   **Key Game Data/Resources Needed:** `GameState`, `TruckUI` active tab & evidence states, `GhostGuess` resource, journal's internal ghost filtering logic result, local timer, `WalkiePlay`.
+
+
+
+
+Trigger events for voices
+==============================
+
 
 **RON File: `locomotion_and_interaction.ron`**
 

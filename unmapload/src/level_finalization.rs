@@ -43,7 +43,6 @@ pub fn after_level_ready(
     mut ev_room: EventWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
     mut next_game_state: ResMut<NextState<AppState>>,
-    time: Res<Time>,
 ) {
     if ev.is_empty() {
         return;
@@ -55,7 +54,6 @@ pub fn after_level_ready(
 
     // Switch to in-game state
     next_game_state.set(AppState::InGame);
-    bf.level_ready_time = time.elapsed_secs();
 
     // Store ambient temperature for reference
     let ambient_temp = bf.ambient_temp;

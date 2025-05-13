@@ -1,1 +1,3 @@
-// TODO: Implement trigger systems for ghost behavior and hunting events
+use bevy::app::App;
+
+pub(crate) fn app_setup(_app: &mut App) {}

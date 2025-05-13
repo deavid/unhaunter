@@ -8,5 +8,6 @@ impl Plugin for UnhaunterWalkiePlugin {
         app.add_event::<WalkieEvent>().init_resource::<WalkiePlay>();
 
         crate::walkie_play::app_setup(app);
+        crate::triggers::app_setup(app);
     }
 }

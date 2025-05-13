@@ -66,7 +66,7 @@ impl WalkieEvent {
             WalkieEvent::MissionStartEasy => 3600.0 * 24.0 * 7.0, // Effectively once per week
 
             // --- Locomotion and Interaction ---
-            WalkieEvent::PlayerStuckAtStart => 180.0 * count, // Long cooldown, especially after first play
+            WalkieEvent::PlayerStuckAtStart => 60.0 * count,
             WalkieEvent::ErraticMovementEarly => 3600.0 * 24.0, // Effectively once per day (mission)
             WalkieEvent::DoorInteractionHesitation => 3600.0 * 24.0, // Effectively once per day (mission)
             WalkieEvent::BumpingInDarkness => 60.0 * count.powf(1.5), // Moderate, increases significantly

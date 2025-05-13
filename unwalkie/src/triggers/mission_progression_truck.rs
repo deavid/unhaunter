@@ -1,1 +1,3 @@
-// TODO: Implement trigger systems for mission progression and truck events
+use bevy::app::App;
+
+pub(crate) fn app_setup(_app: &mut App) {}
