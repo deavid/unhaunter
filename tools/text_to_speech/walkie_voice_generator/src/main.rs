@@ -177,8 +177,41 @@ fn main() {
             .expect("Failed to check for unused files");
     }
 
-    fs::remove_dir_all(TEMP_AUDIO_DIR).expect("Failed to remove temporary audio directory");
-    fs::create_dir_all(TEMP_AUDIO_DIR).expect("Failed to re-create temporary audio directory");
+    // Clean up temporary audio files (*.wav, *.ogg) from TEMP_AUDIO_DIR non-recursively
+    println!(
+        "Cleaning up temporary audio files (*.wav, *.ogg) from {}.",
+        TEMP_AUDIO_DIR
+    );
+    match fs::read_dir(TEMP_AUDIO_DIR) {
+        Ok(entries) => {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_file() {
+                    if let Some(ext_osstr) = path.extension() {
+                        if let Some(ext) = ext_osstr.to_str() {
+                            if ext == "wav" || ext == "ogg" {
+                                println!("Deleting temporary file: {:?}", path);
+                                if let Err(e) = fs::remove_file(&path) {
+                                    eprintln!(
+                                        "Warning: Failed to delete temporary file {:?}: {}",
+                                        path, e
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!(
+                "Warning: Could not read temporary audio directory {} for cleanup: {}",
+                TEMP_AUDIO_DIR, e
+            );
+        }
+    }
+    // The directory TEMP_AUDIO_DIR itself is no longer removed and recreated here.
+    // It's created if it doesn't exist at the beginning of main().
 
     println!("Walkie voice generation complete.");
 }

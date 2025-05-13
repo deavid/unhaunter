@@ -48,13 +48,16 @@ pub fn save_manifest(
 ) -> Result<(), anyhow::Error> {
     let manifest_path = Path::new(GENERATED_ASSETS_DIR).join(MANIFEST_FILENAME);
 
+    // Convert HashMap to BTreeMap to ensure sorted output for consistency
+    let sorted_manifest: std::collections::BTreeMap<_, _> = manifest.iter().collect();
+
     // Configure RON pretty printing.
     let pretty_config = ron::ser::PrettyConfig::new()
         .separate_tuple_members(true)
         .enumerate_arrays(false); // Changed to false to remove array enumeration
 
-    // Serialize the manifest to a RON string.
-    let serialized_manifest = ron::ser::to_string_pretty(manifest, pretty_config)
+    // Serialize the sorted manifest to a RON string.
+    let serialized_manifest = ron::ser::to_string_pretty(&sorted_manifest, pretty_config)
         .map_err(|e| anyhow::anyhow!("Failed to serialize manifest to RON: {}", e))?;
 
     // Create/truncate and write to the manifest file.
