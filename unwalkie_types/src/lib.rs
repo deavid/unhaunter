@@ -38,6 +38,8 @@ pub enum WalkieTag {
     ReminderHigh,
     /// A very gentle, often positive, reminder.
     FriendlyReminder,
+    /// A somewhat more formal reminder.
+    FormalishReminder,
 
     // --- Timing & Contextual ---
     /// A direct and immediate reaction to a player action or game event.
@@ -69,7 +71,7 @@ pub enum WalkieTag {
     /// A purely humorous or light-hearted comment, not necessarily a hint.
     Humorous,
     /// A more formal or serious tone, possibly for critical situations.
-    FormalishReminder,
+    // FormalishReminder is already defined above
 
     // --- Tool Specificity Tags (NEW) ---
     /// Suggests player should *stop* primarily using the Thermometer for now.

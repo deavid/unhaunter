@@ -2,6 +2,7 @@
 // DO NOT EDIT MANUALLY
 
 use unwalkie_types::{VoiceLineData, WalkieTag};
+use crate::ConceptTrait;
 
 /// Defines the different voice line concepts available in this module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -139,5 +140,13 @@ impl MissionProgressionAndTruckConcept {
                 },
             ],
         }
+    }
+}
+
+// Auto-generated implementation of ConceptTrait
+impl ConceptTrait for MissionProgressionAndTruckConcept {
+    fn get_lines(&self) -> Vec<VoiceLineData> {
+        // Delegate to the generated get_lines method
+        self.get_lines()
     }
 }
