@@ -5479,6 +5479,7 @@ dependencies = [
  "uncore",
  "ungear",
  "ungearitems",
+ "unprofile",
  "unsettings",
  "unwalkie_types",
  "unwalkiecore",

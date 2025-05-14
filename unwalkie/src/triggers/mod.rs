@@ -1,5 +1,6 @@
 use bevy::app::App;
 
+pub mod base1;
 pub mod basic_gear_usage;
 pub mod environmental_awareness;
 pub mod evidence_gathering_logic;
@@ -11,6 +12,7 @@ pub mod repellent_expulsion;
 pub mod tutorial_specific;
 
 pub(crate) fn app_setup(app: &mut App) {
+    base1::app_setup(app);
     basic_gear_usage::app_setup(app);
     environmental_awareness::app_setup(app);
     evidence_gathering_logic::app_setup(app);

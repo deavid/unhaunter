@@ -48,6 +48,15 @@ impl Position {
         }
     }
 
+    pub fn lerp(&self, other: &Self, t: f32) -> Self {
+        Self {
+            x: self.x + (other.x - self.x) * t,
+            y: self.y + (other.y - self.y) * t,
+            z: self.z + (other.z - self.z) * t,
+            global_z: self.global_z,
+        }
+    }
+
     pub fn with_random(&self, range: f32) -> Self {
         let mut rng = random_seed::rng();
         Self {

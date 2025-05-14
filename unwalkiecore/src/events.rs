@@ -1,5 +1,6 @@
 use crate::ConceptTrait; // Import from crate root
 use crate::generated::base1::Base1Concept;
+use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept; // Added import
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
 use bevy::prelude::Event;
 use unwalkie_types::VoiceLineData;
@@ -57,6 +58,10 @@ pub enum WalkieEvent {
     StrugglingWithGrabDrop,
     /// Player is struggling with hiding or unhiding mechanics.
     StrugglingWithHideUnhide,
+
+    // --- Environmental Awareness Events ---
+    /// Player is in a dark room without using a light source for a specified duration.
+    DarkRoomNoLightUsed,
     // TODO: Add other event categories here
 }
 
@@ -85,6 +90,10 @@ impl WalkieEvent {
             WalkieEvent::StrugglingWithHideUnhide => {
                 Box::new(LocomotionAndInteractionConcept::StrugglingWithHideUnhide)
             }
+            // --- Environmental Awareness ---
+            WalkieEvent::DarkRoomNoLightUsed => {
+                Box::new(EnvironmentalAwarenessConcept::DarkRoomNoLightUsed) // Updated mapping
+            }
         }
     }
 
@@ -102,6 +111,9 @@ impl WalkieEvent {
             WalkieEvent::BumpingInDarkness => 60.0 * count.powf(1.5), // Moderate, increases significantly
             WalkieEvent::StrugglingWithGrabDrop => 90.0 * count,
             WalkieEvent::StrugglingWithHideUnhide => 75.0 * count,
+
+            // --- Environmental Awareness ---
+            WalkieEvent::DarkRoomNoLightUsed => 90.0 * count, // Placeholder, adjust as needed
         }
     }
 
@@ -123,6 +135,9 @@ impl WalkieEvent {
             WalkieEvent::BumpingInDarkness => WalkieEventPriority::Low,
             WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Low,
             WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
+
+            // --- Environmental Awareness ---
+            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium, // Placeholder, adjust as needed
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being

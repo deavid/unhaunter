@@ -14,6 +14,8 @@ Player's `Position` is still within a small radius of their initial spawn point 
 
 "MainEntranceDoor" entity `Position` and `Behavior` -> Just check all doors by component, filter those that are inside a RoomDB and at the same time have a neighbor that is outside the room (no room). behavior::component::Door exists.
 
+DarkRoomNoLightUsed: This event will now encompass scenarios where the player is in a dark room without using a light source, regardless of collision events. The logic will focus on light levels and the player's use of light sources.
+
 BumpingInDarkness: The trigger here should be much easier, if the flashlight or equivalent is on, the area would be brighter already. There's no need to check the state of the flashlight. There's no need to query if the room has the lights on or off - we just need to check the exposure level.
 
 
@@ -104,41 +106,6 @@ Trigger events for voices
 
 
 **RON File: `locomotion_and_interaction.ron`**
-
-**2. `WalkieEventConceptEntry: ErraticMovementEarly`**
-
-*   **Scenario Description (Recap):** Player exhibits erratic movement (frequent, small, directionless movements or repeatedly bumping into the van/immediate environment) within the first ~30-45 seconds of mission start, suggesting difficulty with isometric controls.
-*   **Goal of Hint:** Reassure the player that isometric controls can take getting used to and encourage them to take their time.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `Time.elapsed_seconds_since_level_ready < Y` (e.g., 30-45s).
-    *   A system tracks player movement input or collision frequency. If (sum of `PlayerSprite.direction` changes over last Z seconds is high AND net displacement is low) OR (player has collided with 'VanBoundary' N times quickly).
-    *   `WalkiePlay.can_play(WalkieEvent::ErraticMovementEarly, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `Time`, Player `Position`, Player `Direction` (or input state), collision events with van boundaries, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `ErraticMovementEarly`
-*   **Primary `WalkieTag`(s) for Line Selection:** `Encouraging`, `Humorous`, `FirstTimeHint`, `PlayerStruggling`.
-*   **Repetition Strategy:** Once per mission attempt, very early in the mission only.
-*   **Priority/Severity:** Medium-Low. A quality-of-life hint.
-
----
-
-**3. `WalkieEventConceptEntry: DoorInteractionHesitation`**
-
-*   **Scenario Description (Recap):** Player is very close to the main entrance door of the location for X seconds (e.g., 10-15s) but has not interacted with it.
-*   **Goal of Hint:** Nudge the player to interact with the door to enter the location.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player `Position` is within interaction range (e.g., < 1.5 units) of the designated "MainEntranceDoor" entity.
-    *   A timer specific to this scenario (`DoorHesitationTimer`) exceeds X seconds.
-    *   The "MainEntranceDoor" `Behavior.state` is `TileState::Closed`.
-    *   `WalkiePlay.can_play(WalkieEvent::DoorInteractionHesitation, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position`, "MainEntranceDoor" entity `Position` and `Behavior`, a local timer for this scenario, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `DoorInteractionHesitation`
-*   **Primary `WalkieTag`(s) for Line Selection:** `DirectHint`, `SlightlyImpatient`, `FirstTimeHint`.
-*   **Repetition Strategy:** Once per mission attempt if the door remains un-interacted with after the initial hesitation period.
-*   **Priority/Severity:** Medium. Key for mission progression.
-
----
 
 **4. `WalkieEventConceptEntry: BumpingInDarkness`**
 

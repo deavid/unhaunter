@@ -363,10 +363,6 @@ pub fn apply_lighting(
     }
     let mut qt = sprite_set.p0();
     cursor_exp /= exp_count;
-    // Ensure the base is not negative before applying the power function
-    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
-    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
-
     // Account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might
     // be off but someother player might have it on.
@@ -384,6 +380,12 @@ pub fn apply_lighting(
         })
         .sum();
     cursor_exp += fl_total_power.sqrt() * 0.9;
+    let f_e1 = 0.1;
+    bf.exposure_lux = bf.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
+    // Ensure the base is not negative before applying the power function
+    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
+
     assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see

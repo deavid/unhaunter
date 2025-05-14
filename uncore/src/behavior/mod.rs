@@ -75,6 +75,10 @@ impl Behavior {
         self.cfg.state.clone()
     }
 
+    pub fn class(&self) -> Class {
+        self.cfg.class.clone()
+    }
+
     /// Creates the default components as required by this behavior for a new entity.
     /// This is often used to spawn new map tiles to add the required components
     /// automatically.
