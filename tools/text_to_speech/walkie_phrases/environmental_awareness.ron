@@ -216,61 +216,6 @@ WalkiePhraseFile(
       ],
     ),
     WalkieEventConceptEntry(
-      name: "WildFlashlightSweeping",
-      lines: [
-        WalkieLineEntry(
-          tts_text: "Easy with the torch there, love. You are lighting up the ceiling more than the room. Try to keep it steady on what you are looking at.",
-          subtitle_text: "Easy with the torch there, love. You're lighting up the ceiling more than the room. Try to keep it steady on what you're looking at.",
-          tags: [Guidance, PlayerStruggling, Humorous, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Are you trying to signal ships with that flashlight beam? A slower, more focused sweep might help you spot things.",
-          subtitle_text: "Are you trying to signal ships with that flashlight beam? A slower, more focused sweep might help you spot things.",
-          tags: [SnarkyHumor, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Things are easier to see if the light is not darting about like a startled firefly. Steady hands, steady beam.",
-          subtitle_text: "Things are easier to see if the light isn't darting about like a startled firefly. Steady hands, steady beam.",
-          tags: [Guidance, Humorous, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "A bit more focus with that torch, if you please. We are looking for subtle clues, not trying to induce a rave.",
-          subtitle_text: "A bit more focus with that torch, if you please. We're looking for subtle clues, not trying to induce a rave.",
-          tags: [SlightlyImpatient, SnarkyHumor, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Remember, a concentrated beam can reveal more than a wild one. Point it where you want to see.",
-          subtitle_text: "Remember, a concentrated beam can reveal more than a wild one. Point it where you want to see.",
-          tags: [ReminderLow, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "You will give yourself a headache waving that torch around so much. Try a more methodical approach to lighting the area.",
-          subtitle_text: "You'll give yourself a headache waving that torch around so much. Try a more methodical approach to lighting the area.",
-          tags: [ConcernedWarning, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "It is a flashlight, not a disco ball. Keep it aimed where you are looking, it helps.",
-          subtitle_text: "It's a flashlight, not a disco ball. Keep it aimed where you're looking, it helps.",
-          tags: [SnarkyHumor, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "If you shine the light directly on things, they tend to become more visible. Just a pro tip.",
-          subtitle_text: "If you shine the light directly on things, they tend to become more visible. Just a pro tip.",
-          tags: [Guidance, SnarkyHumor, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "The idea is to illuminate potential evidence, not paint the walls with light strokes. Focus that beam.",
-          subtitle_text: "The idea is to illuminate potential evidence, not paint the walls with light strokes. Focus that beam.",
-          tags: [Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "A steady light helps spot those fleeting details. Try not to flick it about too much.",
-          subtitle_text: "A steady light helps spot those fleeting details. Try not to flick it about too much.",
-          tags: [Guidance, Encouraging, MediumLength],
-        ),
-      ],
-    ),
-    WalkieEventConceptEntry(
       name: "RoomLightsOnGearNeedsDark",
       lines: [
         WalkieLineEntry(
