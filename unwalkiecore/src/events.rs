@@ -52,8 +52,6 @@ pub enum WalkieEvent {
     ErraticMovementEarly,
     /// Player hesitates to interact with the main door.
     DoorInteractionHesitation,
-    /// Player is bumping into objects in a dark room.
-    BumpingInDarkness,
     /// Player is struggling with picking up or dropping items.
     StrugglingWithGrabDrop,
     /// Player is struggling with hiding or unhiding mechanics.
@@ -81,9 +79,6 @@ impl WalkieEvent {
             WalkieEvent::DoorInteractionHesitation => {
                 Box::new(LocomotionAndInteractionConcept::DoorInteractionHesitation)
             }
-            WalkieEvent::BumpingInDarkness => {
-                Box::new(LocomotionAndInteractionConcept::BumpingInDarkness)
-            }
             WalkieEvent::StrugglingWithGrabDrop => {
                 Box::new(LocomotionAndInteractionConcept::StrugglingWithGrabDrop)
             }
@@ -108,12 +103,11 @@ impl WalkieEvent {
             WalkieEvent::PlayerStuckAtStart => 60.0 * count,
             WalkieEvent::ErraticMovementEarly => 3600.0 * 24.0, // Effectively once per day (mission)
             WalkieEvent::DoorInteractionHesitation => 3600.0 * 24.0, // Effectively once per day (mission)
-            WalkieEvent::BumpingInDarkness => 60.0 * count.powf(1.5), // Moderate, increases significantly
             WalkieEvent::StrugglingWithGrabDrop => 90.0 * count,
             WalkieEvent::StrugglingWithHideUnhide => 75.0 * count,
 
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => 90.0 * count, // Placeholder, adjust as needed
+            WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
         }
     }
 
@@ -132,12 +126,11 @@ impl WalkieEvent {
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
             WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
             WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::High,
-            WalkieEvent::BumpingInDarkness => WalkieEventPriority::Low,
             WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Low,
             WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
 
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium, // Placeholder, adjust as needed
+            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Low,
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being

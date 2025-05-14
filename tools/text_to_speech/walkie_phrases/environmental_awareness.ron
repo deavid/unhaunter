@@ -53,6 +53,56 @@ WalkiePhraseFile(
           subtitle_text: "This room could really use some illumination. Makes spotting the little details much easier.",
           tags: [Guidance, NeutralObservation, MediumLength],
         ),
+        WalkieLineEntry(
+          tts_text: "Trying to navigate by smell now, are we? Or perhaps you have developed echo location I was not briefed on. A light might prove less... clumsy.",
+          subtitle_text: "Trying to navigate by smell now, are we? Or perhaps you've developed echo-location I wasn't briefed on. A light might prove less... clumsy.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Sounding like a one person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          subtitle_text: "Sounding like a one-person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          tags: [SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This pinball wizard approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          subtitle_text: "This 'pinball wizard' approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are trying to find things by bumping into them, you are going to have a very long night. And a lot of bruises.",
+          subtitle_text: "If you're trying to find things by bumping into them, you're going to have a very long night. And a lot of bruises.",
+          tags: [SnarkyHumor, ConcernedWarning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "My instruments are picking up a lot of... well, you hitting things. A little illumination might help your shins.",
+          subtitle_text: "My instruments are picking up a lot of... well, *you* hitting things. A little illumination might help your shins.",
+          tags: [SnarkyHumor, NeutralObservation, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are we playing Marco Polo with the furniture? Because I do not think it is going to shout Polo back.",
+          subtitle_text: "Are we playing 'Marco Polo' with the furniture? Because I don't think it's going to shout 'Polo' back.",
+          tags: [SnarkyHumor, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Honestly, it is like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          subtitle_text: "Honestly, it's like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          tags: [SnarkyHumor, SlightlyImpatient, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I can hear you stumbling about from here. You do have a torch, right? And this place has switches?",
+          subtitle_text: "I can hear you stumbling about from here. You *do* have a torch, right? And this place has switches?",
+          tags: [NeutralObservation, PlayerStruggling, Questioning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Let me guess, you are methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          subtitle_text: "Let me guess, you're methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          subtitle_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          tags: [SlightlyImpatient, SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
       ],
     ),
     WalkieEventConceptEntry(

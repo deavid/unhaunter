@@ -179,24 +179,6 @@ Trigger events for voices
 
 **RON File: `environmental_awareness.ron`**
 
-**1. `WalkieEventConceptEntry: DarkRoomNoLightUsed`**
-
-*   **Scenario Description (Recap):** Player is inside a location, in a dark room (low `BoardData.light_field` lux at player's `Position`), and hasn't activated their flashlight or a room light switch for X seconds.
-*   **Goal of Hint:** Encourage the player to use a light source to improve visibility.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player is in a room (checked via `RoomDB`).
-    *   `BoardData.light_field[player_bpos].lux < DarkThreshold` (e.g., < 0.1 lux).
-    *   Player's equipped Flashlight `Flashlight.status == Off` (if flashlight is equipped in `PlayerGear`).
-    *   Current room's `RoomDB.room_state` indicates lights are off (or query `Interactive` light switches in the room, ensuring they are `TileState::Off`).
-    *   Timer `DarkRoomNoLightTimer` exceeds X seconds (e.g., 10-15s). This timer resets if player enters a lit area or activates a light.
-    *   `WalkiePlay.can_play(WalkieEvent::DarkRoomNoLightUsed, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `PlayerGear`, `Flashlight.status`, `BoardData.light_field`, `RoomDB`, state of `Interactive` light switches in the current room, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `DarkRoomNoLightUsed`
-*   **Primary `WalkieTag`(s) for Line Selection:** `FirstTimeHint`, `Guidance`, `ContextualHint`.
-*   **Repetition Strategy:** Can play once or twice per mission if player repeatedly enters dark areas without using light. Increasing cooldown.
-*   **Priority/Severity:** Medium-High. Important for basic gameplay and evidence spotting.
-
 ---
 
 **2. `WalkieEventConceptEntry: IgnoredObviousBreach`**

@@ -80,6 +80,66 @@ impl EnvironmentalAwarenessConcept {
                     tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::NeutralObservation],
                     length_seconds: 6,
                 },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_11.ogg".to_string(),
+                    subtitle_text: "Trying to navigate by smell now, are we? Or perhaps you've developed echo-location I wasn't briefed on. A light might prove less... clumsy.".to_string(),
+                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 9,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_12.ogg".to_string(),
+                    subtitle_text: "Sounding like a one-person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_13.ogg".to_string(),
+                    subtitle_text: "This 'pinball wizard' approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?".to_string(),
+                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 8,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_14.ogg".to_string(),
+                    subtitle_text: "If you're trying to find things by bumping into them, you're going to have a very long night. And a lot of bruises.".to_string(),
+                    tags: vec![WalkieTag::ConcernedWarning, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_15.ogg".to_string(),
+                    subtitle_text: "My instruments are picking up a lot of... well, *you* hitting things. A little illumination might help your shins.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_16.ogg".to_string(),
+                    subtitle_text: "Are we playing 'Marco Polo' with the furniture? Because I don't think it's going to shout 'Polo' back.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_17.ogg".to_string(),
+                    subtitle_text: "Honestly, it's like a bull in a china shop in there. But darker. Much, much darker. Please use a light.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_18.ogg".to_string(),
+                    subtitle_text: "I can hear you stumbling about from here. You *do* have a torch, right? And this place has switches?".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::PlayerStruggling, WalkieTag::Questioning],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_19.ogg".to_string(),
+                    subtitle_text: "Let me guess, you're methodically mapping the room with your kneecaps? There are easier ways, involving light.".to_string(),
+                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/environmental_awareness/darkroomnolightused_20.ogg".to_string(),
+                    subtitle_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
+                    length_seconds: 8,
+                },
             ],
             Self::FlashlightOnInLitRoom => vec![
                 VoiceLineData {
