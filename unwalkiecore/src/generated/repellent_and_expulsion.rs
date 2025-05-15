@@ -270,9 +270,9 @@ impl RepellentAndExpulsionConcept {
             Self::RepellentUsedGhostEnragesPlayerFlees => vec![
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_01.ogg".to_string(),
-                    subtitle_text: "Whoa, it's properly furious now! That stuff definitely got its attention. If you think you've got the right mix, hold your nerve and keep at it. If not, might be time for a tactical retreat to the truck to rethink.".to_string(),
+                    subtitle_text: "Whoa, it's properly furious now! That stuff definitely got its attention. If you think you've got the right mix, hold your nerve and keep at it.".to_string(),
                     tags: vec![WalkieTag::ConcernedWarning, WalkieTag::FirstTimeHint, WalkieTag::Guidance, WalkieTag::ImmediateResponse, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 13,
+                    length_seconds: 9,
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_02.ogg".to_string(),
@@ -288,15 +288,15 @@ impl RepellentAndExpulsionConcept {
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_04.ogg".to_string(),
-                    subtitle_text: "Okay, it's throwing a tantrum. That's to be expected when you try to evict an angry spirit. Are you sure about your repellent choice?".to_string(),
+                    subtitle_text: "Okay, it's throwing a tantrum. That's to be expected when you try to evict an angry spirit.".to_string(),
                     tags: vec![WalkieTag::Humorous, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::Questioning],
-                    length_seconds: 9,
+                    length_seconds: 7,
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_05.ogg".to_string(),
-                    subtitle_text: "It's definitely upset by that. If you're confident in your ghost ID, you might need to persist with the repellent. If not, regroup at the truck.".to_string(),
+                    subtitle_text: "It's definitely upset by that. If you're confident in your ghost ID, you might need to persist with the repellent.".to_string(),
                     tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 10,
+                    length_seconds: 8,
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_06.ogg".to_string(),
@@ -306,9 +306,9 @@ impl RepellentAndExpulsionConcept {
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_07.ogg".to_string(),
-                    subtitle_text: "A lot of noise and fury! That's common when the repellent starts working... or when it's the wrong one. Stick around if you dare, or check your notes.".to_string(),
+                    subtitle_text: "A lot of noise and fury! That's common when the repellent starts working... or when it's the wrong one. They don't like it either way.".to_string(),
                     tags: vec![WalkieTag::ConcernedWarning, WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 9,
+                    length_seconds: 8,
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_08.ogg".to_string(),
@@ -318,15 +318,15 @@ impl RepellentAndExpulsionConcept {
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_09.ogg".to_string(),
-                    subtitle_text: "That reaction means you're on its radar now. If that was the right stuff, keep it up. If you're unsure, best to fall back and check the journal.".to_string(),
+                    subtitle_text: "That reaction means you're on its radar now. If that was the right stuff, keep it up.".to_string(),
                     tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 9,
+                    length_seconds: 6,
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/repellent_and_expulsion/repellentusedghostenragesplayerflees_10.ogg".to_string(),
-                    subtitle_text: "It's certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out, or retreat and confirm.".to_string(),
+                    subtitle_text: "It's certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out!".to_string(),
                     tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::Questioning],
-                    length_seconds: 11,
+                    length_seconds: 8,
                 },
             ],
             Self::RepellentUsedTooFar => vec![

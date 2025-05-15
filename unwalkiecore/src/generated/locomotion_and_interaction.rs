@@ -7,7 +7,6 @@ use crate::ConceptTrait;
 /// Defines the different voice line concepts available in this module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LocomotionAndInteractionConcept {
-    BumpingInDarkness,
     DoorInteractionHesitation,
     ErraticMovementEarly,
     PlayerStuckAtStart,
@@ -19,68 +18,6 @@ impl LocomotionAndInteractionConcept {
     /// Retrieves a vector of `VoiceLineData` for this concept variant.
     pub fn get_lines(&self) -> Vec<VoiceLineData> {
         match self {
-            Self::BumpingInDarkness => vec![
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_01.ogg".to_string(),
-                    subtitle_text: "Trying to navigate by smell now, are we? Or perhaps you've developed echo-location I wasn't briefed on. A light might prove less... clumsy.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 9,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_02.ogg".to_string(),
-                    subtitle_text: "Sounding like a one-person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_03.ogg".to_string(),
-                    subtitle_text: "This 'pinball wizard' approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_04.ogg".to_string(),
-                    subtitle_text: "If you're trying to find things by bumping into them, you're going to have a very long night. And a lot of bruises.".to_string(),
-                    tags: vec![WalkieTag::ConcernedWarning, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_05.ogg".to_string(),
-                    subtitle_text: "My instruments are picking up a lot of... well, *you* hitting things. A little illumination might help your shins.".to_string(),
-                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_06.ogg".to_string(),
-                    subtitle_text: "Are we playing 'Marco Polo' with the furniture? Because I don't think it's going to shout 'Polo' back.".to_string(),
-                    tags: vec![WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_07.ogg".to_string(),
-                    subtitle_text: "Honestly, it's like a bull in a china shop in there. But darker. Much, much darker. Please use a light.".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_08.ogg".to_string(),
-                    subtitle_text: "I can hear you stumbling about from here. You *do* have a torch, right? And this place has switches?".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::PlayerStruggling, WalkieTag::Questioning],
-                    length_seconds: 6,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_09.ogg".to_string(),
-                    subtitle_text: "Let me guess, you're methodically mapping the room with your kneecaps? There are easier ways, involving light.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/locomotion_and_interaction/bumpingindarkness_10.ogg".to_string(),
-                    subtitle_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-            ],
             Self::DoorInteractionHesitation => vec![
                 VoiceLineData {
                     ogg_path: "walkie/generated/locomotion_and_interaction/doorinteractionhesitation_01.ogg".to_string(),

@@ -292,18 +292,10 @@ We can probably trigger this by the repellent not hitting the ghost.
 
 *   **Scenario Description (Recap):** Player uses the `RepellentFlask` (could be correct or incorrect type), the `GhostSprite.rage` increases significantly or it enters a hunt-like visual/audio state, and the player immediately moves away a significant distance, possibly thinking the repellent failed or made things worse.
 *   **Goal of Hint:** Explain that a strong reaction is expected, and if they believe the repellent is correct, they should persist (or if unsure, retreat to truck to re-evaluate evidence).
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player has recently activated `RepellentFlask`.
-    *   `GhostSprite.rage` spikes significantly OR `GhostSprite.hunting` state changes shortly after repellent use.
-    *   Player `Position` rapidly increases distance from `GhostSprite.Position` immediately following the ghost's reaction.
-    *   This is the first or second time this strong reaction + flee sequence has occurred in the mission.
-    *   `WalkiePlay.can_play(WalkieEvent::RepellentUsedGhostEnragesPlayerFlees, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `PlayerGear`, `GhostSprite.Position`, `GhostSprite.rage`, `GhostSprite.hunting` state, `WalkiePlay`, mission attempt counter for this specific reaction.
-*   **`WalkieEvent` Enum Variant:** `RepellentUsedGhostEnragesPlayerFlees`
-*   **Primary `WalkieTag`(s) for Line Selection:** `FirstTimeHint` (for this reaction), `Guidance`, `ConcernedWarning` (about misinterpreting), `PlayerStruggling`.
-*   **Repetition Strategy:** Once or twice per mission for this specific "fleeing an enraged ghost" scenario.
-*   **Priority/Severity:** Medium. Helps player understand ghost reaction.
+
+There's no need to know if the player is fleeing, we could trigger this just by getting the ghost rage high while the repellant is taking effect (good or not).
+
+We just need to limit this help message by the number of missions completed, let's say 3.
 
 ---
 
@@ -311,17 +303,18 @@ We can probably trigger this by the repellent not hitting the ghost.
 
 *   **Scenario Description (Recap):** The `GhostSprite` and `GhostBreach` entities are despawned (expulsion successful), but the player was either far away, facing the wrong direction, or left the room immediately before/during the despawn animation and thus might not have visually confirmed the expulsion.
 *   **Goal of Hint:** Inform the player that the expulsion was likely successful and they should go back to confirm visually.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `GhostSprite` and `GhostBreach` entities no longer exist (or have a special "expelled" state).
-    *   At the moment of despawn, Player `Position` was > X distance from ghost/breach OR Player `Direction` was not facing ghost/breach.
-    *   Timer `TimeSinceExpulsionNoConfirmation` > Y seconds (e.g., 10-15s).
-    *   `WalkiePlay.can_play(WalkieEvent::GhostExpelledPlayerMissed, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` & `Direction` (at time of despawn), status of `GhostSprite` & `GhostBreach` entities, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `GhostExpelledPlayerMissed`
-*   **Primary `WalkieTag`(s) for Line Selection:** `DelayedObservation`, `Guidance`, `PositiveReinforcement`.
-*   **Repetition Strategy:** Once per successful expulsion if player seems to have missed it.
-*   **Priority/Severity:** Medium. Important for mission completion confirmation.
+
+We need to check how visible was the ghost or the breach during the event of the ghost fading away.
+
+So this means we need to detect somehow the animation of dying was happening, probably GhostSprite has the information here.
+
+And we need to check the visibility of both the GhostSprite and the Breach, was it clearly visible?
+
+We need to to bascially integrate the visibility of them by the amount of time - we could add them both together and compute an average.
+
+If at least one of them was 20% visible or more, we probably don't need to trigger this. But otherwise, if the animation ended and the ghost is gone, we will need to trigger this.
+
+We will limit this hint by the level of the player, only for players below level 10.
 
 ---
 
@@ -329,17 +322,10 @@ We can probably trigger this by the repellent not hitting the ghost.
 
 *   **Scenario Description (Recap):** `GhostSprite` and `GhostBreach` are confirmed gone (either player saw it, or previous "PlayerMissed" hint was given and some time passed). Player remains in the haunted location for an extended period (e.g., X minutes) instead of returning to the truck to click "End Mission".
 *   **Goal of Hint:** Prompt the player to return to the truck and end the mission.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player is inside the location (`RoomDB`).
-    *   `GhostSprite` and `GhostBreach` entities are confirmed gone (internal flag `MissionObjectivesComplete` is true).
-    *   Timer `TimeSinceObjectivesCompletePlayerLingers` > X minutes (e.g., 1-2 mins).
-    *   `WalkiePlay.can_play(WalkieEvent::GhostExpelledPlayerLingers, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position`, `RoomDB`, internal flag for objectives complete, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `GhostExpelledPlayerLingers`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ReminderLow`, `DirectHint`, `Humorous`.
-*   **Repetition Strategy:** Can play a couple of times with increasing cooldown if player continues to linger.
-*   **Priority/Severity:** Low-Medium.
+
+We can just count 30 seconds of the player being in the location since the GhostSprite is gone.
+
+If GhostExpelledPlayerMissed we could give 30 seconds lead time before counting, for this, GhostExpelledPlayerMissed could mark GhostExpelledPlayerLingers once.
 
 ---
 
@@ -347,17 +333,9 @@ We can probably trigger this by the repellent not hitting the ghost.
 
 *   **Scenario Description (Recap):** Player's `RepellentFlask.qty` reaches 0. The `GhostSprite` still exists. The `GhostSprite.repellent_hits` for the *current ghost type* (matching `RepellentFlask.liquid_content` before it became `None`) is > 0, indicating the player was using the correct repellent type.
 *   **Goal of Hint:** Encourage the player, confirm their repellent choice was right, and instruct them to return to the truck to craft more.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player's `RepellentFlask.qty == 0` (event fires once when it transitions to 0).
-    *   `GhostSprite` entity still exists.
-    *   A temporary variable/check confirms that the `RepellentFlask.liquid_content` (just before becoming `None`) matched `GhostSprite.class` AND `GhostSprite.repellent_hits > 0` (or a similar stat showing the correct repellent was being effective).
-    *   `WalkiePlay.can_play(WalkieEvent::RepellentExhaustedGhostPresentCorrectType, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`RepellentFlask` state), `GhostSprite` entity status & `GhostSprite.class` & `GhostSprite.repellent_hits` (or a new field like `last_repellent_type_effective: bool`), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `RepellentExhaustedGhostPresentCorrectType`
-*   **Primary `WalkieTag`(s) for Line Selection:** `PlayerStruggling` (because ran out), `Encouraging`, `DirectHint`, `PositiveReinforcement` (for correct ID).
-*   **Repetition Strategy:** Once per "correct repellent exhausted" event.
-*   **Priority/Severity:** High. Critical for player to not give up if they were on the right track.
+
+
+Seems straightforward enough. The repellent being empty does not mean the repellent will not complete it's job, since it's in the air. So we need to also wait until the amount of particles of the repellent is low enough (<20).
 
 ---
 
@@ -365,9 +343,8 @@ We can probably trigger this by the repellent not hitting the ghost.
 
 
 
-Excellent! Let's maintain this momentum and move on to **`consumables_and_defense.ron`**.
 
-This file will cover hints related to the player's use (or lack thereof) of defensive and utility consumables like Salt, Quartz, and Sage, which are typically introduced in later chapters.
+
 
 ---
 
@@ -377,18 +354,13 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player has `GearKind::Salt` in their inventory, is in a relevant situation for its use (e.g., narrow corridor, doorway, suspected ghost path, trying to track a roaming ghost) but hasn't used any charges for an extended period or after significant ghost activity in that area.
 *   **Goal of Hint:** Remind the player about Salt's utility for tracking and suggest its use.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player `PlayerGear` contains `GearKind::Salt` with `SaltData.charges > 0`.
-    *   Player is in a "strategically relevant area" for salt (e.g., near a doorway in the ghost's room, in a narrow hallway the ghost frequents, or after observing ghost pass a point). This might require some heuristics or map annotation.
-    *   Timer `TimeSinceLastSaltUseInRelevantAreaOrGhostActivity` > X seconds/minutes.
-    *   AND/OR Ghost has recently passed through a "chokepoint" near the player, and player has salt.
-    *   `WalkiePlay.can_play(WalkieEvent::SaltUnusedInRelevantSituation, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`SaltData`), Player `Position`, `RoomDB` (for room/path context), ghost `Position` history (for pathing), local timers, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SaltUnusedInRelevantSituation`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ReminderLow`, `Guidance`, `ContextualHint`, `FirstTimeHint` (if it's the first time salt is relevant after being acquired).
-*   **Repetition Strategy:** Occasionally if relevant situations persist and salt remains unused.
-*   **Priority/Severity:** Medium-Low. Salt is useful but not always critical.
+
+This one is not really clear how it would work, or if it is needed, or even if it's helpful.
+
+Also the Salt is one of these items that might change use later.
+
+Probably we should skip doing this one.
+
 
 ---
 
@@ -396,35 +368,27 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** A hunt is starting (`GhostSprite.hunt_warning_active == true` or `GhostSprite.hunting > 0`), and the player has a `GearKind::QuartzStone` in their `PlayerGear` (hands or inventory) which is not yet shattered (`QuartzStoneData.cracks < MAX_CRACKS`).
 *   **Goal of Hint:** Remind the player that the Quartz Stone they are carrying offers passive protection during a hunt.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   (`GhostSprite.hunt_warning_active == true` OR `GhostSprite.hunting > 0.1`).
-    *   Player `PlayerGear` contains `GearKind::QuartzStone` with `QuartzStoneData.cracks < MAX_CRACKS`.
-    *   This hint should trigger shortly after the hunt/warning begins if quartz is available.
-    *   `WalkiePlay.can_play(WalkieEvent::QuartzUnusedInRelevantSituation, current_time)` returns true (using "Unused" in the event name is a bit of a misnomer as it's passive, but it's about awareness).
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`QuartzStoneData`), `GhostSprite` state, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `QuartzEquippedDuringHuntWarning` (renamed for clarity)
-*   **Primary `WalkieTag`(s) for Line Selection:** `FirstTimeHint` (for quartz's role), `FriendlyReminder`, `Encouraging`, `ConcernedWarning` (implicitly, as a hunt is dangerous).
-*   **Repetition Strategy:** Once per hunt if quartz is available and not shattered.
-*   **Priority/Severity:** Medium. Can increase survivability.
+
+This needs to be refactored. We probably should change this to tell the player that they're not using a Quartz stone and they could. This means they have not picked one from the Truck in this mission, and the ghost is getting angry.
+
+Some voice lines might need change here.
+
+This should only play once per mission. And of course it should play only if Quartz is available in the truck.
+
+We should limit this to happen only after the ghost has hunted once.
 
 ---
 
 **3. `WalkieEventConceptEntry: SageUnusedInRelevantSituation`**
 
-*   **Scenario Description (Recap):** Ghost's `rage` is high (e.g., > 75% of `rage_limit`) OR `GhostSprite.hunt_warning_active == true`, and the player has `GearKind::SageBundle` in inventory with `SageBundleData.consumed == false` but hasn't activated it.
+*   **Scenario Description (Recap):** Ghost's `rage` is high (e.g., > 50% of `rage_limit`) OR `GhostSprite.hunt_warning_active == true`, and the player has `GearKind::SageBundle` in inventory with `SageBundleData.consumed == false` but hasn't activated it.
 *   **Goal of Hint:** Suggest using Sage to potentially calm the ghost or provide cover/confusion if a hunt starts.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player `PlayerGear` contains `GearKind::SageBundle` with `SageBundleData.consumed == false`.
-    *   (`GhostSprite.rage / GhostSprite.rage_limit > 0.75` AND `GhostSprite.calm_time_secs <= 0`) OR `GhostSprite.hunt_warning_active == true`.
-    *   Timer `TimeSinceHighRageOrHuntWarningWithSageUnused` > X seconds.
-    *   `WalkiePlay.can_play(WalkieEvent::SageUnusedInRelevantSituation, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`SageBundleData`), `GhostSprite` state, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SageUnusedInRelevantSituation`
-*   **Primary `WalkieTag`(s) for Line Selection:** `Guidance`, `ConcernedWarning`, `ContextualHint`, `ReminderLow`.
-*   **Repetition Strategy:** Once per high-rage/pre-hunt situation if sage is available.
-*   **Priority/Severity:** Medium. Sage can be a useful tactical tool.
+
+We should limit this to happen only after the ghost has hunted once.
+
+We could also refactor this to be when the player doesn't use it, meaning it's in the truck but not on their inventory, never used.
+
+We need to see how to avoid this and QuartzUnusedInRelevantSituation from playing in the same hunt number. If one plays, the other should be marked.
 
 ---
 
@@ -432,16 +396,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player uses a charge of Salt (`SaltData.spawn_salt` was true, now false), but the `Position` where it was dropped is in a very open area (e.g., center of a large room) rather than a chokepoint like a doorway or narrow corridor.
 *   **Goal of Hint:** Advise the player on more strategic salt placement for better tracking.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `SaltData.spawn_salt` just transitioned from true to false (salt was just dropped).
-    *   The drop `Position` is checked against map geometry: if it's > X units away from any wall/doorway in an open room (room size also a factor).
-    *   `WalkiePlay.can_play(WalkieEvent::SaltDroppedIneffectively, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player `Position` (at time of drop), `BoardData.collision_field`, `RoomDB` (for room geometry), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SaltDroppedIneffectively`
-*   **Primary `WalkieTag`(s) for Line Selection:** `PlayerStruggling`, `Guidance`, `ContextualHint`, `Humorous`.
-*   **Repetition Strategy:** If player repeatedly places salt poorly. Cooldown.
-*   **Priority/Severity:** Low-Medium. Helps optimize salt use.
+
+No, I don't think we should do this at all. Probably it's best if we remove this. We can't give these kinds of hints effectively.
 
 ---
 
@@ -449,15 +405,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** The player's `QuartzStoneData.cracks` count increases by one due to absorbing hunt energy.
 *   **Goal of Hint:** Inform the player that their Quartz Stone took damage but successfully protected them, and that it has limited durability.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `QuartzStoneData.cracks` value increases. This event fires once per crack.
-    *   `WalkiePlay.can_play(WalkieEvent::QuartzCrackedFeedback, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`QuartzStoneData`), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `QuartzCrackedFeedback`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ImmediateResponse`, `PositiveReinforcement` (it worked!), `NeutralObservation`, `ConcernedWarning` (it's getting used up).
-*   **Repetition Strategy:** Once per crack level.
-*   **Priority/Severity:** Medium. Important feedback on consumable use.
+
+We need to wait until the ghost calms down to do this, or the player exited the location.
 
 ---
 
@@ -465,15 +414,9 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** The player's `QuartzStoneData.cracks` reaches `MAX_CRACKS` (or a `is_shattered` flag becomes true), meaning it's now useless.
 *   **Goal of Hint:** Inform the player their Quartz Stone is broken and no longer offers protection.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `QuartzStoneData.cracks >= MAX_CRACKS` (event fires once when this threshold is met/exceeded).
-    *   `WalkiePlay.can_play(WalkieEvent::QuartzShatteredFeedback, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`QuartzStoneData`), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `QuartzShatteredFeedback`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ImmediateResponse`, `ConcernedWarning`, `PlayerStruggling` (now more vulnerable).
-*   **Repetition Strategy:** Once when the stone shatters.
-*   **Priority/Severity:** Medium-High. Player needs to know their defense is gone.
+
+We need to wait until the ghost calms down to do this, or the player exited the location.
+
 
 ---
 
@@ -481,16 +424,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player activates `SageBundleData` (`is_active == true`), but the spawned `SageSmokeParticle` entities are not near the `GhostSprite.Position` or its recent path for X seconds.
 *   **Goal of Hint:** Advise the player to get the sage smoke closer to the ghost for it to have an effect.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `SageBundleData.is_active == true` and `burn_timer` is running.
-    *   A system checks the average distance of recent `SageSmokeParticle` entities from the `GhostSprite.Position` (or its last known strong activity area). If this average distance is > Y units for X seconds.
-    *   `WalkiePlay.can_play(WalkieEvent::SageActivatedIneffectively, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`SageBundleData`), `SageSmokeParticle` positions, `GhostSprite.Position`, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SageActivatedIneffectively`
-*   **Primary `WalkieTag`(s) for Line Selection:** `PlayerStruggling`, `Guidance`, `ContextualHint`.
-*   **Repetition Strategy:** If player repeatedly uses sage far from the ghost. Cooldown.
-*   **Priority/Severity:** Medium. Helps with effective consumable use.
+
+Let's do it simple: We need to wait until the sage runs out. And check if the ghost was smoked or not, if it wasn't, then we play the message.
 
 ---
 
@@ -498,17 +433,9 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** `GhostSprite.hunting > 0` (actively hunting), player has `SageBundleData` available (`consumed == false`), but does not activate it within X seconds of the hunt starting or when ghost is very close.
 *   **Goal of Hint:** Remind the player that Sage can be used defensively during a hunt to create confusion or break line of sight.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `GhostSprite.hunting > 0.1`.
-    *   Player `PlayerGear` contains `SageBundleData` with `consumed == false` and `is_active == false`.
-    *   Timer `TimeSinceHuntStartWithSageAvailable` > X seconds (e.g., 3-5s) OR `GhostSprite.Position.distance(Player.Position) < CloseRangeDuringHuntThreshold`.
-    *   `WalkiePlay.can_play(WalkieEvent::SageUnusedDefensivelyDuringHunt, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`SageBundleData`), `GhostSprite.hunting` state & `Position`, Player `Position`, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SageUnusedDefensivelyDuringHunt`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ConcernedWarning`, `DirectHint`, `ImmediateResponse`, `PlayerStruggling`.
-*   **Repetition Strategy:** Once per hunt if applicable.
-*   **Priority/Severity:** Medium-High. Can be a lifesaver.
+
+We should wait until the hunt is over, then remind the player.
+
 
 ---
 
@@ -529,37 +456,25 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** The `GhostSprite.hunt_warning_active == true` (e.g., ghost is roaring, lights flickering intensely as a pre-hunt signal), but the player doesn't take evasive action (move towards a known hiding spot, attempt to leave the current room/area, or use a defensive item like Sage) for X seconds after the warning starts.
 *   **Goal of Hint:** Urgently prompt the player to react to the hunt warning by hiding or creating distance.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `GhostSprite.hunt_warning_active == true`.
-    *   `GhostSprite.hunt_warning_timer` is, for example, > Y seconds from its start OR < Z seconds from its end (to give a chance before hunt fully starts).
-    *   Player's `Position` has not significantly changed vector towards an exit or known `Behavior.p.object.hidingspot`.
-    *   Player has not activated `SageBundleData` (if available).
-    *   `WalkiePlay.can_play(WalkieEvent::HuntWarningNoPlayerEvasion, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `GhostSprite` state (`hunt_warning_active`, `hunt_warning_timer`), Player `Position` & movement vector, known hiding spot locations/entities, `PlayerGear` (for Sage status), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `HuntWarningNoPlayerEvasion`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ConcernedWarning`, `DirectHint`, `ImmediateResponse`, `UrgentReminder` (or `ReminderHigh`).
-*   **Repetition Strategy:** Once per hunt warning phase if player is unresponsive.
-*   **Priority/Severity:** Very High. Critical for survival.
+
+Most players will understand this on their own, so there's not much point to this. Additionally, the amount of time we have to give the warning and the ghost attacking is pretty low. So this probably won't work.
+
+Knowing that the player is taking evsive action is from hard to impossible. And even if doable, it needs several seconds to analyze, of which are crucial to deliver the message on time.
+
+We could, optionally, reserve this for big maps, and trigger only if the ghost rages far away from the player. Otherwise I don't think this is usable.
 
 ---
 
 **2. `WalkieEventConceptEntry: HuntActiveNearHidingSpotNoHide`**
 
-*   **Scenario Description (Recap):** `GhostSprite.hunting > 0.1` (actively hunting and visible/audible), player is within close proximity (e.g., 1-2 units) to a valid `Behavior.p.object.hidingspot == true` but does not initiate the hide action (`[E]` hold) for X seconds.
+*   **Scenario Description (Recap):** `GhostSprite.hunting > 10.0` (actively hunting and visible/audible), player is within close proximity (e.g., 1-2 units) to a valid `Behavior.p.object.hidingspot == true` but does not initiate the hide action (`[E]` hold) for X seconds.
 *   **Goal of Hint:** Urgently direct the player to use the nearby hiding spot.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `GhostSprite.hunting > 0.1`.
-    *   Player `Position` is within interaction range of an `Entity` with `Behavior.p.object.hidingspot == true`.
-    *   Player does not have the `Hiding` component.
-    *   Timer `TimeNearHidingSpotDuringHuntNoHide` > X seconds (e.g., 1-2s, needs to be quick).
-    *   `WalkiePlay.can_play(WalkieEvent::HuntActiveNearHidingSpotNoHide, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `GhostSprite.hunting` state, Player `Position` & presence of `Hiding` component, nearby entity `Behavior.p.object.hidingspot`, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `HuntActiveNearHidingSpotNoHide`
-*   **Primary `WalkieTag`(s) for Line Selection:** `UrgentReminder`, `DirectHint`, `ContextualHint`, `PlayerStruggling`, `ImmediateResponse`.
-*   **Repetition Strategy:** Can play quickly if player remains near a hiding spot during a hunt without using it.
-*   **Priority/Severity:** Critical. Key survival mechanic.
+
+This is an interesting concept. We don't need to see if the player tries or does not try to hide, we could point it out straight away.
+
+We should trigger an event to highlight the place to hide for 10 seconds.
+
+
 
 ---
 
@@ -567,17 +482,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player has the `Hiding` component. The `GhostSprite.hunting` state has returned to 0 (or very low) for X seconds (e.g., 10-15s), indicating the hunt is over, but the player remains hidden.
 *   **Goal of Hint:** Inform the player that the immediate danger has likely passed and they can safely unhide.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player has `Hiding` component.
-    *   `GhostSprite.hunting < 0.01` (or some "not hunting" threshold).
-    *   Timer `TimeSinceHuntEndedWhileHidden` > X seconds (e.g., 10-15s).
-    *   `WalkiePlay.can_play(WalkieEvent::PlayerStaysHiddenTooLong, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, Player presence of `Hiding` component, `GhostSprite.hunting` state, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `PlayerStaysHiddenTooLong`
-*   **Primary `WalkieTag`(s) for Line Selection:** `DelayedObservation`, `Guidance`, `Encouraging`.
-*   **Repetition Strategy:** Once after a hunt if player remains hidden for an extended period.
-*   **Priority/Severity:** Low-Medium.
+
+A very good idea here. Doesn't seem too complicated to do.
 
 ---
 
@@ -585,18 +491,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player is using the EMF Meter, and it's showing minor, non-evidence-level activity (e.g., `EMFMeter.emf_level` is `EMF2`, `EMF3`, or `EMF4` but not `EMF5`) in an area, but the player quickly moves on or switches gear without further investigation or noting the general activity.
 *   **Goal of Hint:** Teach the player that even non-EMF5 readings can indicate ghost presence/activity and are useful for tracking or pinpointing areas of interest.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   Player is using an active `EMFMeter`.
-    *   `EMFMeter.emf_level` registers as `EMF2`-`EMF4` for a brief period.
-    *   Player then deactivates EMF, switches gear, or moves > Y distance away from that spot within Z (short) seconds.
-    *   This pattern (brief minor EMF, then disengagement) happens N times in the mission without leading to stronger evidence.
-    *   `WalkiePlay.can_play(WalkieEvent::EMFMinorFluctuationsIgnored, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerGear` (`EMFMeter` state), Player `Position` & movement history, counter for this specific pattern, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `EMFMinorFluctuationsIgnored`
-*   **Primary `WalkieTag`(s) for Line Selection:** `Guidance`, `NeutralObservation`, `PlayerStruggling` (if repeated often), `FirstTimeHint` (for interpreting minor EMF).
-*   **Repetition Strategy:** Can play a few times per mission if player consistently ignores these subtle cues.
-*   **Priority/Severity:** Medium-Low. Helps with nuanced investigation.
+
+We should scrap this. The EMF tool is very bad at finding anything.
 
 ---
 
@@ -617,53 +513,32 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 **1. `WalkieEventConceptEntry: SanityDroppedBelowThresholdDarkness`**
 
-*   **Scenario Description (Recap):** Player's sanity (`PlayerSprite.sanity()`) drops below a certain threshold (e.g., 70%) for the first time in the mission, and the primary contributing factor seems to be prolonged exposure to darkness (player has been in low `BoardData.light_field` areas for a significant portion of the time leading up to the sanity drop).
+*   **Scenario Description (Recap):** Player's sanity (`PlayerSprite.sanity()`) drops below a certain threshold (e.g., 50%) for the first time in the mission, and the primary contributing factor seems to be prolonged exposure to darkness (player has been in low `BoardData.light_field` areas for a significant portion of the time leading up to the sanity drop).
 *   **Goal of Hint:** Inform the player about sanity loss in darkness and suggest using room lights or returning to the truck.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `PlayerSprite.sanity()` drops below (e.g., 70%) for the first time this mission (requires tracking a `sanity_threshold_warning_given_darkness` flag per mission).
-    *   A heuristic determines darkness is the likely cause (e.g., average `BoardData.light_field[player_pos].lux` over the last X seconds has been below `DarkThreshold`, and ghost proximity/events have been minimal).
-    *   `WalkiePlay.can_play(WalkieEvent::SanityDroppedBelowThresholdDarkness, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerSprite.sanity()`, `BoardData.light_field`, Player `Position` history (to average light exposure), mission-specific warning flag, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SanityDroppedBelowThresholdDarkness`
-*   **Primary `WalkieTag`(s) for Line Selection:** `FirstTimeHint` (for this specific cause of sanity loss), `ConcernedWarning`, `Guidance`, `ContextualHint`.
-*   **Repetition Strategy:** Once per mission if primarily due to darkness.
-*   **Priority/Severity:** Medium. Important for teaching core sanity mechanic.
+
+Mainly we check sanity dropped below 50%. That will be triggering either SanityDroppedBelowThresholdDarkness or SanityDroppedBelowThresholdGhost.
+
+The main decision on when to trigger each one is the avg proximity to the ghost in the last 10 seconds, if it was close, then SanityDroppedBelowThresholdGhost otherwise SanityDroppedBelowThresholdDarkness
 
 ---
 
 **2. `WalkieEventConceptEntry: SanityDroppedBelowThresholdGhost`**
 
-*   **Scenario Description (Recap):** Player's sanity drops below a certain threshold (e.g., 70%) for the first time, and the primary contributing factor appears to be recent ghost proximity or significant paranormal events (e.g., ghost manifestation, objects thrown, loud noises attributed to ghost).
+*   **Scenario Description (Recap):** Player's sanity drops below a certain threshold (e.g., 50%) for the first time, and the primary contributing factor appears to be recent ghost proximity or significant paranormal events (e.g., ghost manifestation, objects thrown, loud noises attributed to ghost).
 *   **Goal of Hint:** Inform the player that ghost interactions drain sanity and suggest returning to the truck to recover.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `PlayerSprite.sanity()` drops below (e.g., 70%) for the first time this mission (requires tracking a `sanity_threshold_warning_given_ghost` flag per mission).
-    *   A heuristic determines ghost activity is the likely cause (e.g., player was recently within X distance of `GhostSprite` for Y seconds, OR a major `GhostEvent` occurred nearby recently, and light levels have been adequate).
-    *   `WalkiePlay.can_play(WalkieEvent::SanityDroppedBelowThresholdGhost, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerSprite.sanity()`, `GhostSprite.Position`, recent `GhostEvent` log, Player `Position` history, mission-specific warning flag, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `SanityDroppedBelowThresholdGhost`
-*   **Primary `WalkieTag`(s) for Line Selection:** `FirstTimeHint`, `ConcernedWarning`, `Guidance`.
-*   **Repetition Strategy:** Once per mission if primarily due to ghost activity.
-*   **Priority/Severity:** Medium.
 
 ---
+
+This one needs to be developed at the same time with SanityDroppedBelowThresholdDarkness.
+
 
 **3. `WalkieEventConceptEntry: VeryLowSanityNoTruckReturn`**
 
 *   **Scenario Description (Recap):** Player's sanity (`PlayerSprite.sanity()`) is critically low (e.g., < 30%), visual/audio "insanity" effects are likely active, and the player has not moved towards the van/exit or entered the truck for X seconds/minutes since sanity became critical.
 *   **Goal of Hint:** Urgently warn the player about their critical sanity and strongly advise returning to the truck immediately.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `PlayerSprite.sanity() < CriticalSanityThreshold` (e.g., 30%).
-    *   Timer `TimeSinceSanityCriticalNoTruckReturn` > X seconds (e.g., 20-30s). This timer starts/resets when sanity drops below critical or player enters truck.
-    *   Player is inside the location (not in "VanArea").
-    *   `WalkiePlay.can_play(WalkieEvent::VeryLowSanityNoTruckReturn, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerSprite.sanity()`, Player `Position`, "VanArea" definition, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `VeryLowSanityNoTruckReturn`
-*   **Primary `WalkieTag`(s) for Line Selection:** `UrgentReminder` (or `ReminderHigh`), `ConcernedWarning`, `DirectHint`, `PlayerStruggling`.
-*   **Repetition Strategy:** Can play multiple times with a shorter cooldown if sanity remains critical and player doesn't act.
-*   **Priority/Severity:** Very High. Critical for player survival/mission success.
+
+We can wait for 20 seconds to see if the player exits the location, if not and the sanity is below 30%, then we trigger the message.
+
 
 ---
 
@@ -671,18 +546,8 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player's health (`PlayerSprite.health`) drops below a certain threshold (e.g., < 50% or < 30%) due to any reason (could be a lingering effect from a hunt, an environmental hazard if any exist, etc.), and they are not in the truck.
 *   **Goal of Hint:** Advise the player that their health is low and they should consider returning to the truck to recover.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   `PlayerSprite.health < LowHealthThreshold` (e.g., 40%).
-    *   Player is inside the location (not in "VanArea").
-    *   Timer `TimeSinceLowHealthNoTruckReturn` > X seconds (e.g., 15-20s). Timer resets if health recovers above threshold or player enters truck.
-    *   This hint might have a lower priority or longer cooldown if a `VeryLowSanity` hint is also eligible, to avoid hint spam.
-    *   `WalkiePlay.can_play(WalkieEvent::LowHealthGeneralWarning, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerSprite.health`, Player `Position`, "VanArea" definition, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `LowHealthGeneralWarning`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ConcernedWarning`, `Guidance`, `ReminderLow`.
-*   **Repetition Strategy:** Once or twice per significant health drop if player doesn't recover.
-*   **Priority/Severity:** Medium. Health is important, but sanity often drives more immediate threats.
+
+Seems straightforward. If the player health is below 50% for 30 seconds, and inside the location for the whole time, we play the message.
 
 ---
 
@@ -701,17 +566,9 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** Player starts a mission (after their very first one, where loadouts become more customizable), enters the truck, then leaves the truck to enter the haunted location *without* having interacted with the "Loadout" tab in the `TruckUI`. This hint is more relevant if their previous mission's loadout was significantly different or if they have new gear available.
 *   **Goal of Hint:** Gently remind the player that they can customize their gear via the loadout tab, especially if they seem to be repeatedly using a suboptimal or default kit.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None` (player just exited truck).
-    *   This is *not* the player's absolute first mission (e.g., check `PlayerProfileData.statistics.total_missions_completed > 0` or a similar progression metric).
-    *   A flag ` interacted_with_loadout_tab_this_truck_visit` is `false`. This flag is set to `true` when the Loadout tab is opened, and reset when the player leaves the truck.
-    *   *Optional advanced condition:* The player's current `PlayerGear` is identical to the default starting gear for the difficulty OR identical to their loadout from the *previous* mission, AND new gear types are available in `TruckGear` that they haven't equipped.
-    *   `WalkiePlay.can_play(WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, `PlayerProfileData` (for mission count/progression), `TruckUI` tab interaction state (local flag), `PlayerGear`, `TruckGear` (available items in truck), `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `PlayerLeavesTruckWithoutChangingLoadout`
-*   **Primary `WalkieTag`(s) for Line Selection:** `FriendlyReminder`, `Guidance`, `ContextualHint`.
-*   **Repetition Strategy:** Infrequently. Perhaps once per mission if conditions are met, or if player consistently ignores new gear unlocks across several missions.
-*   **Priority/Severity:** Low. This is more of a quality-of-life / optimization hint.
+
+This needs to be merged with the existing GearInVan event. It's the same thing. We can merge the voice lines.
+
 
 ---
 
@@ -719,19 +576,10 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** All primary mission objectives are complete (e.g., `GhostSprite` and `GhostBreach` are despawned/neutralized), the player has returned to the truck (`GameState::Truck`), but they haven't clicked the "End Mission" button in the `TruckUI` for X seconds/minutes.
 *   **Goal of Hint:** Prompt the player to finalize the mission by clicking the "End Mission" button.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::Truck`.
-    *   A global flag `MissionObjectivesComplete` is `true` (set when ghost and breach are gone).
-    *   Timer `TimeSinceObjectivesCompleteInTruckNoEnd` > X seconds (e.g., 20-30s). This timer starts when player enters truck *after* objectives are complete.
-    *   `WalkiePlay.can_play(WalkieEvent::AllObjectivesMetReminderToEndMission, current_time)` returns true.
-*   **Key Game Data/Resources Needed:** `GameState`, global flag for `MissionObjectivesComplete`, local timer, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `AllObjectivesMetReminderToEndMission`
-*   **Primary `WalkieTag`(s) for Line Selection:** `ReminderLow`, `DirectHint`, `PositiveReinforcement`.
-*   **Repetition Strategy:** Can play a couple of times if player idles in the truck after completing objectives. Increasing cooldown.
-*   **Priority/Severity:** Medium. Ensures player completes the mission loop.
 
----
+This seems to be an addendum to GhostExpelledPlayerLingers.
 
+We need to analyze if these should be still separate events, or if they should be merged.
 
 
 
@@ -751,24 +599,7 @@ This file will cover hints related to the player's use (or lack thereof) of defe
 
 *   **Scenario Description (Recap):** It's the player's absolute first mission (e.g., `PlayerProfileData.statistics.total_missions_completed == 0` and `PlayerProfileData.achievements.expelled_first_ghost == false`). The player has started the mission, is in the van or immediate vicinity, and has not moved towards or interacted with the entrance to the actual haunted location for an extended period (e.g., 45-60 seconds).
 *   **Goal of Hint:** Very gently guide the brand-new player to physically enter the mission area.
-*   **Trigger Logic (Conceptual):**
-    *   `GameState` is `GameState::None`.
-    *   This is the player's first ever mission (checked via `PlayerProfileData` stats/achievements).
-    *   `Time.elapsed_seconds_since_level_ready > X` (e.g., 45-60s, a bit longer to allow initial fumbling).
-    *   Player's `Position` is still within a small radius of their initial spawn point (or a designated "VanArea").
-    *   Player has not interacted with the main entrance door of the location.
-    *   `WalkiePlay.can_play(WalkieEvent::FirstMissionPlayerNotEnteringCabin, current_time)` returns true (this event should have a very high `time_to_play` after its first trigger, effectively making it play only once per profile).
-*   **Key Game Data/Resources Needed:** `GameState`, `Time` (since `LevelReadyEvent`), Player `Position`, initial player spawn `Position`, "VanArea" definition, main entrance door interaction state, `PlayerProfileData`, `WalkiePlay`.
-*   **`WalkieEvent` Enum Variant:** `FirstMissionPlayerNotEnteringCabin`
-*   **Primary `WalkieTag`(s) for Line Selection:** `TutorialSpecific`, `FirstTimeHint`, `DirectHint`, `Encouraging`.
-*   **Repetition Strategy:** Ideally, only once per player profile, ever. The `WalkiePlay.time_to_play` for this event should be set astronomically high after the first trigger, or a global "tutorial step completed" flag in `PlayerProfileData` should prevent it.
-*   **Priority/Severity:** High (for the very first mission). Essential to get the player started.
 
----
 
-**Considerations for `tutorial_specific_flow.ron`:**
+We already have hints for this, we can remove these.
 
-*   **Minimalism:** This file should remain very small. Most tutorial hints, even for first-time mechanics, are better handled by `FirstTimeHint` tags within the functionally-categorized RON files (e.g., first time using EMF, first time seeing breach). This keeps `tutorial_specific_flow.ron` for only the absolute, unmissable, "player is literally not starting the game" scenarios.
-*   **Profile-Wide Tracking:** The repetition strategy for hints in this file almost certainly needs to be tied to `PlayerProfileData` achievements or flags to ensure they don't replay for experienced players starting a new game or replaying tutorial maps. The `WalkiePlay`'s per-mission tracking might not be sufficient for "once ever" hints. This is a more advanced feature but important for this category. For an MVP, a very long `time_to_play` cooldown after the first trigger might suffice.
-
----

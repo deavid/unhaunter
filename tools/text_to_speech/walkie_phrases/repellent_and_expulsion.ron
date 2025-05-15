@@ -114,8 +114,8 @@ WalkiePhraseFile(
       name: "RepellentUsedGhostEnragesPlayerFlees", // Player uses repellent, ghost enrages, player flees
       lines: [
         WalkieLineEntry(
-          tts_text: "Whoa, it is properly furious now! That stuff definitely got its attention. If you think you have got the right mix, hold your nerve and keep at it. If not, might be time for a tactical retreat to the truck to rethink.",
-          subtitle_text: "Whoa, it's properly furious now! That stuff definitely got its attention. If you think you've got the right mix, hold your nerve and keep at it. If not, might be time for a tactical retreat to the truck to rethink.",
+          tts_text: "Whoa, it is properly furious now! That stuff definitely got its attention. If you think you have got the right mix, hold your nerve and keep at it.",
+          subtitle_text: "Whoa, it's properly furious now! That stuff definitely got its attention. If you think you've got the right mix, hold your nerve and keep at it.",
           tags: [ConcernedWarning, Guidance, ImmediateResponse, PlayerStruggling, MediumLength, FirstTimeHint],
         ),
         WalkieLineEntry(
@@ -129,13 +129,13 @@ WalkiePhraseFile(
           tags: [NeutralObservation, Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
-          tts_text: "Okay, it is throwing a tantrum. That is to be expected when you try to evict an angry spirit. Are you sure about your repellent choice?",
-          subtitle_text: "Okay, it's throwing a tantrum. That's to be expected when you try to evict an angry spirit. Are you sure about your repellent choice?",
+          tts_text: "Okay, it is throwing a tantrum. That is to be expected when you try to evict an angry spirit.",
+          subtitle_text: "Okay, it's throwing a tantrum. That's to be expected when you try to evict an angry spirit.",
           tags: [Humorous, Questioning, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
-          tts_text: "It is definitely upset by that. If you are confident in your ghost ID, you might need to persist with the repellent. If not, regroup at the truck.",
-          subtitle_text: "It's definitely upset by that. If you're confident in your ghost ID, you might need to persist with the repellent. If not, regroup at the truck.",
+          tts_text: "It is definitely upset by that. If you are confident in your ghost ID, you might need to persist with the repellent.",
+          subtitle_text: "It's definitely upset by that. If you're confident in your ghost ID, you might need to persist with the repellent.",
           tags: [Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
@@ -144,8 +144,8 @@ WalkiePhraseFile(
           tags: [NeutralObservation, Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
-          tts_text: "A lot of noise and fury! That is common when the repellent starts working... or when it is the wrong one. Stick around if you dare, or check your notes.",
-          subtitle_text: "A lot of noise and fury! That's common when the repellent starts working... or when it's the wrong one. Stick around if you dare, or check your notes.",
+          tts_text: "A lot of noise and fury! That is common when the repellent starts working... or when it is the wrong one. They don't like it either way.",
+          subtitle_text: "A lot of noise and fury! That's common when the repellent starts working... or when it's the wrong one. They don't like it either way.",
           tags: [ConcernedWarning, Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
@@ -154,13 +154,13 @@ WalkiePhraseFile(
           tags: [Encouraging, Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
-          tts_text: "That reaction means you are on its radar now. If that was the right stuff, keep it up. If you are unsure, best to fall back and check the journal.",
-          subtitle_text: "That reaction means you're on its radar now. If that was the right stuff, keep it up. If you're unsure, best to fall back and check the journal.",
+          tts_text: "That reaction means you are on its radar now. If that was the right stuff, keep it up.",
+          subtitle_text: "That reaction means you're on its radar now. If that was the right stuff, keep it up.",
           tags: [Guidance, PlayerStruggling, MediumLength],
         ),
         WalkieLineEntry(
-          tts_text: "It is certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out, or retreat and confirm.",
-          subtitle_text: "It's certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out, or retreat and confirm.",
+          tts_text: "It is certainly not pleased with that repellent. The question is, is it the right kind of not pleased? Only one way to find out!",
+          subtitle_text: "It's certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out!",
           tags: [Questioning, Guidance, PlayerStruggling, MediumLength],
         ),
       ],

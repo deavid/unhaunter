@@ -80,6 +80,14 @@ fn main() {
         }
     };
 
+    // Create a set of all detailed_manifest_keys from the current RON definitions.
+    // This will be used to prune the manifest of any entries that no longer correspond
+    // to a defined voice line.
+    let current_defined_keys: HashSet<String> = audio_tasks
+        .iter()
+        .map(|task| task.detailed_manifest_key.clone())
+        .collect();
+
     let all_generated_ogg_paths = Arc::new(Mutex::new(HashSet::<String>::new()));
     let manifest_mutex = Arc::new(Mutex::new(manifest));
 
@@ -134,35 +142,27 @@ fn main() {
         .into_inner()
         .expect("Failed to unwrap paths Mutex");
 
-    if cli.delete_unused {
-        println!("Cleaning manifest of entries from deleted RON files...");
-        // ron_files is Vec<PathBuf> from scan_ron_files earlier
-        let active_ron_filenames: HashSet<String> = ron_files
-            .iter()
-            .map(|path_buf| {
-                path_buf
-                    .file_name()
-                    .unwrap_or_default() // Should always have a filename for valid ron_files
-                    .to_str()
-                    .unwrap_or_default() // Filenames should be valid UTF-8
-                    .to_string()
-            })
-            .collect();
+    // Prune manifest to remove entries for lines/concepts no longer defined in any RON file
+    // or lines/concepts removed from existing RON files. This ensures the manifest accurately
+    // reflects the current state of definitions.
+    println!("Synchronizing manifest with current RON definitions...");
+    let original_manifest_size_before_pruning = manifest_final.len();
+    manifest_final.retain(|key, _entry| current_defined_keys.contains(key));
+    let new_manifest_size_after_pruning = manifest_final.len();
 
-        let original_manifest_size = manifest_final.len();
-        manifest_final.retain(|_key, manifest_entry| {
-            active_ron_filenames.contains(&manifest_entry.ron_file_source)
-        });
-        let cleaned_manifest_size = manifest_final.len();
-        if original_manifest_size > cleaned_manifest_size {
-            println!(
-                "Removed {} stale entries from the manifest.",
-                original_manifest_size - cleaned_manifest_size
-            );
-        } else {
-            println!("No stale entries found in the manifest.");
-        }
+    if original_manifest_size_before_pruning > new_manifest_size_after_pruning {
+        println!(
+            "Removed {} stale entries from the manifest (lines/concepts no longer defined, or from deleted RON files).",
+            original_manifest_size_before_pruning - new_manifest_size_after_pruning
+        );
+    } else {
+        println!("Manifest is already synchronized with current RON definitions.");
     }
+
+    // The `if cli.delete_unused` block that previously handled manifest cleaning
+    // based on deleted RON files is now effectively superseded by the more comprehensive
+    // pruning logic above. The `cli.delete_unused` flag will still control
+    // OGG file cleanup and Rust code generation aspects.
 
     save_manifest(&manifest_final).expect("Failed to save manifest"); // from crate::manifest_handling
 

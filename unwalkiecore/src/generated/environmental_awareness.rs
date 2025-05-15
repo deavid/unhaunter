@@ -12,7 +12,6 @@ pub enum EnvironmentalAwarenessConcept {
     IgnoredObviousBreach,
     IgnoredVisibleGhost,
     RoomLightsOnGearNeedsDark,
-    WildFlashlightSweeping,
 }
 
 impl EnvironmentalAwarenessConcept {
@@ -387,68 +386,6 @@ impl EnvironmentalAwarenessConcept {
                     subtitle_text: "It's a bit like looking for stars in the daytime with those lights on. Some things just need the dark to shine.".to_string(),
                     tags: vec![WalkieTag::Guidance, WalkieTag::Humorous, WalkieTag::MediumLength],
                     length_seconds: 7,
-                },
-            ],
-            Self::WildFlashlightSweeping => vec![
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_01.ogg".to_string(),
-                    subtitle_text: "Easy with the torch there, love. You're lighting up the ceiling more than the room. Try to keep it steady on what you're looking at.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::Humorous, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_02.ogg".to_string(),
-                    subtitle_text: "Are you trying to signal ships with that flashlight beam? A slower, more focused sweep might help you spot things.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_03.ogg".to_string(),
-                    subtitle_text: "Things are easier to see if the light isn't darting about like a startled firefly. Steady hands, steady beam.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::Humorous, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_04.ogg".to_string(),
-                    subtitle_text: "A bit more focus with that torch, if you please. We're looking for subtle clues, not trying to induce a rave.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_05.ogg".to_string(),
-                    subtitle_text: "Remember, a concentrated beam can reveal more than a wild one. Point it where you want to see.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::ReminderLow],
-                    length_seconds: 6,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_06.ogg".to_string(),
-                    subtitle_text: "You'll give yourself a headache waving that torch around so much. Try a more methodical approach to lighting the area.".to_string(),
-                    tags: vec![WalkieTag::ConcernedWarning, WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_07.ogg".to_string(),
-                    subtitle_text: "It's a flashlight, not a disco ball. Keep it aimed where you're looking, it helps.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling, WalkieTag::SnarkyHumor],
-                    length_seconds: 6,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_08.ogg".to_string(),
-                    subtitle_text: "If you shine the light directly on things, they tend to become more visible. Just a pro tip.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::SnarkyHumor],
-                    length_seconds: 6,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_09.ogg".to_string(),
-                    subtitle_text: "The idea is to illuminate potential evidence, not paint the walls with light strokes. Focus that beam.".to_string(),
-                    tags: vec![WalkieTag::Guidance, WalkieTag::MediumLength, WalkieTag::PlayerStruggling],
-                    length_seconds: 7,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/environmental_awareness/wildflashlightsweeping_10.ogg".to_string(),
-                    subtitle_text: "A steady light helps spot those fleeting details. Try not to flick it about too much.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::Guidance, WalkieTag::MediumLength],
-                    length_seconds: 6,
                 },
             ],
         }

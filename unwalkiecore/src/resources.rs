@@ -43,6 +43,9 @@ impl WalkiePlay {
             }
             return false;
         }
+        // TODO: Priority should lower by the count of times played, and we need to know what is the highest priority event that is attempting to play.
+        // ... to know the highest priority that tries to play we need to compute some kind of running average of the inverse of priority, so it decays over time.
+        // ... if an event of lower priority attempts to play, compared to the average priority in the queue, we should ignore it.
         self.urgent_pending = false;
         let mut count = 0;
         if let Some(event_stats) = self.played_events.get(&event) {
