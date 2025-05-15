@@ -3,7 +3,7 @@
 //! Utility functions for the walkie_voice_generator tool.
 
 use crate::ron_types::{WalkieEventConceptEntry, WalkieLineEntry, WalkiePhraseFile};
-use ron::ser::{PrettyConfig, to_string_pretty};
+use ron::ser::{to_string_pretty, PrettyConfig};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::ffi::OsStr;

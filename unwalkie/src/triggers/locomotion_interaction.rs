@@ -14,6 +14,10 @@ const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
 const ERRATIC_MOVEMENT_EARLY_SECONDS: f32 = 5.0;
 const PLAYER_ERRATIC_MAX_DISTANCE: f32 = 6.0;
 
+/// Checks if the player is stuck at the spawn point for too long at the start of a mission.
+///
+/// If the player hasn't entered the location and remains near the spawn for a threshold duration,
+/// triggers a walkie-talkie warning. The threshold is higher for experienced players.
 fn check_player_stuck_at_start(
     time: Res<Time>,
     game_state: Res<State<GameState>>,
@@ -66,6 +70,10 @@ fn check_player_stuck_at_start(
     }
 }
 
+/// Detects erratic movement patterns early in the mission for new players.
+///
+/// If the player moves back and forth near the spawn without entering the location for several seconds,
+/// triggers a walkie-talkie warning. Only applies to players with few completed missions.
 fn check_erratic_movement_early(
     time: Res<Time>,
     game_state: Res<State<GameState>>,
@@ -131,6 +139,10 @@ fn check_erratic_movement_early(
     }
 }
 
+/// Checks if the player hesitates at a closed door near the entrance for too long.
+///
+/// If the player remains outside, close to a closed door, and doesn't interact for over 10 seconds,
+/// triggers a walkie-talkie hint about door interaction.
 fn check_door_interaction_hesitation(
     time: Res<Time>,
     game_state: Res<State<GameState>>,
@@ -195,6 +207,229 @@ fn check_door_interaction_hesitation(
     }
 }
 
+/// Triggers a walkie-talkie event if the player tries to pick up an item but their right hand and inventory are full.
+fn trigger_struggling_with_grab_drop(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    player_query: Query<&ungear::components::playergear::PlayerGear>,
+    mut fail_timer: Local<f32>,
+) {
+    if app_state.get() != &AppState::InGame {
+        *fail_timer = 0.0;
+        return;
+    }
+    if *game_state.get() != GameState::None {
+        *fail_timer = 0.0;
+        return;
+    }
+    let Ok(player_gear) = player_query.get_single() else {
+        return;
+    };
+    // If right hand is not empty and all inventory slots are full, increment timer
+    let right_full = !player_gear.empty_right_handed();
+    let all_full = player_gear
+        .inventory
+        .iter()
+        .all(|g| !matches!(g.kind, uncore::types::gear_kind::GearKind::None));
+    if right_full && all_full {
+        // FIXME: This logic is not correct, we should check if the player is trying to pick up an item
+        // and not just if the right hand is full.
+        *fail_timer += time.delta_secs();
+        if *fail_timer > 3.0 {
+            walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
+            *fail_timer = 0.0;
+        }
+    } else {
+        *fail_timer = 0.0;
+    }
+}
+
+/// Triggers a walkie-talkie event if the player struggles with hiding/unhiding actions.
+///
+/// This includes:
+/// - Trying to hide while carrying an item (right hand not empty)
+/// - Unhiding immediately after hiding (within 2 seconds)
+/// - Failing to hide during a hunt due to carrying an item
+fn trigger_struggling_with_hide_unhide(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    player_query: Query<
+        (Entity, &ungear::components::playergear::PlayerGear),
+        Without<uncore::components::player::Hiding>,
+    >,
+    hiding_query: Query<
+        (Entity, &ungear::components::playergear::PlayerGear),
+        With<uncore::components::player::Hiding>,
+    >,
+    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
+    mut last_hide_state: Local<Option<(bool, f32)>>, // (is_hiding, time_of_change)
+) {
+    if app_state.get() != &AppState::InGame {
+        *last_hide_state = None;
+        return;
+    }
+    if *game_state.get() != GameState::None {
+        *last_hide_state = None;
+        return;
+    }
+    // Determine if player is hiding
+    let (is_hiding, player_gear) = if let Ok((_, gear)) = hiding_query.get_single() {
+        (true, gear)
+    } else if let Ok((_, gear)) = player_query.get_single() {
+        (false, gear)
+    } else {
+        return;
+    };
+    let now = time.elapsed_secs_f64() as f32;
+
+    // Track hide/unhide transitions
+    if let Some((was_hiding, last_change_time)) = *last_hide_state {
+        if !was_hiding && is_hiding {
+            // Player just hid
+            // If right hand is not empty, trigger event
+            if !player_gear.empty_right_handed() {
+                walkie_play.set(
+                    WalkieEvent::StrugglingWithHideUnhide,
+                    time.elapsed_secs_f64(),
+                );
+            }
+            *last_hide_state = Some((true, now));
+        } else if was_hiding && !is_hiding {
+            // Player just unhid
+            let hide_duration = now - last_change_time;
+            if hide_duration < 2.0 {
+                walkie_play.set(
+                    WalkieEvent::StrugglingWithHideUnhide,
+                    time.elapsed_secs_f64(),
+                );
+            }
+            *last_hide_state = Some((false, now));
+        }
+        // else: no state change
+    } else {
+        *last_hide_state = Some((is_hiding, now));
+    }
+
+    // If a hunt is ongoing, and player is hiding with an item in hand, trigger event
+    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
+    if hunt_active && is_hiding && !player_gear.empty_right_handed() {
+        walkie_play.set(
+            WalkieEvent::StrugglingWithHideUnhide,
+            time.elapsed_secs_f64(),
+        );
+    }
+}
+
+/// Triggers a walkie-talkie event if the player stays hidden for too long after a hunt ends.
+///
+/// If the player remains hidden for 10+ seconds after the ghost's hunt ends, this event is triggered to inform them it's safe to unhide.
+fn trigger_player_stays_hidden_too_long(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    hiding_query: Query<Entity, With<uncore::components::player::Hiding>>,
+    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
+    mut post_hunt_hidden_timer: Local<Option<f32>>, // Time spent hidden after hunt ended
+) {
+    if app_state.get() != &AppState::InGame {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    if *game_state.get() != GameState::None {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Only proceed if player is hiding
+    if hiding_query.get_single().is_err() {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Check if any ghost is currently hunting
+    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
+    if hunt_active {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Player is hiding and hunt is over
+    let now = time.elapsed_secs_f64() as f32;
+    if let Some(start_time) = *post_hunt_hidden_timer {
+        if now - start_time > 10.0 {
+            walkie_play.set(
+                WalkieEvent::PlayerStaysHiddenTooLong,
+                time.elapsed_secs_f64(),
+            );
+            // Only trigger once per hiding session
+            *post_hunt_hidden_timer = None;
+        }
+    } else {
+        // Start timer when hunt ends and player is still hiding
+        *post_hunt_hidden_timer = Some(now);
+    }
+}
+
+/// Triggers a walkie-talkie event if the player is near a hiding spot during a hunt but does not hide.
+/// Fires HuntActiveNearHidingSpotNoHide if ghost is hunting, player is not hiding, and a hiding spot is within 1.5 units for 2+ seconds.
+fn trigger_hunt_active_near_hiding_spot_no_hide(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    player_query: Query<(&Position, Entity), Without<uncore::components::player::Hiding>>,
+    hiding_spots: Query<(&Position, &Behavior)>,
+    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
+    mut near_hiding_timer: Local<Option<f32>>, // Time spent near hiding spot during hunt
+) {
+    if app_state.get() != &AppState::InGame {
+        *near_hiding_timer = None;
+        return;
+    }
+    if *game_state.get() != GameState::None {
+        *near_hiding_timer = None;
+        return;
+    }
+    // Check if any ghost is actively hunting (hunting > 10.0)
+    let hunt_active = ghost_query.iter().any(|g| g.hunting > 10.0);
+    if !hunt_active {
+        *near_hiding_timer = None;
+        return;
+    }
+    // Get player position (not hiding)
+    let Ok((player_pos, _)) = player_query.get_single() else {
+        *near_hiding_timer = None;
+        return;
+    };
+    // Find a hiding spot within 1.5 units
+    let near_hiding = hiding_spots
+        .iter()
+        .filter(|(_, behavior)| behavior.p.object.hidingspot)
+        .any(|(spot_pos, _)| player_pos.distance(spot_pos) < 1.5);
+    if near_hiding {
+        let now = time.elapsed_secs_f64() as f32;
+        if let Some(start) = *near_hiding_timer {
+            if now - start > 2.0 {
+                walkie_play.set(
+                    WalkieEvent::HuntActiveNearHidingSpotNoHide,
+                    time.elapsed_secs_f64(),
+                );
+                // Only trigger once per hunt
+                *near_hiding_timer = None;
+            }
+        } else {
+            *near_hiding_timer = Some(now);
+        }
+    } else {
+        *near_hiding_timer = None;
+    }
+}
+
+/// Registers the locomotion and interaction systems to the Bevy app.
+///
+/// These systems monitor player movement and interaction patterns to provide hints or warnings via walkie-talkie.
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -202,6 +437,10 @@ pub(crate) fn app_setup(app: &mut App) {
             crate::triggers::locomotion_interaction::check_player_stuck_at_start,
             crate::triggers::locomotion_interaction::check_erratic_movement_early,
             crate::triggers::locomotion_interaction::check_door_interaction_hesitation,
+            crate::triggers::locomotion_interaction::trigger_struggling_with_grab_drop,
+            crate::triggers::locomotion_interaction::trigger_struggling_with_hide_unhide,
+            crate::triggers::locomotion_interaction::trigger_player_stays_hidden_too_long,
+            crate::triggers::locomotion_interaction::trigger_hunt_active_near_hiding_spot_no_hide, // Register new system
         )
             .run_if(in_state(uncore::states::GameState::None)),
     );

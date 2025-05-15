@@ -162,6 +162,10 @@ impl GearUsable for UVTorch {
             self.display_glitch_timer = rng.random_range(0.2..0.6);
         }
     }
+
+    fn needs_darkness(&self) -> bool {
+        true
+    }
 }
 
 impl From<UVTorch> for Gear {

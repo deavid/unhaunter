@@ -68,6 +68,11 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn is_electronic(&self) -> bool {
         false
     }
+
+    /// Returns true if this gear requires darkness for optimal use.
+    fn needs_darkness(&self) -> bool {
+        false
+    }
 }
 
 impl Clone for Box<dyn GearUsable> {

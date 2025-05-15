@@ -1,4 +1,3 @@
-
 Trigger events for voices
 ==============================
 
@@ -532,7 +531,7 @@ The main decision on when to trigger each one is the avg proximity to the ghost 
 This one needs to be developed at the same time with SanityDroppedBelowThresholdDarkness.
 
 
-**3. `WalkieEventConceptEntry: VeryLowSanityNoTruckReturn`**
+**3. `WalkieEventConceptEntry: VeryLowSanityNoTruckReturn`** (DONE)
 
 *   **Scenario Description (Recap):** Player's sanity (`PlayerSprite.sanity()`) is critically low (e.g., < 30%), visual/audio "insanity" effects are likely active, and the player has not moved towards the van/exit or entered the truck for X seconds/minutes since sanity became critical.
 *   **Goal of Hint:** Urgently warn the player about their critical sanity and strongly advise returning to the truck immediately.
@@ -542,7 +541,7 @@ We can wait for 20 seconds to see if the player exits the location, if not and t
 
 ---
 
-**4. `WalkieEventConceptEntry: LowHealthGeneralWarning`** (More for non-hunt damage, or post-hunt if player doesn't heal)
+**4. `WalkieEventConceptEntry: LowHealthGeneralWarning`** (DONE)
 
 *   **Scenario Description (Recap):** Player's health (`PlayerSprite.health`) drops below a certain threshold (e.g., < 50% or < 30%) due to any reason (could be a lingering effect from a hunt, an environmental hazard if any exist, etc.), and they are not in the truck.
 *   **Goal of Hint:** Advise the player that their health is low and they should consider returning to the truck to recover.

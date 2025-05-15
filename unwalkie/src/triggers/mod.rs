@@ -2,6 +2,7 @@ use bevy::app::App;
 
 pub mod base1;
 pub mod basic_gear_usage;
+pub mod consumables_and_defense;
 pub mod environmental_awareness;
 pub mod evidence_gathering_logic;
 pub mod ghost_behavior_hunting;
@@ -22,4 +23,5 @@ pub(crate) fn app_setup(app: &mut App) {
     player_wellbeing::app_setup(app);
     repellent_expulsion::app_setup(app);
     tutorial_specific::app_setup(app);
+    consumables_and_defense::app_setup(app);
 }

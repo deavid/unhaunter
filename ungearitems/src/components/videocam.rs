@@ -106,6 +106,10 @@ impl GearUsable for Videocam {
             self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
         }
     }
+
+    fn needs_darkness(&self) -> bool {
+        true
+    }
 }
 
 impl From<Videocam> for Gear {

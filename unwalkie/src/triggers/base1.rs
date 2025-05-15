@@ -11,6 +11,9 @@ use uncore::{
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
+/// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.
+/// Only triggers if the player is in the game, not in the truck, and has accessed the truck at least once.
+/// Uses a stopwatch to avoid spamming the reminder and only warns within the first minute inside.
 fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
@@ -76,6 +79,9 @@ fn player_forgot_equipment(
     walkie_play.set(WalkieEvent::GearInVan, time.elapsed_secs_f64());
 }
 
+/// Plays a walkie-talkie message at the start of a tutorial mission when the player enters the location.
+/// Only triggers in tutorial mode, when the player is in the game and not in the truck.
+/// Uses a short delay to avoid playing the message immediately.
 fn mission_start_easy(
     mut walkie_play: ResMut<WalkiePlay>,
     difficulty: Res<CurrentDifficulty>,
@@ -108,6 +114,8 @@ fn mission_start_easy(
     walkie_play.set(WalkieEvent::MissionStartEasy, time.elapsed_secs_f64());
 }
 
+/// Warns the player via walkie-talkie when the ghost is close to starting a hunt in the tutorial.
+/// Only triggers if the player is inside the location and the ghost's rage is high but not yet hunting.
 fn ghost_near_hunt(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
@@ -146,6 +154,7 @@ fn ghost_near_hunt(
     }
 }
 
+/// Registers the above systems to the Bevy app.
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, player_forgot_equipment)
         .add_systems(Update, mission_start_easy)
