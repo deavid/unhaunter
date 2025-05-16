@@ -213,7 +213,8 @@ fn trigger_struggling_with_grab_drop(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<&ungear::components::playergear::PlayerGear>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    player_query: Query<(&ungear::components::playergear::PlayerGear, &PlayerSprite)>,
     mut fail_timer: Local<f32>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -224,7 +225,7 @@ fn trigger_struggling_with_grab_drop(
         *fail_timer = 0.0;
         return;
     }
-    let Ok(player_gear) = player_query.get_single() else {
+    let Ok((player_gear, player_sprite)) = player_query.get_single() else {
         return;
     };
     // If right hand is not empty and all inventory slots are full, increment timer
@@ -234,10 +235,10 @@ fn trigger_struggling_with_grab_drop(
         .iter()
         .all(|g| !matches!(g.kind, uncore::types::gear_kind::GearKind::None));
     if right_full && all_full {
-        // FIXME: This logic is not correct, we should check if the player is trying to pick up an item
-        // and not just if the right hand is full.
-        *fail_timer += time.delta_secs();
-        if *fail_timer > 3.0 {
+        if keyboard_input.just_pressed(player_sprite.controls.grab) {
+            *fail_timer += time.delta_secs();
+        }
+        if *fail_timer > 2.0 {
             walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
             *fail_timer = 0.0;
         }

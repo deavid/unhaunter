@@ -267,6 +267,14 @@ impl GearUsable for EMFMeter {
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn can_enable(&self) -> bool {
+        true
+    }
 }
 
 impl From<EMFMeter> for Gear {

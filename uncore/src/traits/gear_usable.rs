@@ -73,6 +73,16 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn needs_darkness(&self) -> bool {
         false
     }
+
+    /// Returns true if the gear is enabled.
+    fn is_enabled(&self) -> bool {
+        false
+    }
+
+    /// Returns true if the gear can be enabled.
+    fn can_enable(&self) -> bool {
+        true
+    }
 }
 
 impl Clone for Box<dyn GearUsable> {

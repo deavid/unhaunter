@@ -4,6 +4,7 @@ use ndarray::Array3;
 use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::{direction::Direction, position::Position};
+use uncore::components::repellent_particle::RepellentParticle;
 use uncore::metric_recorder::SendMetric;
 use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
@@ -116,7 +117,7 @@ impl GearUsable for RepellentFlask {
             .insert(MapColor {
                 color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
             })
-            .insert(Repellent::new(liquid_content));
+            .insert(RepellentParticle::new(liquid_content));
     }
 
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
@@ -139,33 +140,13 @@ impl From<RepellentFlask> for Gear {
     }
 }
 
-#[derive(Component, Debug, Clone, PartialEq)]
-pub struct Repellent {
-    pub class: GhostType,
-    pub life: f32,
-    pub dir: Direction,
-}
-
-impl Repellent {
-    const MAX_LIFE: f32 = 30.0;
-
-    pub fn new(class: GhostType) -> Self {
-        Self {
-            class,
-            life: Self::MAX_LIFE,
-            dir: Direction::zero(),
-        }
-    }
-
-    pub fn life_factor(&self) -> f32 {
-        self.life / Self::MAX_LIFE
-    }
-}
-
 pub fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
-    mut qrp: Query<(&mut Position, &mut Repellent, &mut MapColor, Entity), Without<GhostSprite>>,
+    mut qrp: Query<
+        (&mut Position, &mut RepellentParticle, &mut MapColor, Entity),
+        Without<GhostSprite>,
+    >,
     bf: Res<BoardData>,
     difficulty: Res<CurrentDifficulty>,
     mut pressure_base: Local<Array3<f32>>,

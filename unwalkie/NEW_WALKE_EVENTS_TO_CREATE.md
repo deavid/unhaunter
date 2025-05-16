@@ -4,7 +4,7 @@ Trigger events for voices
 
 **RON File: `locomotion_and_interaction.ron`**
 
-**5. `WalkieEventConceptEntry: StrugglingWithGrabDrop`**
+**5. `WalkieEventConceptEntry: StrugglingWithGrabDrop`** ( ** DONE ** )
 
 This needs a full refactor, the voice lines, the event itself...
 
@@ -23,7 +23,7 @@ Possible Triggers: (each of these might become their own event with their own li
 
 ---
 
-**6. `WalkieEventConceptEntry: StrugglingWithHideUnhide`**
+**6. `WalkieEventConceptEntry: StrugglingWithHideUnhide`** ( ** DONE ** )
 
 Needs full refactor, split into separate events, different voice lines for each, etc.
 
@@ -42,7 +42,7 @@ Needs full refactor, split into separate events, different voice lines for each,
 
 ---
 
-**2. `WalkieEventConceptEntry: IgnoredObviousBreach`**
+**2. `WalkieEventConceptEntry: IgnoredObviousBreach`**  ( ** DONE ** )
 
 Needs to be renamed and repurposed.
 
@@ -58,7 +58,7 @@ Additionally, we need to send a secondary event for the breach to lit up for 30 
 
 ---
 
-**3. `WalkieEventConceptEntry: IgnoredVisibleGhost`**
+**3. `WalkieEventConceptEntry: IgnoredVisibleGhost`**  ( ** DONE ** )
 
 Needs to be renamed and repurposed.
 
@@ -79,7 +79,7 @@ To be removed, this makes no sense at all.
 
 ---
 
-**5. `WalkieEventConceptEntry: RoomLightsOnGearNeedsDark`**
+**5. `WalkieEventConceptEntry: RoomLightsOnGearNeedsDark`**  ( ** DONE ** )
 
 *   **Scenario Description (Recap):** Player activates a piece of gear that requires darkness for optimal use (e.g., Video Camera for Orbs, UV Torch for certain evidence types if that becomes a mechanic) while the current room's lights are ON.
 *   **Goal of Hint:** Inform the player that the current room lighting might interfere with their gear's effectiveness.
@@ -129,7 +129,7 @@ We want to ensure they're inside the location, but I don't think we need to wait
 
 ---
 
-**2. `WalkieEventConceptEntry: ThermometerNonFreezingFixation`**
+**2. `WalkieEventConceptEntry: ThermometerNonFreezingFixation`**  ( ** DONE ** )
 
 *   **Scenario Description (Recap):** Player is using the Thermometer, it's showing cold temperatures (e.g., 1-10°C) but not sub-zero (Freezing Temps evidence). *   **Goal of Hint:** Guide the player to understand that "cold" isn't "freezing" for evidence, and suggest trying other tools or recognizing this might not be the evidence type.
 
@@ -236,17 +236,17 @@ This one should be marked as done if the player had the repellent once in the mi
 
 **(Specific events to prompt the player to mark the evidence for each gear type):**
 
+See ClearEvidenceFoundNoActionCKey for ideas on how to implement.
+
 **6. `WalkieEventConceptEntry: SpiritBoxResponseNoAction`**
-    *   (Covered by `ClearEvidenceFoundNoActionCKey` if SpiritBox sets a clear "EVP detected" state that can be queried)
+
 
 **7. `WalkieEventConceptEntry: RLPresenceFoundNoAction`**
-    *   (Covered by `ClearEvidenceFoundNoActionCKey` if Red Torch interaction sets a clear "RL Presence detected" state)
 
 **9. `WalkieEventConceptEntry: EVPRecordedNoAction`**
-    *   (Covered by `ClearEvidenceFoundNoActionCKey` when `Recorder.evp_recorded_display == true`)
+
 
 **10. `WalkieEventConceptEntry: CPM500FoundNoAction`**
-    *   (Covered by `ClearEvidenceFoundNoActionCKey` when `GeigerCounter.sound_display > 500`)
 
 **We're missing EMF, Thermometer, Orbs, UVPresence**
 
@@ -400,7 +400,7 @@ No, I don't think we should do this at all. Probably it's best if we remove this
 
 ---
 
-**5. `WalkieEventConceptEntry: QuartzCrackedFeedback`**
+**5. `WalkieEventConceptEntry: QuartzCrackedFeedback`** ( ** DONE ** )
 
 *   **Scenario Description (Recap):** The player's `QuartzStoneData.cracks` count increases by one due to absorbing hunt energy.
 *   **Goal of Hint:** Inform the player that their Quartz Stone took damage but successfully protected them, and that it has limited durability.
@@ -409,7 +409,7 @@ We need to wait until the ghost calms down to do this, or the player exited the 
 
 ---
 
-**6. `WalkieEventConceptEntry: QuartzShatteredFeedback`**
+**6. `WalkieEventConceptEntry: QuartzShatteredFeedback`** ( ** DONE ** )
 
 *   **Scenario Description (Recap):** The player's `QuartzStoneData.cracks` reaches `MAX_CRACKS` (or a `is_shattered` flag becomes true), meaning it's now useless.
 *   **Goal of Hint:** Inform the player their Quartz Stone is broken and no longer offers protection.

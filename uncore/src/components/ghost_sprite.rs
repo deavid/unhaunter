@@ -61,6 +61,8 @@ pub struct GhostSprite {
     pub hunt_warning_timer: f32,
     /// Current warning wave intensity (0.0-1.0)
     pub hunt_warning_intensity: f32,
+    /// Number of times the ghost has hunted in the current mission.
+    pub times_hunted_this_mission: i64,
 }
 
 impl GhostSprite {
@@ -98,6 +100,7 @@ impl GhostSprite {
             hunt_warning_active: false,
             hunt_warning_timer: 0.0,
             hunt_warning_intensity: 0.0,
+            times_hunted_this_mission: 0,
         }
     }
 

@@ -216,6 +216,14 @@ impl GearUsable for Flashlight {
     fn is_electronic(&self) -> bool {
         true
     }
+
+    fn is_enabled(&self) -> bool {
+        self.status != FlashlightStatus::Off
+    }
+
+    fn can_enable(&self) -> bool {
+        true
+    }
 }
 
 impl From<Flashlight> for Gear {

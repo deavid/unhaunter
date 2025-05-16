@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use bevy::prelude::*;
 
 use uncore::{
@@ -7,6 +9,9 @@ use uncore::{
 
 use uncore::resources::roomdb::RoomDB;
 use uncore::traits::gear_usable::GearUsable;
+use uncore::types::gear_kind::GearKind;
+use ungear::components::playergear::PlayerGear;
+use ungearitems::components::thermometer::Thermometer;
 use unwalkiecore::{WalkiePlay, events::WalkieEvent};
 
 /// System that monitors the player's exposure to darkness.
@@ -146,6 +151,65 @@ fn trigger_room_lights_on_gear_needs_dark(
     }
 }
 
+/// Triggers a walkie-talkie event if the player lingers with the thermometer in cold (1-10°C, not freezing) for a set duration.
+fn trigger_thermometer_non_freezing_fixation(
+    time: Res<Time>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    game_state: Res<State<GameState>>,
+    app_state: Res<State<AppState>>,
+    mut timer: Local<f32>,
+    mut trigger_count: Local<u32>,
+    qp: Query<(
+        &PlayerGear,
+        &uncore::components::player_sprite::PlayerSprite,
+    )>,
+) {
+    // Only allow 2 triggers per mission
+    const MAX_TRIGGERS: u32 = 2;
+    const REQUIRED_DURATION: f32 = 15.0;
+    if *trigger_count >= MAX_TRIGGERS {
+        return;
+    }
+    if app_state.get() != &AppState::InGame {
+        *timer = 0.0;
+        return;
+    }
+    if *game_state.get() != GameState::None {
+        *timer = 0.0;
+        return;
+    }
+    let Ok((player_gear, _)) = qp.get_single() else {
+        *timer = 0.0;
+        return;
+    };
+    // Check if right hand is a Thermometer and enabled
+    if let GearKind::Thermometer = player_gear.right_hand.kind {
+        if let Some(thermo) = player_gear
+            .right_hand
+            .data
+            .as_ref()
+            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d))
+        {
+            if thermo.enabled {
+                let temp_c = uncore::kelvin_to_celsius(thermo.temp);
+                if (1.0..=10.0).contains(&temp_c) {
+                    *timer += time.delta_secs();
+                    if *timer > REQUIRED_DURATION {
+                        walkie_play.set(
+                            WalkieEvent::ThermometerNonFreezingFixation,
+                            time.elapsed_secs_f64(),
+                        );
+                        *trigger_count += 1;
+                        *timer = 0.0;
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    *timer = 0.0;
+}
+
 /// Registers the environmental awareness systems to the Bevy app.
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -155,6 +219,7 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_breach_showcase.run_if(in_state(AppState::InGame)),
             trigger_ghost_showcase.run_if(in_state(AppState::InGame)),
             trigger_room_lights_on_gear_needs_dark.run_if(in_state(AppState::InGame)),
+            trigger_thermometer_non_freezing_fixation.run_if(in_state(AppState::InGame)),
         ),
     );
 }

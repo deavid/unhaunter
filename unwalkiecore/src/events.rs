@@ -1,7 +1,12 @@
 use crate::ConceptTrait; // Import from crate root
 use crate::generated::base1::Base1Concept;
+use crate::generated::basic_gear_usage::BasicGearUsageConcept;
+use crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept;
 use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept; // Added import
+use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept;
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
+use crate::generated::player_wellbeing::PlayerWellbeingConcept;
+use crate::generated::repellent_and_expulsion::RepellentAndExpulsionConcept;
 use bevy::prelude::Event;
 use unwalkie_types::VoiceLineData;
 
@@ -68,6 +73,10 @@ pub enum WalkieEvent {
     GhostShowcase,
     /// Player uses gear that requires darkness in a lit room.
     RoomLightsOnGearNeedsDark,
+    /// Player is using the Thermometer, it's showing cold (1-10°C) but not freezing, and lingers too long.
+    ThermometerNonFreezingFixation,
+    /// Player selects gear but does not activate it.
+    GearSelectedNotActivated, // MISSING
 
     // --- Player Wellbeing Events ---
     /// Player's health is low for a prolonged period while inside the location.
@@ -80,6 +89,19 @@ pub enum WalkieEvent {
     QuartzShatteredFeedback,
     /// Player stays hidden for too long after a hunt ends.
     PlayerStaysHiddenTooLong,
+    /// Player has not picked up quartz from the truck when a hunt is likely and they have experienced a hunt before.
+    QuartzUnusedInRelevantSituation,
+    /// Player has not used Sage in a relevant situation.
+    SageUnusedInRelevantSituation,
+
+    // --- Repellent and Expulsion Events ---
+    GhostExpelledPlayerLingers,
+    /// Player enters the location with a repellent.
+    HasRepellentEntersLocation,
+    /// Player used a repellent too far from the ghost.
+    RepellentUsedTooFar,
+    /// Player used a repellent, enraging the ghost, causing the player to flee.
+    RepellentUsedGhostEnragesPlayerFlees,
     // TODO: Add other event categories here
 }
 
@@ -90,24 +112,80 @@ impl WalkieEvent {
             WalkieEvent::GhostNearHunt => Box::new(Base1Concept::GhostNearHunt),
             WalkieEvent::MissionStartEasy => Box::new(Base1Concept::MissionStartEasy),
             // --- Locomotion and Interaction ---
-            WalkieEvent::PlayerStuckAtStart => Box::new(LocomotionAndInteractionConcept::PlayerStuckAtStart),
-            WalkieEvent::ErraticMovementEarly => Box::new(LocomotionAndInteractionConcept::ErraticMovementEarly),
-            WalkieEvent::DoorInteractionHesitation => Box::new(LocomotionAndInteractionConcept::DoorInteractionHesitation),
-            WalkieEvent::StrugglingWithGrabDrop => Box::new(LocomotionAndInteractionConcept::StrugglingWithGrabDrop),
-            WalkieEvent::StrugglingWithHideUnhide => Box::new(LocomotionAndInteractionConcept::StrugglingWithHideUnhide),
-            WalkieEvent::HuntActiveNearHidingSpotNoHide => Box::new(crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept::HuntActiveNearHidingSpotNoHide),
+            WalkieEvent::PlayerStuckAtStart => {
+                Box::new(LocomotionAndInteractionConcept::PlayerStuckAtStart)
+            }
+            WalkieEvent::ErraticMovementEarly => {
+                Box::new(LocomotionAndInteractionConcept::ErraticMovementEarly)
+            }
+            WalkieEvent::DoorInteractionHesitation => {
+                Box::new(LocomotionAndInteractionConcept::DoorInteractionHesitation)
+            }
+            WalkieEvent::StrugglingWithGrabDrop => {
+                Box::new(LocomotionAndInteractionConcept::StrugglingWithGrabDrop)
+            }
+            WalkieEvent::StrugglingWithHideUnhide => {
+                Box::new(LocomotionAndInteractionConcept::StrugglingWithHideUnhide)
+            }
+            WalkieEvent::HuntActiveNearHidingSpotNoHide => {
+                Box::new(GhostBehaviorAndHuntingConcept::HuntActiveNearHidingSpotNoHide)
+            }
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => Box::new(EnvironmentalAwarenessConcept::DarkRoomNoLightUsed),
-            WalkieEvent::BreachShowcase => Box::new(EnvironmentalAwarenessConcept::IgnoredObviousBreach),
-            WalkieEvent::GhostShowcase => Box::new(EnvironmentalAwarenessConcept::IgnoredVisibleGhost),
-            WalkieEvent::RoomLightsOnGearNeedsDark => Box::new(EnvironmentalAwarenessConcept::RoomLightsOnGearNeedsDark),
+            WalkieEvent::DarkRoomNoLightUsed => {
+                Box::new(EnvironmentalAwarenessConcept::DarkRoomNoLightUsed)
+            }
+            WalkieEvent::BreachShowcase => {
+                Box::new(EnvironmentalAwarenessConcept::IgnoredObviousBreach)
+            }
+            WalkieEvent::GhostShowcase => {
+                Box::new(EnvironmentalAwarenessConcept::IgnoredVisibleGhost)
+            }
+            WalkieEvent::RoomLightsOnGearNeedsDark => {
+                Box::new(EnvironmentalAwarenessConcept::RoomLightsOnGearNeedsDark)
+            }
+            WalkieEvent::ThermometerNonFreezingFixation => {
+                Box::new(BasicGearUsageConcept::ThermometerNonFreezingFixation)
+            }
+            WalkieEvent::GearSelectedNotActivated => {
+                Box::new(BasicGearUsageConcept::GearSelectedNotActivated)
+            }
             // --- Player Wellbeing ---
-            WalkieEvent::LowHealthGeneralWarning => Box::new(crate::generated::player_wellbeing::PlayerWellbeingConcept::LowHealthGeneralWarning),
-            WalkieEvent::VeryLowSanityNoTruckReturn => Box::new(crate::generated::player_wellbeing::PlayerWellbeingConcept::VeryLowSanityNoTruckReturn),
+            WalkieEvent::LowHealthGeneralWarning => {
+                Box::new(PlayerWellbeingConcept::LowHealthGeneralWarning)
+            }
+            WalkieEvent::VeryLowSanityNoTruckReturn => {
+                Box::new(PlayerWellbeingConcept::VeryLowSanityNoTruckReturn)
+            }
             // --- Consumables and Defense ---
-            WalkieEvent::QuartzCrackedFeedback => Box::new(crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept::QuartzCrackedFeedback),
-            WalkieEvent::QuartzShatteredFeedback => Box::new(crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept::QuartzShatteredFeedback),
-            WalkieEvent::PlayerStaysHiddenTooLong => Box::new(crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept::PlayerStaysHiddenTooLong),
+            WalkieEvent::QuartzCrackedFeedback => {
+                Box::new(ConsumablesAndDefenseConcept::QuartzCrackedFeedback)
+            }
+            WalkieEvent::QuartzShatteredFeedback => {
+                Box::new(ConsumablesAndDefenseConcept::QuartzShatteredFeedback)
+            }
+            WalkieEvent::QuartzUnusedInRelevantSituation => {
+                Box::new(ConsumablesAndDefenseConcept::QuartzUnusedInRelevantSituation)
+            }
+            WalkieEvent::SageUnusedInRelevantSituation => {
+                Box::new(ConsumablesAndDefenseConcept::SageUnusedInRelevantSituation)
+            }
+            // --- Ghost Behavior and Hunting ---
+            WalkieEvent::PlayerStaysHiddenTooLong => {
+                Box::new(GhostBehaviorAndHuntingConcept::PlayerStaysHiddenTooLong)
+            }
+            // --- Repellent and Expulsion ---
+            WalkieEvent::GhostExpelledPlayerLingers => {
+                Box::new(RepellentAndExpulsionConcept::GhostExpelledPlayerLingers)
+            }
+            WalkieEvent::HasRepellentEntersLocation => {
+                Box::new(RepellentAndExpulsionConcept::HasRepellentEntersLocation)
+            }
+            WalkieEvent::RepellentUsedTooFar => {
+                Box::new(RepellentAndExpulsionConcept::RepellentUsedTooFar)
+            }
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
+                Box::new(RepellentAndExpulsionConcept::RepellentUsedGhostEnragesPlayerFlees)
+            }
         }
     }
 
@@ -131,6 +209,8 @@ impl WalkieEvent {
             WalkieEvent::BreachShowcase => 90.0 * count,
             WalkieEvent::GhostShowcase => 90.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
+            WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
+            WalkieEvent::GearSelectedNotActivated => 15.0 + 60.0 * count, // 15s, then +1min per trigger
 
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
@@ -139,7 +219,17 @@ impl WalkieEvent {
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => 60.0 * count,
             WalkieEvent::QuartzShatteredFeedback => 60.0 * count,
+            WalkieEvent::QuartzUnusedInRelevantSituation => 180.0 * count, // Every 3 minutes if conditions met
+            WalkieEvent::SageUnusedInRelevantSituation => 180.0 * count, // Every 3 minutes if conditions met
+
+            // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => 90.0 * count,
+
+            // --- Repellent and Expulsion ---
+            WalkieEvent::GhostExpelledPlayerLingers => 120.0 * count,
+            WalkieEvent::HasRepellentEntersLocation => 120.0 * count,
+            WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
         }
     }
 
@@ -165,13 +255,23 @@ impl WalkieEvent {
             WalkieEvent::BreachShowcase => WalkieEventPriority::Medium,
             WalkieEvent::GhostShowcase => WalkieEventPriority::Medium,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
+            WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
+            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
             WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::High,
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => WalkieEventPriority::Medium,
             WalkieEvent::QuartzShatteredFeedback => WalkieEventPriority::High,
+            WalkieEvent::QuartzUnusedInRelevantSituation => WalkieEventPriority::Medium,
+            WalkieEvent::SageUnusedInRelevantSituation => WalkieEventPriority::Medium,
+            // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => WalkieEventPriority::Low,
+            // --- Repellent and Expulsion ---
+            WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::Medium,
+            WalkieEvent::HasRepellentEntersLocation => WalkieEventPriority::Medium,
+            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::Low,
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being

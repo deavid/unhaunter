@@ -5481,6 +5481,7 @@ dependencies = [
  "ungearitems",
  "unprofile",
  "unsettings",
+ "untruck",
  "unwalkie_types",
  "unwalkiecore",
 ]

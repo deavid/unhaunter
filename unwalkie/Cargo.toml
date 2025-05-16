@@ -15,6 +15,7 @@ unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkiecore = { path = "../unwalkiecore" }
 unprofile = { path = "../unprofile" }
+untruck = { path = "../untruck" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

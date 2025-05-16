@@ -159,6 +159,14 @@ impl GearUsable for Thermometer {
             self.display_glitch_timer = 0.3;
         }
     }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn can_enable(&self) -> bool {
+        true // Thermometer can always be toggled
+    }
 }
 
 impl From<Thermometer> for Gear {

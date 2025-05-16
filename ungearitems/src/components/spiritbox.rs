@@ -225,6 +225,14 @@ impl GearUsable for SpiritBox {
             self.ghost_answer = true;
         }
     }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn can_enable(&self) -> bool {
+        true
+    }
 }
 
 impl From<SpiritBox> for Gear {
