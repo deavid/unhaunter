@@ -22,6 +22,7 @@ use std::collections::VecDeque;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, MapTileSprite};
+use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
@@ -29,6 +30,7 @@ use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
 use uncore::platform::plt::IS_WASM;
 use uncore::resources::board_data::BoardData;
+use uncore::resources::current_evidence_readings::CurrentEvidenceReadings;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
 use uncore::types::board::fielddata::CollisionFieldData;
@@ -1037,4 +1039,148 @@ pub fn ambient_sound_system(
         sink.set_volume(new_volume.clamp(0.00001, 10.0));
     }
     measure.end_ms();
+}
+
+// Helper function
+fn calculate_clarity_for_visual_evidence(
+    signal_intensity: f32,
+    signal_threshold: f32,
+    visible_intensity: f32,
+    darkness_threshold: f32,
+    player_visibility_to_tile: f32,
+    scaling_factor: f32,
+) -> f32 {
+    if signal_intensity >= signal_threshold && visible_intensity <= darkness_threshold {
+        let base_clarity = signal_intensity / (visible_intensity + 0.05); // Add small epsilon
+        let final_clarity = (base_clarity * player_visibility_to_tile) / scaling_factor;
+        final_clarity.clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
+}
+
+pub fn report_environmental_visual_evidence_clarity_system(
+    mut current_evidence_readings: ResMut<CurrentEvidenceReadings>,
+    board_data: Res<BoardData>,           // bf
+    visibility_data: Res<VisibilityData>, // vf
+    time: Res<Time>,
+    ghost_query: Query<(Entity, &Position), With<GhostSprite>>, // Entity for source_gear_entity
+    breach_query: Query<(Entity, &Position), With<GhostBreach>>, // Entity for source_gear_entity
+) {
+    let current_game_time_secs = time.elapsed_secs_f64();
+    let delta_time_secs = time.delta_secs();
+
+    // Helper to process an entity (ghost or breach)
+    let mut process_entity = |_entity_id: Entity, entity_pos: &Position, is_ghost: bool| {
+        let bpos = entity_pos.to_board_position_size(board_data.map_size);
+        // Ensure bpos is valid before indexing (though to_board_position_size should handle clamping)
+        if bpos.x >= board_data.map_size.0 as i64
+            || bpos.y >= board_data.map_size.1 as i64
+            || bpos.z >= board_data.map_size.2 as i64
+            || bpos.x < 0
+            || bpos.y < 0
+            || bpos.z < 0
+        {
+            // warn!("Entity {:?} at {:?} resulted in out-of-bounds bpos {:?}", entity_id, entity_pos, bpos);
+            return;
+        }
+
+        let player_visibility_to_tile =
+            visibility_data.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+
+        // If player can't see the tile where the entity is, clarity for visual evidence is 0.
+        if player_visibility_to_tile < 0.01 {
+            let evidences_to_clear = if is_ghost {
+                vec![Evidence::UVEctoplasm, Evidence::RLPresence]
+            } else {
+                // Is Breach
+                vec![Evidence::FloatingOrbs]
+            };
+            for ev in evidences_to_clear {
+                current_evidence_readings.report_clarity(
+                    ev,
+                    0.0,
+                    current_game_time_secs,
+                    delta_time_secs,
+                );
+            }
+            return;
+        }
+
+        // Crucial Assumption: board_data.light_field[bpos.ndidx()].additional
+        // correctly sums all light types (Visible, UV, Red, IR) from all sources at this tile.
+        let effective_light_at_entity_pos = board_data.light_field[bpos.ndidx()].additional;
+
+        if is_ghost {
+            // UVEctoplasm Check
+            let uv_clarity = if board_data.evidences.contains(&Evidence::UVEctoplasm) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.ultraviolet,
+                    0.3, // UV signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.3, // Visible light darkness threshold
+                    player_visibility_to_tile,
+                    3.0, // Scaling factor for UV
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::UVEctoplasm,
+                uv_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+
+            // RLPresence Check
+            let rl_clarity = if board_data.evidences.contains(&Evidence::RLPresence) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.red,
+                    0.3, // Red light signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.3,
+                    player_visibility_to_tile,
+                    3.0, // Scaling factor for Red
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::RLPresence,
+                rl_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+        } else {
+            // Is Breach
+            // FloatingOrbs Check
+            let orbs_clarity = if board_data.evidences.contains(&Evidence::FloatingOrbs) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.infrared,
+                    0.5, // IR signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.2, // Visible light darkness threshold
+                    player_visibility_to_tile,
+                    5.0, // Scaling factor for Orbs (IR is usually strong)
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::FloatingOrbs,
+                orbs_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+        }
+    };
+
+    // Process ghost(s)
+    for (entity_id, entity_pos) in ghost_query.iter() {
+        process_entity(entity_id, entity_pos, true);
+    }
+    // Process breach(es)
+    for (entity_id, entity_pos) in breach_query.iter() {
+        process_entity(entity_id, entity_pos, false);
+    }
 }
