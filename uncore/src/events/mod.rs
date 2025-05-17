@@ -1,4 +1,5 @@
 pub mod board_data_rebuild;
+pub mod hint;
 pub mod loadlevel;
 pub mod map_selected;
 pub mod npc_help;

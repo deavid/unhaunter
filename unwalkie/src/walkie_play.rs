@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
 use uncore::{
     components::game_ui::WalkieText,
-    events::loadlevel::LevelReadyEvent,
+    events::{hint::OnScreenHintEvent, loadlevel::LevelReadyEvent},
     random_seed,
     states::{AppState, GameState},
 };
@@ -36,6 +36,7 @@ fn walkie_talk(
     asset_server: Res<AssetServer>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    mut hint_event_writer: EventWriter<OnScreenHintEvent>,
     q_sound_state: Query<(Entity, &WalkieSoundState)>,
     mut qt: Query<&mut Text, With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
@@ -112,6 +113,13 @@ fn walkie_talk(
 
     walkie_play.state = new_state.clone();
     if new_state.is_none() {
+        // When walkie ends, send an OnScreenHintEvent with on_completion=true
+        let hint_text = walkie_event.get_on_screen_actionable_hint_text();
+        if !hint_text.is_empty() {
+            hint_event_writer.send(OnScreenHintEvent {
+                hint_text: hint_text.to_string(),
+            });
+        }
         walkie_play.event = None;
         walkie_play.current_voice_line = None;
         walkie_play.last_message_time = time.elapsed_secs_f64();

@@ -11,5 +11,5 @@ pub trait ConceptTrait {
     fn get_lines(&self) -> Vec<VoiceLineData>;
 }
 
-pub use events::WalkieEvent;
+pub use events::{WalkieEvent, WalkieEventPriority};
 pub use resources::{WalkieEventStats, WalkiePlay, WalkieSoundState};
