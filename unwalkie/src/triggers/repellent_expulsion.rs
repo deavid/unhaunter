@@ -1,8 +1,10 @@
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 use std::any::Any;
 use uncore::components::repellent_particle::RepellentParticle;
 use uncore::resources::board_data::BoardData;
 use uncore::types::gear_kind::GearKind;
+use uncore::types::ghost::types::GhostType;
 use uncore::{
     components::{
         board::position::Position, ghost_sprite::GhostSprite, player_sprite::PlayerSprite,
@@ -325,10 +327,205 @@ fn trigger_repellent_provokes_strong_reaction_system(
     }
 }
 
+// TODO (David): Modify `RepellentFlaskData` in `ungearitems/src/components/repellentflask.rs`
+// to include a transient field like `pub just_emptied_with_type: Option<GhostType>`.
+// This field should be set in `RepellentFlaskData::update()` when `qty` becomes 0
+// (and `active` was true), storing the `liquid_content` *before* it's set to None.
+// A separate system (or this one) should clear `just_emptied_with_type` after one frame.
+
+#[derive(Default)]
+struct RepellentExhaustedCheckState {
+    // Stores the type of ghost the (now empty) repellent was for, if conditions were met
+    pending_check_for_ghost_type: Option<GhostType>,
+    // Time when the repellent was confirmed exhausted and correct
+    time_exhaustion_confirmed: f32,
+}
+
+const MAX_PARTICLE_CLEAR_WAIT_SECONDS: f32 = 10.0; // Max time to wait for particles to clear
+
+fn trigger_repellent_exhausted_correct_type_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    // Query PlayerGear. We need mut if we are to clear the transient `just_emptied_with_type` field.
+    // For now, let's assume another system handles clearing it or it's very short-lived.
+    // If this system clears it, PlayerGear needs to be mut.
+    player_query: Query<&PlayerGear, With<PlayerSprite>>,
+    ghost_query: Query<&GhostSprite>, // To check if ghost is present and its type/hits
+    repellent_particle_query: Query<Entity, With<RepellentParticle>>,
+    mut check_state: Local<RepellentExhaustedCheckState>,
+) {
+    // 1. System Run Condition Checks & Reset
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        *check_state = RepellentExhaustedCheckState::default(); // Reset on state change
+        return;
+    }
+
+    let Ok(player_gear) = player_query.get_single() else {
+        return;
+    };
+    let Ok(ghost_sprite) = ghost_query.get_single() else {
+        // Ghost is not present (e.g., already expelled), so this hint is irrelevant.
+        *check_state = RepellentExhaustedCheckState::default();
+        return;
+    };
+
+    // 2. Detect if a Repellent Flask was JUST emptied with the correct type
+    // This relies on the `just_emptied_with_type` field in `RepellentFlaskData`
+    // being populated for one frame when the flask becomes empty.
+    if check_state.pending_check_for_ghost_type.is_none() {
+        // Only check for new exhaustion events
+        for (gear, _epos) in player_gear.as_vec() {
+            // TODO: We are not checking if the flask is empty.
+            if gear.kind == GearKind::RepellentFlask
+                && gear.data.as_ref().map(|x| !x.can_enable()).unwrap_or(false)
+                && ghost_sprite.repellent_hits > 0
+            {
+                // Flask was correct, and some hits were registered for this ghost type.
+                check_state.pending_check_for_ghost_type = Some(ghost_sprite.class);
+                check_state.time_exhaustion_confirmed = time.elapsed_secs();
+                // This system should probably be responsible for clearing `just_emptied_with_type`
+                // after detecting it, if `PlayerGear` was mutable.
+                // For now, assuming it's cleared elsewhere or by its transient nature.
+                break;
+            }
+        }
+    }
+
+    // 3. If pending check, monitor particle dissipation
+    if let Some(confirmed_ghost_type) = check_state.pending_check_for_ghost_type {
+        // Ensure ghost is still present and of the same type (should be, but good check)
+        if ghost_sprite.class != confirmed_ghost_type {
+            *check_state = RepellentExhaustedCheckState::default(); // Ghost changed type? Unlikely but reset.
+            return;
+        }
+
+        let particles_are_few = repellent_particle_query.iter().count() < 10; // Threshold for "few" particles
+        let time_since_exhaustion = time.elapsed_secs() - check_state.time_exhaustion_confirmed;
+
+        if particles_are_few || time_since_exhaustion > MAX_PARTICLE_CLEAR_WAIT_SECONDS {
+            walkie_play.set(
+                WalkieEvent::RepellentExhaustedGhostPresentCorrectType,
+                time.elapsed_secs_f64(),
+            );
+            *check_state = RepellentExhaustedCheckState::default(); // Reset after triggering
+        }
+    }
+}
+
+// Local resource to track ghost entities for which this hint has already been triggered
+// in the current "expulsion event" to avoid multiple triggers if, for some reason,
+// a ghost removal is processed across multiple system runs or frames without an intervening
+// state change that would clear this.
+#[derive(Resource, Default)]
+struct ProcessedMissedExpulsionGhosts(HashSet<Entity>);
+
+// System to clear the ProcessedMissedExpulsionGhosts on entering a new game state
+// or loading, to ensure it's fresh for each mission.
+fn reset_processed_missed_expulsion_ghosts_on_new_mission(
+    mut processed_ghosts: ResMut<ProcessedMissedExpulsionGhosts>,
+    app_state: Res<State<AppState>>, // For detecting transitions away from InGame
+    mut last_app_state: Local<Option<AppState>>,
+) {
+    let current_app_state = *app_state.get();
+    if *last_app_state != Some(current_app_state) {
+        // If app state changed (e.g., to MainMenu, Summary, or back to Loading/InGame for a new mission)
+        // or if it's the first run, clear the set.
+        if current_app_state != AppState::InGame
+            || last_app_state.is_some_and(|prev| {
+                prev != AppState::InGame && current_app_state == AppState::InGame
+            })
+        {
+            // Clear if we are no longer in game, OR if we just entered InGame (new mission)
+            if !processed_ghosts.0.is_empty() {
+                // info!("Resetting ProcessedMissedExpulsionGhosts due to state change or new mission.");
+                processed_ghosts.0.clear();
+            }
+        }
+    }
+    *last_app_state = Some(current_app_state);
+}
+
+fn trigger_ghost_expelled_player_missed_simplified_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    // GameState isn't strictly needed if we trigger even if player is in truck,
+    // as long as they were outside when the ghost was despawned.
+    // mut game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    mut removed_ghost_query: RemovedComponents<GhostSprite>, // Reacts to GhostSprite removal
+    player_query: Query<&Position, With<PlayerSprite>>,
+    roomdb: Res<RoomDB>,
+    mut processed_ghosts: ResMut<ProcessedMissedExpulsionGhosts>,
+) {
+    // 1. System Run Condition Check (Primarily AppState::InGame)
+    if *app_state.get() != AppState::InGame {
+        return;
+    }
+
+    if removed_ghost_query.is_empty() {
+        return; // No ghosts were removed this frame.
+    }
+
+    let Ok(player_pos) = player_query.get_single() else {
+        // No player found, cannot determine location.
+        return;
+    };
+    let player_is_outside_location = roomdb
+        .room_tiles
+        .get(&player_pos.to_board_position())
+        .is_none();
+
+    for removed_ghost_entity in removed_ghost_query.read() {
+        // Check if we've already processed this specific ghost entity for this hint
+        // in the current "expulsion wave". This is to prevent re-triggering if, for example,
+        // the system runs multiple times before a state change that clears `processed_ghosts`.
+        if processed_ghosts.0.contains(&removed_ghost_entity) {
+            continue;
+        }
+
+        if player_is_outside_location {
+            // Player was outside when this ghost entity was despawned.
+            // info!(
+            //     "Ghost {:?} despawned. Player was outside. Triggering GhostExpelledPlayerMissed.",
+            //     removed_ghost_entity
+            // );
+            walkie_play.set(
+                WalkieEvent::GhostExpelledPlayerMissed,
+                time.elapsed_secs_f64(),
+            );
+            processed_ghosts.0.insert(removed_ghost_entity); // Mark as processed
+        // Since WalkiePlay.set() handles cooldowns, one trigger per despawned ghost is fine.
+        // If multiple ghosts are expelled simultaneously, this could lead to multiple hints if player is outside.
+        // The global cooldown of the event itself should prevent spam.
+        } else {
+            // Player was inside, mark as processed so we don't re-check if they step out immediately.
+            // info!(
+            //    "Ghost {:?} despawned. Player was inside. Not triggering GhostExpelledPlayerMissed.",
+            //    removed_ghost_entity
+            // );
+            processed_ghosts.0.insert(removed_ghost_entity);
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, trigger_ghost_expelled_player_lingers_system);
     app.add_systems(Update, trigger_has_repellent_enters_location_system);
     app.add_systems(Update, trigger_repellent_provokes_strong_reaction_system);
     app.add_systems(Update, trigger_repellent_used_too_far_system);
+    app.add_systems(Update, trigger_repellent_exhausted_correct_type_system);
+    app.init_resource::<ProcessedMissedExpulsionGhosts>() // Initialize the resource
+        .add_systems(
+            Update,
+            reset_processed_missed_expulsion_ghosts_on_new_mission,
+        )
+        .add_systems(
+            Update,
+            trigger_ghost_expelled_player_missed_simplified_system
+                .after(reset_processed_missed_expulsion_ghosts_on_new_mission),
+        );
+
     // ... other systems for this module ...
 }

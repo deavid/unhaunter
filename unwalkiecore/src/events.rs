@@ -3,6 +3,7 @@ use crate::generated::base1::Base1Concept;
 use crate::generated::basic_gear_usage::BasicGearUsageConcept;
 use crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept;
 use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept; // Added import
+use crate::generated::evidence_gathering_and_logic::EvidenceGatheringAndLogicConcept;
 use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept;
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
 use crate::generated::player_wellbeing::PlayerWellbeingConcept;
@@ -85,7 +86,9 @@ pub enum WalkieEvent {
     VeryLowSanityNoTruckReturn,
 
     // --- Consumables and Defense Events ---
+    /// Player used quartz, and it cracked during use.
     QuartzCrackedFeedback,
+    /// Player used quartz, and it shattered during use.
     QuartzShatteredFeedback,
     /// Player stays hidden for too long after a hunt ends.
     PlayerStaysHiddenTooLong,
@@ -102,6 +105,18 @@ pub enum WalkieEvent {
     RepellentUsedTooFar,
     /// Player used a repellent, enraging the ghost, causing the player to flee.
     RepellentUsedGhostEnragesPlayerFlees,
+    /// Player exhausted a repellent while the ghost was present, and it was the correct type.
+    RepellentExhaustedGhostPresentCorrectType,
+    /// Player missed the ghost after it was expelled.
+    GhostExpelledPlayerMissed,
+    /// Player did not switch starting gear in a hotspot.
+    DidNotSwitchStartingGearInHotspot,
+    /// Player did not cycle to other gear when it was necessary.
+    DidNotCycleToOtherGear,
+    /// Journal points to one ghost, but no crafting has been done.
+    JournalPointsToOneGhostNoCraft,
+    /// Player is fixated on EMF readings that are not EMF Level 5.
+    EMFNonEMF5Fixation,
     // TODO: Add other event categories here
 }
 
@@ -149,6 +164,12 @@ impl WalkieEvent {
             WalkieEvent::GearSelectedNotActivated => {
                 Box::new(BasicGearUsageConcept::GearSelectedNotActivated)
             }
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => {
+                Box::new(BasicGearUsageConcept::DidNotSwitchStartingGearInHotspot)
+            }
+            WalkieEvent::DidNotCycleToOtherGear => {
+                Box::new(BasicGearUsageConcept::DidNotCycleToOtherGear)
+            }
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => {
                 Box::new(PlayerWellbeingConcept::LowHealthGeneralWarning)
@@ -186,6 +207,17 @@ impl WalkieEvent {
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
                 Box::new(RepellentAndExpulsionConcept::RepellentUsedGhostEnragesPlayerFlees)
             }
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => {
+                Box::new(RepellentAndExpulsionConcept::RepellentExhaustedGhostPresentCorrectType)
+            }
+            WalkieEvent::GhostExpelledPlayerMissed => {
+                Box::new(RepellentAndExpulsionConcept::GhostExpelledPlayerMissed)
+            }
+            // --- Evidence Gathering ---
+            WalkieEvent::JournalPointsToOneGhostNoCraft => {
+                Box::new(EvidenceGatheringAndLogicConcept::JournalPointsToOneGhostNoCraft)
+            }
+            WalkieEvent::EMFNonEMF5Fixation => Box::new(BasicGearUsageConcept::EMFNonEMF5Fixation),
         }
     }
 
@@ -230,6 +262,13 @@ impl WalkieEvent {
             WalkieEvent::HasRepellentEntersLocation => 120.0 * count,
             WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            WalkieEvent::GhostExpelledPlayerMissed => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => 180.0 * count, // Trigger every 3 minutes if conditions met
+            WalkieEvent::DidNotCycleToOtherGear => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            // --- Evidence Gathering ---
+            WalkieEvent::JournalPointsToOneGhostNoCraft => 300.0 * count, // Trigger every 5 minutes if conditions met
+            WalkieEvent::EMFNonEMF5Fixation => 120.0 * count, // Trigger every 2 minutes if conditions met
         }
     }
 
@@ -257,6 +296,7 @@ impl WalkieEvent {
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
             WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
             WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Low,
+            WalkieEvent::EMFNonEMF5Fixation => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
             WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::High,
@@ -272,6 +312,12 @@ impl WalkieEvent {
             WalkieEvent::HasRepellentEntersLocation => WalkieEventPriority::Medium,
             WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::Low,
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => WalkieEventPriority::Medium,
+            WalkieEvent::GhostExpelledPlayerMissed => WalkieEventPriority::Medium,
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::Medium,
+            WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
+            // --- Evidence Gathering ---
+            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being
