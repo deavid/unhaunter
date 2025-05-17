@@ -85,7 +85,16 @@ fn walkie_talk(
             }
             Some(WalkieSoundState::Talking)
         }
-        Some(WalkieSoundState::Talking) => Some(WalkieSoundState::Outro),
+        Some(WalkieSoundState::Talking) => {
+            let hint_text = walkie_event.get_on_screen_actionable_hint_text();
+            if !hint_text.is_empty() {
+                hint_event_writer.send(OnScreenHintEvent {
+                    hint_text: hint_text.to_string(),
+                });
+            }
+
+            Some(WalkieSoundState::Outro)
+        }
         Some(WalkieSoundState::Outro) => {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed().as_secs_f32() < 2.0 {
@@ -114,12 +123,6 @@ fn walkie_talk(
     walkie_play.state = new_state.clone();
     if new_state.is_none() {
         // When walkie ends, send an OnScreenHintEvent with on_completion=true
-        let hint_text = walkie_event.get_on_screen_actionable_hint_text();
-        if !hint_text.is_empty() {
-            hint_event_writer.send(OnScreenHintEvent {
-                hint_text: hint_text.to_string(),
-            });
-        }
         walkie_play.event = None;
         walkie_play.current_voice_line = None;
         walkie_play.last_message_time = time.elapsed_secs_f64();
