@@ -1,61 +1,6 @@
 WalkiePhraseFile(
   event_lines: [
     WalkieEventConceptEntry(
-      name: "SaltUnusedInRelevantSituation", // e.g., high ghost activity in narrow paths, player has salt but hasn't used it.
-      lines: [
-        WalkieLineEntry(
-          tts_text: "This area looks like a prime spot for some salt lines. Might help us see where it is treading if it passes through.",
-          subtitle_text: "This area looks like a prime spot for some salt lines. Might help us see where it's treading if it passes through.",
-          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength, Encouraging],
-        ),
-        WalkieLineEntry(
-          tts_text: "Got that salt handy? A few well placed piles in doorways or tight corridors could give us some UV footprints to follow.",
-          subtitle_text: "Got that salt handy? A few well-placed piles in doorways or tight corridors could give us some UV footprints to follow.",
-          tags: [ReminderLow, Guidance, DirectHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "If you are trying to track its movements, a bit of salt can work wonders. Lay some down and check it with the UV later.",
-          subtitle_text: "If you're trying to track its movements, a bit of salt can work wonders. Lay some down and check it with the UV later.",
-          tags: [Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Remember that salt you picked up? Now might be a good time to use it to see if our ghostly friend leaves any tracks.",
-          subtitle_text: "Remember that salt you picked up? Now might be a good time to use it to see if our ghostly friend leaves any tracks.",
-          tags: [ReminderMedium, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "This seems like a high traffic area for the ghost. A sprinkle of salt here could be very revealing under UV light.",
-          subtitle_text: "This seems like a high-traffic area for the ghost. A sprinkle of salt here could be very revealing under UV light.",
-          tags: [NeutralObservation, Guidance, ContextualHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Do not forget the salt. It is not just for seasoning. It can make the invisible visible, with a little UV help.",
-          subtitle_text: "Don't forget the salt. It's not just for seasoning. It can make the invisible visible, with a little UV help.",
-          tags: [FriendlyReminder, Humorous, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "If you are unsure of its patrol route, try laying down some salt in key spots. It might just walk right through it.",
-          subtitle_text: "If you're unsure of its patrol route, try laying down some salt in key spots. It might just walk right through it.",
-          tags: [Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "That salt is not just for decoration. Use it to try and catch some ghostly footprints.",
-          subtitle_text: "That salt isn't just for decoration. Use it to try and catch some ghostly footprints.",
-          tags: [SlightlyImpatient, DirectHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Considering how much this thing moves, laying down some salt might give us a clearer picture of its favourite haunts.",
-          subtitle_text: "Considering how much this thing moves, laying down some salt might give us a clearer picture of its favourite haunts.",
-          tags: [NeutralObservation, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "A line of salt across a doorway or narrow path can be surprisingly effective for tracking. Give it a go.",
-          subtitle_text: "A line of salt across a doorway or narrow path can be surprisingly effective for tracking. Give it a go.",
-          tags: [Encouraging, Guidance, DirectHint, MediumLength],
-        ),
-      ],
-    ),
-    WalkieEventConceptEntry(
       name: "QuartzUnusedInRelevantSituation", // e.g., hunt starting/active, player has Quartz but isn't 'using' it (it's passive, but buddy can remind)
       lines: [
         WalkieLineEntry(
@@ -162,61 +107,6 @@ WalkiePhraseFile(
           tts_text: "A bit of sage smoke can work wonders on a grumpy ghost. Worth a try if its rage is building up.",
           subtitle_text: "A bit of sage smoke can work wonders on a grumpy ghost. Worth a try if its rage is building up.",
           tags: [Encouraging, Guidance, MediumLength],
-        ),
-      ],
-    ),
-    WalkieEventConceptEntry(
-      name: "SaltDroppedIneffectively", // Player drops Salt in a wide open area, not near doorways/paths.
-      lines: [
-        WalkieLineEntry(
-          tts_text: "Spreading salt in the middle of a wide room like that? It is a bit like trying to catch rain in a sieve, love.",
-          subtitle_text: "Spreading salt in the middle of a wide room like that? It's a bit like trying to catch rain in a sieve, love.",
-          tags: [PlayerStruggling, SnarkyHumor, Guidance, ContextualHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Salt works best in choke points, like doorways or narrow hallways, where the ghost is more likely to step in it.",
-          subtitle_text: "Salt works best in choke-points, like doorways or narrow hallways, where the ghost is more likely to step in it.",
-          tags: [FirstTimeHint, DirectHint, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "That salt pile might be a bit out of the way. Try placing it where you think the ghost actually walks.",
-          subtitle_text: "That salt pile might be a bit out of the way. Try placing it where you think the ghost actually walks.",
-          tags: [PlayerStruggling, Guidance, ContextualHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "You want to make a barrier or a trap with the salt, not just season the floorboards. Think about its path.",
-          subtitle_text: "You want to make a barrier or a trap with the salt, not just season the floorboards. Think about its path.",
-          tags: [Humorous, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "For the salt to be effective, the ghost needs to cross it. Placing it in more confined spaces increases your chances.",
-          subtitle_text: "For the salt to be effective, the ghost needs to cross it. Placing it in more confined spaces increases your chances.",
-          tags: [ReminderLow, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Is that salt for decoration, or are you hoping the ghost will trip over it? Try putting it in a doorway.",
-          subtitle_text: "Is that salt for decoration, or are you hoping the ghost will trip over it? Try putting it in a doorway.",
-          tags: [SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "A little tip on salt placement: aim for areas the ghost is forced to pass through. Not just any old spot.",
-          subtitle_text: "A little tip on salt placement: aim for areas the ghost is forced to pass through. Not just any old spot.",
-          tags: [FriendlyReminder, Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "That salt pile is looking a bit lonely out there. It is more effective in narrower spots.",
-          subtitle_text: "That salt pile is looking a bit lonely out there. It's more effective in narrower spots.",
-          tags: [Humorous, Guidance, PlayerStruggling, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "Think strategically with the salt. Where does it have to go? That is where you put it.",
-          subtitle_text: "Think strategically with the salt. Where does it *have* to go? That's where you put it.",
-          tags: [Guidance, MediumLength],
-        ),
-        WalkieLineEntry(
-          tts_text: "You are more likely to catch its footprints if the salt is in a high traffic area, like near its breach or a doorway it uses.",
-          subtitle_text: "You're more likely to catch its footprints if the salt is in a high-traffic area, like near its breach or a doorway it uses.",
-          tags: [ReminderMedium, Guidance, ContextualHint, MediumLength],
         ),
       ],
     ),
