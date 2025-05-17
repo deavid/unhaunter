@@ -41,22 +41,33 @@ impl GeigerCounter {
 }
 
 impl GearUsable for GeigerCounter {
+    fn can_enable(&self) -> bool {
+        // Can be enabled if not glitching
+        self.display_glitch_timer <= 0.0
+    }
+
+    fn is_enabled(&self) -> bool {
+        // Is truly enabled if it's on and not glitching
+        self.enabled && self.display_glitch_timer <= 0.0
+    }
+
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.enabled {
-            true => {
-                if self.display_glitch_timer > 0.0 {
-                    if random_seed::rng().random_bool(0.7) {
-                        GearSpriteID::GeigerOff
-                    } else {
-                        GearSpriteID::GeigerTick
-                    }
-                } else if self.sound_a1 > 10.0 {
-                    GearSpriteID::GeigerTick
+        // Show visual state based on self.enabled, but consider glitch for flickering
+        if self.enabled {
+            if self.display_glitch_timer > 0.0 {
+                // Glitching: flicker between Off and Tick
+                if random_seed::rng().random_bool(0.7) { // 70% chance to show Off during glitch flicker
+                    GearSpriteID::GeigerOff
                 } else {
-                    GearSpriteID::GeigerOn
+                    GearSpriteID::GeigerTick // 30% chance to show Tick (or a dedicated glitch sprite if available)
                 }
+            } else if self.sound_a1 > 10.0 { // Not glitching, check sound level for Tick sprite
+                GearSpriteID::GeigerTick
+            } else { // Not glitching, low sound, show On sprite
+                GearSpriteID::GeigerOn
             }
-            false => GearSpriteID::GeigerOff,
+        } else { // Not enabled
+            GearSpriteID::GeigerOff
         }
     }
 
@@ -70,7 +81,9 @@ impl GearUsable for GeigerCounter {
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
+        let on_s = on_off(self.enabled); // Reflects the user's intent (on/off switch state)
+
+        // Show garbled text when enabled (intent) but glitching (actual state)
         if self.enabled && self.display_glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Reading: ERR0R\nEnergy: ###.###",
@@ -80,7 +93,8 @@ impl GearUsable for GeigerCounter {
             };
             return format!("{name}:  {on_s}\n{garbled}");
         }
-        let msg = if self.enabled {
+        // Regular display: use self.is_enabled() to check if it's truly operational
+        let msg = if self.is_enabled() {
             // Use sound_display here, NOT output_sound!
             format!("Reading: {:.1}cpm", self.sound_display)
         } else {
@@ -90,7 +104,14 @@ impl GearUsable for GeigerCounter {
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        self.enabled = !self.enabled;
+        if self.enabled {
+            // If it's on, turn it off
+            self.enabled = false;
+        } else if self.can_enable() {
+            // If it's off but can be enabled (not glitching), turn it on
+            self.enabled = true;
+        }
+        // If it's off and cannot be enabled (e.g. glitching), do nothing.
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {

@@ -51,7 +51,21 @@ impl GearUsable for Videocam {
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        self.enabled = !self.enabled;
+        if self.can_enable() {
+            self.enabled = !self.enabled;
+        } else if self.is_enabled() {
+            self.enabled = false;
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled && self.display_glitch_timer <= 0.01
+    }
+
+    fn can_enable(&self) -> bool {
+        // Videocam does not have a battery, so it can always be enabled
+        // as long as it's not glitching.
+        self.display_glitch_timer <= 0.01
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
