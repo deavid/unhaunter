@@ -117,6 +117,8 @@ pub enum WalkieEvent {
     JournalPointsToOneGhostNoCraft,
     /// Player is fixated on EMF readings that are not EMF Level 5.
     EMFNonEMF5Fixation,
+    /// Journal contains conflicting evidence entries.
+    JournalConflictingEvidence,
     // TODO: Add other event categories here
 }
 
@@ -218,6 +220,9 @@ impl WalkieEvent {
                 Box::new(EvidenceGatheringAndLogicConcept::JournalPointsToOneGhostNoCraft)
             }
             WalkieEvent::EMFNonEMF5Fixation => Box::new(BasicGearUsageConcept::EMFNonEMF5Fixation),
+            WalkieEvent::JournalConflictingEvidence => {
+                Box::new(EvidenceGatheringAndLogicConcept::JournalConflictingEvidence)
+            }
         }
     }
 
@@ -269,6 +274,7 @@ impl WalkieEvent {
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => 300.0 * count, // Trigger every 5 minutes if conditions met
             WalkieEvent::EMFNonEMF5Fixation => 120.0 * count, // Trigger every 2 minutes if conditions met
+            WalkieEvent::JournalConflictingEvidence => 300.0 * count, // Trigger every 5 minutes if conditions met
         }
     }
 
@@ -318,6 +324,7 @@ impl WalkieEvent {
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
+            WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being

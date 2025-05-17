@@ -154,10 +154,84 @@ fn trigger_emf_non_emf5_fixation_system(
     }
 }
 
+const CONFLICT_DURATION_THRESHOLD_SECONDS: f32 = 60.0;
+
+// Local state to track how long a conflicting evidence state has persisted
+#[derive(Default)]
+struct ConflictingEvidenceTracker {
+    conflict_active_since_timestamp: Option<f32>,
+}
+
+fn trigger_journal_conflicting_evidence_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    truck_button_query: Query<&TruckUIButton>,
+    board_data: Res<BoardData>,
+    mut tracker: Local<ConflictingEvidenceTracker>,
+    // TODO: player_profile: Res<Persistent<PlayerProfileData>>,
+) {
+    // 1. System Run Condition Checks
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        // If not in the right state, reset the tracker
+        *tracker = ConflictingEvidenceTracker::default();
+        return;
+    }
+
+    // 2. Check for Any Conflicting Evidence
+    let mut current_conflict_exists = false;
+    for button_data in truck_button_query.iter() {
+        if let TruckButtonType::Evidence(marked_evidence_type) = button_data.class {
+            let actual_ghost_has_this_evidence =
+                board_data.evidences.contains(&marked_evidence_type);
+
+            if button_data.status == TruckButtonState::Pressed && !actual_ghost_has_this_evidence {
+                current_conflict_exists = true;
+                break;
+            }
+            if button_data.status == TruckButtonState::Discard && actual_ghost_has_this_evidence {
+                current_conflict_exists = true;
+                break;
+            }
+        }
+    }
+
+    // 3. Manage Timer and Trigger
+    if current_conflict_exists {
+        if tracker.conflict_active_since_timestamp.is_none() {
+            // A conflict just started (or was re-detected after a reset/previous clear state)
+            tracker.conflict_active_since_timestamp = Some(time.elapsed_secs());
+        } else if let Some(start_time) = tracker.conflict_active_since_timestamp {
+            let duration_of_conflict = time.elapsed_secs() - start_time;
+            if duration_of_conflict > CONFLICT_DURATION_THRESHOLD_SECONDS {
+                // TODO: Add PlayerProfileData check here.
+
+                if walkie_play.set(
+                    WalkieEvent::JournalConflictingEvidence,
+                    time.elapsed_secs_f64(),
+                ) {
+                    // Hint was played, reset the timer to prevent immediate re-trigger for this same conflict.
+                    // The conflict might still exist, but we've hinted.
+                    // It will re-arm if the conflict resolves and then a *new* one appears.
+                    tracker.conflict_active_since_timestamp = None;
+                }
+            }
+        }
+    } else {
+        // No conflict currently exists
+        if tracker.conflict_active_since_timestamp.is_some() {
+            // Conflict was just resolved
+            tracker.conflict_active_since_timestamp = None;
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system,
     );
     app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
+    app.add_systems(Update, trigger_journal_conflicting_evidence_system);
 }
