@@ -23,6 +23,7 @@ use std::ops::{Add, Mul};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct RepellentFlask {
+    /// The ghost type that the repellent is effective against. It is never set to None even if emptied.
     pub liquid_content: Option<GhostType>,
     pub active: bool,
     pub qty: i32,
@@ -30,7 +31,7 @@ pub struct RepellentFlask {
 
 impl GearUsable for RepellentFlask {
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.liquid_content.is_some() {
+        match self.qty > 0 {
             true => GearSpriteID::RepelentFlaskFull,
             false => GearSpriteID::RepelentFlaskEmpty,
         }
@@ -46,9 +47,9 @@ impl GearUsable for RepellentFlask {
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
-        let on_s = match self.liquid_content {
-            Some(x) => format!("Anti-{}", x.name()),
-            None => "Empty".to_string(),
+        let on_s = match (self.liquid_content, self.qty > 0) {
+            (Some(x), true) => format!("Anti-{}", x.name()),
+            _ => "Empty".to_string(),
         };
         let msg = if self.liquid_content.is_some() {
             if self.active {
@@ -63,7 +64,7 @@ impl GearUsable for RepellentFlask {
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        if self.liquid_content.is_none() {
+        if self.liquid_content.is_none() || self.qty <= 0 {
             return;
         }
         self.active = true;
@@ -90,7 +91,6 @@ impl GearUsable for RepellentFlask {
         if self.qty <= 0 {
             self.qty = 0;
             self.active = false;
-            self.liquid_content = None;
             return;
         }
         let Some(liquid_content) = self.liquid_content else {
