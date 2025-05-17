@@ -5475,6 +5475,7 @@ version = "0.3.0-beta4-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "enum-iterator",
  "rand 0.9.1",
  "uncore",
  "ungear",

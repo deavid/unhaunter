@@ -20,3 +20,4 @@ untruck = { path = "../untruck" }
 bevy = { workspace = true }
 rand = { workspace = true }
 bevy-persistent = { workspace = true }
+enum-iterator = { workspace = true }

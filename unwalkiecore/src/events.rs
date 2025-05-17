@@ -123,6 +123,24 @@ pub enum WalkieEvent {
     EMFNonEMF5Fixation,
     /// Journal contains conflicting evidence entries.
     JournalConflictingEvidence,
+
+    // --- Evidence Confirmation Events ---
+    /// Freezing temperatures evidence has been confirmed.
+    FreezingTempsEvidenceConfirmed,
+    /// Floating orbs evidence has been confirmed.
+    FloatingOrbsEvidenceConfirmed,
+    /// UV Ectoplasm evidence has been confirmed.
+    UVEctoplasmEvidenceConfirmed,
+    /// EMF Level 5 evidence has been confirmed.
+    EMFLevel5EvidenceConfirmed,
+    /// EVP evidence has been confirmed.
+    EVPEvidenceConfirmed,
+    /// Spirit Box evidence has been confirmed.
+    SpiritBoxEvidenceConfirmed,
+    /// RL Presence evidence has been confirmed.
+    RLPresenceEvidenceConfirmed,
+    /// CPM 500 evidence has been confirmed.
+    CPM500EvidenceConfirmed,
     // TODO: Add other event categories here
 }
 
@@ -233,6 +251,31 @@ impl WalkieEvent {
             WalkieEvent::JournalConflictingEvidence => {
                 Box::new(EvidenceGatheringAndLogicConcept::JournalConflictingEvidence)
             }
+            // --- Evidence Confirmation Events ---
+            WalkieEvent::FreezingTempsEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::FreezingTempsEvidenceConfirmed)
+            }
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::FloatingOrbsEvidenceConfirmed)
+            }
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::UVEctoplasmEvidenceConfirmed)
+            }
+            WalkieEvent::EMFLevel5EvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::EMFLevel5EvidenceConfirmed)
+            }
+            WalkieEvent::EVPEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::EVPEvidenceConfirmed)
+            }
+            WalkieEvent::SpiritBoxEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::SpiritBoxEvidenceConfirmed)
+            }
+            WalkieEvent::RLPresenceEvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::RLPresenceEvidenceConfirmed)
+            }
+            WalkieEvent::CPM500EvidenceConfirmed => {
+                Box::new(EvidenceGatheringAndLogicConcept::CPM500EvidenceConfirmed)
+            }
         }
     }
 
@@ -287,6 +330,16 @@ impl WalkieEvent {
             WalkieEvent::JournalPointsToOneGhostNoCraft => 300.0 * count, // Trigger every 5 minutes if conditions met
             WalkieEvent::EMFNonEMF5Fixation => 120.0 * count, // Trigger every 2 minutes if conditions met
             WalkieEvent::JournalConflictingEvidence => 300.0 * count, // Trigger every 5 minutes if conditions met
+
+            // --- Evidence Confirmation Events ---
+            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
         }
     }
 
@@ -339,6 +392,16 @@ impl WalkieEvent {
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
             WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
+
+            // --- Evidence Confirmation Events ---
+            WalkieEvent::FreezingTempsEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::EVPEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::Medium,
         }
     }
     /// This is just a prototype function that needs to be replaced, the idea being

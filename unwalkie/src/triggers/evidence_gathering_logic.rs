@@ -3,6 +3,7 @@ use std::any::Any;
 use bevy::prelude::*;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::resources::board_data::BoardData;
+use uncore::resources::current_evidence_readings::CurrentEvidenceReadings;
 use uncore::resources::ghost_guess::GhostGuess;
 use uncore::states::AppState;
 use uncore::states::GameState;
@@ -227,6 +228,55 @@ fn trigger_journal_conflicting_evidence_system(
     }
 }
 
+// How clear evidence needs to be to trigger the "confirmed" hint.
+const CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD: f32 = 0.5;
+
+/// Generic system to trigger "Evidence Confirmed" walkie events.
+fn trigger_evidence_confirmed_feedback_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    evidence_readings: Res<CurrentEvidenceReadings>,
+    // TODO: player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting
+) {
+    // System Run Condition
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        return;
+    }
+    use enum_iterator::all;
+
+    for evidence_type in all::<Evidence>() {
+        // Iterate through all defined Evidence types
+        if let Some(reading) = evidence_readings.get_reading(evidence_type) {
+            if reading.clarity >= CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD {
+                // Evidence is currently clearly visible/audible
+
+                // TODO: Add PlayerProfileData check here to limit hints for experienced players
+                // e.g., if player_profile.level > 5 && evidence_type == Evidence::FreezingTemp { continue; }
+
+                let walkie_event_to_send = match evidence_type {
+                    Evidence::FreezingTemp => Some(WalkieEvent::FreezingTempsEvidenceConfirmed),
+                    Evidence::FloatingOrbs => Some(WalkieEvent::FloatingOrbsEvidenceConfirmed),
+                    Evidence::UVEctoplasm => Some(WalkieEvent::UVEctoplasmEvidenceConfirmed),
+                    Evidence::EMFLevel5 => Some(WalkieEvent::EMFLevel5EvidenceConfirmed),
+                    Evidence::EVPRecording => Some(WalkieEvent::EVPEvidenceConfirmed),
+                    Evidence::SpiritBox => Some(WalkieEvent::SpiritBoxEvidenceConfirmed),
+                    Evidence::RLPresence => Some(WalkieEvent::RLPresenceEvidenceConfirmed),
+                    Evidence::CPM500 => Some(WalkieEvent::CPM500EvidenceConfirmed),
+                };
+
+                if let Some(event_to_send) = walkie_event_to_send {
+                    // Attempt to set the event. If successful, mark it in the tracker.
+                    if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
+                        // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -234,4 +284,5 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
     app.add_systems(Update, trigger_journal_conflicting_evidence_system);
+    app.add_systems(Update, trigger_evidence_confirmed_feedback_system);
 }
