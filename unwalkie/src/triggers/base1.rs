@@ -18,18 +18,12 @@ fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
     roomdb: Res<RoomDB>,
-    difficulty: Res<CurrentDifficulty>,
     gc: Res<GameConfig>,
     mut stopwatch: Local<Stopwatch>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     time: Res<Time>,
 ) {
-    if difficulty.0.tutorial_chapter.is_none() {
-        // Not in tutorial mode, no need to remind the player.
-        stopwatch.reset();
-        return;
-    }
     if app_state.get() != &AppState::InGame {
         // We want to play this only when the player is in the game.
         stopwatch.reset();

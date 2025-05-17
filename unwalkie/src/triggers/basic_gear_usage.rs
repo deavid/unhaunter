@@ -135,8 +135,7 @@ fn trigger_gear_selected_not_activated_system(
 
     // 5. Check Duration and Trigger Event
     if let Some(current_tracker_ref) = tracker.as_ref() {
-        // Use .as_ref() for read-only access
-        const INACTIVITY_THRESHOLD_SECONDS: f32 = 15.0; // Configurable threshold
+        const INACTIVITY_THRESHOLD_SECONDS: f32 = 10.0;
         if current_tracker_ref.inactive_duration >= INACTIVITY_THRESHOLD_SECONDS
             && walkie_play.set(
                 WalkieEvent::GearSelectedNotActivated,
@@ -149,10 +148,10 @@ fn trigger_gear_selected_not_activated_system(
     }
 }
 
-const HOTSPOT_DURATION_THRESHOLD: f32 = 60.0; // Seconds
+const HOTSPOT_DURATION_THRESHOLD: f32 = 30.0; // Seconds
 const HOTSPOT_PROXIMITY_THRESHOLD: f32 = 5.0; // Game units for "near ghost"
 
-#[derive(PartialEq, Clone, Debug)] // Added Debug
+#[derive(PartialEq, Clone, Debug)]
 struct IneffectiveToolInHotspotTracker {
     tool_in_hand: GearKind, // Thermometer or EMFMeter
     duration_in_hotspot_with_ineffective_tool_active: f32,
@@ -239,9 +238,6 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 
     if !in_hotspot {
-        if tracker.is_some() {
-            *tracker = None;
-        }
         return;
     }
 
@@ -354,6 +350,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
+    ghost_query: Query<&GhostSprite>, // Add ghost query to check hunting state
     mut tracker: Local<GearCycleUsageTracker>, // No Option, always track
 ) {
     // 1. System Run Condition & Chapter Check
@@ -381,7 +378,13 @@ fn trigger_did_not_cycle_to_other_gear_system(
         .get(&player_pos.to_board_position())
         .is_none()
     {
-        *tracker = GearCycleUsageTracker::default(); // Player is not inside a defined room
+        return;
+    }
+
+    // Check if any ghost is currently hunting - pause tracking if so
+    let ghost_hunting = ghost_query.iter().any(|g| g.hunting > 0.0);
+    if ghost_hunting {
+        // Don't reset tracker, just return and pause tracking while ghost is hunting
         return;
     }
 
@@ -402,7 +405,6 @@ fn trigger_did_not_cycle_to_other_gear_system(
     {
         if let Some(gear_data) = player_gear.right_hand.data.as_ref() {
             if gear_data.is_enabled() {
-                // TODO (David): Ensure is_enabled() and can_enable() are correct for all evidence gear.
                 is_current_tool_an_active_evidence_tool = true;
             }
         }
@@ -461,7 +463,6 @@ fn trigger_did_not_cycle_to_other_gear_system(
     if !has_other_usable_evidence_tools {
         return; // No other distinct, usable evidence tools to cycle to
     }
-
     // 6. Trigger Condition
     if tracker.time_with_current_tool_continuously_active > TOOL_ACTIVE_THRESHOLD_SECONDS
         && tracker.time_since_last_q_press > Q_PRESS_INACTIVITY_THRESHOLD_SECONDS
@@ -480,5 +481,4 @@ pub(crate) fn app_setup(app: &mut App) {
         trigger_did_not_switch_starting_gear_in_hotspot_system,
     );
     app.add_systems(Update, trigger_did_not_cycle_to_other_gear_system);
-    // ... other systems for this module ...
 }

@@ -296,11 +296,11 @@ impl WalkieEvent {
 
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
-            WalkieEvent::BreachShowcase => 90.0 * count,
-            WalkieEvent::GhostShowcase => 90.0 * count,
+            WalkieEvent::BreachShowcase => 9000.0 * count,
+            WalkieEvent::GhostShowcase => 900.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
             WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
-            WalkieEvent::GearSelectedNotActivated => 15.0 + 60.0 * count, // 15s, then +1min per trigger
+            WalkieEvent::GearSelectedNotActivated => 60.0 * count,
 
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
@@ -362,11 +362,11 @@ impl WalkieEvent {
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Low,
-            WalkieEvent::BreachShowcase => WalkieEventPriority::Medium,
-            WalkieEvent::GhostShowcase => WalkieEventPriority::Medium,
+            WalkieEvent::BreachShowcase => WalkieEventPriority::Low,
+            WalkieEvent::GhostShowcase => WalkieEventPriority::Low,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
             WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
-            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Low,
+            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::High,
             WalkieEvent::EMFNonEMF5Fixation => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
@@ -387,7 +387,7 @@ impl WalkieEvent {
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => WalkieEventPriority::Medium,
             WalkieEvent::GhostExpelledPlayerMissed => WalkieEventPriority::Medium,
-            WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::Medium,
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::High,
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
@@ -404,14 +404,133 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::Medium,
         }
     }
-    /// This is just a prototype function that needs to be replaced, the idea being
-    /// that whenever a voice line needs to add extra hints visually for the player,
-    /// we send some kind of Bevy Event to an hypothetical hint system that will highlight
-    /// the controls or the objects that are relevant to the voice line.
-    pub fn _hint_event(&self) -> &'static str {
+    /// This function returns hint text to display to the player for various events.
+    /// These hints are displayed alongside the walkie-talkie voice to help guide the player
+    /// on what controls or actions they should take.
+    pub fn get_on_screen_actionable_hint_text(&self) -> &'static str {
         match &self {
-            WalkieEvent::PlayerStuckAtStart => "highlight WASD controls",
-            _ => "",
+            // --- Base1 ---
+            WalkieEvent::GearInVan => "Return to van; check Loadout tab for gear.",
+            WalkieEvent::GhostNearHunt => "Ghost is hunting! Hide [E] or create distance!",
+            WalkieEvent::MissionStartEasy => "Approach the building to start investigating.",
+
+            // --- Locomotion and Interaction ---
+            WalkieEvent::PlayerStuckAtStart => "Use [WASD] or Arrow Keys to move.",
+            WalkieEvent::ErraticMovementEarly => "Try smoother [WASD] movements to navigate.",
+            WalkieEvent::DoorInteractionHesitation => "Press [E] near door to open.",
+            WalkieEvent::StrugglingWithGrabDrop => "Use [F] to grab small items, [G] to drop.",
+            WalkieEvent::StrugglingWithHideUnhide => {
+                "Press & Hold [E] near tables/beds to hide. Press [E] again to unhide. (Cannot hide while holding items with [F])."
+            }
+            WalkieEvent::HuntActiveNearHidingSpotNoHide => {
+                "Ghost hunting! Press & Hold [E] at the nearby hiding spot NOW!"
+            }
+
+            // --- Environmental Awareness ---
+            WalkieEvent::DarkRoomNoLightUsed => {
+                "Dark! Use Flashlight [Tab] or find a room light switch [E]."
+            }
+            WalkieEvent::BreachShowcase => {
+                "The shimmering distortion is the Ghost Breach, its entry point."
+            }
+            WalkieEvent::GhostShowcase => {
+                "That was the ghost! Observe its appearance and behavior."
+            }
+            WalkieEvent::RoomLightsOnGearNeedsDark => {
+                "This gear (UV/VideoCam) works best in darkness. Turn off room lights [E]."
+            }
+            WalkieEvent::ThermometerNonFreezingFixation => {
+                "Journal Check: Cold is good, but <0°C is 'Freezing Temps' evidence."
+            }
+            WalkieEvent::GearSelectedNotActivated => "Activate gear in your right hand with [R].",
+
+            // --- Player Wellbeing ---
+            WalkieEvent::LowHealthGeneralWarning => "Health low! Return to the van to recover.",
+            WalkieEvent::VeryLowSanityNoTruckReturn => {
+                "Sanity critical! Go to the van immediately!"
+            }
+
+            // --- Consumables and Defense ---
+            WalkieEvent::QuartzCrackedFeedback => {
+                "Quartz took damage protecting you! It has limited uses."
+            }
+            WalkieEvent::QuartzShatteredFeedback => {
+                "Quartz shattered! It no longer offers protection."
+            }
+            WalkieEvent::PlayerStaysHiddenTooLong => "Hunt over. Press [E] to stop hiding.",
+            WalkieEvent::QuartzUnusedInRelevantSituation => {
+                "Ghost is aggressive! Consider grabbing a Quartz Stone from the truck for defense."
+            }
+            WalkieEvent::SageUnusedInRelevantSituation => {
+                "Ghost is agitated! Sage from the truck can help calm it or aid escape."
+            }
+            WalkieEvent::SageActivatedIneffectively => {
+                "For Sage to work, ensure its smoke reaches the ghost's area."
+            }
+            WalkieEvent::SageUnusedDefensivelyDuringHunt => {
+                "Sage could have helped during that hunt! Use [R]/[Tab] to activate if equipped."
+            }
+
+            // --- Repellent and Expulsion Events ---
+            WalkieEvent::GhostExpelledPlayerLingers => {
+                "Ghost gone! Return to van and select 'End Mission'."
+            }
+            WalkieEvent::HasRepellentEntersLocation => {
+                "Repellent equipped! Use [R]/[Tab] near ghost/breach."
+            }
+            WalkieEvent::RepellentUsedTooFar => {
+                "Repellent used too far away! Get closer to the ghost or its breach."
+            }
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
+                "Strong ghost reaction to repellent! Is it the correct type?"
+            }
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => {
+                "Correct repellent type, but you ran out! Craft more in the van."
+            }
+            WalkieEvent::GhostExpelledPlayerMissed => {
+                "Ghost expelled! Return to the area to visually confirm it and the breach are gone."
+            }
+
+            // --- Basic Gear Usage (continued) & Journal Logic ---
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => {
+                "Current tool ineffective here. Try your other starting tool with [Q]."
+            }
+            WalkieEvent::DidNotCycleToOtherGear => {
+                "Stuck on one tool? Press [Q] to cycle to other gear."
+            }
+            WalkieEvent::JournalPointsToOneGhostNoCraft => {
+                "Journal identified ghost! Go to truck and 'Craft Repellent'."
+            }
+            WalkieEvent::EMFNonEMF5Fixation => {
+                "Journal Check: EMF activity noted, but EMF Level 5 is the specific evidence."
+            }
+            WalkieEvent::JournalConflictingEvidence => {
+                "Journal evidence conflicts. Please review your findings carefully."
+            }
+
+            // --- "Evidence Confirmed" Events ---
+            WalkieEvent::FreezingTempsEvidenceConfirmed => {
+                "Freezing Temps found! Log with [C] or in truck journal."
+            }
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => {
+                "Floating Orbs spotted! Log with [C] or in truck journal."
+            }
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => {
+                "UV Ectoplasm detected! Log with [C] or in truck journal."
+            }
+            WalkieEvent::EMFLevel5EvidenceConfirmed => {
+                "EMF Level 5 confirmed! Log with [C] or in truck journal."
+            }
+            WalkieEvent::EVPEvidenceConfirmed => "EVP recorded! Log with [C] or in truck journal.",
+            WalkieEvent::SpiritBoxEvidenceConfirmed => {
+                "Spirit Box response! Log with [C] or in truck journal."
+            }
+            WalkieEvent::RLPresenceEvidenceConfirmed => {
+                "RL Presence observed! Log with [C] or in truck journal."
+            }
+            WalkieEvent::CPM500EvidenceConfirmed => {
+                "500+ CPM on Geiger! Log with [C] or in truck journal."
+            }
         }
     }
 }
