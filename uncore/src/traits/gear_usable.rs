@@ -83,6 +83,19 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn can_enable(&self) -> bool {
         true
     }
+
+    /// Returns 1.0 if the gear is showing strong signal of evidence in the status text.
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        0.0
+    }
+    /// Returns 1.0 if the gear is showing strong signal of evidence in the icon.
+    fn is_icon_showing_evidence(&self) -> f32 {
+        0.0
+    }
+    /// Returns 1.0 if the gear is reporting strong signal of evidence via sound.
+    fn is_sound_showing_evidence(&self) -> f32 {
+        0.0
+    }
 }
 
 impl Clone for Box<dyn GearUsable> {

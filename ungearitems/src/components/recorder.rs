@@ -203,6 +203,14 @@ impl GearUsable for Recorder {
         }
     }
 
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled() && self.display_glitch_timer <= 0.0 && self.evp_recorded_count > 0 {
+            1.0
+        } else {
+            0.0
+        }
+    }
+
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }

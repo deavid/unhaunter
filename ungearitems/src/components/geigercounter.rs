@@ -56,17 +56,21 @@ impl GearUsable for GeigerCounter {
         if self.enabled {
             if self.display_glitch_timer > 0.0 {
                 // Glitching: flicker between Off and Tick
-                if random_seed::rng().random_bool(0.7) { // 70% chance to show Off during glitch flicker
+                if random_seed::rng().random_bool(0.7) {
+                    // 70% chance to show Off during glitch flicker
                     GearSpriteID::GeigerOff
                 } else {
                     GearSpriteID::GeigerTick // 30% chance to show Tick (or a dedicated glitch sprite if available)
                 }
-            } else if self.sound_a1 > 10.0 { // Not glitching, check sound level for Tick sprite
+            } else if self.sound_a1 > 10.0 {
+                // Not glitching, check sound level for Tick sprite
                 GearSpriteID::GeigerTick
-            } else { // Not glitching, low sound, show On sprite
+            } else {
+                // Not glitching, low sound, show On sprite
                 GearSpriteID::GeigerOn
             }
-        } else { // Not enabled
+        } else {
+            // Not enabled
             GearSpriteID::GeigerOff
         }
     }
@@ -213,6 +217,14 @@ impl GearUsable for GeigerCounter {
             self.sound_a1 = rng.random_range(0.0..400.0);
             // Jumble numbers temporarily
             self.display_glitch_timer = 0.3;
+        }
+    }
+
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled() && self.sound_display > 500.0 {
+            1.0
+        } else {
+            0.0
         }
     }
 }

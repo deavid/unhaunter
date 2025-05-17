@@ -96,6 +96,16 @@ impl GearUsable for SpiritBox {
         }
     }
 
+    fn is_sound_showing_evidence(&self) -> f32 {
+        // SpiritBox is playing a sound/answering when it's enabled, not glitching,
+        // and ghost_answer is true (which means it's actively replying)
+        if self.enabled && self.display_glitch_timer <= 0.0 && self.ghost_answer {
+            1.0
+        } else {
+            0.0
+        }
+    }
+
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }

@@ -167,6 +167,17 @@ impl GearUsable for Thermometer {
     fn can_enable(&self) -> bool {
         true // Thermometer can always be toggled
     }
+
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled()
+            && self.display_glitch_timer <= 0.0
+            && kelvin_to_celsius(self.temp) < 0.0
+        {
+            1.0
+        } else {
+            0.0
+        }
+    }
 }
 
 impl From<Thermometer> for Gear {
