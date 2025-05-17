@@ -9,5 +9,7 @@ impl Plugin for UnhaunterWalkiePlugin {
 
         crate::walkie_play::app_setup(app);
         crate::triggers::app_setup(app);
+        crate::walkie_stats::app_setup(app);
+        crate::walkie_level_stats::setup_walkie_level_systems(app);
     }
 }

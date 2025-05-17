@@ -12,3 +12,4 @@ homepage.workspace = true
 unwalkie_types = { path = "../unwalkie_types" }
 
 bevy = { workspace = true }
+enum-iterator = { workspace = true }

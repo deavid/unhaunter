@@ -12,6 +12,7 @@ pub struct WalkieEventStats {
 pub struct WalkiePlay {
     pub event: Option<WalkieEvent>,
     pub played_events: HashMap<WalkieEvent, WalkieEventStats>,
+    pub other_mission_event_count: HashMap<WalkieEvent, u32>,
     pub state: Option<WalkieSoundState>,
     pub current_voice_line: Option<VoiceLineData>,
     pub last_message_time: f64,
@@ -30,6 +31,7 @@ impl Default for WalkiePlay {
             last_message_time: -100.0,
             truck_accessed: Default::default(),
             urgent_pending: Default::default(),
+            other_mission_event_count: Default::default(),
         }
     }
 }
@@ -92,7 +94,7 @@ impl WalkiePlay {
     }
 }
 
-#[derive(Clone, Debug, Component)]
+#[derive(Clone, Debug, Component, PartialEq, Eq)]
 pub enum WalkieSoundState {
     Intro,
     Talking,
