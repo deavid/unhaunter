@@ -30,10 +30,23 @@ pub struct RepellentFlask {
 }
 
 impl GearUsable for RepellentFlask {
+    fn can_enable(&self) -> bool {
+        // Can be activated if it's not already active, has quantity, and has a liquid type.
+        !self.active && self.qty > 0 && self.liquid_content.is_some()
+    }
+
+    fn is_enabled(&self) -> bool {
+        // Is "enabled" (i.e., actively spraying) if active and has quantity.
+        // liquid_content check is implicitly covered: if active and qty > 0,
+        // update() ensures liquid_content was Some.
+        self.active && self.qty > 0
+    }
+
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.qty > 0 {
-            true => GearSpriteID::RepelentFlaskFull,
-            false => GearSpriteID::RepelentFlaskEmpty,
+        if self.liquid_content.is_some() && self.qty > 0 {
+            GearSpriteID::RepelentFlaskFull
+        } else {
+            GearSpriteID::RepelentFlaskEmpty
         }
     }
 
@@ -47,12 +60,22 @@ impl GearUsable for RepellentFlask {
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
-        let on_s = match (self.liquid_content, self.qty > 0) {
-            (Some(x), true) => format!("Anti-{}", x.name()),
-            _ => "Empty".to_string(),
+        let status_line = if self.qty > 0 {
+            match self.liquid_content {
+                Some(gt) => format!("Anti-{}", gt.name()),
+                None => "Empty (No Type)".to_string(), // Should ideally not be hit if qty > 0 and filled
+            }
+        } else {
+            // qty is 0
+            match self.liquid_content {
+                Some(gt) => format!("Empty (was Anti-{})", gt.name()), // Indicates what it *was*
+                None => "Empty".to_string(),
+            }
         };
-        let msg = if self.liquid_content.is_some() {
+
+        let msg = if self.qty > 0 && self.liquid_content.is_some() {
             if self.active {
+                // or self.is_enabled()
                 "Emptying flask...\nGet close to the ghost!".to_string()
             } else {
                 "Flask ready.\nActivate near the Ghost.".to_string()
@@ -60,14 +83,16 @@ impl GearUsable for RepellentFlask {
         } else {
             "Flask empty.\nMust be filled on the van".to_string()
         };
-        format!("{name}: {on_s}\n{msg}")
+        format!("{name}: {status_line}\n{msg}")
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        if self.liquid_content.is_none() || self.qty <= 0 {
-            return;
+        if self.can_enable() {
+            // Checks !active, qty > 0, liquid_content.is_some()
+            self.active = true;
         }
-        self.active = true;
+        // If already active, or qty is 0, or no liquid_content, it does nothing.
+        // This maintains the "activate once to deplete" behavior.
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {

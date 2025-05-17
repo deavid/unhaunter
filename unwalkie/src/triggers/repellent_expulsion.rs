@@ -327,11 +327,10 @@ fn trigger_repellent_provokes_strong_reaction_system(
     }
 }
 
-// TODO (David): Modify `RepellentFlaskData` in `ungearitems/src/components/repellentflask.rs`
-// to include a transient field like `pub just_emptied_with_type: Option<GhostType>`.
-// This field should be set in `RepellentFlaskData::update()` when `qty` becomes 0
-// (and `active` was true), storing the `liquid_content` *before* it's set to None.
-// A separate system (or this one) should clear `just_emptied_with_type` after one frame.
+// The concept of `just_emptied_with_type` is now handled by RepellentFlaskData
+// retaining its `liquid_content` (GhostType) even when `qty` becomes 0.
+// The `update` method in `RepellentFlaskData` ensures `active` is false and `qty` is 0,
+// while `liquid_content` preserves the type of ghost it was filled with.
 
 #[derive(Default)]
 struct RepellentExhaustedCheckState {
@@ -348,9 +347,6 @@ fn trigger_repellent_exhausted_correct_type_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    // Query PlayerGear. We need mut if we are to clear the transient `just_emptied_with_type` field.
-    // For now, let's assume another system handles clearing it or it's very short-lived.
-    // If this system clears it, PlayerGear needs to be mut.
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
     ghost_query: Query<&GhostSprite>, // To check if ghost is present and its type/hits
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
@@ -371,24 +367,36 @@ fn trigger_repellent_exhausted_correct_type_system(
         return;
     };
 
-    // 2. Detect if a Repellent Flask was JUST emptied with the correct type
-    // This relies on the `just_emptied_with_type` field in `RepellentFlaskData`
-    // being populated for one frame when the flask becomes empty.
+    // 2. Detect if a Repellent Flask was emptied and it was of the correct type for the current ghost
     if check_state.pending_check_for_ghost_type.is_none() {
         // Only check for new exhaustion events
         for (gear, _epos) in player_gear.as_vec() {
-            // TODO: We are not checking if the flask is empty.
-            if gear.kind == GearKind::RepellentFlask
-                && gear.data.as_ref().map(|x| !x.can_enable()).unwrap_or(false)
-                && ghost_sprite.repellent_hits > 0
-            {
-                // Flask was correct, and some hits were registered for this ghost type.
-                check_state.pending_check_for_ghost_type = Some(ghost_sprite.class);
-                check_state.time_exhaustion_confirmed = time.elapsed_secs();
-                // This system should probably be responsible for clearing `just_emptied_with_type`
-                // after detecting it, if `PlayerGear` was mutable.
-                // For now, assuming it's cleared elsewhere or by its transient nature.
-                break;
+            if gear.kind == GearKind::RepellentFlask {
+                if let Some(rep_data_dyn) = gear.data.as_ref() {
+                    if let Some(rep_data) =
+                        <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_data_dyn)
+                    {
+                        // Condition 1: Flask is now empty
+                        if rep_data.qty == 0 {
+                            // Condition 2: Flask *was* filled with a type (which is still stored in liquid_content)
+                            if let Some(flask_content_type) = rep_data.liquid_content {
+                                // Condition 3: The flask's content type matches the current ghost's type
+                                // Condition 4: The ghost has registered hits from the correct repellent type
+                                // (ghost_sprite.repellent_hits implies hits from its own class type)
+                                if flask_content_type == ghost_sprite.class
+                                    && ghost_sprite.repellent_hits > 0
+                                {
+                                    // This flask, of the correct type, is now empty, and the ghost was affected.
+                                    check_state.pending_check_for_ghost_type =
+                                        Some(ghost_sprite.class);
+                                    check_state.time_exhaustion_confirmed = time.elapsed_secs();
+                                    // `liquid_content` is intentionally not cleared in RepellentFlaskData as per new design.
+                                    break; // Found a relevant exhausted flask
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
