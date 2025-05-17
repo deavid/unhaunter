@@ -9,9 +9,12 @@ const FULL_DECAY_DURATION_SECONDS: f64 = 10.0; // Time for clarity to go from 1.
 pub fn decay_evidence_clarity_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
     time: Res<Time>,
+    mut last_report: Local<f64>,
 ) {
     let current_game_time = time.elapsed_secs_f64();
     let delta_seconds_for_decay = time.delta_secs_f64();
+
+    let can_report = current_game_time - *last_report > 5.0;
 
     for evidence_type in all::<Evidence>() {
         // Iterate through all defined evidence types
@@ -20,6 +23,14 @@ pub fn decay_evidence_clarity_system(
             let reading = &mut evidence_readings.readings[idx];
 
             if reading.clarity > 0.0 {
+                if can_report {
+                    *last_report = current_game_time;
+                    info!(
+                        "Evidence clarity for {:?}: {:.1}%",
+                        evidence_type,
+                        reading.clarity * 100.0
+                    );
+                }
                 // Only decay if there's clarity to begin with
                 let time_since_last_update = current_game_time - reading.last_updated_time;
 

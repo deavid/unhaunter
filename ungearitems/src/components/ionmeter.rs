@@ -19,7 +19,8 @@ impl GearUsable for IonMeter {
     }
 
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.is_enabled() { // Use is_enabled for consistency
+        match self.is_enabled() {
+            // Use is_enabled for consistency
             true => GearSpriteID::IonMeter0,
             false => GearSpriteID::IonMeterOff,
         }
@@ -36,7 +37,8 @@ impl GearUsable for IonMeter {
     fn get_status(&self) -> String {
         let name = self.get_display_name();
         let on_s = on_off(self.enabled); // Show ON/OFF based on the switch state
-        let msg = if self.is_enabled() { // Use is_enabled for actual operational status
+        let msg = if self.is_enabled() {
+            // Use is_enabled for actual operational status
             "Reading: 32eV".to_string() // Example status when on
         } else {
             "".to_string()
@@ -45,10 +47,12 @@ impl GearUsable for IonMeter {
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        if self.is_enabled() { // If currently on
-            self.enabled = false;    // Turn it off
-        } else if self.can_enable() { // If currently off and can be turned on
-            self.enabled = true;     // Turn it on
+        if self.is_enabled() {
+            // If currently on
+            self.enabled = false; // Turn it off
+        } else if self.can_enable() {
+            // If currently off and can be turned on
+            self.enabled = true; // Turn it on
         }
         // If off and cannot be enabled (though can_enable is always true here), it remains off.
         // This logic simplifies to self.enabled = !self.enabled for IonMeter.
