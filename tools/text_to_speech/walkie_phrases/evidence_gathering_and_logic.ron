@@ -285,93 +285,446 @@ WalkiePhraseFile(
         ),
       ],
     ),
-    WalkieEventConceptEntry(
-      name: "SpiritBoxResponseNoAction",
+    (
+      name: "FreezingTempsEvidenceConfirmed",
       lines: [
-        // Lines for when Spirit Box gets a response, but player doesn't mark it
-        WalkieLineEntry(tts_text: "Did you hear that whisper through the static? That Spirit Box just gave us something.", subtitle_text: "Did you hear that whisper through the static? That Spirit Box just gave us something.", tags: [FirstTimeHint, Guidance, Questioning, MediumLength, ContextualHint]),
-        WalkieLineEntry(tts_text: "That was a definite response on the Spirit Box. Make sure to log that as evidence.", subtitle_text: "That was a definite response on the Spirit Box. Make sure to log that as evidence.", tags: [DirectHint, ReminderLow, MediumLength]),
-        WalkieLineEntry(tts_text: "The Spirit Box is chattering away. That counts as evidence, you know. Get it marked.", subtitle_text: "The Spirit Box is chattering away. That counts as evidence, you know. Get it marked.", tags: [SlightlyImpatient, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "A voice from beyond... or just bad radio? No, that was the Spirit Box. Note it down.", subtitle_text: "A voice from beyond... or just bad radio? No, that was the Spirit Box. Note it down.", tags: [Humorous, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "Clear as a bell, well, a very crackly bell. Spirit Box evidence confirmed.", subtitle_text: "Clear as a bell, well, a very crackly bell. Spirit Box evidence confirmed.", tags: [PositiveReinforcement, ShortBrevity]),
-        WalkieLineEntry(tts_text: "That is what we are listening for on the Spirit Box. Make a note of that success.", subtitle_text: "That's what we're listening for on the Spirit Box. Make a note of that success.", tags: [Encouraging, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "If you heard a voice through the Spirit Box, that is a vital clue. Do not forget to record it.", subtitle_text: "If you heard a voice through the Spirit Box, that's a vital clue. Don't forget to record it.", tags: [ReminderMedium, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "The Spirit Box just spoke! Or, something spoke through it. Either way, it is evidence.", subtitle_text: "The Spirit Box just spoke! Or, something spoke through it. Either way, it's evidence.", tags: [NeutralObservation, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "That sound from the Spirit Box was not interference. That was our target. Mark it down.", subtitle_text: "That sound from the Spirit Box wasn't interference. That was our target. Mark it down.", tags: [DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Good job getting a response on the Spirit Box. That is one more piece of the puzzle.", subtitle_text: "Good job getting a response on the Spirit Box. That's one more piece of the puzzle.", tags: [PositiveReinforcement, Encouraging, MediumLength]),
-      ],
-    ),
-    WalkieEventConceptEntry(
-      name: "RLPresenceFoundNoAction",
-      lines: [
-        // Lines for when Red Light Presence is observed, but player doesn't mark it
-        WalkieLineEntry(tts_text: "See how it is glowing under that red light? That is a classic sign. Get it noted.", subtitle_text: "See how it's glowing under that red light? That's a classic sign. Get it noted.", tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Aha, the red light reveals its true colours... or, well, an orange glow. That is evidence.", subtitle_text: "Aha, the red light reveals its true colours... or, well, an orange glow. That's evidence.", tags: [Humorous, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "If it lights up like a Christmas tree under the red torch, that is what we call RL Presence. Mark it.", subtitle_text: "If it lights up like a Christmas tree under the red torch, that's what we call RL Presence. Mark it.", tags: [SnarkyHumor, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "That orange shimmer with the red light? That is a bingo for Red Light Presence.", subtitle_text: "That orange shimmer with the red light? That's a bingo for Red Light Presence.", tags: [PositiveReinforcement, ShortBrevity]),
-        WalkieLineEntry(tts_text: "The red torch is showing something important there. That distinct glow is an evidence type.", subtitle_text: "The red torch is showing something important there. That distinct glow is an evidence type.", tags: [Guidance, ContextualHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Some ghosts react visibly to red light. That is what you are seeing now. Make sure it is in the journal.", subtitle_text: "Some ghosts react visibly to red light. That's what you're seeing now. Make sure it's in the journal.", tags: [ReminderLow, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "That is the Red Light Presence we are looking for. Another one ticked off the list.", subtitle_text: "That's the Red Light Presence we're looking for. Another one ticked off the list.", tags: [Encouraging, NeutralObservation, MediumLength]),
-        WalkieLineEntry(tts_text: "Good job with the red torch. That glow is a key indicator. Get it logged.", subtitle_text: "Good job with the red torch. That glow is a key indicator. Get it logged.", tags: [PositiveReinforcement, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "When the ghost itself glows orange under the red light, that is a strong piece of evidence.", subtitle_text: "When the ghost itself glows orange under the red light, that's a strong piece of evidence.", tags: [Guidance, NeutralObservation, MediumLength]),
-        WalkieLineEntry(tts_text: "Not all ghosts show up under red light, but this one clearly does. That is an important find.", subtitle_text: "Not all ghosts show up under red light, but this one clearly does. That's an important find.", tags: [Encouraging, NeutralObservation, MediumLength]),
-      ],
-    ),
-    WalkieEventConceptEntry(
-      name: "UVTraceFoundNoFollow", // Player finds UV traces (e.g. from salt), has UV torch, but doesn't follow trail
-      lines: [
-        WalkieLineEntry(tts_text: "Those handprints or footprints glowing under your UV light? They might lead you somewhere interesting.", subtitle_text: "Those handprints or footprints glowing under your UV light? They might lead you somewhere interesting.", tags: [FirstTimeHint, Guidance, Questioning, ContextualHint, MediumLength]),
-        WalkieLineEntry(tts_text: "You have found some UV traces. Try following them with your UV torch, see where our friend has been wandering.", subtitle_text: "You've found some UV traces. Try following them with your UV torch, see where our friend has been wandering.", tags: [DirectHint, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "Glowing footprints under UV usually mean the ghost has stepped in something... like salt. Follow that trail!", subtitle_text: "Glowing footprints under UV usually mean the ghost has stepped in something... like salt. Follow that trail!", tags: [Guidance, ContextualHint, MediumLength]),
-        WalkieLineEntry(tts_text: "That is a clear UV trail. Keep your UV light on it and see where it takes you. Could be revealing.", subtitle_text: "That's a clear UV trail. Keep your UV light on it and see where it takes you. Could be revealing.", tags: [Encouraging, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "UV traces are like breadcrumbs. Except glowy. And left by ghosts. Follow them.", subtitle_text: "UV traces are like breadcrumbs. Except glowy. And left by ghosts. Follow them.", tags: [Humorous, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Now that you have found those UV marks, the next step is usually to see where they lead. Keep that UV torch handy.", subtitle_text: "Now that you've found those UV marks, the next step is usually to see where they lead. Keep that UV torch handy.", tags: [Guidance, ReminderLow, MediumLength]),
-        WalkieLineEntry(tts_text: "A trail of UV evidence! Do not just stare at it, follow it! It might show you the ghost's favourite spots.",
-          subtitle_text: "A trail of UV evidence! Don't just stare at it, follow it! It might show you the ghost's favourite spots.",
-          tags: [SlightlyImpatient, DirectHint, MediumLength]),
         WalkieLineEntry(
-          tts_text: "Those glowing marks are a gift. Use your UV light to trace its path through the location.",
-          subtitle_text: "Those glowing marks are a gift. Use your UV light to trace its path through the location.",
-          tags: [PositiveReinforcement, Guidance, MediumLength]),
+          tts_text: "That thermometer is showing sub zero temperatures. That is freezing temps right there.",
+          subtitle_text: "That thermometer is showing sub zero temperatures. That is freezing temps right there.",
+          tags: [PositiveReinforcement, DirectHint, ShortBrevity],
+        ),
         WalkieLineEntry(
-          tts_text: "Following UV traces can often lead you right to the ghost or its main haunting area. Worth pursuing.",
-          subtitle_text: "Following UV traces can often lead you right to the ghost or its main haunting area. Worth pursuing.",
-          tags: [Guidance, NeutralObservation, MediumLength]),
+          tts_text: "Got it. The temperature just dropped below freezing. That is a key piece of evidence.",
+          subtitle_text: "Got it. The temperature just dropped below freezing. That is a key piece of evidence.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
         WalkieLineEntry(
-          tts_text: "Good job spotting those UV traces. Now, be a detective and see where they go.",
-          subtitle_text: "Good job spotting those UV traces. Now, be a detective and see where they go.",
-          tags: [Encouraging, Guidance, Humorous, MediumLength]),
+          tts_text: "Yep, that is definitely freezing in there. Good job spotting that with the thermometer.",
+          subtitle_text: "Yep, that is definitely freezing in there. Good job spotting that with the thermometer.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Freezing temperatures confirmed. Make sure to note that down.",
+          subtitle_text: "Freezing temperatures confirmed. Make sure to note that down.",
+          tags: [PositiveReinforcement, ReminderLow, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "The chill in here is undeniable, it is below zero. That is the freezing temps evidence.",
+          subtitle_text: "The chill in here is undeniable, it is below zero. That is the freezing temps evidence.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your thermometer is not lying, that is a solid freezing reading. One more for the books.",
+          subtitle_text: "Your thermometer is not lying, that is a solid freezing reading. One more for the books.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Excellent work with the thermometer. Definitely freezing conditions in that spot.",
+          subtitle_text: "Excellent work with the thermometer. Definitely freezing conditions in that spot.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is officially an icebox. Freezing Temperatures evidence is a lock.",
+          subtitle_text: "It is officially an icebox. Freezing Temperatures evidence is a lock.",
+          tags: [PositiveReinforcement, Humorous, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "That sharp drop in temperature below zero is exactly what we look for. Freezing confirmed.",
+          subtitle_text: "That sharp drop in temperature below zero is exactly what we look for. Freezing confirmed.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You found it. The thermometer confirms freezing temperatures. Good work.",
+          subtitle_text: "You found it. The thermometer confirms freezing temperatures. Good work.",
+          tags: [PositiveReinforcement, ShortBrevity],
+        ),
       ],
     ),
     WalkieEventConceptEntry(
-      name: "EVPRecordedNoAction",
+      name: "FloatingOrbsEvidenceConfirmed",
       lines: [
-        WalkieLineEntry(tts_text: "Your recorder says EVP RECORDED. That is a definite piece of evidence right there.", subtitle_text: "Your recorder says EVP RECORDED. That's a definite piece of evidence right there.", tags: [FirstTimeHint, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "The recorder picked up an Electronic Voice Phenomenon. Make sure that gets logged.", subtitle_text: "The recorder picked up an Electronic Voice Phenomenon. Make sure that gets logged.", tags: [Guidance, ReminderLow, MediumLength]),
-        WalkieLineEntry(tts_text: "Heard that? Well, your recorder did. EVP confirmed. Another one for the journal.", subtitle_text: "Heard that? Well, your recorder did. EVP confirmed. Another one for the journal.", tags: [Humorous, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "If the recorder shows EVP, that is a solid clue. Do not forget to mark it down.", subtitle_text: "If the recorder shows EVP, that's a solid clue. Don't forget to mark it down.", tags: [ReminderMedium, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "That EVP recording is exactly what we need the recorder for. Good catch.", subtitle_text: "That EVP recording is exactly what we need the recorder for. Good catch.", tags: [PositiveReinforcement, Encouraging, MediumLength]),
-        WalkieLineEntry(tts_text: "A ghostly voice on the tape! Well, digital recording. That is EVP evidence.", subtitle_text: "A ghostly voice on the tape! Well, digital recording. That's EVP evidence.", tags: [NeutralObservation, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "The recorder snagged an EVP. That is one of the key evidences we look for.", subtitle_text: "The recorder snagged an EVP. That's one of the key evidences we look for.", tags: [Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "When that EVP RECORDED message pops up, it means you have got something important. Log it.", subtitle_text: "When that EVP RECORDED message pops up, it means you've got something important. Log it.", tags: [DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Excellent, an EVP. That narrows things down nicely. Add it to your list of findings.", subtitle_text: "Excellent, an EVP. That narrows things down nicely. Add it to your list of findings.", tags: [PositiveReinforcement, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "The recorder did its job and caught an EVP. That is a confirmed piece of evidence.", subtitle_text: "The recorder did its job and caught an EVP. That's a confirmed piece of evidence.", tags: [NeutralObservation, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "Look at that. Tiny floating orbs on the video feed. That is our evidence.",
+          subtitle_text: "Look at that. Tiny floating orbs on the video feed. That is our evidence.",
+          tags: [PositiveReinforcement, DirectHint, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Got them. Those little lights dancing around on the night vision are Floating Orbs.",
+          subtitle_text: "Got them. Those little lights dancing around on the night vision are Floating Orbs.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Yep, there they are. Floating Orbs confirmed. Make sure you have got your lights off for the best view.",
+          subtitle_text: "Yep, there they are. Floating Orbs confirmed. Make sure you have got your lights off for the best view.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The video camera is picking up Floating Orbs. That is a clear sign.",
+          subtitle_text: "The video camera is picking up Floating Orbs. That is a clear sign.",
+          tags: [PositiveReinforcement, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Those aren't dust motes, those are Floating Orbs. Another piece of evidence found.",
+          subtitle_text: "Those aren't dust motes, those are Floating Orbs. Another piece of evidence found.",
+          tags: [PositiveReinforcement, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good eye. The night vision camera confirms Floating Orbs in the area.",
+          subtitle_text: "Good eye. The night vision camera confirms Floating Orbs in the area.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Floating Orbs spotted on the camera. That is a definite piece of evidence for this ghost.",
+          subtitle_text: "Floating Orbs spotted on the camera. That is a definite piece of evidence for this ghost.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The camera is showing those tell tale Floating Orbs. Make a note of it.",
+          subtitle_text: "The camera is showing those tell tale Floating Orbs. Make a note of it.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is them. Floating Orbs. Only visible through the night vision, remember.",
+          subtitle_text: "That is them. Floating Orbs. Only visible through the night vision, remember.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Excellent. The video feed clearly shows Floating Orbs. That is a confirmed sighting.",
+          subtitle_text: "Excellent. The video feed clearly shows Floating Orbs. That is a confirmed sighting.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
       ],
     ),
     WalkieEventConceptEntry(
-      name: "CPM500FoundNoAction",
+      name: "UVEctoplasmEvidenceConfirmed",
       lines: [
-        WalkieLineEntry(tts_text: "That Geiger counter is going wild, over five hundred CPM! That is definitely evidence.", subtitle_text: "That Geiger counter is going wild, over five hundred CPM! That's definitely evidence.", tags: [FirstTimeHint, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Radiation levels are off the charts there. Anything over five hundred counts per minute is what we are looking for.", subtitle_text: "Radiation levels are off the charts there. Anything over five hundred counts per minute is what we're looking for.", tags: [Guidance, ContextualHint, MediumLength]),
-        WalkieLineEntry(tts_text: "If your Geiger is screaming past five hundred CPM, you have found some radioactive evidence. Note it down.", subtitle_text: "If your Geiger is screaming past five hundred CPM, you've found some radioactive evidence. Note it down.", tags: [DirectHint, ReminderLow, MediumLength]),
-        WalkieLineEntry(tts_text: "That is a very spicy reading on the Geiger counter. Over five hundred CPM is a positive hit for evidence.", subtitle_text: "That's a very spicy reading on the Geiger counter. Over five hundred CPM is a positive hit for evidence.", tags: [Humorous, PositiveReinforcement, MediumLength]),
-        WalkieLineEntry(tts_text: "When the Geiger clicks that fast and reads above five hundred, you have got yourself some solid proof.", subtitle_text: "When the Geiger clicks that fast and reads above five hundred, you've got yourself some solid proof.", tags: [Encouraging, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "High radiation detected! That is the five hundred plus CPM evidence right there.", subtitle_text: "High radiation detected! That's the five hundred plus CPM evidence right there.", tags: [DirectHint, ShortBrevity]),
-        WalkieLineEntry(tts_text: "The Geiger counter is your friend for this one. A reading consistently over five hundred is key.", subtitle_text: "The Geiger counter is your friend for this one. A reading consistently over five hundred is key.", tags: [ReminderLow, Guidance, MediumLength]),
-        WalkieLineEntry(tts_text: "That is a significant radiation spike, well over the five hundred mark. That counts.", subtitle_text: "That's a significant radiation spike, well over the five hundred mark. That counts.", tags: [NeutralObservation, DirectHint, MediumLength]),
-        WalkieLineEntry(tts_text: "Good job getting that high CPM reading. That confirms one more piece of evidence.", subtitle_text: "Good job getting that high CPM reading. That confirms one more piece of evidence.", tags: [PositiveReinforcement, Encouraging, MediumLength]),
-        WalkieLineEntry(tts_text: "A Geiger reading that high means this ghost is definitely radioactive. Mark that evidence.", subtitle_text: "A Geiger reading that high means this ghost is definitely radioactive. Mark that evidence.", tags: [DirectHint, MediumLength]),
+        WalkieLineEntry(
+          tts_text: "There it is. That green glow under the UV light means U V Ectoplasm.",
+          subtitle_text: "There it is. That green glow under the UV light means U V Ectoplasm.",
+          tags: [PositiveReinforcement, DirectHint, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Got it. The ghost is reacting to the UV light. That is U V Ectoplasm evidence.",
+          subtitle_text: "Got it. The ghost is reacting to the UV light. That is U V Ectoplasm evidence.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Yep, shining green under the UV. U V Ectoplasm confirmed for this one.",
+          subtitle_text: "Yep, shining green under the UV. U V Ectoplasm confirmed for this one.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your UV torch is revealing Ectoplasm. That is a solid piece of evidence.",
+          subtitle_text: "Your UV torch is revealing Ectoplasm. That is a solid piece of evidence.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That eerie green glow is exactly what we are looking for with the UV. Ectoplasm found.",
+          subtitle_text: "That eerie green glow is exactly what we are looking for with the UV. Ectoplasm found.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Nice work with the UV light. That confirms U V Ectoplasm.",
+          subtitle_text: "Nice work with the UV light. That confirms U V Ectoplasm.",
+          tags: [PositiveReinforcement, Encouraging, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost is lighting up green under your UV. That is definitely U V Ectoplasm.",
+          subtitle_text: "The ghost is lighting up green under your UV. That is definitely U V Ectoplasm.",
+          tags: [PositiveReinforcement, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "U V Ectoplasm detected. The ghost is fluorescing under ultraviolet light.",
+          subtitle_text: "U V Ectoplasm detected. The ghost is fluorescing under ultraviolet light.",
+          tags: [PositiveReinforcement, FormalishReminder, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That distinct green sheen under the UV means you have found Ectoplasm.",
+          subtitle_text: "That distinct green sheen under the UV means you have found Ectoplasm.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Confirmed. The ghost is showing U V Ectoplasm. Another clue for the journal.",
+          subtitle_text: "Confirmed. The ghost is showing U V Ectoplasm. Another clue for the journal.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
       ],
     ),
+    WalkieEventConceptEntry(
+      name: "EMFLevel5EvidenceConfirmed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That is it. The E M F meter just hit level five. That is a critical piece of evidence.",
+          subtitle_text: "That is it. The E M F meter just hit level five. That is a critical piece of evidence.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Got it. E M F Level Five confirmed. That is a strong indicator for certain types of entities.",
+          subtitle_text: "Got it. E M F Level Five confirmed. That is a strong indicator for certain types of entities.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Yep, all lights blazing on the E M F meter. That is a Level Five reading.",
+          subtitle_text: "Yep, all lights blazing on the E M F meter. That is a Level Five reading.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your E M F meter is maxed out at Level Five. Solid evidence right there.",
+          subtitle_text: "Your E M F meter is maxed out at Level Five. Solid evidence right there.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That huge spike on the E M F meter to Level Five is exactly what we are looking for.",
+          subtitle_text: "That huge spike on the E M F meter to Level Five is exactly what we are looking for.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Nice one. The E M F meter confirms a Level Five electromagnetic field.",
+          subtitle_text: "Nice one. The E M F meter confirms a Level Five electromagnetic field.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The E M F readings are off the scale, Level Five. That is definitely evidence.",
+          subtitle_text: "The E M F readings are off the scale, Level Five. That is definitely evidence.",
+          tags: [PositiveReinforcement, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "E M F Level Five detected. Significant paranormal energy in this location.",
+          subtitle_text: "E M F Level Five detected. Significant paranormal energy in this location.",
+          tags: [PositiveReinforcement, FormalishReminder, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When all five lights on that E M F meter are lit, you have found your evidence.",
+          subtitle_text: "When all five lights on that E M F meter are lit, you have found your evidence.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Confirmed. E M F Level Five. That is a strong sign, make sure to log it.",
+          subtitle_text: "Confirmed. E M F Level Five. That is a strong sign, make sure to log it.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "EVPEvidenceConfirmed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Your recorder says E V P RECORDED. That is a definite piece of evidence right there.",
+          subtitle_text: "Your recorder says E V P RECORDED. That is a definite piece of evidence right there.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The recorder picked up an Electronic Voice Phenomenon. Make sure that gets logged.",
+          subtitle_text: "The recorder picked up an Electronic Voice Phenomenon. Make sure that gets logged.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Heard that. Well, your recorder did. E V P confirmed. Another one for the journal.",
+          subtitle_text: "Heard that. Well, your recorder did. E V P confirmed. Another one for the journal.",
+          tags: [PositiveReinforcement, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If the recorder shows E V P, that is a solid clue. Do not forget to mark it down.",
+          subtitle_text: "If the recorder shows E V P, that is a solid clue. Do not forget to mark it down.",
+          tags: [PositiveReinforcement, ReminderMedium, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That E V P recording is exactly what we need the recorder for. Good catch.",
+          subtitle_text: "That E V P recording is exactly what we need the recorder for. Good catch.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A ghostly voice on the tape. Well, digital recording. That is E V P evidence.",
+          subtitle_text: "A ghostly voice on the tape. Well, digital recording. That is E V P evidence.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The recorder snagged an E V P. That is one of the key evidences we look for.",
+          subtitle_text: "The recorder snagged an E V P. That is one of the key evidences we look for.",
+          tags: [PositiveReinforcement, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When that E V P RECORDED message pops up, it means you have got something important. Log it.",
+          subtitle_text: "When that E V P RECORDED message pops up, it means you have got something important. Log it.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Excellent, an E V P. That narrows things down nicely. Add it to your list of findings.",
+          subtitle_text: "Excellent, an E V P. That narrows things down nicely. Add it to your list of findings.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The recorder did its job and caught an E V P. That is a confirmed piece of evidence.",
+          subtitle_text: "The recorder did its job and caught an E V P. That is a confirmed piece of evidence.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "SpiritBoxEvidenceConfirmed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Did you hear that whisper through the static. That Spirit Box just gave us something.",
+          subtitle_text: "Did you hear that whisper through the static. That Spirit Box just gave us something.",
+          tags: [PositiveReinforcement, ContextualHint, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That was a definite response on the Spirit Box. Make sure to log that as evidence.",
+          subtitle_text: "That was a definite response on the Spirit Box. Make sure to log that as evidence.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The Spirit Box is chattering away. That counts as evidence, you know. Get it marked.",
+          subtitle_text: "The Spirit Box is chattering away. That counts as evidence, you know. Get it marked.",
+          tags: [PositiveReinforcement, SlightlyImpatient, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A voice from beyond. Or just bad radio. No, that was the Spirit Box. Note it down.",
+          subtitle_text: "A voice from beyond. Or just bad radio. No, that was the Spirit Box. Note it down.",
+          tags: [PositiveReinforcement, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Clear as a bell, well, a very crackly bell. Spirit Box evidence confirmed.",
+          subtitle_text: "Clear as a bell, well, a very crackly bell. Spirit Box evidence confirmed.",
+          tags: [PositiveReinforcement, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is what we are listening for on the Spirit Box. Make a note of that success.",
+          subtitle_text: "That is what we are listening for on the Spirit Box. Make a note of that success.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you heard a voice through the Spirit Box, that is a vital clue. Do not forget to record it.",
+          subtitle_text: "If you heard a voice through the Spirit Box, that is a vital clue. Do not forget to record it.",
+          tags: [PositiveReinforcement, ReminderMedium, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The Spirit Box just spoke. Or, something spoke through it. Either way, it is evidence.",
+          subtitle_text: "The Spirit Box just spoke. Or, something spoke through it. Either way, it is evidence.",
+          tags: [PositiveReinforcement, NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That sound from the Spirit Box was not interference. That was our target. Mark it down.",
+          subtitle_text: "That sound from the Spirit Box was not interference. That was our target. Mark it down.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good job getting a response on the Spirit Box. That is one more piece of the puzzle.",
+          subtitle_text: "Good job getting a response on the Spirit Box. That is one more piece of the puzzle.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "RLPresenceEvidenceConfirmed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "See how it is glowing under that red light. That is a classic sign. Get it noted.",
+          subtitle_text: "See how it is glowing under that red light. That is a classic sign. Get it noted.",
+          tags: [PositiveReinforcement, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Aha, the red light reveals its true colours. Or, well, an orange glow. That is evidence.",
+          subtitle_text: "Aha, the red light reveals its true colours. Or, well, an orange glow. That is evidence.",
+          tags: [PositiveReinforcement, Humorous, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If it lights up like a Christmas tree under the red torch, that is what we call R L Presence. Mark it.",
+          subtitle_text: "If it lights up like a Christmas tree under the red torch, that is what we call R L Presence. Mark it.",
+          tags: [PositiveReinforcement, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That orange shimmer with the red light. That is a bingo for Red Light Presence.",
+          subtitle_text: "That orange shimmer with the red light. That is a bingo for Red Light Presence.",
+          tags: [PositiveReinforcement, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "The red torch is showing something important there. That distinct glow is an evidence type.",
+          subtitle_text: "The red torch is showing something important there. That distinct glow is an evidence type.",
+          tags: [PositiveReinforcement, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Some ghosts react visibly to red light. That is what you are seeing now. Make sure it is in the journal.",
+          subtitle_text: "Some ghosts react visibly to red light. That is what you are seeing now. Make sure it is in the journal.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is the Red Light Presence we are looking for. Another one ticked off the list.",
+          subtitle_text: "That is the Red Light Presence we are looking for. Another one ticked off the list.",
+          tags: [PositiveReinforcement, Encouraging, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good job with the red torch. That glow is a key indicator. Get it logged.",
+          subtitle_text: "Good job with the red torch. That glow is a key indicator. Get it logged.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When the ghost itself glows orange under the red light, that is a strong piece of evidence.",
+          subtitle_text: "When the ghost itself glows orange under the red light, that is a strong piece of evidence.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Not all ghosts show up under red light, but this one clearly does. That is an important find.",
+          subtitle_text: "Not all ghosts show up under red light, but this one clearly does. That is an important find.",
+          tags: [PositiveReinforcement, Encouraging, NeutralObservation, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "CPM500EvidenceConfirmed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That Geiger counter is going wild, over five hundred C P M. That is definitely evidence.",
+          subtitle_text: "That Geiger counter is going wild, over five hundred C P M. That is definitely evidence.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Radiation levels are off the charts there. Anything over five hundred counts per minute is what we are looking for.",
+          subtitle_text: "Radiation levels are off the charts there. Anything over five hundred counts per minute is what we are looking for.",
+          tags: [PositiveReinforcement, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If your Geiger is screaming past five hundred C P M, you have found some radioactive evidence. Note it down.",
+          subtitle_text: "If your Geiger is screaming past five hundred C P M, you have found some radioactive evidence. Note it down.",
+          tags: [PositiveReinforcement, ReminderLow, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is a very spicy reading on the Geiger counter. Over five hundred C P M is a positive hit for evidence.",
+          subtitle_text: "That is a very spicy reading on the Geiger counter. Over five hundred C P M is a positive hit for evidence.",
+          tags: [PositiveReinforcement, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When the Geiger clicks that fast and reads above five hundred, you have got yourself some solid proof.",
+          subtitle_text: "When the Geiger clicks that fast and reads above five hundred, you have got yourself some solid proof.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "High radiation detected. That is the five hundred plus C P M evidence right there.",
+          subtitle_text: "High radiation detected. That is the five hundred plus C P M evidence right there.",
+          tags: [PositiveReinforcement, DirectHint, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "The Geiger counter is your friend for this one. A reading consistently over five hundred is key.",
+          subtitle_text: "The Geiger counter is your friend for this one. A reading consistently over five hundred is key.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is a significant radiation spike, well over the five hundred mark. That counts.",
+          subtitle_text: "That is a significant radiation spike, well over the five hundred mark. That counts.",
+          tags: [PositiveReinforcement, NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good job getting that high C P M reading. That confirms one more piece of evidence.",
+          subtitle_text: "Good job getting that high C P M reading. That confirms one more piece of evidence.",
+          tags: [PositiveReinforcement, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A Geiger reading that high means this ghost is definitely radioactive. Mark that evidence.",
+          subtitle_text: "A Geiger reading that high means this ghost is definitely radioactive. Mark that evidence.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+      ],
+    )
+
   ],
 )
