@@ -65,7 +65,7 @@ fn check_player_stuck_at_start(
     }
 
     if *stuck_time > min_time_secs {
-        warn!("Player stuck at start for {} seconds", *stuck_time);
+        // warn!("Player stuck at start for {} seconds", *stuck_time);
         walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 }

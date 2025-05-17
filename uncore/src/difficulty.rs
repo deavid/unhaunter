@@ -290,15 +290,15 @@ impl Difficulty {
     /// in a darker environment overall.
     pub fn darkness_intensity(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 0.6,
-            Difficulty::TutorialChapter2 => 0.65,
-            Difficulty::TutorialChapter3 => 0.7,
-            Difficulty::TutorialChapter4 => 0.75,
-            Difficulty::TutorialChapter5 => 0.9,
-            Difficulty::StandardChallenge => 1.00, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.15,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.3,    // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.6,    // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 1.0,
+            Difficulty::TutorialChapter2 => 1.1,
+            Difficulty::TutorialChapter3 => 1.2,
+            Difficulty::TutorialChapter4 => 1.3,
+            Difficulty::TutorialChapter5 => 1.4,
+            Difficulty::StandardChallenge => 1.5, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.6,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.7,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.8,   // Was MasterGuardian
         }
     }
 
@@ -308,15 +308,15 @@ impl Difficulty {
     /// highlighting details but creating a less atmospheric look.
     pub fn environment_gamma(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 2.5,
-            Difficulty::TutorialChapter2 => 2.4,
-            Difficulty::TutorialChapter3 => 2.3,
-            Difficulty::TutorialChapter4 => 2.2,
-            Difficulty::TutorialChapter5 => 2.0,
-            Difficulty::StandardChallenge => 1.7, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.1,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.1, // Was ExpertOccultist (Kept from old ExpertOccultist)
-            Difficulty::MasterChallenge => 0.6, // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 1.0,
+            Difficulty::TutorialChapter2 => 1.0,
+            Difficulty::TutorialChapter3 => 0.9,
+            Difficulty::TutorialChapter4 => 0.9,
+            Difficulty::TutorialChapter5 => 0.8,
+            Difficulty::StandardChallenge => 0.7, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.6,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 0.5, // Was ExpertOccultist (Kept from old ExpertOccultist)
+            Difficulty::MasterChallenge => 0.4, // Was MasterGuardian
         }
     }
 
@@ -408,10 +408,10 @@ impl Difficulty {
     /// A higher value makes evidence more visible or noticeable.
     pub fn evidence_visibility(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.9,
-            Difficulty::TutorialChapter2 => 1.7,
-            Difficulty::TutorialChapter3 => 1.5,
-            Difficulty::TutorialChapter4 => 1.2,
+            Difficulty::TutorialChapter1 => 3.0,
+            Difficulty::TutorialChapter2 => 2.7,
+            Difficulty::TutorialChapter3 => 2.0,
+            Difficulty::TutorialChapter4 => 1.5,
             Difficulty::TutorialChapter5 => 1.0,
             Difficulty::StandardChallenge => 0.9, // Was LeadSpecialist
             Difficulty::HardChallenge => 0.7,     // Was MasterSpecialist

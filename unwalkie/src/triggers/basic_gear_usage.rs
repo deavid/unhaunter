@@ -23,24 +23,22 @@ struct RightHandGearStateTracker {
 }
 
 fn trigger_gear_selected_not_activated_system(
-    // Bevy Resources
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    // Player Query
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
-    // Local state for this system
     mut tracker: Local<Option<RightHandGearStateTracker>>,
-    // Potentially Res<BoardData> if we need to check if player is near ghost/breach later
+    mut r_triggered: Local<i32>,
 ) {
     // 1. Check Global Conditions (InGame, GameState::None, Player inside location)
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         if tracker.is_some() {
             // Only reset if there was a tracker
             *tracker = None;
+            *r_triggered = 0;
         }
         return;
     }
@@ -106,6 +104,7 @@ fn trigger_gear_selected_not_activated_system(
     if keyboard_input.just_pressed(player_sprite.controls.trigger) {
         // [R] key
         reset_timer_this_frame = true;
+        *r_triggered += 1;
     }
 
     match tracker.as_mut() {
@@ -136,7 +135,8 @@ fn trigger_gear_selected_not_activated_system(
     // 5. Check Duration and Trigger Event
     if let Some(current_tracker_ref) = tracker.as_ref() {
         const INACTIVITY_THRESHOLD_SECONDS: f32 = 10.0;
-        if current_tracker_ref.inactive_duration >= INACTIVITY_THRESHOLD_SECONDS
+        if current_tracker_ref.inactive_duration
+            >= INACTIVITY_THRESHOLD_SECONDS * (1 + *r_triggered) as f32
             && walkie_play.set(
                 WalkieEvent::GearSelectedNotActivated,
                 time.elapsed_secs_f64(),

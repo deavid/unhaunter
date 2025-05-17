@@ -623,7 +623,7 @@ pub fn apply_lighting(
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
             let dark2 = lerp_color(
                 Color::WHITE,
                 DARK_COLOR2,
