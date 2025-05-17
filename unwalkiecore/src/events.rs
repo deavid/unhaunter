@@ -1,8 +1,8 @@
-use crate::ConceptTrait; // Import from crate root
+use crate::ConceptTrait;
 use crate::generated::base1::Base1Concept;
 use crate::generated::basic_gear_usage::BasicGearUsageConcept;
 use crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept;
-use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept; // Added import
+use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept;
 use crate::generated::evidence_gathering_and_logic::EvidenceGatheringAndLogicConcept;
 use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept;
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
@@ -77,7 +77,7 @@ pub enum WalkieEvent {
     /// Player is using the Thermometer, it's showing cold (1-10°C) but not freezing, and lingers too long.
     ThermometerNonFreezingFixation,
     /// Player selects gear but does not activate it.
-    GearSelectedNotActivated, // MISSING
+    GearSelectedNotActivated,
 
     // --- Player Wellbeing Events ---
     /// Player's health is low for a prolonged period while inside the location.
@@ -96,6 +96,10 @@ pub enum WalkieEvent {
     QuartzUnusedInRelevantSituation,
     /// Player has not used Sage in a relevant situation.
     SageUnusedInRelevantSituation,
+    /// Player activated Sage, but it was used ineffectively.
+    SageActivatedIneffectively,
+    /// Player did not use Sage defensively during a hunt.
+    SageUnusedDefensivelyDuringHunt,
 
     // --- Repellent and Expulsion Events ---
     GhostExpelledPlayerLingers,
@@ -192,6 +196,12 @@ impl WalkieEvent {
             WalkieEvent::SageUnusedInRelevantSituation => {
                 Box::new(ConsumablesAndDefenseConcept::SageUnusedInRelevantSituation)
             }
+            WalkieEvent::SageActivatedIneffectively => {
+                Box::new(ConsumablesAndDefenseConcept::SageActivatedIneffectively)
+            }
+            WalkieEvent::SageUnusedDefensivelyDuringHunt => {
+                Box::new(ConsumablesAndDefenseConcept::SageUnusedDefensivelyDuringHunt)
+            }
             // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => {
                 Box::new(GhostBehaviorAndHuntingConcept::PlayerStaysHiddenTooLong)
@@ -258,6 +268,8 @@ impl WalkieEvent {
             WalkieEvent::QuartzShatteredFeedback => 60.0 * count,
             WalkieEvent::QuartzUnusedInRelevantSituation => 180.0 * count, // Every 3 minutes if conditions met
             WalkieEvent::SageUnusedInRelevantSituation => 180.0 * count, // Every 3 minutes if conditions met
+            WalkieEvent::SageActivatedIneffectively => 180.0 * count, // Trigger every 3 minutes if conditions met
+            WalkieEvent::SageUnusedDefensivelyDuringHunt => 180.0 * count, // Trigger every 3 minutes if conditions met
 
             // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => 90.0 * count,
@@ -311,6 +323,8 @@ impl WalkieEvent {
             WalkieEvent::QuartzShatteredFeedback => WalkieEventPriority::High,
             WalkieEvent::QuartzUnusedInRelevantSituation => WalkieEventPriority::Medium,
             WalkieEvent::SageUnusedInRelevantSituation => WalkieEventPriority::Medium,
+            WalkieEvent::SageActivatedIneffectively => WalkieEventPriority::Low,
+            WalkieEvent::SageUnusedDefensivelyDuringHunt => WalkieEventPriority::Medium,
             // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => WalkieEventPriority::Low,
             // --- Repellent and Expulsion ---
