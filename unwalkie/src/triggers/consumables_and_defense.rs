@@ -104,7 +104,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
-    truck_gear: Res<TruckGear>,
+    truck_gear: Option<Res<TruckGear>>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -159,7 +159,10 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     if player_has_quartz {
         return; // Player already has quartz, no need for this hint
     }
-
+    let truck_gear = match truck_gear {
+        Some(gear) => gear,
+        None => return, // No truck gear available, exit early
+    };
     // 7. Check Truck Inventory for Quartz
     let truck_has_quartz = truck_gear
         .inventory
@@ -184,8 +187,12 @@ fn trigger_sage_unused_in_relevant_situation_system(
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
-    truck_gear: Res<TruckGear>,
+    truck_gear: Option<Res<TruckGear>>,
 ) {
+    let truck_gear = match truck_gear {
+        Some(gear) => gear,
+        None => return, // No truck gear available, exit early
+    };
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         return;
