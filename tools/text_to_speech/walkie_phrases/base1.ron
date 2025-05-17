@@ -1,0 +1,119 @@
+(
+  event_lines: [
+    (
+      name: "GearInVan",
+      lines: [
+        (
+          tts_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          subtitle_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          subtitle_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          tags: [ReminderMedium, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          subtitle_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          tags: [ReminderHigh, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          subtitle_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          tags: [ReminderHigh, DirectHint, SlightlyImpatient, MediumLength],
+        ),
+        (
+          tts_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          subtitle_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          subtitle_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          tags: [ReminderLow, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Don't forget to equip yourself from the van before heading inside!",
+          subtitle_text: "Don't forget to equip yourself from the van before heading inside!",
+          tags: [ReminderMedium, DirectHint, ShortBrevity],
+        ),
+      ],
+    ),
+    (
+      name: "GhostNearHunt",
+      lines: [
+        (
+          tts_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          subtitle_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          tags: [ConcernedWarning, ImmediateResponse, LongDetailed],
+        ),
+        (
+          tts_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          subtitle_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          subtitle_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          subtitle_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          tags: [ConcernedWarning, SnarkyHumor, SlightlyImpatient, LongDetailed],
+        ),
+      ],
+    ),
+    (
+      name: "MissionStartEasy",
+      lines: [
+        (
+          tts_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
+          subtitle_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
+          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
+        ),
+        (
+          tts_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
+          subtitle_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
+          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
+        ),
+        (
+          tts_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
+          subtitle_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
+          tags: [FirstTimeHint, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
+          subtitle_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
+          tags: [FirstTimeHint, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
+          subtitle_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
+          tags: [FirstTimeHint, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
+          subtitle_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
+          tags: [FirstTimeHint, SnarkyHumor, SlightlyImpatient, LongDetailed],
+        ),
+        (
+          tts_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
+          subtitle_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
+          tags: [FirstTimeHint, Encouraging, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
+          subtitle_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
+          tags: [FirstTimeHint, NeutralObservation, ShortBrevity],
+        ),
+        (
+          tts_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
+          subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
+          tags: [FirstTimeHint, NeutralObservation, SnarkyHumor, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

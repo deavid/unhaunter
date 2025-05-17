@@ -10,7 +10,7 @@
   <property name="campaign_order" type="string" value="01B"/>
   <property name="campaign_difficulty" type="string" value="TutorialChapter1"/>
   <property name="map_preview_image" type="string" value="maps/previews/stage1b.png"/>
-  <property name="required_deposit" type="int" value="0"/>
+  <property name="required_deposit" type="int" value="2"/>
   <property name="mission_reward_base" type="int" value="15"/>
   <property name="grade_a_score_threshold" type="int" value="850"/>
   <property name="grade_b_score_threshold" type="int" value="650"/>

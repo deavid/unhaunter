@@ -75,6 +75,13 @@ impl Flashlight {
 
         self.output_power = (self.output_power * 2.0 + new_power) / 3.0;
     }
+
+    fn can_enable_status(&self, target_status: FlashlightStatus) -> bool {
+        if target_status == FlashlightStatus::Off {
+            return true; // Can always turn off
+        }
+        self.battery_level > 0.0 && self.inner_temp <= 1.0 && self.flicker_timer <= 0.0
+    }
 }
 
 impl GearUsable for Flashlight {
@@ -176,7 +183,13 @@ impl GearUsable for Flashlight {
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
         if self.flicker_timer <= 0.0 {
-            self.status = self.status.next().unwrap_or_default();
+            let next_status = self.status.next().unwrap_or_default();
+            if self.can_enable_status(next_status.clone()) {
+                self.status = next_status;
+            } else if self.status != FlashlightStatus::Off {
+                // If it can't be enabled to the next state but is on, turn it off
+                self.status = FlashlightStatus::Off;
+            }
         }
     }
 
@@ -215,6 +228,22 @@ impl GearUsable for Flashlight {
 
     fn is_electronic(&self) -> bool {
         true
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.status != FlashlightStatus::Off
+            && self.battery_level > 0.0
+            && self.inner_temp <= 1.0
+            && self.flicker_timer <= 0.0
+    }
+
+    fn can_enable(&self) -> bool {
+        // This method now considers if any ON state can be achieved.
+        // For Flashlight, it can always be turned to Off,
+        // but to turn it ON (Low, Mid, High) it needs battery and not be overheated or flickering.
+        self.can_enable_status(FlashlightStatus::Low)
+            || self.can_enable_status(FlashlightStatus::Mid)
+            || self.can_enable_status(FlashlightStatus::High)
     }
 }
 

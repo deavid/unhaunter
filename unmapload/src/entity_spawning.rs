@@ -87,12 +87,7 @@ pub fn spawn_player(
         .insert(PlayerGear::from_playergearkind(
             p.difficulty.0.player_gear.clone(),
         ))
-        .insert(
-            PlayerSprite::new(1)
-                // We should always start with 100% sanity, no matter the difficulty
-                // .with_sanity(p.difficulty.0.starting_sanity)
-                .with_controls(**p.control_settings),
-        )
+        .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         // Update the SpatialListener to use the ear offset from audio settings
         .insert(SpatialListener::new(
             -p.audio_settings.sound_output.to_ear_offset(),

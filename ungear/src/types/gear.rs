@@ -89,4 +89,11 @@ impl GearUsable for Gear {
             x.update(gs, pos, ep)
         }
     }
+
+    fn needs_darkness(&self) -> bool {
+        match &self.data {
+            Some(x) => x.needs_darkness(),
+            None => false,
+        }
+    }
 }

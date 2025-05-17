@@ -1,0 +1,334 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "QuartzUnusedInRelevantSituation", // e.g., hunt starting/active, player has Quartz but isn't 'using' it (it's passive, but buddy can remind)
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Things are getting a bit spicy! If you have got that quartz stone, now would be a good time to have it ready. It can take the edge off a hunt.",
+          subtitle_text: "Things are getting a bit spicy! If you've got that quartz stone, now would be a good time to have it ready. It can take the edge off a hunt.",
+          tags: [FirstTimeHint, ConcernedWarning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember that quartz? It is like a personal shield against the worst of a hunt. Keep it on you if you expect trouble.",
+          subtitle_text: "Remember that quartz? It's like a personal shield against the worst of a hunt. Keep it on you if you expect trouble.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If a hunt kicks off, that quartz stone could be a lifesaver. It absorbs some of the ghost's energy.",
+          subtitle_text: "If a hunt kicks off, that quartz stone could be a lifesaver. It absorbs some of the ghost's energy.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz stone works passively when a hunt is active and you are nearby. Just having it equipped can help.",
+          subtitle_text: "The quartz stone works passively when a hunt is active and you're nearby. Just having it equipped can help.",
+          tags: [FirstTimeHint, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feeling like a target? That quartz stone in your inventory might just give you a bit of breathing room if it starts hunting.",
+          subtitle_text: "Feeling like a target? That quartz stone in your inventory might just give you a bit of breathing room if it starts hunting.",
+          tags: [Encouraging, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not forget about your protective charms. That quartz can really dampen a ghost's enthusiasm during a hunt.",
+          subtitle_text: "Don't forget about your protective charms. That quartz can really dampen a ghost's enthusiasm during a hunt.",
+          tags: [ReminderMedium, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "When the ghost is on the prowl, that quartz stone can shorten the ordeal. Keep it in mind.",
+          subtitle_text: "When the ghost is on the prowl, that quartz stone can shorten the ordeal. Keep it in mind.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That quartz is not just a pretty rock. It will try to protect you if the ghost gets aggressive nearby.",
+          subtitle_text: "That quartz isn't just a pretty rock. It'll try to protect you if the ghost gets aggressive nearby.",
+          tags: [FriendlyReminder, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you anticipate a hunt, make sure that quartz stone is somewhere in your active inventory. It is a passive defence.",
+          subtitle_text: "If you anticipate a hunt, make sure that quartz stone is somewhere in your active inventory. It's a passive defence.",
+          tags: [ReminderLow, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz stone is your little pocket guardian for hunts. It might not stop them, but it can make them less nasty.",
+          subtitle_text: "The quartz stone is your little pocket guardian for hunts. It might not stop them, but it can make them less nasty.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "SageUnusedInRelevantSituation", // e.g., high ghost rage, player has Sage but hasn't used it.
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Things are feeling a bit tense in there. If you have got the sage, now might be a good time to light it up and try to calm things down.",
+          subtitle_text: "Things are feeling a bit tense in there. If you've got the sage, now might be a good time to light it up and try to calm things down.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength, ConcernedWarning],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember that sage bundle? It is good for clearing the air, literally. Might soothe our angry friend a bit.",
+          subtitle_text: "Remember that sage bundle? It's good for clearing the air, literally. Might soothe our angry friend a bit.",
+          tags: [ReminderLow, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are worried about a hunt, a bit of burning sage can sometimes delay it or make the ghost less focused.",
+          subtitle_text: "If you're worried about a hunt, a bit of burning sage can sometimes delay it or make the ghost less focused.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The sage needs to be activated to work. Once lit, the smoke can have a calming effect on most entities.",
+          subtitle_text: "The sage needs to be activated to work. Once lit, the smoke can have a calming effect on most entities.",
+          tags: [FirstTimeHint, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feeling the pressure build? Wafting some sage smoke around the ghost's area could give you some breathing room.",
+          subtitle_text: "Feeling the pressure build? Wafting some sage smoke around the ghost's area could give you some breathing room.",
+          tags: [Encouraging, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not forget your cleansing tools. That sage can be surprisingly effective if the ghost is getting agitated.",
+          subtitle_text: "Don't forget your cleansing tools. That sage can be surprisingly effective if the ghost is getting agitated.",
+          tags: [ReminderMedium, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If the ghost is getting a bit too frisky, lighting up the sage might just mellow it out for a short while.",
+          subtitle_text: "If the ghost is getting a bit too frisky, lighting up the sage might just mellow it out for a short while.",
+          tags: [Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That sage is not just for show. Burning it can help pacify an aggressive spirit, or at least confuse it.",
+          subtitle_text: "That sage isn't just for show. Burning it can help pacify an aggressive spirit, or at least confuse it.",
+          tags: [FriendlyReminder, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Consider using the sage if you feel a hunt is imminent. It might buy you some valuable time.",
+          subtitle_text: "Consider using the sage if you feel a hunt is imminent. It might buy you some valuable time.",
+          tags: [DirectHint, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A bit of sage smoke can work wonders on a grumpy ghost. Worth a try if its rage is building up.",
+          subtitle_text: "A bit of sage smoke can work wonders on a grumpy ghost. Worth a try if its rage is building up.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "QuartzCrackedFeedback", // Quartz stone cracks for the first time during a hunt
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Hear that little crack? That was the quartz stone taking a hit for you. Good thing you had it.",
+          subtitle_text: "Hear that little crack? That was the quartz stone taking a hit for you. Good thing you had it.",
+          tags: [ImmediateResponse, PositiveReinforcement, NeutralObservation, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz just absorbed some of that nasty energy. It is doing its job, but it will not last forever.",
+          subtitle_text: "The quartz just absorbed some of that nasty energy. It's doing its job, but it won't last forever.",
+          tags: [ImmediateResponse, NeutralObservation, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That crack means the quartz is working, taking the brunt of the hunt. Keep an eye on it, it gets weaker with each hit.",
+          subtitle_text: "That crack means the quartz is working, taking the brunt of the hunt. Keep an eye on it, it gets weaker with each hit.",
+          tags: [Guidance, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your quartz stone just took some damage. It helped lessen the impact of that hunt.",
+          subtitle_text: "Your quartz stone just took some damage. It helped lessen the impact of that hunt.",
+          tags: [NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good thing that quartz was there, it just shielded you a bit. You will see it start to crack as it absorbs more.",
+          subtitle_text: "Good thing that quartz was there, it just shielded you a bit. You'll see it start to crack as it absorbs more.",
+          tags: [Encouraging, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz is showing signs of wear. That means it is actively protecting you during these hunts.",
+          subtitle_text: "The quartz is showing signs of wear. That means it's actively protecting you during these hunts.",
+          tags: [PositiveReinforcement, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That cracking sound was your quartz. It is like a little bodyguard, taking a beating so you do not have to.",
+          subtitle_text: "That cracking sound was your quartz. It's like a little bodyguard, taking a beating so you don't have to.",
+          tags: [Humorous, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Each crack in that quartz means it has absorbed a bit of the ghost's hunting energy. Useful little thing.",
+          subtitle_text: "Each crack in that quartz means it's absorbed a bit of the ghost's hunting energy. Useful little thing.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz is taking damage, which is what it is for. It will buy you some time, but it is not invincible.",
+          subtitle_text: "The quartz is taking damage, which is what it's for. It'll buy you some time, but it's not invincible.",
+          tags: [NeutralObservation, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That was your quartz stone cracking. It is weakening the hunt's effect on you. Keep an eye on its condition.",
+          subtitle_text: "That was your quartz stone cracking. It's weakening the hunt's effect on you. Keep an eye on its condition.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "QuartzShatteredFeedback", // Quartz stone shatters
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Aand that is the quartz gone. Shattered into a dozen pieces. Served its purpose well, though.",
+          subtitle_text: "Aand that's the quartz gone. Shattered into a dozen pieces. Served its purpose well, though.",
+          tags: [ImmediateResponse, NeutralObservation, MediumLength, PlayerStruggling], // Player is now more vulnerable
+        ),
+        WalkieLineEntry(
+          tts_text: "Your quartz stone just bit the dust. You are on your own for protection against hunts for now.",
+          subtitle_text: "Your quartz stone just bit the dust. You're on your own for protection against hunts for now.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Well, that quartz has had its day. It is completely broken now. Hope you have got another plan if it hunts again.",
+          subtitle_text: "Well, that quartz has had its day. It's completely broken now. Hope you've got another plan if it hunts again.",
+          tags: [SlightlyImpatient, ConcernedWarning, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "The quartz stone shattered. It cannot absorb any more energy. Be extra careful during hunts now.",
+          subtitle_text: "The quartz stone shattered. It cannot absorb any more energy. Be extra careful during hunts now.",
+          tags: [DirectHint, ConcernedWarning, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is your last quartz charge gone, it is broken. It did its job absorbing that hunt energy.",
+          subtitle_text: "That's your last quartz charge gone, it's broken. It did its job absorbing that hunt energy.",
+          tags: [NeutralObservation, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Looks like the quartz stone is all used up. It is just a normal rock now, I am afraid.",
+          subtitle_text: "Looks like the quartz stone is all used up. It's just a normal rock now, I'm afraid.",
+          tags: [Humorous, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Your protective quartz has shattered. You will feel the full force of any hunts from now on.",
+          subtitle_text: "Your protective quartz has shattered. You'll feel the full force of any hunts from now on.",
+          tags: [ConcernedWarning, DirectHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "That quartz did all it could, but it is broken now. Time to rely on your wits and your feet.",
+          subtitle_text: "That quartz did all it could, but it's broken now. Time to rely on your wits and your feet.",
+          tags: [Encouraging, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "With the quartz gone, you have lost a layer of protection. Be mindful if the ghost decides to hunt.",
+          subtitle_text: "With the quartz gone, you've lost a layer of protection. Be mindful if the ghost decides to hunt.",
+          tags: [ReminderMedium, ConcernedWarning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "So much for the quartz stone. It is in pieces. Hope it bought you enough time.",
+          subtitle_text: "So much for the quartz stone. It's in pieces. Hope it bought you enough time.",
+          tags: [NeutralObservation, PlayerStruggling, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "SageActivatedIneffectively", // Sage activated, but player doesn't stay near ghost or in its path.
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That sage smoke needs to get near the ghost to have any effect, love. Waft it about where you think it is.",
+          subtitle_text: "That sage smoke needs to get near the ghost to have any effect, love. Waft it about where you think it is.",
+          tags: [PlayerStruggling, Guidance, ContextualHint, MediumLength, SlightlyImpatient],
+        ),
+        WalkieLineEntry(
+          tts_text: "Burning sage is all well and good, but the smoke needs to reach the entity to calm it or confuse it.",
+          subtitle_text: "Burning sage is all well and good, but the smoke needs to reach the entity to calm it or confuse it.",
+          tags: [PlayerStruggling, ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you trying to smoke out the whole house or just the ghost? Get that sage closer to the action.",
+          subtitle_text: "Are you trying to smoke out the whole house or just the ghost? Get that sage closer to the action.",
+          tags: [PlayerStruggling, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The sage is burning, but I do not think the ghost is getting a good whiff from over there. You need to be nearer.",
+          subtitle_text: "The sage is burning, but I don't think the ghost is getting a good whiff from over there. You need to be nearer.",
+          tags: [PlayerStruggling, NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "For the sage to work its magic, the ghost needs to be in the smoke. Try to get it in the ghost's general vicinity.",
+          subtitle_text: "For the sage to work its magic, the ghost needs to be in the smoke. Try to get it in the ghost's general vicinity.",
+          tags: [PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That sage smells lovely, I am sure, but it is more effective if the ghost can smell it too. Or, you know, sense it.",
+          subtitle_text: "That sage smells lovely, I'm sure, but it's more effective if the ghost can smell it too. Or, you know, sense it.",
+          tags: [PlayerStruggling, Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You have lit the sage, now make sure the smoke actually envelops the area where the ghost is active.",
+          subtitle_text: "You've lit the sage, now make sure the smoke actually envelops the area where the ghost is active.",
+          tags: [PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just lighting the sage is not enough, you need to get that calming smoke near the source of the trouble.",
+          subtitle_text: "Just lighting the sage isn't enough, you need to get that calming smoke near the source of the trouble.",
+          tags: [PlayerStruggling, ReminderMedium, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The idea with the sage is to get the smoke to the ghost. It will not do much good if it is just perfuming the air around you.",
+          subtitle_text: "The idea with the sage is to get the smoke to the ghost. It won't do much good if it's just perfuming the air around you.",
+          tags: [PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you want the sage to calm or confuse it, you need to be proactive in getting that smoke to where the ghost is.",
+          subtitle_text: "If you want the sage to calm or confuse it, you need to be proactive in getting that smoke to where the ghost is.",
+          tags: [PlayerStruggling, Encouraging, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "SageUnusedDefensivelyDuringHunt", // Ghost hunting, player has Sage but doesn't activate it.
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Things getting a bit hairy with that hunt? Now might be a good time for that sage, if you have got it! Can throw it off.",
+          subtitle_text: "Things getting a bit hairy with that hunt? Now might be a good time for that sage, if you've got it! Can throw it off.",
+          tags: [ConcernedWarning, DirectHint, ImmediateResponse, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is on your tail! If you have sage, light it up! It might confuse it enough for you to get away.",
+          subtitle_text: "It's on your tail! If you have sage, light it up! It might confuse it enough for you to get away.",
+          tags: [ConcernedWarning, DirectHint, UrgentReminder, ShortBrevity, PlayerStruggling], // UrgentReminder would be a new tag if needed, or use ReminderHigh
+        ),
+        WalkieLineEntry(
+          tts_text: "This would be an excellent moment to use that sage bundle you are carrying, if you want to try and break its focus.",
+          subtitle_text: "This would be an excellent moment to use that sage bundle you're carrying, if you want to try and break its focus.",
+          tags: [Guidance, ImmediateResponse, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember the sage? It is a good defensive tool during a hunt. Light it if you need a distraction.",
+          subtitle_text: "Remember the sage? It's a good defensive tool during a hunt. Light it if you need a distraction.",
+          tags: [ReminderLow, Guidance, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are feeling overwhelmed by the hunt, that sage might give you a chance. Quick, activate it!",
+          subtitle_text: "If you're feeling overwhelmed by the hunt, that sage might give you a chance. Quick, activate it!",
+          tags: [Encouraging, DirectHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost is actively hunting! Now is when the sage is most useful for creating some confusion.",
+          subtitle_text: "The ghost is actively hunting! Now is when the sage is most useful for creating some confusion.",
+          tags: [NeutralObservation, DirectHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not just run, use your tools! That sage bundle can help throw the ghost off your track during a hunt.",
+          subtitle_text: "Don't just run, use your tools! That sage bundle can help throw the ghost off your track during a hunt.",
+          tags: [SlightlyImpatient, DirectHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is exactly the kind of situation the sage is for. Light it up and try to get some distance.",
+          subtitle_text: "This is exactly the kind of situation the sage is for. Light it up and try to get some distance.",
+          tags: [DirectHint, Guidance, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "A lit sage bundle can make you harder to track during a hunt. Worth a try if it is closing in.",
+          subtitle_text: "A lit sage bundle can make you harder to track during a hunt. Worth a try if it's closing in.",
+          tags: [Guidance, ContextualHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "You have got sage, it is hunting. Seems like a good time to combine the two, does it not?",
+          subtitle_text: "You've got sage, it's hunting. Seems like a good time to combine the two, does it not?",
+          tags: [Questioning, SnarkyHumor, DirectHint, MediumLength, PlayerStruggling],
+        ),
+      ],
+    ),
+  ],
+)
