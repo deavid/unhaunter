@@ -1,5 +1,6 @@
+use crate::components::board::position::Position;
 use bevy::prelude::*;
-use unsettings::controls::ControlKeys;
+use unsettings::controls::ControlKeys; // Added import
 
 /// Represents a player character in the game world.
 ///
@@ -18,17 +19,20 @@ pub struct PlayerSprite {
     pub mean_sound: f32,
     /// The player's current health. A value of 0 indicates the player is incapacitated.
     pub health: f32,
+    /// The player's initial spawn position when the level started.
+    pub spawn_position: Position,
 }
 
 impl PlayerSprite {
     /// Creates a new `PlayerSprite` with the specified ID and default controls.
-    pub fn new(id: usize) -> Self {
+    pub fn new(id: usize, spawn_position: Position) -> Self {
         Self {
             id,
             controls: Self::default_controls(id),
             crazyness: 0.0,
             mean_sound: 0.0,
             health: 100.0,
+            spawn_position,
         }
     }
 

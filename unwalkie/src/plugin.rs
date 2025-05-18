@@ -1,11 +1,17 @@
 use bevy::prelude::*;
-use uncore::{events::walkie::WalkieEvent, resources::walkie::WalkiePlay};
+use unwalkiecore::{WalkiePlay, WalkieTalkingEvent};
 
 pub struct UnhaunterWalkiePlugin;
 
 impl Plugin for UnhaunterWalkiePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<WalkieEvent>().init_resource::<WalkiePlay>();
+        app.add_event::<WalkieTalkingEvent>()
+            .init_resource::<WalkiePlay>();
+
         crate::walkie_play::app_setup(app);
+        crate::triggers::app_setup(app);
+        crate::walkie_stats::app_setup(app);
+        crate::walkie_level_stats::setup_walkie_level_systems(app);
+        crate::focus_ring_system::app_setup(app);
     }
 }

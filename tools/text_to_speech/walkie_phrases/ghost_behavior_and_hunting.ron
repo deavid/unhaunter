@@ -1,0 +1,224 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "HuntWarningNoPlayerEvasion", // Ghost roars (hunt warning), player doesn't move to hide/exit area
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That roar means trouble! Quick, find somewhere to hide, or get out of its main area!",
+          subtitle_text: "That roar means trouble! Quick, find somewhere to hide, or get out of its main area!",
+          tags: [ConcernedWarning, DirectHint, ImmediateResponse, ShortBrevity, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Did you hear that? That is its hunting call! You need to break line of sight or find a hiding spot, now!",
+          subtitle_text: "Did you hear that? That's its hunting call! You need to break line of sight or find a hiding spot, now!",
+          tags: [ConcernedWarning, DirectHint, UrgentReminder, MediumLength], // UrgentReminder might be ReminderHigh
+        ),
+        WalkieLineEntry(
+          tts_text: "That was not a friendly greeting. It is about to hunt. My advice? Do not be where it expects you to be.",
+          subtitle_text: "That wasn't a friendly greeting. It's about to hunt. My advice? Don't be where it expects you to be.",
+          tags: [ConcernedWarning, Guidance, ImmediateResponse, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is getting ready to hunt! This is your cue to either find a very good hiding place or make a strategic retreat from this room.",
+          subtitle_text: "It's getting ready to hunt! This is your cue to either find a very good hiding place or make a strategic retreat from this room.",
+          tags: [DirectHint, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That angry sound means a hunt is starting. If you have a hiding spot nearby, use it. If not, run!",
+          subtitle_text: "That angry sound means a hunt is starting. If you have a hiding spot nearby, use it. If not, run!",
+          tags: [DirectHint, ImmediateResponse, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost just announced its intentions, and they are not pleasant. Time to make yourself scarce or find cover.",
+          subtitle_text: "The ghost just announced its intentions, and they're not pleasant. Time to make yourself scarce or find cover.",
+          tags: [ConcernedWarning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That roar is your signal to either hide or get out of the immediate vicinity. It is coming for you.",
+          subtitle_text: "That roar is your signal to either hide or get out of the immediate vicinity. It's coming for you.",
+          tags: [DirectHint, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You heard that, right? That is the prelude to a hunt. React quickly, find a hiding spot if you can.",
+          subtitle_text: "You heard that, right? That's the prelude to a hunt. React quickly, find a hiding spot if you can.",
+          tags: [Questioning, DirectHint, ConcernedWarning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is about to go on the offensive! Your best bet is to hide or create distance immediately.",
+          subtitle_text: "It's about to go on the offensive! Your best bet is to hide or create distance immediately.",
+          tags: [DirectHint, ImmediateResponse, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is the sound of an imminent hunt. Do not just stand there, make a plan! Hide, or if you are near an exit, use it!",
+          subtitle_text: "That's the sound of an imminent hunt. Don't just stand there, make a plan! Hide, or if you're near an exit, use it!",
+          tags: [SlightlyImpatient, DirectHint, ConcernedWarning, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "HuntActiveNearHidingSpotNoHide", // Ghost actively hunting, player near hiding spot but doesn't use [E]
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Quick, under the table! Or bed! You are right next to a hiding spot, use it while it is hunting!",
+          subtitle_text: "Quick, under the table! Or bed! You're right next to a hiding spot, use it while it's hunting!",
+          tags: [DirectHint, ImmediateResponse, ConcernedWarning, ContextualHint, ShortBrevity, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "That [table/bed/wardrobe] nearby looks like a good place to disappear for a bit. Try interacting with it to hide!",
+          subtitle_text: "That [table/bed/wardrobe] nearby looks like a good place to disappear for a bit. Try interacting with it to hide!",
+          tags: [Guidance, ContextualHint, FirstTimeHint, MediumLength, PlayerStruggling], // Placeholder for specific furniture if possible, else generic "furniture"
+        ),
+        WalkieLineEntry(
+          tts_text: "It is hunting and you are near cover! Get hidden, quickly!",
+          subtitle_text: "It's hunting and you're near cover! Get hidden, quickly!",
+          tags: [UrgentReminder, DirectHint, ShortBrevity, PlayerStruggling], // UrgentReminder is ReminderHigh
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not just stand there while it is hunting! That piece of furniture next to you? Try to hide there!",
+          subtitle_text: "Don't just stand there while it's hunting! That piece of furniture next to you? Try to hide there!",
+          tags: [SlightlyImpatient, DirectHint, ContextualHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "You have a chance to hide from the hunt right there! Interact with that large object!",
+          subtitle_text: "You've a chance to hide from the hunt right there! Interact with that large object!",
+          tags: [DirectHint, ImmediateResponse, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost is on your tail! That nearby [hiding spot type] is your best bet. Get to it!",
+          subtitle_text: "The ghost is on your tail! That nearby [hiding spot type] is your best bet. Get to it!",
+          tags: [ConcernedWarning, DirectHint, ContextualHint, ShortBrevity, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "While it is hunting, standing in the open is a bad idea. You are close to a hiding spot, use the interact key!",
+          subtitle_text: "While it's hunting, standing in the open is a bad idea. You're close to a hiding spot, use the interact key!",
+          tags: [Guidance, ReminderLow, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That looks like a perfectly good hiding place right next to you. What are you waiting for? It is hunting!",
+          subtitle_text: "That looks like a perfectly good hiding place right next to you. What are you waiting for? It's hunting!",
+          tags: [SlightlyImpatient, Questioning, DirectHint, PlayerStruggling, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is actively searching! You are near something you can hide under or in. Try it now!",
+          subtitle_text: "It's actively searching! You're near something you can hide under or in. Try it now!",
+          tags: [DirectHint, ImmediateResponse, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you do not hide now while it is hunting and you are so close to cover, you are asking for trouble!",
+          subtitle_text: "If you don't hide now while it's hunting and you're so close to cover, you're asking for trouble!",
+          tags: [ConcernedWarning, ReminderMedium, PlayerStruggling, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "PlayerStaysHiddenTooLong", // Player successfully hides, hunt ends, player stays hidden excessively
+      lines: [
+        WalkieLineEntry(
+          tts_text: "I think the coast is clear now. You can probably come out from under there.",
+          subtitle_text: "I think the coast is clear now. You can probably come out from under there.",
+          tags: [DelayedObservation, Guidance, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Seems quiet again. No need to stay cooped up in your hiding spot forever, you know.",
+          subtitle_text: "Seems quiet again. No need to stay cooped up in your hiding spot forever, you know.",
+          tags: [NeutralObservation, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The hunt seems to be over. You can stop playing hide and seek with the furniture now.",
+          subtitle_text: "The hunt seems to be over. You can stop playing hide-and-seek with the furniture now.",
+          tags: [SnarkyHumor, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "All clear, I reckon. Time to emerge from your hiding place and get back to it.",
+          subtitle_text: "All clear, I reckon. Time to emerge from your hiding place and get back to it.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you planning on staying hidden for the rest of the investigation? The ghost has moved on, I think.",
+          subtitle_text: "Are you planning on staying hidden for the rest of the investigation? The ghost has moved on, I think.",
+          tags: [Questioning, SnarkyHumor, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It has gone quiet. You can probably un hide now. Remember how to do that?",
+          subtitle_text: "It's gone quiet. You can probably un-hide now. Remember how to do that?",
+          tags: [ReminderLow, Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The immediate danger appears to have passed. Feel free to rejoin the world of the visible.",
+          subtitle_text: "The immediate danger appears to have passed. Feel free to rejoin the world of the visible.",
+          tags: [NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I do not think it is still looking for you. Safe to come out from your little den now.",
+          subtitle_text: "I don't think it's still looking for you. Safe to come out from your little den now.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Okay, the hunt is definitely over. You can stop cowering now, soldier. Back to work.",
+          subtitle_text: "Okay, the hunt is definitely over. You can stop cowering now, soldier. Back to work.",
+          tags: [SlightlyImpatient, Humorous, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Looks like it gave up the chase. You are safe to come out of hiding and continue the investigation.",
+          subtitle_text: "Looks like it gave up the chase. You're safe to come out of hiding and continue the investigation.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "EMFMinorFluctuationsIgnored", // EMF shows minor activity (2-4) near ghost, player doesn't investigate further or switch tools
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That EMF is definitely picking up some low level buzz. Might not be a full five, but it shows something is disturbing the field here.",
+          subtitle_text: "That EMF is definitely picking up some low-level buzz. Might not be a full five, but it shows something is disturbing the field here.",
+          tags: [NeutralObservation, Guidance, ContextualHint, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "Even if the EMF is not maxing out, those smaller spikes can still indicate you are near the ghost's presence or an active object.",
+          subtitle_text: "Even if the EMF isn't maxing out, those smaller spikes can still indicate you're near the ghost's presence or an active object.",
+          tags: [Guidance, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Seeing some EMF activity, even if it is not a level five, is still a clue. It means there is energy around. What else can you find here?",
+          subtitle_text: "Seeing some EMF activity, even if it's not a level five, is still a clue. It means there's energy around. What else can you find here?",
+          tags: [Encouraging, Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not just dismiss those lesser EMF readings. They can help you pinpoint the most active areas, even if they are not the big evidence themselves.",
+          subtitle_text: "Don't just dismiss those lesser EMF readings. They can help you pinpoint the most active areas, even if they're not the big evidence themselves.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The EMF meter is reacting, which is good. It means you are warm. A level five is what we need for evidence, but any reading is information.",
+          subtitle_text: "The EMF meter is reacting, which is good. It means you're warm. A level five is what we need for evidence, but any reading is information.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Those small EMF fluctuations can be a good sign you are in the right area. Keep exploring around there with other tools too.",
+          subtitle_text: "Those small EMF fluctuations can be a good sign you're in the right area. Keep exploring around there with other tools too.",
+          tags: [Encouraging, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A jumpy EMF meter, even below level five, often means the ghost has been through here recently or is nearby. Stay alert.",
+          subtitle_text: "A jumpy EMF meter, even below level five, often means the ghost has been through here recently or is nearby. Stay alert.",
+          tags: [NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That EMF reading shows some paranormal energy. It might not be the specific EMF five evidence, but it is a sign of activity.",
+          subtitle_text: "That EMF reading shows some paranormal energy. It might not be the specific EMF five evidence, but it's a sign of activity.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Even a flicker on the EMF can be useful. It tells you the ghost is interacting with something, or just passing by. Use that.",
+          subtitle_text: "Even a flicker on the EMF can be useful. It tells you the ghost is interacting with something, or just passing by. Use that.",
+          tags: [Guidance, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "So the EMF is not screaming level five. That is fine. But the fact it is reacting at all means this area is worth a closer look with everything you have got.",
+          subtitle_text: "So the EMF isn't screaming level five. That's fine. But the fact it's reacting at all means this area is worth a closer look with everything you've got.",
+          tags: [FriendlyReminder, Guidance, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

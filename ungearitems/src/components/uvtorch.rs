@@ -40,6 +40,14 @@ impl UVTorch {
         let new_power = self.calculate_output_power();
         self.output_power = (self.output_power * 10.0 + new_power) / 11.0;
     }
+
+    pub fn is_enabled(&self) -> bool {
+        self.enabled && self.battery_level > 0.0 && self.display_glitch_timer <= 0.01
+    }
+
+    pub fn can_enable(&self) -> bool {
+        self.battery_level > 0.0 && self.display_glitch_timer <= 0.01
+    }
 }
 
 impl GearUsable for UVTorch {
@@ -118,8 +126,11 @@ impl GearUsable for UVTorch {
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        if self.display_glitch_timer <= 0.0 {
+        if self.can_enable() {
             self.enabled = !self.enabled;
+        } else if self.is_enabled() {
+            // If it can't be enabled but is somehow on (e.g. battery just ran out), turn it off
+            self.enabled = false;
         }
     }
 
@@ -161,6 +172,10 @@ impl GearUsable for UVTorch {
             // Turn off occasionally or glitch the display
             self.display_glitch_timer = rng.random_range(0.2..0.6);
         }
+    }
+
+    fn needs_darkness(&self) -> bool {
+        true
     }
 }
 

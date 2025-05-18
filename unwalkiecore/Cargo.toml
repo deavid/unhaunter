@@ -1,0 +1,17 @@
+[package]
+name = "unwalkiecore"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+unwalkie_types = { path = "../unwalkie_types" }
+uncore = { path = "../uncore" }
+
+bevy = { workspace = true }
+enum-iterator = { workspace = true }
+rand = { workspace = true }

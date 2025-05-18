@@ -85,6 +85,7 @@ pub fn load_level_handler(
     qgs2: Query<Entity, With<GameSound>>,
     mut p: LoadLevelSystemParam,
     mut ev_level_ready: EventWriter<LevelReadyEvent>,
+    time: Res<Time>,
 ) {
     // Get the loaded event or return early if none
     let mut ev_iter = ev.read();
@@ -107,6 +108,8 @@ pub fn load_level_handler(
     // Set temperature from difficulty
     p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
     p.bf.map_path = loaded_event.map_filepath.clone();
+    p.bf.level_ready_time = time.elapsed_secs();
+
     warn!("BoardData Map path: {:?}", &p.bf.map_path);
 
     // Compute map boundaries by examining all tiles

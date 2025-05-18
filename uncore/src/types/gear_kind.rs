@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize}; // Add this
 /// Represents the different types of gear available in the game.
 ///
 /// Each variant holds a specific gear struct with its own attributes and behavior.
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)] // Add Serialize, Deserialize, PartialEq
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)] // Add Eq, Hash
 pub enum GearKind {
     Thermometer,
     EMFMeter,

@@ -1,0 +1,279 @@
+(
+  event_lines: [
+    (
+      name: "GearInVan",
+      lines: [
+        (
+          tts_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          subtitle_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          subtitle_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          tags: [ReminderMedium, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          subtitle_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          tags: [ReminderHigh, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          subtitle_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          tags: [ReminderHigh, DirectHint, SlightlyImpatient, MediumLength],
+        ),
+        (
+          tts_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          subtitle_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          subtitle_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          tags: [ReminderLow, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Don't forget to equip yourself from the van before heading inside!",
+          subtitle_text: "Don't forget to equip yourself from the van before heading inside!",
+          tags: [ReminderMedium, DirectHint, ShortBrevity],
+        ),
+      ],
+    ),
+    (
+      name: "GhostNearHunt",
+      lines: [
+        (
+          tts_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          subtitle_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          tags: [ConcernedWarning, ImmediateResponse, LongDetailed],
+        ),
+        (
+          tts_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          subtitle_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          subtitle_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          subtitle_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          tags: [ConcernedWarning, SnarkyHumor, SlightlyImpatient, LongDetailed],
+        ),
+        (
+          tts_text: "Red alert! It's about to kick off in there. Find cover, now!",
+          subtitle_text: "Red alert! It's about to kick off in there. Find cover, now!",
+          tags: [UrgentReminder, DirectHint, ShortBrevity],
+        ),
+        (
+          tts_text: "Big energy spike detected! That usually means one thing, and it's not tea time. Brace yourself.",
+          subtitle_text: "Big energy spike detected! That usually means one thing, and it's not tea time. Brace yourself.",
+          tags: [ConcernedWarning, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The air in there just got thick with bad intentions. It's preparing to hunt, I'm sure of it.",
+          subtitle_text: "The air in there just got thick with bad intentions. It's preparing to hunt, I'm sure of it.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "My readings are going crazy! That thing's about to lose its temper. You need to react.",
+          subtitle_text: "My readings are going crazy! That thing's about to lose its temper. You need to react.",
+          tags: [UrgentReminder, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "I'm getting a massive paranormal surge. It's hunt time, or very close to it. Evasive maneuvers!",
+          subtitle_text: "I'm getting a massive paranormal surge. It's hunt time, or very close to it. Evasive maneuvers!",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "That... was not a friendly sound. It's gearing up for a hunt. Please be careful.",
+          subtitle_text: "That... was not a friendly sound. It's gearing up for a hunt. Please be careful.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Hostile energy signature escalating rapidly! I suggest finding a very good hiding spot, or the exit.",
+          subtitle_text: "Hostile energy signature escalating rapidly! I suggest finding a very good hiding spot, or the exit.",
+          tags: [UrgentReminder, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "It's getting ready to pounce! Don't be its mouse. Hide or run!",
+          subtitle_text: "It's getting ready to pounce! Don't be its mouse. Hide or run!",
+          tags: [ConcernedWarning, DirectHint, Humorous, ShortBrevity],
+        ),
+        (
+          tts_text: "This is not a drill! Significant paranormal escalation detected. Imminent hostile activity likely.",
+          subtitle_text: "This is not a drill! Significant paranormal escalation detected. Imminent hostile activity likely.",
+          tags: [UrgentReminder, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "The atmosphere just took a nosedive. It's about to get very personal in there. Be ready.",
+          subtitle_text: "The atmosphere just took a nosedive. It's about to get very personal in there. Be ready.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "You've really ticked it off now! I'm seeing a major spike. That's your cue to find a safe corner.",
+          subtitle_text: "You've really ticked it off now! I'm seeing a major spike. That's your cue to find a safe corner.",
+          tags: [ConcernedWarning, SlightlyImpatient, MediumLength],
+        ),
+        (
+          tts_text: "Whatever you just did, it didn't like it. At all. Expecting a hunt any second now.",
+          subtitle_text: "Whatever you just did, it didn't like it. At all. Expecting a hunt any second now.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Energy readings are through the roof! It's prime hunting conditions for our spectral friend. Watch out.",
+          subtitle_text: "Energy readings are through the roof! It's prime hunting conditions for our spectral friend. Watch out.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "I'm picking up intense fluctuations. It's building up to something nasty. Find a hiding spot, and fast!",
+          subtitle_text: "I'm picking up intense fluctuations. It's building up to something nasty. Find a hiding spot, and fast!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's about to manifest with aggressive intent! That's your warning to get somewhere safe.",
+          subtitle_text: "It's about to manifest with aggressive intent! That's your warning to get somewhere safe.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "This feels like the calm before the storm, except the storm just shouted. Get ready for a hunt.",
+          subtitle_text: "This feels like the calm before the storm, except the storm just shouted. Get ready for a hunt.",
+          tags: [ConcernedWarning, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The entity is showing clear signs of aggression. A hunt is highly probable. Take defensive measures.",
+          subtitle_text: "The entity is showing clear signs of aggression. A hunt is highly probable. Take defensive measures.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "Temper, temper! It's definitely about to go on the offensive. Don't be caught in the open.",
+          subtitle_text: "Temper, temper! It's definitely about to go on the offensive. Don't be caught in the open.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Major disturbance incoming! It's preparing to hunt. You know the drill: hide or run.",
+          subtitle_text: "Major disturbance incoming! It's preparing to hunt. You know the drill: hide or run.",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "The equipment is screaming 'danger!' It's about to hunt. Get out of its path!",
+          subtitle_text: "The equipment is screaming 'danger!' It's about to hunt. Get out of its path!",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's on the brink of a full-blown hunt! If you have a safe spot in mind, now's the time.",
+          subtitle_text: "It's on the brink of a full-blown hunt! If you have a safe spot in mind, now's the time.",
+          tags: [ConcernedWarning, Guidance, MediumLength],
+        ),
+        (
+          tts_text: "That's not good... readings are peaking. It means a hunt is imminent. Be prepared.",
+          subtitle_text: "That's not good... readings are peaking. It means a hunt is imminent. Be prepared.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "The ghost is reaching its boiling point. Expect it to hunt any moment now. Find cover!",
+          subtitle_text: "The ghost is reaching its boiling point. Expect it to hunt any moment now. Find cover!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "I'm seeing a critical energy surge. It's about to hunt. Do not get caught.",
+          subtitle_text: "I'm seeing a critical energy surge. It's about to hunt. Do not get caught.",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's showtime, and not in a good way. That ghost is about to hunt. Take immediate action.",
+          subtitle_text: "It's showtime, and not in a good way. That ghost is about to hunt. Take immediate action.",
+          tags: [UrgentReminder, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The paranormal activity just hit critical mass. It's going to hunt. Secure yourself.",
+          subtitle_text: "The paranormal activity just hit critical mass. It's going to hunt. Secure yourself.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "It's powering up for a hunt! Don't wait around to see what happens next. Find a hiding spot.",
+          subtitle_text: "It's powering up for a hunt! Don't wait around to see what happens next. Find a hiding spot.",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Incoming hunt! The ghost is extremely agitated. Your safety is paramount now.",
+          subtitle_text: "Incoming hunt! The ghost is extremely agitated. Your safety is paramount now.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "All signs point to an imminent hunt. Repeat, hunt imminent. Find shelter or evacuate the area.",
+          subtitle_text: "All signs point to an imminent hunt. Repeat, hunt imminent. Find shelter or evacuate the area.",
+          tags: [UrgentReminder, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "That thing is about to blow! Get to a hiding place, quick, before the hunt starts properly!",
+          subtitle_text: "That thing is about to blow! Get to a hiding place, quick, before the hunt starts properly!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "The ghost's rage is peaking. It's going to hunt. I suggest not being its primary target.",
+          subtitle_text: "The ghost's rage is peaking. It's going to hunt. I suggest not being its primary target.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "This is your final warning! A hunt is about to begin. You need to act fast.",
+          subtitle_text: "This is your final warning! A hunt is about to begin. You need to act fast.",
+          tags: [UrgentReminder, DirectHint, ShortBrevity],
+        ),
+      ],
+    ),
+    (
+      name: "MissionStartEasy",
+      lines: [
+        (
+          tts_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
+          subtitle_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
+          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
+        ),
+        (
+          tts_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
+          subtitle_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
+          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
+        ),
+        (
+          tts_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
+          subtitle_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
+          tags: [FirstTimeHint, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
+          subtitle_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
+          tags: [FirstTimeHint, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
+          subtitle_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
+          tags: [FirstTimeHint, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
+          subtitle_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
+          tags: [FirstTimeHint, SnarkyHumor, SlightlyImpatient, LongDetailed],
+        ),
+        (
+          tts_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
+          subtitle_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
+          tags: [FirstTimeHint, Encouraging, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
+          subtitle_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
+          tags: [FirstTimeHint, NeutralObservation, ShortBrevity],
+        ),
+        (
+          tts_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
+          subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
+          tags: [FirstTimeHint, NeutralObservation, SnarkyHumor, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

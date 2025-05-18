@@ -53,7 +53,8 @@ pub struct BoardData {
     /// Source position of warning
     pub ghost_warning_position: Option<Position>,
 
-    pub map_path: String, // Path to the current map file
+    pub map_path: String,      // Path to the current map file
+    pub level_ready_time: f32, // Time when the level became ready
 }
 
 impl FromWorld for BoardData {
@@ -91,6 +92,7 @@ impl FromWorld for BoardData {
                 ghost_repelling_objects: HashMap::new(),
             },
             map_path: String::new(), // Initialize map_path with an empty string
+            level_ready_time: 0.0,   // Initialize level_ready_time
         }
     }
 }

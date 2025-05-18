@@ -1,0 +1,334 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "HasRepellentEntersLocation", // Player has crafted repellent, enters the location
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Right, you have got the ghost specific cocktail. Remember, you will need to get reasonably close for it to... mingle properly with our friend.",
+          subtitle_text: "Right, you've got the ghost-specific cocktail. Remember, you'll need to get reasonably close for it to... *mingle* properly with our friend.",
+          tags: [FirstTimeHint, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Armed with the repellent, I see. This is the pointy end of the stick. Good luck, and try to get a good dose on it.",
+          subtitle_text: "Armed with the repellent, I see. This is the pointy end of the stick. Good luck, and try to get a good dose on it.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That repellent needs to make contact, or at least get very near the ghost or its breach to work effectively.",
+          subtitle_text: "That repellent needs to make contact, or at least get very near the ghost or its breach to work effectively.",
+          tags: [ReminderLow, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Time to serve the eviction notice. Head towards where you last saw it, or near its breach, and get ready to use that vial.",
+          subtitle_text: "Time to serve the eviction notice. Head towards where you last saw it, or near its breach, and get ready to use that vial.",
+          tags: [Guidance, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You are going in with the strong stuff. Remember, aim for the ghost or its main haunt. Do not just spray it at the walls.",
+          subtitle_text: "You're going in with the strong stuff. Remember, aim for the ghost or its main haunt. Don't just spray it at the walls.",
+          tags: [Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Repellent in hand, nice. The closer you are when you use it, the better the chances it will be effective.",
+          subtitle_text: "Repellent in hand, nice. The closer you are when you use it, the better the chances it'll be effective.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This is it then. You have got the repellent. Find your target and give it a good spray.",
+          subtitle_text: "This is it then. You've got the repellent. Find your target and give it a good spray.",
+          tags: [Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The repellent is for close encounters. Do not waste it from across the room.",
+          subtitle_text: "The repellent is for close encounters. Don't waste it from across the room.",
+          tags: [ReminderMedium, DirectHint, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "With that vial, you are ready to face it. Get near its core area and activate the repellent.",
+          subtitle_text: "With that vial, you're ready to face it. Get near its core area and activate the repellent.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Okay, repellent acquired. Now for the tricky part: actually using it on the spooky blighter.",
+          subtitle_text: "Okay, repellent acquired. Now for the tricky part: actually using it on the spooky blighter.",
+          tags: [NeutralObservation, Encouraging, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "RepellentUsedTooFar", // Player uses repellent, but is too far from the ghost/breach for it to be effective
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Bit of a long shot from there, love. You will need to be a tad closer for that repellent to have any effect.",
+          subtitle_text: "Bit of a long shot from there, love. You'll need to be a tad closer for that repellent to have any effect.",
+          tags: [PlayerStruggling, Guidance, ContextualHint, MediumLength, SlightlyImpatient],
+        ),
+        WalkieLineEntry(
+          tts_text: "I do not think it felt that from way over there. The repellent works best up close and personal.",
+          subtitle_text: "I don't think it felt that from way over there. The repellent works best up close and personal.",
+          tags: [PlayerStruggling, Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You are trying to fumigate the whole county, or just the ghost? Get closer with that stuff!",
+          subtitle_text: "You're trying to fumigate the whole county, or just the ghost? Get closer with that stuff!",
+          tags: [PlayerStruggling, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That repellent has a limited range, you know. You need to be practically breathing down its neck for it to really work.",
+          subtitle_text: "That repellent has a limited range, you know. You need to be practically breathing down its neck for it to really work.",
+          tags: [PlayerStruggling, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Wasting good repellent spraying it from that distance. The ghost needs to be nearby for it to take effect.",
+          subtitle_text: "Wasting good repellent spraying it from that distance. The ghost needs to be nearby for it to take effect.",
+          tags: [PlayerStruggling, ConcernedWarning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Think of it like perfume, but for banishing things. You would not spray perfume from across the street, would you? Get closer.",
+          subtitle_text: "Think of it like perfume, but for banishing things. You wouldn't spray perfume from across the street, would you? Get closer.",
+          tags: [PlayerStruggling, Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It needs to be in the thick of that repellent cloud. You are a bit too far away for it to have much impact.",
+          subtitle_text: "It needs to be in the thick of that repellent cloud. You're a bit too far away for it to have much impact.",
+          tags: [PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you sure it can even smell that from there? The repellent needs to be used in close proximity to the target.",
+          subtitle_text: "Are you sure it can even smell that from there? The repellent needs to be used in close proximity to the target.",
+          tags: [PlayerStruggling, Questioning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That was a practice shot, right? Because it was nowhere near. Get in closer before you use the repellent again.",
+          subtitle_text: "That was a practice shot, right? Because it was nowhere near. Get in closer before you use the repellent again.",
+          tags: [PlayerStruggling, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The effective range on that repellent is not what you would call 'long'. You need to be much nearer the ghost or breach.",
+          subtitle_text: "The effective range on that repellent isn't what you'd call 'long'. You need to be much nearer the ghost or breach.",
+          tags: [PlayerStruggling, ReminderMedium, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "RepellentUsedGhostEnragesPlayerFlees", // Player uses repellent, ghost enrages, player flees
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Whoa, it is properly furious now! That stuff definitely got its attention. If you think you have got the right mix, hold your nerve and keep at it.",
+          subtitle_text: "Whoa, it's properly furious now! That stuff definitely got its attention. If you think you've got the right mix, hold your nerve and keep at it.",
+          tags: [ConcernedWarning, Guidance, ImmediateResponse, PlayerStruggling, MediumLength, FirstTimeHint],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is not happy, is it? That means something is happening! Do not leg it just yet, see if you need to apply more or if you chose correctly.",
+          subtitle_text: "It's not happy, is it? That means something is happening! Don't leg it just yet, see if you need to apply more or if you chose correctly.",
+          tags: [Encouraging, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That is a strong reaction! It could be the right repellent, or it might just be very angry. Assess the situation before running!",
+          subtitle_text: "That's a strong reaction! It could be the right repellent, or it might just be very angry. Assess the situation before running!",
+          tags: [NeutralObservation, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Okay, it is throwing a tantrum. That is to be expected when you try to evict an angry spirit.",
+          subtitle_text: "Okay, it's throwing a tantrum. That's to be expected when you try to evict an angry spirit.",
+          tags: [Humorous, Questioning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is definitely upset by that. If you are confident in your ghost ID, you might need to persist with the repellent.",
+          subtitle_text: "It's definitely upset by that. If you're confident in your ghost ID, you might need to persist with the repellent.",
+          tags: [Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That angry display means the repellent is having some effect, good or bad. Do not just run away, think about your next move.",
+          subtitle_text: "That angry display means the repellent is having some effect, good or bad. Don't just run away, think about your next move.",
+          tags: [NeutralObservation, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "A lot of noise and fury! That is common when the repellent starts working... or when it is the wrong one. They don't like it either way.",
+          subtitle_text: "A lot of noise and fury! That's common when the repellent starts working... or when it's the wrong one. They don't like it either way.",
+          tags: [ConcernedWarning, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is fighting back! If you are sure it is the correct repellent, you might just need to apply more pressure.",
+          subtitle_text: "It's fighting back! If you're sure it's the correct repellent, you might just need to apply more pressure.",
+          tags: [Encouraging, Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That reaction means you are on its radar now. If that was the right stuff, keep it up.",
+          subtitle_text: "That reaction means you're on its radar now. If that was the right stuff, keep it up.",
+          tags: [Guidance, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is certainly not pleased with that repellent. The question is, is it the right kind of not pleased? Only one way to find out!",
+          subtitle_text: "It's certainly not pleased with that repellent. The question is, is it the *right kind* of not pleased? Only one way to find out!",
+          tags: [Questioning, Guidance, PlayerStruggling, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "GhostExpelledPlayerMissed", // Ghost expelled, player was far/not looking
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Hang on... I think that might have done it. Things have gone very quiet all of a sudden. You might want to peek back in and confirm.",
+          subtitle_text: "Hang on... I think that might have done it. Things have gone very quiet all of a sudden. You might want to peek back in and confirm.",
+          tags: [DelayedObservation, Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "My readings just flatlined for our friend in there. Pretty sure it is checked out. Did you see it go?",
+          subtitle_text: "My readings just flatlined for our friend in there. Pretty sure it's checked out. Did you see it go?",
+          tags: [NeutralObservation, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I think you got it! The energy signature just vanished. Might be worth a look to make sure it is actually gone.",
+          subtitle_text: "I think you got it! The energy signature just vanished. Might be worth a look to make sure it's actually gone.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Is it... gone? The activity seems to have stopped completely. You should double check the area.",
+          subtitle_text: "Is it... gone? The activity seems to have stopped completely. You should double-check the area.",
+          tags: [Questioning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Pretty sure that was a successful eviction. The place feels different, does it not? Go have a look, make sure it is clear.",
+          subtitle_text: "Pretty sure that was a successful eviction. The place feels different, does it not? Go have a look, make sure it's clear.",
+          tags: [Encouraging, Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That last dose of repellent seems to have done the trick. I am not picking up any paranormal signs. Confirm visual?",
+          subtitle_text: "That last dose of repellent seems to have done the trick. I'm not picking up any paranormal signs. Confirm visual?",
+          tags: [NeutralObservation, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It feels like the air has cleared. I think our ghost has departed. Best to make sure the breach is gone too.",
+          subtitle_text: "It feels like the air has cleared. I think our ghost has departed. Best to make sure the breach is gone too.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Victory! Or so my instruments suggest. Go take a final sweep, ensure no lingering spookiness.",
+          subtitle_text: "Victory! Or so my instruments suggest. Go take a final sweep, ensure no lingering spookiness.",
+          tags: [PositiveReinforcement, Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I think our uninvited guest has finally left the building. You should verify the site is clear before we call it.",
+          subtitle_text: "I think our uninvited guest has finally left the building. You should verify the site is clear before we call it.",
+          tags: [NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The atmosphere in there just changed significantly. I reckon that means job done. But a quick confirmation look would not go amiss.",
+          subtitle_text: "The atmosphere in there just changed significantly. I reckon that means job done. But a quick confirmation look wouldn't go amiss.",
+          tags: [Guidance, DelayedObservation, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "GhostExpelledPlayerLingers", // Ghost/breach gone, player lingers in location, not ending mission
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Pretty sure the coast is clear now. Time to call it a day back at the truck, I reckon, and hit that 'End Mission' button.",
+          subtitle_text: "Pretty sure the coast is clear now. Time to call it a day back at the truck, I reckon, and hit that 'End Mission' button.",
+          tags: [ReminderLow, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Job done, by the looks of it. Head back to the van and we can wrap this one up.",
+          subtitle_text: "Job done, by the looks of it. Head back to the van and we can wrap this one up.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Nothing more to see here, I think. The truck is waiting for you to officially close the case.",
+          subtitle_text: "Nothing more to see here, I think. The truck is waiting for you to officially close the case.",
+          tags: [NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you admiring your handiwork? Fair enough. But the 'End Mission' button is in the truck when you are ready.",
+          subtitle_text: "Are you admiring your handiwork? Fair enough. But the 'End Mission' button is in the truck when you're ready.",
+          tags: [Humorous, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Looks like a successful operation. All that is left is to make it official back at the van.",
+          subtitle_text: "Looks like a successful operation. All that's left is to make it official back at the van.",
+          tags: [Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The site seems secure. Return to the truck to complete the mission debrief.",
+          subtitle_text: "The site seems secure. Return to the truck to complete the mission debrief.",
+          tags: [NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Unless you are planning on redecorating, I think your work here is done. Back to the truck for the final step.",
+          subtitle_text: "Unless you're planning on redecorating, I think your work here is done. Back to the truck for the final step.",
+          tags: [SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "With the ghost gone, there is not much else to do but hit that 'End Mission' button in the van.",
+          subtitle_text: "With the ghost gone, there's not much else to do but hit that 'End Mission' button in the van.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feels good to clear a haunting, eh? Do not forget to finalize the mission in the truck.",
+          subtitle_text: "Feels good to clear a haunting, eh? Don't forget to finalize the mission in the truck.",
+          tags: [PositiveReinforcement, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "All quiet on the paranormal front. That means it is time to head to the truck and clock out.",
+          subtitle_text: "All quiet on the paranormal front. That means it's time to head to the truck and clock out.",
+          tags: [Encouraging, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "RepellentExhaustedGhostPresentCorrectType", // Repellent empty, ghost still there, but it was the correct type
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Blast, ran out of the stuff! But you were definitely on the right track with that mix. Back to the truck, brew another batch, and give it another go. You have got this.",
+          subtitle_text: "Blast, ran out of the stuff! But you were definitely on the right track with that mix. Back to the truck, brew another batch, and give it another go. You've got this.",
+          tags: [PlayerStruggling, Encouraging, DirectHint, MediumLength, PositiveReinforcement],
+        ),
+        WalkieLineEntry(
+          tts_text: "You were so close! Just needed a bit more of that correct repellent. Head back to the van and whip up some more.",
+          subtitle_text: "You were so close! Just needed a bit more of that correct repellent. Head back to the van and whip up some more.",
+          tags: [PlayerStruggling, Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That repellent was working, you just did not have enough. Do not give up now, a quick refill at the truck should do it.",
+          subtitle_text: "That repellent was working, you just didn't have enough. Don't give up now, a quick refill at the truck should do it.",
+          tags: [PlayerStruggling, PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It seems you had the right idea with the repellent, just not quite enough of it. Another vial from the truck might finish the job.",
+          subtitle_text: "It seems you had the right idea with the repellent, just not quite enough of it. Another vial from the truck might finish the job.",
+          tags: [PlayerStruggling, NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That was the right stuff, it was definitely weakening! Just need to top up your repellent in the van and go again.",
+          subtitle_text: "That was the right stuff, it was definitely weakening! Just need to top up your repellent in the van and go again.",
+          tags: [PlayerStruggling, Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "So close to banishing it! Your repellent choice was spot on, just need a larger dose. Back to the truck for a refill.",
+          subtitle_text: "So close to banishing it! Your repellent choice was spot on, just need a larger dose. Back to the truck for a refill.",
+          tags: [PlayerStruggling, PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Do not be disheartened, you were using the correct repellent. It just needs a bit more persuading. Craft another batch.",
+          subtitle_text: "Don't be disheartened, you were using the correct repellent. It just needs a bit more persuading. Craft another batch.",
+          tags: [PlayerStruggling, Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The ghost was reacting to that repellent, which means your ID was good. You just ran out. Time for a quick resupply at the van.",
+          subtitle_text: "The ghost was reacting to that repellent, which means your ID was good. You just ran out. Time for a quick resupply at the van.",
+          tags: [PlayerStruggling, NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You almost had it! That repellent was the right one. Another go with a full vial should send it packing.",
+          subtitle_text: "You almost had it! That repellent was the right one. Another go with a full vial should send it packing.",
+          tags: [PlayerStruggling, Encouraging, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is a tough one, but your repellent was correct. Just needs a bit more of a push. Make another vial and finish it off.",
+          subtitle_text: "It's a tough one, but your repellent was correct. Just needs a bit more of a push. Make another vial and finish it off.",
+          tags: [PlayerStruggling, Encouraging, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

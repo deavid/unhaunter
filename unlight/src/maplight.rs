@@ -22,6 +22,7 @@ use std::collections::VecDeque;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, MapTileSprite};
+use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player_sprite::PlayerSprite;
@@ -29,6 +30,7 @@ use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
 use uncore::platform::plt::IS_WASM;
 use uncore::resources::board_data::BoardData;
+use uncore::resources::current_evidence_readings::CurrentEvidenceReadings;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
 use uncore::types::board::fielddata::CollisionFieldData;
@@ -54,6 +56,7 @@ pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
 
 use crate::metrics::{AMBIENT_SOUND_SYSTEM, APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
+use uncore::components::ghost_orb_particle::GhostOrbParticle;
 use uncore::random_seed;
 
 /// Computes the player's visibility field, determining which areas of the map are
@@ -231,6 +234,7 @@ pub fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
+            Option<&GhostOrbParticle>, // Added GhostOrbParticle
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -363,10 +367,6 @@ pub fn apply_lighting(
     }
     let mut qt = sprite_set.p0();
     cursor_exp /= exp_count;
-    // Ensure the base is not negative before applying the power function
-    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
-    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
-
     // Account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might
     // be off but someother player might have it on.
@@ -384,6 +384,12 @@ pub fn apply_lighting(
         })
         .sum();
     cursor_exp += fl_total_power.sqrt() * 0.9;
+    let f_e1 = 0.1;
+    bf.exposure_lux = bf.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
+    // Ensure the base is not negative before applying the power function
+    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
+
     assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see
@@ -619,7 +625,7 @@ pub fn apply_lighting(
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
             let dark2 = lerp_color(
                 Color::WHITE,
                 DARK_COLOR2,
@@ -698,12 +704,12 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
-    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma, _o_orb) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
-        let mut opacity: f32 =
-            map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+        let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+        let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
         let mut light_v = vec![LightData {
@@ -763,6 +769,18 @@ pub fn apply_lighting(
 
         // 20.0;
         let mut smooth: f32 = 1.0;
+        if sprite_type == SpriteType::GhostOrb {
+            smooth = 10.0;
+            let total_light =
+                ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
+            let ir_ratio = ld_abs.infrared / total_light;
+            if ir_ratio > 0.5 && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
+                opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
+                opacity = opacity.clamp(0.0, 1.0);
+            } else {
+                opacity = 0.0;
+            }
+        }
         if sprite_type == SpriteType::Ghost {
             let Some(gs) = o_gs else {
                 continue;
@@ -821,19 +839,17 @@ pub fn apply_lighting(
         }
         if sprite_type == SpriteType::Breach {
             smooth = 2.0;
-            let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
-                ld.infrared * 3.0
-            } else {
-                0.0
-            } + ld.ultraviolet;
-            opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
-            opacity = opacity.sqrt();
+            let e_nv = ld.ultraviolet - ld.infrared * 3.0
+                + (difficulty.0.evidence_visibility / 2.0 + ld.visible - ld.infrared).powi(3);
+            opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
+            opacity = opacity.min(visibility).cbrt();
             let l = dst_color.luminance();
             let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
             // Make the breach oscilate to increase visibility:
-            let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
+            let osc1 = ((elapsed * 0.92).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
-            dst_color = dst_color.with_luminance(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
+            dst_color = dst_color
+                .with_luminance(((l * (ld.visible - ld.infrared) + e_nv) * osc1).clamp(0.0, 0.99));
             let lin_dst_color = dst_color.to_linear();
 
             dst_color = lin_dst_color
@@ -1035,4 +1051,148 @@ pub fn ambient_sound_system(
         sink.set_volume(new_volume.clamp(0.00001, 10.0));
     }
     measure.end_ms();
+}
+
+// Helper function
+fn calculate_clarity_for_visual_evidence(
+    signal_intensity: f32,
+    signal_threshold: f32,
+    visible_intensity: f32,
+    darkness_threshold: f32,
+    player_visibility_to_tile: f32,
+    scaling_factor: f32,
+) -> f32 {
+    if signal_intensity >= signal_threshold && visible_intensity <= darkness_threshold {
+        let base_clarity = signal_intensity / (visible_intensity + 0.05); // Add small epsilon
+        let final_clarity = (base_clarity * player_visibility_to_tile) / scaling_factor;
+        final_clarity.clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
+}
+
+pub fn report_environmental_visual_evidence_clarity_system(
+    mut current_evidence_readings: ResMut<CurrentEvidenceReadings>,
+    board_data: Res<BoardData>,           // bf
+    visibility_data: Res<VisibilityData>, // vf
+    time: Res<Time>,
+    ghost_query: Query<(Entity, &Position), With<GhostSprite>>, // Entity for source_gear_entity
+    breach_query: Query<(Entity, &Position), With<GhostBreach>>, // Entity for source_gear_entity
+) {
+    let current_game_time_secs = time.elapsed_secs_f64();
+    let delta_time_secs = time.delta_secs();
+
+    // Helper to process an entity (ghost or breach)
+    let mut process_entity = |_entity_id: Entity, entity_pos: &Position, is_ghost: bool| {
+        let bpos = entity_pos.to_board_position_size(board_data.map_size);
+        // Ensure bpos is valid before indexing (though to_board_position_size should handle clamping)
+        if bpos.x >= board_data.map_size.0 as i64
+            || bpos.y >= board_data.map_size.1 as i64
+            || bpos.z >= board_data.map_size.2 as i64
+            || bpos.x < 0
+            || bpos.y < 0
+            || bpos.z < 0
+        {
+            // warn!("Entity {:?} at {:?} resulted in out-of-bounds bpos {:?}", entity_id, entity_pos, bpos);
+            return;
+        }
+
+        let player_visibility_to_tile =
+            visibility_data.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+
+        // If player can't see the tile where the entity is, clarity for visual evidence is 0.
+        if player_visibility_to_tile < 0.01 {
+            let evidences_to_clear = if is_ghost {
+                vec![Evidence::UVEctoplasm, Evidence::RLPresence]
+            } else {
+                // Is Breach
+                vec![Evidence::FloatingOrbs]
+            };
+            for ev in evidences_to_clear {
+                current_evidence_readings.report_clarity(
+                    ev,
+                    0.0,
+                    current_game_time_secs,
+                    delta_time_secs,
+                );
+            }
+            return;
+        }
+
+        // Crucial Assumption: board_data.light_field[bpos.ndidx()].additional
+        // correctly sums all light types (Visible, UV, Red, IR) from all sources at this tile.
+        let effective_light_at_entity_pos = board_data.light_field[bpos.ndidx()].additional;
+
+        if is_ghost {
+            // UVEctoplasm Check
+            let uv_clarity = if board_data.evidences.contains(&Evidence::UVEctoplasm) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.ultraviolet,
+                    0.3, // UV signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.3, // Visible light darkness threshold
+                    player_visibility_to_tile,
+                    3.0, // Scaling factor for UV
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::UVEctoplasm,
+                uv_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+
+            // RLPresence Check
+            let rl_clarity = if board_data.evidences.contains(&Evidence::RLPresence) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.red,
+                    0.3, // Red light signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.3,
+                    player_visibility_to_tile,
+                    3.0, // Scaling factor for Red
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::RLPresence,
+                rl_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+        } else {
+            // Is Breach
+            // FloatingOrbs Check
+            let orbs_clarity = if board_data.evidences.contains(&Evidence::FloatingOrbs) {
+                calculate_clarity_for_visual_evidence(
+                    effective_light_at_entity_pos.infrared,
+                    0.5, // IR signal threshold
+                    effective_light_at_entity_pos.visible,
+                    0.2, // Visible light darkness threshold
+                    player_visibility_to_tile,
+                    5.0, // Scaling factor for Orbs (IR is usually strong)
+                )
+            } else {
+                0.0
+            };
+            current_evidence_readings.report_clarity(
+                Evidence::FloatingOrbs,
+                orbs_clarity,
+                current_game_time_secs,
+                delta_time_secs,
+            );
+        }
+    };
+
+    // Process ghost(s)
+    for (entity_id, entity_pos) in ghost_query.iter() {
+        process_entity(entity_id, entity_pos, true);
+    }
+    // Process breach(es)
+    for (entity_id, entity_pos) in breach_query.iter() {
+        process_entity(entity_id, entity_pos, false);
+    }
 }

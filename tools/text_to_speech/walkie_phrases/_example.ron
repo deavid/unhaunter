@@ -1,0 +1,25 @@
+WalkiePhraseFile(
+    event_lines: [
+        WalkieEventConceptEntry(
+            name: "PlayerSpottedGhost",
+            lines: [
+                WalkieLineEntry(tts_text: "I think I saw something over there!", subtitle_text: "Saw something...", tags: [FirstTimeHint, ShortBrevity]),
+                WalkieLineEntry(tts_text: "Definitely a spooky presence nearby.", subtitle_text: "Spooky presence.", tags: [NeutralObservation, ShortBrevity]),
+            ],
+        ),
+        WalkieEventConceptEntry(
+            name: "LowSanityWarning",
+            lines: [
+                WalkieLineEntry(tts_text: "My head is spinning, I need to get out.", subtitle_text: "Head spinning...", tags: [PlayerStruggling, ConcernedWarning]),
+                WalkieLineEntry(tts_text: "Can\'t take much more of this, feeling weak.", subtitle_text: "Feeling weak.", tags: [LongDetailed, ConcernedWarning, PlayerStruggling]),
+                WalkieLineEntry(tts_text: "Just a routine check, everything seems quiet for now.", subtitle_text: "All quiet.", tags: [MediumLength, NeutralObservation]),
+            ],
+        ),
+        WalkieEventConceptEntry(
+            name: "FirstTimeReminder",
+            lines: [
+                WalkieLineEntry(tts_text: "Remember to use your EMF reader to find disturbances.", subtitle_text: "Use EMF reader.", tags: [ReminderLow, FirstTimeHint]),
+            ],
+        ),
+    ],
+)

@@ -10,8 +10,14 @@ authors.workspace = true
 [dependencies]
 uncore = { path = "../uncore" }
 ungear = { path = "../ungear" }
+ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
+unwalkie_types = { path = "../unwalkie_types" }
+unwalkiecore = { path = "../unwalkiecore" }
+unprofile = { path = "../unprofile" }
+untruck = { path = "../untruck" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
 bevy-persistent = { workspace = true }
+enum-iterator = { workspace = true }

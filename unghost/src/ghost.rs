@@ -115,6 +115,10 @@ fn ghost_movement(
                     ghost.hunting -= dt / 60.0;
                 }
                 if ghost.hunting < 0.0 {
+                    if ghost.hunt_target {
+                        // Check if it was actually hunting
+                        ghost.times_hunted_this_mission += 1;
+                    }
                     ghost.hunting = 0.0;
                     ghost.hunt_target = false;
                     finalize = true;

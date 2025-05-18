@@ -2,6 +2,7 @@
 members = [
     "ungame",
     "tools/ghost_radio",
+    "tools/text_to_speech/walkie_voice_generator",
     "tools/ghost_list",
     "uncore",
     "ungear",
@@ -24,11 +25,12 @@ members = [
     "uncampaign",
     "unprofile",
     "unsummary",
+    "unwalkiecore",
 ]
 resolver = "3"
 
 [workspace.package]
-version = "0.3.0-beta4"
+version = "0.3.0-beta4-dev"
 edition = "2024"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"
@@ -69,6 +71,8 @@ bevy_framepace = "0.18"
 bevy_dylib = "0.15"
 bevy_picking = "0.15"
 ndarray = "0.16.1"
+sha2 = "0.10"
+rayon = "1.7"
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
@@ -106,6 +110,13 @@ unmapload = { path = "unmapload" }
 uncampaign = { path = "uncampaign" }
 unprofile = { path = "unprofile" }
 unsummary = { path = "unsummary" }
+unwalkie_types = { path = "unwalkie_types" }
+
+clap = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
+ron = { workspace = true }
+sha2 = { workspace = true }
+rayon = { workspace = true }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
@@ -117,11 +128,14 @@ anyhow = { workspace = true }
 name = "unhaunter_game"
 path = "unhaunter/src/bin/unhaunter.rs"
 
+[[bin]]
+name = "walkie_voice_generator"
+path = "tools/text_to_speech/walkie_voice_generator/src/main.rs"
+required-features = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "unhaunter/src/lib.rs"
-
 
 [target.'cfg(target_os = "linux")'.dependencies]
 bevy_dylib = { workspace = true }

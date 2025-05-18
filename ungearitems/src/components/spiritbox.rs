@@ -16,6 +16,7 @@ pub struct SpiritBox {
     pub charge: f32,
     pub display_glitch_timer: f32,
     pub interference2_timer: f32,
+    pub last_good_answer: f32,
 }
 
 impl GearUsable for SpiritBox {
@@ -93,6 +94,16 @@ impl GearUsable for SpiritBox {
         // Don't allow toggling if currently glitching severely
         if self.display_glitch_timer <= 0.2 {
             self.enabled = !self.enabled;
+        }
+    }
+
+    fn is_sound_showing_evidence(&self) -> f32 {
+        // SpiritBox is playing a sound/answering when it's enabled, not glitching,
+        // and ghost_answer is true (which means it's actively replying)
+        if self.enabled && self.display_glitch_timer <= 0.0 && self.last_good_answer > 0.0 {
+            1.0
+        } else {
+            0.0
         }
     }
 
@@ -175,6 +186,7 @@ impl GearUsable for SpiritBox {
         if self.ghost_answer {
             if delta > 3.0 {
                 self.ghost_answer = false;
+                self.last_good_answer = 0.0;
             }
         } else if delta > 0.3 && self.interference2_timer <= 0.0 && self.display_glitch_timer <= 0.0
         {
@@ -194,10 +206,14 @@ impl GearUsable for SpiritBox {
                 3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
                 _ => self.ghost_answer = false,
             }
+            if self.ghost_answer {
+                self.last_good_answer = sec;
+            }
         } else if delta > 0.3 && self.interference2_timer > 0.0 && self.display_glitch_timer <= 0.0
         {
             self.last_change_secs = sec;
             self.ghost_answer = true;
+            self.last_good_answer = 0.0;
             gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
         }
     }
@@ -224,6 +240,14 @@ impl GearUsable for SpiritBox {
             self.interference2_timer = rng.random_range(0.3..0.8);
             self.ghost_answer = true;
         }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn can_enable(&self) -> bool {
+        true
     }
 }
 

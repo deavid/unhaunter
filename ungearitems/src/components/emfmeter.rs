@@ -74,31 +74,40 @@ pub struct EMFMeter {
 }
 
 impl GearUsable for EMFMeter {
+    // Default is_enabled() is fine if it just checks self.enabled
+    // fn is_enabled(&self) -> bool { self.enabled }
+
+    // Default can_enable() is fine if it's always true
+    // fn can_enable(&self) -> bool { true }
+
+    // Override is_enabled to consider glitch state
+    fn is_enabled(&self) -> bool {
+        self.enabled && self.display_glitch_timer <= 0.0
+    }
+
+    // Override can_enable to consider glitch state
+    fn can_enable(&self) -> bool {
+        self.display_glitch_timer <= 0.0
+    }
+
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.enabled {
-            true => {
-                // Occasionally show blank screen during glitch
-                if self.display_glitch_timer > 0.0
-                    && random_seed::rng().random_range(0.0..1.0) < 0.3
-                {
-                    // Alternative if EMFMeterGlitch doesn't exist yet
-                    if self.display_glitch_timer > 0.0
-                        && random_seed::rng().random_range(0.0..1.0) < 0.3
-                    {
-                        // Temporarily show as off or randomly flicker between levels
-                        match random_seed::rng().random_range(0..3) {
-                            0 => GearSpriteID::EMFMeterOff,
-                            1 => GearSpriteID::EMFMeter4,
-                            _ => self.emf_level.to_spriteid(),
-                        }
-                    } else {
-                        self.emf_level.to_spriteid()
-                    }
-                } else {
-                    self.emf_level.to_spriteid()
+        // Use self.is_enabled() to check if the device is truly on and not glitching.
+        // However, if we want to show a flickering or off state visually when it's
+        // `enabled` but `display_glitch_timer > 0.0`, we need to check `self.enabled` directly here.
+        if self.enabled {
+            if self.display_glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
+                // Flicker when glitching but enabled
+                match random_seed::rng().random_range(0..3) {
+                    0 => GearSpriteID::EMFMeterOff,
+                    1 => GearSpriteID::EMFMeter4, // Example: flicker to a high reading or specific glitch sprite
+                    _ => self.emf_level.to_spriteid(), // Or back to its current reading sprite
                 }
+            } else {
+                // Normal operation, not glitching or glitch not causing visual disruption this frame
+                self.emf_level.to_spriteid()
             }
-            false => GearSpriteID::EMFMeterOff,
+        } else {
+            GearSpriteID::EMFMeterOff
         }
     }
 
@@ -112,9 +121,9 @@ impl GearUsable for EMFMeter {
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
+        let on_s = on_off(self.enabled); // Show "ON"/"OFF" based on the internal enabled state
 
-        // Show garbled text when glitching
+        // Show garbled text when enabled but glitching
         if self.enabled && self.display_glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Reading: ERR0R\nEnergy: ###.###",
@@ -125,8 +134,9 @@ impl GearUsable for EMFMeter {
             return format!("{name}:  {on_s}\n{garbled}");
         }
 
-        // Regular display
-        let msg = if self.enabled {
+        // Regular display (when truly on and not glitching, checked by self.is_enabled())
+        let msg = if self.is_enabled() {
+            // Use the new self.is_enabled() for actual operational status
             format!(
                 "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
                 self.emf,
@@ -140,7 +150,14 @@ impl GearUsable for EMFMeter {
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        self.enabled = !self.enabled;
+        if self.enabled {
+            // If it's on, turn it off (regardless of glitch state, user can always turn off)
+            self.enabled = false;
+        } else if self.can_enable() {
+            // If it's off and can be enabled (not glitching), turn it on
+            self.enabled = true;
+        }
+        // If it's off and cannot be enabled (e.g., glitching), attempting to turn on does nothing.
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
@@ -262,6 +279,29 @@ impl GearUsable for EMFMeter {
             // Jumble numbers temporarily
             self.display_glitch_timer = 0.2;
         }
+    }
+
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled() {
+            if let EMFLevel::EMF5 = self.emf_level {
+                return 1.0;
+            }
+        }
+        0.0
+    }
+
+    fn is_icon_showing_evidence(&self) -> f32 {
+        // The icon shows evidence if it's the EMF5 sprite (EMFMeter4)
+        // and the device is truly enabled (not glitching).
+        if self.is_enabled() {
+            if let EMFLevel::EMF5 = self.emf_level {
+                // Check if current sprite is indeed the EMF5 sprite.
+                // get_sprite_idx() already considers glitches for visual representation.
+                // However, for "evidence signal", we care about the underlying data if not glitching.
+                return 1.0;
+            }
+        }
+        0.0
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
