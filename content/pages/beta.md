@@ -4,10 +4,20 @@ path = "beta"
 template = "beta.html"
 [extra]
 beta_available = true
-beta_version = "v0.3.0-beta4"
+beta_version = "v0.3.0-beta5"
 +++
 
 ## New shiny things to test!
+
+**Beta 5**
+
+* New walkie talkie automatic generation tool
+* Added a ton of new voice lines and triggers for the walkie talkie buddy
+* Added new stats on how many times a voice line has been activated that are persisted on disk
+* Now the game reads the new stats to make voice lines to be less frequent as they've been presented before several times.
+* Added new hint system that goes along with the walkie talkie buddy
+* New focus vignette and indicator for Ghost and Breach to give visual aid to the player to find them.
+* Added proper Ghost Orbs that visually look like orbs.
 
 **Beta 4**
 
