@@ -12,5 +12,6 @@ impl Plugin for UnhaunterWalkiePlugin {
         crate::triggers::app_setup(app);
         crate::walkie_stats::app_setup(app);
         crate::walkie_level_stats::setup_walkie_level_systems(app);
+        crate::focus_ring_system::app_setup(app);
     }
 }
