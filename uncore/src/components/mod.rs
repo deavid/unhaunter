@@ -6,6 +6,7 @@ pub mod game_config;
 pub mod game_ui;
 pub mod ghost_breach;
 pub mod ghost_influence;
+pub mod ghost_orb_particle;
 pub mod ghost_sprite;
 pub mod hint_ui;
 pub mod player;

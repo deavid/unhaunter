@@ -56,6 +56,7 @@ pub use uncore::components::board::mapcolor::MapColor;
 pub use uncore::types::board::light::{LightData, LightType};
 
 use crate::metrics::{AMBIENT_SOUND_SYSTEM, APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
+use uncore::components::ghost_orb_particle::GhostOrbParticle;
 use uncore::random_seed;
 
 /// Computes the player's visibility field, determining which areas of the map are
@@ -233,6 +234,7 @@ pub fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
+            Option<&GhostOrbParticle>, // Added GhostOrbParticle
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -702,7 +704,7 @@ pub fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
-    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma) in qt.iter_mut() {
+    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma, _o_orb) in qt.iter_mut() {
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
@@ -767,6 +769,18 @@ pub fn apply_lighting(
 
         // 20.0;
         let mut smooth: f32 = 1.0;
+        if sprite_type == SpriteType::GhostOrb {
+            smooth = 10.0;
+            let total_light =
+                ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
+            let ir_ratio = ld_abs.infrared / total_light;
+            if ir_ratio > 0.5 && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
+                opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
+                opacity = opacity.clamp(0.0, 1.0);
+            } else {
+                opacity = 0.0;
+            }
+        }
         if sprite_type == SpriteType::Ghost {
             let Some(gs) = o_gs else {
                 continue;
@@ -825,12 +839,8 @@ pub fn apply_lighting(
         }
         if sprite_type == SpriteType::Breach {
             smooth = 2.0;
-            let e_nv = if bf.evidences.contains(&Evidence::FloatingOrbs) {
-                ld.infrared * 3.0
-            } else {
-                0.0
-            } + ld.ultraviolet
-                + (difficulty.0.evidence_visibility / 2.0).powi(3);
+            let e_nv = ld.ultraviolet - ld.infrared * 3.0
+                + (difficulty.0.evidence_visibility / 2.0 + ld.visible - ld.infrared).powi(3);
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
             opacity = opacity.min(visibility).cbrt();
             let l = dst_color.luminance();
@@ -838,7 +848,8 @@ pub fn apply_lighting(
             // Make the breach oscilate to increase visibility:
             let osc1 = ((elapsed * 0.92).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
-            dst_color = dst_color.with_luminance(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
+            dst_color = dst_color
+                .with_luminance(((l * (ld.visible - ld.infrared) + e_nv) * osc1).clamp(0.0, 0.99));
             let lin_dst_color = dst_color.to_linear();
 
             dst_color = lin_dst_color
