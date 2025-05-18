@@ -9,7 +9,7 @@ use uncore::{
 };
 use unsettings::audio::AudioSettings;
 use unwalkie_types::VoiceLineData;
-use unwalkiecore::{WalkiePlay, WalkieSoundState};
+use unwalkiecore::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 
 fn on_game_load(
     mut ev_level_ready: EventReader<LevelReadyEvent>,
@@ -37,6 +37,7 @@ fn walkie_talk(
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hint_event_writer: EventWriter<OnScreenHintEvent>,
+    mut walkie_talking_writer: EventWriter<WalkieTalkingEvent>,
     q_sound_state: Query<(Entity, &WalkieSoundState)>,
     mut qt: Query<&mut Text, With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
@@ -83,6 +84,12 @@ fn walkie_talk(
                     length_seconds: 2,
                 });
             }
+
+            // Fire WalkieTalkingEvent when transitioning to the Talking state
+            walkie_talking_writer.send(WalkieTalkingEvent {
+                event: walkie_event.clone(),
+            });
+
             Some(WalkieSoundState::Talking)
         }
         Some(WalkieSoundState::Talking) => {

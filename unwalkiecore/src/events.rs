@@ -12,6 +12,14 @@ use bevy::prelude::Event;
 use enum_iterator::Sequence;
 use unwalkie_types::VoiceLineData;
 
+/// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
+/// This allows other systems to react when a specific walkie message starts playing.
+#[derive(Event, Debug, Clone)]
+pub struct WalkieTalkingEvent {
+    /// The walkie event that is currently playing
+    pub event: WalkieEvent,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum WalkieEventPriority {
     Low,
@@ -43,7 +51,7 @@ impl WalkieEventPriority {
 }
 
 /// Sending this event will cause the walkie to play a message.
-#[derive(Clone, Debug, Event, PartialEq, Eq, Hash, Sequence)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Sequence)]
 pub enum WalkieEvent {
     /// When the player forgets the stuff in the van.
     GearInVan,
