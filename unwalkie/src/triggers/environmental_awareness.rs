@@ -3,6 +3,9 @@ use std::any::Any;
 use bevy::prelude::*;
 
 use uncore::{
+    components::{
+        board::position::Position, ghost_breach::GhostBreach, player_sprite::PlayerSprite,
+    },
     resources::board_data::BoardData,
     states::{AppState, GameState},
 };
@@ -22,9 +25,11 @@ use unwalkiecore::{WalkiePlay, events::WalkieEvent};
 fn trigger_darkness_level_system(
     time: Res<Time>,
     board_data: Res<BoardData>,
+    roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
+    qp: Query<(&Position, &PlayerSprite)>,
     mut seconds_dark: Local<f32>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -32,6 +37,17 @@ fn trigger_darkness_level_system(
         return;
     }
     if *game_state.get() != GameState::None {
+        *seconds_dark = 0.0;
+        return;
+    }
+    let Ok((player_pos, _)) = qp.get_single() else {
+        return;
+    };
+    let player_bpos = player_pos.to_board_position();
+    let player_room = roomdb.room_tiles.get(&player_bpos);
+
+    if player_room.is_none() {
+        // Player is not inside the location, no need to remind them.
         *seconds_dark = 0.0;
         return;
     }
@@ -53,14 +69,8 @@ fn trigger_breach_showcase(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(
-        &uncore::components::board::position::Position,
-        &uncore::components::player_sprite::PlayerSprite,
-    )>,
-    q_breach: Query<
-        &uncore::components::board::position::Position,
-        With<uncore::components::ghost_breach::GhostBreach>,
-    >,
+    qp: Query<(&Position, &PlayerSprite)>,
+    q_breach: Query<&Position, With<GhostBreach>>,
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -76,7 +86,12 @@ fn trigger_breach_showcase(
     for breach_pos in q_breach.iter() {
         let breach_bpos = breach_pos.to_board_position();
         let breach_room = roomdb.room_tiles.get(&breach_bpos);
-        if player_room.is_some() && breach_room.is_some() && player_room == breach_room {
+
+        if player_room.is_some()
+            && breach_room.is_some()
+            && player_room == breach_room
+            && breach_pos.distance(player_pos) < 3.0
+        {
             walkie_play.set(WalkieEvent::BreachShowcase, time.elapsed_secs_f64());
             break;
         }
@@ -90,14 +105,8 @@ fn trigger_ghost_showcase(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(
-        &uncore::components::board::position::Position,
-        &uncore::components::player_sprite::PlayerSprite,
-    )>,
-    q_ghost: Query<
-        &uncore::components::board::position::Position,
-        With<uncore::components::ghost_sprite::GhostSprite>,
-    >,
+    qp: Query<(&Position, &PlayerSprite)>,
+    q_ghost: Query<&Position, With<uncore::components::ghost_sprite::GhostSprite>>,
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -124,12 +133,13 @@ fn trigger_ghost_showcase(
 fn trigger_room_lights_on_gear_needs_dark(
     time: Res<Time>,
     board_data: Res<BoardData>,
+    roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(
-        &uncore::components::board::position::Position,
-        &uncore::components::player_sprite::PlayerSprite,
+        &Position,
+        &PlayerSprite,
         &ungear::components::playergear::PlayerGear,
     )>,
 ) {
@@ -139,11 +149,21 @@ fn trigger_room_lights_on_gear_needs_dark(
     if *game_state.get() != GameState::None {
         return;
     }
-    let Ok((_player_pos, _player, player_gear)) = qp.get_single() else {
+    let Ok((player_pos, _player, player_gear)) = qp.get_single() else {
         return;
     };
+    let player_bpos = player_pos.to_board_position();
+    let player_room = roomdb.room_tiles.get(&player_bpos);
+
+    if player_room.is_none() {
+        return;
+    }
+
     // Use GearUsable::needs_darkness for the right hand gear
-    if player_gear.right_hand.needs_darkness() && board_data.exposure_lux > 0.5 {
+    if player_gear.right_hand.needs_darkness()
+        && player_gear.right_hand.is_enabled()
+        && board_data.exposure_lux > 0.5
+    {
         walkie_play.set(
             WalkieEvent::RoomLightsOnGearNeedsDark,
             time.elapsed_secs_f64(),
@@ -159,10 +179,7 @@ fn trigger_thermometer_non_freezing_fixation(
     app_state: Res<State<AppState>>,
     mut timer: Local<f32>,
     mut trigger_count: Local<u32>,
-    qp: Query<(
-        &PlayerGear,
-        &uncore::components::player_sprite::PlayerSprite,
-    )>,
+    qp: Query<(&PlayerGear, &PlayerSprite)>,
 ) {
     // Only allow 2 triggers per mission
     const MAX_TRIGGERS: u32 = 2;

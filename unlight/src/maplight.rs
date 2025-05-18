@@ -623,7 +623,7 @@ pub fn apply_lighting(
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
             let dark2 = lerp_color(
                 Color::WHITE,
                 DARK_COLOR2,
@@ -706,8 +706,8 @@ pub fn apply_lighting(
         let sprite_type = o_type.cloned().unwrap_or_default();
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
-        let mut opacity: f32 =
-            map_color.alpha() * vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+        let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+        let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
         let mut light_v = vec![LightData {
@@ -829,13 +829,14 @@ pub fn apply_lighting(
                 ld.infrared * 3.0
             } else {
                 0.0
-            } + ld.ultraviolet;
-            opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.5);
-            opacity = opacity.sqrt();
+            } + ld.ultraviolet
+                + (difficulty.0.evidence_visibility / 2.0).powi(3);
+            opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
+            opacity = opacity.min(visibility).cbrt();
             let l = dst_color.luminance();
             let rnd_f = rng.random_range(-1.0..1.0_f32).powi(3);
             // Make the breach oscilate to increase visibility:
-            let osc1 = ((elapsed * 0.62).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
+            let osc1 = ((elapsed * 0.92).sin() * 10.0 + 8.0).tanh() * 0.5 + 0.5;
 
             dst_color = dst_color.with_luminance(((l * ld.visible + e_nv) * osc1).clamp(0.0, 0.99));
             let lin_dst_color = dst_color.to_linear();

@@ -9,7 +9,16 @@ use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcep
 use crate::generated::player_wellbeing::PlayerWellbeingConcept;
 use crate::generated::repellent_and_expulsion::RepellentAndExpulsionConcept;
 use bevy::prelude::Event;
+use enum_iterator::Sequence;
 use unwalkie_types::VoiceLineData;
+
+/// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
+/// This allows other systems to react when a specific walkie message starts playing.
+#[derive(Event, Debug, Clone)]
+pub struct WalkieTalkingEvent {
+    /// The walkie event that is currently playing
+    pub event: WalkieEvent,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum WalkieEventPriority {
@@ -42,7 +51,7 @@ impl WalkieEventPriority {
 }
 
 /// Sending this event will cause the walkie to play a message.
-#[derive(Clone, Debug, Event, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Sequence)]
 pub enum WalkieEvent {
     /// When the player forgets the stuff in the van.
     GearInVan,
@@ -532,5 +541,16 @@ impl WalkieEvent {
                 "500+ CPM on Geiger! Log with [C] or in truck journal."
             }
         }
+    }
+}
+
+/// Implementation of FromStr for WalkieEvent to convert string IDs back to enum values
+impl std::str::FromStr for WalkieEvent {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        enum_iterator::all::<WalkieEvent>()
+            .find(|event| format!("{:?}", event) == s)
+            .ok_or(())
     }
 }

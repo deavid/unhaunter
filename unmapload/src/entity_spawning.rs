@@ -10,6 +10,7 @@ use rand::seq::SliceRandom;
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
+use uncore::components::focus_ring::FocusRing;
 use uncore::components::game::GameSound;
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_breach::GhostBreach;
@@ -166,6 +167,19 @@ pub fn spawn_ghosts(
         .insert(SpriteType::Breach)
         .insert(GhostBreach)
         .insert(ghost_spawn)
+        .with_children(|parent| {
+            parent
+                .spawn(Sprite {
+                    image: p.asset_server.load("img/focus_ring_vignette.png"),
+                    color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                    ..default()
+                })
+                .insert(
+                    Transform::from_scale(Vec3::splat(0.5))
+                        .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+                )
+                .insert(FocusRing::default());
+        })
         .id();
 
     // Spawn the ghost entity
@@ -180,7 +194,20 @@ pub fn spawn_ghosts(
         .insert(GameSprite)
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
-        .insert(ghost_spawn);
+        .insert(ghost_spawn)
+        .with_children(|parent| {
+            parent
+                .spawn(Sprite {
+                    image: p.asset_server.load("img/focus_ring_vignette.png"),
+                    color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                    ..default()
+                })
+                .insert(
+                    Transform::from_scale(Vec3::splat(0.5))
+                        .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+                )
+                .insert(FocusRing::default());
+        });
 }
 
 /// Spawns ambient sound entities for the game environment.

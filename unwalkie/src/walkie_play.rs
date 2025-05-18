@@ -9,7 +9,7 @@ use uncore::{
 };
 use unsettings::audio::AudioSettings;
 use unwalkie_types::VoiceLineData;
-use unwalkiecore::{WalkiePlay, WalkieSoundState};
+use unwalkiecore::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 
 fn on_game_load(
     mut ev_level_ready: EventReader<LevelReadyEvent>,
@@ -37,6 +37,7 @@ fn walkie_talk(
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hint_event_writer: EventWriter<OnScreenHintEvent>,
+    mut walkie_talking_writer: EventWriter<WalkieTalkingEvent>,
     q_sound_state: Query<(Entity, &WalkieSoundState)>,
     mut qt: Query<&mut Text, With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
@@ -83,14 +84,31 @@ fn walkie_talk(
                     length_seconds: 2,
                 });
             }
+
+            // Fire WalkieTalkingEvent when transitioning to the Talking state
+            walkie_talking_writer.send(WalkieTalkingEvent {
+                event: walkie_event.clone(),
+            });
+
             Some(WalkieSoundState::Talking)
         }
         Some(WalkieSoundState::Talking) => {
             let hint_text = walkie_event.get_on_screen_actionable_hint_text();
             if !hint_text.is_empty() {
-                hint_event_writer.send(OnScreenHintEvent {
-                    hint_text: hint_text.to_string(),
-                });
+                let saved_count = walkie_play
+                    .other_mission_event_count
+                    .get(&walkie_event)
+                    .copied()
+                    .unwrap_or_default();
+                use rand::Rng;
+                let mut rng = random_seed::rng();
+                let dice = rng.random_range(0..=saved_count);
+                info!("hint dice: {:?}: {}/{}", walkie_event, dice, saved_count);
+                if dice < 3 {
+                    hint_event_writer.send(OnScreenHintEvent {
+                        hint_text: hint_text.to_string(),
+                    });
+                }
             }
 
             Some(WalkieSoundState::Outro)

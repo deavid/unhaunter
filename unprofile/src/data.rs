@@ -80,6 +80,18 @@ pub struct MapStatisticsData {
     pub best_grade: Grade,
 }
 
+/// Statistics for a single walkie event
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(deny_unknown_fields)]
+pub struct WalkieEventStats {
+    /// Number of times this walkie event has been played
+    #[serde(default)]
+    pub play_count: u32,
+    /// Total play time in seconds when this event was last played
+    #[serde(default)]
+    pub last_played_at_time: f64,
+}
+
 #[derive(Resource, Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(deny_unknown_fields)]
 pub struct PlayerProfileData {
@@ -91,4 +103,7 @@ pub struct PlayerProfileData {
     pub statistics: StatisticsData,
     #[serde(default)]
     pub map_statistics: HashMap<String, HashMap<Difficulty, MapStatisticsData>>,
+    /// Tracks statistics for each walkie event, keyed by the event ID
+    #[serde(default)]
+    pub walkie_event_stats: HashMap<String, WalkieEventStats>,
 }

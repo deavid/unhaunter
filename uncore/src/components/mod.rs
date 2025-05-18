@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod board;
+pub mod focus_ring;
 pub mod game;
 pub mod game_config;
 pub mod game_ui;
