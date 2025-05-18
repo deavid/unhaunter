@@ -88,9 +88,20 @@ fn walkie_talk(
         Some(WalkieSoundState::Talking) => {
             let hint_text = walkie_event.get_on_screen_actionable_hint_text();
             if !hint_text.is_empty() {
-                hint_event_writer.send(OnScreenHintEvent {
-                    hint_text: hint_text.to_string(),
-                });
+                let saved_count = walkie_play
+                    .other_mission_event_count
+                    .get(&walkie_event)
+                    .copied()
+                    .unwrap_or_default();
+                use rand::Rng;
+                let mut rng = random_seed::rng();
+                let dice = rng.random_range(0..=saved_count);
+                info!("hint dice: {:?}: {}/{}", walkie_event, dice, saved_count);
+                if dice < 3 {
+                    hint_event_writer.send(OnScreenHintEvent {
+                        hint_text: hint_text.to_string(),
+                    });
+                }
             }
 
             Some(WalkieSoundState::Outro)

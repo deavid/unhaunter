@@ -136,7 +136,7 @@ fn trigger_gear_selected_not_activated_system(
     if let Some(current_tracker_ref) = tracker.as_ref() {
         const INACTIVITY_THRESHOLD_SECONDS: f32 = 10.0;
         if current_tracker_ref.inactive_duration
-            >= INACTIVITY_THRESHOLD_SECONDS * (1 + *r_triggered) as f32
+            >= INACTIVITY_THRESHOLD_SECONDS * (1 + *r_triggered * 5) as f32
             && walkie_play.set(
                 WalkieEvent::GearSelectedNotActivated,
                 time.elapsed_secs_f64(),

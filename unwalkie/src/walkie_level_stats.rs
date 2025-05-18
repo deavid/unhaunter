@@ -17,32 +17,35 @@ pub fn load_walkie_event_stats(
     if ev_level_ready.is_empty() {
         return;
     }
-    // Consume all events (there should only be one per level load)
-    for _event in ev_level_ready.read() {
-        info!("Loading walkie event stats from player profile");
+    for _event in ev_level_ready.read() {}
 
-        // Clear existing event count data
-        walkie_play.other_mission_event_count.clear();
+    info!("Loading walkie event stats from player profile");
 
-        // Convert string event IDs to WalkieEvent enum and populate the HashMap
-        for (event_id_str, stats) in player_profile.walkie_event_stats.iter() {
-            // Parse the string representation back into a WalkieEvent enum
-            // This relies on the Debug representation format used when storing the events
-            if let Ok(walkie_event) = WalkieEvent::from_str(event_id_str) {
-                // Store the play count in the other_mission_event_count HashMap
-                walkie_play
-                    .other_mission_event_count
-                    .insert(walkie_event, stats.play_count);
-            } else {
-                warn!("Failed to parse walkie event ID: {}", event_id_str);
-            }
+    // Clear existing event count data
+    walkie_play.other_mission_event_count.clear();
+
+    // Convert string event IDs to WalkieEvent enum and populate the HashMap
+    for (event_id_str, stats) in player_profile.walkie_event_stats.iter() {
+        // Parse the string representation back into a WalkieEvent enum
+        // This relies on the Debug representation format used when storing the events
+        if let Ok(walkie_event) = WalkieEvent::from_str(event_id_str) {
+            // Store the play count in the other_mission_event_count HashMap
+            info!(
+                "Loaded walkie event: {:?} with play count: {}",
+                walkie_event, stats.play_count
+            );
+            walkie_play
+                .other_mission_event_count
+                .insert(walkie_event, stats.play_count);
+        } else {
+            warn!("Failed to parse walkie event ID: {}", event_id_str);
         }
-
-        info!(
-            "Loaded {} walkie event stats",
-            walkie_play.other_mission_event_count.len()
-        );
     }
+
+    info!(
+        "Loaded {} walkie event stats",
+        walkie_play.other_mission_event_count.len()
+    );
 }
 
 // Function to register systems with the app

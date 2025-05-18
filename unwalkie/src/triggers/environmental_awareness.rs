@@ -86,7 +86,12 @@ fn trigger_breach_showcase(
     for breach_pos in q_breach.iter() {
         let breach_bpos = breach_pos.to_board_position();
         let breach_room = roomdb.room_tiles.get(&breach_bpos);
-        if player_room.is_some() && breach_room.is_some() && player_room == breach_room {
+
+        if player_room.is_some()
+            && breach_room.is_some()
+            && player_room == breach_room
+            && breach_pos.distance(player_pos) < 3.0
+        {
             walkie_play.set(WalkieEvent::BreachShowcase, time.elapsed_secs_f64());
             break;
         }

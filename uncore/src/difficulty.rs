@@ -408,10 +408,10 @@ impl Difficulty {
     /// A higher value makes evidence more visible or noticeable.
     pub fn evidence_visibility(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 3.0,
-            Difficulty::TutorialChapter2 => 2.7,
-            Difficulty::TutorialChapter3 => 2.0,
-            Difficulty::TutorialChapter4 => 1.5,
+            Difficulty::TutorialChapter1 => 6.0,
+            Difficulty::TutorialChapter2 => 4.0,
+            Difficulty::TutorialChapter3 => 3.0,
+            Difficulty::TutorialChapter4 => 2.0,
             Difficulty::TutorialChapter5 => 1.0,
             Difficulty::StandardChallenge => 0.9, // Was LeadSpecialist
             Difficulty::HardChallenge => 0.7,     // Was MasterSpecialist

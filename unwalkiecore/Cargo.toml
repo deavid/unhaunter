@@ -10,6 +10,8 @@ homepage.workspace = true
 
 [dependencies]
 unwalkie_types = { path = "../unwalkie_types" }
+uncore = { path = "../uncore" }
 
 bevy = { workspace = true }
 enum-iterator = { workspace = true }
+rand = { workspace = true }
