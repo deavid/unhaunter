@@ -253,7 +253,7 @@ pub fn apply_lighting(
     let measure = APPLY_LIGHTING.time_measure();
 
     let mut rng = random_seed::rng();
-    let gamma_exp: f32 = difficulty.0.environment_gamma;
+    let _gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();
 
@@ -336,10 +336,14 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors(1, board_dim) {
+        for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
             let lf = &bf.light_field[npos.ndidx()];
-            cursor_exp += lf.lux.powf(gamma_exp);
-            exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
+            let vis = vf.visibility_field[npos.ndidx()];
+
+            cursor_exp += lf.lux * vis;
+            exp_count += 1.0 * vis;
+            // cursor_exp += lf.lux.powf(gamma_exp);
+            // exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
         }
         player_pos = *pos;
     }
@@ -626,12 +630,14 @@ pub fn apply_lighting(
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
+            let dark_color2 =
+                lerp_color(DARK_COLOR2, Color::BLACK, exposure.tanh().clamp(0.0, 1.0));
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
             let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
             let dark2 = lerp_color(
                 Color::WHITE,
-                DARK_COLOR2,
+                dark_color2,
                 exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
             );
             new_mat.data.ambient_color = dark.with_alpha(0.0).into();
