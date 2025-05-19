@@ -387,16 +387,19 @@ pub fn apply_lighting(
     let f_e1 = 0.1;
     bf.exposure_lux = bf.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
     // Ensure the base is not negative before applying the power function
-    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    let normalized_exp = (cursor_exp / center_exp.clamp(0.00001, 10000.0)).clamp(-10.0, 10.0);
     cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
-
-    assert!(cursor_exp.is_normal());
 
     // Minimum exp - controls how dark we can see
     cursor_exp += 0.001 / difficulty.0.environment_gamma;
 
     // Compensate overall to make the scene brighter
     cursor_exp /= 2.8;
+
+    if !cursor_exp.is_normal() {
+        cursor_exp = bf.current_exposure;
+        warn!("cursor_exp is not 'normal': {}", cursor_exp);
+    }
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =

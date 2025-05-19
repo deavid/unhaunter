@@ -703,7 +703,9 @@ fn create_mission_list_item(
     let mission_data = &map.mission_data;
     let map_path = &map.path;
 
-    let entity_id = mission_list
+    
+
+    mission_list
         .spawn(Node {
             width: Val::Percent(100.0),
             padding: UiRect::axes(Val::Px(8.0 * FONT_SCALE), Val::Px(6.0 * FONT_SCALE)),
@@ -785,9 +787,7 @@ fn create_mission_list_item(
                     BadgeUtils::create_badge(row, handles, grade, 32.0, false);
                 });
         })
-        .id();
-
-    entity_id
+        .id()
 }
 
 /// Helper function to create a locked mission list item

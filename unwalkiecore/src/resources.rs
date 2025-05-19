@@ -7,6 +7,7 @@ use unwalkie_types::VoiceLineData;
 #[derive(Clone, Debug, Default)]
 pub struct WalkieEventStats {
     pub count: u32,
+    pub other_count: u32,
     pub last_played: f64,
 }
 
@@ -47,7 +48,7 @@ impl WalkiePlay {
         self.urgent_pending = false;
         let mut count = 0;
         if let Some(event_stats) = self.played_events.get(&event) {
-            count = event_stats.count;
+            count = event_stats.count + event_stats.other_count;
             let next_time_to_play = event.time_to_play(count);
             if time - event_stats.last_played < next_time_to_play {
                 // Wait for the next time to play
@@ -69,11 +70,18 @@ impl WalkiePlay {
         }
         count += 1;
         let mut rng = random_seed::rng();
-        let dice = rng.random_range(0..=saved_count);
+        let max_dice_value = saved_count * saved_count.clamp(0, 10);
+        let dice = rng.random_range(0..=max_dice_value);
         if dice > 3 {
             // Skip playing this event, played too many times.
-            info!("WalkiePlay: skipped: {:?}", event);
-            self.played_events.entry(event).or_default().last_played = time;
+            info!(
+                "WalkiePlay: skipped: {:?}  play dice: {}/{}",
+                event, dice, max_dice_value
+            );
+            let event_stats = self.played_events.entry(event).or_default();
+            event_stats.last_played = time;
+            event_stats.other_count += 1;
+
             return true;
         }
         if let Some(in_event) = &self.event {
@@ -85,13 +93,16 @@ impl WalkiePlay {
 
         warn!(
             "WalkiePlay: {:?} - play dice: {}/{}",
-            event, dice, saved_count
+            event,
+            dice,
+            saved_count.pow(2)
         );
         self.event = Some(event.clone());
         self.played_events.insert(
             event,
             WalkieEventStats {
                 count,
+                other_count: 0,
                 last_played: time,
             },
         );

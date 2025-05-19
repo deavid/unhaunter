@@ -434,13 +434,13 @@ impl SpriteConfig {
     pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
         // --- Load properties
         let properties = BehaviorProperties::from_tiled(tiled_tile);
-        let sprite_config = Self::from_tiled(
+        
+        Self::from_tiled(
             tiled_tile.user_type.as_deref(),
             tset_name,
             tileuid,
             properties,
-        );
-        sprite_config
+        )
     }
 
     pub fn from_tiled(
