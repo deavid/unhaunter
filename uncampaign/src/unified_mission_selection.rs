@@ -36,13 +36,7 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked},
     templates,
 };
-use unmaphub::badge_utils::BadgeUtils; // Added import
-
-/// Component to delay input processing to avoid immediate selection
-#[derive(Component, Default)]
-struct InputDebounce {
-    timer: Timer,
-}
+use unmaphub::badge_utils::BadgeUtils;
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
@@ -76,21 +70,10 @@ pub fn app_setup(app: &mut App) {
         .add_systems(OnExit(AppState::MissionSelect), cleanup_ui)
         .add_systems(
             Update,
-            (
-                update_input_debounce,
-                update_mission_selection,
-                handle_selection_input,
-            )
+            (update_mission_selection, handle_selection_input)
                 .chain()
                 .run_if(in_state(AppState::MissionSelect)),
         );
-}
-
-// System to update the input debounce timer
-fn update_input_debounce(time: Res<Time>, mut query: Query<&mut InputDebounce>) {
-    for mut debounce in query.iter_mut() {
-        debounce.timer.tick(time.delta());
-    }
 }
 
 // System to clean up UI when exiting this state
@@ -114,7 +97,6 @@ fn handle_selection_input(
     mut ev_escape: EventReader<MenuEscapeEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     menu_root: Query<&MenuRoot>,
-    debounce_query: Query<&InputDebounce>,
     maps_resource: Res<Maps>,
     ui_mapping: Res<UIMissionMapping>,
     mission_select_mode: Res<CurrentMissionSelectMode>,
@@ -125,18 +107,17 @@ fn handle_selection_input(
     mut player_profile: ResMut<Persistent<unprofile::data::PlayerProfileData>>,
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>,
 ) {
-    if let Ok(debounce) = debounce_query.get_single() {
-        if !debounce.timer.finished() {
-            ev_menu_clicks.clear();
-            ev_escape.clear();
-            return;
-        }
-    }
-
     let mut selected_identifier: Option<usize> = None;
 
     if let Some(click_ev) = ev_menu_clicks.read().last() {
-        selected_identifier = Some(click_ev.0);
+        if click_ev.state != AppState::MissionSelect {
+            warn!(
+                "MenuItemClicked event received in state: {:?}",
+                click_ev.state
+            );
+            return;
+        }
+        selected_identifier = Some(click_ev.pos);
     }
 
     ev_menu_clicks.clear();
@@ -362,9 +343,6 @@ pub fn setup_ui(
             ..default()
         })
         .insert(MissionSelectUI)
-        .insert(InputDebounce {
-            timer: Timer::from_seconds(0.5, TimerMode::Once),
-        })
         .id();
 
     if available_maps.is_empty() && locked_maps.is_empty() {
@@ -702,8 +680,6 @@ fn create_mission_list_item(
 ) -> Entity {
     let mission_data = &map.mission_data;
     let map_path = &map.path;
-
-    
 
     mission_list
         .spawn(Node {

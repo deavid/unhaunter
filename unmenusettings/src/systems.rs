@@ -464,8 +464,15 @@ pub fn menu_integration_system(
         }
 
         for click_event in menu_clicks.read() {
+            if click_event.state != AppState::SettingsMenu {
+                warn!(
+                    "MenuItemClicked event received in state: {:?}",
+                    click_event.state
+                );
+                continue;
+            }
             warn!("Settings menu received click event: {:?}", click_event);
-            let clicked_idx = click_event.0;
+            let clicked_idx = click_event.pos;
 
             // Find the menu item with this index
             if let Some((menu_item, _)) = menu_items
