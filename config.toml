@@ -73,6 +73,7 @@ social_image = "icons/unhaunter-logo.png"
 # The profile on home page.
 [extra.profile]
 name = "Unhaunter"
+des = "PARANORMAL INVESTIGATION SIMULATOR"
 bio = """Step into the boots of a paranormal investigator in Unhaunter, a 2D isometric ghost hunting game. 
 Explore atmospheric haunted locations, mastering specialized equipment like the EMF Meter, Thermometer, UV Torch, and Spirit Box. 
 Uncover 8 distinct evidence types—from Freezing Temperatures to RL Presence—to identify the ghost. 

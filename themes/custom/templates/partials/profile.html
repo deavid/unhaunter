@@ -1,32 +1,38 @@
 {% if config.extra.profile.avatar_url or config.extra.profile.name %}
 
-<div class="profile-container">
+<!-- <div class="profile-container"> -->
+<section class="sec__1">
+    <div class="title-bio">
+        <h1>{{ config.title }}</h1>
+        <h2>{{config.extra.profile.des}}</h2>
+    </div>
+    <div class="container-description">
+        {{ config.extra.profile.bio | default(value=`A blog by ` ~ config.extra.profile.name) }}
+    </div>
+    <div class="container-buttons">
+        <div>
+            <a href="">
+                Download binary
+                <span></span>
+            </a>
+        </div>
+        <div>
+            <a href="">
+                Play in browser
+                <span></span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section>
     <div class="container-bento">
-        <div class="title-bio">
-            <h1>{{ config.title }}</h1>
-
-            {{ config.extra.profile.bio | default(value=`A blog by ` ~ config.extra.profile.name) }}
-        </div>
-
-        <div class="container-buttons">
-            <div>
-                <a href="">
-                    Download binary
-                    <span></span>
-                </a>
-            </div>
-            <div>
-                <a href="">
-                    Play in browser
-                    <span></span>
-                </a>
-            </div>
-        </div>
         {% for index in [1,2,3,4,5] %}
         <div class="photo-{{index}}">
             <img src="profile/unhaunter-c{{index}}.png" alt="" />
         </div>
         {% endfor %}
     </div>
-</div>
+</section>
+<!-- </div> -->
 {% endif %}

@@ -16,7 +16,8 @@ $gray-900: #111827;
 
 // Theme colors
 $header-bg: #313133; // Use darker background
-$body-bg: #1d1d1f; // Use darker background
+// $body-bg: #1d1d1f; // Use darker background
+$body-bg: #0a0a0a;
 $text-primary: #d1d5db;
 $text-secondary: #9ca3af;
 $text-headings: #fff;
@@ -206,10 +207,10 @@ a {
 
 .main-container {
     position: relative;
+    min-height: calc(100% - 9rem);
     max-width: $max-width-content;
     margin: 0 auto;
-    padding: ($header-height + 4rem) 1rem 4rem;
-    min-height: calc(100% - 9rem);
+    // padding: ($header-height + 4rem) 1rem 4rem;
 }
 
 /* Para pantallas con un ancho máximo de 1200px */
@@ -231,6 +232,21 @@ a {
     .main-container {
         max-width: 100%; /* Ocupa el ancho completo en móviles */
         margin: 0; /* Elimina el margen para ocupar todo el ancho */
+    }
+}
+
+.profile {
+    width: 100%;
+    section {
+        // background-color: red;
+        height: 100dvh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        // max-width: $max-width-content;
+        // margin: 0 auto;
+        // padding: ($header-height + 4rem) 1rem 4rem;
     }
 }
 
@@ -282,21 +298,23 @@ a {
 }
 
 .header-container {
-    width: 100%;
-    min-height: $header-height;
     position: fixed;
     top: 0;
-    z-index: 40;
-    background-color: var(--header);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: rgba(0, 0, 0, 0.45); /* Equivalent to bg-black/80 */
+    backdrop-filter: blur(8px); /* Equivalent to backdrop-blur-md */
+    border-bottom: 1px solid #333; /* Equivalent to border-b border-zinc-800 (assuming zinc-800 is a dark grey) */
 }
 
 .header-inner {
     width: 100%;
     // max-width: $max-width-header-footer;
     // margin: 0 auto;
-    // padding: 0.75rem;
+    padding: 0 5rem;
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -384,51 +402,26 @@ a {
    Components
    ========================================================================== */
 
-.container-bento {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    gap: 15px;
+.sec__1 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin: 20px 0;
 
-    h1 {
-        font-size: 2.5em;
-        padding: 0;
-        line-height: normal;
-        margin: 0 0 10px 0;
-        display: block;
-    }
-
-    [class^="photo-"] {
-        // background-color: rgb(223, 157, 157);
-        border-radius: $br-standard;
-
-        height: 350px;
-        // width: 500px;
-
-        overflow: hidden; /* Asegura que el recorte no se desborde */
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        transition: all 0.3s ease-in-out;
-    }
-
-    [class^="photo-"]:hover {
-        transform: scale(1.05) rotate(1deg);
-    }
-
-    .title-bio {
-        grid-area: 1 / 1 / 3 / 5;
-        background-color: $header-bg;
-        border-radius: 20px;
-        padding: 14px;
+    .container-description {
+        background-color: rgba(24, 24, 27, 0.6); /* Equivalent to bg-zinc-900/60 */
+        backdrop-filter: blur(4px); /* Equivalent to backdrop-blur-sm */
+        border-radius: 0.75rem; /* Equivalent to rounded-xl */
+        padding: 1.5rem; /* Equivalent to p-6 */
+        border: 1px solid #333; /* Equivalent to border border-zinc-800 */
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-xl */
+        max-width: 55rem; /* Equivalent to max-w-3xl (1rem = 16px, 3xl is 48rem) */
+        margin-left: auto; /* Equivalent to mx-auto */
+        margin-right: auto; /* Equivalent to mx-auto */
     }
 
     .container-buttons {
-        background-color: $header-bg;
+        // background-color: $header-bg;
         border-radius: 20px;
         grid-area: 3 / 1 / 5 / 5;
         text-transform: uppercase;
@@ -476,21 +469,93 @@ a {
             }
         }
     }
+
+    .title-bio {
+        text-align: center;
+        h1 {
+            font-size: 3em;
+            line-height: normal;
+            margin: 0 0 10px 0;
+            display: block;
+        }
+
+        h2 {
+            color: $action-color;
+        }
+    }
+}
+
+.container-bento {
+    // display: grid;
+    // grid-template-columns: repeat(6, 1fr);
+    // grid-template-rows: repeat(6, 1fr);
+    // gap: 15px;
+
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 15px;
+
+    [class^="photo-"] {
+        // background-color: rgb(223, 157, 157);
+        border-radius: $br-standard;
+
+        height: 350px;
+        // width: 500px;
+
+        overflow: hidden; /* Asegura que el recorte no se desborde */
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        transition: all 0.3s ease-in-out;
+    }
+
+    [class^="photo-"]:hover {
+        transform: scale(1.05) rotate(1deg);
+    }
+
+    // .title-bio {
+    //     grid-area: 1 / 1 / 3 / 5;
+    //     background-color: $header-bg;
+    //     border-radius: 20px;
+    //     padding: 14px;
+    // }
+
     .photo-1 {
-        grid-area: 1 / 5 / 3 / 7;
+        grid-area: 1 / 1 / 5 / 4;
     }
     .photo-2 {
-        grid-area: 3 / 5 / 5 / 7;
+        grid-area: 1 / 4 / 5 / 9;
     }
     .photo-3 {
-        grid-area: 5 / 1 / 7 / 3;
+        grid-area: 1 / 9 / 5 / 11;
     }
     .photo-4 {
-        grid-area: 5 / 3 / 7 / 5;
+        grid-area: 5 / 1 / 10 / 5;
     }
     .photo-5 {
-        grid-area: 5 / 5 / 7 / 7;
+        grid-area: 5 / 5 / 10 / 11;
     }
+
+    // .photo-1 {
+    //     grid-area: 1 / 5 / 3 / 7;
+    // }
+    // .photo-2 {
+    //     grid-area: 3 / 5 / 5 / 7;
+    // }
+    // .photo-3 {
+    //     grid-area: 5 / 1 / 7 / 3;
+    // }
+    // .photo-4 {
+    //     grid-area: 5 / 3 / 7 / 5;
+    // }
+    // .photo-5 {
+    //     grid-area: 5 / 5 / 7 / 7;
+    // }
 
     // width: 1500px;
 }
