@@ -109,6 +109,11 @@ pub fn hold_button_system(
             continue;
         }
 
+        // Skip disabled buttons
+        if button.disabled {
+            continue;
+        }
+
         // Keep track of buttons that are being actively held
         if *interaction == Interaction::Pressed && button.holding {
             active_buttons.push(button_entity);
@@ -202,6 +207,7 @@ pub fn hold_button_system(
                         // Trigger action
                         match button_class {
                             TruckButtonType::CraftRepellent => {
+                                button.disabled = true; // Disable button to prevent multiple triggers
                                 ev_truckui.send(TruckUIEvent::CraftRepellent);
                                 info!("Sent CraftRepellent event");
                             }
@@ -227,16 +233,28 @@ pub fn hold_button_system(
 
                     // Stop sound
                     if let Some(entity) = hold_sound.take() {
-                        commands.entity(entity).despawn();
+                        if let Some(cmd_e) = commands.get_entity(entity) {
+                            cmd_e.despawn_recursive();
+                        }
                     }
                 }
             }
         }
     }
 
-    // Only clean up progress bars for buttons that are no longer being held
+    // Clean up progress bars for buttons that are no longer being held or are disabled
     for (entity, parent) in progress_query.iter() {
-        if !active_buttons.contains(&parent.get()) {
+        let button_entity = parent.get();
+        let button_is_active = active_buttons.contains(&button_entity);
+
+        // Also get the button to check if it's disabled
+        let button_is_disabled = interaction_query
+            .iter()
+            .find(|(_, _, _, e)| *e == button_entity)
+            .map(|(_, button, _, _)| button.disabled)
+            .unwrap_or(false);
+
+        if !button_is_active || button_is_disabled {
             commands.entity(entity).despawn_recursive();
         }
     }

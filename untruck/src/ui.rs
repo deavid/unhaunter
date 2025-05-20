@@ -5,6 +5,7 @@ use uncore::colors;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::GameState;
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use unstd::materials::UIPanelMaterial;
@@ -34,6 +35,7 @@ impl FromTab for TruckTab {
 pub fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
+    game_state: Res<State<GameState>>,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
@@ -44,6 +46,11 @@ pub fn setup_ui(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
     );
+    let init_vis = if *game_state == GameState::Truck {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
+    };
 
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
     let panel_material = materials.add(UIPanelMaterial {
@@ -337,7 +344,7 @@ pub fn setup_ui(
                 margin: MARGIN,
                 ..default()
             },
-            Visibility::Hidden,
+            init_vis,
             BackgroundColor(colors::TRUCKUI_BGCOLOR),
         ))
         .insert(TruckUI)

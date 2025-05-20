@@ -124,13 +124,26 @@ pub fn compute_visibility(
             };
             dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
             let vf_np = &mut vis_field[np];
+            // Apply a visibility penalty to collision tiles that are in positive X or Y direction
+            let mut visibility_factor = 1.0;
+            if !(ncf.player_free || ncf.see_through) {
+                // Check if the neighbor is in positive X or Y direction relative to current tile
+                if npos.x > pos.x || npos.y < pos.y {
+                    if ncf.is_dynamic {
+                        visibility_factor = (0.5 / (npds + 1.0)).cbrt(); // Doors have less penalty
+                    } else {
+                        visibility_factor = 0.2 / (npds + 1.0); // Apply the penalization
+                    }
+                }
+            }
+
             if *vf_np < -0.000001 {
                 if ncf.player_free || ncf.see_through {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                *vf_np = dst_f;
+                *vf_np = dst_f * visibility_factor;
             } else {
-                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
+                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f * visibility_factor);
             }
             if ncf.stair_offset != 0 && start.z == npos.z {
                 // Move up/down stairs too
@@ -338,7 +351,12 @@ pub fn apply_lighting(
         let cursor_pos = pos.to_board_position();
         for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
             let lf = &bf.light_field[npos.ndidx()];
-            let vis = vf.visibility_field[npos.ndidx()];
+            let vis = vf.visibility_field[npos.ndidx()]
+                * if bf.collision_field[npos.ndidx()].player_free {
+                    1.0
+                } else {
+                    0.01
+                };
 
             cursor_exp += lf.lux * vis;
             exp_count += 1.0 * vis;
@@ -626,15 +644,20 @@ pub fn apply_lighting(
                     + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
                     / 2.0
             };
-            const K_COLD: f32 = 0.5;
+            const K_COLD: f32 = 0.6;
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
-            let dark_color2 =
-                lerp_color(DARK_COLOR2, Color::BLACK, exposure.tanh().clamp(0.0, 1.0));
+            let dark_color2 = lerp_color(
+                DARK_COLOR2,
+                Color::BLACK,
+                (dark_gamma / 4.0 + exposure * dark_gamma)
+                    .tanh()
+                    .clamp(0.0, 1.0),
+            );
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
+            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
             let dark2 = lerp_color(
                 Color::WHITE,
                 dark_color2,
@@ -848,8 +871,12 @@ pub fn apply_lighting(
         }
         if sprite_type == SpriteType::Breach {
             smooth = 2.0;
-            let e_nv = ld.ultraviolet - ld.infrared * 3.0
-                + (difficulty.0.evidence_visibility / 2.0 + ld.visible - ld.infrared).powi(3);
+            let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.0.evidence_visibility
+                - ld.infrared * 3.0
+                + (difficulty.0.evidence_visibility / 7.0
+                    + ld.visible * difficulty.0.evidence_visibility
+                    - ld.infrared)
+                    .powi(3);
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
             opacity = opacity.min(visibility).cbrt();
             let l = dst_color.luminance();
@@ -863,9 +890,18 @@ pub fn apply_lighting(
 
             dst_color = lin_dst_color
                 .with_green(
-                    lin_dst_color.green + ld.ultraviolet * 10.0 * (1.3 - osc1 + rnd_f / 14.0),
+                    lin_dst_color.green
+                        + ld.ultraviolet
+                            * difficulty.0.evidence_visibility
+                            * (1.3 - osc1 + rnd_f / 14.0),
                 )
-                .with_red(lin_dst_color.red + ld.ultraviolet * 11.0 * (1.4 - osc1 + rnd_f / 24.0))
+                .with_red(
+                    lin_dst_color.red
+                        + ld.ultraviolet
+                            * difficulty.0.evidence_visibility
+                            * 1.2
+                            * (1.4 - osc1 + rnd_f / 24.0),
+                )
                 .into();
         }
         let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
