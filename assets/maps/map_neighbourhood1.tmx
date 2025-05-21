@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="49" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="50" nextobjectid="8">
  <properties>
   <property name="author" value="sl4cer/Francisco"/>
   <property name="display_name" value="Neighborhood"/>
+  <property name="draft" type="bool" value="true"/>
   <property name="flavor_text" value="The neighboorhood got hounted"/>
   <property name="location_address" value="34ef Knight Neighbourhood"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="265" source="unhaunter_spritesheetA_6x6x10.tsx"/>
  <tileset firstgid="329" source="unhaunter_custom_tileset.tsx"/>
- <group id="2" name="Sub1" class="FloorLevel" visible="0" locked="1">
+ <group id="2" name="Sub1" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="-1"/>
-   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="8"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="1"/>
+   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="2"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="2"/>
   </properties>
   <layer id="1" name="Floor" width="128" height="128">
    <data encoding="csv">
@@ -2002,12 +2003,12 @@ I need to rest and heal I got injured and I told Harris to continue investigatin
 </data>
   </layer>
  </group>
- <group id="17" name="Ground Level" class="FloorLevel">
+ <group id="17" name="Ground Level" class="FloorLevel" visible="0">
   <properties>
    <property name="FloorLevel::display_name" value="Ground floor"/>
    <property name="FloorLevel::number" type="int" value="0"/>
-   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="5"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="1"/>
+   <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="1"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="3"/>
   </properties>
   <layer id="18" name="Floor" width="128" height="128">
    <data encoding="csv">
@@ -4009,7 +4010,7 @@ We've moved some useful equipment near the house to assist in your investigation
    <property name="FloorLevel::display_name" value="Upper Floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>
    <property name="FloorLevel::quantity_ghost_attracting_objects" type="int" value="0"/>
-   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="0"/>
+   <property name="FloorLevel::quantity_ghost_repelling_objects" type="int" value="1"/>
   </properties>
   <layer id="34" name="Floor" width="128" height="128">
    <data encoding="csv">
@@ -5283,7 +5284,7 @@ We've moved some useful equipment near the house to assist in your investigation
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

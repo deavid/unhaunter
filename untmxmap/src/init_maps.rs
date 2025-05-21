@@ -107,6 +107,17 @@ pub fn tmxmap_preload(
         if let Some(tmx) = tmx {
             mapload.processed = true;
             cleanup_needed = true;
+
+            // If the map is a draft, skip loading it.
+            if tmx.props.draft {
+                warn!(
+                    "Skipping draft map {:?} at path {:?}",
+                    tmx.props.display_name,
+                    mapload.path
+                );
+                continue;
+            }
+
             let path = mapload.path.clone();
             let classname = tmx.class.clone();
             let display_name = tmx.props.display_name.clone();

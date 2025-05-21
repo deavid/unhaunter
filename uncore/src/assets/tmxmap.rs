@@ -48,6 +48,8 @@ pub struct NaivelyParsedProps {
 
     /// Minimum player level required for this map. Parsed from the 'min_player_level' TMX property. Defaults to 0.
     pub min_player_level: i32,
+    /// Indicates if this map is a draft and should be ignored by the game. Parsed from the 'draft' TMX property.
+    pub draft: bool,
 }
 
 /// Represents a Tiled map asset (`.tmx` file).
@@ -75,6 +77,7 @@ impl TmxMap {
         let is_campaign_mission = props_map
             .get("is_campaign_mission")
             .is_some_and(|s| s == "true");
+        let draft = props_map.get("draft").is_some_and(|s| s == "true"); // Added this line
 
         let parse_i64 = |key: &str, default: i64| -> i64 {
             props_map
@@ -117,6 +120,7 @@ impl TmxMap {
             grade_c_score_threshold: parse_i64("grade_c_score_threshold", 250),
             grade_d_score_threshold: parse_i64("grade_d_score_threshold", 125),
             min_player_level: parse_i32("min_player_level", 0), // Parse min_player_level
+            draft,                                              // Added this line
         };
 
         // Ensure grade thresholds are fully initialized
