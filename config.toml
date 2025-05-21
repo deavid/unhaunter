@@ -99,6 +99,36 @@ url = "https://www.reddit.com/r/Unhaunter/"
 name = "rss"
 url = "$BASE_URL/atom.xml"
 
+[[extra.profile.bento]]
+index = "1"
+name = "Photo - 1"
+des = "Des photo 1"
+img = "profile/unhaunter-c1.png"
+
+[[extra.profile.bento]]
+index = "2"
+name = "Photo - 2"
+des = "Des photo 2"
+img = "profile/unhaunter-c2.png"
+
+[[extra.profile.bento]]
+index = "3"
+name = "Photo - 3"
+des = "Des photo 3"
+img = "profile/unhaunter-c3.png"
+
+[[extra.profile.bento]]
+index = "4"
+name = "Photo - 4"
+des = "Des photo 4"
+img = "profile/unhaunter-c4.png"
+
+[[extra.profile.bento]]
+index = "5"
+name = "Photo - 5"
+des = "Des photo 5"
+img = "profile/unhaunter-c5.png"
+
 # The top menu.
 [[extra.menu]]
 name = "News"

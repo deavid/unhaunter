@@ -27,9 +27,19 @@
 
 <section>
     <div class="container-bento">
-        {% for index in [1,2,3,4,5] %}
-        <div class="photo-{{index}}">
-            <img src="profile/unhaunter-c{{index}}.png" alt="" />
+        {% for bento in config.extra.profile.bento %}
+        <div class="photo-{{bento.index}}">
+            <img src="{{bento.img}}" alt="" />
+            {% if bento.name is defined %}
+            <div class="absolute-overlay">
+                <div class="info">
+                    <h3>{{bento.name}}</h3>
+                    {% if bento.des is defined %}
+                    <p>{{bento.des}}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

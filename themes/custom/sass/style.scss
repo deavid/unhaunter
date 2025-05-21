@@ -15,8 +15,9 @@ $gray-800: #1f2937;
 $gray-900: #111827;
 
 // Theme colors
-$header-bg: #313133; // Use darker background
+// $header-bg: #313133; // Use darker background
 // $body-bg: #1d1d1f; // Use darker background
+$header-bg: #0a0a0a;
 $body-bg: #0a0a0a;
 $text-primary: #d1d5db;
 $text-secondary: #9ca3af;
@@ -55,8 +56,8 @@ $line-height-base: 1.75;
 // Breakpoints & Layout
 $breakpoint-lg: 1024px;
 $breakpoint-md: 768px;
-$max-width-content: 65%;
-$max-width-header-footer: 56rem;
+$max-width-content: 75%;
+$max-width-header-footer: 95%;
 $header-height: 3.5rem;
 
 /* ==========================================================================
@@ -210,7 +211,7 @@ a {
     min-height: calc(100% - 9rem);
     max-width: $max-width-content;
     margin: 0 auto;
-    // padding: ($header-height + 4rem) 1rem 4rem;
+    padding: ($header-height + 4rem) 1rem 4rem;
 }
 
 /* Para pantallas con un ancho máximo de 1200px */
@@ -250,24 +251,102 @@ a {
     }
 }
 
+.from-the-blog {
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+
+    .head {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        .check {
+            height: 2rem; /* Equivalent to h-8 (assuming 1 unit = 0.25rem, so 8 * 0.25 = 2rem) */
+            width: 0.25rem; /* Equivalent to w-1 (assuming 1 unit = 0.25rem, so 1 * 0.25 = 0.25rem) */
+            background-color: $action-color; /* Equivalent to bg-[$action-color] */
+            margin-right: 0.75rem; /* Equivalent to mr-3 (assuming 1 unit = 0.25rem, so 3 * 0.25 = 0.75rem) */
+        }
+    }
+
+    .cover-click {
+        inset: 0;
+        position: absolute;
+        font-size: 0px;
+    }
+
+    .list-blog {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+
+        > div {
+            background-color: rgba(24, 24, 27, 0.6); /* Equivalent to bg-zinc-900/60 */
+            backdrop-filter: blur(4px); /* Equivalent to backdrop-blur-sm */
+            border-radius: 0.75rem; /* Equivalent to rounded-xl */
+            padding: 1.5rem; /* Equivalent to p-6 */
+            border: 1px solid #333; /* Equivalent to border border-zinc-800 */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-xl */
+
+            &:hover {
+                .title {
+                    color: $action-color;
+                }
+            }
+        }
+    }
+}
+
 .list-items {
     display: flex;
     flex-direction: column;
+    gap: 40px;
+    max-width: $max-width-content;
+    margin: 0 auto;
 
-    max-width: 800px;
-    margin: 50px auto 0 auto;
-
-    > section {
-        transition: transform 0.2s; /* Optional smooth transition */
-
-        &:active {
-            transform: scale(0.95);
+    > section.list-item {
+        &:hover {
+            .title {
+                color: $action-color;
+            }
         }
 
-        background-color: $header-bg;
-        padding: 1.5em;
-        margin: 20px 0;
-        border-radius: $br-standard;
+        .head {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            .check {
+                height: 2rem; /* Equivalent to h-8 (assuming 1 unit = 0.25rem, so 8 * 0.25 = 2rem) */
+                width: 0.25rem; /* Equivalent to w-1 (assuming 1 unit = 0.25rem, so 1 * 0.25 = 0.25rem) */
+                background-color: $action-color; /* Equivalent to bg-[$action-color] */
+                margin-right: 0.75rem; /* Equivalent to mr-3 (assuming 1 unit = 0.25rem, so 3 * 0.25 = 0.75rem) */
+            }
+        }
+
+        .title {
+            margin-top: 10px;
+        }
+
+        transition: transform 0.2s; /* Optional smooth transition */
+
+        // &:active {
+        //     transform: scale(0.95);
+        // }
+
+        // // background-color: $header-bg;
+        // // background-color: red;
+        // padding: 1.5em;
+        // margin: 20px 0;
+        // border-radius: $br-standard;
+
+        background-color: rgba(24, 24, 27, 0.6); /* Equivalent to bg-zinc-900/60 */
+        backdrop-filter: blur(4px); /* Equivalent to backdrop-blur-sm */
+        border-radius: 0.75rem; /* Equivalent to rounded-xl */
+        padding: 1.5rem; /* Equivalent to p-6 */
+        border: 1px solid #333; /* Equivalent to border border-zinc-800 */
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-xl */
+        // max-width: 55rem; /* Equivalent to max-w-3xl (1rem = 16px, 3xl is 48rem) */
+        // margin-left: auto; /* Equivalent to mx-auto */
+        // margin-right: auto; /* Equivalent to mx-auto */
 
         position: relative;
         a {
@@ -405,8 +484,9 @@ a {
 .sec__1 {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 40px;
     margin: 20px 0;
+    height: calc(100dvh - ($header-height + 8rem)) !important;
 
     .container-description {
         background-color: rgba(24, 24, 27, 0.6); /* Equivalent to bg-zinc-900/60 */
@@ -498,6 +578,7 @@ a {
 
     [class^="photo-"] {
         // background-color: rgb(223, 157, 157);
+        position: relative;
         border-radius: $br-standard;
 
         height: 350px;
@@ -512,10 +593,45 @@ a {
         }
 
         transition: all 0.3s ease-in-out;
-    }
 
-    [class^="photo-"]:hover {
-        transform: scale(1.05) rotate(1deg);
+        .absolute-overlay {
+            position: absolute;
+            inset: 0; /* Equivalent to top: 0; right: 0; bottom: 0; left: 0; */
+            // background: linear-gradient(
+            //     to top,
+            //     rgba(0, 0, 0, 0.2) 0%,
+            //     transparent 70%
+            // ); /* Equivalent to bg-gradient-to-t from-black/70 to-transparent */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Equivalent to justify-end */
+            // padding: 1rem; /* Equivalent to p-4 */
+            transition: background 0.3s ease-in-out; /* Smooth transition for the hover effect */
+
+            .info {
+                display: none;
+                h3,
+                p {
+                    padding: 0;
+                    margin: 0;
+                }
+            }
+        }
+
+        .absolute-overlay:hover {
+            background: linear-gradient(
+                to top,
+                rgba(255, 69, 0, 0.4) 0%,
+                transparent 50%
+            ); /* Equivalent to group-hover:from-[#ff4500]/40 */
+
+            .info {
+                display: block;
+                // background-color: blue;
+                backdrop-filter: blur(2px); /* Equivalent to backdrop-blur-md */
+                padding: 1rem;
+            }
+        }
     }
 
     // .title-bio {
@@ -617,12 +733,12 @@ a {
 
 // Footer Components
 .footer-container {
-    // max-width: $max-width-header-footer;
+    max-width: $max-width-header-footer;
     width: 100%;
     height: 10rem;
     margin: 0 auto;
     background-color: $header-bg;
-
+    border-top: 1px solid #333;
     // padding: 1rem 2rem;
     display: flex;
 
