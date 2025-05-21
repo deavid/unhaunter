@@ -77,7 +77,7 @@ pub fn keyboard(
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        app_next_state.set(AppState::MainMenu);
+        app_next_state.set(AppState::MissionSelect);
         game_next_state.set(GameState::None);
     }
 }
