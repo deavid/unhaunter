@@ -290,9 +290,9 @@ impl Difficulty {
     /// in a darker environment overall.
     pub fn darkness_intensity(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.0,
-            Difficulty::TutorialChapter2 => 1.1,
-            Difficulty::TutorialChapter3 => 1.2,
+            Difficulty::TutorialChapter1 => 0.7,
+            Difficulty::TutorialChapter2 => 0.9,
+            Difficulty::TutorialChapter3 => 1.0,
             Difficulty::TutorialChapter4 => 1.3,
             Difficulty::TutorialChapter5 => 1.4,
             Difficulty::StandardChallenge => 1.5, // Was LeadSpecialist
@@ -410,13 +410,13 @@ impl Difficulty {
         match self {
             Difficulty::TutorialChapter1 => 6.0,
             Difficulty::TutorialChapter2 => 4.0,
-            Difficulty::TutorialChapter3 => 3.0,
-            Difficulty::TutorialChapter4 => 2.0,
-            Difficulty::TutorialChapter5 => 1.0,
-            Difficulty::StandardChallenge => 0.9, // Was LeadSpecialist
-            Difficulty::HardChallenge => 0.7,     // Was MasterSpecialist
+            Difficulty::TutorialChapter3 => 2.0,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 0.8,
+            Difficulty::StandardChallenge => 0.7, // Was LeadSpecialist
+            Difficulty::HardChallenge => 0.6,     // Was MasterSpecialist
             Difficulty::ExpertChallenge => 0.5,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 0.5,   // Was MasterGuardian
+            Difficulty::MasterChallenge => 0.4,   // Was MasterGuardian
         }
     }
 

@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
 
-pub struct UnprofilePlugin;
+pub struct UnhaunterProfilePlugin;
 
-impl Plugin for UnprofilePlugin {
+impl Plugin for UnhaunterProfilePlugin {
     fn build(&self, app: &mut App) {
         let config_dir_path = dirs::config_dir()
             .map(|native_config_dir| native_config_dir.join("unhaunter-game").join("config"))

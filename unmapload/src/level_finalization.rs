@@ -16,7 +16,7 @@ use uncore::events::loadlevel::LevelReadyEvent;
 use uncore::events::roomchanged::RoomChangedEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
-use uncore::states::AppState;
+use uncore::states::{AppState, GameState};
 use uncore::{celsius_to_kelvin, random_seed};
 use unlight::prebake::prebake_lighting_field;
 use unstd::board::tiledata::PreMesh;
@@ -42,7 +42,8 @@ pub fn after_level_ready(
     mut ev: EventReader<LevelReadyEvent>,
     mut ev_room: EventWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
-    mut next_game_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     if ev.is_empty() {
         return;
@@ -53,7 +54,8 @@ pub fn after_level_ready(
     let open_van = ev.read().next().unwrap().open_van;
 
     // Switch to in-game state
-    next_game_state.set(AppState::InGame);
+    next_app_state.set(AppState::InGame);
+    next_game_state.set(GameState::None);
 
     // Store ambient temperature for reference
     let ambient_temp = bf.ambient_temp;

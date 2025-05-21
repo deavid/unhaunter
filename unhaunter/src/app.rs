@@ -5,6 +5,7 @@ use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::plugin::UnhaunterCorePlugin;
+use uncore::resources::cli_options::CliOptions;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use unfog::plugin::UnhaunterFogPlugin;
@@ -19,7 +20,7 @@ use unmenu::plugin::UnhaunterMenuPlugin;
 use unmenusettings::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
-use unprofile::plugin::UnprofilePlugin;
+use unprofile::plugin::UnhaunterProfilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
@@ -30,8 +31,9 @@ use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 use unwalkie::plugin::UnhaunterWalkiePlugin;
 
-pub fn app_run() {
+pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
+    app.insert_resource(cli_options);
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: format!("Unhaunter {}", plt::VERSION),
@@ -80,7 +82,7 @@ pub fn app_run() {
         UnhaunterCoreMenuPlugin,
         UnhaunterMapLoadPlugin,
         UnhaunterCampaignPlugin,
-        UnprofilePlugin,
+        UnhaunterProfilePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     #[cfg(not(target_arch = "wasm32"))]

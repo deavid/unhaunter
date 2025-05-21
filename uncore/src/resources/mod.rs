@@ -1,4 +1,5 @@
 pub mod board_data;
+pub mod cli_options;
 pub mod current_evidence_readings;
 pub mod difficulty_state;
 pub mod ghost_guess;

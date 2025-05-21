@@ -116,10 +116,13 @@ pub fn handle_difficulty_click(
 
     for ev in ev_menu_clicks.read() {
         let total_displayed_difficulties = displayed_difficulties.len();
-
+        if ev.state != AppState::MapHub {
+            warn!("MenuItemClicked event received in state: {:?}", ev.state);
+            continue;
+        }
         if let Some((item_data, _)) = q_items
             .iter()
-            .find(|(_, interactive)| interactive.identifier == ev.0)
+            .find(|(_, interactive)| interactive.identifier == ev.pos)
         {
             // Ensure the clicked item is a non-tutorial difficulty
             if !item_data.difficulty.is_tutorial_difficulty() {
@@ -143,7 +146,7 @@ pub fn handle_difficulty_click(
                 );
             }
             break;
-        } else if ev.0 == total_displayed_difficulties {
+        } else if ev.pos == total_displayed_difficulties {
             // This is the "Go Back" item
             next_app_state.set(AppState::MainMenu);
             next_hub_state.set(MapHubState::None);

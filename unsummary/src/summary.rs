@@ -41,6 +41,7 @@ pub fn update_time(
     mut sd: ResMut<SummaryData>,
     game_state: Res<State<GameState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     qp: Query<&PlayerSprite>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -59,12 +60,14 @@ pub fn update_time(
     }
     if alive_count == 0 {
         app_next_state.set(AppState::Summary);
+        game_next_state.set(GameState::None);
     }
 }
 
 pub fn keyboard(
     app_state: Res<State<AppState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if *app_state.get() != AppState::Summary {
@@ -74,7 +77,8 @@ pub fn keyboard(
         | keyboard_input.just_pressed(KeyCode::NumpadEnter)
         | keyboard_input.just_pressed(KeyCode::Enter)
     {
-        app_next_state.set(AppState::MainMenu);
+        app_next_state.set(AppState::MissionSelect);
+        game_next_state.set(GameState::None);
     }
 }
 pub fn setup_ui(

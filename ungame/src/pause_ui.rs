@@ -26,7 +26,7 @@ pub fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(GameState::None);
-        next_state.set(AppState::MainMenu);
+        next_state.set(AppState::MissionSelect);
     }
 }
 

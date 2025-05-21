@@ -6,6 +6,7 @@ use uncore::difficulty::Difficulty;
 use uncore::types::mission_data::MissionData;
 use uncore::types::root::map::Sheet;
 use uncore::{resources::maps::Maps, types::root::map::Map};
+use uncore::resources::cli_options::CliOptions;
 
 pub struct PreLoad<A: Asset> {
     path: String,
@@ -94,6 +95,7 @@ pub fn tmxmap_preload(
     mut maps: ResMut<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
+    cli_options: Res<CliOptions>,
 ) {
     let mut cleanup_needed = false;
     if !mapsidx.idxprocessed {
@@ -107,6 +109,17 @@ pub fn tmxmap_preload(
         if let Some(tmx) = tmx {
             mapload.processed = true;
             cleanup_needed = true;
+
+            // If the map is a draft, skip loading it unless --draft-maps is passed.
+            if tmx.props.draft && !cli_options.include_draft_maps {
+                warn!(
+                    "Skipping draft map {:?} at path {:?} (use --draft-maps to include)",
+                    tmx.props.display_name,
+                    mapload.path
+                );
+                continue;
+            }
+
             let path = mapload.path.clone();
             let classname = tmx.class.clone();
             let display_name = tmx.props.display_name.clone();
