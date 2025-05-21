@@ -5,6 +5,7 @@ use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::plugin::UnhaunterCorePlugin;
+use uncore::resources::cli_options::CliOptions;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
 use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use unfog::plugin::UnhaunterFogPlugin;
@@ -30,8 +31,9 @@ use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 use unwalkie::plugin::UnhaunterWalkiePlugin;
 
-pub fn app_run() {
+pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
+    app.insert_resource(cli_options);
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: format!("Unhaunter {}", plt::VERSION),
