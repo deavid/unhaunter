@@ -423,6 +423,30 @@ article {
     grid-template-rows: auto 1fr auto auto;
 }
 
+section.beta {
+    h1 {
+        font-size: 3em;
+    }
+    .container-image {
+        overflow: hidden;
+        // position: relative; /* Equivalent to relative */
+        width: 700px; /* Equivalent to w-full */
+        height: auto; /* Equivalent to h-[300px] */
+        border-radius: 0.75rem; /* Equivalent to rounded-xl */
+        overflow: hidden; /* Equivalent to overflow-hidden */
+        margin-bottom: 2rem; /* Equivalent to mb-8 (assuming 1 unit = 0.25rem, so 8 * 0.25 = 2rem) */
+
+        @media (min-width: 768px) {
+            /* Equivalent to md:h-[400px] */
+            height: auto;
+        }
+        img {
+            width: 100%;
+            height: auto;
+        }
+    }
+}
+
 .page-info {
     -webkit-font-smoothing: antialiased; /* For WebKit browsers */
     -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
