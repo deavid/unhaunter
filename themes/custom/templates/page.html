@@ -1,36 +1,26 @@
-{% extends "index.html" %}
-{% block main %}
+{% extends "index.html" %} {% block main %}
 <article>
-  {% include "injects/page_start.html" ignore missing %}
+    {% include "injects/page_start.html" ignore missing %}
 
-  <header class="page-header">
-    <h1>{{ page.title }}</h1>
-    {% include "partials/page_info.html" %}
-  </header>
+    <header class="page-header">
+        <h1>{{ page.title }}</h1>
+        {% include "partials/page_info2.html" %}
+    </header>
 
-  {% if page.extra.cover.image %}
-  <figure>
-    <img src="{{ get_url(path=page.extra.cover.image) }}"
-         alt="{{ page.extra.cover.alt | default(value='cover') }}"
-         loading="lazy">
-  </figure>
-  {% endif %}
+    {% if page.extra.cover.image %}
+    <figure>
+        <img
+            src="{{ get_url(path=page.extra.cover.image) }}"
+            alt="{{ page.extra.cover.alt | default(value='cover') }}"
+            loading="lazy"
+        />
+    </figure>
+    {% endif %} {% include "partials/toc.html" %}
 
-  {% include "partials/toc.html" %}
+    <section class="prose">{{ page.content | safe }}</section>
 
-  <section class="prose">
-    {{ page.content | safe }}
-  </section>
-
-  <hr>
-
-  {% include "partials/post_taxonomies.html" %}
-  {% include "partials/post_navigation.html" %}
-
-  {% if page.extra.comment | default(value=config.extra.comment) %}
-    {% include "partials/comment.html" %}
-  {% endif %}
-
-  {% include "injects/page_end.html" ignore missing %}
+    {% include "partials/post_taxonomies.html" %} {% include "partials/post_navigation.html" %} {% if page.extra.comment
+    | default(value=config.extra.comment) %} {% include "partials/comment.html" %} {% endif %} {% include
+    "injects/page_end.html" ignore missing %}
 </article>
 {% endblock main %}

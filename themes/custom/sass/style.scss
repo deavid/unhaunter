@@ -123,7 +123,7 @@ body {
 // Add the .prose class styles
 .prose {
     color: $text-primary;
-    max-width: 65ch;
+    // max-width: 65ch;
 
     h1,
     h2,
@@ -163,7 +163,7 @@ body {
         margin: 0.5em 0;
         &::marker {
             font-weight: 400;
-            color: $text-secondary;
+            color: $action-color;
         }
     }
 
@@ -350,26 +350,12 @@ a {
         }
 
         transition: transform 0.2s; /* Optional smooth transition */
-
-        // &:active {
-        //     transform: scale(0.95);
-        // }
-
-        // // background-color: $header-bg;
-        // // background-color: red;
-        // padding: 1.5em;
-        // margin: 20px 0;
-        // border-radius: $br-standard;
-
         background-color: rgba(24, 24, 27, 0.6); /* Equivalent to bg-zinc-900/60 */
         backdrop-filter: blur(4px); /* Equivalent to backdrop-blur-sm */
         border-radius: 0.75rem; /* Equivalent to rounded-xl */
         padding: 1.5rem; /* Equivalent to p-6 */
         border: 1px solid #333; /* Equivalent to border border-zinc-800 */
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-xl */
-        // max-width: 55rem; /* Equivalent to max-w-3xl (1rem = 16px, 3xl is 48rem) */
-        // margin-left: auto; /* Equivalent to mx-auto */
-        // margin-right: auto; /* Equivalent to mx-auto */
 
         a {
             color: #ffffff;
@@ -384,7 +370,7 @@ a {
     }
 }
 
-.paginator {
+.pagination {
     display: flex;
     justify-content: space-around;
     padding: 20px 0;
@@ -429,7 +415,22 @@ a {
     }
 }
 
+article {
+    // background-color:  red;
+    min-height: 60dvh;
+
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+}
+
 .page-info {
+    -webkit-font-smoothing: antialiased; /* For WebKit browsers */
+    -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
+    opacity: 0.6;
+    font-size: 0.75rem;
+}
+
+.page-info2 {
     -webkit-font-smoothing: antialiased; /* For WebKit browsers */
     -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
     opacity: 0.6;
@@ -438,7 +439,7 @@ a {
 
 .page-header {
     h1 {
-        font-size: 2.5rem;
+        font-size: 3.5rem;
         padding: 0;
         margin: 0;
     }
