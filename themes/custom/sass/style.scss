@@ -574,6 +574,59 @@ section.beta {
    Components
    ========================================================================== */
 
+.container-buttons {
+    // background-color: $header-bg;
+    border-radius: 20px;
+    grid-area: 3 / 1 / 5 / 5;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 1.2rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+
+    div {
+        a {
+            border-radius: 7px;
+            padding: 10px 25px;
+            display: inline-block;
+            border: 5px $action-color solid;
+            background-color: #6929112f;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden; /* Important to clip the sliding span */
+            z-index: 2; /* Ensure text is above the span */
+            transition: color 0.5s ease-in-out; /* Smooth color transition */
+
+            span {
+                position: absolute;
+                top: 100%; /* Start off-screen at the bottom */
+                left: 0; /* Align to the left */
+                width: 100%;
+                height: 110%;
+                background-color: $action-color;
+                transition: transform 0.25s ease-in-out; /* Smooth slide transition */
+                z-index: -1; /* Place behind the text */
+                transform: translateY(-100%); /* Slide in from the bottom to the top */
+            }
+
+            color: $header-bg; /* Change text color on hover */
+            &:hover {
+                color: $action-color;
+
+                span {
+                    transform: translateY(0); /* Initial position (off-screen) */
+                }
+            }
+        }
+    }
+
+    &.small {
+        font-size: 0.8rem;
+    }
+}
 .sec__1 {
     display: flex;
     flex-direction: column;
@@ -591,56 +644,6 @@ section.beta {
         max-width: 55rem; /* Equivalent to max-w-3xl (1rem = 16px, 3xl is 48rem) */
         margin-left: auto; /* Equivalent to mx-auto */
         margin-right: auto; /* Equivalent to mx-auto */
-    }
-
-    .container-buttons {
-        // background-color: $header-bg;
-        border-radius: 20px;
-        grid-area: 3 / 1 / 5 / 5;
-        text-transform: uppercase;
-        font-weight: 700;
-        font-size: 1.2rem;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 50px;
-
-        div {
-            a {
-                border-radius: 7px;
-                padding: 10px 25px;
-                display: inline-block;
-                border: 5px $action-color solid;
-                background-color: #6929112f;
-                text-decoration: none;
-                position: relative;
-                overflow: hidden; /* Important to clip the sliding span */
-                z-index: 2; /* Ensure text is above the span */
-                transition: color 0.5s ease-in-out; /* Smooth color transition */
-
-                span {
-                    position: absolute;
-                    top: 100%; /* Start off-screen at the bottom */
-                    left: 0; /* Align to the left */
-                    width: 100%;
-                    height: 110%;
-                    background-color: $action-color;
-                    transition: transform 0.25s ease-in-out; /* Smooth slide transition */
-                    z-index: -1; /* Place behind the text */
-                    transform: translateY(-100%); /* Slide in from the bottom to the top */
-                }
-
-                color: $header-bg; /* Change text color on hover */
-                &:hover {
-                    color: $action-color;
-
-                    span {
-                        transform: translateY(0); /* Initial position (off-screen) */
-                    }
-                }
-            }
-        }
     }
 
     .title-bio {

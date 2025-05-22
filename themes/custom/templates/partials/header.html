@@ -1,26 +1,42 @@
 <header class="header-container {% if config.extra.style.header_blur %}blur-header{% endif %}">
-  <div class="header-inner">
-    <div class="site-title">
-      <a href="{{ get_url(path=``) | safe }}" >
-        <img src="{{ get_url(path=config.extra.profile.title_url) }}" type=""/>
-      </a>
-    </div>
+    <div class="header-inner">
+        <div class="site-title">
+            <a href="{{ get_url(path=``) | safe }}">
+                <img src="{{ get_url(path=config.extra.profile.title_url) }}" type="" />
+            </a>
+        </div>
 
-    {% if config.extra.menu %}
-    <button class="menu-toggle" role="button" aria-label="Menu"></button>
-    <nav class="main-nav">
-      <ul class="nav-wrapper">
-        {% for menu in config.extra.menu %}
-        <li>
-          <a href="{{ menu.url | replace(from=`$BASE_URL`, to=config.base_url) | safe }}"
-             {% if menu.new_window %}target="_blank" rel="noopener noreferrer"{% endif %}>
-            {{ menu.name }}
-          </a>
-        </li>
-        {% endfor %}
-        {% include "injects/header_nav.html" ignore missing %}
-      </ul>
-    </nav>
-    {% endif %}
-  </div>
+        {% if config.extra.menu %}
+        <button class="menu-toggle" role="button" aria-label="Menu"></button>
+        <nav class="main-nav">
+            <ul class="nav-wrapper">
+                {% for menu in config.extra.menu %}
+                <li>
+                    <a
+                        href="{{ menu.url | replace(from=`$BASE_URL`, to=config.base_url) | safe }}"
+                        {%
+                        if
+                        menu.new_window
+                        %}target="_blank"
+                        rel="noopener noreferrer"
+                        {%
+                        endif
+                        %}
+                    >
+                        {{ menu.name }}
+                    </a>
+                </li>
+                {% endfor %} {% include "injects/header_nav.html" ignore missing %}
+            </ul>
+            <div class="container-buttons small">
+                <div>
+                    <a href="{{ get_url(path='wasm/main/') }}" target="_blank">
+                        Play in browser
+                        <span></span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+    </div>
 </header>
