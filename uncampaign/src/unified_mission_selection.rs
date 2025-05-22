@@ -16,6 +16,7 @@
 
 use bevy::picking::PickingBehavior;
 use bevy::prelude::*;
+use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 
@@ -28,6 +29,8 @@ use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSe
 use uncore::states::{AppState, MapHubState};
 use uncore::types::grade::Grade;
 use uncore::types::root::game_assets::GameAssets;
+use uncoremenu::components::MenuMouseTracker;
+use uncoremenu::events::KeyboardNavigate;
 use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::{
     components::{MenuItemInteractive, MenuRoot},
@@ -63,14 +66,22 @@ pub struct UIMissionMapping {
     pub ui_to_map_index: Vec<usize>,
 }
 
+#[derive(Resource, Default)]
+pub struct InitialScrollTarget(Option<usize>);
+
 /// Setup function for unified mission selection systems
 pub fn app_setup(app: &mut App) {
     app.init_resource::<UIMissionMapping>()
+        .init_resource::<InitialScrollTarget>()
         .add_systems(OnEnter(AppState::MissionSelect), setup_ui)
         .add_systems(OnExit(AppState::MissionSelect), cleanup_ui)
         .add_systems(
             Update,
-            (update_mission_selection, handle_selection_input)
+            (
+                update_mission_selection,
+                handle_selection_input,
+                trigger_initial_scroll_if_needed,
+            )
                 .chain()
                 .run_if(in_state(AppState::MissionSelect)),
         );
@@ -309,6 +320,7 @@ pub fn setup_ui(
     mission_select_mode: Res<CurrentMissionSelectMode>,
     difficulty_resource: Res<CurrentDifficulty>,
     mut ui_mapping: ResMut<UIMissionMapping>,
+    mut initial_scroll_target: ResMut<InitialScrollTarget>,
 ) {
     info!(
         "Setting up MissionSelectUI for mode: {:?}",
@@ -427,8 +439,58 @@ pub fn setup_ui(
     sorted_available_maps.sort_by(sort_maps);
     sorted_locked_maps.sort_by(sort_maps);
 
+    let mut default_selected_idx_in_sorted_list = 0;
+
     let (initial_desc, initial_preview_image_path) = if !sorted_available_maps.is_empty() {
-        let initial_map = &sorted_available_maps[0].1;
+        // Ensure this is inside the 'if !sorted_available_maps.is_empty() { ... }' block
+        // and after 'default_selected_idx_in_sorted_list' has been initialized (e.g., to 0).
+
+        if mission_select_mode.0 == MissionSelectMode::Campaign {
+            // Iterate available maps from most advanced (last in the 'sorted_available_maps' list, due to .rev())
+            // to least advanced. 'idx' will be the original index from the forward iteration.
+            for (idx, (_original_map_idx, map_info)) in
+                sorted_available_maps.iter().enumerate().rev()
+            {
+                let current_map_mission_data = &map_info.mission_data;
+
+                // Get player's financial details for clarity
+                let player_bank_balance = player_profile_resource.progression.bank;
+                let player_insurance_deposit =
+                    player_profile_resource.progression.insurance_deposit;
+
+                // Get map's financial requirements for clarity
+                let map_required_total_deposit = current_map_mission_data.required_deposit;
+
+                // Calculate how much *additional* money is needed from the bank,
+                // if the map's required deposit is more than what's already in the player's insurance deposit.
+                let additional_funds_needed_from_bank =
+                    map_required_total_deposit - player_insurance_deposit;
+
+                // Determine if the player can afford this map
+                let is_map_affordable = if additional_funds_needed_from_bank > 0 {
+                    // Player needs to pull money from their bank account.
+                    // Check if bank balance is sufficient for the additional amount needed.
+                    player_bank_balance >= additional_funds_needed_from_bank
+                } else {
+                    // Player's current insurance deposit already covers or exceeds the map's requirement.
+                    // No additional funds are needed from the bank, or they might even get a refund from their deposit.
+                    // Thus, the map is considered affordable in terms of bank funds.
+                    true
+                };
+
+                if is_map_affordable {
+                    // This map is affordable. Since we are iterating from most advanced to least,
+                    // this is the most advanced affordable map.
+                    default_selected_idx_in_sorted_list = idx; // Set this map as the default selection.
+                    break; // Exit the loop as we've found our target.
+                }
+            }
+            // If the loop completes without finding an affordable map (i.e., 'break' was never called),
+            // 'default_selected_idx_in_sorted_list' will retain its initial value (e.g., 0).
+            // This will result in the first map in 'sorted_available_maps' being selected as a fallback.
+        }
+
+        let initial_map = &sorted_available_maps[default_selected_idx_in_sorted_list].1;
         let initial_mission = &initial_map.mission_data;
 
         let difficulty_info = match mission_select_mode.0 {
@@ -448,15 +510,23 @@ pub fn setup_ui(
             }
         };
 
+        let base_reward = initial_mission.mission_reward_base;
+        let potential_reward_range = format!(
+            "${:.0} - ${:.0}",
+            base_reward as f64 * 0.5,
+            base_reward as f64 * 5.0
+        );
+
         let initial_description = format!(
-            "Mission: <{}>\nLocation: {}\n{}\n\n{}\n\n{}\nRequired Deposit: ${}\nReward: ${}",
+            "Mission: <{}>\nLocation: {}\n{}\n\n{}\n\n{}\nRequired Deposit: ${}\nReward: ${} ({})",
             initial_mission.display_name,
             initial_mission.location_name,
             initial_mission.location_address,
             initial_mission.flavor_text,
             difficulty_info,
             initial_mission.required_deposit,
-            initial_mission.mission_reward_base,
+            base_reward,
+            potential_reward_range,
         );
 
         let initial_preview = if initial_mission.preview_image_path.is_empty() {
@@ -504,8 +574,9 @@ pub fn setup_ui(
             let mut content_area = templates::create_selectable_content_area(
                 parent,
                 &handles,
-                0,
+                default_selected_idx_in_sorted_list,
             );
+            content_area.insert(MenuMouseTracker::default());
 
             content_area.with_children(|content| {
                 content
@@ -535,7 +606,7 @@ pub fn setup_ui(
                                 for (idx, (original_idx, map)) in sorted_available_maps.iter().enumerate() {
                                     ui_mapping.ui_to_map_index.push(*original_idx);
 
-                                    let selected = idx == 0;
+                                    let selected = idx == default_selected_idx_in_sorted_list;
                                     create_mission_list_item(
                                         mission_list,
                                         &handles,
@@ -665,6 +736,13 @@ pub fn setup_ui(
 
             templates::create_player_status_bar(parent, &handles, &player_profile_resource);
         });
+
+    // If there are available missions, set the target for initial scroll.
+    if !sorted_available_maps.is_empty() {
+        initial_scroll_target.0 = Some(default_selected_idx_in_sorted_list);
+    } else {
+        initial_scroll_target.0 = None;
+    }
 }
 
 /// Helper function to create a mission list item in the UI
@@ -830,4 +908,30 @@ fn create_locked_mission_item(
                     ..default()
                 });
         });
+}
+
+fn trigger_initial_scroll_if_needed(
+    mut initial_scroll_target: ResMut<InitialScrollTarget>,
+    mut ev_keyboard_nav: EventWriter<KeyboardNavigate>,
+    container_query: Query<&ComputedNode, With<ScrollableListContainer>>,
+) {
+    if let Some(target_idx) = initial_scroll_target.0 {
+        if let Ok(container_node) = container_query.get_single() {
+            if container_node.size().y > 0.0 {
+                // Check if container height is calculated
+                info!(
+                    "Initial scroll: UI ready. Triggering scroll to index: {}",
+                    target_idx
+                );
+                ev_keyboard_nav.send(KeyboardNavigate(target_idx));
+                initial_scroll_target.0 = None; // Clear the target so this doesn't run again
+            } else {
+                // Log that UI is not ready, will retry next frame.
+                // info!("Initial scroll: UI not ready yet (container height is 0). Will retry.");
+            }
+        } else {
+            // Log that container is not found, will retry next frame.
+            // info!("Initial scroll: ScrollableListContainer not found yet. Will retry.");
+        }
+    }
 }
