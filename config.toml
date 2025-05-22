@@ -131,6 +131,10 @@ img = "profile/unhaunter-c5.png"
 
 # The top menu.
 [[extra.menu]]
+name = "Home"
+url = "$BASE_URL"
+
+[[extra.menu]]
 name = "News"
 url = "$BASE_URL/news"
 

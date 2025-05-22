@@ -1,6 +1,7 @@
 <!-- Page list single item -->
 
 <section class="list-item">
+    {% include "partials/page_info.html" %}
     {% if page.extra.cover.image %}
     <figure class="mb-4 mt-0">
         <img class="h-auto w-full rounded-lg" src="{{ get_url(path=page.extra.cover.image) }}"
@@ -8,7 +9,7 @@
     </figure>
     {% endif %}<!---->
 
-    <h2 class="">{{ page.title }}</h2>
+    <h2 class="title">{{ page.title }}</h2>
 
     {% if prefer_summary %}
     <section>
@@ -28,7 +29,6 @@
     </div>
     {% endif %}
 
-    {% include "partials/page_info.html" %}
 
     <a class="cover-click absolute inset-0 text-[0]" href="{{ page.permalink }}">{{ page.title }}</a>
 </section>

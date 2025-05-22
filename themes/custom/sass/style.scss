@@ -209,6 +209,7 @@ a {
 .main-container {
     position: relative;
     min-height: calc(100% - 9rem);
+    width: 100%;
     max-width: $max-width-content;
     margin: 0 auto;
     padding: ($header-height + 4rem) 1rem 4rem;
@@ -296,12 +297,34 @@ a {
     }
 }
 
-.list-items {
+.list-items-news {
+    width: 100%;
+    // background-color: red;
+    > section.list-item {
+        padding: 30px 0 10px 0;
+        border-bottom: 2px solid #333;
+
+        position: relative;
+        .cover-click {
+            inset: 0;
+            position: absolute;
+            font-size: 0px;
+        }
+
+        &:hover {
+            .title {
+                color: $action-color;
+            }
+        }
+    }
+}
+
+.list-items-home {
     display: flex;
     flex-direction: column;
     gap: 40px;
-    max-width: $max-width-content;
-    margin: 0 auto;
+    width: 100%;
+    // margin: 0 auto;
 
     > section.list-item {
         &:hover {
@@ -348,11 +371,11 @@ a {
         // margin-left: auto; /* Equivalent to mx-auto */
         // margin-right: auto; /* Equivalent to mx-auto */
 
-        position: relative;
         a {
             color: #ffffff;
         }
 
+        position: relative;
         .cover-click {
             inset: 0;
             position: absolute;
