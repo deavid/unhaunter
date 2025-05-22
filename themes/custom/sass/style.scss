@@ -384,6 +384,51 @@ a {
     }
 }
 
+.paginator {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px 0;
+
+    .active {
+        text-decoration: none;
+        display: flex; /* Equivalent to flex */
+        align-items: center; /* Equivalent to items-center */
+        gap: 0.75rem; /* Equivalent to space-x-3 (space between children) */
+        padding-left: 1.5rem; /* Equivalent to px-6 */
+        padding-right: 1.5rem; /* Equivalent to px-6 */
+        padding-top: 1rem; /* Equivalent to py-4 */
+        padding-bottom: 1rem; /* Equivalent to py-4 */
+        background-color: #18181b; /* Equivalent to bg-zinc-900 */
+        border-radius: 0.75rem; /* Equivalent to rounded-xl */
+        border: 1px solid #3f3f46; /* Equivalent to border border-zinc-800 */
+        transition: all 300ms ease-in-out; /* Equivalent to transition-all duration-300 */
+        cursor: pointer; /* Often implied for interactive elements */
+
+        /* Hover states */
+        &:hover {
+            background-color: #27272a; /* Equivalent to hover:bg-zinc-800 */
+            border-color: $action-color; /* Equivalent to hover:border-[#ff4500] */
+
+            color: $action-color;
+        }
+    }
+
+    .disabled {
+        display: flex; /* Equivalent to flex */
+        align-items: center; /* Equivalent to items-center */
+        gap: 0.75rem; /* Equivalent to space-x-3 */
+        padding-left: 1.5rem; /* Equivalent to px-6 */
+        padding-right: 1.5rem; /* Equivalent to px-6 */
+        padding-top: 1rem; /* Equivalent to py-4 */
+        padding-bottom: 1rem; /* Equivalent to py-4 */
+        background-color: rgba(24, 24, 27, 0.4); /* Equivalent to bg-zinc-900/40 */
+        border-radius: 0.75rem; /* Equivalent to rounded-xl */
+        border: 1px solid rgba(63, 63, 70, 0.5); /* Equivalent to border border-zinc-800/50 */
+        opacity: 0.5; /* Equivalent to opacity-50 */
+        cursor: not-allowed; /* Equivalent to cursor-not-allowed */
+    }
+}
+
 .page-info {
     -webkit-font-smoothing: antialiased; /* For WebKit browsers */
     -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
