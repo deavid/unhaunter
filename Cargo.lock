@@ -5121,6 +5121,7 @@ dependencies = [
  "ungearitems",
  "unlight",
  "unmapload",
+ "unprofile",
  "unsettings",
  "unstd",
 ]
@@ -5137,6 +5138,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.12",
  "uncore",
+ "unprofile",
  "unsettings",
 ]
 
@@ -5467,6 +5469,7 @@ dependencies = [
  "unprofile",
  "unsettings",
  "unstd",
+ "unwalkiecore",
 ]
 
 [[package]]

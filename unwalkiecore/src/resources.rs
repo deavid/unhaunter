@@ -2,6 +2,7 @@ use crate::events::WalkieEvent;
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng;
 use uncore::random_seed;
+use uncore::types::evidence::Evidence;
 use unwalkie_types::VoiceLineData;
 
 #[derive(Clone, Debug, Default)]
@@ -21,6 +22,8 @@ pub struct WalkiePlay {
     pub last_message_time: f64,
     pub truck_accessed: bool,
     pub urgent_pending: bool,
+    pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
+    pub highlight_craft_button: bool,
 }
 
 impl Default for WalkiePlay {
@@ -35,6 +38,8 @@ impl Default for WalkiePlay {
             truck_accessed: Default::default(),
             urgent_pending: Default::default(),
             other_mission_event_count: Default::default(),
+            evidence_hinted_not_logged_via_walkie: None,
+            highlight_craft_button: false, // Added
         }
     }
 }

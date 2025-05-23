@@ -285,7 +285,7 @@ WalkiePhraseFile(
         ),
       ],
     ),
-    (
+    WalkieEventConceptEntry(
       name: "FreezingTempsEvidenceConfirmed",
       lines: [
         WalkieLineEntry(
@@ -724,7 +724,51 @@ WalkiePhraseFile(
           tags: [PositiveReinforcement, DirectHint, MediumLength],
         ),
       ],
-    )
-
+    ),
+    WalkieEventConceptEntry(
+      name: "PotentialGhostIDWithNewEvidencePrompt",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "That last reading is strong. If that's our third piece, we might know what we're dealing with. Head to the truck, log it, and let's see if we can confirm.",
+          subtitle_text: "That last reading is strong. If that's our third piece, we might know what we're dealing with. Head to the truck, log it, and let's see if we can confirm.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "Just got a clear reading on the latest evidence. Cross-referencing... that could mean we've identified the ghost type. If you log that in the journal, we can be sure and prep the right repellent.",
+          subtitle_text: "Just got a clear reading on the latest evidence. Cross-referencing... that could mean we've identified the ghost type. If you log that in the journal, we can be sure and prep the right repellent.",
+          tags: [LongDetailed, Informative]),
+        WalkieLineEntry(
+          tts_text: "Okay, the latest evidence is coming in clear now. My guess? That points to a specific ghost type. Get to the truck, update the journal, and let's verify.",
+          subtitle_text: "Okay, the latest evidence is coming in clear now. My guess? That points to a specific ghost type. Get to the truck, update the journal, and let's verify.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "With this new piece of evidence, and the other signs, I'm betting we know the ghost. Let's get it logged.",
+          subtitle_text: "With this new piece of evidence, and the other signs, I'm betting we know the ghost. Let's get it logged.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "This latest evidence is a game-changer. I think we're dealing with a known entity. Time to make it official in the journal.",
+          subtitle_text: "This latest evidence is a game-changer. I think we're dealing with a known entity. Time to make it official in the journal.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "That's the third piece of evidence! The latest reading confirms it. It has to be a specific type. Let's head back and record it.",
+          subtitle_text: "That's the third piece of evidence! The latest reading confirms it. It has to be a specific type. Let's head back and record it.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "I've got a solid lock on this new evidence. All indicators point to a particular ghost. We need to log this immediately.",
+          subtitle_text: "I've got a solid lock on this new evidence. All indicators point to a particular ghost. We need to log this immediately.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "The new evidence is undeniable. We're likely facing a known type of ghost. Let's get to the truck and confirm our findings.",
+          subtitle_text: "The new evidence is undeniable. We're likely facing a known type of ghost. Let's get to the truck and confirm our findings.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "Excellent, the latest evidence just came through. This strongly suggests a specific entity. Update the journal so we can be certain.",
+          subtitle_text: "Excellent, the latest evidence just came through. This strongly suggests a specific entity. Update the journal so we can be certain.",
+          tags: [MediumLength, Informative]),
+        WalkieLineEntry(
+          tts_text: "We have the final piece of evidence! Combined with our other findings, it's almost certainly a known ghost. Let's log it and prepare.",
+          subtitle_text: "We have the final piece of evidence! Combined with our other findings, it's almost certainly a known ghost. Let's log it and prepare.",
+          tags: [MediumLength, Informative]),
+      ],
+    ),
   ],
 )

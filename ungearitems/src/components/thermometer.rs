@@ -24,6 +24,7 @@ pub struct Thermometer {
     pub temp_l1: f32,
     pub frame_counter: u16,
     pub display_glitch_timer: f32,
+    pub blinking_hint_active: bool,
 }
 
 impl Default for Thermometer {
@@ -35,6 +36,7 @@ impl Default for Thermometer {
             temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
             display_glitch_timer: Default::default(),
+            blinking_hint_active: false,
         }
     }
 }
@@ -72,7 +74,18 @@ impl GearUsable for Thermometer {
 
         // Regular display
         let msg = if self.enabled {
-            format!("Temperature: {:>5.1}ºC", kelvin_to_celsius(self.temp))
+            let temp_celsius = kelvin_to_celsius(self.temp);
+            if self.blinking_hint_active {
+                let temp_str = format!("{:>5.1}ºC", temp_celsius);
+                let blinking_temp_str = if self.frame_counter % 40 < 20 {
+                    format!(">[{}]<", temp_str.trim())
+                } else {
+                    format!("  {}  ", temp_str.trim())
+                };
+                format!("Temperature: {}", blinking_temp_str)
+            } else {
+                format!("Temperature: {:>5.1}ºC", temp_celsius)
+            }
         } else {
             "".to_string()
         };
@@ -105,7 +118,29 @@ impl GearUsable for Thermometer {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
+
+            // Update blinking_hint_active
+            const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+            if kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0 {
+                let count = gs
+                    .player_profile
+                    .times_evidence_acknowledged_on_gear
+                    .get(&Evidence::FreezingTemp)
+                    .copied()
+                    .unwrap_or(0);
+                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+            } else {
+                self.blinking_hint_active = false;
+            }
+        } else {
+            // Ensure blinking_hint_active is false if not updating temp this frame,
+            // or if we want it to strictly follow the evidence condition.
+            // For now, let's ensure it's false if the condition isn't met.
+            if !(kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0) {
+                self.blinking_hint_active = false;
+            }
         }
+
         // Decrement glitch timer if active
         if self.display_glitch_timer > 0.0 {
             self.display_glitch_timer -= gs.time.delta_secs();
@@ -177,6 +212,10 @@ impl GearUsable for Thermometer {
         } else {
             0.0
         }
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
     }
 }
 

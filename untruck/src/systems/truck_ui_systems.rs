@@ -1,4 +1,4 @@
-use super::craft_repellent::craft_repellent;
+use crate::craft_repellent::craft_repellent;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;

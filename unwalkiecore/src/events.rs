@@ -150,7 +150,9 @@ pub enum WalkieEvent {
     RLPresenceEvidenceConfirmed,
     /// CPM 500 evidence has been confirmed.
     CPM500EvidenceConfirmed,
-    // TODO: Add other event categories here
+
+    // --- Proactive Crafting Prompts ---
+    PotentialGhostIDWithNewEvidence,
 }
 
 impl WalkieEvent {
@@ -285,6 +287,10 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => {
                 Box::new(EvidenceGatheringAndLogicConcept::CPM500EvidenceConfirmed)
             }
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => {
+                Box::new(EvidenceGatheringAndLogicConcept::PotentialGhostIDWithNewEvidencePrompt)
+            }
         }
     }
 
@@ -349,6 +355,9 @@ impl WalkieEvent {
             WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
             WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
             WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count, // e.g., 3 minutes, then 6, etc.
         }
     }
 
@@ -411,6 +420,9 @@ impl WalkieEvent {
             WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::Medium,
             WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::Medium,
             WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::Medium,
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
         }
     }
     /// This function returns hint text to display to the player for various events.
@@ -540,17 +552,11 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => {
                 "500+ CPM on Geiger! Log with [C] or in truck journal."
             }
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => {
+                "Potential ID! Log new evidence in truck to confirm & craft repellent."
+            }
         }
-    }
-}
-
-/// Implementation of FromStr for WalkieEvent to convert string IDs back to enum values
-impl std::str::FromStr for WalkieEvent {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        enum_iterator::all::<WalkieEvent>()
-            .find(|event| format!("{:?}", event) == s)
-            .ok_or(())
     }
 }

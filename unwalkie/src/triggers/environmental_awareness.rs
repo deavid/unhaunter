@@ -1,6 +1,6 @@
-use std::any::Any;
-
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
+use std::any::Any; // Added import
 
 use uncore::{
     components::{
@@ -11,9 +11,9 @@ use uncore::{
 };
 
 use uncore::resources::roomdb::RoomDB;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_usable::GearUsable;
 use ungearitems::components::thermometer::Thermometer;
 use unwalkiecore::{WalkiePlay, events::WalkieEvent};
 
@@ -30,14 +30,14 @@ fn trigger_darkness_level_system(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    mut seconds_dark: Local<f32>,
+    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
 ) {
     if app_state.get() != &AppState::InGame {
-        *seconds_dark = 0.0;
+        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
         return;
     }
     if *game_state.get() != GameState::None {
-        *seconds_dark = 0.0;
+        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
         return;
     }
     let Ok((player_pos, _)) = qp.get_single() else {
@@ -48,17 +48,18 @@ fn trigger_darkness_level_system(
 
     if player_room.is_none() {
         // Player is not inside the location, no need to remind them.
-        *seconds_dark = 0.0;
+        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
         return;
     }
 
     if board_data.exposure_lux < 0.1 {
-        *seconds_dark += time.delta_secs();
-        if *seconds_dark > 10.0 {
+        stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
+        if stopwatch.elapsed_secs() > 10.0 {
+            // Changed from *seconds_dark > 10.0
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
         }
     } else {
-        *seconds_dark = 0.0;
+        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
     }
 }
 
@@ -177,7 +178,7 @@ fn trigger_thermometer_non_freezing_fixation(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    mut timer: Local<f32>,
+    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
     mut trigger_count: Local<u32>,
     qp: Query<(&PlayerGear, &PlayerSprite)>,
 ) {
@@ -188,15 +189,15 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     }
     if app_state.get() != &AppState::InGame {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     }
     if *game_state.get() != GameState::None {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     }
     let Ok((player_gear, _)) = qp.get_single() else {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     };
     // Check if right hand is a Thermometer and enabled
@@ -210,21 +211,22 @@ fn trigger_thermometer_non_freezing_fixation(
             if thermo.enabled {
                 let temp_c = uncore::kelvin_to_celsius(thermo.temp);
                 if (1.0..=10.0).contains(&temp_c) {
-                    *timer += time.delta_secs();
-                    if *timer > REQUIRED_DURATION {
+                    stopwatch.tick(time.delta()); // Changed from *timer += time.delta_secs();
+                    if stopwatch.elapsed_secs() > REQUIRED_DURATION {
+                        // Changed from *timer > REQUIRED_DURATION
                         walkie_play.set(
                             WalkieEvent::ThermometerNonFreezingFixation,
                             time.elapsed_secs_f64(),
                         );
                         *trigger_count += 1;
-                        *timer = 0.0;
+                        stopwatch.reset(); // Changed from *timer = 0.0;
                     }
-                    return;
+                    return; // Return to avoid resetting stopwatch if conditions are met
                 }
             }
         }
     }
-    *timer = 0.0;
+    stopwatch.reset(); // Changed from *timer = 0.0;
 }
 
 /// Registers the environmental awareness systems to the Bevy app.

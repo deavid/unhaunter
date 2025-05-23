@@ -3,10 +3,14 @@ use super::{
     uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
 };
 use bevy::{prelude::*, utils::HashSet};
+use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::resources::potential_id_timer::PotentialIDTimer; // New import
 use uncore::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
+use unprofile::data::PlayerProfileData;
+use unwalkiecore::resources::WalkiePlay;
 
 #[allow(clippy::type_complexity)]
 pub fn button_system(
@@ -25,6 +29,10 @@ pub fn button_system(
     mut gg: ResMut<GhostGuess>,
     mut ev_truckui: EventWriter<TruckUIEvent>,
     gc: Res<GameConfig>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    mut profile_data: ResMut<Persistent<PlayerProfileData>>,
+    time: Res<Time>,
+    mut potential_id_timer: ResMut<PotentialIDTimer>, // Added ResMut to allow modification
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -54,8 +62,60 @@ pub fn button_system(
         }
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             if let Some(truckui_event) = tui_button.pressed() {
-                ev_truckui.send(truckui_event);
+                ev_truckui.send(truckui_event.clone());
+
+                // Reset highlight_craft_button if CraftRepellent is clicked
+                if let TruckButtonType::CraftRepellent = tui_button.class {
+                    if walkie_play.highlight_craft_button {
+                        walkie_play.highlight_craft_button = false;
+                        // info!("Craft Repellent button clicked, highlight_craft_button reset.");
+                    }
+                }
             }
+
+            // Acknowledgement Logic Start
+            if let TruckButtonType::Evidence(clicked_evidence_type) = tui_button.class {
+                // Check if this evidence was hinted by a walkie talkie message
+                let mut acknowledged_walkie_hint = false;
+                if let Some((hinted_evidence, _timestamp)) =
+                    walkie_play.evidence_hinted_not_logged_via_walkie
+                {
+                    if hinted_evidence == clicked_evidence_type
+                        && tui_button.status == TruckButtonState::Pressed
+                    {
+                        const JOURNAL_HINT_THRESHOLD: u32 = 3; // Consistent with blinking system
+                        let ack_count_entry = profile_data
+                            .times_evidence_acknowledged_in_journal
+                            .entry(clicked_evidence_type)
+                            .or_insert(0);
+
+                        if *ack_count_entry < JOURNAL_HINT_THRESHOLD {
+                            *ack_count_entry += 1;
+                            profile_data.set_changed(); // Mark Persistent data as changed
+                            // info!("Journal hint for {:?} acknowledged via walkie. New count: {}", clicked_evidence_type, *ack_count_entry);
+                        }
+                        acknowledged_walkie_hint = true;
+                    }
+                }
+
+                if acknowledged_walkie_hint {
+                    walkie_play.evidence_hinted_not_logged_via_walkie = None;
+                }
+
+                // Cancel PotentialIDTimer if the logged evidence matches
+                if tui_button.status == TruckButtonState::Pressed {
+                    if let Some((timed_evidence, _, _, _)) = potential_id_timer.data {
+                        if timed_evidence == clicked_evidence_type {
+                            // info!(
+                            //     "Evidence {:?} logged in journal, cancelling PotentialIDTimer.",
+                            //     clicked_evidence_type
+                            // );
+                            potential_id_timer.data = None;
+                        }
+                    }
+                }
+            }
+            // Acknowledgement Logic End
         }
         if let TruckButtonType::Ghost(ghost_type) = tui_button.class {
             if interaction.is_changed() && tui_button.status == TruckButtonState::Pressed {
@@ -130,11 +190,43 @@ pub fn button_system(
             *interaction
         };
         let mut textcolor = q_textcolor.get_mut(children[0]).unwrap();
-        border_color.0 = tui_button.border_color(interaction);
-        *color = tui_button.background_color(interaction).into();
-        textcolor.0 = tui_button.text_color(interaction);
+
+        // Default color calculation
+        let mut current_border_color = tui_button.border_color(interaction);
+        let current_background_color = tui_button.background_color(interaction);
+        let current_text_color = tui_button.text_color(interaction);
+
+        // UI Cue for Craft Repellent Button
+        if let TruckButtonType::CraftRepellent = tui_button.class {
+            if walkie_play.highlight_craft_button && !tui_button.disabled {
+                let pulse_factor =
+                    (time.elapsed_secs_f64() * std::f64::consts::PI * 2.0).sin() * 0.5 + 0.5; // Varies 0.0 to 1.0
+
+                current_border_color = current_border_color.mix(
+                    &uncore::colors::JOURNAL_BUTTON_BLINK_BORDER_COLOR, // Reusing journal blink color
+                    pulse_factor as f32,
+                );
+                // Example for background, if desired:
+                // current_background_color = current_background_color.mix(
+                //     &uncore::colors::TRUCKUI_ACCENT2_COLOR, // Example: A slightly different shade for bg
+                //     pulse_factor as f32
+                // );
+            }
+        }
+
+        border_color.0 = current_border_color;
+        *color = current_background_color.into();
+        textcolor.0 = current_text_color;
     }
     gg.ghost_type = ghost_selected;
+
+    // Update GhostGuess with the latest selected evidences
+    if gg.evidences_found != selected_evidences_found {
+        gg.evidences_found = selected_evidences_found;
+    }
+    if gg.evidences_missing != selected_evidences_missing {
+        gg.evidences_missing = selected_evidences_missing;
+    }
 }
 
 pub fn ghost_guess_system(

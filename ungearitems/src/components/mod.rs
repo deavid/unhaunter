@@ -18,9 +18,9 @@ pub mod thermometer;
 pub mod uvtorch;
 pub mod videocam;
 
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear::utils::on_off;
 use uncore::types::gear_kind::GearKind;
+use ungear::gear_stuff::GearStuff;
+use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;

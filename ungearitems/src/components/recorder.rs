@@ -10,7 +10,7 @@ use uncore::{
     metric_recorder::SendMetric,
     resources::{board_data::BoardData, roomdb::RoomDB},
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
+}; 
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -25,6 +25,7 @@ pub struct Recorder {
     pub evp_recorded_count: usize,
     pub display_glitch_timer: f32, // Added for EMI effects
     pub false_reading_timer: f32,  // For creating false audio spikes
+    pub blinking_hint_active: bool,
 }
 
 impl GearUsable for Recorder {
@@ -92,7 +93,16 @@ impl GearUsable for Recorder {
         // Normal display
         let msg = if self.enabled {
             if self.evp_recorded_display {
-                "- EVP RECORDED -".to_string()
+                // This state implies evidence has been found and is being actively displayed
+                if self.blinking_hint_active {
+                    if self.frame_counter % 40 < 20 {
+                        "- EVP RECORDED !!! -".to_string()
+                    } else {
+                        "- EVP RECORDED     -".to_string()
+                    }
+                } else {
+                    "- EVP RECORDED -".to_string()
+                }
             } else {
                 format!(
                     "Volume: {:>4.0}dB ({})",
@@ -201,6 +211,23 @@ impl GearUsable for Recorder {
                 );
             }
         }
+
+        // Update blinking_hint_active
+        const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+        // We consider "showing evidence strongly" when an EVP has been recorded at least once.
+        // The `evp_recorded_display` flag is for the temporary "- EVP RECORDED -" message,
+        // while `evp_recorded_count > 0` indicates that evidence has been found.
+        if self.evp_recorded_count > 0 && self.display_glitch_timer <= 0.0 {
+            let count = gs
+                .player_profile
+                .times_evidence_acknowledged_on_gear
+                .get(&Evidence::EVPRecording)
+                .copied()
+                .unwrap_or(0);
+            self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+        } else {
+            self.blinking_hint_active = false;
+        }
     }
 
     fn is_status_text_showing_evidence(&self) -> f32 {
@@ -213,6 +240,10 @@ impl GearUsable for Recorder {
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
     }
 
     fn is_electronic(&self) -> bool {

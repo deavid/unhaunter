@@ -1,10 +1,11 @@
 use bevy::utils::HashSet;
 use enum_iterator::Sequence;
 use enum_iterator::all;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use thiserror::Error;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize)]
 pub enum Evidence {
     FreezingTemp,
     FloatingOrbs,

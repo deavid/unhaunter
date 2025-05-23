@@ -1,7 +1,6 @@
+use crate::gear_stuff::GearStuff;
+use crate::gear_usable::GearUsable;
 use bevy::prelude::*;
-
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear_kind::GearKind;
 use uncore::{
     components::board::position::Position,
@@ -81,7 +80,11 @@ impl GearUsable for Gear {
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
-        unimplemented!();
+        if let Some(data) = &self.data {
+            data.box_clone()
+        } else {
+            Box::new(Gear::none())
+        }
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {

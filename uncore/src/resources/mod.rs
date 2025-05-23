@@ -9,6 +9,7 @@ pub mod manual;
 pub mod maps;
 pub mod mission_select_mode;
 pub mod object_interaction;
+pub mod potential_id_timer;
 pub mod roomdb;
 pub mod summary_data;
 pub mod visibility_data;

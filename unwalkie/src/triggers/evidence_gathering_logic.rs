@@ -270,6 +270,8 @@ fn trigger_evidence_confirmed_feedback_system(
                     // Attempt to set the event. If successful, mark it in the tracker.
                     if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
                         // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
+                        walkie_play.evidence_hinted_not_logged_via_walkie =
+                            Some((evidence_type, time.elapsed_secs_f64()));
                     }
                 }
             }

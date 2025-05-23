@@ -26,6 +26,8 @@ pub enum WalkieTag {
     DirectHint,
     /// A hint or reminder related to a specific tutorial or training session.
     TutorialSpecific,
+    /// An informative line.
+    Informative,
 
     // --- Reminder Severity ---
     /// A reminder for a critical mechanic or event that the player might have forgotten.

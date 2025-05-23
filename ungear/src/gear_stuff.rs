@@ -1,10 +1,11 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_persistent::Persistent;
+use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
-use crate::difficulty::CurrentDifficulty;
-use crate::resources::summary_data::SummaryData;
-use crate::{
+use uncore::difficulty::CurrentDifficulty;
+use uncore::resources::summary_data::SummaryData;
+use uncore::{
     components::board::position::Position, events::sound::SoundEvent,
     resources::board_data::BoardData,
 };
@@ -29,6 +30,8 @@ pub struct GearStuff<'w, 's> {
     pub difficulty: Res<'w, CurrentDifficulty>,
     /// Audio settings from the game.
     pub audio_settings: Res<'w, Persistent<AudioSettings>>,
+    /// Player profile data.
+    pub player_profile: Res<'w, Persistent<PlayerProfileData>>,
 }
 
 impl GearStuff<'_, '_> {

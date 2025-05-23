@@ -14,6 +14,7 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
+unwalkiecore = { path = "../unwalkiecore" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

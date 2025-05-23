@@ -20,8 +20,8 @@ use uncore::resources::board_data::BoardData;
 use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::summary_data::SummaryData;
-use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::utils::{MeanValue, PrintingTimer};
+use ungear::gear_stuff::GearStuff;
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 

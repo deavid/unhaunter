@@ -9,7 +9,9 @@ pub mod ghost_behavior_hunting;
 pub mod locomotion_interaction;
 pub mod mission_progression_truck;
 pub mod player_wellbeing;
+pub mod potential_id_prompt;
 pub mod repellent_expulsion;
+pub mod truck_craft_prompt;
 pub mod tutorial_specific;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -25,3 +27,5 @@ pub(crate) fn app_setup(app: &mut App) {
     tutorial_specific::app_setup(app);
     consumables_and_defense::app_setup(app);
 }
+
+pub use truck_craft_prompt::{InTruckCraftPromptTimer, trigger_in_truck_craft_prompt_system};
