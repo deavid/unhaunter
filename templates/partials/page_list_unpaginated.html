@@ -1,5 +1,81 @@
 <!-- Pages -->
 
-{% for page in pages %}
-  {% include "partials/page_list_item.html" %}
-{% endfor %}
+<!-- News entrie -->
+{% block new %}
+
+{% set page = new_page  %}
+
+<section class="list-item">
+  
+    <div class="head">
+      <div class="check"></div>
+      <h2>Latest News</h2>
+    </div>
+
+
+    {% include "partials/page_info.html" %}
+    <h2 class="title">{{ page.title }}</h2>
+
+
+    {% if prefer_summary %}
+    <section>
+        {% if page.summary %}
+        {{ page.summary | safe }}
+        {% elif page.description %}
+        <p>{{ page.description }}</p>
+        {% endif %}
+    </section>
+    {% else %}
+    <div class=""></div>
+    {% if page.description %}
+    <p>{{ page.description }}</p>
+    {% elif page.summary %}
+    {{ page.summary | safe }}
+    {% endif %}
+    </div>
+    {% endif %}
+
+
+    <a class="cover-click" href="{{ page.permalink }}">{{ page.title }}</a>
+</section>
+{% endblock new %}
+
+<!-- Blog entries -->
+<section class="from-the-blog">
+
+  <div class="head">
+    <div class="check"></div>
+    <h2>From the blog</h2>
+  </div>
+
+  <div class="list-blog">
+    {% for page in filtered_blog_pages %} 
+    <div>
+      {% include "partials/page_info.html" %}
+      <h2 class="title">{{ page.title }}</h2>
+
+
+      {% if prefer_summary %}
+      <section>
+          {% if page.summary %}
+          {{ page.summary | safe }}
+          {% elif page.description %}
+          <p>{{ page.description }}</p>
+          {% endif %}
+      </section>
+      {% else %}
+      <div class=""></div>
+      {% if page.description %}
+      <p>{{ page.description }}</p>
+      {% elif page.summary %}
+      {{ page.summary | safe }}
+      {% endif %}
+      </div>
+      {% endif %}
+      <a class="cover-click" href="{{ page.permalink }}">Read more →</a>
+
+    </div>
+    {% endfor %}
+  </div>
+
+</section>

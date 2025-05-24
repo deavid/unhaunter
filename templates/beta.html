@@ -1,32 +1,45 @@
-{% extends "index.html" %}
-{% block main %}
+{% extends "index.html" %} {% block main %}
 
-<h1 class="mb-16">{{ page.title }}</h1>
+<section class="beta">
+    <h1>{{ page.title }}</h1>
 
-<p>Sometimes we release beta versions to test and showcase new features for early feedback.</p>
+    <div class="container-image">
+        <img
+            src="{{ get_url(path='beta-screenshot.webp') }}"
+            alt="Unhaunter {{ page.extra.beta_version }} Beta Screenshot"
+        />
+    </div>
+    <div class="prose">
+        <p>Sometimes we release beta versions to test and showcase new features for early feedback.</p>
 
-{% if page.extra.beta_available %}
-<p>And we currently have the Beta {{ page.extra.beta_version }} to test!</p>
+        {% if page.extra.beta_available %}
+        <p>And we currently have the Beta {{ page.extra.beta_version }} to test!</p>
 
-<p><a href="https://github.com/deavid/unhaunter/releases/tag/{{ page.extra.beta_version }}">Click here to download
-    Unhaunter {{ page.extra.beta_version }} for Linux+Windows</a></p>
+        <p>
+            <a href="https://github.com/deavid/unhaunter/releases/tag/{{ page.extra.beta_version }}"
+                >Click here to download Unhaunter {{ page.extra.beta_version }} for Linux+Windows</a
+            >
+        </p>
 
-<p><a href="{{ get_url(path='wasm/beta/') }}" target="_blank" rel="noopener">Click here to play {{
-    page.extra.beta_version }} in the browser</a></p>
+        <p>
+            <a href="{{ get_url(path='wasm/beta/') }}" target="_blank" rel="noopener"
+                >Click here to play {{ page.extra.beta_version }} in the browser</a
+            >
+        </p>
 
-<div class="my-8 text-center">
-  <img src="{{ get_url(path='beta-screenshot.webp') }}" alt="Unhaunter {{ page.extra.beta_version }} Beta Screenshot"
-    class="mx-auto max-w-full rounded-lg shadow-lg">
-</div>
+        {{ page.content | safe }} {% else %}
+        <p>
+            Currently we don't have any Beta version, head to <a href="{{ get_url(path='news') }}">news</a> to get the
+            latest stable version.
+        </p>
 
-{{ page.content | safe }}
-
-{% else %}
-<p>Currently we don't have any Beta version, head to <a href="{{ get_url(path='news') }}">news</a> to get the latest
-  stable version.</p>
-
-<p><a href="{{ get_url(path='wasm/main/') }}" target="_blank" rel="noopener">Click here to play the stable version in
-    the browser</a></p>
-{% endif %}
+        <p>
+            <a href="{{ get_url(path='wasm/main/') }}" target="_blank" rel="noopener"
+                >Click here to play the stable version in the browser</a
+            >
+        </p>
+        {% endif %}
+    </div>
+</section>
 
 {% endblock main %}

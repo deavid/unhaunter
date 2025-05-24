@@ -1,25 +1,20 @@
 {% import "macros.html" as macros %}
-<!doctype html>
-<html class="dark" lang="{{ lang | default(value='en') }}">
-  {% include "partials/head.html" %}
-  <body>
-    {% include "partials/header.html" %}
+<!DOCTYPE html>
+<html lang="{{ lang | default(value='en') }}">
+    {% include "partials/head.html" %}
+    <body>
+        {% include "partials/header.html" %} {% include "injects/body_start.html" ignore missing %}
 
-    {% include "injects/body_start.html" ignore missing %}
+        <main class="main-container">
+            {% block main %} {% if paginator is undefined or paginator.current_index == 1 %}
+            <div class="profile">{% include "partials/profile.html" %}</div>
+            {% endif %}
 
-    <main class="main-container">
-      {% block main %}
-      {% if paginator is undefined or paginator.current_index == 1 %}
-      {% include "partials/profile.html" %}
-      {% endif %}
+            <div class="prose">{% include "partials/page_list.html" %}</div>
+            {% endblock main %}
+        </main>
 
-      <div class="prose">
-        {% include "partials/page_list.html" %}
-      </div>
-      {% endblock main %}
-    </main>
-
-    {% include "partials/footer.html" %}
-    {% include "injects/body_end.html" ignore missing %}
-  </body>
+        {% block footer %} {% include "partials/footer.html" %} {% endblock footer %} {% include "injects/body_end.html"
+        ignore missing %}
+    </body>
 </html>
