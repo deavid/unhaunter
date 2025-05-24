@@ -41,7 +41,7 @@ fn quartz_cracked_feedback(
         if let Some(quartz) = g
             .data
             .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d))
+            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d.as_ref()))
         {
             if let Some(prev) = *last_cracks {
                 if quartz.cracks > prev && quartz.cracks < 4 {
@@ -79,7 +79,7 @@ fn quartz_shattered_feedback(
         if let Some(quartz) = g
             .data
             .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d))
+            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d.as_ref()))
         {
             if quartz.cracks >= 4 && !*shattered {
                 walkie_play.set(
@@ -231,7 +231,9 @@ fn trigger_sage_unused_in_relevant_situation_system(
     let player_has_unconsumed_sage = player_gear.as_vec().iter().any(|(gear, _epos)| {
         if gear.kind == GearKind::SageBundle {
             if let Some(sage_data_dyn) = gear.data.as_ref() {
-                if let Some(sage_data) = <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn) {
+                if let Some(sage_data) =
+                    <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref())
+                {
                     return !sage_data.consumed; // Player has sage and it's not consumed
                 }
             }
@@ -320,7 +322,8 @@ fn trigger_sage_activated_ineffectively_system(
     for (gear_item, _epos) in player_gear.as_vec() {
         if gear_item.kind == GearKind::SageBundle {
             if let Some(sage_data_dyn) = gear_item.data.as_ref() {
-                current_sage_data = <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn);
+                current_sage_data =
+                    <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref());
                 break;
             }
         }
@@ -479,7 +482,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                     if gear_item.kind == GearKind::SageBundle {
                         if let Some(sage_data_dyn) = gear_item.data.as_ref() {
                             if let Some(sage_data) =
-                                <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn)
+                                <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref())
                             {
                                 if !sage_data.consumed {
                                     player_has_unconsumed_sage_now = true;
@@ -505,9 +508,9 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                     for (gear_item, _epos) in player_gear.as_vec() {
                         if gear_item.kind == GearKind::SageBundle {
                             if let Some(sage_data_dyn) = gear_item.data.as_ref() {
-                                if let Some(sage_data) =
-                                    <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn)
-                                {
+                                if let Some(sage_data) = <dyn Any>::downcast_ref::<SageBundleData>(
+                                    sage_data_dyn.as_ref(),
+                                ) {
                                     if sage_data.is_active {
                                         *sage_was_activated_during_this_hunt = true;
                                         // info!("Sage activated by player during current hunt.");

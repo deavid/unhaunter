@@ -228,7 +228,7 @@ fn trigger_thermometer_non_freezing_fixation(
             .right_hand
             .data
             .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d))
+            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d.as_ref()))
         {
             if thermo.enabled {
                 let temp_c = uncore::kelvin_to_celsius(thermo.temp);

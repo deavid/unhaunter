@@ -165,7 +165,7 @@ fn trigger_repellent_used_too_far_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active = rep_data.active && rep_data.qty > 0;
         }
     }
@@ -254,7 +254,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
         }
     }
@@ -349,7 +349,8 @@ fn trigger_repellent_exhausted_correct_type_system(
         for (gear, _epos) in player_gear.as_vec() {
             if gear.kind == GearKind::RepellentFlask {
                 if let Some(rep_data_dyn) = gear.data.as_ref() {
-                    if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn)
+                    if let Some(rep_data) =
+                        <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
                     {
                         // Condition 1: Flask is now empty
                         if rep_data.qty == 0 {
