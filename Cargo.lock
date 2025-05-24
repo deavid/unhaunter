@@ -5121,6 +5121,7 @@ dependencies = [
  "ungearitems",
  "unlight",
  "unmapload",
+ "unprofile",
  "unsettings",
  "unstd",
 ]
@@ -5137,6 +5138,7 @@ dependencies = [
  "serde",
  "thiserror 2.0.12",
  "uncore",
+ "unprofile",
  "unsettings",
 ]
 
@@ -5458,6 +5460,7 @@ version = "0.3.0-beta5-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "enum-iterator",
  "fastapprox",
  "ordered-float",
  "rand 0.9.1",
@@ -5467,6 +5470,7 @@ dependencies = [
  "unprofile",
  "unsettings",
  "unstd",
+ "unwalkiecore",
 ]
 
 [[package]]

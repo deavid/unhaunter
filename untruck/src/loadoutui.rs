@@ -7,7 +7,6 @@ use uncore::components::player_inventory::{Inventory, InventoryNext};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty; // Use CurrentDifficulty
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::evidence::Evidence;
 use uncore::types::evidence_status::EvidenceStatus;
 use uncore::types::gear::equipmentposition::Hand;
@@ -15,6 +14,7 @@ use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
 use unstd::materials::UIPanelMaterial;
 

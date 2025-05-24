@@ -1,5 +1,6 @@
 use bevy::app::App;
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use uncore::{
     components::{board::position::Position, player_sprite::PlayerSprite},
     resources::roomdb::RoomDB,
@@ -14,33 +15,34 @@ fn very_low_sanity_no_truck_return(
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
-    mut timer: Local<f32>,
+    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
     time: Res<Time>,
 ) {
     if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     }
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
     if player.sanity() >= 30.0 {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     }
     let player_bpos = pos.to_board_position();
     if roomdb.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
         return;
     }
-    *timer += time.delta().as_secs_f32();
-    if *timer > 20.0 {
+    stopwatch.tick(time.delta()); // Changed from *timer += time.delta().as_secs_f32();
+    if stopwatch.elapsed_secs() > 20.0 {
+        // Changed from *timer > 20.0
         walkie_play.set(
             WalkieEvent::VeryLowSanityNoTruckReturn,
             time.elapsed_secs_f64(),
         );
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0;
     }
 }
 
@@ -51,33 +53,34 @@ fn low_health_general_warning(
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
-    mut timer: Local<f32>,
+    mut stopwatch: Local<Stopwatch>, // Changed from timer: Local<f32>
     time: Res<Time>,
 ) {
     if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0
         return;
     }
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
     if player.health >= 50.0 {
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0
         return;
     }
     let player_bpos = pos.to_board_position();
     if roomdb.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0
         return;
     }
-    *timer += time.delta().as_secs_f32();
-    if *timer > 30.0 {
+    stopwatch.tick(time.delta()); // Changed from *timer += time.delta().as_secs_f32()
+    if stopwatch.elapsed_secs() > 30.0 {
+        // Changed from *timer > 30.0
         walkie_play.set(
             WalkieEvent::LowHealthGeneralWarning,
             time.elapsed_secs_f64(),
         );
-        *timer = 0.0;
+        stopwatch.reset(); // Changed from *timer = 0.0
     }
 }
 

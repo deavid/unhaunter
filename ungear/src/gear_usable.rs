@@ -1,13 +1,15 @@
-use crate::components::board::position::Position;
-use crate::components::ghost_sprite::GhostSprite;
-use crate::systemparam::gear_stuff::GearStuff;
-use crate::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
-use crate::types::ghost::types::GhostType;
+use crate::gear_stuff::GearStuff;
 use bevy::color::Color;
+use std::any::Any;
+use uncore::components::board::position::Position;
+use uncore::components::ghost_sprite::GhostSprite;
+use uncore::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
+use uncore::types::ghost::types::GhostType; // Added
 
 /// Provides a common interface for all gear types, enabling consistent
 /// interactions.
-pub trait GearUsable: std::fmt::Debug + Sync + Send {
+pub trait GearUsable: std::fmt::Debug + Sync + Send + Any {
+    // Added Any trait bound
     /// Returns the display name of the gear (e.g., "EMF Reader").
     fn get_display_name(&self) -> &'static str;
 
@@ -96,6 +98,16 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send {
     fn is_sound_showing_evidence(&self) -> f32 {
         0.0
     }
+
+    /// Returns true if the gear's blinking hint is currently active.
+    fn is_blinking_hint_active(&self) -> bool {
+        false
+    }
+
+    // ATTENTION: The "as_any" methods are **NOT NEEDED** for downcasting.
+    // .. **DO NOT ENABLE THEM**.
+    // fn as_any(&self) -> &dyn Any;
+    // fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl Clone for Box<dyn GearUsable> {

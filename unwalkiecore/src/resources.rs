@@ -2,6 +2,7 @@ use crate::events::WalkieEvent;
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng;
 use uncore::random_seed;
+use uncore::types::evidence::Evidence;
 use unwalkie_types::VoiceLineData;
 
 #[derive(Clone, Debug, Default)]
@@ -21,6 +22,8 @@ pub struct WalkiePlay {
     pub last_message_time: f64,
     pub truck_accessed: bool,
     pub urgent_pending: bool,
+    pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
+    pub highlight_craft_button: bool,
 }
 
 impl Default for WalkiePlay {
@@ -35,6 +38,8 @@ impl Default for WalkiePlay {
             truck_accessed: Default::default(),
             urgent_pending: Default::default(),
             other_mission_event_count: Default::default(),
+            evidence_hinted_not_logged_via_walkie: None,
+            highlight_craft_button: false, // Added
         }
     }
 }
@@ -126,6 +131,27 @@ impl WalkiePlay {
         self.current_voice_line = None;
         // Keep the other mission event count, so it can be used in the next mission.
         self.other_mission_event_count = omec;
+    }
+
+    /// Mark evidence as hinted via walkie for potential journal blinking
+    pub fn set_evidence_hint(&mut self, evidence: Evidence, time: f64) {
+        self.evidence_hinted_not_logged_via_walkie = Some((evidence, time));
+    }
+
+    /// Clear evidence hint when it's been acknowledged in journal
+    pub fn clear_evidence_hint(&mut self) -> Option<Evidence> {
+        if let Some((evidence, _)) = self.evidence_hinted_not_logged_via_walkie.take() {
+            Some(evidence)
+        } else {
+            None
+        }
+    }
+
+    /// Check if there's a pending evidence hint
+    pub fn has_evidence_hint(&self, evidence: Evidence) -> bool {
+        self.evidence_hinted_not_logged_via_walkie
+            .map(|(e, _)| e == evidence)
+            .unwrap_or(false)
     }
 }
 

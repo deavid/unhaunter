@@ -1,5 +1,7 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
+use crate::gear_stuff::GearStuff;
+use crate::gear_usable::GearUsable;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -9,8 +11,6 @@ use uncore::components::player_inventory::{Inventory, InventoryNext, InventorySt
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::sound::SoundEvent;
 use uncore::resources::looking_gear::LookingGear;
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unsettings::audio::{AudioSettings, SoundOutput};
 

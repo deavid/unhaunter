@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use std::str::FromStr;
 use uncore::events::loadlevel::LevelReadyEvent;
 use unprofile::PlayerProfileData;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
+
+/// Helper function to parse walkie event strings back to enum variants
+fn parse_walkie_event(event_str: &str) -> Option<WalkieEvent> {
+    enum_iterator::all::<WalkieEvent>().find(|event| format!("{:?}", event) == event_str)
+}
 
 /// System that loads walkie event data from player profile into WalkiePlay resource
 /// when a level loads. This allows the game to track which walkie events were played
@@ -28,7 +32,7 @@ pub fn load_walkie_event_stats(
     for (event_id_str, stats) in player_profile.walkie_event_stats.iter() {
         // Parse the string representation back into a WalkieEvent enum
         // This relies on the Debug representation format used when storing the events
-        if let Ok(walkie_event) = WalkieEvent::from_str(event_id_str) {
+        if let Some(walkie_event) = parse_walkie_event(event_id_str) {
             // Store the play count in the other_mission_event_count HashMap
             info!(
                 "Loaded walkie event: {:?} with play count: {}",

@@ -7,8 +7,8 @@ use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::position::Position;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
-use uncore::systemparam::gear_stuff::GearStuff;
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_stuff::GearStuff;
 
 /// Allows the player to hide in a designated hiding spot.
 ///

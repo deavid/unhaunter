@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use bevy_persistent::Persistent;
 
 use uncore::behavior::component::Door;
@@ -25,23 +26,32 @@ fn check_player_stuck_at_start(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut stuck_time: Local<f32>,
+    mut stuck_timer: Local<Stopwatch>, // Changed from Local<f32>
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
-    let mut min_time_secs: f32 = 30.0;
+    let mut min_time_secs: f32 = 7.0;
     if app_state.get() != &AppState::InGame {
-        *stuck_time = 0.0;
+        stuck_timer.reset(); // Changed from *stuck_time = 0.0
         return;
     }
     if *game_state.get() != GameState::None {
-        *stuck_time = 0.0;
+        stuck_timer.reset(); // Changed from *stuck_time = 0.0
         return;
     }
     let Ok((player_position, player_sprite)) = player_query.get_single() else {
         return;
     };
 
+    if player_profile.statistics.total_missions_completed > 1 {
+        min_time_secs = 15.0;
+    }
     if player_profile.statistics.total_missions_completed > 3 {
+        min_time_secs = 30.0;
+    }
+    if player_profile.statistics.total_missions_completed > 6 {
+        min_time_secs = 60.0;
+    }
+    if player_profile.statistics.total_missions_completed > 9 {
         min_time_secs = 90.0;
     }
     // If the player is already inside the location, reset the stuck time
@@ -50,7 +60,7 @@ fn check_player_stuck_at_start(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        *stuck_time = 0.0;
+        stuck_timer.reset(); // Changed from *stuck_time = 0.0
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
         return;
     }
@@ -58,14 +68,15 @@ fn check_player_stuck_at_start(
     let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
 
     if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
-        *stuck_time += time.delta_secs();
+        stuck_timer.tick(time.delta()); // Changed from *stuck_time += time.delta_secs()
     } else {
-        *stuck_time = 0.0;
+        stuck_timer.reset(); // Changed from *stuck_time = 0.0
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 
-    if *stuck_time > min_time_secs {
-        // warn!("Player stuck at start for {} seconds", *stuck_time);
+    if stuck_timer.elapsed_secs() > min_time_secs {
+        // Changed from *stuck_time > min_time_secs
+        // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
         walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 }
@@ -81,12 +92,12 @@ fn check_erratic_movement_early(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &Direction, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut not_entered_location_time: Local<f32>,
+    mut not_entered_timer: Local<Stopwatch>, // Changed from Local<f32>
     mut avg_position: Local<Option<Position>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *not_entered_location_time = 0.0;
+        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
         *avg_position = None;
         return;
     }
@@ -112,7 +123,7 @@ fn check_erratic_movement_early(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        *not_entered_location_time = 0.0;
+        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
         walkie_play.mark(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
         return;
     }
@@ -122,7 +133,7 @@ fn check_erratic_movement_early(
     let distance_from_avg = player_position.distance(m_avg);
 
     if distance_from_avg > 2.0 {
-        *not_entered_location_time = 0.0;
+        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
         return;
     }
 
@@ -131,10 +142,11 @@ fn check_erratic_movement_early(
         && player_direction.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
-        *not_entered_location_time += time.delta_secs();
+        not_entered_timer.tick(time.delta()); // Changed from *not_entered_location_time += time.delta_secs()
     }
 
-    if *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS {
+    if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
+        // Changed from *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS
         walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
     }
 }
@@ -151,14 +163,14 @@ fn check_door_interaction_hesitation(
     player_query: Query<(&Position, &PlayerSprite)>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut hesitation_timer: Local<f32>,
+    mut hesitation_timer: Local<Stopwatch>, // Changed from Local<f32>
 ) {
     if app_state.get() != &AppState::InGame {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
         return;
     }
     if *game_state.get() != GameState::None {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
         return;
     }
 
@@ -173,7 +185,7 @@ fn check_door_interaction_hesitation(
         .is_none();
 
     if !is_outside {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
         return;
     }
 
@@ -191,19 +203,19 @@ fn check_door_interaction_hesitation(
 
     let distance_to_door = player_position.distance(door_position);
     if distance_to_door > 1.5 || door_behavior.state() != TileState::Closed {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
         return;
     }
 
-    *hesitation_timer += time.delta_secs();
+    hesitation_timer.tick(time.delta()); // Changed from *hesitation_timer += time.delta_secs()
 
-    if *hesitation_timer > 10.0
+    if hesitation_timer.elapsed_secs() > 5.0 // Changed from *hesitation_timer > 10.0
         && walkie_play.set(
             WalkieEvent::DoorInteractionHesitation,
             time.elapsed_secs_f64(),
         )
     {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
     }
 }
 
@@ -215,14 +227,14 @@ fn trigger_struggling_with_grab_drop(
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&ungear::components::playergear::PlayerGear, &PlayerSprite)>,
-    mut fail_timer: Local<f32>,
+    mut fail_timer: Local<Stopwatch>, // Changed from Local<f32>
 ) {
     if app_state.get() != &AppState::InGame {
-        *fail_timer = 0.0;
+        fail_timer.reset(); // Changed from *fail_timer = 0.0
         return;
     }
     if *game_state.get() != GameState::None {
-        *fail_timer = 0.0;
+        fail_timer.reset(); // Changed from *fail_timer = 0.0
         return;
     }
     let Ok((player_gear, player_sprite)) = player_query.get_single() else {
@@ -236,14 +248,15 @@ fn trigger_struggling_with_grab_drop(
         .all(|g| !matches!(g.kind, uncore::types::gear_kind::GearKind::None));
     if right_full && all_full {
         if keyboard_input.just_pressed(player_sprite.controls.grab) {
-            *fail_timer += time.delta_secs();
+            fail_timer.tick(time.delta()); // Changed from *fail_timer += time.delta_secs()
         }
-        if *fail_timer > 2.0 {
+        if fail_timer.elapsed_secs() > 2.0 {
+            // Changed from *fail_timer > 2.0
             walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
-            *fail_timer = 0.0;
+            fail_timer.reset(); // Changed from *fail_timer = 0.0
         }
     } else {
-        *fail_timer = 0.0;
+        fail_timer.reset(); // Changed from *fail_timer = 0.0
     }
 }
 

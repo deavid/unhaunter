@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use bevy::prelude::*;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::resources::board_data::BoardData;
@@ -10,7 +8,6 @@ use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
 use uncore::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
-use ungearitems::prelude::RepellentFlask;
 use untruck::uibutton::TruckButtonState;
 use untruck::uibutton::TruckButtonType;
 use untruck::uibutton::TruckUIButton;
@@ -35,35 +32,24 @@ fn trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system(
     let current_gs_val = *game_state.get();
     let previous_gs_val = *prev_game_state;
     *prev_game_state = current_gs_val;
-
+    // FIXME: Somehow this triggers still being in the truck or something? like, too early or similar.
     // --- Check conditions when player HAS JUST LEFT THE TRUCK ---
     if current_gs_val == GameState::None && previous_gs_val == GameState::Truck {
-        if let Some(identified_ghost_via_guess) = gg.ghost_type {
+        if let Some(_identified_ghost_via_guess) = gg.ghost_type {
             // Player just left the truck, and GhostGuess indicates a single ghost was selected.
 
             // Check if player has the correct repellent for this guessed ghost.
             let Ok(player_gear) = player_query.get_single() else {
                 return;
             };
-            let mut player_has_correct_repellent = false;
+            let mut player_has_repellent = false;
             for (gear, _epos) in player_gear.as_vec() {
                 if gear.kind == GearKind::RepellentFlask {
-                    if let Some(rep_data_dyn) = gear.data.as_ref() {
-                        if let Some(rep_data) =
-                            <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn)
-                        {
-                            if rep_data.liquid_content == Some(identified_ghost_via_guess)
-                                && rep_data.qty > 0
-                            {
-                                player_has_correct_repellent = true;
-                                break;
-                            }
-                        }
-                    }
+                    player_has_repellent = true;
                 }
             }
 
-            if !player_has_correct_repellent {
+            if !player_has_repellent {
                 // They left the truck after their journal pointed to one ghost (via GhostGuess),
                 // and they don't have the correct repellent in their inventory.
                 // Add a small delay here using a Local timer if desired, or rely on WalkiePlay cooldowns.
@@ -238,6 +224,7 @@ fn trigger_evidence_confirmed_feedback_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
+    truck_button_query: Query<&TruckUIButton>,
     // TODO: player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting
 ) {
     // System Run Condition
@@ -251,6 +238,22 @@ fn trigger_evidence_confirmed_feedback_system(
         if let Some(reading) = evidence_readings.get_reading(evidence_type) {
             if reading.clarity >= CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD {
                 // Evidence is currently clearly visible/audible
+
+                // Check if player has already marked this evidence in their journal
+                let mut player_already_marked_evidence = false;
+                for button_data in truck_button_query.iter() {
+                    if button_data.class == TruckButtonType::Evidence(evidence_type) {
+                        if button_data.status == TruckButtonState::Pressed {
+                            player_already_marked_evidence = true;
+                        }
+                        break; // Found the button for this evidence type
+                    }
+                }
+
+                // Skip hint if player has already acknowledged this evidence
+                if player_already_marked_evidence {
+                    continue;
+                }
 
                 // TODO: Add PlayerProfileData check here to limit hints for experienced players
                 // e.g., if player_profile.level > 5 && evidence_type == Evidence::FreezingTemp { continue; }
@@ -270,6 +273,7 @@ fn trigger_evidence_confirmed_feedback_system(
                     // Attempt to set the event. If successful, mark it in the tracker.
                     if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
                         // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
+                        walkie_play.set_evidence_hint(evidence_type, time.elapsed_secs_f64());
                     }
                 }
             }
