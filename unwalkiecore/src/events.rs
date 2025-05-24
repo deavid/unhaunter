@@ -355,7 +355,7 @@ impl WalkieEvent {
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
             WalkieEvent::BreachShowcase => 9000.0 * count,
-            WalkieEvent::GhostShowcase => 900.0 * count,
+            WalkieEvent::GhostShowcase => 9000.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
             WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
             WalkieEvent::GearSelectedNotActivated => 60.0 * count,
@@ -392,17 +392,17 @@ impl WalkieEvent {
             WalkieEvent::JournalConflictingEvidence => 300.0 * count, // Trigger every 5 minutes if conditions met
 
             // --- Evidence Confirmation Events ---
-            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count,
 
             // --- Proactive Crafting Prompts ---
-            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count, // e.g., 3 minutes, then 6, etc.
+            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count,
 
             // --- Mission Progression and Truck Events ---
             WalkieEvent::ClearEvidenceFoundNoActionCKey => 120.0 * count,

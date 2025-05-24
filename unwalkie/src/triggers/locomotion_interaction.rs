@@ -295,87 +295,68 @@ fn trigger_struggling_with_grab_drop(
     }
 }
 
-/// Triggers a walkie-talkie event if the player struggles with hiding/unhiding actions.
+/// Triggers a walkie-talkie event if the player struggles to hide by holding [E] for over 2 seconds while not hidden.
 ///
-/// This includes:
-/// - Trying to hide while carrying an item (right hand not empty)
-/// - Unhiding immediately after hiding (within 2 seconds)
-/// - Failing to hide during a hunt due to carrying an item
+/// This detects when a player holds the hide key ([E]) for over 2 seconds consecutively
+/// without successfully hiding, indicating they're struggling because they're carrying a house item.
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
+        &uncore::components::player_sprite::PlayerSprite,
         Without<uncore::components::player::Hiding>,
     >,
-    hiding_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
-        With<uncore::components::player::Hiding>,
-    >,
-    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut last_hide_state: Local<Option<(bool, f32)>>, // (is_hiding, time_of_change)
+    mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
     if *game_state.get() != GameState::None {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
-    // Determine if player is hiding
-    let (is_hiding, player_gear) = if let Ok((_, gear)) = hiding_query.get_single() {
-        (true, gear)
-    } else if let Ok((_, gear)) = player_query.get_single() {
-        (false, gear)
-    } else {
+
+    // Only proceed if player is not hiding
+    let Ok(player_sprite) = player_query.get_single() else {
+        *hide_key_timer = None;
         return;
     };
-    let now = time.elapsed_secs_f64() as f32;
 
-    // Track hide/unhide transitions
-    if let Some((was_hiding, last_change_time)) = *last_hide_state {
-        if !was_hiding && is_hiding {
-            // Player just hid
-            // If right hand is not empty, trigger event
-            if !player_gear.empty_right_handed() {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((true, now));
-        } else if was_hiding && !is_hiding {
-            // Player just unhid
-            let hide_duration = now - last_change_time;
-            if hide_duration < 2.0 {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((false, now));
+    // Check if the hide key (activate key, typically [E]) is currently pressed
+    let hide_key_pressed = keyboard_input.pressed(player_sprite.controls.activate);
+
+    if hide_key_pressed {
+        // Start or continue timer if key is pressed
+        if hide_key_timer.is_none() {
+            *hide_key_timer = Some(Stopwatch::new());
         }
-        // else: no state change
-    } else {
-        *last_hide_state = Some((is_hiding, now));
-    }
 
-    // If a hunt is ongoing, and player is hiding with an item in hand, trigger event
-    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
-    if hunt_active && is_hiding && !player_gear.empty_right_handed() {
-        walkie_play.set(
-            WalkieEvent::StrugglingWithHideUnhide,
-            time.elapsed_secs_f64(),
-        );
+        if let Some(ref mut timer) = *hide_key_timer {
+            timer.tick(time.delta());
+
+            // If player has been holding [E] for over 2 seconds while not hidden, trigger event
+            if timer.elapsed_secs() > 2.0 && walkie_play.set(
+                    WalkieEvent::StrugglingWithHideUnhide,
+                    time.elapsed_secs_f64(),
+                ) {
+                // Reset timer after successful trigger to avoid spam
+                *hide_key_timer = None;
+            }
+        }
+    } else {
+        // Reset timer if key is not pressed
+        *hide_key_timer = None;
     }
 }
 
 /// Triggers a walkie-talkie event if the player stays hidden for too long after a hunt ends.
 ///
 /// If the player remains hidden for 10+ seconds after the ghost's hunt ends, this event is triggered to inform them it's safe to unhide.
+/// This event will not fire if any ghost's rage is above 20% of its rage limit.
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
@@ -401,6 +382,12 @@ fn trigger_player_stays_hidden_too_long(
     // Check if any ghost is currently hunting
     let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
     if hunt_active {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Check if any ghost's rage is above 20% of its rage limit
+    let high_rage = ghost_query.iter().any(|g| g.rage > g.rage_limit * 0.2);
+    if high_rage {
         *post_hunt_hidden_timer = None;
         return;
     }
