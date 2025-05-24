@@ -4,9 +4,19 @@ use bevy::prelude::Resource;
 
 #[derive(Resource, Default, Debug)]
 pub struct PotentialIDTimer {
-    // Stores: (Newly detected high-clarity evidence,
-    //          The single potential ghost identified,
-    //          Initial acknowledgement count for this evidence on gear,
-    //          Time when this potential ID was first detected)
-    pub data: Option<(Evidence, GhostType, u32, f32)>,
+    /// Stores information about a potential ghost identification.
+    pub data: Option<PotentialIDData>,
+}
+
+/// Represents data associated with a potential ghost identification.
+#[derive(Debug, Default)]
+pub struct PotentialIDData {
+    /// Newly detected high-clarity evidence.
+    pub evidence: Evidence,
+    /// The single potential ghost identified.
+    pub ghost_type: GhostType,
+    /// Initial acknowledgement count for this evidence on gear.
+    pub ack_count: u32,
+    /// Time when this potential ID was first detected.
+    pub detection_time: f32,
 }
