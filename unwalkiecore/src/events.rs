@@ -566,7 +566,7 @@ impl WalkieEvent {
                 "Ghost gone! Return to van and select \'End Mission\'."
             }
             WalkieEvent::HasRepellentEntersLocation => {
-                "Repellent equipped! Use [R]/[Tab] near ghost/breach."
+                "Repellent equipped! Use [R] to open the bottle and ensure to be close to the ghost."
             }
             WalkieEvent::RepellentUsedTooFar => {
                 "Repellent used too far away! Get closer to the ghost or its breach."

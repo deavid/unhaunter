@@ -113,10 +113,16 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     mut walkie_play: ResMut<WalkiePlay>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut tracker: ResMut<LoadoutInteractionTracker>,
+    difficulty: Res<uncore::difficulty::CurrentDifficulty>,
     _player_q: Query<Entity, With<PlayerSprite>>,
 ) {
     if *app_state.get() != AppState::InGame {
         *prev_game_state = *game_state.get(); // Keep prev_game_state updated
+        return;
+    }
+
+    // Only trigger if van auto-open is enabled in difficulty settings
+    if !difficulty.0.van_auto_open {
         return;
     }
 
