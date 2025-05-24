@@ -9,7 +9,7 @@ pub struct PotentialIDTimer {
 }
 
 /// Represents data associated with a potential ghost identification.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct PotentialIDData {
     /// Newly detected high-clarity evidence.
     pub evidence: Evidence,

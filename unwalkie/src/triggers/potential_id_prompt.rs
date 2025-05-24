@@ -26,9 +26,8 @@ pub fn potential_id_prompt_system(
     const PROMPT_DELAY_SECONDS: f32 = 20.0;
 
     // --- Part e: Handle Loss of Condition for Active Timer (run this first) ---
-    if let Some((timed_evidence, _potential_ghost, _initial_ack_count, _detection_time)) =
-        timer.data
-    {
+    if let Some(ref potential_data) = timer.data {
+        let timed_evidence = potential_data.evidence;
         let Some(ev_reading) = current_evidence_readings.get_reading(timed_evidence) else {
             return;
         };
@@ -129,12 +128,12 @@ pub fn potential_id_prompt_system(
                     //     identified_ghost.name(),
                     //     initial_ack_count
                     // );
-                    timer.data = Some((
-                        current_ev_candidate,
-                        identified_ghost,
-                        initial_ack_count,
-                        time.elapsed_secs(),
-                    ));
+                    timer.data = Some(uncore::resources::potential_id_timer::PotentialIDData {
+                        evidence: current_ev_candidate,
+                        ghost_type: identified_ghost,
+                        ack_count: initial_ack_count,
+                        detection_time: time.elapsed_secs(),
+                    });
                     break; // Start timer for the first one found, then process it next frame
                 }
             }
@@ -142,8 +141,11 @@ pub fn potential_id_prompt_system(
     }
 
     // --- Part d: Check Active Timer and Trigger Walkie ---
-    if let Some((timed_evidence, _potential_ghost, initial_ack_count, detection_time)) = timer.data
-    {
+    if let Some(ref potential_data) = timer.data {
+        let timed_evidence = potential_data.evidence;
+        let initial_ack_count = potential_data.ack_count;
+        let detection_time = potential_data.detection_time;
+
         if time.elapsed_secs() - detection_time > PROMPT_DELAY_SECONDS {
             let current_ack_count = player_profile
                 .times_evidence_acknowledged_on_gear

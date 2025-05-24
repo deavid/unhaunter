@@ -104,8 +104,8 @@ pub fn button_system(
 
                 // Cancel PotentialIDTimer if the logged evidence matches
                 if tui_button.status == TruckButtonState::Pressed {
-                    if let Some((timed_evidence, _, _, _)) = potential_id_timer.data {
-                        if timed_evidence == clicked_evidence_type {
+                    if let Some(potential_data) = &potential_id_timer.data {
+                        if potential_data.evidence == clicked_evidence_type {
                             // info!(
                             //     "Evidence {:?} logged in journal, cancelling PotentialIDTimer.",
                             //     clicked_evidence_type
