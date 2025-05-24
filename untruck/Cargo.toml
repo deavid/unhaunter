@@ -21,3 +21,4 @@ rand = { workspace = true }
 fastapprox = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
+enum-iterator = { workspace = true }

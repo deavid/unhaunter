@@ -5460,6 +5460,7 @@ version = "0.3.0-beta5-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "enum-iterator",
  "fastapprox",
  "ordered-float",
  "rand 0.9.1",
