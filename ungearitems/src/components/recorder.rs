@@ -10,7 +10,7 @@ use uncore::{
     metric_recorder::SendMetric,
     resources::{board_data::BoardData, roomdb::RoomDB},
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-}; 
+};
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -95,7 +95,7 @@ impl GearUsable for Recorder {
             if self.evp_recorded_display {
                 // This state implies evidence has been found and is being actively displayed
                 if self.blinking_hint_active {
-                    if self.frame_counter % 40 < 20 {
+                    if self.frame_counter % 30 < 15 {
                         "- EVP RECORDED !!! -".to_string()
                     } else {
                         "- EVP RECORDED     -".to_string()

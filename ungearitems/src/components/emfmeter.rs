@@ -138,22 +138,18 @@ impl GearUsable for EMFMeter {
         // Regular display (when truly on and not glitching, checked by self.is_enabled())
         let msg = if self.is_enabled() {
             let emf_status_text = self.emf_level.to_status();
-            if self.blinking_hint_active && self.emf_level == EMFLevel::EMF5 {
-                let blinking_emf_text = if self.frame_counter % 40 < 20 {
-                    format!(">[{}]<", emf_status_text)
-                } else {
-                    format!("  {}  ", emf_status_text)
-                };
-                format!(
-                    "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
-                    self.emf, blinking_emf_text, self.miasma_pressure_2,
-                )
+            let blinking_emf_text = if self.frame_counter % 30 < 15
+                && self.blinking_hint_active
+                && self.emf_level == EMFLevel::EMF5
+            {
+                format!(">[{}]<", emf_status_text)
             } else {
-                format!(
-                    "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
-                    self.emf, emf_status_text, self.miasma_pressure_2,
-                )
-            }
+                format!("  {}  ", emf_status_text)
+            };
+            format!(
+                "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
+                self.emf, blinking_emf_text, self.miasma_pressure_2,
+            )
         } else {
             "".to_string()
         };
@@ -245,11 +241,7 @@ impl GearUsable for EMFMeter {
                     .copied()
                     .unwrap_or(0);
                 self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
-            } else {
-                self.blinking_hint_active = false;
             }
-        } else {
-            self.blinking_hint_active = false;
         }
         if self.enabled {
             let delta = 10.0 / (self.emf + 0.5).powf(1.5);

@@ -103,7 +103,7 @@ impl GearUsable for GeigerCounter {
         let msg = if self.is_enabled() {
             let cpm_text = format!("{:.1}", self.sound_display);
             if self.blinking_hint_active {
-                let blinking_cpm_text = if self.frame_counter % 40 < 20 {
+                let blinking_cpm_text = if self.frame_counter % 30 < 15 {
                     format!(">[{}]<", cpm_text)
                 } else {
                     format!("  {}  ", cpm_text)

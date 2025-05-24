@@ -52,16 +52,11 @@ impl TruckUIButton {
     pub fn border_color(&self, interaction: Interaction) -> Color {
         let color = match self.class {
             TruckButtonType::Evidence(_) => {
-                // Apply blinking effect for evidence buttons
-                if self.blinking_hint_active && self.frame_counter % 40 < 20 {
-                    // Bright yellow/orange border when blinking
-                    Color::srgb(1.0, 0.8, 0.0)
-                } else {
-                    match interaction {
-                        Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                        Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
-                        Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
-                    }
+                // Border color for evidence buttons (blinking handled by journal system)
+                match interaction {
+                    Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
+                    Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
+                    Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
                 }
             }
             TruckButtonType::Ghost(_) => match interaction {
@@ -88,7 +83,7 @@ impl TruckUIButton {
         let color = match self.class {
             TruckButtonType::Evidence(_) => match self.status {
                 TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
-                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed evidence
                 TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
             TruckButtonType::Ghost(_) => match self.status {

@@ -77,7 +77,7 @@ impl GearUsable for Thermometer {
             let temp_celsius = kelvin_to_celsius(self.temp);
             if self.blinking_hint_active {
                 let temp_str = format!("{:>5.1}ºC", temp_celsius);
-                let blinking_temp_str = if self.frame_counter % 40 < 20 {
+                let blinking_temp_str = if self.frame_counter % 30 < 15 {
                     format!(">[{}]<", temp_str.trim())
                 } else {
                     format!("  {}  ", temp_str.trim())

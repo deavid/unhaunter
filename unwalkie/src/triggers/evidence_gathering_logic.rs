@@ -32,7 +32,7 @@ fn trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system(
     let current_gs_val = *game_state.get();
     let previous_gs_val = *prev_game_state;
     *prev_game_state = current_gs_val;
-
+    // FIXME: Somehow this triggers still being in the truck or something? like, too early or similar.
     // --- Check conditions when player HAS JUST LEFT THE TRUCK ---
     if current_gs_val == GameState::None && previous_gs_val == GameState::Truck {
         if let Some(_identified_ghost_via_guess) = gg.ghost_type {

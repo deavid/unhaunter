@@ -40,7 +40,7 @@ impl Plugin for UnhaunterTruckPlugin {
                     ui::update_tab_interactions,
                     loadoutui::update_loadout_buttons,
                     loadoutui::button_clicked,
-                    update_journal_button_blinking_system, // Added the new system
+                    update_journal_button_blinking_system,
                 )
                     .run_if(in_state(GameState::Truck)),
             );
