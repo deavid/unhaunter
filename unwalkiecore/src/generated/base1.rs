@@ -8,17 +8,79 @@ use crate::ConceptTrait;
 /// Defines the different voice line concepts available in this module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Base1Concept {
+    AllObjectivesMetReminderToEndMission,
     GearInVan,
     GhostNearHunt,
     MissionStartEasy,
-    AllObjectivesMetReminderToEndMission, // Added
-    PlayerLeavesTruckWithoutChangingLoadout, // Added
+    PlayerLeavesTruckWithoutChangingLoadout,
 }
 
 impl Base1Concept {
     /// Retrieves a vector of `VoiceLineData` for this concept variant.
     pub fn get_lines(&self) -> Vec<VoiceLineData> {
         match self {
+            Self::AllObjectivesMetReminderToEndMission => vec![
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_01.ogg".to_string(),
+                    subtitle_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_02.ogg".to_string(),
+                    subtitle_text: "That's everything on the checklist. You can return to the van now to finish the mission.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_03.ogg".to_string(),
+                    subtitle_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.".to_string(),
+                    tags: vec![WalkieTag::Encouraging, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_04.ogg".to_string(),
+                    subtitle_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::LongDetailed, WalkieTag::ReminderMedium],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_05.ogg".to_string(),
+                    subtitle_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_06.ogg".to_string(),
+                    subtitle_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_07.ogg".to_string(),
+                    subtitle_text: "You've accomplished everything required. The truck is your ticket home, so to speak.".to_string(),
+                    tags: vec![WalkieTag::Encouraging, WalkieTag::MediumLength, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_08.ogg".to_string(),
+                    subtitle_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_09.ogg".to_string(),
+                    subtitle_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_10.ogg".to_string(),
+                    subtitle_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.".to_string(),
+                    tags: vec![WalkieTag::LongDetailed, WalkieTag::NeutralObservation, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+            ],
             Self::GearInVan => vec![
                 VoiceLineData {
                     ogg_path: "walkie/generated/base1/gearinvan_01.ogg".to_string(),
@@ -337,32 +399,66 @@ impl Base1Concept {
                     length_seconds: 7,
                 },
             ],
-            Self::AllObjectivesMetReminderToEndMission => vec![
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/allobjectivesmet_01.ogg".to_string(),
-                    subtitle_text: "Looks like you've done everything on the list. Time to pack up and head home.".to_string(),
-                    tags: vec![WalkieTag::NeutralObservation, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
-                    length_seconds: 5,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/allobjectivesmet_02.ogg".to_string(),
-                    subtitle_text: "All objectives complete. Nice work! You can end the mission from the truck now.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
-                    length_seconds: 5,
-                },
-            ],
             Self::PlayerLeavesTruckWithoutChangingLoadout => vec![
                 VoiceLineData {
-                    ogg_path: "walkie/generated/base1/loadoutreminder_01.ogg".to_string(),
-                    subtitle_text: "Just a heads-up, you left the truck with the same gear. Remember you can swap tools in the Loadout tab.".to_string(),
-                    tags: vec![WalkieTag::NeutralObservation, WalkieTag::MediumLength, WalkieTag::ReminderLow],
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_01.ogg".to_string(),
+                    subtitle_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.".to_string(),
+                    tags: vec![WalkieTag::LongDetailed, WalkieTag::Questioning, WalkieTag::ReminderMedium],
                     length_seconds: 6,
                 },
                 VoiceLineData {
-                    ogg_path: "walkie/generated/base1/loadoutreminder_02.ogg".to_string(),
-                    subtitle_text: "Still rocking that same loadout, huh? Don't forget to check the Loadout tab in the truck if you need different tools.".to_string(),
-                    tags: vec![WalkieTag::SnarkyHumor, WalkieTag::MediumLength, WalkieTag::ReminderLow],
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_02.ogg".to_string(),
+                    subtitle_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::Questioning, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_03.ogg".to_string(),
+                    subtitle_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_04.ogg".to_string(),
+                    subtitle_text: "Did you customize your loadout? Different missions might need different tools, you know.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::Questioning, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_05.ogg".to_string(),
+                    subtitle_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
                     length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_06.ogg".to_string(),
+                    subtitle_text: "You're using the basic setup. That might work, but the truck has better equipment available.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_07.ogg".to_string(),
+                    subtitle_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::ReminderMedium, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_08.ogg".to_string(),
+                    subtitle_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_09.ogg".to_string(),
+                    subtitle_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::ReminderLow, WalkieTag::SnarkyHumor],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_10.ogg".to_string(),
+                    subtitle_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
                 },
             ],
         }

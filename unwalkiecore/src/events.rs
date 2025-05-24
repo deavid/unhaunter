@@ -379,7 +379,7 @@ impl WalkieEvent {
 
             // --- Repellent and Expulsion ---
             WalkieEvent::GhostExpelledPlayerLingers => 120.0 * count,
-            WalkieEvent::HasRepellentEntersLocation => 120.0 * count,
+            WalkieEvent::HasRepellentEntersLocation => 300.0 * count,
             WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count, // Trigger every 1.5 minutes if conditions met
