@@ -16,12 +16,5 @@ concat(with=[page]) %} {% set_global found_recent = true %} {% endif %} {% endfo
 
 <div class="list-items-home">{% include "partials/page_list_unpaginated.html" %}</div>
 <br />
-<!-- <div class="mt-8 flex justify-center">
-    <a href="{{ get_url(path='wasm/main') }}" target="_blank" rel="noopener">Play In Browser</a>
-    <span class="mx-2">&centerdot;</span>
-    <a href="{{ get_url(path='archive') }}">Archive</a>
-    <span class="mx-2">&centerdot;</span>
-    <a href="{{ get_url(path='tags') }}">Tags</a>
-</div> -->
 
 {% endblock main %}
