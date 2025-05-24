@@ -1,13 +1,11 @@
 {% extends "index.html" %}<!---->
 {% block main %}
 <!-- Section Title -->
-<div class="mb-16">
+<div>
     <h1>{{ section.title }}</h1>
     <p>{{ section.description }}</p>
 </div>
 
 <!-- Pages -->
-{% set prefer_summary = true %}
-
-{% include "partials/page_list.html" %}<!---->
+<div class="list-items-news">{% set prefer_summary = true %} {% include "partials/page_list.html" %}<!----></div>
 {% endblock main %}

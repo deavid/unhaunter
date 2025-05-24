@@ -4,10 +4,13 @@ base_url = "https://www.unhaunter.com"
 
 # The site title and description; used in feeds by default.
 title = "Unhaunter Official Website"
-description = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
-Find 8 distinct evidence types to narrow down the ghost's identity.
-Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
-Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+description = """Step into the boots of a paranormal investigator in Unhaunter, a 2D isometric ghost hunting game. 
+Explore atmospheric haunted locations, mastering specialized equipment like the EMF Meter, Thermometer, UV Torch, and Spirit Box. 
+Uncover 8 distinct evidence types—from Freezing Temperatures to RL Presence—to identify the ghost. 
+Match the evidence you've gathered against over 44 unique ghost profiles to identify the ghost in a tense deductive challenge.
+Navigate vision-obscuring Miasma, and learn to interpret crucial sound cues. 
+Manage your sanity and health, survive terrifying ghost hunts by hiding, and finally, craft the specific repellent needed to banish the 
+restless spirit. Can you solve the mystery and cleanse the location?
 """
 
 # The default site author.
@@ -43,7 +46,7 @@ compile_sass = true
 build_search_index = true
 
 #theme = "custom"
-theme = "kita"
+theme = "custom"
 
 [markdown]
 # Whether to do syntax highlighting
@@ -70,14 +73,19 @@ social_image = "icons/unhaunter-logo.png"
 # The profile on home page.
 [extra.profile]
 name = "Unhaunter"
-bio = """Investigate haunted locations using gear like EMF readers, thermometers, and much more.
-Find 8 distinct evidence types to narrow down the ghost's identity.
-Analyze your findings in the truck's journal, comparing evidence against 44 unique ghost profiles to make your deduction.
-Craft the targeted repellent and confront the entity, managing your sanity against the dark.
+des = "PARANORMAL INVESTIGATION SIMULATOR"
+bio = """Step into the boots of a paranormal investigator in Unhaunter, a 2D isometric ghost hunting game. 
+Explore atmospheric haunted locations, mastering specialized equipment like the EMF Meter, Thermometer, UV Torch, and Spirit Box. 
+Uncover 8 distinct evidence types—from Freezing Temperatures to RL Presence—to identify the ghost. 
+Match the evidence you've gathered against over 44 unique ghost profiles to identify the ghost in a tense deductive challenge.
+Navigate vision-obscuring Miasma, and learn to interpret crucial sound cues. 
+Manage your sanity and health, survive terrifying ghost hunts by hiding, and finally, craft the specific repellent needed to banish the 
+restless spirit. Can you solve the mystery and cleanse the location?
 """
 
 # The URL of avatar.
 avatar_url = "icons/unhaunter-logo.png"
+title_url = "images/title.svg"
 
 [[extra.profile.social]]
 name = "github"
@@ -91,7 +99,41 @@ url = "https://www.reddit.com/r/Unhaunter/"
 name = "rss"
 url = "$BASE_URL/atom.xml"
 
+[[extra.profile.bento]]
+index = "1"
+name = "Photo - 1"
+des = "Des photo 1"
+img = "profile/unhaunter-c1.png"
+
+[[extra.profile.bento]]
+index = "2"
+name = "Photo - 2"
+des = "Des photo 2"
+img = "profile/unhaunter-c2.png"
+
+[[extra.profile.bento]]
+index = "3"
+name = "Photo - 3"
+des = "Des photo 3"
+img = "profile/unhaunter-c3.png"
+
+[[extra.profile.bento]]
+index = "4"
+name = "Photo - 4"
+des = "Des photo 4"
+img = "profile/unhaunter-c4.png"
+
+[[extra.profile.bento]]
+index = "5"
+name = "Photo - 5"
+des = "Des photo 5"
+img = "profile/unhaunter-c5.png"
+
 # The top menu.
+[[extra.menu]]
+name = "Home"
+url = "$BASE_URL"
+
 [[extra.menu]]
 name = "News"
 url = "$BASE_URL/news"
@@ -109,6 +151,35 @@ url = "$BASE_URL/blog"
 name = "Beta"
 url = "$BASE_URL/beta"
 
+[[extra.footer.links]]
+name = "matrix"
+url = "https://matrix.to/#/#unhaunter:matrix.org"
+icon = "/icons/matrix.svg"
+
+[[extra.footer.links]]
+name = "youtube"
+url = "https://www.youtube.com/c/DavidMart%C3%ADnezMart%C3%AD"
+icon = "/icons/youtube.svg"
+
+[[extra.footer.links]]
+name = "reddit"
+url = "https://www.reddit.com/r/Unhaunter/"
+icon = "/icons/reddit.svg"
+
+[[extra.footer.links]]
+name = "mastodon"
+url = "https://techhub.social/@deavid"
+icon = "/icons/mastodon.svg"
+
+[[extra.footer.links]]
+name = "portfolio"
+url = "https://deavid.wordpress.com/"
+icon = "/icons/portfolio.svg"
+
+[[extra.footer.links]]
+name = "github"
+url = "https://github.com/deavid/unhaunter"
+icon = "/icons/github.svg"
 
 # The page footer options.
 [extra.footer]

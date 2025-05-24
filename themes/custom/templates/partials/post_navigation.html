@@ -1,18 +1,42 @@
 {% if page.lower or page.higher %}
-<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
-  {% if page.higher %}
-  <a
-    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
-    href="{{ page.higher.permalink }}"
-    ><span class="mr-1.5">←</span><span>{{ page.higher.title }}</span></a
-  >
-  {% endif %}<!---->
-  {% if page.lower %}
-  <a
-    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
-    href="{{ page.lower.permalink }}"
-    ><span>{{ page.lower.title }}</span><span class="ml-1.5">→</span></a
-  >
-  {% endif %}
+<nav class="pagination">
+    {% if page.higher %}
+    <a class="active" href="{{ page.higher.permalink }}">
+        <svg
+            class="my-icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path d="M19 12H5"></path>
+            <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        <span>{{ page.higher.title }}</span></a
+    >
+    {% endif %}<!---->
+    {% if page.lower %}
+    <a class="active" href="{{ page.lower.permalink }}">
+        <span>{{ page.lower.title }}</span>
+        <svg
+            class="my-icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path d="M5 12h14"></path>
+            <path d="M12 5l7 7-7 7"></path>
+        </svg>
+    </a>
+    {% endif %}
 </nav>
 {% endif %}
