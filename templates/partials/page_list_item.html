@@ -3,8 +3,8 @@
 <section class="list-item">
     {% include "partials/page_info.html" %}
     {% if page.extra.cover.image %}
-    <figure class="mb-4 mt-0">
-        <img class="h-auto w-full rounded-lg" src="{{ get_url(path=page.extra.cover.image) }}"
+    <figure >
+        <img src="{{ get_url(path=page.extra.cover.image) }}"
             alt="{{ page.extra.cover.alt | default(value='cover') }}" />
     </figure>
     {% endif %}<!---->
@@ -30,5 +30,5 @@
     {% endif %}
 
 
-    <a class="cover-click absolute inset-0 text-[0]" href="{{ page.permalink }}">{{ page.title }}</a>
+    <a class="cover-click" href="{{ page.permalink }}">{{ page.title }}</a>
 </section>

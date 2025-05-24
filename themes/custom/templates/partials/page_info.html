@@ -1,7 +1,7 @@
 <div class="page-info">
     {% if page.date %}
     <time>{{ page.date | date }}</time>
-    <span class="mx-1">&middot;</span>
+    <span>&middot;</span>
     <span>{{ page.reading_time }}min</span>
     {% endif %}<!---->
     {% if page.authors | length > 0 %}<!---->
@@ -10,7 +10,7 @@
     {% set author = config.author %}<!---->
     {% endif %}<!---->
     {% if author %}
-    <span class="mx-1">&middot;</span>
+    <span>&middot;</span>
     <span>{{ author }}</span>
     {% endif %}
     <!-- Page Info inject -->

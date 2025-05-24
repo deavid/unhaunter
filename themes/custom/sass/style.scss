@@ -370,6 +370,19 @@ a {
     }
 }
 
+.list-item {
+    figure {
+        margin-bottom: 1rem; /* Equivalent to mb-4 */
+        margin-top: 0; /* Equivalent to mt-0 */
+
+        img {
+            height: auto; /* Equivalent to h-auto */
+            width: 100%; /* Equivalent to w-full */
+            border-radius: 0.5rem; /* Equivalent to rounded-lg */
+        }
+    }
+}
+
 .pagination {
     display: flex;
     justify-content: space-around;
@@ -1093,6 +1106,74 @@ section.beta {
 
 .hidden {
     display: none;
+}
+
+.toc {
+    background-color: #1a202c;
+    margin-bottom: 3rem;
+    display: flex;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-size: 1.125rem;
+
+    details {
+        width: 100%;
+    }
+
+    summary {
+        cursor: pointer;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        padding-left: 1rem;
+
+        span {
+            color: #cbd5e0;
+        }
+    }
+
+    div {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 0.25rem;
+
+                a {
+                    text-decoration: none;
+                    color: #a0aec0;
+                    display: block;
+                    padding: 0.25rem 0;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+
+                ul {
+                    margin-top: 0.25rem;
+                    margin-left: 1rem;
+                }
+            }
+        }
+    }
+}
+
+.error_404 {
+    position: absolute; /* Equivalent to absolute */
+    left: 2rem; /* Equivalent to inset-x-8 (left: 8 * 0.25rem = 2rem) */
+    right: 2rem; /* Equivalent to inset-x-8 (right: 8 * 0.25rem = 2rem) */
+    bottom: 5rem; /* Equivalent to bottom-20 (20 * 0.25rem = 5rem) */
+    top: 0; /* Equivalent to top-0 */
+    display: flex; /* Equivalent to flex */
+    align-items: center; /* Equivalent to items-center */
+    justify-content: center; /* Equivalent to justify-center */
+    font-size: 8rem; /* Equivalent to text-9xl (Tailwind's text-9xl is 8rem) */
+    line-height: 1; /* Often implied or default for such large text to prevent excessive line height */
 }
 
 /* ==========================================================================

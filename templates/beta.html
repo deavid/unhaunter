@@ -1,13 +1,12 @@
 {% extends "index.html" %} {% block main %}
 
 <section class="beta">
-    <h1 class="mb-16">{{ page.title }}</h1>
+    <h1>{{ page.title }}</h1>
 
     <div class="container-image">
         <img
             src="{{ get_url(path='beta-screenshot.webp') }}"
             alt="Unhaunter {{ page.extra.beta_version }} Beta Screenshot"
-            class="mx-auto max-w-full rounded-lg shadow-lg"
         />
     </div>
     <div class="prose">
