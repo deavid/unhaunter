@@ -1,4 +1,4 @@
-<div class="page-info2">
+<div class="page-info-inside">
     {% if page.date %}
     <time>{{ page.date | date }}</time>
     <span>&middot;</span>
@@ -14,5 +14,5 @@
     <span>{{ page.reading_time }}min</span>
     {% endif %}<!---->
     <!-- Page Info inject -->
-    {% include "injects/page_info2.html" ignore missing %}
+    {% include "injects/page_info_inside.html" ignore missing %}
 </div>

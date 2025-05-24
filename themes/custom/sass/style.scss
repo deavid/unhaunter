@@ -467,7 +467,7 @@ section.beta {
     font-size: 0.75rem;
 }
 
-.page-info2 {
+.page-info-inside {
     -webkit-font-smoothing: antialiased; /* For WebKit browsers */
     -moz-osx-font-smoothing: grayscale; /* For Firefox on macOS */
     opacity: 0.6;
@@ -601,6 +601,9 @@ section.beta {
     gap: 50px;
 
     div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         a {
             border-radius: 7px;
             padding: 10px 25px;
