@@ -1,4 +1,5 @@
 use crate::events::walkie::WalkieEvent;
+use crate::types::evidence::Evidence;
 use bevy::{prelude::*, utils::HashMap};
 
 #[derive(Clone, Debug, Default)]
@@ -14,6 +15,9 @@ pub struct WalkiePlay {
     pub state: Option<WalkieSoundState>,
     pub last_message_time: f64,
     pub truck_accessed: bool,
+    /// Tracks evidence that was hinted via walkie but not yet acknowledged in journal
+    /// (Evidence, time_hinted)
+    pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
 }
 
 impl Default for WalkiePlay {
@@ -25,6 +29,7 @@ impl Default for WalkiePlay {
             // Set to a negative value so the first message can be played immediately
             last_message_time: -100.0,
             truck_accessed: Default::default(),
+            evidence_hinted_not_logged_via_walkie: None,
         }
     }
 }
@@ -71,6 +76,27 @@ impl WalkiePlay {
     pub fn reset(&mut self) {
         let new_self = Self::default();
         *self = new_self;
+    }
+
+    /// Mark evidence as hinted via walkie for potential journal blinking
+    pub fn set_evidence_hint(&mut self, evidence: Evidence, time: f64) {
+        self.evidence_hinted_not_logged_via_walkie = Some((evidence, time));
+    }
+
+    /// Clear evidence hint when it's been acknowledged in journal
+    pub fn clear_evidence_hint(&mut self) -> Option<Evidence> {
+        if let Some((evidence, _)) = self.evidence_hinted_not_logged_via_walkie.take() {
+            Some(evidence)
+        } else {
+            None
+        }
+    }
+
+    /// Check if there's a pending evidence hint
+    pub fn has_evidence_hint(&self, evidence: Evidence) -> bool {
+        self.evidence_hinted_not_logged_via_walkie
+            .map(|(e, _)| e == evidence)
+            .unwrap_or(false)
     }
 }
 

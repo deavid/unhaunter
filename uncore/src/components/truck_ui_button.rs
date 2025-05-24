@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::colors;
 use crate::events::truck::TruckUIEvent;
+use crate::types::evidence::Evidence;
 use crate::types::truck_button::{TruckButtonState, TruckButtonType};
 
 /// Represents a button in the truck UI, handling its state, type, and visual
@@ -20,6 +21,10 @@ pub struct TruckUIButton {
     pub hold_timer: Option<f32>,
     /// Whether the button is currently being held
     pub holding: bool,
+    /// Whether this button should blink to indicate a hint (for evidence buttons)
+    pub blinking_hint_active: bool,
+    /// Frame counter for blinking animation
+    pub frame_counter: u32,
 }
 
 impl TruckUIButton {
@@ -46,11 +51,19 @@ impl TruckUIButton {
 
     pub fn border_color(&self, interaction: Interaction) -> Color {
         let color = match self.class {
-            TruckButtonType::Evidence(_) => match interaction {
-                Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
-                Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
-                Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
-            },
+            TruckButtonType::Evidence(_) => {
+                // Apply blinking effect for evidence buttons
+                if self.blinking_hint_active && self.frame_counter % 40 < 20 {
+                    // Bright yellow/orange border when blinking
+                    Color::srgb(1.0, 0.8, 0.0)
+                } else {
+                    match interaction {
+                        Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
+                        Interaction::Hovered => colors::TRUCKUI_TEXT_COLOR,
+                        Interaction::None => colors::TRUCKUI_ACCENT2_COLOR,
+                    }
+                }
+            }
             TruckButtonType::Ghost(_) => match interaction {
                 Interaction::Pressed => colors::TRUCKUI_ACCENT3_COLOR,
                 Interaction::Hovered => colors::TRUCKUI_ACCENT_COLOR,
@@ -116,6 +129,27 @@ impl TruckUIButton {
         let alpha_disabled = if self.disabled { 0.1 } else { 1.0 };
         color.with_alpha(color.alpha() * alpha_disabled)
     }
+
+    /// Update the frame counter for blinking animation
+    pub fn update_frame_counter(&mut self) {
+        self.frame_counter = self.frame_counter.wrapping_add(1);
+    }
+
+    /// Set blinking hint state for evidence buttons
+    pub fn set_blinking_hint(&mut self, active: bool) {
+        if matches!(self.class, TruckButtonType::Evidence(_)) {
+            self.blinking_hint_active = active;
+        }
+    }
+
+    /// Get the evidence type if this is an evidence button
+    pub fn get_evidence(&self) -> Option<Evidence> {
+        if let TruckButtonType::Evidence(evidence) = &self.class {
+            Some(*evidence)
+        } else {
+            None
+        }
+    }
 }
 
 impl From<TruckButtonType> for TruckUIButton {
@@ -132,6 +166,8 @@ impl From<TruckButtonType> for TruckUIButton {
             hold_duration,
             hold_timer: None,
             holding: false,
+            blinking_hint_active: false,
+            frame_counter: 0,
         }
     }
 }

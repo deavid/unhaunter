@@ -132,6 +132,27 @@ impl WalkiePlay {
         // Keep the other mission event count, so it can be used in the next mission.
         self.other_mission_event_count = omec;
     }
+
+    /// Mark evidence as hinted via walkie for potential journal blinking
+    pub fn set_evidence_hint(&mut self, evidence: Evidence, time: f64) {
+        self.evidence_hinted_not_logged_via_walkie = Some((evidence, time));
+    }
+
+    /// Clear evidence hint when it's been acknowledged in journal
+    pub fn clear_evidence_hint(&mut self) -> Option<Evidence> {
+        if let Some((evidence, _)) = self.evidence_hinted_not_logged_via_walkie.take() {
+            Some(evidence)
+        } else {
+            None
+        }
+    }
+
+    /// Check if there's a pending evidence hint
+    pub fn has_evidence_hint(&self, evidence: Evidence) -> bool {
+        self.evidence_hinted_not_logged_via_walkie
+            .map(|(e, _)| e == evidence)
+            .unwrap_or(false)
+    }
 }
 
 #[derive(Clone, Debug, Component, PartialEq, Eq)]

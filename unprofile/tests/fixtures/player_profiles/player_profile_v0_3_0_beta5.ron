@@ -1,0 +1,292 @@
+PlayerProfileData(
+    progression: ProgressionData(
+        bank: 51565,
+        insurance_deposit: 0,
+        player_xp: 128975,
+        player_level: 64,
+    ),
+    achievements: AchievementData(
+        expelled_first_ghost: false,
+    ),
+    statistics: StatisticsData(
+        total_missions_completed: 32,
+        total_deaths: 0,
+        total_play_time_seconds: 6722.414153814316,
+    ),
+    map_statistics: {
+        "maps/stage1a.tmx": {
+            TutorialChapter1: MapStatisticsData(
+                total_missions_completed: 7,
+                total_deaths: 0,
+                total_play_time_seconds: 1522.71430850029,
+                total_mission_completed_time_seconds: 1327.3827362060547,
+                best_score: 1252,
+                best_grade: A,
+            ),
+        },
+        "maps/stage3c.tmx": {
+            TutorialChapter3: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 99.73257541656494,
+                total_mission_completed_time_seconds: 94.53257751464844,
+                best_score: 4100,
+                best_grade: A,
+            ),
+        },
+        "maps/stage3b.tmx": {
+            TutorialChapter3: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 91.46595764160156,
+                total_mission_completed_time_seconds: 91.46595764160156,
+                best_score: 4256,
+                best_grade: A,
+            ),
+        },
+        "maps/stage4b.tmx": {
+            TutorialChapter4: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 102.66578674316406,
+                total_mission_completed_time_seconds: 102.66578674316406,
+                best_score: 5958,
+                best_grade: A,
+            ),
+        },
+        "maps/map_house1.tmx": {
+            StandardChallenge: MapStatisticsData(
+                total_missions_completed: 2,
+                total_deaths: 0,
+                total_play_time_seconds: 568.8146667480469,
+                total_mission_completed_time_seconds: 568.8146667480469,
+                best_score: 12000,
+                best_grade: B,
+            ),
+            ExpertChallenge: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 191.131103515625,
+                total_mission_completed_time_seconds: 191.131103515625,
+                best_score: 28500,
+                best_grade: B,
+            ),
+            MasterChallenge: MapStatisticsData(
+                total_missions_completed: 0,
+                total_deaths: 0,
+                total_play_time_seconds: 285.5970153808594,
+                total_mission_completed_time_seconds: 0.0,
+                best_score: 0,
+                best_grade: NA,
+            ),
+        },
+        "maps/stage2c.tmx": {
+            TutorialChapter2: MapStatisticsData(
+                total_missions_completed: 2,
+                total_deaths: 0,
+                total_play_time_seconds: 466.66160583496094,
+                total_mission_completed_time_seconds: 307.86334228515625,
+                best_score: 1766,
+                best_grade: A,
+            ),
+        },
+        "maps/stage5c.tmx": {
+            TutorialChapter5: MapStatisticsData(
+                total_missions_completed: 2,
+                total_deaths: 0,
+                total_play_time_seconds: 537.9990844726563,
+                total_mission_completed_time_seconds: 537.9990844726563,
+                best_score: 4928,
+                best_grade: A,
+            ),
+        },
+        "maps/stage2b.tmx": {
+            TutorialChapter2: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 96.86587524414063,
+                total_mission_completed_time_seconds: 96.86587524414063,
+                best_score: 2124,
+                best_grade: A,
+            ),
+        },
+        "maps/stage1c.tmx": {
+            TutorialChapter1: MapStatisticsData(
+                total_missions_completed: 2,
+                total_deaths: 0,
+                total_play_time_seconds: 475.62335205078125,
+                total_mission_completed_time_seconds: 475.62335205078125,
+                best_score: 1092,
+                best_grade: A,
+            ),
+        },
+        "maps/stage3a.tmx": {
+            TutorialChapter3: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 111.86564636230469,
+                total_mission_completed_time_seconds: 111.86564636230469,
+                best_score: 3820,
+                best_grade: A,
+            ),
+        },
+        "maps/stage5a.tmx": {
+            TutorialChapter5: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 152.79835510253906,
+                total_mission_completed_time_seconds: 152.79835510253906,
+                best_score: 6032,
+                best_grade: A,
+            ),
+        },
+        "maps/stage4c.tmx": {
+            TutorialChapter4: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 163.99818420410156,
+                total_mission_completed_time_seconds: 163.99818420410156,
+                best_score: 4692,
+                best_grade: A,
+            ),
+        },
+        "maps/stage5b.tmx": {
+            TutorialChapter5: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 266.5990295410156,
+                total_mission_completed_time_seconds: 266.5990295410156,
+                best_score: 3336,
+                best_grade: B,
+            ),
+        },
+        "maps/stage2a.tmx": {
+            TutorialChapter2: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 112.39897155761719,
+                total_mission_completed_time_seconds: 112.39897155761719,
+                best_score: 1986,
+                best_grade: A,
+            ),
+        },
+        "maps/map_house2.tmx": {
+            HardChallenge: MapStatisticsData(
+                total_missions_completed: 1,
+                total_deaths: 0,
+                total_play_time_seconds: 213.13076782226563,
+                total_mission_completed_time_seconds: 213.13076782226563,
+                best_score: 13740,
+                best_grade: B,
+            ),
+        },
+        "maps/stage4a.tmx": {
+            TutorialChapter4: MapStatisticsData(
+                total_missions_completed: 3,
+                total_deaths: 0,
+                total_play_time_seconds: 516.0608520507813,
+                total_mission_completed_time_seconds: 516.0608520507813,
+                best_score: 4698,
+                best_grade: A,
+            ),
+        },
+        "maps/stage1b.tmx": {
+            TutorialChapter1: MapStatisticsData(
+                total_missions_completed: 3,
+                total_deaths: 0,
+                total_play_time_seconds: 746.291015625,
+                total_mission_completed_time_seconds: 746.291015625,
+                best_score: 1121,
+                best_grade: A,
+            ),
+        },
+    },
+    walkie_event_stats: {
+        "DidNotSwitchStartingGearInHotspot": WalkieEventStats(
+            play_count: 1,
+            last_played_at_time: 3793.238884049255,
+        ),
+        "CPM500EvidenceConfirmed": WalkieEventStats(
+            play_count: 2,
+            last_played_at_time: 6320.649556056602,
+        ),
+        "FreezingTempsEvidenceConfirmed": WalkieEventStats(
+            play_count: 3,
+            last_played_at_time: 4626.023491034997,
+        ),
+        "GhostExpelledPlayerLingers": WalkieEventStats(
+            play_count: 2,
+            last_played_at_time: 4009.675420264255,
+        ),
+        "MissionStartEasy": WalkieEventStats(
+            play_count: 12,
+            last_played_at_time: 5774.563409520216,
+        ),
+        "UVEctoplasmEvidenceConfirmed": WalkieEventStats(
+            play_count: 5,
+            last_played_at_time: 6079.396730152216,
+        ),
+        "DarkRoomNoLightUsed": WalkieEventStats(
+            play_count: 5,
+            last_played_at_time: 6892.431616033821,
+        ),
+        "EMFLevel5EvidenceConfirmed": WalkieEventStats(
+            play_count: 4,
+            last_played_at_time: 4554.527663444739,
+        ),
+        "FloatingOrbsEvidenceConfirmed": WalkieEventStats(
+            play_count: 3,
+            last_played_at_time: 6473.096787936738,
+        ),
+        "GhostNearHunt": WalkieEventStats(
+            play_count: 6,
+            last_played_at_time: 5248.022545337177,
+        ),
+        "SpiritBoxEvidenceConfirmed": WalkieEventStats(
+            play_count: 1,
+            last_played_at_time: 5886.760917691216,
+        ),
+        "StrugglingWithHideUnhide": WalkieEventStats(
+            play_count: 2,
+            last_played_at_time: 6015.879964222216,
+        ),
+        "BreachShowcase": WalkieEventStats(
+            play_count: 7,
+            last_played_at_time: 5821.560885800216,
+        ),
+        "GhostExpelledPlayerMissed": WalkieEventStats(
+            play_count: 4,
+            last_played_at_time: 5040.252877861013,
+        ),
+        "JournalPointsToOneGhostNoCraft": WalkieEventStats(
+            play_count: 4,
+            last_played_at_time: 6649.076091467542,
+        ),
+        "RLPresenceEvidenceConfirmed": WalkieEventStats(
+            play_count: 3,
+            last_played_at_time: 5630.160606713715,
+        ),
+        "VeryLowSanityNoTruckReturn": WalkieEventStats(
+            play_count: 2,
+            last_played_at_time: 5734.10197512956,
+        ),
+        "PlayerStaysHiddenTooLong": WalkieEventStats(
+            play_count: 1,
+            last_played_at_time: 5653.9999199793565,
+        ),
+        "GearSelectedNotActivated": WalkieEventStats(
+            play_count: 7,
+            last_played_at_time: 6770.758136499821,
+        ),
+        "GearInVan": WalkieEventStats(
+            play_count: 6,
+            last_played_at_time: 6794.7293991818215,
+        ),
+        "GhostShowcase": WalkieEventStats(
+            play_count: 7,
+            last_played_at_time: 6839.4394563308215,
+        ),
+    },
+    times_evidence_acknowledged_on_gear: {},
+    times_evidence_acknowledged_in_journal: {},
+)

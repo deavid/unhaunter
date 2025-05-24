@@ -29,7 +29,7 @@ fn check_player_stuck_at_start(
     mut stuck_timer: Local<Stopwatch>, // Changed from Local<f32>
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
-    let mut min_time_secs: f32 = 30.0;
+    let mut min_time_secs: f32 = 7.0;
     if app_state.get() != &AppState::InGame {
         stuck_timer.reset(); // Changed from *stuck_time = 0.0
         return;
@@ -42,7 +42,16 @@ fn check_player_stuck_at_start(
         return;
     };
 
+    if player_profile.statistics.total_missions_completed > 1 {
+        min_time_secs = 15.0;
+    }
     if player_profile.statistics.total_missions_completed > 3 {
+        min_time_secs = 30.0;
+    }
+    if player_profile.statistics.total_missions_completed > 6 {
+        min_time_secs = 60.0;
+    }
+    if player_profile.statistics.total_missions_completed > 9 {
         min_time_secs = 90.0;
     }
     // If the player is already inside the location, reset the stuck time
@@ -65,7 +74,8 @@ fn check_player_stuck_at_start(
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 
-    if stuck_timer.elapsed_secs() > min_time_secs { // Changed from *stuck_time > min_time_secs
+    if stuck_timer.elapsed_secs() > min_time_secs {
+        // Changed from *stuck_time > min_time_secs
         // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
         walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
@@ -135,7 +145,8 @@ fn check_erratic_movement_early(
         not_entered_timer.tick(time.delta()); // Changed from *not_entered_location_time += time.delta_secs()
     }
 
-    if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS { // Changed from *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS
+    if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
+        // Changed from *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS
         walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
     }
 }
@@ -198,7 +209,7 @@ fn check_door_interaction_hesitation(
 
     hesitation_timer.tick(time.delta()); // Changed from *hesitation_timer += time.delta_secs()
 
-    if hesitation_timer.elapsed_secs() > 10.0 // Changed from *hesitation_timer > 10.0
+    if hesitation_timer.elapsed_secs() > 5.0 // Changed from *hesitation_timer > 10.0
         && walkie_play.set(
             WalkieEvent::DoorInteractionHesitation,
             time.elapsed_secs_f64(),
@@ -239,7 +250,8 @@ fn trigger_struggling_with_grab_drop(
         if keyboard_input.just_pressed(player_sprite.controls.grab) {
             fail_timer.tick(time.delta()); // Changed from *fail_timer += time.delta_secs()
         }
-        if fail_timer.elapsed_secs() > 2.0 { // Changed from *fail_timer > 2.0
+        if fail_timer.elapsed_secs() > 2.0 {
+            // Changed from *fail_timer > 2.0
             walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
             fail_timer.reset(); // Changed from *fail_timer = 0.0
         }

@@ -99,7 +99,7 @@ pub fn button_system(
                 }
 
                 if acknowledged_walkie_hint {
-                    walkie_play.evidence_hinted_not_logged_via_walkie = None;
+                    walkie_play.clear_evidence_hint();
                 }
 
                 // Cancel PotentialIDTimer if the logged evidence matches
