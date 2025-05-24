@@ -11,6 +11,8 @@ pub enum Base1Concept {
     GearInVan,
     GhostNearHunt,
     MissionStartEasy,
+    AllObjectivesMetReminderToEndMission, // Added
+    PlayerLeavesTruckWithoutChangingLoadout, // Added
 }
 
 impl Base1Concept {
@@ -332,6 +334,34 @@ impl Base1Concept {
                     ogg_path: "walkie/generated/base1/missionstarteasy_09.ogg".to_string(),
                     subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.".to_string(),
                     tags: vec![WalkieTag::FirstTimeHint, WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+            ],
+            Self::AllObjectivesMetReminderToEndMission => vec![
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmet_01.ogg".to_string(),
+                    subtitle_text: "Looks like you've done everything on the list. Time to pack up and head home.".to_string(),
+                    tags: vec![WalkieTag::NeutralObservation, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmet_02.ogg".to_string(),
+                    subtitle_text: "All objectives complete. Nice work! You can end the mission from the truck now.".to_string(),
+                    tags: vec![WalkieTag::Encouraging, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+            ],
+            Self::PlayerLeavesTruckWithoutChangingLoadout => vec![
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/loadoutreminder_01.ogg".to_string(),
+                    subtitle_text: "Just a heads-up, you left the truck with the same gear. Remember you can swap tools in the Loadout tab.".to_string(),
+                    tags: vec![WalkieTag::NeutralObservation, WalkieTag::MediumLength, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/loadoutreminder_02.ogg".to_string(),
+                    subtitle_text: "Still rocking that same loadout, huh? Don't forget to check the Loadout tab in the truck if you need different tools.".to_string(),
+                    tags: vec![WalkieTag::SnarkyHumor, WalkieTag::MediumLength, WalkieTag::ReminderLow],
                     length_seconds: 7,
                 },
             ],

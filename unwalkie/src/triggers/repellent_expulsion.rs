@@ -146,7 +146,7 @@ fn trigger_has_repellent_enters_location_system(
     *player_was_previously_outside = !player_is_currently_inside;
 }
 
-const EFFECTIVE_REPELLENT_RANGE: f32 = 4.0; // Configurable distance in game units
+const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0; // Changed from 4.0
 
 // Local state to track if the repellent was active in the previous frame
 #[derive(Default)]
@@ -222,7 +222,7 @@ fn trigger_repellent_used_too_far_system(
 }
 
 const REACTION_WINDOW_SECONDS: f32 = 5.0;
-const RAGE_SPIKE_THRESHOLD: f32 = 30.0; // How much rage must increase to be considered a spike
+const RAGE_SPIKE_THRESHOLD: f32 = 18.0; // Changed from 30.0
 const PARTICLE_NEARBY_THRESHOLD: f32 = 3.5; // How close particles need to be to the ghost
 
 #[derive(Default)]
