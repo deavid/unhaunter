@@ -275,5 +275,115 @@
         ),
       ],
     ),
+    (
+      name: "AllObjectivesMetReminderToEndMission",
+      lines: [
+        (
+          tts_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.",
+          subtitle_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "That's everything on the checklist. You can return to the van now to finish the mission.",
+          subtitle_text: "That's everything on the checklist. You can return to the van now to finish the mission.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.",
+          subtitle_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.",
+          tags: [ReminderLow, Encouraging, LongDetailed],
+        ),
+        (
+          tts_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.",
+          subtitle_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.",
+          tags: [ReminderMedium, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.",
+          subtitle_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.",
+          subtitle_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "You've accomplished everything required. The truck is your ticket home, so to speak.",
+          subtitle_text: "You've accomplished everything required. The truck is your ticket home, so to speak.",
+          tags: [ReminderLow, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.",
+          subtitle_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.",
+          tags: [ReminderMedium, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.",
+          subtitle_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.",
+          subtitle_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.",
+          tags: [ReminderLow, NeutralObservation, LongDetailed],
+        ),
+      ],
+    ),
+    (
+      name: "PlayerLeavesTruckWithoutChangingLoadout",
+      lines: [
+        (
+          tts_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.",
+          subtitle_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.",
+          tags: [ReminderMedium, Questioning, LongDetailed],
+        ),
+        (
+          tts_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?",
+          subtitle_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.",
+          subtitle_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.",
+          tags: [ReminderLow, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "Did you customize your loadout? Different missions might need different tools, you know.",
+          subtitle_text: "Did you customize your loadout? Different missions might need different tools, you know.",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.",
+          subtitle_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.",
+          tags: [ReminderLow, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "You're using the basic setup. That might work, but the truck has better equipment available.",
+          subtitle_text: "You're using the basic setup. That might work, but the truck has better equipment available.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.",
+          subtitle_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.",
+          tags: [ReminderMedium, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.",
+          subtitle_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.",
+          tags: [ReminderLow, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.",
+          subtitle_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.",
+          tags: [ReminderLow, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.",
+          subtitle_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.",
+          tags: [ReminderMedium, DirectHint, LongDetailed],
+        ),
+      ],
+    ),
   ],
 )

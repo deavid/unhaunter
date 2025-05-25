@@ -216,7 +216,9 @@ pub fn button_system(
 
         // Only update border color if it hasn't been modified by blinking systems
         // Since blinking systems now run after this system, we can always set the border color here
-        border_color.0 = current_border_color;
+        if !tui_button.blinking_hint_active {
+            border_color.0 = current_border_color;
+        }
         *color = current_background_color.into();
         textcolor.0 = current_text_color;
     }

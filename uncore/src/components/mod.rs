@@ -13,6 +13,7 @@ pub mod player;
 pub mod player_inventory;
 pub mod player_sprite;
 pub mod repellent_particle;
+pub mod light; // Added light module
 pub mod sprite_type;
 pub mod summary_ui;
 pub mod truck;

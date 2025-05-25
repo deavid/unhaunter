@@ -33,9 +33,9 @@ pub fn trigger_in_truck_craft_prompt_system(
             for (gear, _epos) in player_gear.as_vec() {
                 if gear.kind == GearKind::RepellentFlask {
                     if let Some(rep_data_dyn) = gear.data.as_ref() {
-                        if let Some(flask) =
-                            <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data_dyn)
-                        {
+                        if let Some(flask) = <dyn std::any::Any>::downcast_ref::<RepellentFlask>(
+                            rep_data_dyn.as_ref(),
+                        ) {
                             if flask.liquid_content == Some(identified_ghost) && flask.qty > 0 {
                                 has_correct_repellent = true;
                                 break;
@@ -82,7 +82,7 @@ pub fn trigger_in_truck_craft_prompt_system(
                             if let Some(rep_data_dyn_recheck) = gear_recheck.data.as_ref() {
                                 if let Some(flask_recheck) =
                                     <dyn std::any::Any>::downcast_ref::<RepellentFlask>(
-                                        rep_data_dyn_recheck,
+                                        rep_data_dyn_recheck.as_ref(),
                                     )
                                 {
                                     if flask_recheck.liquid_content

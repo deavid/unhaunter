@@ -132,9 +132,7 @@ impl TruckUIButton {
 
     /// Set blinking hint state for evidence buttons
     pub fn set_blinking_hint(&mut self, active: bool) {
-        if matches!(self.class, TruckButtonType::Evidence(_)) {
             self.blinking_hint_active = active;
-        }
     }
 
     /// Get the evidence type if this is an evidence button

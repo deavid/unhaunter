@@ -13,7 +13,7 @@ use uncore::{
     states::{AppState, GameState},
 };
 use ungear::components::playergear::PlayerGear;
-use ungearitems::components::repellentflask::RepellentFlask as RepellentFlaskData;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone
@@ -86,20 +86,15 @@ fn trigger_has_repellent_enters_location_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>, // Removed PlayerSprite component as it's not directly used here
+    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     roomdb: Res<RoomDB>,
-    mut player_was_previously_outside: Local<bool>, // Tracks if player was outside in the last check
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
-        // If not in the right state, ensure the flag is reset for the next valid entry
-        *player_was_previously_outside = true;
         return;
     }
 
     let Ok((player_gear, player_pos)) = player_query.get_single() else {
-        // No player found
-        *player_was_previously_outside = true; // Reset state
         return;
     };
 
@@ -107,23 +102,11 @@ fn trigger_has_repellent_enters_location_system(
     let has_valid_repellent = player_gear.as_vec().iter().any(|(gear, _epos)| {
         if gear.kind == GearKind::RepellentFlask {
             if let Some(rep_data_dyn) = gear.data.as_ref() {
-                if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_data_dyn)
-                {
-                    return rep_data.liquid_content.is_some() && rep_data.qty > 0;
-                }
+                return rep_data_dyn.can_enable();
             }
         }
         false
     });
-
-    if !has_valid_repellent {
-        // Player doesn't have a filled repellent, update flag and exit
-        *player_was_previously_outside = roomdb
-            .room_tiles
-            .get(&player_pos.to_board_position())
-            .is_none();
-        return;
-    }
 
     // 4. Determine Current Location Status
     let player_is_currently_inside = roomdb
@@ -131,22 +114,15 @@ fn trigger_has_repellent_enters_location_system(
         .get(&player_pos.to_board_position())
         .is_some();
 
-    // 5. Detect Transition from Outside to Inside
-    if player_is_currently_inside && *player_was_previously_outside {
-        // Player just entered the location with a valid repellent
+    if player_is_currently_inside && has_valid_repellent {
         walkie_play.set(
             WalkieEvent::HasRepellentEntersLocation,
             time.elapsed_secs_f64(),
         );
-        // Note: The global WalkiePlay cooldown will manage re-triggering for this event.
-        // No need to explicitly prevent re-triggering within this system beyond the state transition.
     }
-
-    // 6. Update Previous Location Status for the next frame
-    *player_was_previously_outside = !player_is_currently_inside;
 }
 
-const EFFECTIVE_REPELLENT_RANGE: f32 = 4.0; // Configurable distance in game units
+const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0; // Changed from 4.0
 
 // Local state to track if the repellent was active in the previous frame
 #[derive(Default)]
@@ -189,7 +165,7 @@ fn trigger_repellent_used_too_far_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active = rep_data.active && rep_data.qty > 0;
         }
     }
@@ -222,7 +198,7 @@ fn trigger_repellent_used_too_far_system(
 }
 
 const REACTION_WINDOW_SECONDS: f32 = 5.0;
-const RAGE_SPIKE_THRESHOLD: f32 = 30.0; // How much rage must increase to be considered a spike
+const RAGE_SPIKE_THRESHOLD: f32 = 18.0; // Changed from 30.0
 const PARTICLE_NEARBY_THRESHOLD: f32 = 3.5; // How close particles need to be to the ghost
 
 #[derive(Default)]
@@ -278,7 +254,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
         }
     }
@@ -374,7 +350,7 @@ fn trigger_repellent_exhausted_correct_type_system(
             if gear.kind == GearKind::RepellentFlask {
                 if let Some(rep_data_dyn) = gear.data.as_ref() {
                     if let Some(rep_data) =
-                        <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_data_dyn)
+                        <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
                     {
                         // Condition 1: Flask is now empty
                         if rep_data.qty == 0 {

@@ -8,7 +8,9 @@ use uncore::components::board::direction::Direction;
 use uncore::components::{board::position::Position, player_sprite::PlayerSprite};
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::{AppState, GameState};
-use unprofile::data::PlayerProfileData;
+use uncore::types::gear_kind::GearKind;
+use ungear::components::playergear::PlayerGear;
+use unprofile::PlayerProfileData;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
@@ -219,128 +221,142 @@ fn check_door_interaction_hesitation(
     }
 }
 
-/// Triggers a walkie-talkie event if the player tries to pick up an item but their right hand and inventory are full.
+/// Triggers a walkie-talkie event if the player attempts to grab an item when their inventory and hand are full,
+/// and this state of attempting to grab while full persists.
 fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&ungear::components::playergear::PlayerGear, &PlayerSprite)>,
-    mut fail_timer: Local<Stopwatch>, // Changed from Local<f32>
+    player_query: Query<(&PlayerGear, &PlayerSprite)>,
+    mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
-    if app_state.get() != &AppState::InGame {
-        fail_timer.reset(); // Changed from *fail_timer = 0.0
-        return;
+    // 1. System Run Condition
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        if full_and_failed_grab_timer.is_some() {
+            *full_and_failed_grab_timer = None;
+        }
+        return; // Added return
     }
-    if *game_state.get() != GameState::None {
-        fail_timer.reset(); // Changed from *fail_timer = 0.0
-        return;
-    }
+
     let Ok((player_gear, player_sprite)) = player_query.get_single() else {
-        return;
+        if full_and_failed_grab_timer.is_some() {
+            *full_and_failed_grab_timer = None;
+        }
+        return; // Added return
     };
-    // If right hand is not empty and all inventory slots are full, increment timer
-    let right_full = !player_gear.empty_right_handed();
-    let all_full = player_gear
-        .inventory
+
+    // 2.b. Check Player Full State
+    let right_hand_full = !player_gear.empty_right_handed();
+    let inventory_full = player_gear
+        .as_vec()
         .iter()
-        .all(|g| !matches!(g.kind, uncore::types::gear_kind::GearKind::None));
-    if right_full && all_full {
-        if keyboard_input.just_pressed(player_sprite.controls.grab) {
-            fail_timer.tick(time.delta()); // Changed from *fail_timer += time.delta_secs()
+        .all(|(g, _)| !matches!(g.kind, GearKind::None)); // Corrected to use GearKind::None
+    let player_is_completely_full = right_hand_full && inventory_full;
+
+    // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
+    if keyboard_input.just_pressed(player_sprite.controls.grab) && player_is_completely_full {
+        if full_and_failed_grab_timer.is_none() {
+            *full_and_failed_grab_timer = Some(Stopwatch::new());
+            // Timer starts, will be ticked below if it's Some.
         }
-        if fail_timer.elapsed_secs() > 2.0 {
-            // Changed from *fail_timer > 2.0
-            walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
-            fail_timer.reset(); // Changed from *fail_timer = 0.0
+        // If timer was already Some (player pressed grab again while full and timer running), it just continues.
+    } else if !player_is_completely_full && full_and_failed_grab_timer.is_some() {
+        // Player is no longer full, so reset the timer.
+        *full_and_failed_grab_timer = None;
+    }
+
+    // 3.d. Triggering Logic (if timer is Some)
+    if let Some(ref mut timer_ref) = *full_and_failed_grab_timer {
+        timer_ref.tick(time.delta()); // Tick the timer each frame it's Some
+
+        // Re-check player_is_completely_full because they might have dropped/used an item
+        // through a means other than the grab key (e.g., using a consumable from inventory directly)
+        // which would not have reset the timer in the block above.
+        let updated_right_hand_full = !player_gear.empty_right_handed();
+        let updated_inventory_full = player_gear
+            .inventory // Assuming inventory is the correct field name
+            .iter()
+            .all(|g| !matches!(g.kind, GearKind::None));
+        let updated_player_is_completely_full = updated_right_hand_full && updated_inventory_full;
+
+        if updated_player_is_completely_full {
+            if timer_ref.elapsed_secs() > 5.0 {
+                // Duration player struggles
+                if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
+                    *full_and_failed_grab_timer = None; // Reset timer after successful trigger
+                }
+            }
+        } else {
+            // Player resolved the full state while timer was running
+            *full_and_failed_grab_timer = None;
         }
-    } else {
-        fail_timer.reset(); // Changed from *fail_timer = 0.0
     }
 }
 
-/// Triggers a walkie-talkie event if the player struggles with hiding/unhiding actions.
+/// Triggers a walkie-talkie event if the player struggles to hide by holding [E] for over 2 seconds while not hidden.
 ///
-/// This includes:
-/// - Trying to hide while carrying an item (right hand not empty)
-/// - Unhiding immediately after hiding (within 2 seconds)
-/// - Failing to hide during a hunt due to carrying an item
+/// This detects when a player holds the hide key ([E]) for over 2 seconds consecutively
+/// without successfully hiding, indicating they're struggling because they're carrying a house item.
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
+        &uncore::components::player_sprite::PlayerSprite,
         Without<uncore::components::player::Hiding>,
     >,
-    hiding_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
-        With<uncore::components::player::Hiding>,
-    >,
-    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut last_hide_state: Local<Option<(bool, f32)>>, // (is_hiding, time_of_change)
+    mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
     if *game_state.get() != GameState::None {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
-    // Determine if player is hiding
-    let (is_hiding, player_gear) = if let Ok((_, gear)) = hiding_query.get_single() {
-        (true, gear)
-    } else if let Ok((_, gear)) = player_query.get_single() {
-        (false, gear)
-    } else {
+
+    // Only proceed if player is not hiding
+    let Ok(player_sprite) = player_query.get_single() else {
+        *hide_key_timer = None;
         return;
     };
-    let now = time.elapsed_secs_f64() as f32;
 
-    // Track hide/unhide transitions
-    if let Some((was_hiding, last_change_time)) = *last_hide_state {
-        if !was_hiding && is_hiding {
-            // Player just hid
-            // If right hand is not empty, trigger event
-            if !player_gear.empty_right_handed() {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((true, now));
-        } else if was_hiding && !is_hiding {
-            // Player just unhid
-            let hide_duration = now - last_change_time;
-            if hide_duration < 2.0 {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((false, now));
+    // Check if the hide key (activate key, typically [E]) is currently pressed
+    let hide_key_pressed = keyboard_input.pressed(player_sprite.controls.activate);
+
+    if hide_key_pressed {
+        // Start or continue timer if key is pressed
+        if hide_key_timer.is_none() {
+            *hide_key_timer = Some(Stopwatch::new());
         }
-        // else: no state change
-    } else {
-        *last_hide_state = Some((is_hiding, now));
-    }
 
-    // If a hunt is ongoing, and player is hiding with an item in hand, trigger event
-    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
-    if hunt_active && is_hiding && !player_gear.empty_right_handed() {
-        walkie_play.set(
-            WalkieEvent::StrugglingWithHideUnhide,
-            time.elapsed_secs_f64(),
-        );
+        if let Some(ref mut timer) = *hide_key_timer {
+            timer.tick(time.delta());
+
+            // If player has been holding [E] for over 2 seconds while not hidden, trigger event
+            if timer.elapsed_secs() > 2.0 && walkie_play.set(
+                    WalkieEvent::StrugglingWithHideUnhide,
+                    time.elapsed_secs_f64(),
+                ) {
+                // Reset timer after successful trigger to avoid spam
+                *hide_key_timer = None;
+            }
+        }
+    } else {
+        // Reset timer if key is not pressed
+        *hide_key_timer = None;
     }
 }
 
 /// Triggers a walkie-talkie event if the player stays hidden for too long after a hunt ends.
 ///
 /// If the player remains hidden for 10+ seconds after the ghost's hunt ends, this event is triggered to inform them it's safe to unhide.
+/// This event will not fire if any ghost's rage is above 20% of its rage limit.
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
@@ -366,6 +382,12 @@ fn trigger_player_stays_hidden_too_long(
     // Check if any ghost is currently hunting
     let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
     if hunt_active {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
+    // Check if any ghost's rage is above 20% of its rage limit
+    let high_rage = ghost_query.iter().any(|g| g.rage > g.rage_limit * 0.2);
+    if high_rage {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -448,14 +470,14 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            crate::triggers::locomotion_interaction::check_player_stuck_at_start,
-            crate::triggers::locomotion_interaction::check_erratic_movement_early,
-            crate::triggers::locomotion_interaction::check_door_interaction_hesitation,
-            crate::triggers::locomotion_interaction::trigger_struggling_with_grab_drop,
-            crate::triggers::locomotion_interaction::trigger_struggling_with_hide_unhide,
-            crate::triggers::locomotion_interaction::trigger_player_stays_hidden_too_long,
-            crate::triggers::locomotion_interaction::trigger_hunt_active_near_hiding_spot_no_hide, // Register new system
+            check_player_stuck_at_start,
+            check_erratic_movement_early,
+            check_door_interaction_hesitation,
+            trigger_struggling_with_grab_drop, // This is the modified system
+            trigger_struggling_with_hide_unhide,
+            trigger_player_stays_hidden_too_long,
+            trigger_hunt_active_near_hiding_spot_no_hide,
         )
-            .run_if(in_state(uncore::states::GameState::None)),
+            .run_if(in_state(GameState::None)), // Corrected in_state path
     );
 }

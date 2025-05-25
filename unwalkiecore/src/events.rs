@@ -61,7 +61,7 @@ pub enum WalkieEvent {
     MissionStartEasy,
 
     // --- Locomotion and Interaction Events ---
-    /// Player hasn't moved significantly from the start.
+    /// Player hasn\'t moved significantly from the start.
     PlayerStuckAtStart,
     /// Player exhibits erratic movement early on.
     ErraticMovementEarly,
@@ -83,7 +83,7 @@ pub enum WalkieEvent {
     GhostShowcase,
     /// Player uses gear that requires darkness in a lit room.
     RoomLightsOnGearNeedsDark,
-    /// Player is using the Thermometer, it's showing cold (1-10°C) but not freezing, and lingers too long.
+    /// Player is using the Thermometer, it\'s showing cold (1-10°C) but not freezing, and lingers too long.
     ThermometerNonFreezingFixation,
     /// Player selects gear but does not activate it.
     GearSelectedNotActivated,
@@ -93,6 +93,10 @@ pub enum WalkieEvent {
     LowHealthGeneralWarning,
     /// Player's sanity is critically low and they haven't returned to the truck.
     VeryLowSanityNoTruckReturn,
+    /// Player's sanity dropped due to darkness.
+    SanityDroppedBelowThresholdDarkness,
+    /// Player's sanity dropped due to ghost proximity.
+    SanityDroppedBelowThresholdGhost,
 
     // --- Consumables and Defense Events ---
     /// Player used quartz, and it cracked during use.
@@ -153,6 +157,20 @@ pub enum WalkieEvent {
 
     // --- Proactive Crafting Prompts ---
     PotentialGhostIDWithNewEvidence,
+
+    // --- Mission Progression and Truck Events ---
+    /// Player has found evidence but not logged it via C key.
+    ClearEvidenceFoundNoActionCKey,
+    /// Player has found evidence but not logged it in the truck.
+    ClearEvidenceFoundNoActionTruck,
+    /// Player is in the truck with evidence but hasn't updated the journal.
+    InTruckWithEvidenceNoJournal,
+    /// Player is warned about a hunt but doesn't evade.
+    HuntWarningNoPlayerEvasion,
+    /// All objectives are met, reminding the player to end the mission.
+    AllObjectivesMetReminderToEndMission,
+    /// Player leaves the truck without changing their loadout.
+    PlayerLeavesTruckWithoutChangingLoadout,
 }
 
 impl WalkieEvent {
@@ -211,6 +229,12 @@ impl WalkieEvent {
             }
             WalkieEvent::VeryLowSanityNoTruckReturn => {
                 Box::new(PlayerWellbeingConcept::VeryLowSanityNoTruckReturn)
+            }
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => {
+                Box::new(PlayerWellbeingConcept::SanityDroppedBelowThresholdDarkness)
+            }
+            WalkieEvent::SanityDroppedBelowThresholdGhost => {
+                Box::new(PlayerWellbeingConcept::SanityDroppedBelowThresholdGhost)
             }
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => {
@@ -291,6 +315,25 @@ impl WalkieEvent {
             WalkieEvent::PotentialGhostIDWithNewEvidence => {
                 Box::new(EvidenceGatheringAndLogicConcept::PotentialGhostIDWithNewEvidencePrompt)
             }
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => {
+                Box::new(EvidenceGatheringAndLogicConcept::ClearEvidenceFoundNoActionCKey)
+            }
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => {
+                Box::new(EvidenceGatheringAndLogicConcept::ClearEvidenceFoundNoActionTruck)
+            }
+            WalkieEvent::InTruckWithEvidenceNoJournal => {
+                Box::new(EvidenceGatheringAndLogicConcept::InTruckWithEvidenceNoJournal)
+            }
+            WalkieEvent::HuntWarningNoPlayerEvasion => {
+                Box::new(GhostBehaviorAndHuntingConcept::HuntWarningNoPlayerEvasion)
+            }
+            WalkieEvent::AllObjectivesMetReminderToEndMission => {
+                Box::new(Base1Concept::AllObjectivesMetReminderToEndMission)
+            }
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => {
+                Box::new(Base1Concept::PlayerLeavesTruckWithoutChangingLoadout)
+            }
         }
     }
 
@@ -312,7 +355,7 @@ impl WalkieEvent {
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
             WalkieEvent::BreachShowcase => 9000.0 * count,
-            WalkieEvent::GhostShowcase => 900.0 * count,
+            WalkieEvent::GhostShowcase => 9000.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
             WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
             WalkieEvent::GearSelectedNotActivated => 60.0 * count,
@@ -320,6 +363,8 @@ impl WalkieEvent {
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
             WalkieEvent::VeryLowSanityNoTruckReturn => 120.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => 120.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdGhost => 120.0 * count,
 
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => 60.0 * count,
@@ -334,7 +379,7 @@ impl WalkieEvent {
 
             // --- Repellent and Expulsion ---
             WalkieEvent::GhostExpelledPlayerLingers => 120.0 * count,
-            WalkieEvent::HasRepellentEntersLocation => 120.0 * count,
+            WalkieEvent::HasRepellentEntersLocation => 300.0 * count,
             WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count, // Trigger every 1.5 minutes if conditions met
@@ -347,17 +392,25 @@ impl WalkieEvent {
             WalkieEvent::JournalConflictingEvidence => 300.0 * count, // Trigger every 5 minutes if conditions met
 
             // --- Evidence Confirmation Events ---
-            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count,
 
             // --- Proactive Crafting Prompts ---
-            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count, // e.g., 3 minutes, then 6, etc.
+            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count,
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => 120.0 * count,
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => 120.0 * count,
+            WalkieEvent::InTruckWithEvidenceNoJournal => 120.0 * count,
+            WalkieEvent::HuntWarningNoPlayerEvasion => 30.0 * count,
+            WalkieEvent::AllObjectivesMetReminderToEndMission => 180.0 * count,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => 120.0 * count,
         }
     }
 
@@ -389,6 +442,8 @@ impl WalkieEvent {
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
             WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::High,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieEventPriority::Medium,
+            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieEventPriority::High,
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => WalkieEventPriority::Medium,
             WalkieEvent::QuartzShatteredFeedback => WalkieEventPriority::High,
@@ -423,6 +478,14 @@ impl WalkieEvent {
 
             // --- Proactive Crafting Prompts ---
             WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => WalkieEventPriority::Medium,
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => WalkieEventPriority::Medium,
+            WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
+            WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
+            WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::Low,
         }
     }
     /// This function returns hint text to display to the player for various events.
@@ -461,7 +524,7 @@ impl WalkieEvent {
                 "This gear (UV/VideoCam) works best in darkness. Turn off room lights [E]."
             }
             WalkieEvent::ThermometerNonFreezingFixation => {
-                "Journal Check: Cold is good, but <0°C is 'Freezing Temps' evidence."
+                "Journal Check: Cold is good, but <0°C is \'Freezing Temps\' evidence."
             }
             WalkieEvent::GearSelectedNotActivated => "Activate gear in your right hand with [R].",
 
@@ -469,6 +532,12 @@ impl WalkieEvent {
             WalkieEvent::LowHealthGeneralWarning => "Health low! Return to the van to recover.",
             WalkieEvent::VeryLowSanityNoTruckReturn => {
                 "Sanity critical! Go to the van immediately!"
+            }
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => {
+                "Sanity dropping in darkness! Find light or return to truck."
+            }
+            WalkieEvent::SanityDroppedBelowThresholdGhost => {
+                "Sanity dropping near ghost! Increase distance or use Quartz."
             }
 
             // --- Consumables and Defense ---
@@ -486,7 +555,7 @@ impl WalkieEvent {
                 "Ghost is agitated! Sage from the truck can help calm it or aid escape."
             }
             WalkieEvent::SageActivatedIneffectively => {
-                "For Sage to work, ensure its smoke reaches the ghost's area."
+                "For Sage to work, ensure its smoke reaches the ghost\'s area."
             }
             WalkieEvent::SageUnusedDefensivelyDuringHunt => {
                 "Sage could have helped during that hunt! Use [R]/[Tab] to activate if equipped."
@@ -494,10 +563,10 @@ impl WalkieEvent {
 
             // --- Repellent and Expulsion Events ---
             WalkieEvent::GhostExpelledPlayerLingers => {
-                "Ghost gone! Return to van and select 'End Mission'."
+                "Ghost gone! Return to van and select \'End Mission\'."
             }
             WalkieEvent::HasRepellentEntersLocation => {
-                "Repellent equipped! Use [R]/[Tab] near ghost/breach."
+                "Repellent equipped! Use [R] to open the bottle and ensure to be close to the ghost."
             }
             WalkieEvent::RepellentUsedTooFar => {
                 "Repellent used too far away! Get closer to the ghost or its breach."
@@ -520,7 +589,7 @@ impl WalkieEvent {
                 "Stuck on one tool? Press [Q] to cycle to other gear."
             }
             WalkieEvent::JournalPointsToOneGhostNoCraft => {
-                "Journal identified ghost! Go to truck and 'Craft Repellent'."
+                "Journal identified ghost! Go to truck and \'Craft Repellent\'."
             }
             WalkieEvent::EMFNonEMF5Fixation => {
                 "Journal Check: EMF activity noted, but EMF Level 5 is the specific evidence."
@@ -556,6 +625,26 @@ impl WalkieEvent {
             // --- Proactive Crafting Prompts ---
             WalkieEvent::PotentialGhostIDWithNewEvidence => {
                 "Potential ID! Log new evidence in truck to confirm & craft repellent."
+            }
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => {
+                "Evidence found! Press [C] to quick-log it."
+            }
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => {
+                "Evidence found! Log it in the Journal in the truck."
+            }
+            WalkieEvent::InTruckWithEvidenceNoJournal => {
+                "New evidence collected. Open Journal [J] and update your findings."
+            }
+            WalkieEvent::HuntWarningNoPlayerEvasion => {
+                "Hunt starting! Hide or run! Check Journal [J] for ghost type info."
+            }
+            WalkieEvent::AllObjectivesMetReminderToEndMission => {
+                "All objectives complete! Return to truck and 'End Mission'."
+            }
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => {
+                "Remember to check the Loadout tab in the truck to equip different gear."
             }
         }
     }

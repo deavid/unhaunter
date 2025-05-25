@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use uncore::states::GameState;
 use unwalkiecore::resources::WalkiePlay;
 
-pub fn reset_craft_button_highlight_on_truck_exit_system(
+fn reset_craft_button_highlight_on_truck_exit_system(
     mut prev_game_state: Local<GameState>,
     current_game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
@@ -68,3 +68,7 @@ pub fn reset_craft_button_highlight_on_truck_exit_system(
 // So, the initial default value of prev_game_state (e.g. GameState::None or GameState::Menu)
 // won't cause a false trigger on the first frame the game enters GameState::None from an initial state.
 // The logic `*prev_game_state = current_gs_val;` at the end is key.
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, reset_craft_button_highlight_on_truck_exit_system);
+}

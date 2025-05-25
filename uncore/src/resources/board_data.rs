@@ -57,6 +57,17 @@ pub struct BoardData {
     pub level_ready_time: f32, // Time when the level became ready
 }
 
+impl BoardData {
+    /// Returns if the given position has light above a fixed threshold.
+    pub fn is_lit(&self, pos: BoardPosition) -> bool {
+        if let Some(light_data) = self.light_field.get(pos.ndidx()) {
+            light_data.lux > 0.5
+        } else {
+            false
+        }
+    }
+}
+
 impl FromWorld for BoardData {
     fn from_world(_world: &mut World) -> Self {
         // Using from_world to initialize is not needed but just in case we need it later.
