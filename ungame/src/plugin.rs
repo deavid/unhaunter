@@ -1,11 +1,5 @@
 use crate::evidence_perception;
-use crate::{
-    boardfield_update,
-    hide_mouse, // Import the hide_mouse module
-    hint_ui_display,
-    looking_gear,
-    systems, // Import the whole systems module
-};
+use crate::{boardfield_update, hide_mouse, looking_gear, systems};
 
 use super::{game_ui, object_charge, pause_ui, roomchanged};
 use bevy::prelude::*;
@@ -24,8 +18,7 @@ impl Plugin for UnhaunterGamePlugin {
         roomchanged::app_setup(app);
         pause_ui::app_setup(app);
         object_charge::app_setup(app);
-        looking_gear::app_setup(app);
         evidence_perception::app_setup(app);
-        hint_ui_display::app_setup(app);
+        looking_gear::app_setup(app);
     }
 }
