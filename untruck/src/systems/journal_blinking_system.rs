@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 use bevy::utils::HashSet;
 use bevy_persistent::Persistent;
-use uncore::components::ghost_sprite::GhostSprite; // ADDED
+use uncore::components::ghost_sprite::GhostSprite;
+use uncore::states::GameState;
 use uncore::types::ghost::types::GhostType;
 use uncore::{
     colors,
     components::truck_ui_button::TruckUIButton,
+    events::loadlevel::LevelLoadedEvent,
     resources::current_evidence_readings::CurrentEvidenceReadings,
     types::{
         evidence::Evidence,
@@ -18,14 +20,17 @@ use unwalkiecore::resources::WalkiePlay;
 pub const JOURNAL_HINT_THRESHOLD: u32 = 3;
 pub const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
 
-#[allow(clippy::too_many_arguments)]
-pub fn update_journal_button_blinking_system(
+// Define the new resource
+#[derive(Resource, Default)]
+pub struct SeenEvidenceHints(HashSet<Evidence>);
+
+fn update_journal_button_blinking_system(
     walkie_play: Res<WalkiePlay>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
     profile_data: Res<Persistent<PlayerProfileData>>,
     mut button_query: Query<(&mut TruckUIButton, &mut BorderColor)>,
     time: Res<Time>,
-    mut seen_evidence_hints: Local<HashSet<Evidence>>,
+    mut seen_evidence_hints: ResMut<SeenEvidenceHints>, // MODIFIED: Use ResMut
 ) {
     // Create a temporary map of evidence button states
     let mut evidence_button_states = bevy::utils::HashMap::new();
@@ -49,7 +54,7 @@ pub fn update_journal_button_blinking_system(
         if ack_count < JOURNAL_HINT_THRESHOLD {
             blinking_target_evidence = Some(evidence_type);
             // Store this evidence in our persistent memory
-            seen_evidence_hints.insert(evidence_type);
+            seen_evidence_hints.0.insert(evidence_type); // MODIFIED: Access field of resource
         }
     }
 
@@ -71,7 +76,7 @@ pub fn update_journal_button_blinking_system(
                 if ack_count < JOURNAL_HINT_THRESHOLD {
                     blinking_target_evidence = Some(evidence_item);
                     // Store this evidence in our persistent memory
-                    seen_evidence_hints.insert(evidence_item);
+                    seen_evidence_hints.0.insert(evidence_item); // MODIFIED: Access field of resource
                     break; // Found a high clarity target, no need to check further
                 }
             }
@@ -81,7 +86,8 @@ pub fn update_journal_button_blinking_system(
     // Priority 3: Fallback to previously seen evidence hints (if no current target)
     if blinking_target_evidence.is_none() {
         // Filter seen evidence to only those not currently pressed and still under threshold
-        for &evidence_item in seen_evidence_hints.iter() {
+        for &evidence_item in seen_evidence_hints.0.iter() {
+            // MODIFIED: Access field of resource
             let button_state = evidence_button_states
                 .get(&evidence_item)
                 .copied()
@@ -100,8 +106,7 @@ pub fn update_journal_button_blinking_system(
         }
     }
 
-    // TODO: Clear seen_evidence_hints when mission ends
-    // This would require access to mission state or game state to detect mission exit
+    // TODO: Clear seen_evidence_hints when mission ends - This will be handled by the new system
 
     // Apply Blinking to Buttons
     for (mut truck_button, mut border_color) in button_query.iter_mut() {
@@ -138,7 +143,7 @@ pub fn update_journal_button_blinking_system(
 }
 
 /// System for ghost button blinking when only one valid ghost candidate remains
-pub fn update_journal_ghost_blinking_system(
+fn update_journal_ghost_blinking_system(
     mut button_query: Query<(&mut TruckUIButton, &mut BorderColor)>,
     ghost_sprite_query: Query<&GhostSprite>,
     time: Res<Time>,
@@ -218,4 +223,28 @@ pub fn update_journal_ghost_blinking_system(
             }
         }
     }
+}
+
+fn clear_seen_evidence_hints_on_mission_change(
+    mut seen_evidence_hints: ResMut<SeenEvidenceHints>,
+    mut level_loaded_events: EventReader<LevelLoadedEvent>,
+) {
+    // If any LevelLoadedEvent has occurred, it signifies a new level/mission has started.
+    // We iterate through them to consume them for this reader and then clear the hints.
+    for _event in level_loaded_events.read() {
+        seen_evidence_hints.0.clear();
+    }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.init_resource::<SeenEvidenceHints>();
+    app.add_systems(Update, clear_seen_evidence_hints_on_mission_change);
+    app.add_systems(
+        FixedUpdate,
+        (
+            update_journal_button_blinking_system,
+            update_journal_ghost_blinking_system,
+        )
+            .run_if(in_state(GameState::Truck)),
+    );
 }

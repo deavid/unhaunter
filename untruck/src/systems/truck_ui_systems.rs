@@ -23,25 +23,25 @@ pub struct ProgressIndicator;
 #[derive(Resource, Default)]
 pub struct HoldSoundEntity(pub Option<Entity>);
 
-pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
+fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
     }
 }
 
-pub fn show_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
+fn show_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
     for mut v in qtui.iter_mut() {
         *v = Visibility::Inherited;
     }
 }
 
-pub fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
+fn hide_ui(mut qtui: Query<&mut Visibility, With<TruckUI>>) {
     for mut v in qtui.iter_mut() {
         *v = Visibility::Hidden;
     }
 }
 
-pub fn keyboard(
+fn keyboard(
     game_state: Res<State<GameState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -84,8 +84,7 @@ pub fn keyboard(
 ///
 /// When a hold is completed, this system sends the appropriate event based on the
 /// button type (e.g., `TruckUIEvent::CraftRepellent` or `TruckUIEvent::EndMission`).
-#[allow(clippy::too_many_arguments)]
-pub fn hold_button_system(
+fn hold_button_system(
     mut commands: Commands,
     time: Res<Time>,
     asset_server: Res<AssetServer>,
@@ -260,8 +259,7 @@ pub fn hold_button_system(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn truckui_event_handle(
+fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: EventReader<TruckUIEvent>,
@@ -345,4 +343,19 @@ pub fn truckui_event_handle(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnExit(AppState::InGame), cleanup);
+    app.add_systems(OnEnter(GameState::Truck), show_ui);
+    app.add_systems(OnExit(GameState::Truck), hide_ui);
+    app.add_systems(Update, keyboard);
+    app.add_systems(
+        Update,
+        (
+            hold_button_system,
+            truckui_event_handle.after(hold_button_system),
+        )
+            .run_if(in_state(GameState::Truck)),
+    );
 }
