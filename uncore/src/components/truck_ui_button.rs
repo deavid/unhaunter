@@ -88,7 +88,7 @@ impl TruckUIButton {
             },
             TruckButtonType::Ghost(_) => match self.status {
                 TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_alpha(0.0),
-                TruckButtonState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
+                TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed ghost, same as evidence
                 TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
@@ -132,7 +132,7 @@ impl TruckUIButton {
 
     /// Set blinking hint state for evidence buttons
     pub fn set_blinking_hint(&mut self, active: bool) {
-            self.blinking_hint_active = active;
+        self.blinking_hint_active = active;
     }
 
     /// Get the evidence type if this is an evidence button
