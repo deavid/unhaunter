@@ -2,6 +2,7 @@
 
 <!-- Profile -->
 <div class="profile">{% include "partials/profile.html" %}</div>
+
 {% set news_section = get_section(path="news/_index.md") %} {% set blog_section = get_section(path="blog/_index.md") %}
 {% set filtered_blog_pages = [] %} {% set found_recent = false %} {% for page in blog_section.pages %} {% if
 page.extra.keep_on_home %} {% set_global filtered_blog_pages = filtered_blog_pages | concat(with=[page]) %} {% elif not
