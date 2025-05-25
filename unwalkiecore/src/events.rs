@@ -504,7 +504,9 @@ impl WalkieEvent {
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => "Use [WASD] or Arrow Keys to move.",
-            WalkieEvent::ErraticMovementEarly => "Try smoother [WASD] movements to navigate.",
+            WalkieEvent::ErraticMovementEarly => {
+                "Movement is isometric by default, you'll get used to in no time;\nSettings -> Gameplay -> Movement Style"
+            }
             WalkieEvent::DoorInteractionHesitation => "Press [E] near door to open.",
             WalkieEvent::StrugglingWithGrabDrop => "Use [F] to grab small items, [G] to drop.",
             WalkieEvent::StrugglingWithHideUnhide => {
@@ -525,7 +527,7 @@ impl WalkieEvent {
                 "That was the ghost! Observe its appearance and behavior."
             }
             WalkieEvent::RoomLightsOnGearNeedsDark => {
-                "This gear (UV/VideoCam) works best in darkness. Turn off room lights [E]."
+                "This gear works best in darkness. Turn off room lights."
             }
             WalkieEvent::ThermometerNonFreezingFixation => {
                 "Journal Check: Cold is good, but <0°C is \'Freezing Temps\' evidence."
@@ -562,7 +564,7 @@ impl WalkieEvent {
                 "For Sage to work, ensure its smoke reaches the ghost\'s area."
             }
             WalkieEvent::SageUnusedDefensivelyDuringHunt => {
-                "Sage could have helped during that hunt! Use [R]/[Tab] to activate if equipped."
+                "Sage could have helped during that hunt! Use [R] to activate if equipped."
             }
 
             // --- Repellent and Expulsion Events ---
@@ -639,10 +641,10 @@ impl WalkieEvent {
                 "Evidence found! Log it in the Journal in the truck."
             }
             WalkieEvent::InTruckWithEvidenceNoJournal => {
-                "New evidence collected. Open Journal [J] and update your findings."
+                "New evidence collected. Go to the truck and update your findings."
             }
             WalkieEvent::HuntWarningNoPlayerEvasion => {
-                "Hunt starting! Hide or run! Check Journal [J] for ghost type info."
+                "Hunt starting! Hide or run! Press and Hold [E] near big furniture to hide."
             }
             WalkieEvent::AllObjectivesMetReminderToEndMission => {
                 "All objectives complete! Return to truck and 'End Mission'."

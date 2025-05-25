@@ -133,7 +133,7 @@ fn check_erratic_movement_early(
     let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
     let distance_from_avg = player_position.distance(m_avg);
 
-    if distance_from_avg > 2.0 {
+    if distance_from_avg > 3.0 {
         not_entered_timer.reset();
         return;
     }
@@ -141,7 +141,7 @@ fn check_erratic_movement_early(
     // ...    We need to acknowledge that the player is not confortable with the isometric movement.
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-        && player_direction.distance() > 60.0
+        && player_direction.distance() > 30.0
     {
         // Ignore when the player is stuck or stopped.
         not_entered_timer.tick(time.delta());
