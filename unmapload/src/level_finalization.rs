@@ -37,7 +37,7 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `ev_room` - Event writer for room changed events
 /// * `roomdb` - Room database resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
-pub fn after_level_ready(
+fn after_level_ready(
     mut bf: ResMut<BoardData>,
     mut ev: EventReader<LevelReadyEvent>,
     mut ev_room: EventWriter<RoomChangedEvent>,
@@ -198,7 +198,7 @@ pub fn after_level_ready(
 /// * `query` - Query to find entities with PreMesh components
 /// * `images` - Asset storage for image data
 /// * `meshes` - Asset storage for mesh creation
-pub fn process_pre_meshes(
+fn process_pre_meshes(
     mut commands: Commands,
     query: Query<(Entity, &PreMesh)>,
     images: Res<Assets<Image>>,
@@ -253,7 +253,7 @@ pub fn process_pre_meshes(
 /// # Arguments
 /// * `bf` - Board data resource for collision/lighting fields
 /// * `qt` - Query to access all level entities with behaviors and positions
-pub fn load_map_add_prebaked_lighting(
+fn load_map_add_prebaked_lighting(
     mut bf: ResMut<BoardData>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
@@ -265,4 +265,14 @@ pub fn load_map_add_prebaked_lighting(
 
     // Log completion
     info!("Map loaded with prebaked lighting data");
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    use bevy::prelude::on_event; // Corrected import path
+    use uncore::events::loadlevel::LevelReadyEvent; // Ensure this is imported
+    app.add_systems(Update, (process_pre_meshes, after_level_ready))
+        .add_systems(
+            Update,
+            load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>), // Pass the function itself
+        );
 }

@@ -45,6 +45,7 @@ fn quartz_cracked_feedback(
         {
             if let Some(prev) = *last_cracks {
                 if quartz.cracks > prev && quartz.cracks < 4 {
+                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                     walkie_play.set(WalkieEvent::QuartzCrackedFeedback, time.elapsed_secs_f64());
                 }
             }
@@ -82,6 +83,7 @@ fn quartz_shattered_feedback(
             .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d.as_ref()))
         {
             if quartz.cracks >= 4 && !*shattered {
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 walkie_play.set(
                     WalkieEvent::QuartzShatteredFeedback,
                     time.elapsed_secs_f64(),
@@ -171,7 +173,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     if !truck_has_quartz {
         return; // Quartz isn't even available in the truck
     }
-
+    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
     // 8. Trigger Event: All conditions met
     walkie_play.set(
         WalkieEvent::QuartzUnusedInRelevantSituation,
@@ -253,7 +255,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     if !truck_has_sage {
         return; // Sage isn't even available in the truck
     }
-
+    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
     // 8. Trigger Event: All conditions met
     walkie_play.set(
         WalkieEvent::SageUnusedInRelevantSituation,
@@ -362,6 +364,7 @@ fn trigger_sage_activated_ineffectively_system(
                 let calm_increase =
                     ghost_sprite.calm_time_secs - tracker.initial_ghost_calm_time_secs;
                 if calm_increase < MIN_EFFECTIVE_SAGE_CALM_INCREASE {
+                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                     walkie_play.set(
                         WalkieEvent::SageActivatedIneffectively,
                         time.elapsed_secs_f64(),
@@ -494,6 +497,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                 }
 
                 if player_has_unconsumed_sage_now && !*sage_was_activated_during_this_hunt {
+                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                     walkie_play.set(
                         WalkieEvent::SageUnusedDefensivelyDuringHunt,
                         time.elapsed_secs_f64(),
@@ -532,8 +536,8 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, trigger_quartz_unused_in_relevant_situation_system);
     app.add_systems(Update, trigger_sage_unused_in_relevant_situation_system);
     app.add_systems(Update, trigger_sage_activated_ineffectively_system);
-    app.init_resource::<HuntSageUsageTracker>() // Initialize the resource
-        .add_systems(Update, reset_hunt_sage_tracker_on_mission_change) // System to reset the tracker
+    app.init_resource::<HuntSageUsageTracker>()
+        .add_systems(Update, reset_hunt_sage_tracker_on_mission_change)
         .add_systems(
             Update,
             trigger_sage_unused_defensively_during_hunt_system

@@ -1,15 +1,16 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
+use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
 use uncoremenu::components::{MenuMouseTracker, MenuRoot};
 use uncoremenu::templates;
 
-pub fn setup_ui_cam(mut commands: Commands) {
+fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
 }
 
-pub fn setup_ui_main_cat_system(
+fn setup_ui_main_cat_system(
     mut commands: Commands,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
@@ -18,7 +19,8 @@ pub fn setup_ui_main_cat_system(
     setup_ui_main_cat(&mut commands, &handles, &qtui, "Settings", &menu_items);
 }
 
-pub fn setup_ui_main_cat(
+/// Helper function to set up the main categories UI for settings menu (not a system)
+pub(crate) fn setup_ui_main_cat(
     commands: &mut Commands,
     handles: &Res<GameAssets>,
     qtui: &Query<Entity, With<SettingsMenu>>,
@@ -131,7 +133,7 @@ pub fn setup_ui_main_cat(
     info!("Settings UI initialized with entity: {:?}", root_entity);
 }
 
-pub fn cleanup(
+fn cleanup(
     mut commands: Commands,
     qtui: Query<Entity, With<SettingsMenu>>,
     qc: Query<Entity, With<SCamera>>,
@@ -151,4 +153,21 @@ pub fn cleanup(
     for e in qtimer.iter() {
         commands.entity(e).despawn_recursive();
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        OnEnter(AppState::SettingsMenu),
+        (
+            setup_ui_cam,
+            setup_ui_main_cat_system,
+            |mut commands: Commands| {
+                commands.spawn(SettingsStateTimer {
+                    state_entered_at: bevy::utils::Instant::now(),
+                });
+            },
+        )
+            .chain(),
+    )
+    .add_systems(OnExit(AppState::SettingsMenu), cleanup);
 }

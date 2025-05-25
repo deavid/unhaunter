@@ -18,9 +18,9 @@ use uncore::states::AppState;
 use unprofile::data::PlayerProfileData; // Added import
 
 #[derive(Default)]
-pub struct MeanSound(f32);
+struct MeanSound(f32);
 
-pub fn lose_sanity(
+fn lose_sanity(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
@@ -84,7 +84,7 @@ pub fn lose_sanity(
     }
 }
 
-pub fn recover_sanity(
+fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
@@ -117,7 +117,7 @@ pub fn recover_sanity(
     }
 }
 
-pub fn visual_health(
+fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
     mut qb: Query<(
@@ -153,7 +153,7 @@ pub fn visual_health(
     }
 }
 
-pub fn update_player_stamina(
+fn update_player_stamina(
     mut players: Query<(&PlayerSprite, &mut Stamina)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -176,7 +176,7 @@ pub fn update_player_stamina(
     }
 }
 
-pub fn handle_player_death(
+fn handle_player_death(
     mut player_query: Query<&mut PlayerSprite>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut summary_data: ResMut<SummaryData>,
@@ -220,4 +220,21 @@ pub fn handle_player_death(
             break;
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            lose_sanity,
+            visual_health,
+            update_player_stamina,
+            handle_player_death,
+        )
+            .run_if(in_state(uncore::states::GameState::None)),
+    );
+    app.add_systems(
+        Update,
+        recover_sanity.run_if(in_state(uncore::states::GameState::Truck)),
+    );
 }

@@ -18,7 +18,7 @@ use unsettings::game::{GameplaySettings, MovementStyle};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
-pub fn keyboard_player(
+fn keyboard_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
@@ -223,7 +223,7 @@ pub fn keyboard_player(
     }
 }
 
-pub fn stairs_player(
+fn stairs_player(
     mut players: Query<(&mut Position, &PlayerSprite)>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
     gc: Res<GameConfig>,
@@ -277,4 +277,11 @@ pub fn stairs_player(
     if !in_stairs && player_pos.z.fract().abs() > 0.001 {
         player_pos.z = player_bpos.z as f32;
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (keyboard_player, stairs_player).run_if(in_state(uncore::states::GameState::None)),
+    );
 }

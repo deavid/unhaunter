@@ -3,6 +3,7 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton}; // Assu
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
+use uncore::states::GameState;
 use uncore::components::player_inventory::{Inventory, InventoryNext};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty; // Use CurrentDifficulty
@@ -249,7 +250,7 @@ pub fn setup_loadout_ui(
     });
 }
 
-pub fn update_loadout_buttons(
+fn update_loadout_buttons(
     mut qbut: Query<
         (
             &Interaction,
@@ -391,7 +392,7 @@ pub fn update_loadout_buttons(
     }
 }
 
-pub fn button_clicked(
+fn button_clicked(
     mut ev_clk: EventReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
@@ -419,4 +420,11 @@ pub fn button_clicked(
             p_gear.append(gear.clone());
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (update_loadout_buttons, button_clicked).run_if(in_state(GameState::Truck)),
+    );
 }

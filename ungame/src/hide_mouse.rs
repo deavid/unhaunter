@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{prelude::*, window::PrimaryWindow};
 use uncore::states::{AppState, GameState};
 
-pub fn system_hide_mouse(
+fn system_hide_mouse(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
     mut ev_cursor_moved: EventReader<CursorMoved>,
     mut timer: Local<MouseTimer>,
@@ -38,8 +38,13 @@ impl Default for MouseTimer {
 
 /// System to ensure mouse cursor is visible when exiting the game state.
 /// This prevents the cursor from staying permanently hidden after leaving the game.
-pub fn show_mouse_cursor_on_exit(mut windows: Query<&mut Window, With<PrimaryWindow>>) {
+fn show_mouse_cursor_on_exit(mut windows: Query<&mut Window, With<PrimaryWindow>>) {
     for mut window in windows.iter_mut() {
         window.cursor_options.visible = true;
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, system_hide_mouse)
+        .add_systems(OnExit(AppState::InGame), show_mouse_cursor_on_exit);
 }

@@ -28,16 +28,16 @@ fn check_player_stuck_at_start(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut stuck_timer: Local<Stopwatch>, // Changed from Local<f32>
+    mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     let mut min_time_secs: f32 = 7.0;
     if app_state.get() != &AppState::InGame {
-        stuck_timer.reset(); // Changed from *stuck_time = 0.0
+        stuck_timer.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        stuck_timer.reset(); // Changed from *stuck_time = 0.0
+        stuck_timer.reset();
         return;
     }
     let Ok((player_position, player_sprite)) = player_query.get_single() else {
@@ -62,7 +62,7 @@ fn check_player_stuck_at_start(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        stuck_timer.reset(); // Changed from *stuck_time = 0.0
+        stuck_timer.reset();
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
         return;
     }
@@ -70,14 +70,13 @@ fn check_player_stuck_at_start(
     let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
 
     if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
-        stuck_timer.tick(time.delta()); // Changed from *stuck_time += time.delta_secs()
+        stuck_timer.tick(time.delta());
     } else {
-        stuck_timer.reset(); // Changed from *stuck_time = 0.0
+        stuck_timer.reset();
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 
     if stuck_timer.elapsed_secs() > min_time_secs {
-        // Changed from *stuck_time > min_time_secs
         // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
         walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
@@ -94,12 +93,12 @@ fn check_erratic_movement_early(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &Direction, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut not_entered_timer: Local<Stopwatch>, // Changed from Local<f32>
+    mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
+        not_entered_timer.reset();
         *avg_position = None;
         return;
     }
@@ -125,7 +124,7 @@ fn check_erratic_movement_early(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
+        not_entered_timer.reset();
         walkie_play.mark(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
         return;
     }
@@ -135,20 +134,20 @@ fn check_erratic_movement_early(
     let distance_from_avg = player_position.distance(m_avg);
 
     if distance_from_avg > 2.0 {
-        not_entered_timer.reset(); // Changed from *not_entered_location_time = 0.0
+        not_entered_timer.reset();
         return;
     }
-
+    // FIXME: This is not sensitive enough. And the voice lines aren't optimal, and the hint is not useful either.
+    // ...    We need to acknowledge that the player is not confortable with the isometric movement.
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
         && player_direction.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
-        not_entered_timer.tick(time.delta()); // Changed from *not_entered_location_time += time.delta_secs()
+        not_entered_timer.tick(time.delta());
     }
 
     if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
-        // Changed from *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS
         walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
     }
 }
@@ -165,14 +164,14 @@ fn check_door_interaction_hesitation(
     player_query: Query<(&Position, &PlayerSprite)>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut hesitation_timer: Local<Stopwatch>, // Changed from Local<f32>
+    mut hesitation_timer: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
+        hesitation_timer.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
+        hesitation_timer.reset();
         return;
     }
 
@@ -187,7 +186,7 @@ fn check_door_interaction_hesitation(
         .is_none();
 
     if !is_outside {
-        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
+        hesitation_timer.reset();
         return;
     }
 
@@ -205,19 +204,19 @@ fn check_door_interaction_hesitation(
 
     let distance_to_door = player_position.distance(door_position);
     if distance_to_door > 1.5 || door_behavior.state() != TileState::Closed {
-        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
+        hesitation_timer.reset();
         return;
     }
 
-    hesitation_timer.tick(time.delta()); // Changed from *hesitation_timer += time.delta_secs()
+    hesitation_timer.tick(time.delta());
 
-    if hesitation_timer.elapsed_secs() > 5.0 // Changed from *hesitation_timer > 10.0
+    if hesitation_timer.elapsed_secs() > 3.0
         && walkie_play.set(
             WalkieEvent::DoorInteractionHesitation,
             time.elapsed_secs_f64(),
         )
     {
-        hesitation_timer.reset(); // Changed from *hesitation_timer = 0.0
+        hesitation_timer.reset();
     }
 }
 
@@ -237,14 +236,14 @@ fn trigger_struggling_with_grab_drop(
         if full_and_failed_grab_timer.is_some() {
             *full_and_failed_grab_timer = None;
         }
-        return; // Added return
+        return;
     }
 
     let Ok((player_gear, player_sprite)) = player_query.get_single() else {
         if full_and_failed_grab_timer.is_some() {
             *full_and_failed_grab_timer = None;
         }
-        return; // Added return
+        return;
     };
 
     // 2.b. Check Player Full State
@@ -284,6 +283,7 @@ fn trigger_struggling_with_grab_drop(
         if updated_player_is_completely_full {
             if timer_ref.elapsed_secs() > 5.0 {
                 // Duration player struggles
+                // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
                 if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
                     *full_and_failed_grab_timer = None; // Reset timer after successful trigger
                 }
@@ -339,10 +339,13 @@ fn trigger_struggling_with_hide_unhide(
             timer.tick(time.delta());
 
             // If player has been holding [E] for over 2 seconds while not hidden, trigger event
-            if timer.elapsed_secs() > 2.0 && walkie_play.set(
+            if timer.elapsed_secs() > 2.0
+                && walkie_play.set(
                     WalkieEvent::StrugglingWithHideUnhide,
                     time.elapsed_secs_f64(),
-                ) {
+                )
+            {
+                // FIXME: Additional verification and tuning is needed for this trigger.
                 // Reset timer after successful trigger to avoid spam
                 *hide_key_timer = None;
             }
@@ -364,7 +367,7 @@ fn trigger_player_stays_hidden_too_long(
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, With<uncore::components::player::Hiding>>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut post_hunt_hidden_timer: Local<Option<f32>>, // Time spent hidden after hunt ended
+    mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
         *post_hunt_hidden_timer = None;
@@ -395,6 +398,7 @@ fn trigger_player_stays_hidden_too_long(
     let now = time.elapsed_secs_f64() as f32;
     if let Some(start_time) = *post_hunt_hidden_timer {
         if now - start_time > 10.0 {
+            // FIXME: Additional verification and tuning is needed for this trigger.
             walkie_play.set(
                 WalkieEvent::PlayerStaysHiddenTooLong,
                 time.elapsed_secs_f64(),
@@ -418,7 +422,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     player_query: Query<(&Position, Entity), Without<uncore::components::player::Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut near_hiding_timer: Local<Option<f32>>, // Time spent near hiding spot during hunt
+    mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
         *near_hiding_timer = None;
@@ -448,6 +452,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
         let now = time.elapsed_secs_f64() as f32;
         if let Some(start) = *near_hiding_timer {
             if now - start > 2.0 {
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 walkie_play.set(
                     WalkieEvent::HuntActiveNearHidingSpotNoHide,
                     time.elapsed_secs_f64(),

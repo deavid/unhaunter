@@ -11,9 +11,11 @@ use uncore::{
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 
+use uncore::states::GameState;
+
 // PotentialIDTimer struct definition removed from here
 
-pub fn potential_id_prompt_system(
+fn potential_id_prompt_system(
     mut timer: ResMut<PotentialIDTimer>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
     ghost_guess: Res<GhostGuess>,
@@ -186,4 +188,11 @@ pub fn potential_id_prompt_system(
             // info!("Potential ID timer for {:?} active, waiting for delay. Time left: {:.1}s", timed_evidence, PROMPT_DELAY_SECONDS - (time.elapsed_secs() - detection_time));
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        potential_id_prompt_system.run_if(in_state(GameState::None)),
+    );
 }

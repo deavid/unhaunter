@@ -7,12 +7,13 @@ pub struct InTruckCraftPromptTimer {
 }
 
 use bevy::prelude::*;
+use uncore::states::GameState;
 use uncore::{resources::ghost_guess::GhostGuess, types::gear_kind::GearKind};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 
-pub fn trigger_in_truck_craft_prompt_system(
+fn trigger_in_truck_craft_prompt_system(
     mut timer: ResMut<InTruckCraftPromptTimer>,
     ghost_guess: Res<GhostGuess>,
     player_query: Query<&PlayerGear>,
@@ -136,4 +137,11 @@ pub fn trigger_in_truck_craft_prompt_system(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        trigger_in_truck_craft_prompt_system.run_if(in_state(GameState::Truck)),
+    );
 }

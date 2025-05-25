@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncore::states::AppState;
 use uncore::{
     components::player_sprite::PlayerSprite, resources::looking_gear::LookingGear,
     types::evidence::Evidence,
@@ -7,7 +8,7 @@ use uncore::{
 use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 
-pub fn acknowledge_blinking_gear_hint_system(
+fn acknowledge_blinking_gear_hint_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_query: Query<(&PlayerSprite, &PlayerGear)>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
@@ -44,4 +45,11 @@ pub fn acknowledge_blinking_gear_hint_system(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        acknowledge_blinking_gear_hint_system.run_if(in_state(AppState::InGame)),
+    );
 }

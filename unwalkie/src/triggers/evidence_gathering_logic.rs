@@ -22,7 +22,6 @@ fn trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system(
     mut walkie_play: ResMut<WalkiePlay>,
     gg: Res<GhostGuess>,
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
-    // We don't strictly need truck_tab_query or truck_button_query if gg is reliable
 ) {
     if *app_state.get() != AppState::InGame {
         *prev_game_state = *game_state.get();
@@ -33,6 +32,7 @@ fn trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system(
     let previous_gs_val = *prev_game_state;
     *prev_game_state = current_gs_val;
     // FIXME: Somehow this triggers still being in the truck or something? like, too early or similar.
+    // FIXME: Needs review.
     // --- Check conditions when player HAS JUST LEFT THE TRUCK ---
     if current_gs_val == GameState::None && previous_gs_val == GameState::Truck {
         if let Some(_identified_ghost_via_guess) = gg.ghost_type {
@@ -82,7 +82,6 @@ fn trigger_emf_non_emf5_fixation_system(
     truck_button_query: Query<&TruckUIButton>,
     board_data: Res<BoardData>,
     mut incorrect_marker_state: Local<IncorrectEvidenceMarkedState>,
-    // TODO: player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -118,26 +117,18 @@ fn trigger_emf_non_emf5_fixation_system(
             incorrect_marker_state.emf5_incorrectly_marked_since = Some(time.elapsed_secs());
         } else if let Some(start_time) = incorrect_marker_state.emf5_incorrectly_marked_since {
             let duration_of_conflict = time.elapsed_secs() - start_time;
-            if duration_of_conflict > DELAY_AFTER_INCORRECT_MARKING_SECONDS {
-                // TODO: Add PlayerProfileData check here to limit hint frequency for experienced players.
-                // For example:
-                // if player_profile.statistics.total_missions_completed < 5 ||
-                //    !player_profile.achievements.some_emf_understanding_achieved { ... }
-
-                if walkie_play.set(WalkieEvent::EMFNonEMF5Fixation, time.elapsed_secs_f64()) {
-                    // Hint was played, reset the state to prevent immediate re-trigger
-                    *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
-                }
+            if duration_of_conflict > DELAY_AFTER_INCORRECT_MARKING_SECONDS
+                && walkie_play.set(WalkieEvent::EMFNonEMF5Fixation, time.elapsed_secs_f64())
+            {
+                // Hint was played, reset the state to prevent immediate re-trigger
+                *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
             }
         }
-    } else {
-        // No conflict, or conflict resolved
-        if incorrect_marker_state
-            .emf5_incorrectly_marked_since
-            .is_some()
-        {
-            *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
-        }
+    } else if incorrect_marker_state
+        .emf5_incorrectly_marked_since
+        .is_some()
+    {
+        *incorrect_marker_state = IncorrectEvidenceMarkedState::default();
     }
 }
 
@@ -157,7 +148,6 @@ fn trigger_journal_conflicting_evidence_system(
     truck_button_query: Query<&TruckUIButton>,
     board_data: Res<BoardData>,
     mut tracker: Local<ConflictingEvidenceTracker>,
-    // TODO: player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -193,7 +183,7 @@ fn trigger_journal_conflicting_evidence_system(
             let duration_of_conflict = time.elapsed_secs() - start_time;
             if duration_of_conflict > CONFLICT_DURATION_THRESHOLD_SECONDS {
                 // TODO: Add PlayerProfileData check here.
-
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 if walkie_play.set(
                     WalkieEvent::JournalConflictingEvidence,
                     time.elapsed_secs_f64(),
@@ -230,9 +220,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     player_query: Query<(&PlayerSprite, &PlayerGear)>,
-    // No direct query for journal state here, assumes C_KEY is for direct gear interaction
     mut tracked_state: ResMut<ClearEvidenceTrackedState>,
-    // player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting (optional)
 ) {
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         tracked_state.tracked_clear_evidence.clear();
@@ -240,7 +228,6 @@ fn trigger_clear_evidence_no_action_ckey_system(
     }
 
     let Ok((_player_sprite, player_gear)) = player_query.get_single() else {
-        // Prefix player_sprite with _
         tracked_state.tracked_clear_evidence.clear();
         return;
     };
@@ -317,7 +304,6 @@ fn trigger_clear_evidence_no_action_truck_system(
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut tracked_state: ResMut<NoActionTruckTrackedState>,
-    // player_profile: Res<Persistent<PlayerProfileData>>, // Optional
 ) {
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         // Only trigger this hint when player is NOT in the truck
@@ -374,7 +360,7 @@ fn trigger_clear_evidence_no_action_truck_system(
 const MIN_EVIDENCE_COUNT_FOR_NO_JOURNAL_HINT: usize = 1;
 const TIME_IN_TRUCK_NO_JOURNAL_ACTION_SECONDS: f64 = 20.0;
 
-#[derive(Resource, Default)] // Added to allow system to run
+#[derive(Resource, Default)]
 struct InTruckNoJournalActionState {
     time_entered_truck_with_unlogged_evidence: Option<f64>,
     hinted_this_truck_session: bool,
@@ -388,7 +374,6 @@ fn trigger_in_truck_with_evidence_no_journal_system(
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
     mut system_state: ResMut<InTruckNoJournalActionState>,
-    // player_profile: Res<Persistent<PlayerProfileData>>, // Optional
 ) {
     if *app_state.get() != AppState::InGame {
         system_state.time_entered_truck_with_unlogged_evidence = None;
@@ -404,7 +389,7 @@ fn trigger_in_truck_with_evidence_no_journal_system(
         }
 
         let mut unlogged_clear_evidence_count = 0;
-        let mut player_interacted_with_journal_this_frame = false; // Simplified check
+        let mut player_interacted_with_journal_this_frame = false;
 
         for evidence_type in all::<Evidence>() {
             let mut is_evidence_clear = false;
@@ -451,6 +436,7 @@ fn trigger_in_truck_with_evidence_no_journal_system(
                 if !player_interacted_with_journal_this_frame
                     && (current_time - time_entered >= TIME_IN_TRUCK_NO_JOURNAL_ACTION_SECONDS)
                 {
+                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                     if walkie_play.set(WalkieEvent::InTruckWithEvidenceNoJournal, current_time) {
                         // info!("[Walkie] Triggered InTruckWithEvidenceNoJournal.");
                         system_state.hinted_this_truck_session = true;
@@ -474,6 +460,73 @@ fn trigger_in_truck_with_evidence_no_journal_system(
     }
 }
 
+// How clear evidence needs to be to trigger the "confirmed" hint.
+const CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD: f32 = 0.5;
+
+/// Generic system to trigger "Evidence Confirmed" walkie events.
+fn trigger_evidence_confirmed_feedback_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    evidence_readings: Res<CurrentEvidenceReadings>,
+    truck_button_query: Query<&TruckUIButton>,
+    // TODO: player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting
+) {
+    // System Run Condition
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        return;
+    }
+    use enum_iterator::all;
+
+    for evidence_type in all::<Evidence>() {
+        // Iterate through all defined Evidence types
+        if let Some(reading) = evidence_readings.get_reading(evidence_type) {
+            if reading.clarity >= CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD {
+                // Evidence is currently clearly visible/audible
+
+                // Check if player has already marked this evidence in their journal
+                let mut player_already_marked_evidence = false;
+                for button_data in truck_button_query.iter() {
+                    if button_data.class == TruckButtonType::Evidence(evidence_type) {
+                        if button_data.status == TruckButtonState::Pressed {
+                            player_already_marked_evidence = true;
+                        }
+                        break; // Found the button for this evidence type
+                    }
+                }
+
+                // Skip hint if player has already acknowledged this evidence
+                if player_already_marked_evidence {
+                    continue;
+                }
+
+                // TODO: Add PlayerProfileData check here to limit hints for experienced players
+                // e.g., if player_profile.level > 5 && evidence_type == Evidence::FreezingTemp { continue; }
+
+                let walkie_event_to_send = match evidence_type {
+                    Evidence::FreezingTemp => Some(WalkieEvent::FreezingTempsEvidenceConfirmed),
+                    Evidence::FloatingOrbs => Some(WalkieEvent::FloatingOrbsEvidenceConfirmed),
+                    Evidence::UVEctoplasm => Some(WalkieEvent::UVEctoplasmEvidenceConfirmed),
+                    Evidence::EMFLevel5 => Some(WalkieEvent::EMFLevel5EvidenceConfirmed),
+                    Evidence::EVPRecording => Some(WalkieEvent::EVPEvidenceConfirmed),
+                    Evidence::SpiritBox => Some(WalkieEvent::SpiritBoxEvidenceConfirmed),
+                    Evidence::RLPresence => Some(WalkieEvent::RLPresenceEvidenceConfirmed),
+                    Evidence::CPM500 => Some(WalkieEvent::CPM500EvidenceConfirmed),
+                };
+
+                if let Some(event_to_send) = walkie_event_to_send {
+                    // Attempt to set the event. If successful, mark it in the tracker.
+                    if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
+                        // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
+                        walkie_play.set_evidence_hint(evidence_type, time.elapsed_secs_f64());
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -481,10 +534,11 @@ pub(crate) fn app_setup(app: &mut App) {
     );
     app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
     app.add_systems(Update, trigger_journal_conflicting_evidence_system);
-    app.init_resource::<ClearEvidenceTrackedState>(); // Initialize new resource
-    app.init_resource::<NoActionTruckTrackedState>(); // Initialize new resource
-    app.init_resource::<InTruckNoJournalActionState>(); // Initialize new resource
+    app.init_resource::<ClearEvidenceTrackedState>();
+    app.init_resource::<NoActionTruckTrackedState>();
+    app.init_resource::<InTruckNoJournalActionState>();
     app.add_systems(Update, trigger_clear_evidence_no_action_ckey_system);
     app.add_systems(Update, trigger_clear_evidence_no_action_truck_system);
     app.add_systems(Update, trigger_in_truck_with_evidence_no_journal_system);
+    app.add_systems(Update, trigger_evidence_confirmed_feedback_system);
 }

@@ -7,13 +7,14 @@ use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::resources::potential_id_timer::PotentialIDTimer; // New import
+use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 
 #[allow(clippy::type_complexity)]
-pub fn button_system(
+fn button_system(
     mut interaction_query: Query<
         (
             Ref<Interaction>,
@@ -233,7 +234,7 @@ pub fn button_system(
     }
 }
 
-pub fn ghost_guess_system(
+fn ghost_guess_system(
     mut guess_query: Query<&mut Text, With<TruckUIGhostGuess>>,
     gg: Res<GhostGuess>,
 ) {
@@ -246,4 +247,11 @@ pub fn ghost_guess_system(
             None => "-- Unknown --".to_string(),
         };
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, ghost_guess_system).add_systems(
+        FixedUpdate,
+        button_system.run_if(in_state(GameState::Truck)),
+    );
 }

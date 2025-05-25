@@ -7,9 +7,6 @@ use uncore::{
     states::{AppState, GameState},
 };
 use unprofile::PlayerProfileData;
-// Assuming a UI state resource that indicates interaction with truck tabs
-// This is a placeholder; actual resource path/name might differ.
-// use untruck::ui_state::TruckUiInteractionState; // Placeholder, replace with actual if known
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
@@ -54,6 +51,7 @@ fn trigger_all_objectives_met_reminder_system(
 
     if let Some(timer) = linger_timer.as_mut() {
         timer.tick(time.delta());
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= LINGER_DURATION_SECONDS
             && walkie_play.set(
                 WalkieEvent::AllObjectivesMetReminderToEndMission,
@@ -92,6 +90,7 @@ fn track_loadout_interaction_system(
             // info!("[WalkieDebug] Loadout interaction (proxy via L key) detected!");
         }
     }
+    // FIXME: All this code seems incomplete or a placeholder..
 
     // Example with a hypothetical TruckUiInteractionState resource:
     // if let Some(ui_state) = truck_ui_state {
@@ -146,6 +145,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
             && !tracker.interacted_this_session
         {
             // info!("[WalkieDebug] Conditions met for PlayerLeavesTruckWithoutChangingLoadout. Attempting to set event.");
+            // FIXME: Additional verification needed.
             walkie_play.set(
                 WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout,
                 time.elapsed_secs_f64(),

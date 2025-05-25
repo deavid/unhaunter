@@ -3,6 +3,7 @@ use uncore::colors;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::GameState;
 use uncore::types::root::game_assets::GameAssets;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
@@ -57,7 +58,7 @@ pub fn setup_sanity_ui(p: &mut ChildBuilder, handles: &GameAssets) {
     });
 }
 
-pub fn update_sanity(
+fn update_sanity(
     gc: Res<GameConfig>,
     qp: Query<&PlayerSprite>,
     mut qst: Query<&mut Text, With<SanityText>>,
@@ -73,4 +74,11 @@ pub fn update_sanity(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        FixedUpdate,
+        update_sanity.run_if(in_state(GameState::Truck)),
+    );
 }

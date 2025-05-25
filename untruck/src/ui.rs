@@ -5,7 +5,7 @@ use uncore::colors;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::states::GameState;
+use uncore::states::{AppState, GameState};
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use unstd::materials::UIPanelMaterial;
@@ -32,7 +32,7 @@ impl FromTab for TruckTab {
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     game_state: Res<State<GameState>>,
@@ -351,7 +351,7 @@ pub fn setup_ui(
         .with_children(truck_ui);
 }
 
-pub fn update_tab_interactions(
+fn update_tab_interactions(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     mut qt: Query<(
         Ref<Interaction>,
@@ -416,4 +416,12 @@ pub fn update_tab_interactions(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+        .add_systems(
+            Update,
+            update_tab_interactions.run_if(in_state(GameState::Truck)),
+        );
 }

@@ -17,9 +17,13 @@
 //! * `level_finalization` - Post-load processing and environment preparation
 //! * `influence_system` - Ghost influence assignment to objects
 
-// Re-export the public items from submodules
-pub use crate::level_finalization::after_level_ready;
-pub use crate::level_finalization::load_map_add_prebaked_lighting;
-pub use crate::level_finalization::process_pre_meshes;
 pub use crate::level_setup::LoadLevelSystemParam;
-pub use crate::level_setup::load_level_handler;
+
+use crate::level_finalization;
+use crate::level_setup;
+use bevy::prelude::App;
+
+pub(crate) fn app_setup(app: &mut App) {
+    level_finalization::app_setup(app);
+    level_setup::app_setup(app);
+}

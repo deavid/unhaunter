@@ -19,7 +19,7 @@ use ungear::gear_usable::GearUsable;
 /// pickable object within reach. If so, the object is visually attached to the
 /// player, and the player's right-hand gear is disabled. Only one object can be
 /// held at a time.
-pub fn grab_object(
+fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &Direction, &PlayerSprite)>,
     deployables: Query<(Entity, &Position), With<DeployedGear>>,
@@ -102,7 +102,7 @@ pub fn grab_object(
 /// invalid, an "invalid drop" sound effect is played, and the object is not
 /// dropped.
 #[allow(clippy::type_complexity)]
-pub fn drop_object(
+fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
     mut objects: Query<(Entity, &mut Position), (Without<PlayerSprite>, With<FloorItemCollidable>)>,
@@ -164,7 +164,7 @@ pub fn drop_object(
 /// sound effect when the player moves while holding a movable object, with a
 /// cooldown to prevent the sound from playing too frequently.
 #[allow(clippy::type_complexity)]
-pub fn update_held_object_position(
+fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
     players: Query<(&Position, &PlayerGear, &Direction), With<PlayerSprite>>,
     mut gs: GearStuff,
@@ -200,7 +200,7 @@ pub fn update_held_object_position(
 
 /// System for deploying a piece of gear from the player's right hand into the game
 /// world.
-pub fn deploy_gear(
+fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &Direction)>,
     mut commands: Commands,
@@ -256,7 +256,7 @@ pub fn deploy_gear(
 }
 
 /// System for retrieving deployed gear and adding it to the player's right hand.
-pub fn retrieve_gear(
+fn retrieve_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&Position, &PlayerSprite, &mut PlayerGear)>,
     q_deployed: Query<(Entity, &Position, &DeployedGearData)>,
@@ -317,4 +317,18 @@ pub fn retrieve_gear(
             // --
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            update_held_object_position,
+            deploy_gear,
+            retrieve_gear,
+            grab_object,
+            drop_object,
+        )
+            .run_if(in_state(uncore::states::GameState::None)),
+    );
 }

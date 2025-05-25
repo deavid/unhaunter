@@ -13,7 +13,7 @@ use uncore::{
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
 
-pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
+fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
     for cam in qc.iter() {
         commands.entity(cam).despawn_recursive();
@@ -31,7 +31,7 @@ pub fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
         .insert(Direction::zero());
 }
 
-pub fn cleanup(
+fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<GCameraArena>>,
     qgs: Query<Entity, With<GameSprite>>,
@@ -54,7 +54,7 @@ pub fn cleanup(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn keyboard(
+fn keyboard(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -135,7 +135,7 @@ pub fn keyboard(
 /// H key: Move down one floor
 ///
 /// This is a temporary debugging system for testing multi-floor maps
-pub fn keyboard_floor_switch(
+fn keyboard_floor_switch(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&PlayerSprite, &mut Position)>,
     board_data: Res<BoardData>,
@@ -218,4 +218,13 @@ pub fn keyboard_floor_switch(
             );
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::InGame), setup);
+    app.add_systems(OnExit(AppState::InGame), cleanup);
+    app.add_systems(
+        Update,
+        (keyboard, keyboard_floor_switch).run_if(in_state(AppState::InGame)),
+    );
 }

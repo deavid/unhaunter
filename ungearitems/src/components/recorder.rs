@@ -278,7 +278,7 @@ impl From<Recorder> for Gear {
     }
 }
 
-pub fn sound_update(
+fn sound_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     qg: Query<(&GhostSprite, &Position)>,
@@ -346,4 +346,8 @@ pub fn sound_update(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, sound_update);
 }
