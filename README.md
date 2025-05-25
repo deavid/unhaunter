@@ -4,6 +4,8 @@ Dare to enter a world where shadows whisper and every creak could be a ghostly p
 
 This 2D isometric game seamlessly blends exploration, puzzle-solving, and strategic investigation, offering a unique blend of thrills and chills for those brave enough to confront the unknown.
 
+![Unhaunter Discord Banner 2](https://discord.com/api/guilds/1374650085127749745/widget.png?style=banner2)
+    
 Here are some screenshots of the game:
 
 ![Screenshot1](screenshots/unhaunter-c1.png)
