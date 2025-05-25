@@ -134,6 +134,7 @@ pub enum WalkieEvent {
     /// Player did not cycle to other gear when it was necessary.
     DidNotCycleToOtherGear,
     /// Journal points to one ghost, but no crafting has been done.
+    /// FIXME: appears twice!
     JournalPointsToOneGhostNoCraft,
     /// Player is fixated on EMF readings that are not EMF Level 5.
     EMFNonEMF5Fixation,

@@ -460,6 +460,73 @@ fn trigger_in_truck_with_evidence_no_journal_system(
     }
 }
 
+// How clear evidence needs to be to trigger the "confirmed" hint.
+const CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD: f32 = 0.5;
+
+/// Generic system to trigger "Evidence Confirmed" walkie events.
+fn trigger_evidence_confirmed_feedback_system(
+    time: Res<Time>,
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut walkie_play: ResMut<WalkiePlay>,
+    evidence_readings: Res<CurrentEvidenceReadings>,
+    truck_button_query: Query<&TruckUIButton>,
+    // TODO: player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting
+) {
+    // System Run Condition
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        return;
+    }
+    use enum_iterator::all;
+
+    for evidence_type in all::<Evidence>() {
+        // Iterate through all defined Evidence types
+        if let Some(reading) = evidence_readings.get_reading(evidence_type) {
+            if reading.clarity >= CLEAR_EVIDENCE_CONFIRMATION_THRESHOLD {
+                // Evidence is currently clearly visible/audible
+
+                // Check if player has already marked this evidence in their journal
+                let mut player_already_marked_evidence = false;
+                for button_data in truck_button_query.iter() {
+                    if button_data.class == TruckButtonType::Evidence(evidence_type) {
+                        if button_data.status == TruckButtonState::Pressed {
+                            player_already_marked_evidence = true;
+                        }
+                        break; // Found the button for this evidence type
+                    }
+                }
+
+                // Skip hint if player has already acknowledged this evidence
+                if player_already_marked_evidence {
+                    continue;
+                }
+
+                // TODO: Add PlayerProfileData check here to limit hints for experienced players
+                // e.g., if player_profile.level > 5 && evidence_type == Evidence::FreezingTemp { continue; }
+
+                let walkie_event_to_send = match evidence_type {
+                    Evidence::FreezingTemp => Some(WalkieEvent::FreezingTempsEvidenceConfirmed),
+                    Evidence::FloatingOrbs => Some(WalkieEvent::FloatingOrbsEvidenceConfirmed),
+                    Evidence::UVEctoplasm => Some(WalkieEvent::UVEctoplasmEvidenceConfirmed),
+                    Evidence::EMFLevel5 => Some(WalkieEvent::EMFLevel5EvidenceConfirmed),
+                    Evidence::EVPRecording => Some(WalkieEvent::EVPEvidenceConfirmed),
+                    Evidence::SpiritBox => Some(WalkieEvent::SpiritBoxEvidenceConfirmed),
+                    Evidence::RLPresence => Some(WalkieEvent::RLPresenceEvidenceConfirmed),
+                    Evidence::CPM500 => Some(WalkieEvent::CPM500EvidenceConfirmed),
+                };
+
+                if let Some(event_to_send) = walkie_event_to_send {
+                    // Attempt to set the event. If successful, mark it in the tracker.
+                    if walkie_play.set(event_to_send, time.elapsed_secs_f64()) {
+                        // info!("[Walkie] Triggered {:?} confirmation.", evidence_type);
+                        walkie_play.set_evidence_hint(evidence_type, time.elapsed_secs_f64());
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -473,4 +540,5 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, trigger_clear_evidence_no_action_ckey_system);
     app.add_systems(Update, trigger_clear_evidence_no_action_truck_system);
     app.add_systems(Update, trigger_in_truck_with_evidence_no_journal_system);
+    app.add_systems(Update, trigger_evidence_confirmed_feedback_system);
 }
