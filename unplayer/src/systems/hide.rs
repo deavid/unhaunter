@@ -17,7 +17,7 @@ use ungear::gear_stuff::GearStuff;
 /// partially hidden. A visual overlay is added to the hiding spot to indicate the
 /// player's presence.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
-pub fn hide_player(
+fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<
@@ -96,7 +96,7 @@ pub fn hide_player(
 /// This system checks if the player is pressing the 'activate' key and is
 /// currently hiding. If so, the player character exits the hiding spot, their
 /// visibility is restored, and the visual overlay is removed from the hiding spot.
-pub fn unhide_player(
+fn unhide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
@@ -112,8 +112,6 @@ pub fn unhide_player(
             // Using 'activate' for unhiding Remove the Hiding component
             commands.entity(player_entity).remove::<Hiding>();
 
-            // Reset player sprite animation TODO: Define default animation For now, let's
-            // just set it back to the standing animation (index 32)
             commands
                 .entity(player_entity)
                 .insert(AnimationTimer::from_range(
@@ -124,10 +122,14 @@ pub fn unhide_player(
                     color: Color::WHITE.with_alpha(1.0),
                 });
 
-            // Reset player position TODO: Consider using the hiding spot's position For now,
-            // let's just leave the position as is. Reset player visibility *visibility =
-            // Visibility::Visible; --- Remove Visual Overlay ---
             commands.entity(hiding.hiding_spot).despawn_descendants();
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (hide_player, unhide_player).run_if(in_state(uncore::states::GameState::None)),
+    );
 }

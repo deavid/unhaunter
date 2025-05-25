@@ -38,7 +38,7 @@ fn ease_in_quad(t: f32) -> f32 {
 }
 
 /// Sets up the on-screen hint UI elements.
-pub fn setup_hint_ui_system(mut commands: Commands, handles: Res<GameAssets>) {
+fn setup_hint_ui_system(mut commands: Commands, handles: Res<GameAssets>) {
     let font_size = HINT_TEXT_FONT_SIZE_SCALE;
     let font_handle = handles.fonts.overlock.w400_regular.clone();
 
@@ -79,7 +79,7 @@ pub fn setup_hint_ui_system(mut commands: Commands, handles: Res<GameAssets>) {
 }
 
 /// Handles `OnScreenHintEvent`s and manages hint animations.
-pub fn hint_ui_event_and_animation_system(
+fn hint_ui_event_and_animation_system(
     mut events: EventReader<OnScreenHintEvent>,
     mut ui_state: ResMut<HintUiState>,
     mut hint_box_query: Query<(&mut Node, &mut Visibility), With<HintBoxUIRoot>>,
@@ -178,14 +178,14 @@ pub fn hint_ui_event_and_animation_system(
 }
 
 /// Cleans up the on-screen hint UI elements when leaving the in-game state.
-pub fn cleanup_hint_ui_system(mut commands: Commands, query: Query<Entity, With<HintBoxUIRoot>>) {
+fn cleanup_hint_ui_system(mut commands: Commands, query: Query<Entity, With<HintBoxUIRoot>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }
 }
 
 /// Registers the hint UI systems with the app.
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_hint_ui_system)
         .add_systems(
             Update,

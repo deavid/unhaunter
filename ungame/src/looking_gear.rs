@@ -5,7 +5,7 @@ use uncore::{
     states::AppState,
 };
 
-pub fn system_update_looking_gear(
+fn system_update_looking_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut looking_gear: ResMut<LookingGear>,
     gc: Res<GameConfig>,
@@ -21,7 +21,7 @@ pub fn system_update_looking_gear(
     looking_gear.held = keyboard_input.pressed(player_sprite.controls.left_hand_look);
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<LookingGear>().add_systems(
         Update,
         system_update_looking_gear.run_if(in_state(AppState::InGame)),

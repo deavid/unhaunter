@@ -5,8 +5,8 @@ use uncore::{
     events::hint::OnScreenHintEvent,
     platform::plt,
     resources::hint_ui_state::{HintAnimationPhase, HintUiState},
+    states::{AppState, GameState},
 };
-
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;
 const HINT_BOX_MARGIN_LEFT_PX: f32 = 20.0;
@@ -34,9 +34,19 @@ fn ease_in_quad(t: f32) -> f32 {
     t * t
 }
 
+pub(crate) fn app_setup(app: &mut App) {
+    app.init_resource::<HintUiState>()
+        .add_systems(OnEnter(AppState::InGame), setup_hint_ui_system)
+        .add_systems(
+            Update,
+            hint_ui_event_and_animation_system.run_if(in_state(GameState::None)),
+        )
+        .add_systems(OnExit(AppState::InGame), cleanup_hint_ui_system);
+}
+
 /// Sets up the on-screen hint UI elements.
 /// Renamed from setup_hint_ui to match plan.
-pub fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font_handle: Handle<Font> = asset_server.load(HINT_TEXT_FONT_PATH);
     let text_font_size = 18.0 * plt::FONT_SCALE;
 
@@ -81,7 +91,7 @@ pub fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServe
 /// Handles `OnScreenHintEvent`s and manages hint animations.
 /// Renamed from handle_hint_events_and_animate to match plan.
 #[allow(clippy::too_many_arguments)]
-pub fn hint_ui_event_and_animation_system(
+fn hint_ui_event_and_animation_system(
     mut events: EventReader<OnScreenHintEvent>,
     mut ui_state: ResMut<HintUiState>,
     mut hint_box_query: Query<(&mut Node, &mut Visibility), With<HintBoxUIRoot>>,
@@ -165,7 +175,7 @@ pub fn hint_ui_event_and_animation_system(
 }
 
 /// Cleans up the on-screen hint UI elements.
-pub fn cleanup_hint_ui_system(mut commands: Commands, query: Query<Entity, With<HintBoxUIRoot>>) {
+fn cleanup_hint_ui_system(mut commands: Commands, query: Query<Entity, With<HintBoxUIRoot>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }

@@ -78,7 +78,7 @@ pub struct GhostSetupSimulationMarker {
 /// * `p` - Level system parameters containing all needed resources
 /// * `ev_level_ready` - Event writer to signal when level is ready
 #[allow(clippy::too_many_arguments)]
-pub fn load_level_handler(
+fn load_level_handler(
     mut ev: EventReader<LevelLoadedEvent>,
     mut commands: Commands,
     qgs: Query<Entity, With<GameSprite>>,
@@ -262,4 +262,8 @@ pub fn load_level_handler(
     // Send level ready event
     ev_level_ready.send(LevelReadyEvent { open_van });
     warn!("Done: load_level_handler");
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(PostUpdate, load_level_handler);
 }

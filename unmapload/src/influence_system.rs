@@ -25,7 +25,7 @@ use crate::level_setup::AssignGhostInfluenceMarker;
 /// * `position_query` - Query to get positions of objects
 /// * `roomdb` - Room database to identify objects within valid rooms
 /// * `board_data` - Board data for accessing floor properties
-pub fn assign_ghost_influence_system(
+fn assign_ghost_influence_system(
     mut commands: Commands,
     marker_query: Query<(Entity, &AssignGhostInfluenceMarker)>,
     ghost_spawn_query: Query<&Position, With<uncore::components::ghost_breach::GhostBreach>>,
@@ -107,4 +107,8 @@ pub fn assign_ghost_influence_system(
         // Remove the marker entity as its job is done
         commands.entity(marker_entity).despawn();
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, assign_ghost_influence_system);
 }

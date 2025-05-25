@@ -13,26 +13,26 @@ use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::GameplaySettings;
 
-pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
+fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
     // Despawn game UI if not used
     for gui in qg.iter() {
         commands.entity(gui).despawn_recursive();
     }
 }
 
-pub fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Hidden;
     }
 }
 
-pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Visible;
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     game_settings: Res<Persistent<GameplaySettings>>,
@@ -292,7 +292,7 @@ pub fn setup_ui(
     info!("Game UI loaded");
 }
 
-pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
+fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
         .spawn((
             Text::default(),
@@ -379,7 +379,7 @@ fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
 /// dropping or moving the object. When the player is not holding an object, the UI
 /// reverts to displaying the player's gear information.
 #[allow(clippy::type_complexity)]
-pub fn toggle_held_object_ui(
+fn toggle_held_object_ui(
     // mut held_object_ui: Query<
     //     (&mut Visibility, &mut Node),
     //     (With<HeldObjectUI>, Without<RightSideGearUI>),
@@ -463,7 +463,7 @@ pub fn toggle_held_object_ui(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(OnExit(AppState::InGame), cleanup)
         .add_systems(OnEnter(GameState::None), resume)

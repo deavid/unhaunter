@@ -1,11 +1,5 @@
-use crate::systems::keyboard::stairs_player;
-
-use super::systems::grabdrop::{
-    deploy_gear, drop_object, grab_object, retrieve_gear, update_held_object_position,
-};
-use super::systems::hide::{hide_player, unhide_player};
-use super::systems::keyboard::keyboard_player;
-use super::systems::sanityhealth::{lose_sanity, recover_sanity, visual_health};
+// Import the systems module
+use super::systems;
 use bevy::prelude::*;
 use uncore::states::GameState;
 use uncore::systems::animation::animate_sprite;
@@ -14,24 +8,9 @@ pub struct UnhaunterPlayerPlugin;
 
 impl Plugin for UnhaunterPlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                keyboard_player,
-                lose_sanity,
-                visual_health,
-                animate_sprite,
-                update_held_object_position,
-                deploy_gear,
-                retrieve_gear,
-                grab_object,
-                drop_object,
-                hide_player,
-                unhide_player,
-                stairs_player,
-            )
-                .run_if(in_state(GameState::None)),
-        )
-        .add_systems(Update, recover_sanity.run_if(in_state(GameState::Truck)));
+        app.add_systems(Update, animate_sprite.run_if(in_state(GameState::None)));
+
+        // Call the app_setup from the systems module
+        systems::app_setup(app);
     }
 }

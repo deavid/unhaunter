@@ -11,22 +11,12 @@ impl Plugin for UnhaunterMapLoadPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LoadLevelEvent>()
             .add_event::<LevelLoadedEvent>()
-            .add_event::<LevelReadyEvent>()
-            .add_systems(PostUpdate, crate::module::load_level_handler)
-            .add_systems(
-                Update,
-                (
-                    crate::module::process_pre_meshes,
-                    crate::module::after_level_ready,
-                ),
-            )
-            .add_systems(
-                Update,
-                crate::module::load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>),
-            )
-            .add_systems(
-                Update,
-                crate::influence_system::assign_ghost_influence_system,
-            );
+            .add_event::<LevelReadyEvent>();
+
+        // Call the main app_setup from the module
+        crate::module::app_setup(app);
+
+        // The influence_system is now also part of the module refactoring.
+        crate::influence_system::app_setup(app);
     }
 }
