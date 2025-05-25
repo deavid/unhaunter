@@ -187,6 +187,7 @@ fn trigger_room_lights_on_gear_needs_dark(
         && player_gear.right_hand.is_enabled()
         && board_data.exposure_lux > 0.5
     {
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(
             WalkieEvent::RoomLightsOnGearNeedsDark,
             time.elapsed_secs_f64(),
@@ -200,7 +201,7 @@ fn trigger_thermometer_non_freezing_fixation(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
+    mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
     qp: Query<(&PlayerGear, &PlayerSprite)>,
 ) {
@@ -211,15 +212,15 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     }
     if app_state.get() != &AppState::InGame {
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     let Ok((player_gear, _)) = qp.get_single() else {
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     };
     // Check if right hand is a Thermometer and enabled
@@ -233,22 +234,22 @@ fn trigger_thermometer_non_freezing_fixation(
             if thermo.enabled {
                 let temp_c = uncore::kelvin_to_celsius(thermo.temp);
                 if (1.0..=10.0).contains(&temp_c) {
-                    stopwatch.tick(time.delta()); // Changed from *timer += time.delta_secs();
+                    stopwatch.tick(time.delta());
                     if stopwatch.elapsed_secs() > REQUIRED_DURATION {
-                        // Changed from *timer > REQUIRED_DURATION
+                        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                         walkie_play.set(
                             WalkieEvent::ThermometerNonFreezingFixation,
                             time.elapsed_secs_f64(),
                         );
                         *trigger_count += 1;
-                        stopwatch.reset(); // Changed from *timer = 0.0;
+                        stopwatch.reset();
                     }
                     return; // Return to avoid resetting stopwatch if conditions are met
                 }
             }
         }
     }
-    stopwatch.reset(); // Changed from *timer = 0.0;
+    stopwatch.reset();
 }
 
 /// Registers the environmental awareness systems to the Bevy app.

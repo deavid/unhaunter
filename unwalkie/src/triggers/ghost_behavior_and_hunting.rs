@@ -1,9 +1,7 @@
 use bevy::{prelude::*, time::Stopwatch};
 use uncore::{
     components::{
-        board::position::Position,
-        ghost_sprite::GhostSprite,
-        player::Hiding,
+        board::position::Position, ghost_sprite::GhostSprite, player::Hiding,
         player_sprite::PlayerSprite,
     },
     states::{AppState, GameState},
@@ -65,9 +63,11 @@ fn trigger_hunt_warning_no_player_evasion_system(
         stopwatch.tick(time.delta());
 
         if stopwatch.elapsed_secs() > NO_EVASION_TIMER_SECONDS {
-            if !is_player_hiding { // Re-check hiding status
+            if !is_player_hiding {
+                // Re-check hiding status
                 if let Some(initial_pos) = *player_pos_at_warning {
                     if player_current_pos.distance(&initial_pos) < NO_EVASION_MAX_DISTANCE {
+                        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                         if walkie_play.set(
                             WalkieEvent::HuntWarningNoPlayerEvasion,
                             time.elapsed_secs_f64(),
@@ -81,7 +81,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
                         *player_pos_at_warning = None;
                     }
                 } else {
-                     // Should not happen if timer is Some, but good to reset
+                    // Should not happen if timer is Some, but good to reset
                     *warning_timer = None;
                     *player_pos_at_warning = None;
                 }
@@ -95,8 +95,5 @@ fn trigger_hunt_warning_no_player_evasion_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_hunt_warning_no_player_evasion_system,
-    );
+    app.add_systems(Update, trigger_hunt_warning_no_player_evasion_system);
 }

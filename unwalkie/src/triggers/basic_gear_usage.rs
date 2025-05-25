@@ -328,8 +328,6 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 }
 
-// In unwalkie/src/triggers/basic_gear_usage.rs
-
 const MIN_CHAPTER_FOR_CYCLE_HINT: ManualChapterIndex = ManualChapterIndex::Chapter2;
 const TOOL_ACTIVE_THRESHOLD_SECONDS: f32 = 90.0;
 const Q_PRESS_INACTIVITY_THRESHOLD_SECONDS: f32 = 75.0;
@@ -464,6 +462,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
         return; // No other distinct, usable evidence tools to cycle to
     }
     // 6. Trigger Condition
+    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
     if tracker.time_with_current_tool_continuously_active > TOOL_ACTIVE_THRESHOLD_SECONDS
         && tracker.time_since_last_q_press > Q_PRESS_INACTIVITY_THRESHOLD_SECONDS
         && walkie_play.set(WalkieEvent::DidNotCycleToOtherGear, time.elapsed_secs_f64())

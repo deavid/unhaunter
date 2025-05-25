@@ -24,9 +24,6 @@ const MAX_SANITY_FOR_HINT_PERCENT_SHARED: f32 = 65.0;
 // Constants for SanityDroppedBelowThresholdGhost
 const GHOST_PROXIMITY_THRESHOLD: f32 = 3.0;
 const MIN_INTERACTION_DURATION_SECONDS: f32 = 10.0;
-// Shared Sanity Constants (defined above for the darkness system, reused here)
-// const SANITY_DROP_THRESHOLD_POINTS_SHARED: f32 = 15.0; // Already defined
-// const MAX_SANITY_FOR_HINT_PERCENT_SHARED: f32 = 65.0; // Already defined
 
 /// Triggers a warning if the player's sanity drops below 30% and they don't return to the truck within 20 seconds.
 fn very_low_sanity_no_truck_return(
@@ -35,34 +32,34 @@ fn very_low_sanity_no_truck_return(
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
-    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
+    mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
     if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
     if player.sanity() >= 30.0 {
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     let player_bpos = pos.to_board_position();
     if roomdb.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
         return;
     }
-    stopwatch.tick(time.delta()); // Changed from *timer += time.delta().as_secs_f32();
+    stopwatch.tick(time.delta());
     if stopwatch.elapsed_secs() > 20.0 {
-        // Changed from *timer > 20.0
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(
             WalkieEvent::VeryLowSanityNoTruckReturn,
             time.elapsed_secs_f64(),
         );
-        stopwatch.reset(); // Changed from *timer = 0.0;
+        stopwatch.reset();
     }
 }
 
@@ -73,34 +70,34 @@ fn low_health_general_warning(
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
-    mut stopwatch: Local<Stopwatch>, // Changed from timer: Local<f32>
+    mut stopwatch: Local<Stopwatch>,
     time: Res<Time>,
 ) {
     if app_state.get() != &AppState::InGame || *game_state.get() != GameState::None {
-        stopwatch.reset(); // Changed from *timer = 0.0
+        stopwatch.reset();
         return;
     }
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
     if player.health >= 50.0 {
-        stopwatch.reset(); // Changed from *timer = 0.0
+        stopwatch.reset();
         return;
     }
     let player_bpos = pos.to_board_position();
     if roomdb.room_tiles.get(&player_bpos).is_none() {
         // Player is not inside the location, reset timer
-        stopwatch.reset(); // Changed from *timer = 0.0
+        stopwatch.reset();
         return;
     }
-    stopwatch.tick(time.delta()); // Changed from *timer += time.delta().as_secs_f32()
+    stopwatch.tick(time.delta());
     if stopwatch.elapsed_secs() > 30.0 {
-        // Changed from *timer > 30.0
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(
             WalkieEvent::LowHealthGeneralWarning,
             time.elapsed_secs_f64(),
         );
-        stopwatch.reset(); // Changed from *timer = 0.0
+        stopwatch.reset();
     }
 }
 
@@ -169,11 +166,10 @@ fn trigger_sanity_dropped_due_to_darkness_system(
 
     // 3.e. Trigger Conditions
     if let Some((initial_sanity, timer)) = darkness_sanity_tracker.as_ref() {
-        // Changed to as_ref()
         if *hint_triggered_this_episode {
             return;
         }
-
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS
             && player_sprite.sanity() < MAX_SANITY_FOR_HINT_PERCENT_SHARED
             && (*initial_sanity - player_sprite.sanity()) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity
@@ -279,12 +275,11 @@ fn trigger_sanity_dropped_due_to_ghost_system(
 
     // 3.e. Trigger Conditions
     if let Some((initial_sanity, timer, _tracked_ghost_e)) = interaction_sanity_tracker.as_ref() {
-        // Changed to as_ref()
         if *hint_triggered_this_episode {
             // If hint already fired for this specific interaction episode
             return;
         }
-
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if timer.elapsed_secs() >= MIN_INTERACTION_DURATION_SECONDS
             && player_sprite.sanity() < MAX_SANITY_FOR_HINT_PERCENT_SHARED
             && (*initial_sanity - player_sprite.sanity()) >= SANITY_DROP_THRESHOLD_POINTS_SHARED // Dereference initial_sanity

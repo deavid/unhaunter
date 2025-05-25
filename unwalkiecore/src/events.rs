@@ -22,6 +22,7 @@ pub struct WalkieTalkingEvent {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum WalkieEventPriority {
+    VeryLow,
     Low,
     Medium,
     High,
@@ -31,6 +32,7 @@ pub enum WalkieEventPriority {
 impl WalkieEventPriority {
     pub fn value(&self) -> f32 {
         match self {
+            WalkieEventPriority::VeryLow => 0.01,
             WalkieEventPriority::Low => 0.1,
             WalkieEventPriority::Medium => 1.0,
             WalkieEventPriority::High => 10.0,
@@ -39,6 +41,7 @@ impl WalkieEventPriority {
     }
     pub fn time_factor(&self) -> f32 {
         match self {
+            WalkieEventPriority::VeryLow => 3.0,
             WalkieEventPriority::Low => 1.5,
             WalkieEventPriority::Medium => 1.0,
             WalkieEventPriority::High => 0.2,
@@ -433,8 +436,8 @@ impl WalkieEvent {
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Low,
-            WalkieEvent::BreachShowcase => WalkieEventPriority::Low,
-            WalkieEvent::GhostShowcase => WalkieEventPriority::Low,
+            WalkieEvent::BreachShowcase => WalkieEventPriority::VeryLow,
+            WalkieEvent::GhostShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
             WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
             WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::High,
@@ -480,8 +483,8 @@ impl WalkieEvent {
             WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
 
             // --- Mission Progression and Truck Events ---
-            WalkieEvent::ClearEvidenceFoundNoActionCKey => WalkieEventPriority::Medium,
-            WalkieEvent::ClearEvidenceFoundNoActionTruck => WalkieEventPriority::Medium,
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => WalkieEventPriority::VeryLow,
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => WalkieEventPriority::VeryLow,
             WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
             WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
             WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,

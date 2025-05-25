@@ -122,7 +122,7 @@ fn trigger_has_repellent_enters_location_system(
     }
 }
 
-const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0; // Changed from 4.0
+const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0;
 
 // Local state to track if the repellent was active in the previous frame
 #[derive(Default)]
@@ -187,7 +187,7 @@ fn trigger_repellent_used_too_far_system(
             });
 
         let distance = player_pos.distance(&target_pos);
-
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if distance > EFFECTIVE_REPELLENT_RANGE {
             walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
         }
@@ -198,7 +198,7 @@ fn trigger_repellent_used_too_far_system(
 }
 
 const REACTION_WINDOW_SECONDS: f32 = 5.0;
-const RAGE_SPIKE_THRESHOLD: f32 = 18.0; // Changed from 30.0
+const RAGE_SPIKE_THRESHOLD: f32 = 18.0;
 const PARTICLE_NEARBY_THRESHOLD: f32 = 3.5; // How close particles need to be to the ghost
 
 #[derive(Default)]
@@ -286,7 +286,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
             let particles_nearby = repellent_particle_query
                 .iter()
                 .any(|particle_pos| ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD);
-
+            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
             if (rage_increase > RAGE_SPIKE_THRESHOLD || hunt_just_started || warning_just_started)
                 && particles_nearby
                 && walkie_play.set(
@@ -387,7 +387,7 @@ fn trigger_repellent_exhausted_correct_type_system(
 
         let particles_are_few = repellent_particle_query.iter().count() < 10; // Threshold for "few" particles
         let time_since_exhaustion = time.elapsed_secs() - check_state.time_exhaustion_confirmed;
-
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if particles_are_few || time_since_exhaustion > MAX_PARTICLE_CLEAR_WAIT_SECONDS {
             walkie_play.set(
                 WalkieEvent::RepellentExhaustedGhostPresentCorrectType,
@@ -500,7 +500,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, trigger_repellent_provokes_strong_reaction_system);
     app.add_systems(Update, trigger_repellent_used_too_far_system);
     app.add_systems(Update, trigger_repellent_exhausted_correct_type_system);
-    app.init_resource::<ProcessedMissedExpulsionGhosts>() // Initialize the resource
+    app.init_resource::<ProcessedMissedExpulsionGhosts>()
         .add_systems(
             Update,
             reset_processed_missed_expulsion_ghosts_on_new_mission,
@@ -510,6 +510,4 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_ghost_expelled_player_missed_simplified_system
                 .after(reset_processed_missed_expulsion_ghosts_on_new_mission),
         );
-
-    // ... other systems for this module ...
 }
