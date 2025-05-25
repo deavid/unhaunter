@@ -170,7 +170,7 @@ pub fn compute_visibility(
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
-pub fn player_visibility_system(
+fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bf: Res<BoardData>,
     gc: Res<GameConfig>,
@@ -219,7 +219,7 @@ pub fn player_visibility_system(
 /// * Adjusts tile and sprite colors based on lighting, visibility, and exposure,
 ///   creating a realistic and atmospheric visual experience.
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
-pub fn apply_lighting(
+fn apply_lighting(
     mut qt2: Query<
         (
             &Position,
@@ -994,7 +994,7 @@ pub fn apply_lighting(
 }
 
 /// System to manage ambient sound levels based on visibility.
-pub fn ambient_sound_system(
+fn ambient_sound_system(
     vf: Res<VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
@@ -1116,7 +1116,7 @@ fn calculate_clarity_for_visual_evidence(
     }
 }
 
-pub fn report_environmental_visual_evidence_clarity_system(
+fn report_environmental_visual_evidence_clarity_system(
     mut current_evidence_readings: ResMut<CurrentEvidenceReadings>,
     board_data: Res<BoardData>,           // bf
     visibility_data: Res<VisibilityData>, // vf
@@ -1240,4 +1240,17 @@ pub fn report_environmental_visual_evidence_clarity_system(
     for (entity_id, entity_pos) in breach_query.iter() {
         process_entity(entity_id, entity_pos, false);
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            player_visibility_system,
+            apply_lighting,
+            report_environmental_visual_evidence_clarity_system.after(apply_lighting),
+        )
+            .chain(),
+    )
+    .add_systems(Update, ambient_sound_system);
 }

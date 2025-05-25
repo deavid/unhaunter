@@ -26,6 +26,8 @@ pub(crate) fn app_setup(app: &mut App) {
     repellent_expulsion::app_setup(app);
     tutorial_specific::app_setup(app);
     consumables_and_defense::app_setup(app);
+    potential_id_prompt::app_setup(app);
+    truck_craft_prompt::app_setup(app);
 }
 
-pub use truck_craft_prompt::{InTruckCraftPromptTimer, trigger_in_truck_craft_prompt_system};
+pub use truck_craft_prompt::InTruckCraftPromptTimer;

@@ -40,8 +40,12 @@ impl Plugin for UnhaunterProfilePlugin {
         }
 
         // Make sure any stuck deposit is properly set on startup
-        app.add_systems(Startup, recover_stuck_insurance_deposit);
+        app_setup(app);
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, recover_stuck_insurance_deposit);
 }
 
 fn recover_stuck_insurance_deposit(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
