@@ -7,7 +7,7 @@ use uncore::{
 };
 use unstd::tiledmap::MapTileSetDb;
 
-pub fn load_level_handler(
+fn load_level_handler(
     mut ev: EventReader<LoadLevelEvent>,
     mut evw: EventWriter<LevelLoadedEvent>,
     asset_server: Res<AssetServer>,
@@ -37,4 +37,8 @@ pub fn load_level_handler(
         layers,
         floor_mapping,
     });
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, load_level_handler);
 }

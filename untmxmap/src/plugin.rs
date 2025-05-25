@@ -4,8 +4,7 @@ use uncore::assets::tmxmap::{TmxMap, TmxMapLoader};
 use uncore::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
 use unstd::tiledmap::MapTileSetDb;
 
-use crate::init_maps::{MapAssetIndexHandle, init_maps, map_index_preload, tmxmap_preload};
-use crate::load_level::load_level_handler;
+use crate::init_maps::MapAssetIndexHandle;
 
 pub struct UnhaunterTmxMapPlugin;
 
@@ -18,11 +17,9 @@ impl Plugin for UnhaunterTmxMapPlugin {
             .init_asset::<AssetIdx>()
             .init_asset_loader::<TmxMapLoader>()
             .init_asset_loader::<TsxSheetLoader>()
-            .init_asset_loader::<AssetIdxLoader>()
-            .add_systems(Startup, init_maps)
-            .add_systems(
-                Update,
-                (map_index_preload, tmxmap_preload, load_level_handler),
-            );
+            .init_asset_loader::<AssetIdxLoader>();
+
+        crate::init_maps::app_setup(app);
+        crate::load_level::app_setup(app);
     }
 }

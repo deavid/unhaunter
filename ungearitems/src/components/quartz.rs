@@ -125,7 +125,7 @@ impl From<QuartzStoneData> for Gear {
     }
 }
 
-pub fn update_quartz_and_ghost(
+fn update_quartz_and_ghost(
     mut q_gear1: Query<(&Position, &mut PlayerGear)>,
     mut q_gear2: Query<(&Position, &mut DeployedGearData)>,
     mut q_ghost: Query<(&Position, &mut GhostSprite)>,
@@ -160,4 +160,8 @@ pub fn update_quartz_and_ghost(
         }
     }
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_quartz_and_ghost);
 }

@@ -70,7 +70,7 @@ pub struct UIMissionMapping {
 pub struct InitialScrollTarget(Option<usize>);
 
 /// Setup function for unified mission selection systems
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<UIMissionMapping>()
         .init_resource::<InitialScrollTarget>()
         .add_systems(OnEnter(AppState::MissionSelect), setup_ui)

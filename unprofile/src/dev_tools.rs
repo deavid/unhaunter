@@ -18,8 +18,13 @@ pub fn get_fixture_directory() -> Option<PathBuf> {
     }
 }
 
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, snapshot_schema_system)
+        .add_systems(Startup, validate_schema_snapshots);
+}
+
 /// System to create a versioned snapshot of the player profile schema.
-pub fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>>) {
+fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>>) {
     #[cfg(all(debug_assertions, target_os = "linux"))]
     {
         use ron::ser::{PrettyConfig, to_string_pretty};
@@ -48,7 +53,7 @@ pub fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>
 }
 
 /// System to validate schema snapshots against the current `PlayerProfileData` definition.
-pub fn validate_schema_snapshots() {
+fn validate_schema_snapshots() {
     #[cfg(all(debug_assertions, target_os = "linux"))]
     {
         use crate::data::PlayerProfileData;

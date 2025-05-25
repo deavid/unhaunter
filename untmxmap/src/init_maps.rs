@@ -51,12 +51,17 @@ impl MapAssetIndexHandle {
     }
 }
 
-pub fn init_maps(asset_server: Res<AssetServer>, mut mapsidx: ResMut<MapAssetIndexHandle>) {
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, init_maps);
+    app.add_systems(Update, (map_index_preload, tmxmap_preload));
+}
+
+fn init_maps(asset_server: Res<AssetServer>, mut mapsidx: ResMut<MapAssetIndexHandle>) {
     mapsidx.tmxidx = asset_server.load("index/maps-tmx.assetidx");
     mapsidx.tsxidx = asset_server.load("index/maps-tsx.assetidx");
 }
 
-pub fn map_index_preload(
+fn map_index_preload(
     asset_server: Res<AssetServer>,
     idx_assets: Res<Assets<AssetIdx>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
@@ -91,7 +96,7 @@ pub fn map_index_preload(
     mapsidx.idxprocessed = true;
 }
 
-pub fn tmxmap_preload(
+fn tmxmap_preload(
     mut maps: ResMut<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,

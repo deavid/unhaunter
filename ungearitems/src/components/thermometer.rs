@@ -225,7 +225,7 @@ impl From<Thermometer> for Gear {
     }
 }
 
-pub fn temperature_update(
+fn temperature_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,
@@ -370,4 +370,8 @@ pub fn temperature_update(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, temperature_update);
 }

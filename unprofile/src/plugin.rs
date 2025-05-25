@@ -33,9 +33,7 @@ impl Plugin for UnhaunterProfilePlugin {
         {
             #[cfg(target_os = "linux")]
             {
-                use crate::dev_tools;
-                app.add_systems(Startup, dev_tools::snapshot_schema_system)
-                    .add_systems(Startup, dev_tools::validate_schema_snapshots);
+                crate::dev_tools::app_setup(app);
             }
         }
 

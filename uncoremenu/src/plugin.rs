@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
 use crate::events::KeyboardNavigate;
-use crate::scrollbar;
-use crate::systems; // Import scrollbar module
+use crate::systems;
 
 /// Plugin that adds all menu component systems to the app
 pub struct UnhaunterCoreMenuPlugin;
@@ -12,21 +11,9 @@ impl Plugin for UnhaunterCoreMenuPlugin {
         app.add_event::<systems::MenuItemClicked>()
             .add_event::<systems::MenuItemSelected>()
             .add_event::<systems::MenuEscapeEvent>()
-            .add_event::<KeyboardNavigate>() // Register the KeyboardNavigate event
-            .add_systems(
-                Update,
-                (
-                    systems::menu_mouse_movement_system,
-                    systems::menu_interaction_system,
-                    systems::menu_keyboard_system,
-                    systems::update_menu_item_visuals,
-                    // Add scrollbar systems
-                    scrollbar::update_scroll_position,
-                    scrollbar::update_scrollbar,
-                    scrollbar::handle_scrollbar_interactions,
-                    scrollbar::ensure_selected_item_visible,
-                )
-                    .chain(),
-            );
+            .add_event::<KeyboardNavigate>();
+
+        crate::systems::app_setup(app);
+        crate::scrollbar::app_setup(app);
     }
 }

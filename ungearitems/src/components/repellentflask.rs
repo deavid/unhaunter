@@ -165,7 +165,7 @@ impl From<RepellentFlask> for Gear {
     }
 }
 
-pub fn repellent_update(
+fn repellent_update(
     mut cmd: Commands,
     mut qgs: Query<(&Position, &mut GhostSprite)>,
     mut qrp: Query<
@@ -344,4 +344,8 @@ pub fn repellent_update(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, repellent_update);
 }
