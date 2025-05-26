@@ -14,9 +14,16 @@ use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::GameplaySettings;
 
-fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
+fn cleanup(
+    mut commands: Commands,
+    qg: Query<Entity, With<GameUI>>,
+    qwt: Query<Entity, With<WalkieTextUIRoot>>,
+) {
     // Despawn game UI if not used
     for gui in qg.iter() {
+        commands.entity(gui).despawn_recursive();
+    }
+    for gui in qwt.iter() {
         commands.entity(gui).despawn_recursive();
     }
 }
