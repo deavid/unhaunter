@@ -1,13 +1,13 @@
 use super::truckgear::TruckGear;
-use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton}; // Assuming TruckUIButton is still needed
+use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
-use uncore::states::GameState;
 use uncore::components::player_inventory::{Inventory, InventoryNext};
 use uncore::components::player_sprite::PlayerSprite;
-use uncore::difficulty::CurrentDifficulty; // Use CurrentDifficulty
+use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
 use uncore::types::evidence_status::EvidenceStatus;
 use uncore::types::gear::equipmentposition::Hand;
@@ -39,7 +39,7 @@ pub fn setup_loadout_ui(
     p: &mut ChildBuilder,
     handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
-    difficulty: &CurrentDifficulty, // Use CurrentDifficulty here
+    difficulty: &CurrentDifficulty,
 ) {
     let button = || {
         (
@@ -79,7 +79,7 @@ pub fn setup_loadout_ui(
             },
         )
     };
-    let equipment_def = || equipment(GearSpriteID::None); // Default to None if no gear
+    let equipment_def = || equipment(GearSpriteID::None);
 
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| {
         (
@@ -132,7 +132,6 @@ pub fn setup_loadout_ui(
             });
             p.spawn(equipment_frame(materials)).with_children(|p| {
                 for i in 0..2 {
-                    // Assuming 2 backpack slots
                     p.spawn(button())
                         .insert(LoadoutButton::InventoryNext(InventoryNext::new(i)))
                         .with_children(|p| {
@@ -170,14 +169,13 @@ pub fn setup_loadout_ui(
                     row_gap: Val::Px(6.0 * UI_SCALE),
                     column_gap: Val::Px(6.0 * UI_SCALE),
                     min_height: Val::Px(200.0 * UI_SCALE),
-                    max_width: Val::Px(600.0 * UI_SCALE), // Increased max width
+                    max_width: Val::Px(600.0 * UI_SCALE),
                     padding: UiRect::all(Val::Px(12.0 * UI_SCALE)),
                     margin: UiRect::all(Val::Px(2.0 * UI_SCALE)),
                     ..default()
                 },
             ))
             .with_children(|p| {
-                // Use difficulty.0 (DifficultyStruct) to get truck_gear
                 let tg = TruckGear::from_difficulty(&difficulty.0);
                 for gear in &tg.inventory {
                     p.spawn(button())
@@ -262,8 +260,6 @@ fn update_loadout_buttons(
     >,
     mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    // This query was for TruckUIButton from Journal, not needed for Loadout hover help directly
-    // but EvidenceStatus uses it.
     interaction_query_journal_buttons: Query<&TruckUIButton, With<Button>>,
     mut ev_clk: EventWriter<EventButtonClicked>,
     gc: Res<GameConfig>,
@@ -364,7 +360,7 @@ fn update_loadout_buttons(
         (
             format!("{}:", gear_name),
             format!(
-                "{}{}{}{}", // Using empty strings to conditionally add newlines
+                "{}{}{}{}",
                 gear_desc,
                 if evidence_text.is_empty() && status.help_text.is_empty() && click_help.is_empty()
                 {
@@ -408,12 +404,11 @@ fn button_clicked(
     };
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
-            p_gear.take_hand(&inv.hand); // This returns the taken gear, effectively removing it
+            p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
             if let Some(idx) = invnext.idx {
-                // Ensure idx is Some
-                p_gear.take_next(idx); // This returns the taken gear
+                p_gear.take_next(idx);
             }
         }
         LoadoutButton::Van(gear) => {

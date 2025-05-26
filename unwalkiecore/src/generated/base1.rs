@@ -11,7 +11,6 @@ pub enum Base1Concept {
     AllObjectivesMetReminderToEndMission,
     GearInVan,
     GhostNearHunt,
-    MissionStartEasy,
     PlayerLeavesTruckWithoutChangingLoadout,
 }
 
@@ -341,62 +340,6 @@ impl Base1Concept {
                     subtitle_text: "This is your final warning! A hunt is about to begin. You need to act fast.".to_string(),
                     tags: vec![WalkieTag::DirectHint, WalkieTag::ShortBrevity, WalkieTag::UrgentReminder],
                     length_seconds: 5,
-                },
-            ],
-            Self::MissionStartEasy => vec![
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_01.ogg".to_string(),
-                    subtitle_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::NeutralObservation],
-                    length_seconds: 10,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_02.ogg".to_string(),
-                    subtitle_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::NeutralObservation],
-                    length_seconds: 10,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_03.ogg".to_string(),
-                    subtitle_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_04.ogg".to_string(),
-                    subtitle_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::MediumLength, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_05.ogg".to_string(),
-                    subtitle_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 9,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_06.ogg".to_string(),
-                    subtitle_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_07.ogg".to_string(),
-                    subtitle_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_08.ogg".to_string(),
-                    subtitle_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::NeutralObservation, WalkieTag::ShortBrevity],
-                    length_seconds: 6,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_09.ogg".to_string(),
-                    subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::SnarkyHumor],
-                    length_seconds: 7,
                 },
             ],
             Self::PlayerLeavesTruckWithoutChangingLoadout => vec![

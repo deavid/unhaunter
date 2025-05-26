@@ -17,7 +17,7 @@ use ungearitems::components::repellentflask::RepellentFlask;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone
-const LINGER_THRESHOLD_SECONDS: f64 = 30.0;
+const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
 
 fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,

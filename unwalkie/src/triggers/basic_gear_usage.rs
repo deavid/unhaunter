@@ -98,7 +98,7 @@ fn trigger_gear_selected_not_activated_system(
     }
 
     // 4. Manage Tracker State & Timer
-    let current_gear_kind = right_hand_gear.kind.clone(); // Clone here as it's cheap
+    let current_gear_kind = right_hand_gear.kind;
     let mut reset_timer_this_frame = false;
 
     if keyboard_input.just_pressed(player_sprite.controls.trigger) {
@@ -242,7 +242,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 
     // 4. Inspect Right-Hand Gear
-    let current_tool_kind = player_gear.right_hand.kind.clone();
+    let current_tool_kind = player_gear.right_hand.kind;
     if current_tool_kind != GearKind::Thermometer && current_tool_kind != GearKind::EMFMeter {
         if tracker.is_some() {
             *tracker = None;
@@ -302,14 +302,14 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
             } else {
                 // Tool in hand changed, reset tracker
                 *current_tracker_mut = IneffectiveToolInHotspotTracker {
-                    tool_in_hand: current_tool_kind.clone(),
+                    tool_in_hand: current_tool_kind,
                     duration_in_hotspot_with_ineffective_tool_active: 0.0,
                 };
             }
         }
         None => {
             *tracker = Some(IneffectiveToolInHotspotTracker {
-                tool_in_hand: current_tool_kind.clone(),
+                tool_in_hand: current_tool_kind,
                 duration_in_hotspot_with_ineffective_tool_active: 0.0,
             });
         }
@@ -395,7 +395,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 4. Manage Tracker - time_with_current_tool_continuously_active
-    let current_right_tool_kind = player_gear.right_hand.kind.clone();
+    let current_right_tool_kind = player_gear.right_hand.kind;
     let mut is_current_tool_an_active_evidence_tool = false;
 
     if current_right_tool_kind != GearKind::None
@@ -409,11 +409,11 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     if is_current_tool_an_active_evidence_tool {
-        if tracker.right_hand_tool_active == Some(current_right_tool_kind.clone()) {
+        if tracker.right_hand_tool_active == Some(current_right_tool_kind) {
             tracker.time_with_current_tool_continuously_active += time.delta_secs();
         } else {
             // Tool changed or just became an active evidence tool
-            tracker.right_hand_tool_active = Some(current_right_tool_kind.clone());
+            tracker.right_hand_tool_active = Some(current_right_tool_kind);
             tracker.time_with_current_tool_continuously_active = 0.0;
         }
     } else {

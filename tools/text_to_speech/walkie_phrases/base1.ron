@@ -226,56 +226,6 @@
       ],
     ),
     (
-      name: "MissionStartEasy",
-      lines: [
-        (
-          tts_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
-          subtitle_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.",
-          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
-        ),
-        (
-          tts_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
-          subtitle_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.",
-          tags: [FirstTimeHint, NeutralObservation, LongDetailed],
-        ),
-        (
-          tts_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
-          subtitle_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.",
-          tags: [FirstTimeHint, Encouraging, MediumLength],
-        ),
-        (
-          tts_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
-          subtitle_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.",
-          tags: [FirstTimeHint, SnarkyHumor, MediumLength],
-        ),
-        (
-          tts_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
-          subtitle_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.",
-          tags: [FirstTimeHint, Encouraging, MediumLength],
-        ),
-        (
-          tts_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
-          subtitle_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.",
-          tags: [FirstTimeHint, SnarkyHumor, SlightlyImpatient, LongDetailed],
-        ),
-        (
-          tts_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
-          subtitle_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.",
-          tags: [FirstTimeHint, Encouraging, DirectHint, MediumLength],
-        ),
-        (
-          tts_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
-          subtitle_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.",
-          tags: [FirstTimeHint, NeutralObservation, ShortBrevity],
-        ),
-        (
-          tts_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
-          subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.",
-          tags: [FirstTimeHint, NeutralObservation, SnarkyHumor, MediumLength],
-        ),
-      ],
-    ),
-    (
       name: "AllObjectivesMetReminderToEndMission",
       lines: [
         (

@@ -14,7 +14,7 @@ impl TruckGear {
             inventory: difficulty
                 .truck_gear
                 .iter()
-                .map(|gk| Gear::from_gearkind(gk.clone()))
+                .map(|gk| Gear::from_gearkind(*gk))
                 .collect::<Vec<_>>(),
         }
     }

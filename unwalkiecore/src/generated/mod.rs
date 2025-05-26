@@ -13,3 +13,5 @@ pub mod locomotion_and_interaction;
 pub mod mission_progression_and_truck;
 pub mod player_wellbeing;
 pub mod repellent_and_expulsion;
+pub mod tutorial_chapter_intros;
+pub mod tutorial_gear_explanations;

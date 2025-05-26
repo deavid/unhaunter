@@ -34,7 +34,14 @@ echo; echo;
 echo; echo;
 
 # for f in $(git ls-files -- "*.rs" "*.yaml" "*.md" "*.sh" "*.toml" "*.html" "*.wgsl"); do
-for f in $(git ls-files -- "*.rs" "*.toml" "*.md"); do
+for f in $(git ls-files -- "*.rs" "*.toml" "*.md" "*.ron"); do
+    # Skip files larger than 100KB (102400 bytes)
+    file_size=$(stat -c%s "$f" 2>/dev/null || echo 0)
+    if [ "$file_size" -gt 102400 ]; then
+        echo "--- SKIPPED FILE \`$f\` (size: $file_size bytes, > 100KB) ---";
+        echo; echo;
+        continue
+    fi
 
     echo "--- BEGIN FILE \`$f\` ---";
     echo; echo;

@@ -8,8 +8,13 @@ use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
 use crate::generated::player_wellbeing::PlayerWellbeingConcept;
 use crate::generated::repellent_and_expulsion::RepellentAndExpulsionConcept;
+use crate::generated::tutorial_chapter_intros::TutorialChapterIntrosConcept;
+use crate::generated::tutorial_gear_explanations::TutorialGearExplanationsConcept;
+use bevy::log::warn;
 use bevy::prelude::Event;
 use enum_iterator::Sequence;
+use uncore::difficulty::Difficulty;
+use uncore::types::gear_kind::GearKind;
 use unwalkie_types::VoiceLineData;
 
 /// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
@@ -53,6 +58,14 @@ impl WalkieEventPriority {
     }
 }
 
+struct NullVoice;
+
+impl ConceptTrait for NullVoice {
+    fn get_lines(&self) -> Vec<VoiceLineData> {
+        vec![]
+    }
+}
+
 /// Sending this event will cause the walkie to play a message.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Sequence)]
 pub enum WalkieEvent {
@@ -60,8 +73,13 @@ pub enum WalkieEvent {
     GearInVan,
     /// When the Ghost rage is near its limit.
     GhostNearHunt,
-    /// Welcome message for easy difficulty.
-    MissionStartEasy,
+    // MissionStartEasy, // Removed as per task
+
+    // --- Tutorial and Difficulty Intros ---
+    /// Chapter intros based on difficulty/chapter number
+    ChapterIntro(Difficulty),
+    /// Explanations for specific gear items
+    GearExplanation(GearKind),
 
     // --- Locomotion and Interaction Events ---
     /// Player hasn\'t moved significantly from the start.
@@ -182,7 +200,74 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => Box::new(Base1Concept::GearInVan),
             WalkieEvent::GhostNearHunt => Box::new(Base1Concept::GhostNearHunt),
-            WalkieEvent::MissionStartEasy => Box::new(Base1Concept::MissionStartEasy),
+            WalkieEvent::ChapterIntro(difficulty) => match difficulty {
+                Difficulty::TutorialChapter1 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter1Intro)
+                }
+                Difficulty::TutorialChapter2 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter2Intro)
+                }
+                Difficulty::TutorialChapter3 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter3Intro)
+                }
+                Difficulty::TutorialChapter4 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter4Intro)
+                }
+                Difficulty::TutorialChapter5 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter5Intro)
+                }
+                Difficulty::StandardChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::StandardChallengeIntro)
+                }
+                Difficulty::HardChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::HardChallengeIntro)
+                }
+                Difficulty::ExpertChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::ExpertChallengeIntro)
+                }
+                Difficulty::MasterChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::MasterChallengeIntro)
+                }
+            },
+            WalkieEvent::GearExplanation(gear_kind) => match gear_kind {
+                GearKind::Flashlight => {
+                    Box::new(TutorialGearExplanationsConcept::FlashlightEnabledIntro)
+                }
+                GearKind::Thermometer => {
+                    Box::new(TutorialGearExplanationsConcept::ThermometerEnabledIntro)
+                }
+                GearKind::EMFMeter => {
+                    Box::new(TutorialGearExplanationsConcept::EMFMeterEnabledIntro)
+                }
+                GearKind::UVTorch => Box::new(TutorialGearExplanationsConcept::UVTorchEnabledIntro),
+                GearKind::Videocam => {
+                    Box::new(TutorialGearExplanationsConcept::VideocamEnabledIntro)
+                }
+                GearKind::Recorder => {
+                    Box::new(TutorialGearExplanationsConcept::RecorderEnabledIntro)
+                }
+                GearKind::GeigerCounter => {
+                    Box::new(TutorialGearExplanationsConcept::GeigerCounterEnabledIntro)
+                }
+                GearKind::SpiritBox => {
+                    Box::new(TutorialGearExplanationsConcept::SpiritBoxEnabledIntro)
+                }
+                GearKind::RedTorch => {
+                    Box::new(TutorialGearExplanationsConcept::RedTorchEnabledIntro)
+                }
+                GearKind::Salt => Box::new(TutorialGearExplanationsConcept::SaltSelectedIntro),
+                GearKind::QuartzStone => {
+                    Box::new(TutorialGearExplanationsConcept::QuartzStoneSelectedIntro)
+                }
+                GearKind::SageBundle => {
+                    Box::new(TutorialGearExplanationsConcept::SageBundleSelectedIntro)
+                }
+
+                _ => {
+                    warn!("No gear explanation concept for gear kind: {:?}", gear_kind);
+                    Box::new(NullVoice)
+                }
+            },
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => {
                 Box::new(LocomotionAndInteractionConcept::PlayerStuckAtStart)
@@ -346,7 +431,9 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => 120.0 * count,
             WalkieEvent::GhostNearHunt => 120.0 * count.cbrt(),
-            WalkieEvent::MissionStartEasy => 3600.0 * 24.0 * 7.0, // Effectively once per week
+            // WalkieEvent::MissionStartEasy => 3600.0 * 24.0 * 7.0, // Removed
+            WalkieEvent::ChapterIntro(_) => 3600.0 * 24.0 * 365.0, // Effectively once (very long cooldown)
+            WalkieEvent::GearExplanation(_) => 3600.0 * 24.0 * 365.0, // Effectively once (very long cooldown)
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => 60.0 * count,
@@ -427,7 +514,9 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => WalkieEventPriority::Low,
             WalkieEvent::GhostNearHunt => WalkieEventPriority::Urgent,
-            WalkieEvent::MissionStartEasy => WalkieEventPriority::Medium,
+            WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
+            WalkieEvent::GearExplanation(_) => WalkieEventPriority::Medium,
+
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
             WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
@@ -500,11 +589,52 @@ impl WalkieEvent {
             // --- Base1 ---
             WalkieEvent::GearInVan => "Return to van; check Loadout tab for gear.",
             WalkieEvent::GhostNearHunt => "Ghost is hunting! Hide [E] or create distance!",
-            WalkieEvent::MissionStartEasy => "Approach the building to start investigating.",
+            WalkieEvent::ChapterIntro(difficulty) => match difficulty {
+                Difficulty::TutorialChapter1 => {
+                    "Welcome to your first investigation! For now, only two tools: EMF & Thermometer. Approach the building to start investigating."
+                }
+                Difficulty::TutorialChapter2 => {
+                    "Time to learn about new evidence types. Check out the UV Torch and Video Cam."
+                }
+                Difficulty::TutorialChapter3 => {
+                    "Let's explore more advanced gear. Use the Recorder and Geiger Counter."
+                }
+                Difficulty::TutorialChapter4 => {
+                    "Capturing evidence is key. Let's practice with the Spirit Box and Red Torch."
+                }
+                Difficulty::TutorialChapter5 => {
+                    "Final training: master all your tools. Salt, Quartz, and Sage are now available."
+                }
+                Difficulty::StandardChallenge => "Standard contract. Identify the entity.",
+                Difficulty::HardChallenge => "This will be a challenge. Expect aggression.",
+                Difficulty::ExpertChallenge => "Expert level: a highly dangerous entity awaits.",
+                Difficulty::MasterChallenge => {
+                    "Master challenge: face the ultimate paranormal threat."
+                }
+            },
+            WalkieEvent::GearExplanation(gear_kind) => match gear_kind {
+                GearKind::Flashlight => "Flashlight: [TAB] to toggle modes. High-beam overheats.",
+                GearKind::Thermometer => "Thermometer: Detects Freezing Temps (<0°C).",
+                GearKind::EMFMeter => "EMF Meter: Reads energy. \"EMF5\" is key evidence.",
+                GearKind::UVTorch => "UV Torch: Makes some ghosts turn green.",
+                GearKind::Videocam => {
+                    "Video Cam: Look using the night vision to see if there are floating orbs."
+                }
+                GearKind::Recorder => "Digital Recorder: Record for EVPs (ghost voices).",
+                GearKind::GeigerCounter => "Geiger Counter: Finds High Radiation (>500cpm).",
+                GearKind::SpiritBox => "Spirit Box: Some ghosts talk throught it.",
+                GearKind::RedTorch => "Red Torch: Some ghosts glow orange under it.",
+                GearKind::Salt => "Salt: Place to track the ghost (UV might be needed).",
+                GearKind::QuartzStone => "Quartz Stone: Hold for protection. Cracks/shatters.",
+                GearKind::SageBundle => "Sage Bundle: Light to cleanse area, deters ghost.",
+                _ => "This gear has specific uses. Check Journal for details.",
+            },
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => "Use [WASD] or Arrow Keys to move.",
-            WalkieEvent::ErraticMovementEarly => "Try smoother [WASD] movements to navigate.",
+            WalkieEvent::ErraticMovementEarly => {
+                "Movement is isometric by default, you'll get used to in no time;\nSettings -> Gameplay -> Movement Style"
+            }
             WalkieEvent::DoorInteractionHesitation => "Press [E] near door to open.",
             WalkieEvent::StrugglingWithGrabDrop => "Use [F] to grab small items, [G] to drop.",
             WalkieEvent::StrugglingWithHideUnhide => {
@@ -525,7 +655,7 @@ impl WalkieEvent {
                 "That was the ghost! Observe its appearance and behavior."
             }
             WalkieEvent::RoomLightsOnGearNeedsDark => {
-                "This gear (UV/VideoCam) works best in darkness. Turn off room lights [E]."
+                "This gear works best in darkness. Turn off room lights."
             }
             WalkieEvent::ThermometerNonFreezingFixation => {
                 "Journal Check: Cold is good, but <0°C is \'Freezing Temps\' evidence."
@@ -562,7 +692,7 @@ impl WalkieEvent {
                 "For Sage to work, ensure its smoke reaches the ghost\'s area."
             }
             WalkieEvent::SageUnusedDefensivelyDuringHunt => {
-                "Sage could have helped during that hunt! Use [R]/[Tab] to activate if equipped."
+                "Sage could have helped during that hunt! Use [R] to activate if equipped."
             }
 
             // --- Repellent and Expulsion Events ---
@@ -576,7 +706,7 @@ impl WalkieEvent {
                 "Repellent used too far away! Get closer to the ghost or its breach."
             }
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
-                "Strong ghost reaction to repellent! Is it the correct type?"
+                "Strong ghost reaction to repellent! It might be the correct type."
             }
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => {
                 "Correct repellent type, but you ran out! Craft more in the van."
@@ -639,10 +769,10 @@ impl WalkieEvent {
                 "Evidence found! Log it in the Journal in the truck."
             }
             WalkieEvent::InTruckWithEvidenceNoJournal => {
-                "New evidence collected. Open Journal [J] and update your findings."
+                "New evidence collected. Go to the truck and update your findings."
             }
             WalkieEvent::HuntWarningNoPlayerEvasion => {
-                "Hunt starting! Hide or run! Check Journal [J] for ghost type info."
+                "Hunt starting! Hide or run! Press and Hold [E] near big furniture to hide."
             }
             WalkieEvent::AllObjectivesMetReminderToEndMission => {
                 "All objectives complete! Return to truck and 'End Mission'."
