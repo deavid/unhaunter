@@ -111,4 +111,7 @@ pub struct PlayerProfileData {
     pub times_evidence_acknowledged_on_gear: HashMap<Evidence, u32>,
     #[serde(default)]
     pub times_evidence_acknowledged_in_journal: HashMap<Evidence, u32>,
+    /// Tracks if a tutorial chapter intro for a given difficulty/chapter has been played.
+    #[serde(default)]
+    pub tutorial_chapter_intro_played: HashMap<Difficulty, bool>,
 }

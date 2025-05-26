@@ -2,6 +2,7 @@ use crate::gear_stuff::GearStuff;
 use crate::gear_usable::GearUsable;
 use bevy::prelude::*;
 use uncore::types::gear_kind::GearKind;
+use uncore::types::ghost::types::GhostType;
 use uncore::{
     components::board::position::Position,
     types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID},
@@ -96,6 +97,83 @@ impl GearUsable for Gear {
     fn needs_darkness(&self) -> bool {
         match &self.data {
             Some(x) => x.needs_darkness(),
+            None => false,
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        match &self.data {
+            Some(x) => x.is_enabled(),
+            None => false,
+        }
+    }
+
+    fn power(&self) -> f32 {
+        match &self.data {
+            Some(x) => x.power(),
+            None => 0.0,
+        }
+    }
+
+    fn color(&self) -> Color {
+        match &self.data {
+            Some(x) => x.color(),
+            None => Color::WHITE,
+        }
+    }
+
+    fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
+        match &self.data {
+            Some(x) => x.can_fill_liquid(ghost_type),
+            None => false,
+        }
+    }
+
+    fn do_fill_liquid(&mut self, ghost_type: GhostType) {
+        match &mut self.data {
+            Some(x) => x.do_fill_liquid(ghost_type),
+            None => warn!("do_fill_liquid called on empty Gear"),
+        }
+    }
+
+    fn is_electronic(&self) -> bool {
+        match &self.data {
+            Some(x) => x.is_electronic(),
+            None => false,
+        }
+    }
+
+    fn can_enable(&self) -> bool {
+        match &self.data {
+            Some(x) => x.can_enable(),
+            None => false,
+        }
+    }
+
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        match &self.data {
+            Some(x) => x.is_status_text_showing_evidence(),
+            None => 0.0,
+        }
+    }
+
+    fn is_icon_showing_evidence(&self) -> f32 {
+        match &self.data {
+            Some(x) => x.is_icon_showing_evidence(),
+            None => 0.0,
+        }
+    }
+
+    fn is_sound_showing_evidence(&self) -> f32 {
+        match &self.data {
+            Some(x) => x.is_sound_showing_evidence(),
+            None => 0.0,
+        }
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        match &self.data {
+            Some(x) => x.is_blinking_hint_active(),
             None => false,
         }
     }

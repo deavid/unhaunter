@@ -9,11 +9,11 @@ pub mod ghost_influence;
 pub mod ghost_orb_particle;
 pub mod ghost_sprite;
 pub mod hint_ui;
+pub mod light;
 pub mod player;
 pub mod player_inventory;
 pub mod player_sprite;
 pub mod repellent_particle;
-pub mod light; // Added light module
 pub mod sprite_type;
 pub mod summary_ui;
 pub mod truck;

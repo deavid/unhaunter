@@ -29,6 +29,11 @@ pub enum WalkieTag {
     /// An informative line.
     Informative,
 
+    // --- other ---
+    DirectWarning,
+    SeriousTone,
+    GrimAtmosphere,
+    FatalisticTone,
     // --- Reminder Severity ---
     /// A reminder for a critical mechanic or event that the player might have forgotten.
     UrgentReminder,
