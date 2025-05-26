@@ -463,9 +463,9 @@ impl Difficulty {
                 inventory: vec![GearKind::EMFMeter, GearKind::None],
             },
             Difficulty::TutorialChapter2 => PlayerGearKind {
-                left_hand: GearKind::Videocam,
-                right_hand: GearKind::UVTorch,
-                inventory: vec![GearKind::Thermometer, GearKind::EMFMeter],
+                left_hand: GearKind::UVTorch,
+                right_hand: GearKind::Thermometer,
+                inventory: vec![GearKind::Videocam, GearKind::EMFMeter],
             },
             _ => PlayerGearKind {
                 left_hand: GearKind::Flashlight,

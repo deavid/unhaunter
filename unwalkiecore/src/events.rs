@@ -578,7 +578,7 @@ impl WalkieEvent {
                 "Repellent used too far away! Get closer to the ghost or its breach."
             }
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
-                "Strong ghost reaction to repellent! Is it the correct type?"
+                "Strong ghost reaction to repellent! It might be the correct type."
             }
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => {
                 "Correct repellent type, but you ran out! Craft more in the van."

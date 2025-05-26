@@ -5,6 +5,7 @@ use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
+    WalkieTextUIRoot,
 };
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -37,6 +38,41 @@ fn setup_ui(
     handles: Res<GameAssets>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
+    // Spawn independent WalkieText UI
+    commands
+        .spawn((
+            WalkieTextUIRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(10.0),
+                left: Val::Percent(20.0),
+                width: Val::Percent(60.0),
+                height: Val::Auto,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ZIndex(100),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn(Text::new(""))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w400i_regular.clone(),
+                    font_size: 18.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextLayout::new_with_justify(JustifyText::Center))
+                .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
+                .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
+                .insert(Node {
+                    padding: UiRect::axes(Val::Px(10.0 * UI_SCALE), Val::Px(1.0 * UI_SCALE)),
+                    ..default()
+                })
+                .insert(WalkieText);
+        });
+
+    // Spawn vignette for the damage background
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -207,31 +243,6 @@ fn setup_ui(
                     flex_grow: 0.0,
                     ..default()
                 });
-            parent.spawn(Node {
-                flex_grow: 0.5,
-                ..default()
-            });
-
-            parent
-                .spawn(Text::new(""))
-                .insert(TextFont {
-                    font: handles.fonts.chakra.w400i_regular.clone(),
-                    font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextLayout::new_with_justify(JustifyText::Center))
-                .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
-                .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
-                .insert(Node {
-                    align_self: AlignSelf::Center,
-                    justify_self: JustifySelf::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_grow: 0.1,
-                    margin: UiRect::bottom(Val::Px(-6.0 * UI_SCALE)),
-                    padding: UiRect::all(Val::Px(-1.0 * UI_SCALE)),
-                    ..default()
-                })
-                .insert(WalkieText);
             parent.spawn(Node {
                 flex_grow: 0.5,
                 ..default()
