@@ -30,14 +30,14 @@ fn trigger_darkness_level_system(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
+    mut stopwatch: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     let Ok((player_pos, _)) = qp.get_single() else {
@@ -48,14 +48,13 @@ fn trigger_darkness_level_system(
 
     if player_room.is_none() {
         // Player is not inside the location, no need to remind them.
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
 
-    if board_data.exposure_lux < 0.1 {
+    if board_data.exposure_lux < 0.7 {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
-        if stopwatch.elapsed_secs() > 10.0 {
-            // Changed from *seconds_dark > 10.0
+        if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
         }
     } else {

@@ -31,6 +31,7 @@ pub enum WalkieEventPriority {
     Low,
     Medium,
     High,
+    VeryHigh,
     Urgent,
 }
 
@@ -41,15 +42,17 @@ impl WalkieEventPriority {
             WalkieEventPriority::Low => 0.1,
             WalkieEventPriority::Medium => 1.0,
             WalkieEventPriority::High => 10.0,
-            WalkieEventPriority::Urgent => 100.0,
+            WalkieEventPriority::VeryHigh => 100.0,
+            WalkieEventPriority::Urgent => 1000.0,
         }
     }
     pub fn time_factor(&self) -> f32 {
         match self {
-            WalkieEventPriority::VeryLow => 3.0,
-            WalkieEventPriority::Low => 1.5,
+            WalkieEventPriority::VeryLow => 1.4,
+            WalkieEventPriority::Low => 1.2,
             WalkieEventPriority::Medium => 1.0,
-            WalkieEventPriority::High => 0.2,
+            WalkieEventPriority::High => 0.5,
+            WalkieEventPriority::VeryHigh => 0.2,
             WalkieEventPriority::Urgent => 0.05,
         }
     }
@@ -436,20 +439,20 @@ impl WalkieEvent {
             WalkieEvent::GearExplanation(_) => 3600.0 * 24.0 * 365.0, // Effectively once (very long cooldown)
 
             // --- Locomotion and Interaction ---
-            WalkieEvent::PlayerStuckAtStart => 60.0 * count,
+            WalkieEvent::PlayerStuckAtStart => 180.0 * count,
             WalkieEvent::ErraticMovementEarly => 3600.0 * 24.0, // Effectively once per day (mission)
             WalkieEvent::DoorInteractionHesitation => 3600.0 * 24.0, // Effectively once per day (mission)
-            WalkieEvent::StrugglingWithGrabDrop => 90.0 * count,
-            WalkieEvent::StrugglingWithHideUnhide => 75.0 * count,
+            WalkieEvent::StrugglingWithGrabDrop => 180.0 * count,
+            WalkieEvent::StrugglingWithHideUnhide => 180.0 * count,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => 30.0 * count,
 
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
+            WalkieEvent::DarkRoomNoLightUsed => 180.0 * count,
             WalkieEvent::BreachShowcase => 9000.0 * count,
             WalkieEvent::GhostShowcase => 9000.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
             WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
-            WalkieEvent::GearSelectedNotActivated => 60.0 * count,
+            WalkieEvent::GearSelectedNotActivated => 300.0 * count,
 
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
@@ -471,12 +474,12 @@ impl WalkieEvent {
             // --- Repellent and Expulsion ---
             WalkieEvent::GhostExpelledPlayerLingers => 120.0 * count,
             WalkieEvent::HasRepellentEntersLocation => 300.0 * count,
-            WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
-            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::GhostExpelledPlayerMissed => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::DidNotSwitchStartingGearInHotspot => 180.0 * count, // Trigger every 3 minutes if conditions met
-            WalkieEvent::DidNotCycleToOtherGear => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            WalkieEvent::RepellentUsedTooFar => 60.0 * count,
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count,
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count,
+            WalkieEvent::GhostExpelledPlayerMissed => 180.0 * count,
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => 180.0 * count,
+            WalkieEvent::DidNotCycleToOtherGear => 180.0 * count,
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => 300.0 * count, // Trigger every 5 minutes if conditions met
             WalkieEvent::EMFNonEMF5Fixation => 120.0 * count, // Trigger every 2 minutes if conditions met
@@ -499,7 +502,7 @@ impl WalkieEvent {
             WalkieEvent::ClearEvidenceFoundNoActionCKey => 120.0 * count,
             WalkieEvent::ClearEvidenceFoundNoActionTruck => 120.0 * count,
             WalkieEvent::InTruckWithEvidenceNoJournal => 120.0 * count,
-            WalkieEvent::HuntWarningNoPlayerEvasion => 30.0 * count,
+            WalkieEvent::HuntWarningNoPlayerEvasion => 120.0 * count,
             WalkieEvent::AllObjectivesMetReminderToEndMission => 180.0 * count,
             WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => 120.0 * count,
         }
@@ -525,7 +528,7 @@ impl WalkieEvent {
             WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Low,
+            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium,
             WalkieEvent::BreachShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::GhostShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
