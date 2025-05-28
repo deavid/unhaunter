@@ -17,7 +17,6 @@ use ungear::components::playergear::PlayerGear;
 use unsettings::game::{GameplaySettings, MovementStyle};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
-#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn keyboard_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,

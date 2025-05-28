@@ -77,7 +77,6 @@ pub struct GhostSetupSimulationMarker {
 /// * `qgs2` - Query for existing game sounds to despawn
 /// * `p` - Level system parameters containing all needed resources
 /// * `ev_level_ready` - Event writer to signal when level is ready
-#[allow(clippy::too_many_arguments)]
 fn load_level_handler(
     mut ev: EventReader<LevelLoadedEvent>,
     mut commands: Commands,

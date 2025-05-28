@@ -5,6 +5,7 @@ pub mod components;
 pub mod difficulty;
 pub mod events;
 pub mod metric_recorder;
+pub mod noise;
 pub mod platform;
 pub mod plugin;
 pub mod random_seed;

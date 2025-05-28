@@ -101,7 +101,6 @@ fn grab_object(
 /// If the drop is valid, the object is placed at the target tile. If the drop is
 /// invalid, an "invalid drop" sound effect is played, and the object is not
 /// dropped.
-#[allow(clippy::type_complexity)]
 fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
@@ -163,7 +162,6 @@ fn drop_object(
 /// indication that the object is being held. Additionally, it plays a scraping
 /// sound effect when the player moves while holding a movable object, with a
 /// cooldown to prevent the sound from playing too frequently.
-#[allow(clippy::type_complexity)]
 fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
     players: Query<(&Position, &PlayerGear, &Direction), With<PlayerSprite>>,

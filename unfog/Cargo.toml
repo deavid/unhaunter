@@ -13,5 +13,4 @@ unstd = { path = "../unstd" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
-noise = { workspace = true }
 ndarray = { workspace = true }

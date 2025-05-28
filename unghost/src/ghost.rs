@@ -9,6 +9,7 @@ use uncore::components::board::direction::Direction;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
+use uncore::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
@@ -54,7 +55,6 @@ impl FadeOut {
 ///
 /// This system handles the ghost's movement logic, ensuring it navigates the game
 /// world according to its current state and objectives.
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn ghost_movement(
     mut q: Query<
         (&mut GhostSprite, &mut Position, Entity),
@@ -358,12 +358,11 @@ impl RoarType {
 /// This system updates the ghost's rage based on player proximity, sanity, and
 /// sound levels. It triggers hunts when rage exceeds a threshold and handles
 /// player damage during hunts.
-#[allow(clippy::too_many_arguments)]
 fn ghost_enrage(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
-    mut qg: Query<(&mut GhostSprite, &Position), Without<FadeOut>>,
+    mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     mut gs: GearStuff,
     mut last_roar: Local<f32>,
@@ -374,7 +373,8 @@ fn ghost_enrage(
 
     timer.tick(time.delta());
     let dt = time.delta_secs();
-    for (mut ghost, ghost_position) in &mut qg {
+
+    for (mut ghost, ghost_position, _dynamics) in qg.iter_mut() {
         // --- Salty Trace Spawning Logic ---
         if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
             // Only spawn traces when NOT hunting and salty effect is active
@@ -407,7 +407,7 @@ fn ghost_enrage(
     *last_roar += dt;
     let mut should_roar = RoarType::None;
     let mut roar_time = 3.0;
-    for (mut ghost, gpos) in &mut qg {
+    for (mut ghost, gpos, dynamics) in qg.iter_mut() {
         if ghost.calm_time_secs > 0.0 {
             ghost.calm_time_secs -= dt.min(ghost.calm_time_secs);
         }
@@ -520,7 +520,8 @@ fn ghost_enrage(
         }
         avg_angry.push_len(angry, dt);
         let rage_limit =
-            400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier;
+            400.0 * difficulty.0.ghost_rage_likelihood.sqrt() * ghost.rage_limit_multiplier
+                / (dynamics.rage_tendency_multiplier + 0.01);
         ghost.rage_limit = rage_limit;
         if timer.just_finished() && DEBUG_HUNTS {
             info!(
@@ -663,7 +664,6 @@ fn spawn_salty_trace(
         .insert(GameSprite);
 }
 
-#[allow(clippy::type_complexity)]
 fn ghost_fade_out_system(
     mut commands: Commands,
     time: Res<Time>,
@@ -803,7 +803,7 @@ fn calculate_weighted_distance_squared(ghost_pos: &Position, player_pos: &Positi
     dx * dx + dy * dy + dz * dz
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
@@ -811,6 +811,7 @@ pub fn app_setup(app: &mut App) {
             ghost_enrage,
             ghost_fade_out_system,
             update_ghost_warning_field,
+            crate::systems::dynamic_behavior_update::update_ghost_behavior_dynamics_system,
         ),
     );
 }

@@ -23,7 +23,6 @@ impl Plugin for TutorialGearExplanationsTriggerPlugin {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn trigger_evidence_gear_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
     current_difficulty_res: Res<CurrentDifficulty>,
@@ -66,7 +65,6 @@ fn trigger_evidence_gear_explanations(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn trigger_support_item_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
     current_difficulty_res: Res<CurrentDifficulty>,

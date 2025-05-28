@@ -16,7 +16,6 @@ use ungear::gear_stuff::GearStuff;
 /// valid hiding spot. If so, the player character enters the hiding spot, becoming
 /// partially hidden. A visual overlay is added to the hiding spot to indicate the
 /// player's presence.
-#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn hide_player(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,

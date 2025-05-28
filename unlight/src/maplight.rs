@@ -218,7 +218,7 @@ fn player_visibility_system(
 ///
 /// * Adjusts tile and sprite colors based on lighting, visibility, and exposure,
 ///   creating a realistic and atmospheric visual experience.
-#[allow(clippy::type_complexity, clippy::too_many_arguments)]
+#[expect(clippy::type_complexity)]
 fn apply_lighting(
     mut qt2: Query<
         (
@@ -238,7 +238,6 @@ fn apply_lighting(
     gc: Res<GameConfig>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
-        // Create a ParamSet for Sprite queries
         Query<(
             &Position,
             &mut Sprite,
@@ -247,7 +246,7 @@ fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
-            Option<&GhostOrbParticle>, // Added GhostOrbParticle
+            Option<&GhostOrbParticle>,
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -258,7 +257,6 @@ fn apply_lighting(
             ),
         >,
     )>,
-    // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
     miasma_config: Res<MiasmaConfig>,
     mut visible: Local<HashSet<Entity>>,

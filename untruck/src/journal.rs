@@ -6,14 +6,13 @@ use bevy::{prelude::*, utils::HashSet};
 use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
-use uncore::resources::potential_id_timer::PotentialIDTimer; // New import
+use uncore::resources::potential_id_timer::PotentialIDTimer;
 use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 
-#[allow(clippy::type_complexity)]
 fn button_system(
     mut interaction_query: Query<
         (
@@ -33,7 +32,7 @@ fn button_system(
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     time: Res<Time>,
-    mut potential_id_timer: ResMut<PotentialIDTimer>, // Added ResMut to allow modification
+    mut potential_id_timer: ResMut<PotentialIDTimer>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
