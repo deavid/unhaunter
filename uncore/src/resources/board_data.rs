@@ -1,6 +1,9 @@
 use crate::{
     celsius_to_kelvin,
-    components::board::{boardposition::BoardPosition, position::Position},
+    components::{
+        board::{boardposition::BoardPosition, position::Position},
+        ghost_behavior_dynamics::GhostBehaviorDynamics,
+    },
     types::{
         board::{
             fielddata::{CollisionFieldData, LightFieldData},
@@ -32,7 +35,10 @@ pub struct BoardData {
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
+
+    /// Evidences of the current ghost
     pub evidences: HashSet<Evidence>,
+    pub ghost_dynamics: GhostBehaviorDynamics,
 
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
@@ -104,6 +110,7 @@ impl FromWorld for BoardData {
             },
             map_path: String::new(), // Initialize map_path with an empty string
             level_ready_time: 0.0,   // Initialize level_ready_time
+            ghost_dynamics: GhostBehaviorDynamics::default(),
         }
     }
 }

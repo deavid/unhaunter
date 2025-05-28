@@ -411,10 +411,10 @@ fn apply_lighting(
     cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
     // Minimum exp - controls how dark we can see
-    cursor_exp += 0.001 / difficulty.0.environment_gamma;
+    cursor_exp += 0.001 / difficulty.0.environment_gamma + difficulty.0.darkness_intensity;
 
     // Compensate overall to make the scene brighter
-    cursor_exp /= 2.8;
+    cursor_exp /= 2.8 / difficulty.0.darkness_intensity;
 
     if !cursor_exp.is_normal() {
         cursor_exp = bf.current_exposure;
@@ -840,24 +840,27 @@ fn apply_lighting(
                 dst_color = dst_color.with_luminance(l);
                 let r = dst_color.to_srgba().red;
                 let g = dst_color.to_srgba().green;
-                let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility.sqrt()
-                } else {
-                    0.0
-                };
-                let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    (ld.red * 32.0 * difficulty.0.evidence_visibility.sqrt()).clamp(0.0, 1.5)
-                } else {
-                    0.0
-                };
+                let e_uv = ld.ultraviolet * 9.0 * bf.ghost_dynamics.uv_ectoplasm_clarity.max(0.0);
+                let e_rl = (ld.red * 52.0 * bf.ghost_dynamics.rl_presence_clarity.max(0.0))
+                    .clamp(0.0, 1.5);
                 let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
                 let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
                     .clamp(0.001, 0.999);
                 opacity = opacity * f + orig_opacity * (1.0 - f);
-                let srgba = dst_color.with_luminance(l * ld.visible).to_srgba();
+                opacity *= (bf.ghost_dynamics.visual_alpha_multiplier * 0.5
+                    + 0.5
+                    + e_uv
+                    + e_rl
+                    + ld.ultraviolet * 2.0
+                    + ld.red * 10.0
+                    + ld.infrared)
+                    .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
+                let srgba = dst_color
+                    .with_luminance((l * ld.visible - ld.infrared).clamp(0.0, 1.0))
+                    .to_srgba();
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl + e_infra / 3.0)
-                    .with_green(g * ld.visible + e_uv + e_rl / 2.0 + e_infra)
+                    .with_red(r * ld.visible + e_rl / 1.2 + e_infra / 3.0)
+                    .with_green(g * ld.visible + e_uv + e_rl + e_infra)
                     .into();
             }
             smooth = 1.0;
@@ -1176,7 +1179,7 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.3, // Visible light darkness threshold
                     player_visibility_to_tile,
                     3.0, // Scaling factor for UV
-                )
+                ) * board_data.ghost_dynamics.uv_ectoplasm_clarity.max(0.0)
             } else {
                 0.0
             };
@@ -1196,7 +1199,7 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.3,
                     player_visibility_to_tile,
                     3.0, // Scaling factor for Red
-                )
+                ) * board_data.ghost_dynamics.rl_presence_clarity.max(0.0)
             } else {
                 0.0
             };
@@ -1217,7 +1220,7 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.2, // Visible light darkness threshold
                     player_visibility_to_tile,
                     5.0, // Scaling factor for Orbs (IR is usually strong)
-                )
+                ) * board_data.ghost_dynamics.floating_orbs_clarity.max(0.0)
             } else {
                 0.0
             };

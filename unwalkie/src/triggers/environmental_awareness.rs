@@ -52,7 +52,7 @@ fn trigger_darkness_level_system(
         return;
     }
 
-    if board_data.exposure_lux < 0.7 {
+    if board_data.exposure_lux < 0.4 {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
         if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use uncore::{
     components::{ghost_behavior_dynamics::GhostBehaviorDynamics, ghost_sprite::GhostSprite},
     difficulty::CurrentDifficulty,
+    resources::board_data::BoardData,
     types::evidence::Evidence,
 };
 
@@ -29,9 +30,7 @@ fn calculate_noise_multiplier(
     let sum = (short_term_noise + long_term_noise) * 2.0;
 
     let combined_noise = sum.tanh() * 0.5 + 0.5;
-    let scaled_value = combined_noise.powf(power_scale);
-
-    scaled_value.clamp(0.0, 1.0)
+    combined_noise.powf(power_scale) * 2.0 - 1.0 // Scale to [-1, 1]
 }
 
 pub(crate) fn update_ghost_behavior_dynamics_system(
@@ -39,6 +38,7 @@ pub(crate) fn update_ghost_behavior_dynamics_system(
     difficulty: Res<CurrentDifficulty>,
     noise_table: Res<uncore::noise::PerlinNoise>,
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
+    mut board_data: ResMut<BoardData>,
     mut report_time: Local<f32>,
 ) {
     let elapsed_seconds = time.elapsed_secs();
@@ -58,14 +58,13 @@ pub(crate) fn update_ghost_behavior_dynamics_system(
                 evidence_visibility_recip,
             );
 
-            let evidence_presence_multiplier =
-                if ghost_sprite.class.evidences().contains(&evidence_type) {
-                    1.0
-                } else {
-                    0.0
-                };
+            let evidence_presence_max = if ghost_sprite.class.evidences().contains(&evidence_type) {
+                1.0
+            } else {
+                0.0
+            };
 
-            let final_clarity_value = scaled_value * evidence_presence_multiplier;
+            let final_clarity_value = scaled_value.clamp(-1.0, evidence_presence_max);
             dynamics.set_clarity(evidence_type, final_clarity_value);
         }
 
@@ -86,6 +85,7 @@ pub(crate) fn update_ghost_behavior_dynamics_system(
             dynamics.noise_offsets.rage_tendency_multiplier_y,
             evidence_visibility_recip,
         );
+        board_data.ghost_dynamics = *dynamics;
         if *report_time > 10.0 {
             info!(
                 "Dynamics: Frz:{:.2}, Orbs:{:.2}, UV:{:.2}, EMF:{:.2}, EVP:{:.2}, SprtBx:{:.2}, RL:{:.2}, CPM500:{:.2}, Alpha:{:.2}, Rage:{:.2}",

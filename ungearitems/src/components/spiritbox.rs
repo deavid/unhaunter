@@ -189,7 +189,8 @@ impl GearUsable for SpiritBox {
         if gs.bf.evidences.contains(&Evidence::SpiritBox) {
             let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
             let temp_clamped = (temp_celsius - 3.0).clamp(0.5, 10.0);
-            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0;
+            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
+                * gs.bf.ghost_dynamics.spirit_box_clarity.max(0.0);
             // info!(
             //     "charge: {:.2} sound:{:.2} temp:{:.2} light:{:.2}",
             //     self.charge,

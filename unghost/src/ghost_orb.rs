@@ -12,7 +12,6 @@ use uncore::{
     },
     random_seed,
     resources::board_data::BoardData,
-    types::evidence::Evidence,
 };
 
 // Timer resource for controlling orb spawn rate (~1 per second)
@@ -36,16 +35,20 @@ pub fn spawn_ghost_orb_particles(
     breach_query: Query<(Entity, &Position), With<GhostBreach>>,
     board_data: Res<BoardData>,
 ) {
-    // Tick the timer
+    let mut rng = random_seed::rng();
     spawn_timer.0.tick(time.delta());
 
     // Only spawn orbs if the timer finished and FloatingOrbs is an active evidence type
-    if !spawn_timer.0.just_finished() || !board_data.evidences.contains(&Evidence::FloatingOrbs) {
+    if !spawn_timer.0.just_finished()
+        || !rng.random_bool(
+            board_data
+                .ghost_dynamics
+                .floating_orbs_clarity
+                .clamp(0.0, 1.0) as f64,
+        )
+    {
         return;
     }
-
-    // Get a random number generator
-    let mut rng = random_seed::rng();
 
     // For each ghost breach
     for (_breach_entity, breach_pos) in breach_query.iter() {

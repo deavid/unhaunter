@@ -34,11 +34,9 @@ impl GeigerCounter {
         }
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        if gs.bf.evidences.contains(&Evidence::CPM500) {
-            f32::tanh(avg_snd.sqrt() / 20.0) * 980.0
-        } else {
-            f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
-        }
+        let evidence = gs.bf.ghost_dynamics.cpm500_clarity.max(-0.5);
+
+        f32::tanh(avg_snd.sqrt() / (10.0 + evidence * 10.0)) * (480.0 + evidence * 500.0)
     }
 }
 

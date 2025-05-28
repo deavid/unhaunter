@@ -104,15 +104,15 @@ impl Difficulty {
     /// A higher value means the ghost becomes enraged more quickly.
     pub fn ghost_rage_likelihood(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.3,
-            Difficulty::TutorialChapter2 => 1.3,
-            Difficulty::TutorialChapter3 => 1.3,
-            Difficulty::TutorialChapter4 => 1.3,
-            Difficulty::TutorialChapter5 => 1.3,
-            Difficulty::StandardChallenge => 1.3, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.6,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 2.8,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 4.0,   // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 1.0,
+            Difficulty::TutorialChapter2 => 1.0,
+            Difficulty::TutorialChapter3 => 1.0,
+            Difficulty::TutorialChapter4 => 1.0,
+            Difficulty::TutorialChapter5 => 1.0,
+            Difficulty::StandardChallenge => 1.0, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.0,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.0,   // Was MasterGuardian
         }
     }
 
@@ -125,11 +125,11 @@ impl Difficulty {
             Difficulty::TutorialChapter2 => 1.1,
             Difficulty::TutorialChapter3 => 1.1,
             Difficulty::TutorialChapter4 => 1.1,
-            Difficulty::TutorialChapter5 => 1.2,
-            Difficulty::StandardChallenge => 1.25, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.35,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.6,    // Was ExpertOccultist
-            Difficulty::MasterChallenge => 2.6,    // Was MasterGuardian
+            Difficulty::TutorialChapter5 => 1.1,
+            Difficulty::StandardChallenge => 1.1, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.1,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.1,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.1,   // Was MasterGuardian
         }
     }
 
@@ -178,10 +178,10 @@ impl Difficulty {
             Difficulty::TutorialChapter3 => 4.0,
             Difficulty::TutorialChapter4 => 3.0,
             Difficulty::TutorialChapter5 => 2.5,
-            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.0,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 0.7,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 0.05,  // Was MasterGuardian
+            Difficulty::StandardChallenge => 2.2, // Was LeadSpecialist
+            Difficulty::HardChallenge => 2.0,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.5,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.0,   // Was MasterGuardian
         }
     }
 
@@ -207,15 +207,15 @@ impl Difficulty {
     /// can provoke a hunt.
     pub fn hunt_provocation_radius(&self) -> f32 {
         match self {
-            Difficulty::TutorialChapter1 => 1.5,
-            Difficulty::TutorialChapter2 => 1.6,
-            Difficulty::TutorialChapter3 => 1.7,
-            Difficulty::TutorialChapter4 => 1.8,
-            Difficulty::TutorialChapter5 => 1.9,
-            Difficulty::StandardChallenge => 2.0, // Was LeadSpecialist
-            Difficulty::HardChallenge => 2.4,     // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 3.0,   // Was ExpertOccultist
-            Difficulty::MasterChallenge => 5.0,   // Was MasterGuardian
+            Difficulty::TutorialChapter1 => 1.4,
+            Difficulty::TutorialChapter2 => 1.4,
+            Difficulty::TutorialChapter3 => 1.5,
+            Difficulty::TutorialChapter4 => 1.5,
+            Difficulty::TutorialChapter5 => 1.6,
+            Difficulty::StandardChallenge => 1.6, // Was LeadSpecialist
+            Difficulty::HardChallenge => 1.7,     // Was MasterSpecialist
+            Difficulty::ExpertChallenge => 1.8,   // Was ExpertOccultist
+            Difficulty::MasterChallenge => 1.9,   // Was MasterGuardian
         }
     }
 
@@ -391,14 +391,14 @@ impl Difficulty {
     pub fn player_speed(&self) -> f32 {
         match self {
             Difficulty::TutorialChapter1 => 1.3,
-            Difficulty::TutorialChapter2 => 1.25,
-            Difficulty::TutorialChapter3 => 1.20,
-            Difficulty::TutorialChapter4 => 1.15,
-            Difficulty::TutorialChapter5 => 1.1,
-            Difficulty::StandardChallenge => 1.05, // Was LeadSpecialist
-            Difficulty::HardChallenge => 1.0,      // Was MasterSpecialist
-            Difficulty::ExpertChallenge => 1.0,    // Was ExpertOccultist
-            Difficulty::MasterChallenge => 1.0,    // Was MasterGuardian
+            Difficulty::TutorialChapter2 => 1.27,
+            Difficulty::TutorialChapter3 => 1.25,
+            Difficulty::TutorialChapter4 => 1.23,
+            Difficulty::TutorialChapter5 => 1.20,
+            Difficulty::StandardChallenge => 1.2,
+            Difficulty::HardChallenge => 1.2,
+            Difficulty::ExpertChallenge => 1.2,
+            Difficulty::MasterChallenge => 1.2,
         }
     }
 

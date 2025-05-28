@@ -14,7 +14,7 @@ impl PerlinNoise {
     /// Uses a large table size and fine resolution to work for all use cases
     pub fn new(seed: u32) -> Self {
         const SIZE: usize = 4000;
-        const RESOLUTION: f32 = 0.005;
+        const RESOLUTION: f32 = 0.01;
 
         let perlin = Perlin::new(seed);
         let mut values = vec![vec![0.0; SIZE]; SIZE];
@@ -43,8 +43,8 @@ impl PerlinNoise {
 
     /// Get noise value from precomputed table
     pub fn get(&self, x: f32, y: f32) -> f32 {
-        let xi = (x * self.resolution) as usize % self.size;
-        let yi = (y * self.resolution) as usize % self.size;
+        let xi = (x / self.resolution) as usize % self.size;
+        let yi = (y / self.resolution) as usize % self.size;
         self.values[xi][yi]
     }
 }
@@ -56,5 +56,5 @@ impl Default for PerlinNoise {
 }
 
 // Noise frequency constants
-pub const SHORT_TERM_NOISE_FREQ: f32 = 1.0 / 30.0;
-pub const LONG_TERM_NOISE_FREQ: f32 = 1.0 / 300.0;
+pub const SHORT_TERM_NOISE_FREQ: f32 = 0.5;
+pub const LONG_TERM_NOISE_FREQ: f32 = 0.07;
