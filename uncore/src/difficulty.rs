@@ -410,10 +410,10 @@ impl Difficulty {
         match self {
             Difficulty::TutorialChapter1 => 6.0,
             Difficulty::TutorialChapter2 => 4.0,
-            Difficulty::TutorialChapter3 => 2.0,
-            Difficulty::TutorialChapter4 => 1.0,
-            Difficulty::TutorialChapter5 => 0.8,
-            Difficulty::StandardChallenge => 0.7, // Was LeadSpecialist
+            Difficulty::TutorialChapter3 => 3.0,
+            Difficulty::TutorialChapter4 => 2.0,
+            Difficulty::TutorialChapter5 => 1.5,
+            Difficulty::StandardChallenge => 1.0, // Was LeadSpecialist
             Difficulty::HardChallenge => 0.6,     // Was MasterSpecialist
             Difficulty::ExpertChallenge => 0.5,   // Was ExpertOccultist
             Difficulty::MasterChallenge => 0.4,   // Was MasterGuardian

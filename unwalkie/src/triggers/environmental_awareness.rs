@@ -184,7 +184,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     // Use GearUsable::needs_darkness for the right hand gear
     if player_gear.right_hand.needs_darkness()
         && player_gear.right_hand.is_enabled()
-        && board_data.exposure_lux > 0.5
+        && board_data.light_field[player_bpos.ndidx()].lux > 0.5
     {
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(

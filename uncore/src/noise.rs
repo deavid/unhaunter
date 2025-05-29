@@ -56,5 +56,5 @@ impl Default for PerlinNoise {
 }
 
 // Noise frequency constants
-pub const SHORT_TERM_NOISE_FREQ: f32 = 0.5;
-pub const LONG_TERM_NOISE_FREQ: f32 = 0.07;
+pub const SHORT_TERM_NOISE_FREQ: f32 = 0.2;
+pub const LONG_TERM_NOISE_FREQ: f32 = 0.01;

@@ -257,6 +257,9 @@ impl GearUsable for SpiritBox {
         true
     }
 
+    fn needs_darkness(&self) -> bool {
+        true
+    }
     fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
         if warning_level < 0.0001 || !self.enabled {
             return;
