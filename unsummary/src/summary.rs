@@ -156,7 +156,24 @@ pub fn setup_ui(
                     height: Val::Percent(70.0),
                     justify_content: JustifyContent::SpaceEvenly,
                     align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
+                    display: Display::Grid,
+                    padding: UiRect::horizontal(Val::Px(10.0 * UI_SCALE)),
+                    grid_auto_rows: vec![
+                        GridTrack::DEFAULT,
+                        GridTrack::DEFAULT,
+                        GridTrack::DEFAULT,
+                    ],
+                    grid_template_columns: vec![
+                        GridTrack::percent(33.0),
+                        GridTrack::percent(33.0),
+                        GridTrack::percent(33.0),
+                    ],
+                    grid_template_rows: vec![
+                        GridTrack::auto(),
+                        GridTrack::auto(),
+                        GridTrack::auto(),
+                    ],
+
                     ..default()
                 })
                 .insert(BackgroundColor(main_color))
@@ -170,6 +187,26 @@ pub fn setup_ui(
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         })
                         .insert(TextColor(Color::WHITE));
+
+                    parent
+                        .spawn(Text::new("Map: Unknown"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::MapMissionName);
+
+                    parent
+                        .spawn(Text::new("Difficulty: Unknown"))
+                        .insert(TextFont {
+                            font: handles.fonts.londrina.w300_light.clone(),
+                            font_size: 24.0 * FONT_SCALE,
+                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(TextColor(css::GRAY.into()))
+                        .insert(SummaryUIType::DifficultyName);
 
                     // Ghost and mission details
                     parent
@@ -205,13 +242,15 @@ pub fn setup_ui(
                     // Separator
                     parent
                         .spawn(Node {
-                            width: Val::Percent(80.0),
+                            left: Val::Percent(1.0),
+                            width: Val::Percent(98.0),
                             height: Val::Px(2.0),
                             margin: UiRect {
                                 top: Val::Px(15.0),
                                 bottom: Val::Px(15.0),
                                 ..default()
                             },
+                            grid_column: GridPlacement::span(3),
                             ..default()
                         })
                         .insert(BackgroundColor(css::GRAY.into()));
@@ -224,6 +263,10 @@ pub fn setup_ui(
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 28.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(Node {
+                            grid_column: GridPlacement::span(2),
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
 
@@ -243,13 +286,15 @@ pub fn setup_ui(
                     // Separator
                     parent
                         .spawn(Node {
-                            width: Val::Percent(80.0),
+                            left: Val::Percent(1.0),
+                            width: Val::Percent(98.0),
                             height: Val::Px(2.0),
                             margin: UiRect {
                                 top: Val::Px(10.0),
                                 bottom: Val::Px(10.0),
                                 ..default()
                             },
+                            grid_column: GridPlacement::span(3),
                             ..default()
                         })
                         .insert(BackgroundColor(css::GRAY.into()));
@@ -297,13 +342,16 @@ pub fn setup_ui(
                     // Separator
                     parent
                         .spawn(Node {
-                            width: Val::Percent(60.0),
+                            left: Val::Percent(1.0),
+                            width: Val::Percent(98.0),
                             height: Val::Px(1.0),
                             margin: UiRect {
                                 top: Val::Px(5.0),
                                 bottom: Val::Px(5.0),
                                 ..default()
                             },
+                            grid_column: GridPlacement::span(3),
+
                             ..default()
                         })
                         .insert(BackgroundColor(css::DARK_GRAY.into()));
@@ -348,13 +396,15 @@ pub fn setup_ui(
                     // Separator
                     parent
                         .spawn(Node {
-                            width: Val::Percent(80.0),
+                            left: Val::Percent(1.0),
+                            width: Val::Percent(98.0),
                             height: Val::Px(2.0),
                             margin: UiRect {
                                 top: Val::Px(10.0),
                                 bottom: Val::Px(10.0),
                                 ..default()
                             },
+                            grid_column: GridPlacement::span(3),
                             ..default()
                         })
                         .insert(BackgroundColor(css::GRAY.into()));
@@ -366,6 +416,10 @@ pub fn setup_ui(
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 26.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        })
+                        .insert(Node {
+                            grid_column: GridPlacement::span(2),
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
 
@@ -382,8 +436,10 @@ pub fn setup_ui(
                     parent.spawn(Node {
                         width: Val::Percent(100.0),
                         height: Val::Percent(5.0),
+                        grid_column: GridPlacement::span(3),
                         ..default()
                     });
+                    parent.spawn(Node { ..default() });
 
                     parent
                         .spawn(Text::new("[ - Press enter to continue - ]"))
@@ -402,6 +458,7 @@ pub fn update_ui(
     mut qui: Query<(&SummaryUIType, &mut Text)>,
     rsd: Res<SummaryData>,
     player_profile: Res<Persistent<PlayerProfileData>>,
+    maps: Res<Maps>,
 ) {
     for (sui, mut text) in &mut qui {
         match &sui {
@@ -427,6 +484,17 @@ pub fn update_ui(
                     rsd.ghosts_unhaunted,
                     rsd.ghost_types.len()
                 )
+            }
+            SummaryUIType::MapMissionName => {
+                let map_name = maps
+                    .maps
+                    .iter()
+                    .find(|m| m.path == rsd.map_path)
+                    .map_or("Unknown Map", |m| &m.name);
+                text.0 = format!("Map: {}", map_name);
+            }
+            SummaryUIType::DifficultyName => {
+                text.0 = format!("Difficulty: {}", rsd.difficulty.0.difficulty_name);
             }
             SummaryUIType::PlayersAlive => {
                 text.0 = format!("Players Alive: {}/{}", rsd.alive_count, rsd.player_count)
