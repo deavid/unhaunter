@@ -218,7 +218,7 @@ pub fn setup_journal_ui(
             min_width: Val::Px(0.0),
             max_width: Val::Percent(60.0),
             min_height: Val::Px(30.0 * UI_SCALE),
-            border: UiRect::all(Val::Px(MARGIN_PERCENT)),
+            border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(30.0 * UI_SCALE)).with_left(Val::Percent(20.0)),
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,

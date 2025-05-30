@@ -224,7 +224,7 @@ fn setup_ui(
                 .spawn(Button)
                 .insert(Node {
                     min_height: Val::Px(60.0 * UI_SCALE),
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     align_content: AlignContent::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -258,7 +258,7 @@ fn setup_ui(
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     position_type: PositionType::Relative,
                     ..default()
                 })
