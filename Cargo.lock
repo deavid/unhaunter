@@ -5073,6 +5073,7 @@ dependencies = [
  "fastapprox",
  "itertools 0.14.0",
  "ndarray",
+ "noise",
  "ordered-float",
  "rand 0.9.1",
  "serde",
@@ -5100,7 +5101,6 @@ version = "0.3.0-beta5-dev"
 dependencies = [
  "bevy",
  "ndarray",
- "noise",
  "rand 0.9.1",
  "uncore",
  "unstd",
@@ -5160,6 +5160,7 @@ name = "unghost"
 version = "0.3.0-beta5-dev"
 dependencies = [
  "bevy",
+ "enum-iterator",
  "ordered-float",
  "rand 0.9.1",
  "uncore",

@@ -234,6 +234,7 @@ fn temperature_update(
     difficulty: Res<CurrentDifficulty>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
+    let freezing = bf.ghost_dynamics.freezing_temp_clarity;
 
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();
@@ -251,12 +252,12 @@ fn temperature_update(
         if bpos.z < 0 || bpos.z >= bf.map_size.2 as i64 {
             continue;
         }
-        let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
-        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -3.0 } else { 1.0 });
-        const GHOST_MAX_POWER: f32 = 2.0;
+        let ghost_target_temp: f32 = celsius_to_kelvin(1.0 - 4.0 * freezing);
+        const GHOST_MAX_POWER: f32 = 1.0;
         const BREACH_MAX_POWER: f32 = 20.0;
         let ghost_in_room = roomdb.room_tiles.get(&bpos);
         let breach_in_room = roomdb.room_tiles.get(&gs.spawn_point);
+        let power = freezing * 0.5 + 0.5;
         for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
             if ghost_in_room != roomdb.room_tiles.get(&npos)
                 || !bf.collision_field[npos.ndidx()].player_free
@@ -265,7 +266,8 @@ fn temperature_update(
                 continue;
             }
             let t = &mut bf.temperature_field[npos.ndidx()];
-            *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
+            *t = (*t + ghost_target_temp * GHOST_MAX_POWER * power)
+                / (1.0 + GHOST_MAX_POWER * power);
         }
         for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
             if breach_in_room != roomdb.room_tiles.get(&gs.spawn_point)
@@ -275,7 +277,8 @@ fn temperature_update(
                 continue;
             }
             let t = &mut bf.temperature_field[npos.ndidx()];
-            *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
+            *t = (*t + ghost_target_temp * BREACH_MAX_POWER * power)
+                / (1.0 + BREACH_MAX_POWER * power)
         }
     }
 

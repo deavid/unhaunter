@@ -4,6 +4,7 @@ pub mod focus_ring;
 pub mod game;
 pub mod game_config;
 pub mod game_ui;
+pub mod ghost_behavior_dynamics;
 pub mod ghost_breach;
 pub mod ghost_influence;
 pub mod ghost_orb_particle;

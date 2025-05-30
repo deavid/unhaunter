@@ -1,7 +1,8 @@
 // untruck/src/ui.rs
-use super::{TruckUI, activity, journalui, loadoutui, sanity, sensors};
+use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::truck::TruckUI;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -223,7 +224,7 @@ fn setup_ui(
                 .spawn(Button)
                 .insert(Node {
                     min_height: Val::Px(60.0 * UI_SCALE),
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     align_content: AlignContent::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -257,7 +258,7 @@ fn setup_ui(
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     position_type: PositionType::Relative,
                     ..default()
                 })

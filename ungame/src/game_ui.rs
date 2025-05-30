@@ -396,7 +396,6 @@ fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
 /// objects.It displays the held object's name and provides instructions for
 /// dropping or moving the object. When the player is not holding an object, the UI
 /// reverts to displaying the player's gear information.
-#[allow(clippy::type_complexity)]
 fn toggle_held_object_ui(
     // mut held_object_ui: Query<
     //     (&mut Visibility, &mut Node),

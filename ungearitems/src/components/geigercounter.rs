@@ -27,18 +27,11 @@ pub struct GeigerCounter {
 
 impl GeigerCounter {
     pub fn calculate_output_sound(&self, gs: &GearStuff) -> f32 {
-        // if the glitch timer is running, then apply a random value.
-        if self.display_glitch_timer > 0.0 {
-            let mut rng = random_seed::rng();
-            return rng.random_range(0.0..1000.0);
-        }
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        if gs.bf.evidences.contains(&Evidence::CPM500) {
-            f32::tanh(avg_snd.sqrt() / 20.0) * 980.0
-        } else {
-            f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
-        }
+        let evidence = gs.bf.ghost_dynamics.cpm500_clarity.cbrt().max(-0.05);
+
+        f32::tanh(avg_snd.sqrt() / (10.0 + evidence * 2.0)) * (480.0 + evidence * 500.0)
     }
 }
 
@@ -160,18 +153,23 @@ impl GearUsable for GeigerCounter {
 
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 12.0 / gs.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 20.0 * gs.difficulty.0.equipment_sensitivity;
         if self.enabled {
             // Calculate the *current* output sound.
             let current_output_sound = self.calculate_output_sound(gs);
-
             // Smooth the *current* output to get sound_a1 (first IIR filter).
             self.sound_a1 = (self.sound_a1 * mass + current_output_sound * mass.recip())
                 / (mass + mass.recip());
 
+            let mass = mass
+                * if current_output_sound > self.sound_a2 {
+                    1.0
+                } else {
+                    4.0
+                };
             // Smooth sound_a1 to get output_sound (second IIR filter).
-            // Crucial change:  Use sound_a1 *here*, not current_output_sound!
-            self.output_sound = (self.output_sound * 10.0 + self.sound_a1) / 11.0;
+            self.output_sound =
+                (self.output_sound * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
 
             self.sound_a2 =
                 (self.sound_a2 * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
@@ -247,8 +245,6 @@ impl GearUsable for GeigerCounter {
 
         // Random EMF spikes
         if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            self.sound_a1 = rng.random_range(0.0..400.0);
-            // Jumble numbers temporarily
             self.display_glitch_timer = 0.3;
         }
     }

@@ -5,108 +5,88 @@
       name: "TutorialChapter1Intro",
       lines: [
         (
-          tts_text: "Alright welcome to your first official investigation. For this training exercise you will have the essentials a Flashlight a Thermometer and an E. M. F. Meter.",
-          subtitle_text: "Alright, welcome to your first official investigation! For this training exercise, you'll have the essentials: a Flashlight, a Thermometer, and an EMF Meter.",
+          tts_text: "Good, you made it to the site. The reports indicate that this is a calm entity, perfect for learning the basics.\nWe only provided the basic gear for now. Take your time and explore.",
+          subtitle_text: "Good, you made it to the site. The reports indicate that this is a calm entity, perfect for learning the basics. We only provided the basic gear for now. Take your time and explore.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This is your first simulation. We are starting you off with some basic gear Flashlight Thermometer and an E. M. F. reader. Head inside and get familiar with them.",
-          subtitle_text: "This is your first simulation. We're starting you off with some basic gear: Flashlight, Thermometer, and an EMF reader. Head inside and get familiar with them.",
+          tts_text: "Welcome Unhaunter. The readings here are mild, so it is an ideal place to practice your techniques safely.\nFocus on learning the basic gear provided, we'll give you more later.",
+          subtitle_text: "Welcome, Unhaunter. The readings here are mild, so it is an ideal place to practice your techniques safely. Focus on learning the basic gear provided, we'll give you more later.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Okay trainee for this first run you have got a Flashlight for sight a Thermometer for temperature drops and an E. M. F. Meter for electrical disturbances. Your job is to investigate.",
-          subtitle_text: "Okay, trainee, for this first run, you've got a Flashlight for sight, a Thermometer for temperature drops, and an EMF Meter for electrical disturbances. Your job is to investigate.",
+          tts_text: "Alright, seems you arrived. There isn't that much activity here, so do not worry about making mistakes.\nOnly E M F and Thermometer for now, focus on learning how to use them.",
+          subtitle_text: "Alright, you're at the practice facility. Everything here is set up for learning, so don't worry about making mistakes. Only EMF and Thermometer for now, focus on learning how to use them.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Let us get started. Your initial kit includes a Flashlight Thermometer and E. M. F. Meter. These tools are key to finding paranormal activity. Go ahead and explore.",
-          subtitle_text: "Let's get started. Your initial kit includes a Flashlight, Thermometer, and an EMF Meter. These tools are key to finding paranormal activity. Go ahead and explore.",
+          tts_text: "Unhaunter, I see you arrived to the Training site. This location has just enough activity to teach you the fundamentals without any real danger.\nInvestigate the location with the E M F and Thermometer.",
+          subtitle_text: "Unhaunter, I see you arrived to the Training site. This location has just enough activity to teach you the fundamentals without any real danger. Investigate the location with the EMF and Thermometer.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Welcome to basic training. We have equipped you with a Flashlight Thermometer and E. M. F. Meter. Use them to gather data from the location.",
-          subtitle_text: "Welcome to basic training! We've equipped you with a Flashlight, Thermometer, and an EMF Meter. Use them to gather data from the location.",
+          tts_text: "Perfect timing, seems you arrived. This training ground will help you get familiar with the equipment and procedures. Take it step by step.\nBasic gear for now, focus on learning how to use them.",
+          subtitle_text: "Perfect timing, seems you arrived. This training ground will help you get familiar with the equipment and procedures. Take it step by step. Basic gear for now, focus on learning how to use them.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Your first assignment is a walkthrough with core equipment Flashlight Thermometer and E. M. F. Meter. No pressure just get a feel for the tools.",
-          subtitle_text: "Your first assignment is a walkthrough with core equipment: Flashlight, Thermometer, and an EMF Meter. No pressure, just get a feel for the tools.",
+          tts_text: "You have arrived at the training facility. The entity here is docile, making it perfect for hands-on learning.\nGet hands on with that E M F and Thermometer.",
+          subtitle_text: "You've arrived at the training facility. The entity here is docile, making it perfect for hands-on learning. Get hands on with that EMF and Thermometer.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
-        (
-          tts_text: "Time to learn the ropes. You have a Flashlight to see a Thermometer to detect cold spots and an E. M. F. Meter for energy spikes. Report your findings.",
-          subtitle_text: "Time to learn the ropes. You have a Flashlight to see, a Thermometer to detect cold spots, and an EMF Meter for energy spikes. Report your findings.",
-          tags: [FirstTimeHint, Encouraging, MediumLength]
-        ),
-        (
-          tts_text: "For this introductory exercise your loadout is a Flashlight Thermometer and E. M. F. Meter. These will help you find where the entity is active.",
-          subtitle_text: "For this introductory exercise, your loadout is a Flashlight, Thermometer, and an EMF Meter. These will help you find where the entity is active.",
-          tags: [FirstTimeHint, Encouraging, MediumLength]
-        ),
-        (
-          tts_text: "Let us ease you into it. Your gear for this session Flashlight Thermometer E. M. F. Meter. Focus on learning how they react to the environment.",
-          subtitle_text: "Let's ease you into it. Your gear for this session: Flashlight, Thermometer, EMF Meter. Focus on learning how they react to the environment.",
-          tags: [FirstTimeHint, Encouraging, MediumLength]
-        ),
-        (
-          tts_text: "Welcome Unhaunter. Your first training scenario starts now. You are equipped with a Flashlight Thermometer and E. M. F. Meter. Good luck in there.",
-          subtitle_text: "Welcome, Unhaunter. Your first training scenario starts now. You're equipped with a Flashlight, Thermometer, and an EMF Meter. Good luck in there.",
-          tags: [FirstTimeHint, Encouraging, MediumLength]
-        )
       ]
     ),
     (
       name: "TutorialChapter2Intro",
       lines: [
         (
-          tts_text: "Alright for this next phase we are adding a U. V. Torch and a Video Camera to your kit. These replace your flashlight. See what you can find.",
-          subtitle_text: "Alright, for this next phase, we're adding a UV Torch and a Video Camera to your kit. These replace your flashlight. See what you can find.",
+          tts_text: "Alright, you are on site for your next session.\nWelcome back to the hot seat, investigator. We have made some changes to your kit this time.\nThat old flashlight? It has been upgraded to a U V Torch.\nYou will also find a Video Camera in your pack. Different tools for different kinds of spooky.",
+          subtitle_text: "Alright, you're on site for your next session. Welcome back to the hot seat, investigator. We've made some changes to your kit this time. That old flashlight? It's been upgraded to a UV Torch. You'll also find a Video Camera in your pack. Different tools for different kinds of spooky.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to expand your toolkit. Your flashlight has been swapped for a U. V. Torch, and you will now have access to a Video Camera. More tools might come later.",
-          subtitle_text: "Time to expand your toolkit. Your flashlight has been swapped for a UV Torch, and you'll now have access to a Video Camera. More tools might come later.",
+          tts_text: "Unhaunter, this is base. Seems you have arrived and are ready for the next lesson. Time to expand your toolkit.\nYour flashlight has been swapped for a U V Torch, and you will now have access to a Video Camera. More tools might come later.",
+          subtitle_text: "Unhaunter, this is base. Seems you've arrived and are ready for the next lesson. Time to expand your toolkit. Your flashlight has been swapped for a UV Torch, and you'll now have access to a Video Camera. More tools might come later.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Good progress. In this chapter you will be using the U. V. Torch and Video Camera alongside your basic gear. Remember more equipment may become available as you advance.",
-          subtitle_text: "Good progress. In this chapter, you'll be using the UV Torch and Video Camera, alongside your basic gear. Remember, more equipment may become available as you advance.",
+          tts_text: "Looks like you made it to the location. Good progress on to the next chapter.\nIn this phase, you will be using the U V Torch and Video Camera alongside your basic gear. Remember, more equipment may become available as you advance.",
+          subtitle_text: "Looks like you made it to the location. Good progress on to the next chapter. In this phase, you'll be using the UV Torch and Video Camera alongside your basic gear. Remember, more equipment may become available as you advance.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Let us try some new equipment. We have swapped your flashlight for a U. V. Torch and added a Video Camera. These are for attempting to detect visual evidence. You might get more gear later.",
-          subtitle_text: "Let's try some new equipment. We've swapped your flashlight for a UV Torch and added a Video Camera. These are for attempting to detect visual evidence. You might get more gear later.",
+          tts_text: "Okay, you are at the location for Chapter Two. Let us try some new equipment.\nWe have swapped your flashlight for a U V Torch and added a Video Camera.\nThese are for attempting to detect visual evidence. You might get more gear later.",
+          subtitle_text: "Okay, you're at the location for Chapter Two. Let's try some new equipment. We've swapped your flashlight for a UV Torch and added a Video Camera. These are for attempting to detect visual evidence. You might get more gear later.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "For this lesson you are getting a U. V. Torch replacing your flashlight, and a Video Camera. These tools can provide more direct visual evidence. Other gear could be introduced as you go.",
-          subtitle_text: "For this lesson, you're getting a UV Torch, replacing your flashlight, and a Video Camera. These tools can provide more direct visual evidence. Other gear could be introduced as you go.",
+          tts_text: "Hello there, Unhaunter. You have arrived for your next training lesson.\nFor this, you are getting a U V Torch replacing your flashlight, and a Video Camera.\nThese tools can provide more direct visual evidence. Other gear could be introduced as you go.",
+          subtitle_text: "Hello there, Unhaunter. You've arrived for your next training lesson. For this lesson, you're getting a UV Torch, replacing your flashlight, and a Video Camera. These tools can provide more direct visual evidence. Other gear could be introduced as you go.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Okay next step. We are introducing the U. V. Torch and Video Camera. The flashlight has been removed. Use these to try and find new clues. And who knows there might be more tools for you down the line.",
-          subtitle_text: "Okay, next step. We're introducing the UV Torch and Video Camera. The flashlight has been removed. Use these to try and find new clues. And who knows, there might be more tools for you down the line.",
+          tts_text: "Alright Unhaunter, you are on site. This is it, your next step.\nWe are introducing the U V Torch and Video Camera. The flashlight has been removed.\nUse these to try and find new clues. And who knows, there might be more tools for you down the line.",
+          subtitle_text: "Alright Unhaunter, you're on site. This is it, your next step. We're introducing the UV Torch and Video Camera. The flashlight has been removed. Use these to try and find new clues. And who knows, there might be more tools for you down the line.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Building on what you have learned you now have a U. V. Torch replacing your flashlight, and a Video Camera. These can help you gather different types of evidence. Further equipment may be supplied later.",
-          subtitle_text: "Building on what you've learned, you now have a UV Torch, replacing your flashlight, and a Video Camera. These can help you gather different types of evidence. Further equipment may be supplied later.",
+          tts_text: "Good, you have made it back. This is a good opportunity to build on what you have learned.\nYou now have a U V Torch replacing your flashlight, and a Video Camera.\nThese can help you gather different types of evidence. Further equipment may be supplied later.",
+          subtitle_text: "Good, you've made it back. This is a good opportunity to build on what you've learned. You now have a UV Torch, replacing your flashlight, and a Video Camera. These can help you gather different types of evidence. Further equipment may be supplied later.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This training module includes the U. V. Torch and Video Camera. Your flashlight is no longer available. Experiment with them to see what kind of responses you can elicit. Additional tools may be provided in future sessions.",
-          subtitle_text: "This training module includes the UV Torch and Video Camera. Your flashlight is no longer available. Experiment with them to see what kind of responses you can elicit. Additional tools may be provided in future sessions.",
+          tts_text: "Base to Unhaunter, we are getting some advanced readings now that you are at the location.\nThis training module includes the U V Torch and Video Camera. Your flashlight is no longer available.\nExperiment with them to see what kind of responses you can elicit. Additional tools may be provided in future sessions.",
+          subtitle_text: "Base to Unhaunter, we are getting some advanced readings now that you're at the location. This training module includes the UV Torch and Video Camera. Your flashlight is no longer available. Experiment with them to see what kind of responses you can elicit. Additional tools may be provided in future sessions.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to get more technical. You are receiving a U. V. Torch and a Video Camera. Your flashlight has been removed. Pay attention to how they function. You may receive more advanced gear later on.",
-          subtitle_text: "Time to get more technical. You're receiving a UV Torch and a Video Camera. Your flashlight has been removed. Pay attention to how they function. You may receive more advanced gear later on.",
+          tts_text: "Hello there. Seems you are ready for the next phase now that you have arrived. Time to get more technical.\nYou are receiving a U V Torch and a Video Camera. Your flashlight has been removed.\nPay attention to how they function. You may receive more advanced gear later on.",
+          subtitle_text: "Hello there. Seems you're ready for the next phase now that you've arrived. Time to get more technical. You're receiving a UV Torch and a Video Camera. Your flashlight has been removed. Pay attention to how they function. You may receive more advanced gear later on.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "For this exercise we are adding the U. V. Torch and Video Camera to your available tools. Your flashlight is gone. Remember this is a learning phase and more gear might be introduced.",
-          subtitle_text: "For this exercise, we're adding the UV Torch and Video Camera to your available tools. Your flashlight is gone. Remember, this is a learning phase, and more gear might be introduced.",
+          tts_text: "Looks like you made it, Unhaunter. Welcome for this exercise.\nWe are adding the U V Torch and Video Camera to your available tools. Your flashlight is gone.\nRemember this is a learning phase and more gear might be introduced.",
+          subtitle_text: "Looks like you made it, Unhaunter. Welcome for this exercise. We're adding the UV Torch and Video Camera to your available tools. Your flashlight is gone. Remember, this is a learning phase, and more gear might be introduced.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         )
       ]
@@ -115,53 +95,53 @@
       name: "TutorialChapter3Intro",
       lines: [
         (
-          tts_text: "Continuing your training this chapter introduces the Recorder and Geiger Counter. These will help you find different kinds of evidence. More equipment might follow.",
-          subtitle_text: "Continuing your training, this chapter introduces the Recorder and Geiger Counter. These will help you find different kinds of evidence. More equipment might follow.",
+          tts_text: "Alright, investigator; you're showing promise. This is your next contract.\nWe're adding the Recorder to your kit. listen for those E V P. and a Geiger Counter to track any unusual C P M spikes.",
+          subtitle_text: "Alright, investigator, you're showing promise. This is your next contract. We're adding the Recorder to your kit - listen for those EVPs - and a Geiger Counter to track any unusual CPM spikes.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Now you will learn to use the Recorder for E. V. P. and the Geiger Counter for C. P. M. readings. Keep an eye out for more gear in later stages.",
-          subtitle_text: "Now you'll learn to use the Recorder for EVP and the Geiger Counter for CPM readings. Keep an eye out for more gear in later stages.",
+          tts_text: "Welcome back. Now you will learn to use the Recorder for E V P and the Geiger Counter for C P M readings. Keep an eye out for more gear in later stages.",
+          subtitle_text: "Welcome back. Now you'll learn to use the Recorder for EVP and the Geiger Counter for CPM readings. Keep an eye out for more gear in later stages.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This session we are adding the Recorder and Geiger Counter to your inventory. Gathering audio and radiation data can be crucial. Expect your toolkit to expand further.",
-          subtitle_text: "This session, we're adding the Recorder and Geiger Counter to your inventory. Gathering audio and radiation data can be crucial. Expect your toolkit to expand further.",
+          tts_text: "Looks like you made it. This session we are adding the Recorder and Geiger Counter to your inventory.\nGathering audio and radiation data can be crucial. Expect your toolkit to expand further.",
+          subtitle_text: "Looks like you made it. This session, we're adding the Recorder and Geiger Counter to your inventory. Gathering audio and radiation data can be crucial. Expect your toolkit to expand further.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to focus on new types of evidence. You now have a Recorder and a Geiger Counter. And as always be prepared for new tools as you progress.",
-          subtitle_text: "Time to focus on new types of evidence. You now have a Recorder and a Geiger Counter. And, as always, be prepared for new tools as you progress.",
+          tts_text: "Okay, you're at the location. Time to focus on new types of evidence.\nYou now have a Recorder and a Geiger Counter. And as always be prepared for new tools as you progress.",
+          subtitle_text: "Okay, you're at the location. Time to focus on new types of evidence. You now have a Recorder and a Geiger Counter. And, as always, be prepared for new tools as you progress.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Let us get you familiar with the Recorder and Geiger Counter. These are vital for spotting evidence you might miss with other tools. You may get more gear later.",
-          subtitle_text: "Let's get you familiar with the Recorder and Geiger Counter. These are vital for spotting evidence you might miss with other tools. You may get more gear later.",
+          tts_text: "Welcome to this assignment. Let us get you familiar with the Recorder and Geiger Counter.\nThese are vital for spotting evidence you might miss with other tools.",
+          subtitle_text: "Welcome to this assignment. Let's get you familiar with the Recorder and Geiger Counter. These are vital for spotting evidence you might miss with other tools.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "In this module you will be working with the Recorder for E. V. P. and the Geiger Counter for radiation levels. Your available equipment will continue to grow.",
-          subtitle_text: "In this module, you'll be working with the Recorder for EVP and the Geiger Counter for radiation levels. Your available equipment will continue to grow.",
+          tts_text: "Alright, another case for you to solve, Unhaunter. Here you will need the Recorder for E V P and the Geiger Counter for radiation levels. Be careful out there.",
+          subtitle_text: "Alright, another case for you to solve, Unhaunter. Here you will need the Recorder for EVP and the Geiger Counter for radiation levels. Be careful out there.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Your equipment is expanding. This time it is a Recorder and a Geiger Counter. Master these and we might give you more advanced tools.",
-          subtitle_text: "Your equipment is expanding. This time, it's a Recorder and a Geiger Counter. Master these, and we might give you more advanced tools.",
+          tts_text: "Base to Unhaunter. Seems you arrived and good to go. Take a look to the Recorder and the Geiger Counter... You'll need them to deal with the entity here.",
+          subtitle_text: "Base to Unhaunter. Seems you arrived and good to go. Take a look to the Recorder and the Geiger Counter... You'll need them to deal with the entity here.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This chapter focuses on advanced evidence collection using the Recorder and Geiger Counter. Remember each piece of gear has its purpose. More tools could be on their way.",
-          subtitle_text: "This chapter focuses on advanced evidence collection using the Recorder and Geiger Counter. Remember, each piece of gear has its purpose. More tools could be on their way.",
+          tts_text: "Base to Unhaunter, we are getting some new readings here.\nThe entity might not be as calm as the one you faced so far. Focus on advanced evidence collection using the Recorder and Geiger Counter.",
+          subtitle_text: "Base to Unhaunter, we are getting some new readings here. The entity might not be as calm as the one you faced so far. Focus on advanced evidence collection using the Recorder and Geiger Counter.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "We are adding the Recorder and Geiger Counter to your kit. These will help you spot subtle clues. Your gear options might increase later.",
-          subtitle_text: "We're adding the Recorder and Geiger Counter to your kit. These will help you spot subtle clues. Your gear options might increase later.",
+          tts_text: "Hello there. We are adding the Recorder and Geiger Counter to your kit.\nThese will help you spot subtle clues. Be on your toes, this one might not be as easy as it was last time.",
+          subtitle_text: "Hello there. We're adding the Recorder and Geiger Counter to your kit. These will help you spot subtle clues. Be on your toes, this one might not be as easy as it was last time.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Okay time for more advanced detection. You now have the Recorder and Geiger Counter. Use them well and anticipate further additions to your equipment.",
-          subtitle_text: "Okay, time for more advanced detection. You now have the Recorder and Geiger Counter. Use them well, and anticipate further additions to your equipment.",
+          tts_text: "Welcome, Unhaunter.\n You now have the Recorder and Geiger Counter. You will need them for this mission.",
+          subtitle_text: "Welcome, Unhaunter. You now have the Recorder and Geiger Counter. You will need them for this mission.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         )
       ]
@@ -170,53 +150,53 @@
       name: "TutorialChapter4Intro",
       lines: [
         (
-          tts_text: "You are progressing well. Now we are introducing Spirit Box and Red Torch. Document everything you can. More specialized gear may be available later.",
-          subtitle_text: "You're progressing well. Now we're introducing Spirit Box and Red Torch. Document everything you can. More specialized gear may be available later.",
+          tts_text: "Alright investigator you are on site. This entity seems to be trying to communicate so the Spirit Box is your primary tool here along with the Red Torch for any visual anomalies.",
+          subtitle_text: "Alright investigator, you're on site. This entity seems to be trying to communicate, so the Spirit Box is your primary tool here, along with the Red Torch for any visual anomalies.",
+          tags: [FirstTimeHint, Guidance, MediumLength]
+        ),
+        (
+          tts_text: "Welcome back Unhaunter. Reports suggest this one is quite vocal use the Spirit Box to try and make contact. The Red Torch might also reveal some hidden details.",
+          subtitle_text: "Welcome back, Unhaunter. Reports suggest this one is quite vocal; use the Spirit Box to try and make contact. The Red Torch might also reveal some hidden details.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This chapter is about advanced sensory input. You will get a Spirit Box to hear responses and a Red Torch for specific visual cues. Your equipment list is not final yet.",
-          subtitle_text: "This chapter is about advanced sensory input. You'll get a Spirit Box to hear responses and a Red Torch for specific visual cues. Your equipment list isn't final yet.",
+          tts_text: "Looks like you made it. This entity is known for distinct vocalizations so the Spirit Box will be essential. Keep that Red Torch handy too.",
+          subtitle_text: "Looks like you made it. This entity is known for distinct vocalizations, so the Spirit Box will be essential. Keep that Red Torch handy too.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to add communication and specialized illumination to your skills. You are equipped with a Spirit Box and a Red Torch. And yes there is still more gear you might unlock.",
-          subtitle_text: "Time to add communication and specialized illumination to your skills. You're equipped with a Spirit Box and a Red Torch. And yes, there's still more gear you might unlock.",
+          tts_text: "Okay you are at the location. This one is tricky and seems to enjoy playing games. The Spirit Box and Red Torch are your best bet for gathering evidence.",
+          subtitle_text: "Okay, you're at the location. This one is tricky and seems to enjoy playing games. The Spirit Box and Red Torch are your best bet for gathering evidence.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Let us work on direct interaction. You now have a Spirit Box and a Red Torch. Use them to gather irrefutable proof. Further tools may be provided.",
-          subtitle_text: "Let's work on direct interaction. You now have a Spirit Box and a Red Torch. Use them to gather irrefutable proof. Further tools may be provided.",
+          tts_text: "Welcome to this training. We are dealing with a highly active entity here. Capturing responses with the Spirit Box is crucial and the Red Torch may pick up on its manifestations.",
+          subtitle_text: "Welcome to this training. We're dealing with a highly active entity here. Capturing responses with the Spirit Box is crucial, and the Red Torch may pick up on its manifestations.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "For this training segment you will be using Spirit Box and Red Torch. Capturing responses as they happen is crucial. Expect more equipment options later.",
-          subtitle_text: "For this training segment, you'll be using Spirit Box and Red Torch. Capturing responses as they happen is crucial. Expect more equipment options later.",
+          tts_text: "Alright Unhaunter next step. This entity is quite responsive according to reports. The Spirit Box and Red Torch are key for this investigation.",
+          subtitle_text: "Alright Unhaunter, next step. This entity is quite responsive according to reports. The Spirit Box and Red Torch are key for this investigation.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "We are giving you a Spirit Box and a Red Torch. Communication and specific visual detection are key. Your range of tools might expand further.",
-          subtitle_text: "We're giving you a Spirit Box and a Red Torch. Communication and specific visual detection are key. Your range of tools might expand further.",
+          tts_text: "This is a good opportunity to focus on direct interaction. This entity has been known to communicate so the Spirit Box is vital. Use the Red Torch for visual confirmation.",
+          subtitle_text: "This is a good opportunity to focus on direct interaction. This entity has been known to communicate, so the Spirit Box is vital. Use the Red Torch for visual confirmation.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This lesson focuses on direct ghostly interaction with Spirit Box and Red Torch. What you record can make or break a case. Other gear could be introduced as you go.",
-          subtitle_text: "This lesson focuses on direct ghostly interaction with Spirit Box and Red Torch. What you record can make or break a case. Other gear could be introduced as you go.",
+          tts_text: "Base to Unhaunter we are picking up some communication signals. The Spirit Box should help you decipher them and the Red Torch might reveal the source.",
+          subtitle_text: "Base to Unhaunter, we are picking up some communication signals. The Spirit Box should help you decipher them, and the Red Torch might reveal the source.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Your new tools are a Spirit Box and a Red Torch. Set them up strategically. And remember your loadout options may grow.",
-          subtitle_text: "Your new tools are a Spirit Box and a Red Torch. Set them up strategically. And remember, your loadout options may grow.",
+          tts_text: "Hello there. The entity in this location is reportedly quite vocal. Let us see what you can get with the Spirit Box and Red Torch.",
+          subtitle_text: "Hello there. The entity in this location is reportedly quite vocal. Let's see what you can get with the Spirit Box and Red Torch.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to become a master communicator. You have got a Spirit Box and a Red Torch. And who knows what other gadgets we might give you next.",
-          subtitle_text: "Time to become a master communicator. You've got a Spirit Box and a Red Torch. And who knows what other gadgets we might give you next.",
-          tags: [FirstTimeHint, Encouraging, MediumLength]
-        ),
-        (
-          tts_text: "In this chapter you will practice with Spirit Box and Red Torch. These are essential for evidence gathering. Be prepared for more equipment in the future.",
-          subtitle_text: "In this chapter, you'll practice with Spirit Box and Red Torch. These are essential for evidence gathering. Be prepared for more equipment in the future.",
+          tts_text: "Welcome Unhaunter for this chapter. This entity likes to make its presence known. The Spirit Box and Red Torch are essential for gathering evidence here.",
+          subtitle_text: "Welcome, Unhaunter, for this chapter. This entity likes to make its presence known. The Spirit Box and Red Torch are essential for evidence gathering here.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         )
       ]
@@ -225,53 +205,53 @@
       name: "TutorialChapter5Intro",
       lines: [
         (
-          tts_text: "Final chapter of basic training. You are getting Salt Quartz Stone and Sage Bundle. This completes your initial toolkit but advanced gear may appear on real jobs.",
-          subtitle_text: "Final chapter of basic training! You're getting Salt, Quartz Stone, and Sage Bundle. This completes your initial toolkit, but advanced gear may appear on real jobs.",
+          tts_text: "Alright investigator you are at the final chapter of basic training. This entity is more defensive so the Salt Quartz Stone and Sage Bundle will be crucial.",
+          subtitle_text: "Alright investigator, you're at the final chapter of basic training. This entity is more defensive, so the Salt, Quartz Stone, and Sage Bundle will be crucial.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This is it for formal training. We are adding Salt for tracking, Quartz Stone for defense, and Sage Bundle for influence. Master these and you are ready for the field where more specialized equipment might be needed.",
-          subtitle_text: "This is it for formal training. We're adding Salt for tracking, Quartz Stone for defense, and Sage Bundle for influence. Master these, and you're ready for the field, where more specialized equipment might be needed.",
+          tts_text: "Welcome back. This entity is known to be territorial. Master the Salt Quartz Stone and Sage Bundle as they will be key to handling it.",
+          subtitle_text: "Welcome back. This entity is known to be territorial. Master the Salt, Quartz Stone, and Sage Bundle, as they will be key to handling it.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Last lesson in tactical items. You will use Salt, Quartz Stone, and Sage Bundle. This rounds out your primary gear though more tools could be available depending on the mission.",
-          subtitle_text: "Last lesson in tactical items. You'll use Salt, Quartz Stone, and Sage Bundle. This rounds out your primary gear, though more tools could be available depending on the mission.",
+          tts_text: "Looks like you made it to the last lesson. This entity has shown signs of aggression. The Salt Quartz Stone and Sage Bundle are your primary defensive tools.",
+          subtitle_text: "Looks like you made it to the last lesson. This entity has shown signs of aggression. The Salt, Quartz Stone, and Sage Bundle are your primary defensive tools.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Time to deploy defensive and tracking items. You are equipped with Salt, Quartz Stone, and Sage Bundle. This is the last of your standard issue gear for now; other items may be mission specific.",
-          subtitle_text: "Time to deploy defensive and tracking items. You're equipped with Salt, Quartz Stone, and Sage Bundle. This is the last of your standard issue gear for now; other items may be mission-specific.",
+          tts_text: "Okay you are at the location for Chapter Five. The presence here is strong. Time to deploy defensive and tracking items like Salt Quartz Stone and Sage Bundle.",
+          subtitle_text: "Okay, you're at the location for Chapter Five. The presence here is strong. Time to deploy defensive and tracking items like Salt, Quartz Stone, and Sage Bundle.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "For this final tutorial you get Salt, Quartz Stone, and Sage Bundle. These will help you manage difficult encounters. Your core set of tools is now complete but expect variations.",
-          subtitle_text: "For this final tutorial, you get Salt, Quartz Stone, and Sage Bundle. These will help you manage difficult encounters. Your core set of tools is now complete, but expect variations.",
+          tts_text: "Welcome to this final tutorial. This entity can be quite a handful. The Salt Quartz Stone and Sage Bundle will help you manage difficult encounters.",
+          subtitle_text: "Welcome to this final tutorial. This entity can be quite a handful. The Salt, Quartz Stone, and Sage Bundle will help you manage difficult encounters.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "We are adding Salt Quartz Stone and Sage Bundle to your arsenal. Learn to use them effectively. This completes your training loadout; future missions might offer more.",
-          subtitle_text: "We're adding Salt, Quartz Stone, and Sage Bundle to your arsenal. Learn to use them effectively. This completes your training loadout; future missions might offer more.",
+          tts_text: "Alright Unhaunter next step. This entity will test your defensive skills. Learn to use the Salt Quartz Stone and Sage Bundle effectively.",
+          subtitle_text: "Alright Unhaunter, next step. This entity will test your defensive skills. Learn to use the Salt, Quartz Stone, and Sage Bundle effectively.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This module introduces advanced tactical items with Salt, Quartz Stone, and Sage Bundle. With this, your basic training is over. More complex gear might be seen in the field.",
-          subtitle_text: "This module introduces advanced tactical items with Salt, Quartz Stone, and Sage Bundle. With this, your basic training is over. More complex gear might be seen in the field.",
+          tts_text: "This is a good opportunity for this module. This entity is known for its resilience so the Salt Quartz Stone and Sage Bundle will be vital.",
+          subtitle_text: "This is a good opportunity for this module. This entity is known for its resilience, so the Salt, Quartz Stone, and Sage Bundle will be vital.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Your new tools are Salt, Quartz Stone, and Sage Bundle. These are for mitigating threats. This is the last of your initial gear set but stay adaptable for more.",
-          subtitle_text: "Your new tools are Salt, Quartz Stone, and Sage Bundle. These are for mitigating threats. This is the last of your initial gear set, but stay adaptable for more.",
+          tts_text: "Base to Unhaunter we are picking up some interesting readings. We expect this entity to be a significant threat. The Salt Quartz Stone and Sage Bundle are for mitigating that.",
+          subtitle_text: "Base to Unhaunter, we are picking up some interesting readings. We expect this entity to be a significant threat. The Salt, Quartz Stone, and Sage Bundle are for mitigating that.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Let's focus on defensive and offensive items. You have got Salt, Quartz Stone, and Sage Bundle. This concludes your equipment training, though specialized tools may appear later.",
-          subtitle_text: "Let's focus on defensive and offensive items. You've got Salt, Quartz Stone, and Sage Bundle. This concludes your equipment training, though specialized tools may appear later.",
+          tts_text: "Hello there. The entity here requires a more direct approach. Master the Salt Quartz Stone and Sage Bundle for this encounter.",
+          subtitle_text: "Hello there. The entity here requires a more direct approach. Master the Salt, Quartz Stone, and Sage Bundle for this encounter.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (
-          tts_text: "In this final chapter you will master Salt, Quartz Stone, and Sage Bundle. This completes your standard investigator's kit. Be ready for more advanced tech on tougher assignments.",
-          subtitle_text: "In this final chapter, you'll master Salt, Quartz Stone, and Sage Bundle. This completes your standard investigator's kit. Be ready for more advanced tech on tougher assignments.",
+          tts_text: "Welcome Unhaunter to this final chapter. The entity here will be a true test of your skills. You will need to master the Salt Quartz Stone and Sage Bundle.",
+          subtitle_text: "Welcome, Unhaunter, to this final chapter. The entity here will be a true test of your skills. You will need to master the Salt, Quartz Stone, and Sage Bundle.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         )
       ]
@@ -281,53 +261,53 @@
       name: "StandardChallengeIntro",
       lines: [
         (
-          tts_text: "Alright this is a standard investigation. All your gear is available. Assess the situation and proceed with the objectives.",
-          subtitle_text: "Alright, this is a standard investigation. All your gear is available. Assess the situation and proceed with the objectives.",
+          tts_text: "Alright Unhaunter, you're on site. This is a standard contract, nothing too out of the ordinary... hopefully.\nYou've got full access to all authorized equipment in the truck. Standard protocols apply. Good hunting.",
+          subtitle_text: "Alright, Unhaunter, you're on site. This is a standard contract, nothing too out of the ordinary... hopefully. You've got full access to all authorized equipment in the truck. Standard protocols apply. Good hunting.",
           tags: [NeutralObservation, MediumLength]
         ),
         (
-          tts_text: "Welcome to the site. This is a moderate haunting. You have access to your full range of equipment. Good luck.",
-          subtitle_text: "Welcome to the site. This is a moderate haunting. You have access to your full range of equipment. Good luck.",
+          tts_text: "Welcome to the site, Unhaunter. This is a moderate haunting.\nYou have access to your full range of equipment. Good luck.",
+          subtitle_text: "Welcome to the site, Unhaunter. This is a moderate haunting. You have access to your full range of equipment. Good luck.",
           tags: [NeutralObservation, Encouraging, MediumLength]
         ),
         (
-          tts_text: "This is a standard contract. Expect typical paranormal activity. All tools are at your disposal. Get to it.",
-          subtitle_text: "This is a standard contract. Expect typical paranormal activity. All tools are at your disposal. Get to it.",
+          tts_text: "Looks like you made it. This is a standard contract.\nExpect typical paranormal activity. All tools are at your disposal. Get to it.",
+          subtitle_text: "Looks like you made it. This is a standard contract. Expect typical paranormal activity. All tools are at your disposal. Get to it.",
           tags: [NeutralObservation, DirectHint, MediumLength]
         ),
         (
-          tts_text: "Okay you are on location. This should be a fairly routine job. Use any gear you deem necessary.",
-          subtitle_text: "Okay, you're on location. This should be a fairly routine job. Use any gear you deem necessary.",
+          tts_text: "Okay, you're at the location. This should be a fairly routine job.\nUse any gear you deem necessary.",
+          subtitle_text: "Okay, you're at the location. This should be a fairly routine job. Use any gear you deem necessary.",
           tags: [NeutralObservation, MediumLength]
         ),
         (
-          tts_text: "This investigation is rated standard difficulty. Prepare for moderate resistance. All your equipment is unlocked.",
-          subtitle_text: "This investigation is rated standard difficulty. Prepare for moderate resistance. All your equipment is unlocked.",
+          tts_text: "Welcome to the challenge, Unhaunter. This investigation is rated standard difficulty.\nPrepare for moderate resistance. All your equipment is unlocked.",
+          subtitle_text: "Welcome to the challenge, Unhaunter. This investigation is rated standard difficulty. Prepare for moderate resistance. All your equipment is unlocked.",
           tags: [NeutralObservation, MediumLength]
         ),
         (
-          tts_text: "We are looking at a Class Two manifestation. Nothing you haven't seen before. Your full kit is available.",
-          subtitle_text: "We're looking at a Class Two manifestation. Nothing you haven't seen before. Your full kit is available.",
+          tts_text: "Alright, you're here. We are looking at a Class Two manifestation.\nNothing you haven't seen before. Your full kit is available.",
+          subtitle_text: "Alright, you're here. We're looking at a Class Two manifestation. Nothing you haven't seen before. Your full kit is available.",
           tags: [NeutralObservation, ShortBrevity]
         ),
         (
-          tts_text: "Another day another ghost. This is a standard run. You know the drill and you've got all your toys.",
+          tts_text: "Another day, another ghost. This is a standard run.\nYou know the drill and you've got all your toys.",
           subtitle_text: "Another day, another ghost. This is a standard run. You know the drill, and you've got all your toys.",
           tags: [NeutralObservation, Humorous, MediumLength]
         ),
         (
-          tts_text: "The client reports moderate paranormal disturbances. This is a standard case. Select your preferred equipment and begin.",
-          subtitle_text: "The client reports moderate paranormal disturbances. This is a standard case. Select your preferred equipment and begin.",
+          tts_text: "Base to Unhaunter, we are getting some readings here.\nThe client reports moderate paranormal disturbances. This is a standard case.\nSelect your preferred equipment and begin.",
+          subtitle_text: "Base to Unhaunter, we are getting some readings here. The client reports moderate paranormal disturbances. This is a standard case. Select your preferred equipment and begin.",
           tags: [NeutralObservation, FormalishReminder, MediumLength]
         ),
         (
-          tts_text: "This haunting falls within standard parameters. You should be able to handle it with your available gear. Proceed when ready.",
-          subtitle_text: "This haunting falls within standard parameters. You should be able to handle it with your available gear. Proceed when ready.",
+          tts_text: "Hello there. This haunting falls within standard parameters.\nYou should be able to handle it with your available gear. Proceed when ready.",
+          subtitle_text: "Hello there. This haunting falls within standard parameters. You should be able to handle it with your available gear. Proceed when ready.",
           tags: [NeutralObservation, Encouraging, MediumLength]
         ),
         (
-          tts_text: "Standard investigation protocol applies here. Full access to equipment. Identify and neutralize the target.",
-          subtitle_text: "Standard investigation protocol applies here. Full access to equipment. Identify and neutralize the target.",
+          tts_text: "Welcome to the mission. Standard investigation protocol applies here.\nFull access to equipment. Identify and neutralize the target.",
+          subtitle_text: "Welcome to the mission. Standard investigation protocol applies here. Full access to equipment. Identify and neutralize the target.",
           tags: [NeutralObservation, DirectHint, MediumLength]
         )
       ]
@@ -336,53 +316,53 @@
       name: "HardChallengeIntro",
       lines: [
         (
-          tts_text: "This is a hard difficulty investigation. Expect significant paranormal activity and increased aggression. Choose your gear wisely.",
-          subtitle_text: "This is a hard difficulty investigation. Expect significant paranormal activity and increased aggression. Choose your gear wisely.",
+          tts_text: "Alright, Unhaunter, this one's got a bad vibe from the get-go. Scans are... messy.\nYou've got access to the full arsenal, and you're probably going to need it.\nMy advice? Don't linger. Get in, get what you need, and get out. Fast.",
+          subtitle_text: "Alright, Unhaunter, this one's got a bad vibe from the get-go. Scans are... messy. You've got access to the full arsenal, and you're probably going to need it. My advice? Don't linger. Get in, get what you need, and get out. Fast.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "We have got a tough one here. The entity is highly active and potentially dangerous. Standard approaches may not be enough.",
-          subtitle_text: "We've got a tough one here. The entity is highly active and potentially dangerous. Standard approaches may not be enough.",
+          tts_text: "Base to Unhaunter. We have got a tough one here.\nThe entity is highly active and potentially dangerous. Standard approaches may not be enough.",
+          subtitle_text: "Base to Unhaunter. We've got a tough one here. The entity is highly active and potentially dangerous. Standard approaches may not be enough.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "This contract is rated for experienced Unhaunters. The threat level is high. Be cautious and thorough.",
-          subtitle_text: "This contract is rated for experienced Unhaunters. The threat level is high. Be cautious and thorough.",
+          tts_text: "Looks like you made it. This contract is rated for experienced Unhaunters.\nThe threat level is high. Be cautious and thorough.",
+          subtitle_text: "Looks like you made it. This contract is rated for experienced Unhaunters. The threat level is high. Be cautious and thorough.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "Alright things are more serious now. This entity is known to be aggressive. Do not take any unnecessary risks.",
-          subtitle_text: "Alright, things are more serious now. This entity is known to be aggressive. Don't take any unnecessary risks.",
+          tts_text: "Okay, you're at the location. Alright things are more serious now.\nThis entity is known to be aggressive. Do not take any unnecessary risks.",
+          subtitle_text: "Okay, you're at the location. Alright, things are more serious now. This entity is known to be aggressive. Don't take any unnecessary risks.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "This is a confirmed hostile environment. Expect a challenging investigation. Your safety is not guaranteed.",
-          subtitle_text: "This is a confirmed hostile environment. Expect a challenging investigation. Your safety is not guaranteed.",
+          tts_text: "Welcome to the challenge, Unhaunter. This is a confirmed hostile environment.\nExpect a challenging investigation. Your safety is not guaranteed.",
+          subtitle_text: "Welcome to the challenge, Unhaunter. This is a confirmed hostile environment. Expect a challenging investigation. Your safety is not guaranteed.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "Reports indicate a powerful and malevolent presence. This will be a difficult case. Stay alert.",
-          subtitle_text: "Reports indicate a powerful and malevolent presence. This will be a difficult case. Stay alert.",
+          tts_text: "Alright, you're here. Reports indicate a powerful and malevolent presence.\nThis will be a difficult case. Stay alert.",
+          subtitle_text: "Alright, you're here. Reports indicate a powerful and malevolent presence. This will be a difficult case. Stay alert.",
           tags: [DirectWarning, SeriousTone, ShortBrevity]
         ),
         (
-          tts_text: "No room for mistakes on this one. The ghost is strong and territorial. Prepare for a fight.",
-          subtitle_text: "No room for mistakes on this one. The ghost is strong and territorial. Prepare for a fight.",
+          tts_text: "Another day, another ghost. No room for mistakes on this one.\nThe ghost is strong and territorial. Prepare for a fight.",
+          subtitle_text: "Another day, another ghost. No room for mistakes on this one. The ghost is strong and territorial. Prepare for a fight.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "This is a high stakes investigation. The entity is volatile. Make sure your equipment and strategy are solid.",
-          subtitle_text: "This is a high-stakes investigation. The entity is volatile. Make sure your equipment and strategy are solid.",
+          tts_text: "Base to Unhaunter, I'm getting chills just looking at the readings. This is a high stakes investigation.\nThe entity is volatile. Make sure your equipment and strategy are solid.",
+          subtitle_text: "Base to Unhaunter, I'm getting chills just looking at the readings. This is a high-stakes investigation. The entity is volatile. Make sure your equipment and strategy are solid.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "Previous teams have struggled with this location. Approach with extreme caution. This will test your skills.",
-          subtitle_text: "Previous teams have struggled with this location. Approach with extreme caution. This will test your skills.",
+          tts_text: "Hello there. Previous teams have struggled with this location.\nApproach with extreme caution. This will test your skills.",
+          subtitle_text: "Hello there. Previous teams have struggled with this location. Approach with extreme caution. This will test your skills.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         ),
         (
-          tts_text: "The paranormal activity here is intense and dangerous. This is a hard assignment. Double check everything.",
-          subtitle_text: "The paranormal activity here is intense and dangerous. This is a hard assignment. Double-check everything.",
+          tts_text: "Welcome to the mission. The paranormal activity here is intense and dangerous.\nThis is a hard assignment. Double check everything.",
+          subtitle_text: "Welcome to the mission. The paranormal activity here is intense and dangerous. This is a hard assignment. Double-check everything.",
           tags: [DirectWarning, SeriousTone, MediumLength]
         )
       ]
@@ -391,53 +371,53 @@
       name: "ExpertChallengeIntro",
       lines: [
         (
-          tts_text: "This is an expert level assignment. The entity is extremely dangerous and unpredictable. Survival is your primary concern.",
-          subtitle_text: "This is an expert-level assignment. The entity is extremely dangerous and unpredictable. Survival is your primary concern.",
-          tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
-        ),
-        (
-          tts_text: "Only our best Unhaunters take on cases like this. The entity is powerful and remorseless. Do not underestimate it.",
-          subtitle_text: "Only our best Unhaunters take on cases like this. The entity is powerful and remorseless. Do not underestimate it.",
-          tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
-        ),
-        (
-          tts_text: "This location is a confirmed paranormal hotspot of the highest order. Expect overwhelming activity and severe risk. Enter at your own peril.",
-          subtitle_text: "This location is a confirmed paranormal hotspot of the highest order. Expect overwhelming activity and severe risk. Enter at your own peril.",
+          tts_text: "Listen up, Unhaunter. This is an expert deployment. The target entity is extremely hostile, and the environment itself will work against you.\nYour sanity is going to take a beating from the moment you step out of the van, and resources will be scarce.\nEvery piece of gear, every second, counts. Make them count. No room for error.",
+          subtitle_text: "Listen up, Unhaunter. This is an expert deployment. The target entity is extremely hostile, and the environment itself will work against you. Your sanity is going to take a beating from the moment you step out of the van, and resources will be scarce. Every piece of gear, every second, counts. Make them count. No room for error.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, LongDetailed]
         ),
         (
-          tts_text: "The entity you are facing is exceptionally hostile and cunning. One wrong move could be your last. Focus and stay alive.",
-          subtitle_text: "The entity you're facing is exceptionally hostile and cunning. One wrong move could be your last. Focus and stay alive.",
+          tts_text: "Base to Unhaunter. Only our best Unhaunters take on cases like this.\nThe entity is powerful and remorseless. Do not underestimate it.",
+          subtitle_text: "Base to Unhaunter. Only our best Unhaunters take on cases like this. The entity is powerful and remorseless. Do not underestimate it.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "This is one of the most dangerous hauntings we have ever documented. Your chances of success are slim. Proceed with extreme prejudice.",
-          subtitle_text: "This is one of the most dangerous hauntings we've ever documented. Your chances of success are slim. Proceed with extreme prejudice.",
+          tts_text: "Looks like you made it. This location is a confirmed paranormal hotspot of the highest order.\nExpect overwhelming activity and severe risk. Enter at your own peril.",
+          subtitle_text: "Looks like you made it. This location is a confirmed paranormal hotspot of the highest order. Expect overwhelming activity and severe risk. Enter at your own peril.",
+          tags: [DirectWarning, SeriousTone, GrimAtmosphere, LongDetailed]
+        ),
+        (
+          tts_text: "Okay, you're at the location. The entity you are facing is exceptionally hostile and cunning.\nOne wrong move could be your last. Focus and stay alive.",
+          subtitle_text: "Okay, you're at the location. The entity you're facing is exceptionally hostile and cunning. One wrong move could be your last. Focus and stay alive.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "Forget everything you think you know. This thing is different. It is intelligent and it is lethal. Good luck you will need it.",
-          subtitle_text: "Forget everything you think you know. This thing is different. It's intelligent, and it's lethal. Good luck, you'll need it.",
+          tts_text: "Welcome to the challenge, Unhaunter. This is one of the most dangerous hauntings we have ever documented.\nYour chances of success are slim. Proceed with extreme prejudice.",
+          subtitle_text: "Welcome to the challenge, Unhaunter. This is one of the most dangerous hauntings we've ever documented. Your chances of success are slim. Proceed with extreme prejudice.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "We have minimal data on this entity other than its extreme aggression. You are walking into the unknown. Be prepared for anything.",
-          subtitle_text: "We have minimal data on this entity, other than its extreme aggression. You're walking into the unknown. Be prepared for anything.",
+          tts_text: "Alright, you're here. Forget everything you think you know. This thing is different.\nIt is intelligent and it is lethal. Good luck you will need it.",
+          subtitle_text: "Alright, you're here. Forget everything you think you know. This thing is different. It's intelligent, and it's lethal. Good luck, you'll need it.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "This is where Unhaunters become legends or statistics. The entity is a true nightmare. Do not become another casualty.",
-          subtitle_text: "This is where Unhaunters become legends, or statistics. The entity is a true nightmare. Don't become another casualty.",
+          tts_text: "Another day, another ghost. We have minimal data on this entity other than its extreme aggression.\nYou are walking into the unknown. Be prepared for anything.",
+          subtitle_text: "Another day, another ghost. We have minimal data on this entity, other than its extreme aggression. You're walking into the unknown. Be prepared for anything.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "The risks on this assignment are off the charts. The entity is incredibly powerful. Consider this your final warning.",
-          subtitle_text: "The risks on this assignment are off the charts. The entity is incredibly powerful. Consider this your final warning.",
+          tts_text: "Base to Unhaunter, I'm getting chills just looking at the readings. This is where Unhaunters become legends or statistics.\nThe entity is a true nightmare. Do not become another casualty.",
+          subtitle_text: "Base to Unhaunter, I'm getting chills just looking at the readings. This is where Unhaunters become legends, or statistics. The entity is a true nightmare. Don't become another casualty.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         ),
         (
-          tts_text: "You are facing a paranormal apex predator. It will hunt you relentlessly. Every second counts. Make them count.",
-          subtitle_text: "You're facing a paranormal apex predator. It will hunt you relentlessly. Every second counts. Make them count.",
+          tts_text: "Hello there. The risks on this assignment are off the charts.\nThe entity is incredibly powerful. Consider this your final warning.",
+          subtitle_text: "Hello there. The risks on this assignment are off the charts. The entity is incredibly powerful. Consider this your final warning.",
+          tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
+        ),
+        (
+          tts_text: "Welcome to the mission. You are facing a paranormal apex predator.\nIt will hunt you relentlessly. Every second counts. Make them count.",
+          subtitle_text: "Welcome to the mission. You're facing a paranormal apex predator. It will hunt you relentlessly. Every second counts. Make them count.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, MediumLength]
         )
       ]
@@ -446,53 +426,53 @@
       name: "MasterChallengeIntro",
       lines: [
         (
-          tts_text: "This is a master level challenge. Frankly we do not expect you to succeed. This entity is beyond anything we have encountered. Good luck.",
-          subtitle_text: "This is a master-level challenge. Frankly, we don't expect you to succeed. This entity is beyond anything we've encountered. Good luck.",
+          tts_text: "Alright, Unhaunter, you're on site. This is a master level challenge.\nFrankly we do not expect you to succeed. This entity is beyond anything we have encountered. Good luck.",
+          subtitle_text: "Alright, Unhaunter, you're on site. This is a master-level challenge. Frankly, we don't expect you to succeed. This entity is beyond anything we've encountered. Good luck.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "You volunteered for this. Remember that. This is a borderline suicide mission. The entity is overwhelmingly powerful.",
-          subtitle_text: "You volunteered for this. Remember that. This is a borderline suicide mission. The entity is overwhelmingly powerful.",
+          tts_text: "Base to Unhaunter. You volunteered for this. Remember that.\nThis is a borderline suicide mission. The entity is overwhelmingly powerful.",
+          subtitle_text: "Base to Unhaunter. You volunteered for this. Remember that. This is a borderline suicide mission. The entity is overwhelmingly powerful.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "No Unhaunter has faced an entity of this magnitude and returned unscathed. Or at all. This is a one way ticket for most.",
-          subtitle_text: "No Unhaunter has faced an entity of this magnitude and returned unscathed. Or at all. This is a one-way ticket for most.",
+          tts_text: "Looks like you made it. No Unhaunter has faced an entity of this magnitude and returned unscathed. Or at all.\nThis is a one way ticket for most.",
+          subtitle_text: "Looks like you made it. No Unhaunter has faced an entity of this magnitude and returned unscathed. Or at all. This is a one-way ticket for most.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "This is not an investigation. This is a survival test against impossible odds. The entity is a force of nature.",
-          subtitle_text: "This is not an investigation. This is a survival test against impossible odds. The entity is a force of nature.",
+          tts_text: "Okay, you're at the location. This is not an investigation.\nThis is a survival test against impossible odds. The entity is a force of nature.",
+          subtitle_text: "Okay, you're at the location. This is not an investigation. This is a survival test against impossible odds. The entity is a force of nature.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "If you have any last words now would be the time. What you are about to face is essentially a paranormal god. Do not expect to make it back.",
-          subtitle_text: "If you have any last words, now would be the time. What you're about to face is essentially a paranormal god. Don't expect to make it back.",
+          tts_text: "Welcome to the challenge, Unhaunter. If you have any last words now would be the time.\nWhat you are about to face is essentially a paranormal god. Do not expect to make it back.",
+          subtitle_text: "Welcome to the challenge, Unhaunter. If you have any last words, now would be the time. What you're about to face is essentially a paranormal god. Don't expect to make it back.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "This is it. The ultimate challenge. The entity is a harbinger of destruction. We are not even sure it can be stopped.",
-          subtitle_text: "This is it. The ultimate challenge. The entity is a harbinger of destruction. We're not even sure it can be stopped.",
+          tts_text: "Alright, you're here. This is it. The ultimate challenge.\nThe entity is a harbinger of destruction. We are not even sure it can be stopped.",
+          subtitle_text: "Alright, you're here. This is it. The ultimate challenge. The entity is a harbinger of destruction. We're not even sure it can be stopped.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "The readings are off the scale. It is a miracle the building is still standing. Whatever you do it probably will not be enough.",
-          subtitle_text: "The readings are off the scale. It's a miracle the building is still standing. Whatever you do, it probably won't be enough.",
+          tts_text: "Another day, another ghost. The readings are off the scale.\nIt is a miracle the building is still standing. Whatever you do it probably will not be enough.",
+          subtitle_text: "Another day, another ghost. The readings are off the scale. It's a miracle the building is still standing. Whatever you do, it probably won't be enough.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "All previous attempts to even categorize this entity have ended in disaster. You are walking into a meat grinder.",
-          subtitle_text: "All previous attempts to even categorize this entity have ended in disaster. You're walking into a meat grinder.",
+          tts_text: "Base to Unhaunter, I'm getting chills just looking at the readings. All previous attempts to even categorize this entity have ended in disaster.\nYou are walking into a meat grinder.",
+          subtitle_text: "Base to Unhaunter, I'm getting chills just looking at the readings. All previous attempts to even categorize this entity have ended in disaster. You're walking into a meat grinder.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "Consider your affairs in order. This entity defies all known paranormal science. We are sending you in blind against a hurricane.",
-          subtitle_text: "Consider your affairs in order. This entity defies all known paranormal science. We're sending you in blind against a hurricane.",
+          tts_text: "Hello there. Consider your affairs in order.\nThis entity defies all known paranormal science. We are sending you in blind against a hurricane.",
+          subtitle_text: "Hello there. Consider your affairs in order. This entity defies all known paranormal science. We're sending you in blind against a hurricane.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         ),
         (
-          tts_text: "This is the Unhaunters Everest wreathed in shadow and despair. Go if you must. But do not say we did not warn you Extensively.",
-          subtitle_text: "This is the Unhaunter's Everest, wreathed in shadow and despair. Go, if you must. But don't say we didn't warn you. Extensively.",
+          tts_text: "Welcome to the mission. This is the Unhaunters Everest wreathed in shadow and despair.\nGo if you must. But do not say we did not warn you Extensively.",
+          subtitle_text: "Welcome to the mission. This is the Unhaunter's Everest, wreathed in shadow and despair. Go, if you must. But don't say we didn't warn you. Extensively.",
           tags: [DirectWarning, SeriousTone, GrimAtmosphere, FatalisticTone, MediumLength]
         )
       ]

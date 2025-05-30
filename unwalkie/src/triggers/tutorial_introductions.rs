@@ -32,6 +32,6 @@ fn trigger_chapter_intros(
         WalkieEvent::ChapterIntro(difficulty),
         time.elapsed_secs_f64(),
     ) {
-        info!("Non-tutorial intro for {:?} triggered.", difficulty);
+        info!("Intro for {:?} triggered.", difficulty);
     }
 }

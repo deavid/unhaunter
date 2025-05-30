@@ -44,6 +44,7 @@ fn walkie_talk(
     time: Res<Time>,
 ) {
     let mut rng = random_seed::rng();
+    walkie_play.priority_bar /= 1.2;
 
     let Some(walkie_event) = walkie_play.event.clone() else {
         stopwatch.reset();

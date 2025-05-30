@@ -30,14 +30,14 @@ fn trigger_darkness_level_system(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    mut stopwatch: Local<Stopwatch>, // Changed from Local<f32>
+    mut stopwatch: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     let Ok((player_pos, _)) = qp.get_single() else {
@@ -48,14 +48,13 @@ fn trigger_darkness_level_system(
 
     if player_room.is_none() {
         // Player is not inside the location, no need to remind them.
-        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
 
-    if board_data.exposure_lux < 0.1 {
+    if board_data.exposure_lux < 0.4 {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
-        if stopwatch.elapsed_secs() > 10.0 {
-            // Changed from *seconds_dark > 10.0
+        if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
         }
     } else {
@@ -185,7 +184,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     // Use GearUsable::needs_darkness for the right hand gear
     if player_gear.right_hand.needs_darkness()
         && player_gear.right_hand.is_enabled()
-        && board_data.exposure_lux > 0.5
+        && board_data.light_field[player_bpos.ndidx()].lux > 0.5
     {
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(

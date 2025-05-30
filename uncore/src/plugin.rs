@@ -17,6 +17,7 @@ impl Plugin for UnhaunterCorePlugin {
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
         app.init_resource::<HintUiState>();
+        app.init_resource::<crate::noise::PerlinNoise>();
         app.add_event::<OnScreenHintEvent>();
     }
 }

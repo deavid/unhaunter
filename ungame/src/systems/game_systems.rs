@@ -53,7 +53,6 @@ fn cleanup(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn keyboard(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,

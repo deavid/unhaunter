@@ -17,6 +17,7 @@ use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Stamina;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use uncore::components::sprite_type::SpriteType;
 use uncore::random_seed;
 use uncore::resources::summary_data::SummaryData;
@@ -194,6 +195,7 @@ pub fn spawn_ghosts(
         .insert(GameSprite)
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
+        .insert(GhostBehaviorDynamics::default())
         .insert(ghost_spawn)
         .with_children(|parent| {
             parent

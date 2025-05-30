@@ -24,7 +24,7 @@ use unstd::plugins::board::rebuild_collision_data;
 
 use crate::components::MiasmaSprite;
 use crate::metrics;
-use crate::resources::{MiasmaConfig, PerlinNoiseTable};
+use crate::resources::MiasmaConfig;
 
 fn initialize_miasma(
     mut board_data: ResMut<BoardData>,
@@ -221,7 +221,7 @@ fn spawn_miasma(
 fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
-    noise_table: Res<PerlinNoiseTable>,
+    noise_table: Res<uncore::noise::PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();

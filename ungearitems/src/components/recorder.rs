@@ -106,7 +106,8 @@ impl GearUsable for Recorder {
             } else {
                 format!(
                     "Volume: {:>4.0}dB ({})",
-                    self.sound, self.evp_recorded_count
+                    self.sound - 93.0,
+                    self.evp_recorded_count
                 )
             }
         } else {
@@ -183,8 +184,10 @@ impl GearUsable for Recorder {
             self.sound_l[n] = 0.0;
             self.evp_recorded_count = 0;
         }
-        if self.sound > 1.0 && self.enabled && gs.bf.evidences.contains(&Evidence::EVPRecording) {
-            self.amt_recorded += self.sound * gs.time.delta_secs();
+        if self.sound > 1.0 && self.enabled && gs.bf.ghost_dynamics.evp_recording_clarity > 0.0 {
+            self.amt_recorded += self.sound
+                * gs.time.delta_secs()
+                * gs.bf.ghost_dynamics.evp_recording_clarity.cbrt();
             if self.amt_recorded > 200.0 {
                 self.evp_recorded_time_secs = gs.time.elapsed_secs();
                 self.evp_recorded_count += 1;
@@ -196,13 +199,11 @@ impl GearUsable for Recorder {
             let sum_snd: f32 = self.sound_l.iter().sum();
             let avg_snd: f32 = sum_snd / self.sound_l.len() as f32 + 1.0;
             self.sound = (avg_snd.ln() * 10.0).clamp(0.0, 60.0);
-            if gs.bf.evidences.contains(&Evidence::EVPRecording) {
-                self.sound_l.iter_mut().for_each(|x| *x /= 1.2);
-                self.evp_recorded_display =
-                    (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;
-            } else {
-                self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
-            }
+            self.sound_l.iter_mut().for_each(|x| {
+                *x /= 1.5 - (gs.bf.ghost_dynamics.evp_recording_clarity.max(0.0).cbrt()) / 2.0
+            });
+            self.evp_recorded_display =
+                (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;
             if self.sound > 1.0 && self.enabled {
                 gs.play_audio(
                     "sounds/effects-radio-scan.ogg".into(),
@@ -248,6 +249,10 @@ impl GearUsable for Recorder {
 
     fn is_electronic(&self) -> bool {
         true
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
     }
 
     fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {

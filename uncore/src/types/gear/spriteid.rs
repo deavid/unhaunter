@@ -2,7 +2,6 @@
 ///
 /// Each variant represents a specific sprite or animation frame for a piece of
 /// gear. The values are used to index into the gear spritesheet.
-#[allow(dead_code)]
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum GearSpriteID {
     ThermometerOff = 0,

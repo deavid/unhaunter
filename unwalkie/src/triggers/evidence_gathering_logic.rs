@@ -3,67 +3,13 @@ use bevy::utils::HashMap;
 use enum_iterator::all;
 use uncore::{
     components::player_sprite::PlayerSprite,
-    resources::{
-        board_data::BoardData, current_evidence_readings::CurrentEvidenceReadings,
-        ghost_guess::GhostGuess,
-    },
+    resources::{board_data::BoardData, current_evidence_readings::CurrentEvidenceReadings},
     states::{AppState, GameState},
-    types::{evidence::Evidence, gear_kind::GearKind}, // For identifying gear types
+    types::evidence::Evidence, // For identifying gear types
 };
 use ungear::components::playergear::PlayerGear;
 use untruck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use unwalkiecore::{WalkieEvent, WalkiePlay};
-
-fn trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system(
-    time: Res<Time>,
-    app_state: Res<State<AppState>>,
-    game_state: Res<State<GameState>>,
-    mut prev_game_state: Local<GameState>,
-    mut walkie_play: ResMut<WalkiePlay>,
-    gg: Res<GhostGuess>,
-    player_query: Query<&PlayerGear, With<PlayerSprite>>,
-) {
-    if *app_state.get() != AppState::InGame {
-        *prev_game_state = *game_state.get();
-        return;
-    }
-
-    let current_gs_val = *game_state.get();
-    let previous_gs_val = *prev_game_state;
-    *prev_game_state = current_gs_val;
-    // FIXME: Somehow this triggers still being in the truck or something? like, too early or similar.
-    // FIXME: Needs review.
-    // --- Check conditions when player HAS JUST LEFT THE TRUCK ---
-    if current_gs_val == GameState::None && previous_gs_val == GameState::Truck {
-        if let Some(_identified_ghost_via_guess) = gg.ghost_type {
-            // Player just left the truck, and GhostGuess indicates a single ghost was selected.
-
-            // Check if player has the correct repellent for this guessed ghost.
-            let Ok(player_gear) = player_query.get_single() else {
-                return;
-            };
-            let mut player_has_repellent = false;
-            for (gear, _epos) in player_gear.as_vec() {
-                if gear.kind == GearKind::RepellentFlask {
-                    player_has_repellent = true;
-                }
-            }
-
-            if !player_has_repellent {
-                // They left the truck after their journal pointed to one ghost (via GhostGuess),
-                // and they don't have the correct repellent in their inventory.
-                // Add a small delay here using a Local timer if desired, or rely on WalkiePlay cooldowns.
-                // For now, direct trigger:
-                walkie_play.set(
-                    WalkieEvent::JournalPointsToOneGhostNoCraft,
-                    time.elapsed_secs_f64(),
-                );
-            }
-        }
-        // If gg.ghost_type is None, it means either no single ghost was ID'd or player cleared their guess.
-        // In this case, the condition for the hint isn't met.
-    }
-}
 
 const DELAY_AFTER_INCORRECT_MARKING_SECONDS: f32 = 10.0;
 
@@ -528,10 +474,6 @@ fn trigger_evidence_confirmed_feedback_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        trigger_journal_points_to_one_ghost_no_craft_on_exit_v3_system,
-    );
     app.add_systems(Update, trigger_emf_non_emf5_fixation_system);
     app.add_systems(Update, trigger_journal_conflicting_evidence_system);
     app.init_resource::<ClearEvidenceTrackedState>();

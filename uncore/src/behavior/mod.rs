@@ -302,7 +302,6 @@ pub enum Class {
     CornerWall,
     StairsUp,
     StairsDown,
-    #[allow(clippy::upper_case_acronyms)]
     NPC,
     FakeGhost,
     FakeBreach,

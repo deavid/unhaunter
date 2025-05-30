@@ -137,11 +137,9 @@ fn check_erratic_movement_early(
         not_entered_timer.reset();
         return;
     }
-    // FIXME: This is not sensitive enough. And the voice lines aren't optimal, and the hint is not useful either.
-    // ...    We need to acknowledge that the player is not confortable with the isometric movement.
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-        && player_direction.distance() > 30.0
+        && player_direction.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
         not_entered_timer.tick(time.delta());

@@ -20,7 +20,6 @@ pub enum GhostEvent {
 #[derive(Component)]
 struct FlickerTimer(Timer);
 
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn trigger_ghost_events(
     mut commands: Commands,
     q_player: Query<(&Position, &PlayerSprite)>,

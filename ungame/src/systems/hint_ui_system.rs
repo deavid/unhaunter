@@ -90,7 +90,6 @@ fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) 
 
 /// Handles `OnScreenHintEvent`s and manages hint animations.
 /// Renamed from handle_hint_events_and_animate to match plan.
-#[allow(clippy::too_many_arguments)]
 fn hint_ui_event_and_animation_system(
     mut events: EventReader<OnScreenHintEvent>,
     mut ui_state: ResMut<HintUiState>,

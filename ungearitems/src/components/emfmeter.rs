@@ -222,12 +222,9 @@ impl GearUsable for EMFMeter {
             let mut new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
             self.emf -= 0.2 * gs.difficulty.0.equipment_sensitivity;
             self.emf /= 1.4_f32.powf(gs.difficulty.0.equipment_sensitivity);
-            if gs.bf.evidences.contains(&Evidence::EMFLevel5) {
-                new_emf = f32::tanh(new_emf / 40.0) * 45.0;
-            } else {
-                // If there's no possibility of EMF5, remap it so it's always below 20 mGauss.
-                new_emf = f32::tanh(new_emf / 19.0) * 15.0;
-            }
+            let emf5_evidence = gs.bf.ghost_dynamics.emf_level5_clarity.max(-0.2);
+            new_emf =
+                f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0)) * (15.0 + emf5_evidence * 30.0);
             self.emf = self.emf.max(new_emf);
             self.emf_level = EMFLevel::from_milligauss(self.emf);
 

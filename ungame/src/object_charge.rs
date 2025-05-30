@@ -37,7 +37,6 @@ fn accumulate_charge(
 struct WithinDischargeRange;
 
 /// System to check ghost proximity to objects
-#[allow(clippy::too_many_arguments)]
 fn check_ghost_proximity(
     // Access the object interaction configuration
     config: Res<ObjectInteractionConfig>,
