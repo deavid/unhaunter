@@ -16,9 +16,14 @@ fn trigger_almost_ready_to_craft_repellent_system(
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
     mut clear_evidences: Local<HashSet<Evidence>>,
+    mut repellent_crafted: Local<bool>,
 ) {
     if *app_state != AppState::InGame {
         clear_evidences.clear();
+        *repellent_crafted = false;
+        return;
+    }
+    if *repellent_crafted {
         return;
     }
     // Check if player already has a repellent flask
@@ -26,16 +31,16 @@ fn trigger_almost_ready_to_craft_repellent_system(
         for (gear, _epos) in player_gear.as_vec() {
             if gear.kind == GearKind::RepellentFlask {
                 // If player already has a repellent flask, no need to prompt to craft.
+                *repellent_crafted = true;
                 return;
             }
         }
     }
 
     // Check if clear evidence uniquely identifies the correct ghost
-    const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
+    const HIGH_CLARITY_THRESHOLD: f32 = 0.5;
 
     // Collect all clear evidences
-    let mut clear_evidences = HashSet::new();
     for evidence in enum_iterator::all::<Evidence>() {
         if clear_evidences.contains(&evidence) {
             continue;
@@ -65,7 +70,8 @@ fn trigger_almost_ready_to_craft_repellent_system(
         if is_compatible {
             compatible_ghosts.push(ghost_type);
         }
-    } // Only trigger if exactly one ghost is compatible with clear evidences
+    }
+
     if compatible_ghosts.len() != 1 {
         return;
     }

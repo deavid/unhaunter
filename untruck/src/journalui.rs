@@ -69,7 +69,7 @@ pub fn setup_journal_ui(
                         Text::new(evidence.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 16.0 * FONT_SCALE,
+                            font_size: 18.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -152,7 +152,7 @@ pub fn setup_journal_ui(
                         Text::new(ghost_type.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 15.0 * FONT_SCALE, // Slightly reduced font size
+                            font_size: 18.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),

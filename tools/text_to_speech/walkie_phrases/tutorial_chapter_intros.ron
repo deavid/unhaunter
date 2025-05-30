@@ -21,7 +21,7 @@
         ),
         (
           tts_text: "Unhaunter, I see you arrived to the Training site. This location has just enough activity to teach you the fundamentals without any real danger.\nInvestigate the location with the E M F and Thermometer.",
-          subtitle_text: "Training site reached. This location has just enough activity to teach you the fundamentals without any real danger. Investigate the location with the EMF and Thermometer.",
+          subtitle_text: "Unhaunter, I see you arrived to the Training site. This location has just enough activity to teach you the fundamentals without any real danger. Investigate the location with the EMF and Thermometer.",
           tags: [FirstTimeHint, Encouraging, MediumLength]
         ),
         (

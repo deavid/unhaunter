@@ -292,7 +292,7 @@ impl TutorialChapterIntrosConcept {
                 },
                 VoiceLineData {
                     ogg_path: "walkie/generated/tutorial_chapter_intros/tutorialchapter1intro_04.ogg".to_string(),
-                    subtitle_text: "Training site reached. This location has just enough activity to teach you the fundamentals without any real danger. Investigate the location with the EMF and Thermometer.".to_string(),
+                    subtitle_text: "Unhaunter, I see you arrived to the Training site. This location has just enough activity to teach you the fundamentals without any real danger. Investigate the location with the EMF and Thermometer.".to_string(),
                     tags: vec![WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
                     length_seconds: 14,
                 },

@@ -155,7 +155,6 @@ pub enum WalkieEvent {
     /// Player did not cycle to other gear when it was necessary.
     DidNotCycleToOtherGear,
     /// Journal points to one ghost, but no crafting has been done.
-    /// FIXME: appears twice!
     JournalPointsToOneGhostNoCraft,
     /// Player is fixated on EMF readings that are not EMF Level 5.
     EMFNonEMF5Fixation,
@@ -591,7 +590,9 @@ impl WalkieEvent {
         match &self {
             // --- Base1 ---
             WalkieEvent::GearInVan => "Return to van; check Loadout tab for gear.",
-            WalkieEvent::GhostNearHunt => "Ghost is about to hunt! Find a hiding spot (Hold [E] to hide) or create distance!",
+            WalkieEvent::GhostNearHunt => {
+                "Ghost is about to hunt! Find a hiding spot (Hold [E] to hide) or create distance!"
+            }
             WalkieEvent::ChapterIntro(difficulty) => match difficulty {
                 Difficulty::TutorialChapter1 => {
                     "Approach the building to start investigating. Gear limited to: Flashlight, EMF & Thermometer."
