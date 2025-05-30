@@ -516,9 +516,9 @@ impl WalkieEvent {
     pub fn priority(&self) -> WalkieEventPriority {
         match self {
             WalkieEvent::GearInVan => WalkieEventPriority::Low,
-            WalkieEvent::GhostNearHunt => WalkieEventPriority::Urgent,
+            WalkieEvent::GhostNearHunt => WalkieEventPriority::Low,
             WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
-            WalkieEvent::GearExplanation(_) => WalkieEventPriority::Medium,
+            WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryLow,
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
@@ -559,7 +559,7 @@ impl WalkieEvent {
             WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::High,
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
-            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
+            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Low,
             WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
 
             // --- Evidence Confirmation Events ---
