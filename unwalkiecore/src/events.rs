@@ -516,7 +516,7 @@ impl WalkieEvent {
     pub fn priority(&self) -> WalkieEventPriority {
         match self {
             WalkieEvent::GearInVan => WalkieEventPriority::Low,
-            WalkieEvent::GhostNearHunt => WalkieEventPriority::Low,
+            WalkieEvent::GhostNearHunt => WalkieEventPriority::VeryLow,
             WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
             WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryLow,
 
@@ -524,16 +524,16 @@ impl WalkieEvent {
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
             WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
             WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::High,
-            WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Low,
-            WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
+            WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Medium,
+            WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Medium,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium,
             WalkieEvent::BreachShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::GhostShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
-            WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
-            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::High,
+            WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Medium,
+            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Medium,
             WalkieEvent::EMFNonEMF5Fixation => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
@@ -550,9 +550,9 @@ impl WalkieEvent {
             // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => WalkieEventPriority::Low,
             // --- Repellent and Expulsion ---
-            WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::Medium,
+            WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::High,
             WalkieEvent::HasRepellentEntersLocation => WalkieEventPriority::Medium,
-            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::Low,
+            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::High,
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => WalkieEventPriority::Medium,
             WalkieEvent::GhostExpelledPlayerMissed => WalkieEventPriority::Medium,
@@ -563,14 +563,14 @@ impl WalkieEvent {
             WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
 
             // --- Evidence Confirmation Events ---
-            WalkieEvent::FreezingTempsEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::FloatingOrbsEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::UVEctoplasmEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::EMFLevel5EvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::EVPEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::FreezingTempsEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::EVPEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::VeryHigh,
 
             // --- Proactive Crafting Prompts ---
             WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
@@ -591,22 +591,22 @@ impl WalkieEvent {
         match &self {
             // --- Base1 ---
             WalkieEvent::GearInVan => "Return to van; check Loadout tab for gear.",
-            WalkieEvent::GhostNearHunt => "Ghost is hunting! Hide [E] or create distance!",
+            WalkieEvent::GhostNearHunt => "Ghost is about to hunt! Find a hiding spot (Hold [E] to hide) or create distance!",
             WalkieEvent::ChapterIntro(difficulty) => match difficulty {
                 Difficulty::TutorialChapter1 => {
-                    "Welcome to your first investigation! For now, only two tools: EMF & Thermometer. Approach the building to start investigating."
+                    "Approach the building to start investigating. Gear limited to: Flashlight, EMF & Thermometer."
                 }
                 Difficulty::TutorialChapter2 => {
-                    "Time to learn about new evidence types. Check out the UV Torch and Video Cam."
+                    "Enter the location when ready. Gear has been extended with UV Torch & Video Cam."
                 }
                 Difficulty::TutorialChapter3 => {
-                    "Let's explore more advanced gear. Use the Recorder and Geiger Counter."
+                    "Find the ghost and the breach. Recorder & Geiger Counter have been added to the truck."
                 }
                 Difficulty::TutorialChapter4 => {
-                    "Capturing evidence is key. Let's practice with the Spirit Box and Red Torch."
+                    "Carefully explore the location. All main gear is now available: Spirit Box & Red Torch added."
                 }
                 Difficulty::TutorialChapter5 => {
-                    "Final training: master all your tools. Salt, Quartz, and Sage are now available."
+                    "Identify the ghost. Defensive items: Salt, Quartz & Sage are now available."
                 }
                 Difficulty::StandardChallenge => "Standard contract. Identify the entity.",
                 Difficulty::HardChallenge => "This will be a challenge. Expect aggression.",

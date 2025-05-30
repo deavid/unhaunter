@@ -23,6 +23,7 @@ pub struct WalkiePlay {
     pub truck_accessed: bool,
     pub urgent_pending: bool,
     pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
+    pub priority_bar: f32,
 }
 
 impl Default for WalkiePlay {
@@ -38,6 +39,7 @@ impl Default for WalkiePlay {
             urgent_pending: Default::default(),
             other_mission_event_count: Default::default(),
             evidence_hinted_not_logged_via_walkie: None,
+            priority_bar: 0.0,
         }
     }
 }
@@ -48,6 +50,11 @@ impl WalkiePlay {
         // TODO: Priority should lower by the count of times played, and we need to know what is the highest priority event that is attempting to play.
         // ... to know the highest priority that tries to play we need to compute some kind of running average of the inverse of priority, so it decays over time.
         // ... if an event of lower priority attempts to play, compared to the average priority in the queue, we should ignore it.
+        if self.priority_bar < event.priority().value() {
+            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.2;
+        } else {
+            return false;
+        }
         self.urgent_pending = false;
         let mut count = 0;
         if let Some(event_stats) = self.played_events.get(&event) {
