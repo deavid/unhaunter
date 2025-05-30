@@ -245,8 +245,6 @@ impl GearUsable for GeigerCounter {
 
         // Random EMF spikes
         if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            self.sound_a1 = rng.random_range(0.0..400.0);
-            // Jumble numbers temporarily
             self.display_glitch_timer = 0.3;
         }
     }
