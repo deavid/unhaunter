@@ -2,16 +2,13 @@ use bevy::prelude::*;
 use uncore::resources::potential_id_timer::PotentialIDTimer;
 use unwalkiecore::{WalkiePlay, WalkieTalkingEvent};
 
-use crate::triggers::InTruckCraftPromptTimer;
-
 pub struct UnhaunterWalkiePlugin;
 
 impl Plugin for UnhaunterWalkiePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<WalkieTalkingEvent>()
-            .init_resource::<WalkiePlay>()
-            .init_resource::<PotentialIDTimer>()
-            .init_resource::<InTruckCraftPromptTimer>();
+        app.add_event::<WalkieTalkingEvent>();
+        app.init_resource::<WalkiePlay>();
+        app.init_resource::<PotentialIDTimer>();
 
         crate::walkie_play::app_setup(app);
         crate::triggers::app_setup(app);

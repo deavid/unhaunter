@@ -35,5 +35,3 @@ pub(crate) fn app_setup(app: &mut App) {
     potential_id_prompt::app_setup(app);
     truck_craft_prompt::app_setup(app);
 }
-
-pub use truck_craft_prompt::InTruckCraftPromptTimer;

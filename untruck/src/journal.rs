@@ -1,11 +1,11 @@
-use super::{
-    GhostGuess, TruckUIEvent, TruckUIGhostGuess,
-    uibutton::{TruckButtonState, TruckButtonType, TruckUIButton},
-};
+use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use bevy::{prelude::*, utils::HashSet};
 use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::truck::TruckUIGhostGuess;
+use uncore::events::truck::TruckUIEvent;
+use uncore::resources::ghost_guess::GhostGuess;
 use uncore::resources::potential_id_timer::PotentialIDTimer;
 use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
@@ -31,7 +31,6 @@ fn button_system(
     gc: Res<GameConfig>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
-    time: Res<Time>,
     mut potential_id_timer: ResMut<PotentialIDTimer>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
@@ -63,14 +62,6 @@ fn button_system(
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             if let Some(truckui_event) = tui_button.pressed() {
                 ev_truckui.send(truckui_event.clone());
-
-                // Reset highlight_craft_button if CraftRepellent is clicked
-                if let TruckButtonType::CraftRepellent = tui_button.class {
-                    if walkie_play.highlight_craft_button {
-                        walkie_play.highlight_craft_button = false;
-                        // info!("Craft Repellent button clicked, highlight_craft_button reset.");
-                    }
-                }
             }
 
             // Acknowledgement Logic Start
@@ -192,27 +183,9 @@ fn button_system(
         let mut textcolor = q_textcolor.get_mut(children[0]).unwrap();
 
         // Default color calculation
-        let mut current_border_color = tui_button.border_color(interaction);
+        let current_border_color = tui_button.border_color(interaction);
         let current_background_color = tui_button.background_color(interaction);
         let current_text_color = tui_button.text_color(interaction);
-
-        // UI Cue for Craft Repellent Button
-        if let TruckButtonType::CraftRepellent = tui_button.class {
-            if walkie_play.highlight_craft_button && !tui_button.disabled {
-                let pulse_factor =
-                    (time.elapsed_secs_f64() * std::f64::consts::PI * 2.0).sin() * 0.5 + 0.5; // Varies 0.0 to 1.0
-
-                current_border_color = current_border_color.mix(
-                    &uncore::colors::JOURNAL_BUTTON_BLINK_BORDER_COLOR, // Reusing journal blink color
-                    pulse_factor as f32,
-                );
-                // Example for background, if desired:
-                // current_background_color = current_background_color.mix(
-                //     &uncore::colors::TRUCKUI_ACCENT2_COLOR, // Example: A slightly different shade for bg
-                //     pulse_factor as f32
-                // );
-            }
-        }
 
         // Only update border color if it hasn't been modified by blinking systems
         // Since blinking systems now run after this system, we can always set the border color here

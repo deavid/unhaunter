@@ -27,7 +27,3 @@ pub mod systems;
 pub mod truckgear;
 pub mod ui;
 pub mod uibutton;
-
-use uncore::components::truck::{TruckUI, TruckUIGhostGuess};
-use uncore::events::truck::TruckUIEvent;
-use uncore::resources::ghost_guess::GhostGuess;

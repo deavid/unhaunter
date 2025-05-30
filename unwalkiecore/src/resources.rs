@@ -23,7 +23,6 @@ pub struct WalkiePlay {
     pub truck_accessed: bool,
     pub urgent_pending: bool,
     pub evidence_hinted_not_logged_via_walkie: Option<(Evidence, f64)>,
-    pub highlight_craft_button: bool,
 }
 
 impl Default for WalkiePlay {
@@ -39,7 +38,6 @@ impl Default for WalkiePlay {
             urgent_pending: Default::default(),
             other_mission_event_count: Default::default(),
             evidence_hinted_not_logged_via_walkie: None,
-            highlight_craft_button: false, // Added
         }
     }
 }

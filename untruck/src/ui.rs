@@ -1,7 +1,8 @@
 // untruck/src/ui.rs
-use super::{TruckUI, activity, journalui, loadoutui, sanity, sensors};
+use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::truck::TruckUI;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
