@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::data::PlayerProfileData;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -6,7 +8,6 @@ use std::path::PathBuf;
 
 /// Helper function to locate the fixture directory for schema snapshots.
 /// Returns `Some(PathBuf)` if the directory exists, or `None` if it does not.
-#[allow(dead_code)]
 pub fn get_fixture_directory() -> Option<PathBuf> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").ok()?;
     let fixture_dir = PathBuf::from(manifest_dir).join("tests/fixtures/player_profiles");
