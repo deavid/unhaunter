@@ -5,13 +5,13 @@
 source ./myenv/bin/activate || exit 1
 
 # Voices can be seen at: https://github.com/hexgrad/kokoro/blob/main/demo/app.py
-TEXT01A="The ghost was expelled from the haunted location. 
-Congratulations! 
+TEXT01A="The ghost was expelled from the haunted location.
+Congratulations!
 Mission is now completed.
 
 Get to the truck and click on the End Mission button.
 "
-TEXT01B="The ghost is gone. The haunted location is now safe. 
+TEXT01B="The ghost is gone. The haunted location is now safe.
 Congratulations!
 You have completed the mission.
 
@@ -23,13 +23,13 @@ TEXT04A="You went in without any gear?... That's brave... But you will need to g
 TEXT05A="Remember to use the flashlight on dark areas. It will help you see better."
 TEXT06A="If you keep exploring in the dark you'll get insane. Turn on the lights of the location to preserve your sanity."
 TEXT07A="Hey!... Get out NOW!... The ghost wants to harm you."
-TEXT08A="Hey!... you seem a bit lost, do you need help? 
+TEXT08A="Hey!... you seem a bit lost, do you need help?
 Maybe you could use the thermometer to find the ghost's room.
 The cold typically spreads throughout the haunted location so you should be able to follow the trail.
 "
 TEXT09A="The ghost is not happy. It's throwing objects around. Be careful."
 TEXT10A="The ghost is angry. It's hunting you. You need to hide."
-TEXT12A="Bingo! We have a ghost room! The thermometer is showing a cold spot. 
+TEXT12A="Bingo! We have a ghost room! The thermometer is showing a cold spot.
 Let's set up the gear."
 
 # Gear In Van - player went in and forgot to get gear
@@ -47,7 +47,7 @@ GHOST_NEAR_HUNT_2="The energy levels are surging... it's getting angry... I don'
 GHOST_NEAR_HUNT_3="Static's spiking on my end... that's never good... you might want to leave before it's too late."
 GHOST_NEAR_HUNT_4="Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you."
 
-# Mission start - flavor text to welcome the player to the mission and set the scene. 
+# Mission start - flavor text to welcome the player to the mission and set the scene.
 
 # .. easy variant - these are for easy missions which we need to tell the player to enter the location somehow.
 MISSION_START_EASY_1="Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity."
@@ -59,6 +59,17 @@ MISSION_START_EASY_6="Alright... Rookie... This is it. Don't mess it up! Explore
 MISSION_START_EASY_7="This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room."
 MISSION_START_EASY_8="Base to Unhaunter, we are getting some readings here... Go inside and see what is that about."
 MISSION_START_EASY_9="Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source."
+
+# .. training variant - these are for tutorial/training missions, acknowledging arrival and framing as practice
+MISSION_START_TRAINING_1="Good, you made it to the training site. This is a controlled environment, perfect for learning the basics. Take your time and explore."
+MISSION_START_TRAINING_2="Welcome to your training location. The readings here are mild, so it's an ideal place to practice your techniques safely."
+MISSION_START_TRAINING_3="Alright, you're at the practice facility. Everything here is set up for learning, so don't worry about making mistakes."
+MISSION_START_TRAINING_4="Training site reached. This location has just enough activity to teach you the fundamentals without any real danger."
+MISSION_START_TRAINING_5="Perfect timing. This training ground will help you get familiar with the equipment and procedures. Take it step by step."
+MISSION_START_TRAINING_6="You've arrived at the training facility. The entity here is docile, making it perfect for hands-on learning."
+MISSION_START_TRAINING_7="Welcome to the practice site. Think of this as your classroom - everything you need to learn is right here."
+MISSION_START_TRAINING_8="Good, you found the training location. The conditions here are ideal for mastering the basics of ghost hunting."
+MISSION_START_TRAINING_9="Training facility confirmed. This is where you'll learn the ropes safely. Remember, practice makes perfect."
 
 # ..medium variant - these are for medium difficulty, a more serious tone. The player knows the drill.
 MISSION_START_MEDIUM_1="Mission start, Unhaunter. Preliminary scans show elevated EMF and thermal anomalies. Proceed with caution."
@@ -85,7 +96,7 @@ MISSION_START_HARD_9="This is a bad one, Unhaunter.  A real bad one.  Just... tr
 # VOICE="bf_emma" # quite good.
 # VOICE="bm_fable" # acceptable
 VOICE="bf_emma"
-TEXT="$MISSION_START_EASY_9"
+TEXT="$MISSION_START_TRAINING_5"
 
 # Run kokoro to generate speech
 echo "Kokoro is generating speech..."
