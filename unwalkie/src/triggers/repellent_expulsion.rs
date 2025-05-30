@@ -324,7 +324,7 @@ fn trigger_repellent_exhausted_correct_type_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
-    ghost_query: Query<&GhostSprite>, // To check if ghost is present and its type/hits
+    ghost_query: Query<&GhostSprite>,
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
     mut check_state: Local<RepellentExhaustedCheckState>,
 ) {
@@ -342,6 +342,10 @@ fn trigger_repellent_exhausted_correct_type_system(
         *check_state = RepellentExhaustedCheckState::default();
         return;
     };
+
+    if ghost_sprite.get_health() < 0.0 {
+        return;
+    }
 
     // 2. Detect if a Repellent Flask was emptied and it was of the correct type for the current ghost
     if check_state.pending_check_for_ghost_type.is_none() {
@@ -384,7 +388,6 @@ fn trigger_repellent_exhausted_correct_type_system(
             *check_state = RepellentExhaustedCheckState::default(); // Ghost changed type? Unlikely but reset.
             return;
         }
-
         let particles_are_few = repellent_particle_query.iter().count() < 10; // Threshold for "few" particles
         let time_since_exhaustion = time.elapsed_secs() - check_state.time_exhaustion_confirmed;
         // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.

@@ -60,9 +60,14 @@ fn keyboard_player(
     let dt = time.delta_secs() * 60.0;
     for (mut pos, mut dir, player, mut anim, player_gear, hiding, mut stamina) in players.iter_mut()
     {
-        let col_delta = colhand.delta(&pos);
-        pos.x -= col_delta.x;
-        pos.y -= col_delta.y;
+        let col_delta;
+        if hiding.is_none() {
+            col_delta = colhand.delta(&pos);
+            pos.x -= col_delta.x;
+            pos.y -= col_delta.y;
+        } else {
+            col_delta = Vec3::ZERO;
+        }
         let mut d = Direction {
             dx: 0.0,
             dy: 0.0,

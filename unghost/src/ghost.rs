@@ -287,7 +287,7 @@ fn ghost_movement(
                 ghost.hunt_target = false;
             }
         }
-        if ghost.repellent_hits > 1000 {
+        if ghost.get_health() < 0.0 {
             summary.ghosts_unhaunted += 1;
             if let Some(breach) = ghost.breach_id {
                 commands

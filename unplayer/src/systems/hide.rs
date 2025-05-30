@@ -45,7 +45,7 @@ fn hide_player(
                 .iter()
                 // Manually filter for hiding spots
                 .filter(|(_, _, behavior)| behavior.p.object.hidingspot)
-                .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.0)
+                .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.3)
             {
                 // Key is held down, tick the timer
                 timer.tick(time.delta());

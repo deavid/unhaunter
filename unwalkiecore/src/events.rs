@@ -76,7 +76,6 @@ pub enum WalkieEvent {
     GearInVan,
     /// When the Ghost rage is near its limit.
     GhostNearHunt,
-    // MissionStartEasy, // Removed as per task
 
     // --- Tutorial and Difficulty Intros ---
     /// Chapter intros based on difficulty/chapter number
