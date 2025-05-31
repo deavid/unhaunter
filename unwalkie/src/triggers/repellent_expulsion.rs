@@ -123,13 +123,13 @@ fn trigger_has_repellent_enters_location_system(
 }
 
 const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0;
+const TOO_FAR_DURATION_SECONDS: f64 = 5.0;
 
-// Local state to track if the repellent was active in the previous frame
+// Local state to track when the "too far" condition started
 #[derive(Default)]
 struct PrevRepellentState {
     was_active: bool,
-    // We might also store which flask (if player could have multiple, though unlikely now)
-    // or the entity_id of the player to handle multiplayer later. For now, simple bool.
+    too_far_started: Option<f64>,
 }
 
 fn trigger_repellent_used_too_far_system(
@@ -170,10 +170,8 @@ fn trigger_repellent_used_too_far_system(
         }
     }
 
-    // 3. Detect Activation: Was not active previously, but is active now.
-    if current_repellent_is_active && !prev_repellent_state.was_active {
-        // Repellent was just activated by the player this frame.
-
+    // 3. Check if repellent is active and player is too far
+    if current_repellent_is_active {
         // Determine target position for distance check
         let target_pos: Position = ghost_pos_query
             .get_single()
@@ -187,10 +185,22 @@ fn trigger_repellent_used_too_far_system(
             });
 
         let distance = player_pos.distance(&target_pos);
-        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-        if distance > EFFECTIVE_REPELLENT_RANGE {
-            walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+        let is_too_far = distance > EFFECTIVE_REPELLENT_RANGE;
+
+        if is_too_far {
+            if prev_repellent_state.too_far_started.is_none() {
+                prev_repellent_state.too_far_started = Some(time.elapsed_secs_f64());
+            } else if let Some(start_time) = prev_repellent_state.too_far_started {
+                if time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS {
+                    walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+                    prev_repellent_state.too_far_started = None; // Reset after triggering
+                }
+            }
+        } else {
+            prev_repellent_state.too_far_started = None; // Reset if not too far
         }
+    } else {
+        prev_repellent_state.too_far_started = None; // Reset if repellent not active
     }
 
     // 4. Update previous state for next frame
