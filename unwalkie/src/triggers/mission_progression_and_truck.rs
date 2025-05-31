@@ -1,14 +1,13 @@
-use bevy::{prelude::*, time::Stopwatch};
-use bevy_persistent::Persistent;
+use bevy::{prelude::*, time::Stopwatch, utils::HashSet};
 use uncore::{
     components::{
         game_config::GameConfig, ghost_breach::GhostBreach, ghost_sprite::GhostSprite,
         player_sprite::PlayerSprite,
     },
     states::{AppState, GameState},
+    types::evidence::Evidence,
 };
 use ungear::components::playergear::PlayerGear;
-use unprofile::PlayerProfileData;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
@@ -64,13 +63,16 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     game_state: Res<State<GameState>>,
     mut prev_game_state: Local<GameState>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_profile: Res<Persistent<PlayerProfileData>>,
     difficulty: Res<uncore::difficulty::CurrentDifficulty>,
     player_gear_q: Query<(&PlayerSprite, &PlayerGear)>,
     game_config: Res<GameConfig>,
+    mut exited_truck_time: Local<Option<f64>>,
+    mut empty_right_handed: Local<bool>,
+    mut discoverable_evidences_with_current_gear: Local<HashSet<Evidence>>,
+    mut last_gear_evidences_change_time: Local<Option<f64>>,
 ) {
     if *app_state.get() != AppState::InGame {
-        *prev_game_state = *game_state.get();
+        *exited_truck_time = None;
         return;
     }
 
@@ -85,18 +87,57 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
 
     // Player leaves the truck (transitions from Truck to None)
     if current_gs == GameState::None && previous_gs == GameState::Truck {
-        // Only trigger if player has completed at least one mission (not first time)
-        if player_profile.statistics.total_missions_completed >= 1 {
-            // Check if the current player has empty right hand
-            for (player_sprite, player_gear) in player_gear_q.iter() {
-                if player_sprite.id == game_config.player_id && player_gear.empty_right_handed() {
-                    walkie_play.set(
-                        WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout,
-                        time.elapsed_secs_f64(),
-                    );
-                    break; // Only need to check once per player
+        *exited_truck_time = Some(time.elapsed_secs_f64());
+
+        // Check if the current player has empty right hand
+        for (player_sprite, player_gear) in player_gear_q.iter() {
+            if player_sprite.id == game_config.player_id {
+                // Calculate current set of discoverable evidences from player's gear
+                let mut new_discoverable_evidences = HashSet::new();
+
+                // Check left hand gear
+                if let Ok(evidence) = Evidence::try_from(&player_gear.left_hand.kind) {
+                    new_discoverable_evidences.insert(evidence);
                 }
+
+                // Check right hand gear
+                if let Ok(evidence) = Evidence::try_from(&player_gear.right_hand.kind) {
+                    new_discoverable_evidences.insert(evidence);
+                }
+
+                // Check inventory gear
+                for gear_item in &player_gear.inventory {
+                    if let Ok(evidence) = Evidence::try_from(&gear_item.kind) {
+                        new_discoverable_evidences.insert(evidence);
+                    }
+                }
+
+                // Check if the set of discoverable evidences has changed
+                if *discoverable_evidences_with_current_gear != new_discoverable_evidences {
+                    *discoverable_evidences_with_current_gear = new_discoverable_evidences;
+                    *last_gear_evidences_change_time = Some(time.elapsed_secs_f64());
+                }
+                *empty_right_handed = player_gear.empty_right_handed();
+
+                break;
             }
+        }
+    }
+    if let Some(exited_time) = *exited_truck_time {
+        let cur_time = time.elapsed_secs_f64();
+        if cur_time - exited_time > 60.0 {
+            return;
+        }
+        let too_long_checking_evidence =
+            (exited_time - last_gear_evidences_change_time.unwrap_or(exited_time)) > 120.0;
+        let trigger = *empty_right_handed || too_long_checking_evidence;
+        if trigger
+            && walkie_play.set(
+                WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout,
+                cur_time,
+            )
+        {
+            *exited_truck_time = None;
         }
     }
 }

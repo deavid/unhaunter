@@ -579,7 +579,7 @@ impl WalkieEvent {
             WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
             WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
             WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,
-            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::Low,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::High,
         }
     }
     /// This function returns hint text to display to the player for various events.
