@@ -109,7 +109,7 @@ pub struct SaltParticle;
 pub struct SaltParticleTimer(Timer);
 
 /// System to handle salt pile logic.
-pub fn salt_pile_system(
+fn salt_pile_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     // Retrieve Ghost Position
@@ -168,7 +168,7 @@ pub fn salt_pile_system(
 }
 
 /// System to handle salt particle logic.
-pub fn salt_particle_system(
+fn salt_particle_system(
     mut commands: Commands,
     time: Res<Time>,
     mut salt_particles: Query<(Entity, &mut Transform, &mut SaltParticleTimer)>,
@@ -207,7 +207,7 @@ pub struct UVReactive(pub f32);
 pub struct SaltyTraceTimer(pub Timer);
 
 /// System to handle salt trace logic.
-pub fn salty_trace_system(
+fn salty_trace_system(
     mut commands: Commands,
     time: Res<Time>,
     mut salty_traces: Query<
@@ -245,4 +245,10 @@ pub fn salty_trace_system(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, salt_particle_system);
+    app.add_systems(Update, salt_pile_system);
+    app.add_systems(Update, salty_trace_system);
 }

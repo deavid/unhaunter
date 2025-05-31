@@ -1,17 +1,6 @@
+pub mod focus_ring_system;
 pub mod plugin;
+pub mod triggers;
+pub mod walkie_level_stats;
 pub mod walkie_play;
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod walkie_stats;

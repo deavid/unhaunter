@@ -47,16 +47,6 @@ impl PlayerGear {
     pub fn empty_right_handed(&self) -> bool {
         matches!(self.right_hand.kind, GearKind::None)
     }
-    // TODO: Remove this code as it is unused.
-    // pub fn new() -> Self {
-    //     use super::prelude::Flashlight;
-    //     Self {
-    //         left_hand: Flashlight::default().into(),
-    //         right_hand: Gear::none(),
-    //         inventory: vec![Gear::none(), Gear::none()],
-    //         held_item: None,
-    //     }
-    // }
 
     /// Returns the nth next item in the inventory. If out of bounds, returns None.
     /// This is different from Some(Gear::None) which means that the slot exists but it

@@ -2,9 +2,9 @@
 
 use crate::types::evidence::Evidence;
 use crate::types::ghost::types::GhostType;
+use bevy::utils::HashMap;
+use bevy::utils::HashSet;
 use itertools::Itertools;
-use std::collections::HashMap;
-use std::collections::HashSet;
 
 const MAX_COMBO: usize = 1024 * 1024;
 

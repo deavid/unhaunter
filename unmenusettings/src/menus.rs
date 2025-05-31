@@ -3,9 +3,7 @@ use bevy_persistent::Persistent;
 use strum::IntoEnumIterator;
 use unsettings::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
-    game::{
-        CameraControls, CharacterControls, GameplaySettings, GameplaySettingsValue, MovementStyle,
-    },
+    game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
 };
 
 use crate::components::MenuEvent;
@@ -62,7 +60,6 @@ pub enum AudioSettingsMenu {
 
 impl AudioSettingsMenu {
     pub fn menu_event(&self) -> MenuEvent {
-        #[allow(clippy::match_single_binding)]
         match self {
             // <-- add here the events for specific menus
             Self::VolumeMaster
@@ -184,17 +181,13 @@ pub enum GameplaySettingsMenu {
     MovementStyle,
     #[strum(to_string = "Camera Controls")]
     CameraControls,
-    #[strum(to_string = "Character Controls")]
-    CharacterControls,
 }
 
 impl GameplaySettingsMenu {
     pub fn menu_event(&self) -> MenuEvent {
-        #[allow(clippy::match_single_binding)]
         match self {
             GameplaySettingsMenu::MovementStyle => MenuEvent::EditGameplaySetting(*self),
             GameplaySettingsMenu::CameraControls => MenuEvent::EditGameplaySetting(*self),
-            GameplaySettingsMenu::CharacterControls => MenuEvent::EditGameplaySetting(*self),
         }
     }
 
@@ -202,7 +195,6 @@ impl GameplaySettingsMenu {
         match self {
             GameplaySettingsMenu::MovementStyle => game_settings.movement_style.to_string(),
             GameplaySettingsMenu::CameraControls => game_settings.camera_controls.to_string(),
-            GameplaySettingsMenu::CharacterControls => game_settings.character_controls.to_string(),
         }
     }
 
@@ -232,20 +224,6 @@ impl GameplaySettingsMenu {
                             s.to_string()
                         },
                         MenuEvent::SaveGameplaySetting(GameplaySettingsValue::camera_controls(s)),
-                    )
-                })
-                .collect::<Vec<_>>(),
-            GameplaySettingsMenu::CharacterControls => CharacterControls::iter()
-                .map(|s| {
-                    (
-                        if s == game_settings.character_controls {
-                            format!("[{s}]")
-                        } else {
-                            s.to_string()
-                        },
-                        MenuEvent::SaveGameplaySetting(GameplaySettingsValue::character_controls(
-                            s,
-                        )),
                     )
                 })
                 .collect::<Vec<_>>(),

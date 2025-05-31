@@ -1,3 +1,18 @@
+### Version 0.3.0 - 2025-05-31
+
+* New campaign with 15 new maps!
+* Progression system with money, experience and leveling up.
+* Walkie Talkie buddy extended aggressively with an additional Hint UI.
+* Now missions are graded from A to F.
+* New design for the menu.
+* The menu now works with the mouse as well as keyboard.
+* Multi-floor support and stairs. Maps can now have multiple floors.
+* Controls are now fully configurable via config file. (User must edit file manually)
+* Flashlight and lighting rework to make it look moodier.
+* Additional spritesheets.
+* New contributed map `Tarin Library` (thanks!!)
+* New website! https://www.unhaunter.com
+
 ### Version 0.2.7 - 2025-03-26
 
 **Features:**
@@ -15,7 +30,7 @@
   Includes visual progress bar and audio feedback during the hold. #32
 *   **Auto-Hiding Mouse Cursor:** The mouse cursor now automatically hides after a short
   period of inactivity during gameplay, enhancing immersion. #74
-*   **Basic Spatial Audio:** Implemented initial spatial audio (volume-based positioning) 
+*   **Basic Spatial Audio:** Implemented initial spatial audio (volume-based positioning)
   for sound effects, providing better directional awareness. #54
 *   **Look at left hand:** `Left Control` now allows to focus and see the left hand gear,
   and set the evidence on the left hand. #27
@@ -25,14 +40,14 @@
 *   **Music volume:** Increased music volume, which allows for a very loud music at 100%. #92
 *   **Snappier Camera:** Adjusted for a faster, snappier feel and improved responsiveness. #93
 *   **WASM now allows for resizing:** Improved WASM CSS handling so in-browser gaming uses the full browser window. #63
-  
+
 **Fixes:**
 
 *   **UI:** Corrected visibility issues with the in-game control key legend.
 *   **Gear - Recorder:** Removed an experimental false reading mechanic that could be confusing.
 *   **Spirit Box:** Limited the effective range of the Spirit Box to require closer proximity to the ghost. #68
 *   **Replaced duplicate ghosts:** Domovoi and Wisp were duplicates so they have been renamed to new unique ghosts. #87
-  
+
 **Other:**
 
 *   **Tools:** Added an internal `ghost_list` developer tool for viewing ghost/evidence statistics. #86
@@ -48,8 +63,8 @@
     The miasma's density and movement are simulated, and it interacts with the environment and player.
 *   **Electromagnetic Interference (EMI):** Added a new mechanic where the ghost,
     particularly during its pre-hunt warning phase, emits electromagnetic interference.
-    This affects electronic gear (Flashlight, EMF Meter, Recorder, Red Torch, Videocam), 
-    causing glitches, malfunctions, and false readings. This adds a layer of challenge 
+    This affects electronic gear (Flashlight, EMF Meter, Recorder, Red Torch, Videocam),
+    causing glitches, malfunctions, and false readings. This adds a layer of challenge
     and realism to using electronic equipment.
 *   **Stamina System Integration:** The miasma now directly impacts the player's stamina.
     Higher miasma density in a location increases the rate at which stamina depletes while sprinting.
@@ -77,9 +92,9 @@
 
 **Features:**
 
-*   **Screenspace orthogonal movement**: Now players can choose to move the 
+*   **Screenspace orthogonal movement**: Now players can choose to move the
     character relative to the screen or relative to the map.
-*   **Settings**: Added gameplay + audio settings which are saved to disk or 
+*   **Settings**: Added gameplay + audio settings which are saved to disk or
     local storage for WASM.
 
 **Changes:**
@@ -101,11 +116,11 @@
     * Ghosts now get angrier with more aggressive actions.
     * Ghost hunting duration is no longer increased by the anger.
     * A new cool-down logic for hunting has been implemented on top of the ghost rage.
-        
+
 **Changes:**
 
 * **Gear:**
-  * Added support to use different gears in the truck depending on the chosen difficulty. 
+  * Added support to use different gears in the truck depending on the chosen difficulty.
   * Adjusted `EMF` meter sensibility to adapt to the difficulty.
   * Improved `Red Torch` and `Video Cam` lighting.
 * **UI:**
@@ -124,58 +139,58 @@
 **Features:**
 
 * **New Consumable Items:**
-    * Salt: You can drop salt on the ground, and if the ghost walks over it, 
-      it will leave a trace of salt where it goes. These traces are only visible 
+    * Salt: You can drop salt on the ground, and if the ghost walks over it,
+      it will leave a trace of salt where it goes. These traces are only visible
       under UV light.
-    * Quartz Stone: It absorbs the ghost's hunting energy, effectively shortening 
-      hunts and protecting the player. The stone gradually cracks and eventually 
+    * Quartz Stone: It absorbs the ghost's hunting energy, effectively shortening
+      hunts and protecting the player. The stone gradually cracks and eventually
       breaks after repeated uses.
     * Sage: Burn it and smoke the ghost, and it will calm it down for 30 seconds.
-      During hunts, it will confuse the ghost and make it lose track of the player. 
+      During hunts, it will confuse the ghost and make it lose track of the player.
 * **New Menu: Map Hub:**
-    * Provides a clear and dedicated menu for selecting the map and difficulty 
+    * Provides a clear and dedicated menu for selecting the map and difficulty
       level before starting a new game.
     * Displays all available maps in a list, allowing for easy browsing and selection.
-    * Presents a separate screen for choosing from a range of 16 difficulty levels, 
+    * Presents a separate screen for choosing from a range of 16 difficulty levels,
       each with a description of its unique challenges.
 * **Expanded Difficulty System:**
-    * Offers 16 distinct difficulty levels, ranging from "Novice Investigator" 
-      to "Master Guardian", providing a wide range of challenges for players 
+    * Offers 16 distinct difficulty levels, ranging from "Novice Investigator"
+      to "Master Guardian", providing a wide range of challenges for players
       of all skill levels.
-    * Each difficulty level affects various aspects of the game, including 
+    * Each difficulty level affects various aspects of the game, including
       ghost behavior, environment conditions, player attributes, and scoring.
     * Difficulties now customize the available equipment for the player.
 * **Improved Ghost Expulsion Feedback:**
-    * When a ghost is successfully expelled, it now fades out over 5 seconds 
+    * When a ghost is successfully expelled, it now fades out over 5 seconds
       while emitting smoke particles, creating a more noticeable and satisfying
       visual effect.
-    * The ghost's breach also fades out, indicating its permanent 
+    * The ghost's breach also fades out, indicating its permanent
       departure from the location.
     * Two distinct roar sounds now play during the expulsion, adding to the
       dramatic effect.
 
 **Fixes:**
 
-* **Lighting:** Several adjustments have been made to the lighting system to 
+* **Lighting:** Several adjustments have been made to the lighting system to
   create a more visually appealing and atmospheric environment.
 * **Quartz Stone:** The Quartz Stone's energy absorption rate is now adjusted
   based on the selected difficulty level, making it more effective at higher difficulty levels.
 * **Repellent Flask:** The behavior of the Repellent Flask particles has been
-  improved. They now spread more realistically, preventing them from clumping 
+  improved. They now spread more realistically, preventing them from clumping
   together or moving in an unnatural way.
 * **Hiding Mechanics:**
-    * Players can no longer hide while carrying any items, 
+    * Players can no longer hide while carrying any items,
       preventing conflicts with other actions.
-    * The player's sprite now changes color when hiding, 
+    * The player's sprite now changes color when hiding,
       providing a visual indicator of their hidden state.
-    * Hiding now requires the player to hold down the "E" key 
+    * Hiding now requires the player to hold down the "E" key
       for a short duration, reducing accidental triggers.
 * **Truck Journal:** The Truck Journal UI now filters possible evidence more
   effectively based on the selected ghost type, streamlining the evidence selection process.
-* **Windows:** Fixed a bug that prevented map tileset images from loading correctly 
+* **Windows:** Fixed a bug that prevented map tileset images from loading correctly
   in the Windows build, ensuring compatibility and a consistent experience across platforms.
 * **General:**
-    * Addressed several warnings and clippy lints to improve 
+    * Addressed several warnings and clippy lints to improve
       code quality and maintainability.
     * Fixed minor UI issues and typos in the game.
 
@@ -183,7 +198,7 @@
 
 **Features:**
 
-* **Item Grab & Drop:** 
+* **Item Grab & Drop:**
     * Items are now dropped to the center of the tile and it
       checks for other items to prevent dropping items in occupied tiles.
 * **Deployable Gear:**
@@ -194,10 +209,10 @@
     * The ghost will snore, roar and more on different scenarios.
     * The player will hear a loud heardbeat when the health is low.
     * The backgroud music will fade out and be replaced by unsettling sounds
-      when the sanity is low. 
+      when the sanity is low.
 * **Basic Spatial sound:**
     * Now the sounds will have a volume (not panning) depending on the distance.
-    
+
 **Fixes:**
   * Increased overall brightness of the game.
   * Ensure the torch iluminates the player itself.
@@ -221,14 +236,14 @@
 * **Grab & Drop Items:**
     * Players can now pick up light items with `F`
     * While carrying an item they're slower, they can drop the item with `G`
-* **Object-Ghost Interaction System:** 
-    * Introduced a new system that allows players to influence the ghost's 
+* **Object-Ghost Interaction System:**
+    * Introduced a new system that allows players to influence the ghost's
       behavior by manipulating objects in the environment.
     * Objects are assigned hidden properties (`Attractive`, `Repulsive`) that
       affect how the ghost interacts with them.
     * The ghost's roaming behavior is now influenced by the proximity
       and charge levels of objects.
-    * Players can provoke hunts by placing `Repulsive` objects near 
+    * Players can provoke hunts by placing `Repulsive` objects near
       the ghost's breach and by removing `Attractive` objects from the location.
     * Added visual glow effects to objects based on their properties
       and the active light source, revealing their influence on the ghost.
@@ -239,7 +254,7 @@
     * As we now depend on having objects, it was time to get an update to the
       big university map to add all sorts of objects. It looks pretty cool!
 * **New Tutorial: Glass House:**
-    * A simple map where all walls are transparent so that it is easy to see, 
+    * A simple map where all walls are transparent so that it is easy to see,
       and players can learn the ghost evidences at their own pace.
 
 **Fixes:**
@@ -338,7 +353,7 @@ Fixes:
 
 Changes:
 - WASM support (with problems)
-- Deployed WASM to https://deavid.github.io/unhaunter/ 
+- Deployed WASM to https://deavid.github.io/unhaunter/
 
 ### Version 0.1.3 - 2024-03-12
 

@@ -1,0 +1,329 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "DarkRoomNoLightUsed",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Bit dark in this room, is it not? Might be worth seeing if there is a light switch around, or using your torch.",
+          subtitle_text: "Bit dark in this room, is it not? Might be worth seeing if there is a light switch around, or using your torch.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength, Encouraging],
+        ),
+        WalkieLineEntry(
+          tts_text: "Hard to spot clues when you can not see your own hand in front of your face. A little light would go a long way here.",
+          subtitle_text: "Hard to spot clues when you can't see your own hand in front of your face. A little light would go a long way here.",
+          tags: [FirstTimeHint, Guidance, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember, your torch is good for focused light, but room lights can help you get a better overall picture. If there are any working ones, that is.",
+          subtitle_text: "Remember, your torch is good for focused light, but room lights can help you get a better overall picture. If there are any working ones, that is.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This gloom is not doing us any favours. See if you can brighten things up a bit, make it harder for things to lurk.",
+          subtitle_text: "This gloom isn't doing us any favours. See if you can brighten things up a bit, make it harder for things to lurk.",
+          tags: [Guidance, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are you a fan of the dark? Because our ghostly friend might be, but it makes our job trickier. Light switch? Torch?",
+          subtitle_text: "Are you a fan of the dark? Because our ghostly friend might be, but it makes our job trickier. Light switch? Torch?",
+          tags: [Questioning, SnarkyHumor, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You would be surprised what you can miss in the shadows. Always good to illuminate your surroundings properly.",
+          subtitle_text: "You'd be surprised what you can miss in the shadows. Always good to illuminate your surroundings properly.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Feels like we are exploring a cave in here. Any chance of finding a light source to make it less... cave like?",
+          subtitle_text: "Feels like we're exploring a cave in here. Any chance of finding a light source to make it less... cave-like?",
+          tags: [Humorous, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are having trouble seeing, do not forget your basic tools. Your torch, or see if the room has its own lights.",
+          subtitle_text: "If you're having trouble seeing, don't forget your basic tools. Your torch, or see if the room has its own lights.",
+          tags: [ReminderLow, DirectHint, MediumLength, PlayerStruggling],
+        ),
+        WalkieLineEntry(
+          tts_text: "Working in the dark is a good way to trip over your own feet, or worse. Lets get some light in here.",
+          subtitle_text: "Working in the dark is a good way to trip over your own feet, or worse. Let's get some light in here.",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This room could really use some illumination. Makes spotting the little details much easier.",
+          subtitle_text: "This room could really use some illumination. Makes spotting the little details much easier.",
+          tags: [Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Trying to navigate by smell now, are we? Or perhaps you have developed echo location I was not briefed on. A light might prove less... clumsy.",
+          subtitle_text: "Trying to navigate by smell now, are we? Or perhaps you've developed echo-location I wasn't briefed on. A light might prove less... clumsy.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Sounding like a one person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          subtitle_text: "Sounding like a one-person demolition crew in there. Maybe flick on your torch, or find a light switch, eh?",
+          tags: [SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "This pinball wizard approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          subtitle_text: "This 'pinball wizard' approach to exploration is novel. Less effective, mind you, but novel. Lights, perhaps?",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are trying to find things by bumping into them, you are going to have a very long night. And a lot of bruises.",
+          subtitle_text: "If you're trying to find things by bumping into them, you're going to have a very long night. And a lot of bruises.",
+          tags: [SnarkyHumor, ConcernedWarning, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "My instruments are picking up a lot of... well, you hitting things. A little illumination might help your shins.",
+          subtitle_text: "My instruments are picking up a lot of... well, *you* hitting things. A little illumination might help your shins.",
+          tags: [SnarkyHumor, NeutralObservation, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Are we playing Marco Polo with the furniture? Because I do not think it is going to shout Polo back.",
+          subtitle_text: "Are we playing 'Marco Polo' with the furniture? Because I don't think it's going to shout 'Polo' back.",
+          tags: [SnarkyHumor, PlayerStruggling, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Honestly, it is like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          subtitle_text: "Honestly, it's like a bull in a china shop in there. But darker. Much, much darker. Please use a light.",
+          tags: [SnarkyHumor, SlightlyImpatient, PlayerStruggling, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I can hear you stumbling about from here. You do have a torch, right? And this place has switches?",
+          subtitle_text: "I can hear you stumbling about from here. You *do* have a torch, right? And this place has switches?",
+          tags: [NeutralObservation, PlayerStruggling, Questioning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Let me guess, you are methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          subtitle_text: "Let me guess, you're methodically mapping the room with your kneecaps? There are easier ways, involving light.",
+          tags: [SnarkyHumor, PlayerStruggling, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          subtitle_text: "Right, this is getting painful to listen to. Find a light, any light, before you accidentally knock the whole place down.",
+          tags: [SlightlyImpatient, SnarkyHumor, PlayerStruggling, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "IgnoredObviousBreach",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Did you see that shimmer over there? My readings are a bit fuzzy around that spot. Might be where it is getting in.",
+          subtitle_text: "Did you see that shimmer over there? My readings are a bit fuzzy around that spot. Might be where it's getting in.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength, Questioning],
+        ),
+        WalkieLineEntry(
+          tts_text: "There is a... distortion, in the air near that area. That is often where these things make their entrance. Keep an eye on it.",
+          subtitle_text: "There's a... distortion, in the air near that area. That's often where these things make their entrance. Keep an eye on it.",
+          tags: [FirstTimeHint, Guidance, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That spot where the air looks a bit like heat haze? That is what we call a breach. Prime real estate for ghosts.",
+          subtitle_text: "That spot where the air looks a bit like heat haze? That's what we call a breach. Prime real estate for ghosts.",
+          tags: [FirstTimeHint, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "I am picking up some strange energy fluctuations concentrated right around... there. See that wispy looking thing?",
+          subtitle_text: "I'm picking up some strange energy fluctuations concentrated right around... there. See that wispy looking thing?",
+          tags: [Guidance, ContextualHint, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The source of the haunting, its entry point, often looks a bit... off. Like the air itself is disturbed. See anything like that?",
+          subtitle_text: "The source of the haunting, its entry point, often looks a bit... off. Like the air itself is disturbed. See anything like that?",
+          tags: [Guidance, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That faint, cloudy patch? That is the breach. Most of its activity will probably centre around there.",
+          subtitle_text: "That faint, cloudy patch? That's the breach. Most of its activity will probably centre around there.",
+          tags: [DirectHint, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You will want to pay close attention to the area around that... shimmering portal. That is its doorway, so to speak.",
+          subtitle_text: "You'll want to pay close attention to the area around that... shimmering portal. That's its doorway, so to speak.",
+          tags: [Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The breach is usually the heart of the haunting. If you have spotted it, that is a good place to focus your gear.",
+          subtitle_text: "The breach is usually the heart of the haunting. If you've spotted it, that's a good place to focus your gear.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "See that? Where the air looks like it is wobbling? That is your target. The ghost's little hidey hole.",
+          subtitle_text: "See that? Where the air looks like it's wobbling? That's your target. The ghost's little hidey-hole.",
+          tags: [DirectHint, Humorous, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That unusual patch in the air... that is the breach. Keep it in sight, it is important.",
+          subtitle_text: "That unusual patch in the air... that's the breach. Keep it in sight, it's important.",
+          tags: [DirectHint, ReminderLow, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "IgnoredVisibleGhost",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Blimey, did you see that? Definitely not just the house settling.",
+          subtitle_text: "Blimey, did you see that? Definitely not just the house settling.",
+          tags: [ImmediateResponse, NeutralObservation, ShortBrevity, Questioning],
+        ),
+        WalkieLineEntry(
+          tts_text: "Well, hello there. Our shy friend decided to make an appearance, it seems.",
+          subtitle_text: "Well, hello there. Our shy friend decided to make an appearance, it seems.",
+          tags: [SnarkyHumor, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That was it! That was the ghost! Did you catch a glimpse?",
+          subtitle_text: "That was it! That was the ghost! Did you catch a glimpse?",
+          tags: [ImmediateResponse, Encouraging, Questioning, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just saw a flicker of something... or someone. Keep your eyes peeled around where that was.",
+          subtitle_text: "Just saw a flicker of something... or someone. Keep your eyes peeled around where that was.",
+          tags: [NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It just showed itself! Now is a good time to observe it, see if it reacts to any of your gear.",
+          subtitle_text: "It just showed itself! Now is a good time to observe it, see if it reacts to any of your gear.",
+          tags: [ImmediateResponse, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "There it is, bold as brass. Do not let it spook you too much, try to get some readings if you can.",
+          subtitle_text: "There it is, bold as brass. Don't let it spook you too much, try to get some readings if you can.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Our guest of honour has arrived. Try not to stare, it might get self conscious.",
+          subtitle_text: "Our guest of honour has arrived. Try not to stare, it might get self-conscious.",
+          tags: [SnarkyHumor, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Definitely saw movement there. That was our target, alright. What did you make of it?",
+          subtitle_text: "Definitely saw movement there. That was our target, alright. What did you make of it?",
+          tags: [NeutralObservation, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is made an appearance! Quick, while it is visible, see if any of your tools pick up anything strong.",
+          subtitle_text: "It's made an appearance! Quick, while it's visible, see if any of your tools pick up anything strong.",
+          tags: [ImmediateResponse, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Yep, that was it. Not just a draft. Try to remember what it looked like, any distinct features.",
+          subtitle_text: "Yep, that was it. Not just a draft. Try to remember what it looked like, any distinct features.",
+          tags: [NeutralObservation, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "RoomLightsOnGearNeedsDark",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Some of this kit, like the UV or night vision, works best when it is properly dark. Those room lights might be washing things out.",
+          subtitle_text: "Some of this kit, like the UV or night vision, works best when it's properly dark. Those room lights might be washing things out.",
+          tags: [FirstTimeHint, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Trying to use the [UV torch / Video Cam] with all the lights on? You might be missing some of the more subtle details that way.",
+          subtitle_text: "Trying to use the [UV torch / Video Cam] with all the lights on? You might be missing some of the more subtle details that way.",
+          tags: [ReminderLow, Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "For the best results with that piece of gear, you will probably want to kill the main lights in the room.",
+          subtitle_text: "For the best results with that piece of gear, you'll probably want to kill the main lights in the room.",
+          tags: [Guidance, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "That particular tool is a bit of a diva, prefers the dark. Try flicking off the room lights and see if it behaves better.",
+          subtitle_text: "That particular tool is a bit of a diva, prefers the dark. Try flicking off the room lights and see if it behaves better.",
+          tags: [Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you are looking for things that glow or float, ambient light can be your enemy. Darkness is your friend with that one.",
+          subtitle_text: "If you're looking for things that glow or float, ambient light can be your enemy. Darkness is your friend with that one.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Certain phenomena only show up properly in the dark. Might be worth hitting that light switch before you rely too much on that reading.",
+          subtitle_text: "Certain phenomena only show up properly in the dark. Might be worth hitting that light switch before you rely too much on that reading.",
+          tags: [Guidance, ContextualHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The room lights could be interfering with what that [UV torch / Video Cam] can pick up. Try it in the pitch black.",
+          subtitle_text: "The room lights could be interfering with what that [UV torch / Video Cam] can pick up. Try it in the pitch black.",
+          tags: [ReminderMedium, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just a heads up, that gear is much more effective in total darkness. Room lights off, please.",
+          subtitle_text: "Just a heads-up, that gear is much more effective in total darkness. Room lights off, please.",
+          tags: [DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "To get the most out of that tool, try plunging the room into darkness first. Makes all the difference for some evidence.",
+          subtitle_text: "To get the most out of that tool, try plunging the room into darkness first. Makes all the difference for some evidence.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is a bit like looking for stars in the daytime with those lights on. Some things just need the dark to shine.",
+          subtitle_text: "It's a bit like looking for stars in the daytime with those lights on. Some things just need the dark to shine.",
+          tags: [Humorous, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    WalkieEventConceptEntry(
+      name: "FlashlightOnInLitRoom",
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Room lights are on, and your torch. Trying to get a tan, or just really like seeing everything twice?",
+          subtitle_text: "Room lights are on, and your torch. Trying to get a tan, or just really like seeing everything twice?",
+          tags: [SnarkyHumor, NeutralObservation, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "You know, the room lights are doing a perfectly good job there. Might save your torch battery for when you actually need it.",
+          subtitle_text: "You know, the room lights are doing a perfectly good job there. Might save your torch battery for when you actually need it.",
+          tags: [ReminderLow, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "No need to double up on the illumination, love. If the room light is on, your torch can take a break.",
+          subtitle_text: "No need to double up on the illumination, love. If the room light is on, your torch can take a break.",
+          tags: [FriendlyReminder, Guidance, MediumLength], // Assuming FriendlyReminder is a new tag for a gentler reminder
+        ),
+        WalkieLineEntry(
+          tts_text: "That is a well lit room you have got there. And your flashlight is on. Just pointing it out.",
+          subtitle_text: "That's a well-lit room you've got there. And your flashlight is on. Just pointing it out.",
+          tags: [NeutralObservation, ShortBrevity],
+        ),
+        WalkieLineEntry(
+          tts_text: "Torches are great for the dark spots, but if the main lights are on, you are probably fine without it.",
+          subtitle_text: "Torches are great for the dark spots, but if the main lights are on, you're probably fine without it.",
+          tags: [Guidance, ReminderLow, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Conserve that torch battery when you can. If the room is already lit, no need to have it blazing.",
+          subtitle_text: "Conserve that torch battery when you can. If the room is already lit, no need to have it blazing.",
+          tags: [Guidance, ReminderMedium, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "It is bright enough in here to read a book, and you have still got your torch on. Anything I am missing?",
+          subtitle_text: "It's bright enough in here to read a book, and you've still got your torch on. Anything I'm missing?",
+          tags: [Questioning, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The room seems adequately illuminated by its own lights. Your torch can rest for now.",
+          subtitle_text: "The room seems adequately illuminated by its own lights. Your torch can rest for now.",
+          tags: [NeutralObservation, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Double lighting? Ambitious. But probably not necessary if the room switch is already doing its job.",
+          subtitle_text: "Double lighting? Ambitious. But probably not necessary if the room switch is already doing its job.",
+          tags: [Humorous, NeutralObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Good job getting the room lights on. That usually means you can give your personal torch a bit of a rest.",
+          subtitle_text: "Good job getting the room lights on. That usually means you can give your personal torch a bit of a rest.",
+          tags: [PositiveReinforcement, Guidance, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

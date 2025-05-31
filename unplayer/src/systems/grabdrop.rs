@@ -6,12 +6,12 @@ use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::player::HeldObject;
 use uncore::components::player_sprite::PlayerSprite;
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear::equipmentposition::Hand;
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_stuff::GearStuff;
+use ungear::gear_usable::GearUsable;
 
 /// Allows the player to pick up a pickable object from the environment.
 ///
@@ -19,15 +19,15 @@ use ungear::components::playergear::PlayerGear;
 /// pickable object within reach. If so, the object is visually attached to the
 /// player, and the player's right-hand gear is disabled. Only one object can be
 /// held at a time.
-pub fn grab_object(
+fn grab_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
+    mut players: Query<(&mut PlayerGear, &Position, &Direction, &PlayerSprite)>,
     deployables: Query<(Entity, &Position), With<DeployedGear>>,
     // Query for all entities with Behavior
     pickables: Query<(Entity, &Position, &Behavior)>,
     mut gs: GearStuff,
 ) {
-    for (mut player_gear, player_pos, player) in players.iter_mut() {
+    for (mut player_gear, player_pos, player_dir, player) in players.iter_mut() {
         if keyboard_input.just_pressed(player.controls.grab) && player_gear.held_item.is_none() {
             // If there's any gear deployed nearby do not consider furniture.
             if deployables
@@ -37,7 +37,7 @@ pub fn grab_object(
                 return;
             }
 
-            // Find a pickable object near the player
+            // First, try to find a pickable object at the player's current position
             if let Some((object_entity, _, _)) = pickables
                 .iter()
                 // Filter for pickable objects
@@ -51,6 +51,41 @@ pub fn grab_object(
 
                 // Play "Pick Up" sound effect
                 gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
+                return;
+            }
+
+            // If no pickable object was found at the player's position,
+            // check in the direction the player is facing
+
+            // Normalize the direction vector to length 0.5
+            let normalized_dir = player_dir.normalized() * 0.5;
+
+            // Calculate the reach position by adding the normalized direction to the player's position
+            let reach_pos = player_pos + normalized_dir;
+
+            // Convert both positions to board positions
+            let player_board_pos = player_pos.to_board_position();
+            let reach_board_pos = reach_pos.to_board_position();
+
+            // Check if the reach position is exactly 1 tile away
+            if player_board_pos.distance_taxicab(&reach_board_pos) == 1 {
+                // Check for pickable objects at the reach position
+                if let Some((object_entity, _, _)) = pickables
+                    .iter()
+                    // Filter for pickable objects
+                    .filter(|(_, _, behavior)| behavior.p.object.pickable)
+                    .find(|(_, object_pos, _)| {
+                        reach_board_pos.distance(&object_pos.to_board_position()) < 0.5
+                    })
+                {
+                    // Set the held object in the player's gear
+                    player_gear.held_item = Some(HeldObject {
+                        entity: object_entity,
+                    });
+
+                    // Play "Pick Up" sound effect
+                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
+                }
             }
         }
     }
@@ -66,8 +101,7 @@ pub fn grab_object(
 /// If the drop is valid, the object is placed at the target tile. If the drop is
 /// invalid, an "invalid drop" sound effect is played, and the object is not
 /// dropped.
-#[allow(clippy::type_complexity)]
-pub fn drop_object(
+fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite), Without<Behavior>>,
     mut objects: Query<(Entity, &mut Position), (Without<PlayerSprite>, With<FloorItemCollidable>)>,
@@ -128,8 +162,7 @@ pub fn drop_object(
 /// indication that the object is being held. Additionally, it plays a scraping
 /// sound effect when the player moves while holding a movable object, with a
 /// cooldown to prevent the sound from playing too frequently.
-#[allow(clippy::type_complexity)]
-pub fn update_held_object_position(
+fn update_held_object_position(
     mut objects: Query<(&mut Position, &Behavior), Without<PlayerSprite>>,
     players: Query<(&Position, &PlayerGear, &Direction), With<PlayerSprite>>,
     mut gs: GearStuff,
@@ -143,7 +176,7 @@ pub fn update_held_object_position(
                 *object_pos = *player_pos;
 
                 // Slightly elevate the object's Z position
-                const OBJECT_ELEVATION: f32 = 0.1;
+                const OBJECT_ELEVATION: f32 = 0.3;
                 object_pos.z += OBJECT_ELEVATION;
 
                 // --- Play Scraping Sound if Object is Movable and Player is Moving ---
@@ -165,7 +198,7 @@ pub fn update_held_object_position(
 
 /// System for deploying a piece of gear from the player's right hand into the game
 /// world.
-pub fn deploy_gear(
+fn deploy_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite, &Direction)>,
     mut commands: Commands,
@@ -221,7 +254,7 @@ pub fn deploy_gear(
 }
 
 /// System for retrieving deployed gear and adding it to the player's right hand.
-pub fn retrieve_gear(
+fn retrieve_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&Position, &PlayerSprite, &mut PlayerGear)>,
     q_deployed: Query<(Entity, &Position, &DeployedGearData)>,
@@ -282,4 +315,18 @@ pub fn retrieve_gear(
             // --
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            update_held_object_position,
+            deploy_gear,
+            retrieve_gear,
+            grab_object,
+            drop_object,
+        )
+            .run_if(in_state(uncore::states::GameState::None)),
+    );
 }

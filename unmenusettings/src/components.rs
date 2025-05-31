@@ -1,3 +1,5 @@
+use bevy::utils::Instant;
+
 use bevy::prelude::*;
 use unsettings::{audio::AudioSettingsValue, game::GameplaySettingsValue};
 
@@ -29,6 +31,11 @@ pub enum SettingsState {
     Lv2List,
     /// Allows the user to select a new value for the setting (10% volume, 50% volume, etc)
     Lv3ValueEdit(MenuSettingsLevel1),
+}
+
+#[derive(Component)]
+pub struct SettingsStateTimer {
+    pub state_entered_at: Instant,
 }
 
 #[derive(Component)]

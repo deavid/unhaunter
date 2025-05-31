@@ -1,0 +1,7 @@
+WalkiePhraseFile(
+  event_lines: [
+    // We could add more here if other *extremely specific first-time-ever* scenarios come up,
+    // but for now, "Not Entering Cabin" is the most obvious one.
+    // Other early hints are covered by `FirstTimeHint` tags in the other functional RON files.
+  ],
+)

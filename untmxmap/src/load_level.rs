@@ -7,7 +7,7 @@ use uncore::{
 };
 use unstd::tiledmap::MapTileSetDb;
 
-pub fn load_level_handler(
+fn load_level_handler(
     mut ev: EventReader<LoadLevelEvent>,
     mut evw: EventWriter<LevelLoadedEvent>,
     asset_server: Res<AssetServer>,
@@ -25,14 +25,20 @@ pub fn load_level_handler(
     warn!("Load Level: {map_filepath}");
     let tiled_map = UnhaunterMapLoader::load(&map_filepath, &maps, &tmx_assets, &tsx_assets);
 
-    let layers = bevy_load_map(
+    let (layers, floor_mapping) = bevy_load_map(
         tiled_map,
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
     );
+
     evw.send(LevelLoadedEvent {
         map_filepath,
         layers,
+        floor_mapping,
     });
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, load_level_handler);
 }

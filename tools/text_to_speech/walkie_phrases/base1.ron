@@ -1,0 +1,339 @@
+(
+  event_lines: [
+    (
+      name: "GearInVan",
+      lines: [
+        (
+          tts_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          subtitle_text: "Your gear is in the van. Are you sure you want to go in without it?",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          subtitle_text: "Uh... Aren't you forgetting something? The van is full of gear. And your hands are empty.",
+          tags: [ReminderMedium, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          subtitle_text: "Wait a minute, you left your kit in the truck! You might want to go back and collect your gear.",
+          tags: [ReminderHigh, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          subtitle_text: "Wait! Where's your equipment? You need to grab it from the van before going in.",
+          tags: [ReminderHigh, DirectHint, SlightlyImpatient, MediumLength],
+        ),
+        (
+          tts_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          subtitle_text: "Hold on a second! Did you remember to pick up your gear from the truck?",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          subtitle_text: "You might want to double-check the van. It seems like you're missing some essential tools.",
+          tags: [ReminderLow, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Don't forget to equip yourself from the van before heading inside!",
+          subtitle_text: "Don't forget to equip yourself from the van before heading inside!",
+          tags: [ReminderMedium, DirectHint, ShortBrevity],
+        ),
+      ],
+    ),
+    (
+      name: "GhostNearHunt",
+      lines: [
+        (
+          tts_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          subtitle_text: "Activity levels are off the charts! Something is about to happen. You should get out of there.",
+          tags: [ConcernedWarning, ImmediateResponse, LongDetailed],
+        ),
+        (
+          tts_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          subtitle_text: "The energy levels are surging... it's getting angry... I don't think you're safe there.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          subtitle_text: "Static's spiking on my end... that's never good... you might want to leave before it's too late.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          subtitle_text: "Uh... you're not alone in there. And whatever it is, it's not happy. I'd look for an exit path if I were you.",
+          tags: [ConcernedWarning, SnarkyHumor, SlightlyImpatient, LongDetailed],
+        ),
+        (
+          tts_text: "Red alert! It's about to kick off in there. Find cover, now!",
+          subtitle_text: "Red alert! It's about to kick off in there. Find cover, now!",
+          tags: [UrgentReminder, DirectHint, ShortBrevity],
+        ),
+        (
+          tts_text: "Big energy spike detected! That usually means one thing, and it's not tea time. Brace yourself.",
+          subtitle_text: "Big energy spike detected! That usually means one thing, and it's not tea time. Brace yourself.",
+          tags: [ConcernedWarning, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The air in there just got thick with bad intentions. It's preparing to hunt, I'm sure of it.",
+          subtitle_text: "The air in there just got thick with bad intentions. It's preparing to hunt, I'm sure of it.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "My readings are going crazy! That thing's about to lose its temper. You need to react.",
+          subtitle_text: "My readings are going crazy! That thing's about to lose its temper. You need to react.",
+          tags: [UrgentReminder, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "I'm getting a massive paranormal surge. It's hunt time, or very close to it. Evasive maneuvers!",
+          subtitle_text: "I'm getting a massive paranormal surge. It's hunt time, or very close to it. Evasive maneuvers!",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "That... was not a friendly sound. It's gearing up for a hunt. Please be careful.",
+          subtitle_text: "That... was not a friendly sound. It's gearing up for a hunt. Please be careful.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Hostile energy signature escalating rapidly! I suggest finding a very good hiding spot, or the exit.",
+          subtitle_text: "Hostile energy signature escalating rapidly! I suggest finding a very good hiding spot, or the exit.",
+          tags: [UrgentReminder, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "It's getting ready to pounce! Don't be its mouse. Hide or run!",
+          subtitle_text: "It's getting ready to pounce! Don't be its mouse. Hide or run!",
+          tags: [ConcernedWarning, DirectHint, Humorous, ShortBrevity],
+        ),
+        (
+          tts_text: "This is not a drill! Significant paranormal escalation detected. Imminent hostile activity likely.",
+          subtitle_text: "This is not a drill! Significant paranormal escalation detected. Imminent hostile activity likely.",
+          tags: [UrgentReminder, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "The atmosphere just took a nosedive. It's about to get very personal in there. Be ready.",
+          subtitle_text: "The atmosphere just took a nosedive. It's about to get very personal in there. Be ready.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "You've really ticked it off now! I'm seeing a major spike. That's your cue to find a safe corner.",
+          subtitle_text: "You've really ticked it off now! I'm seeing a major spike. That's your cue to find a safe corner.",
+          tags: [ConcernedWarning, SlightlyImpatient, MediumLength],
+        ),
+        (
+          tts_text: "Whatever you just did, it didn't like it. At all. Expecting a hunt any second now.",
+          subtitle_text: "Whatever you just did, it didn't like it. At all. Expecting a hunt any second now.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Energy readings are through the roof! It's prime hunting conditions for our spectral friend. Watch out.",
+          subtitle_text: "Energy readings are through the roof! It's prime hunting conditions for our spectral friend. Watch out.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "I'm picking up intense fluctuations. It's building up to something nasty. Find a hiding spot, and fast!",
+          subtitle_text: "I'm picking up intense fluctuations. It's building up to something nasty. Find a hiding spot, and fast!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's about to manifest with aggressive intent! That's your warning to get somewhere safe.",
+          subtitle_text: "It's about to manifest with aggressive intent! That's your warning to get somewhere safe.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "This feels like the calm before the storm, except the storm just shouted. Get ready for a hunt.",
+          subtitle_text: "This feels like the calm before the storm, except the storm just shouted. Get ready for a hunt.",
+          tags: [ConcernedWarning, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The entity is showing clear signs of aggression. A hunt is highly probable. Take defensive measures.",
+          subtitle_text: "The entity is showing clear signs of aggression. A hunt is highly probable. Take defensive measures.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "Temper, temper! It's definitely about to go on the offensive. Don't be caught in the open.",
+          subtitle_text: "Temper, temper! It's definitely about to go on the offensive. Don't be caught in the open.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "Major disturbance incoming! It's preparing to hunt. You know the drill: hide or run.",
+          subtitle_text: "Major disturbance incoming! It's preparing to hunt. You know the drill: hide or run.",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "The equipment is screaming 'danger!' It's about to hunt. Get out of its path!",
+          subtitle_text: "The equipment is screaming 'danger!' It's about to hunt. Get out of its path!",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's on the brink of a full-blown hunt! If you have a safe spot in mind, now's the time.",
+          subtitle_text: "It's on the brink of a full-blown hunt! If you have a safe spot in mind, now's the time.",
+          tags: [ConcernedWarning, Guidance, MediumLength],
+        ),
+        (
+          tts_text: "That's not good... readings are peaking. It means a hunt is imminent. Be prepared.",
+          subtitle_text: "That's not good... readings are peaking. It means a hunt is imminent. Be prepared.",
+          tags: [ConcernedWarning, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "The ghost is reaching its boiling point. Expect it to hunt any moment now. Find cover!",
+          subtitle_text: "The ghost is reaching its boiling point. Expect it to hunt any moment now. Find cover!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "I'm seeing a critical energy surge. It's about to hunt. Do not get caught.",
+          subtitle_text: "I'm seeing a critical energy surge. It's about to hunt. Do not get caught.",
+          tags: [ConcernedWarning, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "It's showtime, and not in a good way. That ghost is about to hunt. Take immediate action.",
+          subtitle_text: "It's showtime, and not in a good way. That ghost is about to hunt. Take immediate action.",
+          tags: [UrgentReminder, Humorous, MediumLength],
+        ),
+        (
+          tts_text: "The paranormal activity just hit critical mass. It's going to hunt. Secure yourself.",
+          subtitle_text: "The paranormal activity just hit critical mass. It's going to hunt. Secure yourself.",
+          tags: [ConcernedWarning, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "It's powering up for a hunt! Don't wait around to see what happens next. Find a hiding spot.",
+          subtitle_text: "It's powering up for a hunt! Don't wait around to see what happens next. Find a hiding spot.",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "Incoming hunt! The ghost is extremely agitated. Your safety is paramount now.",
+          subtitle_text: "Incoming hunt! The ghost is extremely agitated. Your safety is paramount now.",
+          tags: [ConcernedWarning, ImmediateResponse, MediumLength],
+        ),
+        (
+          tts_text: "All signs point to an imminent hunt. Repeat, hunt imminent. Find shelter or evacuate the area.",
+          subtitle_text: "All signs point to an imminent hunt. Repeat, hunt imminent. Find shelter or evacuate the area.",
+          tags: [UrgentReminder, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "That thing is about to blow! Get to a hiding place, quick, before the hunt starts properly!",
+          subtitle_text: "That thing is about to blow! Get to a hiding place, quick, before the hunt starts properly!",
+          tags: [UrgentReminder, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "The ghost's rage is peaking. It's going to hunt. I suggest not being its primary target.",
+          subtitle_text: "The ghost's rage is peaking. It's going to hunt. I suggest not being its primary target.",
+          tags: [ConcernedWarning, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "This is your final warning! A hunt is about to begin. You need to act fast.",
+          subtitle_text: "This is your final warning! A hunt is about to begin. You need to act fast.",
+          tags: [UrgentReminder, DirectHint, ShortBrevity],
+        ),
+      ],
+    ),
+    (
+      name: "AllObjectivesMetReminderToEndMission",
+      lines: [
+        (
+          tts_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.",
+          subtitle_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "That's everything on the checklist. You can return to the van now to finish the mission.",
+          subtitle_text: "That's everything on the checklist. You can return to the van now to finish the mission.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.",
+          subtitle_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.",
+          tags: [ReminderLow, Encouraging, LongDetailed],
+        ),
+        (
+          tts_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.",
+          subtitle_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.",
+          tags: [ReminderMedium, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.",
+          subtitle_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.",
+          subtitle_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "You've accomplished everything required. The truck is your ticket home, so to speak.",
+          subtitle_text: "You've accomplished everything required. The truck is your ticket home, so to speak.",
+          tags: [ReminderLow, Encouraging, MediumLength],
+        ),
+        (
+          tts_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.",
+          subtitle_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.",
+          tags: [ReminderMedium, FormalishReminder, MediumLength],
+        ),
+        (
+          tts_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.",
+          subtitle_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.",
+          tags: [ReminderMedium, DirectHint, MediumLength],
+        ),
+        (
+          tts_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.",
+          subtitle_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.",
+          tags: [ReminderLow, NeutralObservation, LongDetailed],
+        ),
+      ],
+    ),
+    (
+      name: "PlayerLeavesTruckWithoutChangingLoadout",
+      lines: [
+        (
+          tts_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.",
+          subtitle_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.",
+          tags: [ReminderMedium, Questioning, LongDetailed],
+        ),
+        (
+          tts_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?",
+          subtitle_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.",
+          subtitle_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.",
+          tags: [ReminderLow, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "Did you customize your loadout? Different missions might need different tools, you know.",
+          subtitle_text: "Did you customize your loadout? Different missions might need different tools, you know.",
+          tags: [ReminderMedium, Questioning, MediumLength],
+        ),
+        (
+          tts_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.",
+          subtitle_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.",
+          tags: [ReminderLow, FormalishReminder, LongDetailed],
+        ),
+        (
+          tts_text: "You're using the basic setup. That might work, but the truck has better equipment available.",
+          subtitle_text: "You're using the basic setup. That might work, but the truck has better equipment available.",
+          tags: [ReminderMedium, NeutralObservation, MediumLength],
+        ),
+        (
+          tts_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.",
+          subtitle_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.",
+          tags: [ReminderMedium, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.",
+          subtitle_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.",
+          tags: [ReminderLow, DirectHint, LongDetailed],
+        ),
+        (
+          tts_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.",
+          subtitle_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.",
+          tags: [ReminderLow, SnarkyHumor, MediumLength],
+        ),
+        (
+          tts_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.",
+          subtitle_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.",
+          tags: [ReminderMedium, DirectHint, LongDetailed],
+        ),
+      ],
+    ),
+  ],
+)

@@ -25,6 +25,7 @@ pub struct Recorder {
     pub evp_recorded_count: usize,
     pub display_glitch_timer: f32, // Added for EMI effects
     pub false_reading_timer: f32,  // For creating false audio spikes
+    pub blinking_hint_active: bool,
 }
 
 impl GearUsable for Recorder {
@@ -92,11 +93,21 @@ impl GearUsable for Recorder {
         // Normal display
         let msg = if self.enabled {
             if self.evp_recorded_display {
-                "- EVP RECORDED -".to_string()
+                // This state implies evidence has been found and is being actively displayed
+                if self.blinking_hint_active {
+                    if self.frame_counter % 30 < 15 {
+                        "- EVP RECORDED !!! -".to_string()
+                    } else {
+                        "- EVP RECORDED     -".to_string()
+                    }
+                } else {
+                    "- EVP RECORDED -".to_string()
+                }
             } else {
                 format!(
                     "Volume: {:>4.0}dB ({})",
-                    self.sound, self.evp_recorded_count
+                    self.sound - 93.0,
+                    self.evp_recorded_count
                 )
             }
         } else {
@@ -151,7 +162,7 @@ impl GearUsable for Recorder {
         let pos = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
 
@@ -173,8 +184,10 @@ impl GearUsable for Recorder {
             self.sound_l[n] = 0.0;
             self.evp_recorded_count = 0;
         }
-        if self.sound > 1.0 && self.enabled && gs.bf.evidences.contains(&Evidence::EVPRecording) {
-            self.amt_recorded += self.sound * gs.time.delta_secs();
+        if self.sound > 1.0 && self.enabled && gs.bf.ghost_dynamics.evp_recording_clarity > 0.0 {
+            self.amt_recorded += self.sound
+                * gs.time.delta_secs()
+                * gs.bf.ghost_dynamics.evp_recording_clarity.cbrt();
             if self.amt_recorded > 200.0 {
                 self.evp_recorded_time_secs = gs.time.elapsed_secs();
                 self.evp_recorded_count += 1;
@@ -186,13 +199,11 @@ impl GearUsable for Recorder {
             let sum_snd: f32 = self.sound_l.iter().sum();
             let avg_snd: f32 = sum_snd / self.sound_l.len() as f32 + 1.0;
             self.sound = (avg_snd.ln() * 10.0).clamp(0.0, 60.0);
-            if gs.bf.evidences.contains(&Evidence::EVPRecording) {
-                self.sound_l.iter_mut().for_each(|x| *x /= 1.2);
-                self.evp_recorded_display =
-                    (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;
-            } else {
-                self.sound_l.iter_mut().for_each(|x| *x /= 2.0);
-            }
+            self.sound_l.iter_mut().for_each(|x| {
+                *x /= 1.5 - (gs.bf.ghost_dynamics.evp_recording_clarity.max(0.0).cbrt()) / 2.0
+            });
+            self.evp_recorded_display =
+                (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;
             if self.sound > 1.0 && self.enabled {
                 gs.play_audio(
                     "sounds/effects-radio-scan.ogg".into(),
@@ -201,14 +212,47 @@ impl GearUsable for Recorder {
                 );
             }
         }
+
+        // Update blinking_hint_active
+        const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+        // We consider "showing evidence strongly" when an EVP has been recorded at least once.
+        // The `evp_recorded_display` flag is for the temporary "- EVP RECORDED -" message,
+        // while `evp_recorded_count > 0` indicates that evidence has been found.
+        if self.evp_recorded_count > 0 && self.display_glitch_timer <= 0.0 {
+            let count = gs
+                .player_profile
+                .times_evidence_acknowledged_on_gear
+                .get(&Evidence::EVPRecording)
+                .copied()
+                .unwrap_or(0);
+            self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+        } else {
+            self.blinking_hint_active = false;
+        }
+    }
+
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled() && self.display_glitch_timer <= 0.0 && self.evp_recorded_count > 0 {
+            1.0
+        } else {
+            0.0
+        }
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
 
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
+    }
+
     fn is_electronic(&self) -> bool {
         true
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
     }
 
     fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
@@ -239,7 +283,7 @@ impl From<Recorder> for Gear {
     }
 }
 
-pub fn sound_update(
+fn sound_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     qg: Query<(&GhostSprite, &Position)>,
@@ -307,4 +351,8 @@ pub fn sound_update(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, sound_update);
 }

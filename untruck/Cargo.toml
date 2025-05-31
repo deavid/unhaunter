@@ -13,9 +13,12 @@ unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
+unprofile = { path = "../unprofile" }
+unwalkiecore = { path = "../unwalkiecore" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
 fastapprox = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
+enum-iterator = { workspace = true }

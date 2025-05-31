@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="13" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="128" height="128" tilewidth="24" tileheight="12" infinite="0" nextlayerid="13" nextobjectid="1">
  <properties>
   <property name="display_name" value="Tutorial 01: Basics"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="265" source="unhaunter_spritesheetA_6x6x10.tsx"/>
  <tileset firstgid="329" source="unhaunter_custom_tileset.tsx"/>
- <group id="2" name="Ground Level">
+ <group id="2" name="Ground Level" class="FloorLevel">
+  <properties>
+   <property name="FloorLevel::display_name" value="Ground floor"/>
+   <property name="FloorLevel::number" type="int" value="0"/>
+  </properties>
   <layer id="1" name="Floor" width="128" height="128">
    <data encoding="csv">
 5,5,8,5,6,5,6,8,5,5,6,8,6,8,8,6,5,5,8,8,6,7,5,6,5,5,5,8,5,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

@@ -16,3 +16,4 @@ strum = { workspace = true }
 uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 unsettings = { path = "../unsettings" }
+uncoremenu = { path = "../uncoremenu" }

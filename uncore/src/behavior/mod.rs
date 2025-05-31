@@ -75,6 +75,10 @@ impl Behavior {
         self.cfg.state.clone()
     }
 
+    pub fn class(&self) -> Class {
+        self.cfg.class.clone()
+    }
+
     /// Creates the default components as required by this behavior for a new entity.
     /// This is often used to spawn new map tiles to add the required components
     /// automatically.
@@ -264,6 +268,7 @@ pub struct Movement {
     // it can cover an area of 3x3 board tiles. collision_map: [[bool; 9]; 9],
     /// Indicates that this will make collision dynamic. This is used for doors.
     pub is_dynamic: bool,
+    pub stair_offset: i32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -289,12 +294,14 @@ pub enum Class {
     WallDecor,
     CeilingLight,
     StreetLight,
+    CandleLight,
     Appliance,
     Van,
     Window,
     InvisibleWall,
     CornerWall,
-    #[allow(clippy::upper_case_acronyms)]
+    StairsUp,
+    StairsDown,
     NPC,
     FakeGhost,
     FakeBreach,
@@ -426,13 +433,13 @@ impl SpriteConfig {
     pub fn from_tiled_auto(tset_name: String, tileuid: u32, tiled_tile: &tiled::Tile) -> Self {
         // --- Load properties
         let properties = BehaviorProperties::from_tiled(tiled_tile);
-        let sprite_config = Self::from_tiled(
+
+        Self::from_tiled(
             tiled_tile.user_type.as_deref(),
             tset_name,
             tileuid,
             properties,
-        );
-        sprite_config
+        )
     }
 
     pub fn from_tiled(
@@ -510,12 +517,20 @@ impl SpriteConfig {
                     "sounds/switch-off-1.ogg",
                 ))
                 .insert(component::RoomState::default()),
-            Class::RoomSwitch => entity
-                .insert(component::Interactive::new(
-                    "sounds/switch-on-1.ogg",
-                    "sounds/switch-off-1.ogg",
-                ))
-                .insert(component::RoomState::new_for_room(&self.orientation)),
+            Class::RoomSwitch => {
+                // Check for opposite_side property
+                let opposite_side = self.properties.get_bool("switch:opposite_side");
+
+                entity
+                    .insert(component::Interactive::new(
+                        "sounds/switch-on-1.ogg",
+                        "sounds/switch-off-1.ogg",
+                    ))
+                    .insert(component::RoomState::with_opposite_side(
+                        &self.orientation,
+                        opposite_side,
+                    ))
+            }
             Class::Breaker => entity.insert(component::Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
@@ -555,6 +570,7 @@ impl SpriteConfig {
                 .insert(component::RoomState::default())
                 .insert(component::Light),
             Class::StreetLight => entity.insert(component::Light),
+            Class::CandleLight => entity.insert(component::Light),
             Class::Appliance => entity.insert(component::FloorItemCollidable),
             Class::Van => entity,
             Class::Window => entity,
@@ -570,6 +586,8 @@ impl SpriteConfig {
                     "sounds/effects-dongdongdong.ogg",
                 ))
                 .insert(component::FloorItemCollidable),
+            Class::StairsDown => entity.insert(component::Stairs { z: -1 }),
+            Class::StairsUp => entity.insert(component::Stairs { z: 1 }),
         };
     }
 
@@ -691,6 +709,13 @@ impl SpriteConfig {
                 p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
             }
+            Class::CandleLight => {
+                p.display.disable = true;
+                p.light.can_emit_light = true;
+                p.light.light_emission_enabled = true;
+                p.light.emission_power = (-0.5).try_into().unwrap();
+                p.light.heat_coef = 6;
+            }
             Class::Appliance => {
                 p.display.global_z = (0.000070).try_into().unwrap();
             }
@@ -701,6 +726,14 @@ impl SpriteConfig {
             }
             Class::Window => {
                 p.display.global_z = (-0.00004).try_into().unwrap();
+            }
+            Class::StairsDown => {
+                p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = -1;
+            }
+            Class::StairsUp => {
+                p.display.global_z = (0.000005).try_into().unwrap();
+                p.movement.stair_offset = 1;
             }
             Class::None => {}
         }

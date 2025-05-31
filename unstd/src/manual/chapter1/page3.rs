@@ -1,5 +1,5 @@
-use super::super::utils::{grid_img_text2, header, summary_text};
 use super::super::ManualPageData;
+use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
@@ -12,15 +12,15 @@ Gather evidence, analyze your findings, and prepare for the unknown.
     let grid = vec![
         (
             &handles.images.manual_emf_reader,
-            "*1. EMF Reader:* The EMF reader detects electromagnetic changes, which can indicate a ghost's presence. Hold it near suspected areas of ghost activity. A reading of *EMF5* on device is strong evidence."
+            "*1. EMF Reader:* The EMF reader detects electromagnetic changes, which can indicate a ghost's presence. Hold it near suspected areas of ghost activity. A reading of *EMF5* on device is strong evidence.",
         ),
         (
             &handles.images.manual_thermometer,
-            "*2. Thermometer:* The thermometer measures temperature. Some ghosts cause temperatures to drop significantly, even below freezing. Use the thermometer to find these cold spots, if it reads *below zero*, mark it as evidence."
+            "*2. Thermometer:* The thermometer measures temperature. Some ghosts cause temperatures to drop significantly, even below freezing. Use the thermometer to find these cold spots, if it reads *below zero*, mark it as evidence.",
         ),
         (
             &handles.images.manual_truck_sanity,
-            "*3. Sanity:* Staying in the dark or being exposed to the ghost's presence for too long will gradually decrease your Sanity. Low Sanity can have negative effects! While in the truck your sanity will recover gradually."
+            "*3. Sanity:* Staying in the dark or being exposed to the ghost's presence for too long will gradually decrease your Sanity. Low Sanity can have negative effects! While in the truck your sanity will recover gradually.",
         ),
         (
             &handles.images.manual_ghost_attack,
@@ -28,7 +28,7 @@ Gather evidence, analyze your findings, and prepare for the unknown.
         ),
         (
             &handles.images.manual_truck_exterior,
-            "*5. The Truck: Your Safe Haven:* You're safe inside your truck, parked outside the haunted location. Your Sanity level will recover over time here."
+            "*5. The Truck: Your Safe Haven:* You're safe inside your truck, parked outside the haunted location. Your Sanity level will recover over time here.",
         ),
         (
             &handles.images.manual_truck_journal,

@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::metric_recorder::SendMetric;
+use uncore::random_seed;
 use uncore::{
     components::{
         board::{direction::Direction, position::Position},
@@ -16,7 +17,6 @@ use uncore::{
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
 };
-use uncore::random_seed;
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
@@ -154,8 +154,7 @@ pub struct SageSmokeParticle;
 pub struct SmokeParticleTimer(pub Timer);
 
 /// System to handle smoke particle logic.
-#[allow(clippy::type_complexity)]
-pub fn sage_smoke_system(
+fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
     mut smoke_particles: Query<
@@ -219,4 +218,8 @@ pub fn sage_smoke_system(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, sage_smoke_system);
 }

@@ -1,0 +1,24 @@
+[package]
+name = "unmapload"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+uncore = { path = "../uncore" }
+unstd = { path = "../unstd" }
+unlight = { path = "../unlight" }
+ungear = { path = "../ungear" }
+ungearitems = { path = "../ungearitems" }
+unsettings = { path = "../unsettings" }
+
+bevy = { workspace = true }
+rand = { workspace = true }
+tiled = { workspace = true }
+ordered-float = { workspace = true }
+bevy-persistent = { workspace = true }
+ndarray = { workspace = true }

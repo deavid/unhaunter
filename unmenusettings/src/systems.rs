@@ -1,6 +1,7 @@
 use crate::components::{
     AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuItem,
-    MenuSettingClassSelected, SaveAudioSetting, SaveGameplaySetting, SettingsMenu, SettingsState,
+    MenuSettingClassSelected, MenuType, SaveAudioSetting, SaveGameplaySetting, SettingsMenu,
+    SettingsState, SettingsStateTimer,
 };
 use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
@@ -9,38 +10,39 @@ use bevy_persistent::Persistent;
 use uncore::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
+use uncoremenu::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
+use uncoremenu::systems::MenuItemClicked;
+use uncoremenu::templates;
 use unsettings::audio::AudioSettings;
 use unsettings::game::GameplaySettings;
 
-pub fn handle_input(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q: Query<&mut SettingsMenu>,
-    menu_items: Query<&MenuItem>,
-    mut ev_menu: EventWriter<MenuEvent>,
-) {
-    let mut menu = q.single_mut();
-    let max_menu_idx = menu_items.iter().count();
-    if keyboard_input.just_pressed(KeyCode::ArrowUp) {
-        if menu.selected_item_idx == 0 {
-            menu.selected_item_idx = max_menu_idx - 1;
-        } else {
-            menu.selected_item_idx -= 1;
-        }
-    } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
-        menu.selected_item_idx = (menu.selected_item_idx + 1) % max_menu_idx;
-    } else if keyboard_input.just_pressed(KeyCode::Enter) {
-        if let Some(menu_item) = menu_items
-            .iter()
-            .find(|item| item.idx == menu.selected_item_idx)
-        {
-            ev_menu.send(menu_item.on_activate);
-        }
-    } else if keyboard_input.just_pressed(KeyCode::Escape) {
-        ev_menu.send(MenuEvent::Back(MenuEvBack));
-    }
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            item_highlight_system,
+            menu_routing_system,
+            menu_back_event,
+            menu_settings_class_selected,
+            menu_audio_setting_selected,
+            menu_save_audio_setting,
+            menu_gameplay_setting_selected,
+            menu_save_gameplay_setting,
+            menu_integration_system,
+            handle_escape,
+        )
+            .run_if(in_state(AppState::SettingsMenu)),
+    )
+    .add_event::<MenuEvent>()
+    .add_event::<MenuEvBack>()
+    .add_event::<MenuSettingClassSelected>()
+    .add_event::<AudioSettingSelected>()
+    .add_event::<SaveAudioSetting>()
+    .add_event::<GameplaySettingSelected>()
+    .add_event::<SaveGameplaySetting>();
 }
 
-pub fn item_highlight_system(
+fn item_highlight_system(
     menu: Query<&SettingsMenu>,
     mut menu_items: Query<(&MenuItem, &mut TextColor)>,
 ) {
@@ -52,14 +54,11 @@ pub fn item_highlight_system(
         } else {
             MENU_ITEM_COLOR_OFF
         };
-        // Note: these are now handled on creation and disabled items no longer have MenuItem component.
-        // let alpha = if item.on_activate.is_none() { 0.2 } else { 1.0 };
-        // text_color.0 = color.with_alpha(alpha);
         text_color.0 = color;
     }
 }
 
-pub fn menu_routing_system(
+fn menu_routing_system(
     mut ev_menu: EventReader<MenuEvent>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut ev_class: EventWriter<MenuSettingClassSelected>,
@@ -103,7 +102,7 @@ pub fn menu_routing_system(
     }
 }
 
-pub fn menu_back_event(
+fn menu_back_event(
     mut events: EventReader<MenuEvBack>,
     mut next_state: ResMut<NextState<SettingsState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
@@ -132,7 +131,7 @@ pub fn menu_back_event(
     }
 }
 
-pub fn menu_settings_class_selected(
+fn menu_settings_class_selected(
     mut commands: Commands,
     mut events: EventReader<MenuSettingClassSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -172,7 +171,7 @@ pub fn menu_settings_class_selected(
     }
 }
 
-pub fn menu_audio_setting_selected(
+fn menu_audio_setting_selected(
     mut commands: Commands,
     mut events: EventReader<AudioSettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -184,18 +183,108 @@ pub fn menu_audio_setting_selected(
         warn!("Audio Setting Selected: {:?}", ev.setting);
 
         let menu_items = ev.setting.iter_events_item(&audio_settings);
-        setup_ui_main_cat(
-            &mut commands,
-            &handles,
-            &qtui,
-            ev.setting.to_string(),
-            &menu_items,
-        );
+
+        // Clean up old UI
+        for e in qtui.iter() {
+            commands.entity(e).despawn_recursive();
+        }
+
+        // Create new UI with uncoremenu templates
+        commands
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            })
+            .insert(SettingsMenu {
+                menu_type: MenuType::SettingEdit,
+                selected_item_idx: 0,
+            })
+            .with_children(|parent| {
+                // Background
+                templates::create_background(parent, &handles);
+
+                // Logo
+                templates::create_logo(parent, &handles);
+
+                // Create breadcrumb navigation with title - show the full path
+                templates::create_breadcrumb_navigation(
+                    parent,
+                    &handles,
+                    "Audio Settings",
+                    ev.setting.to_string()
+                );
+
+                // Create content area for settings items
+                let mut content_area = templates::create_selectable_content_area(
+                    parent,
+                    &handles,
+                    0 // Initial selection
+                );
+
+                // Add mouse tracker to prevent unwanted initial hover selection
+                content_area.insert(MenuMouseTracker::default());
+
+                content_area.insert(MenuRoot {
+                    selected_item: 0,
+                });
+
+                // Add a column container inside the content area for vertical layout
+                content_area.with_children(|content| {
+                    content
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::FlexStart,
+                            justify_content: JustifyContent::FlexStart,
+                            overflow: Overflow::scroll_y(),
+                            ..default()
+                        })
+                        .with_children(|menu_list| {
+                            let mut idx = 0;
+
+                            // Add each menu item
+                            for (item_text, event) in menu_items.iter() {
+                                if !event.is_none() {
+                                    templates::create_content_item(
+                                        menu_list,
+                                        item_text,
+                                        idx,
+                                        idx == 0, // First item selected by default
+                                        &handles
+                                    )
+                                    .insert(MenuItem::new(idx, *event));
+                                    idx += 1;
+                                }
+                            }
+
+                            // Add "Go Back" option
+                            templates::create_content_item(
+                                menu_list,
+                                "Go Back",
+                                idx,
+                                false,
+                                &handles
+                            )
+                            .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
+                        });
+                });
+
+                // Help text
+                templates::create_help_text(
+                    parent,
+                    &handles,
+                    Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
+                );
+            });
+
         next_state.set(SettingsState::Lv3ValueEdit(MenuSettingsLevel1::Audio));
     }
 }
 
-pub fn menu_save_audio_setting(
+fn menu_save_audio_setting(
     mut events: EventReader<SaveAudioSetting>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
@@ -240,7 +329,7 @@ pub fn menu_save_audio_setting(
     }
 }
 
-pub fn menu_gameplay_setting_selected(
+fn menu_gameplay_setting_selected(
     mut commands: Commands,
     mut events: EventReader<GameplaySettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -252,18 +341,109 @@ pub fn menu_gameplay_setting_selected(
         warn!("Gameplay Setting Selected: {:?}", ev.setting);
 
         let menu_items = ev.setting.iter_events_item(&game_settings);
-        setup_ui_main_cat(
-            &mut commands,
-            &handles,
-            &qtui,
-            ev.setting.to_string(), // Use Display trait for title
-            &menu_items,
-        );
+
+        // Clean up old UI
+        for e in qtui.iter() {
+            commands.entity(e).despawn_recursive();
+        }
+
+        // Create new UI with uncoremenu templates
+        commands
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            })
+            .insert(SettingsMenu {
+                menu_type: MenuType::SettingEdit,
+                selected_item_idx: 0,
+            })
+            .with_children(|parent| {
+                // Background
+                templates::create_background(parent, &handles);
+
+                // Logo
+
+                templates::create_logo(parent, &handles);
+
+                // Create breadcrumb navigation with title - show the full path
+                templates::create_breadcrumb_navigation(
+                    parent,
+                    &handles,
+                    "Gameplay Settings",
+                    ev.setting.to_string(),
+                );
+
+                // Create content area for settings items
+                let mut content_area = templates::create_selectable_content_area(
+                    parent,
+                    &handles,
+                    0 // Initial selection
+                );
+
+                // Add mouse tracker to prevent unwanted initial hover selection
+                content_area.insert(MenuMouseTracker::default());
+
+                content_area.insert(MenuRoot {
+                    selected_item: 0,
+                });
+
+                // Add a column container inside the content area for vertical layout
+                content_area.with_children(|content| {
+                    content
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::FlexStart,
+                            justify_content: JustifyContent::FlexStart,
+                            overflow: Overflow::scroll_y(),
+                            ..default()
+                        })
+                        .with_children(|menu_list| {
+                            let mut idx = 0;
+
+                            // Add each menu item
+                            for (item_text, event) in menu_items.iter() {
+                                if !event.is_none() {
+                                    templates::create_content_item(
+                                        menu_list,
+                                        item_text,
+                                        idx,
+                                        idx == 0, // First item selected by default
+                                        &handles
+                                    )
+                                    .insert(MenuItem::new(idx, *event));
+                                    idx += 1;
+                                }
+                            }
+
+                            // Add "Go Back" option
+                            templates::create_content_item(
+                                menu_list,
+                                "Go Back",
+                                idx,
+                                false,
+                                &handles
+                            )
+                            .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
+                        });
+                });
+
+                // Help text
+                templates::create_help_text(
+                    parent,
+                    &handles,
+                    Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
+                );
+            });
+
         next_state.set(SettingsState::Lv3ValueEdit(MenuSettingsLevel1::Gameplay));
     }
 }
 
-pub fn menu_save_gameplay_setting(
+fn menu_save_gameplay_setting(
     mut events: EventReader<SaveGameplaySetting>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut gameplay_settings: ResMut<Persistent<GameplaySettings>>,
@@ -287,5 +467,63 @@ pub fn menu_save_gameplay_setting(
             error!("Error persisting Gameplay Settings: {e:?}");
         }
         ev_back.send(MenuEvBack);
+    }
+}
+
+fn menu_integration_system(
+    mut menu_clicks: EventReader<MenuItemClicked>,
+    mut menu_events: EventWriter<MenuEvent>,
+    menu_items: Query<(&MenuItem, &MenuItemInteractive)>,
+    state_timer: Query<&SettingsStateTimer>,
+) {
+    // Define a small grace period to ignore events from previous state
+    const GRACE_PERIOD_SECS: f32 = 0.1;
+
+    // Get time since state entered
+    if let Ok(timer) = state_timer.get_single() {
+        let time_in_state = timer.state_entered_at.elapsed().as_secs_f32();
+
+        // Ignore events that happened too soon after state transition
+        if time_in_state < GRACE_PERIOD_SECS {
+            menu_clicks.clear();
+            return;
+        }
+
+        for click_event in menu_clicks.read() {
+            if click_event.state != AppState::SettingsMenu {
+                warn!(
+                    "MenuItemClicked event received in state: {:?}",
+                    click_event.state
+                );
+                continue;
+            }
+            warn!("Settings menu received click event: {:?}", click_event);
+            let clicked_idx = click_event.pos;
+
+            // Find the menu item with this index
+            if let Some((menu_item, _)) = menu_items
+                .iter()
+                .find(|(_, interactive)| interactive.identifier == clicked_idx)
+            {
+                // Send the corresponding menu event
+                menu_events.send(menu_item.on_activate);
+                warn!("Activating menu item: {:?}", menu_item.on_activate);
+            } else {
+                warn!("No menu item found with index {}", clicked_idx);
+            }
+        }
+        menu_clicks.clear();
+    }
+}
+
+/// Handles the ESC key events from the core menu system
+fn handle_escape(
+    mut escape_events: EventReader<uncoremenu::systems::MenuEscapeEvent>,
+    mut menu_events: EventWriter<MenuEvent>,
+) {
+    if !escape_events.is_empty() {
+        // If ESC was pressed, send a Back event
+        menu_events.send(MenuEvent::Back(MenuEvBack));
+        escape_events.clear();
     }
 }

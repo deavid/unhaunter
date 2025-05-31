@@ -63,8 +63,19 @@ fn load_assets(
                 Some(UVec2::new(0, 0)),
                 Some(UVec2::new(0, 0)),
             )),
+            // Load badges spritesheet (32x32 px per badge, no padding)
+            badges: server.load("img/badges.png"),
+            badges_atlas: texture_atlases.add(TextureAtlasLayout::from_grid(
+                UVec2::new(32, 32), // 32x32 pixels per badge
+                5,                  // 5 columns (limited to just the grade badges for now)
+                1,                  // 1 row
+                Some(UVec2::new(0, 0)),
+                Some(UVec2::new(0, 0)),
+            )),
             vignette: server.load("img/vignette.png"),
             miasma: server.load("img/miasma-base-01.png"),
+            menu_background: server.load("img/menu-background.jpg"),
+            menu_background_low_contrast: server.load("img/menu-background-low-contrast.jpg"),
             // --- Manual Images ---
             // Chapter 1: Page 1:
             manual_investigate: ch1("investigate.png"),
@@ -115,6 +126,12 @@ fn load_assets(
             manual_salt: ch5("salt.png"),
             manual_quartz: ch5("quartz.png"),
             manual_sage: ch5("sage.png"),
+
+            // --- Scrollbar Components ---
+            scroll_arrow_up: server.load("img/scroll_arrow_up.png"),
+            scroll_arrow_down: server.load("img/scroll_arrow_down.png"),
+            scroll_thumb: server.load("img/scroll_thumb.png"),
+            scroll_track: server.load("img/scroll_track.png"),
         },
         fonts: FontAssets {
             londrina: LondrinaFontAssets {

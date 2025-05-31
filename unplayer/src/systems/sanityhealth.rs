@@ -7,15 +7,20 @@ use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
+use uncore::types::grade::Grade;
 use uncore::utils::PrintingTimer;
 use uncore::utils::light::lerp_color;
 
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
+use uncore::resources::summary_data::SummaryData;
+use uncore::states::AppState;
+use unprofile::data::PlayerProfileData; // Added import
 
 #[derive(Default)]
-pub struct MeanSound(f32);
+struct MeanSound(f32);
 
-pub fn lose_sanity(
+fn lose_sanity(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
@@ -79,7 +84,7 @@ pub fn lose_sanity(
     }
 }
 
-pub fn recover_sanity(
+fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
     gc: Res<GameConfig>,
@@ -112,7 +117,7 @@ pub fn recover_sanity(
     }
 }
 
-pub fn visual_health(
+fn visual_health(
     qp: Query<&PlayerSprite>,
     gc: Res<GameConfig>,
     mut qb: Query<(
@@ -148,7 +153,7 @@ pub fn visual_health(
     }
 }
 
-pub fn update_player_stamina(
+fn update_player_stamina(
     mut players: Query<(&PlayerSprite, &mut Stamina)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
@@ -169,4 +174,67 @@ pub fn update_player_stamina(
             stamina.recovery_rate = 0.3 * difficulty.0.health_recovery_rate;
         }
     }
+}
+
+fn handle_player_death(
+    mut player_query: Query<&mut PlayerSprite>,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+    mut summary_data: ResMut<SummaryData>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    board_data: Res<BoardData>,
+    difficulty_res: Res<CurrentDifficulty>,
+) {
+    for player in player_query.iter_mut() {
+        if player.health <= 0.0 {
+            let initial_deposit_held = player_profile.progression.insurance_deposit;
+
+            player_profile.progression.insurance_deposit = 0;
+            player_profile.statistics.total_deaths += 1; // Global deaths
+
+            // Record death for specific map and difficulty
+            let map_path_str = board_data.map_path.clone();
+
+            let current_difficulty_variant = difficulty_res.0.difficulty;
+
+            let map_specific_stats = player_profile
+                .map_statistics
+                .entry(map_path_str.clone())
+                .or_default()
+                .entry(current_difficulty_variant)
+                .or_default();
+            map_specific_stats.total_deaths += 1;
+
+            if let Err(e) = player_profile.persist() {
+                error!("Failed to persist PlayerProfileData after death: {:?}", e);
+            }
+
+            summary_data.map_path = map_path_str;
+            summary_data.deposit_originally_held = initial_deposit_held;
+            summary_data.deposit_returned_to_bank = 0;
+            summary_data.costs_deducted_from_deposit = initial_deposit_held;
+            summary_data.money_earned = 0;
+            summary_data.grade_achieved = Grade::NA;
+
+            next_app_state.set(AppState::Summary);
+
+            break;
+        }
+    }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            lose_sanity,
+            visual_health,
+            update_player_stamina,
+            handle_player_death,
+        )
+            .run_if(in_state(uncore::states::GameState::None)),
+    );
+    app.add_systems(
+        Update,
+        recover_sanity.run_if(in_state(uncore::states::GameState::Truck)),
+    );
 }

@@ -9,9 +9,20 @@ pub struct SummaryUI;
 pub enum SummaryUIType {
     GhostList,
     TimeTaken,
+    MapMissionName, // Added
+    DifficultyName, // Added
     GhostUnhaunted,
     RepellentUsed,
     AvgSanity,
     PlayersAlive,
     FinalScore,
+    GradeAchieved,
+    BaseReward,
+    GradeMultiplier,
+    CalculatedEarnings,
+    InsuranceDepositHeld,
+    CostsDeducted,
+    DepositReturned,
+    NetChange,
+    FinalBankTotal,
 }

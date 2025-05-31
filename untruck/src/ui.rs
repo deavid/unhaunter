@@ -1,11 +1,14 @@
-use super::uibutton::TruckButtonType;
-use super::{TruckUI, activity, journalui, loadoutui, sanity, sensors};
+// untruck/src/ui.rs
+use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore::colors;
-use uncore::components::truck_ui::{TabContents, TabState, TruckTab};
+use uncore::components::truck::TruckUI;
+use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::{AppState, GameState};
 use uncore::types::root::game_assets::GameAssets;
+use uncore::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use unstd::materials::UIPanelMaterial;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
@@ -30,12 +33,12 @@ impl FromTab for TruckTab {
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
+    game_state: Res<State<GameState>>,
     handles: Res<GameAssets>,
-    // Access the difficulty settings
-    difficulty: Res<CurrentDifficulty>,
+    difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
@@ -44,15 +47,18 @@ pub fn setup_ui(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
     );
+    let init_vis = if *game_state == GameState::Truck {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
+    };
 
-    // Load Truck UI
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
     });
     let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
     let left_column = |p: Cb| {
-        // Top Left - Sanity
         p.spawn((
             MaterialNode(panel_material.clone()),
             Node {
@@ -69,7 +75,6 @@ pub fn setup_ui(
         ))
         .with_children(|p| sanity::setup_sanity_ui(p, &handles));
 
-        // Bottom Left - Sensors
         p.spawn((
             MaterialNode(panel_material.clone()),
             Node {
@@ -88,6 +93,7 @@ pub fn setup_ui(
     };
     let mid_column = |p: Cb| {
         let mut title_tab = |p: Cb, tab: TabContents| {
+            // Directly use TruckTab from uncore, assuming its `from_tab` takes `&CurrentDifficulty`
             let truck_tab = TruckTab::from_tab(tab, &difficulty);
             let txt_fg = truck_tab.text_color();
             let tab_bg = materials.add(UIPanelMaterial {
@@ -126,7 +132,7 @@ pub fn setup_ui(
                     ..default()
                 },
                 Interaction::None,
-                truck_tab,
+                truck_tab, // This component is uncore::components::truck_ui::TruckTab
             ))
             .with_children(|p| {
                 p.spawn(Node {
@@ -138,7 +144,6 @@ pub fn setup_ui(
             });
         };
 
-        // Tab titles:
         p.spawn(Node {
             margin: UiRect::all(Val::ZERO),
             padding: UiRect::all(Val::ZERO),
@@ -173,7 +178,6 @@ pub fn setup_ui(
         p.spawn((base_node.clone(), TabContents::Journal))
             .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));
 
-        // ---
         p.spawn(Node {
             justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Column,
@@ -183,7 +187,6 @@ pub fn setup_ui(
         });
     };
     let right_column = |p: Cb| {
-        // Top Right - Activity
         p.spawn((
             MaterialNode(panel_material.clone()),
             Node {
@@ -200,7 +203,6 @@ pub fn setup_ui(
         ))
         .with_children(|p| activity::setup_activity_ui(p, &handles));
 
-        // Bottom Right - 2 buttons - Exit Truck + End mission.
         p.spawn((
             Node {
                 border: UiRect::all(Val::Px(1.0)),
@@ -222,7 +224,7 @@ pub fn setup_ui(
                 .spawn(Button)
                 .insert(Node {
                     min_height: Val::Px(60.0 * UI_SCALE),
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     align_content: AlignContent::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -256,7 +258,7 @@ pub fn setup_ui(
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     position_type: PositionType::Relative,
                     ..default()
                 })
@@ -280,7 +282,6 @@ pub fn setup_ui(
         });
     };
     let truck_ui = |p: Cb| {
-        // Left column
         p.spawn((
             Node {
                 border: UiRect::all(Val::Px(1.0)),
@@ -296,7 +297,6 @@ pub fn setup_ui(
         ))
         .with_children(left_column);
 
-        // Mid content
         p.spawn((
             MaterialNode(panel_material.clone()),
             Node {
@@ -315,7 +315,6 @@ pub fn setup_ui(
         ))
         .with_children(mid_column);
 
-        // Right column
         p.spawn((
             Node {
                 border: UiRect::all(Val::Px(1.0)),
@@ -346,32 +345,22 @@ pub fn setup_ui(
                 margin: MARGIN,
                 ..default()
             },
-            Visibility::Hidden,
+            init_vis,
             BackgroundColor(colors::TRUCKUI_BGCOLOR),
         ))
         .insert(TruckUI)
         .with_children(truck_ui);
-    // ---
 }
 
-/// Updates the visual appearance and behavior of tabs in the truck UI.
-///
-/// This system handles:
-///
-/// * Changing the visual state of tabs based on mouse interactions (hover, press).
-///
-/// * Switching between different content sections when tabs are clicked.
-///
-/// * Updating the colors and styles of tabs to reflect their current state.
-pub fn update_tab_interactions(
+fn update_tab_interactions(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     mut qt: Query<(
         Ref<Interaction>,
-        &mut TruckTab,
+        &mut TruckTab, // This is uncore::components::truck_ui::TruckTab
         &Children,
         &MaterialNode<UIPanelMaterial>,
     )>,
-    mut qc: Query<(&mut Node, &TabContents)>,
+    mut qc: Query<(&mut Node, &TabContents)>, // This TabContents is uncore::components::truck_ui::TabContents
     mut text_query: Query<(&mut TextColor, &mut TextFont)>,
 ) {
     let mut new_selected_cnt = None;
@@ -386,12 +375,11 @@ pub fn update_tab_interactions(
         if !int.is_changed() {
             continue;
         }
-        let int = *int.into_inner();
-        if tt.state == TabState::Pressed && int == Interaction::Hovered {
+        let int_val = *int.into_inner();
+        if tt.state == TabState::Pressed && int_val == Interaction::Hovered {
             new_selected_cnt = Some(tt.contents.clone());
         }
         if changed > 1 && tt.state == TabState::Selected {
-            // For the initialization pass
             new_selected_cnt = Some(tt.contents.clone());
         }
     }
@@ -400,21 +388,23 @@ pub fn update_tab_interactions(
         if !int.is_changed() && !new_selection {
             continue;
         }
-        let int = *int.into_inner();
+        let int_val = *int.into_inner();
 
-        // warn!("Truck Tab {:?} - Interaction: {:?}", tt, int);
         if tt.state == TabState::Selected && new_selection && changed <= 1 {
             tt.state = TabState::Default;
-        } else if tt.state == TabState::Pressed && int == Interaction::Hovered {
+        } else if tt.state == TabState::Pressed && int_val == Interaction::Hovered {
             tt.state = TabState::Selected;
         } else {
-            tt.update_from_interaction(&int);
+            tt.update_from_interaction(&int_val);
         }
         let (mut textcolor, mut textfont) = text_query.get_mut(children[1]).unwrap();
         textcolor.0 = tt.text_color();
         textfont.font_size = tt.font_size();
-        let mat = materials.get_mut(panmat).unwrap();
-        mat.color = tt.bg_color().into();
+        if let Some(mat) = materials.get_mut(panmat) {
+            mat.color = tt.bg_color().into();
+        } else {
+            warn!("Material not found for TruckTab update.");
+        }
     }
     if let Some(cnt) = new_selected_cnt {
         for (mut style, tc) in &mut qc {
@@ -427,4 +417,12 @@ pub fn update_tab_interactions(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+        .add_systems(
+            Update,
+            update_tab_interactions.run_if(in_state(GameState::Truck)),
+        );
 }

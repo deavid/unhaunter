@@ -23,3 +23,5 @@ pub const DIALOG_TEXT_COLOR: Color = Color::srgba(1.0, 1.0, 1.0, 0.7);
 pub const DIALOG_BOLD_TEXT_COLOR: Color = Color::srgba(0.0, 0.8, 1.0, 0.9);
 pub const MENU_ITEM_COLOR_ON: Color = Color::Srgba(css::ORANGE_RED);
 pub const MENU_ITEM_COLOR_OFF: Color = Color::Srgba(css::GRAY);
+pub const MENU_DESC_TEXT_COLOR: Color = Color::srgba(0.8, 0.94, 0.98, 1.0);
+pub const JOURNAL_BUTTON_BLINK_BORDER_COLOR: Color = Color::srgba(0.9, 0.85, 0.7, 1.0);

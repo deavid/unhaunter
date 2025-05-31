@@ -7,7 +7,7 @@ use uncore::components::player_inventory::{Inventory, InventoryNext};
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::traits::gear_usable::GearUsable;
+use uncore::states::GameState;
 use uncore::types::evidence::Evidence;
 use uncore::types::evidence_status::EvidenceStatus;
 use uncore::types::gear::equipmentposition::Hand;
@@ -15,6 +15,7 @@ use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
 use unstd::materials::UIPanelMaterial;
 
@@ -78,7 +79,7 @@ pub fn setup_loadout_ui(
             },
         )
     };
-    let equipment_def = || equipment(GearSpriteID::IonMeterOff);
+    let equipment_def = || equipment(GearSpriteID::None);
 
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| {
         (
@@ -208,7 +209,6 @@ pub fn setup_loadout_ui(
             ..default()
         })
         .with_children(|p| {
-            // ---- Right side of the window ----
             p.spawn((
                 Text::new("Help and Item description:"),
                 TextFont {
@@ -225,7 +225,7 @@ pub fn setup_loadout_ui(
                 GearHelpTitle,
             ));
             p.spawn((
-                Text::new("Select ..."),
+                Text::new("Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here."),
                 TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
                     font_size: 16.0 * FONT_SCALE,
@@ -248,7 +248,7 @@ pub fn setup_loadout_ui(
     });
 }
 
-pub fn update_loadout_buttons(
+fn update_loadout_buttons(
     mut qbut: Query<
         (
             &Interaction,
@@ -260,7 +260,7 @@ pub fn update_loadout_buttons(
     >,
     mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
-    interaction_query: Query<&TruckUIButton, With<Button>>,
+    interaction_query_journal_buttons: Query<&TruckUIButton, With<Button>>,
     mut ev_clk: EventWriter<EventButtonClicked>,
     gc: Res<GameConfig>,
 ) {
@@ -284,51 +284,61 @@ pub fn update_loadout_buttons(
             ev_clk.send(EventButtonClicked(lbut.clone()));
         }
         if *int != Interaction::None {
+            // Only update help text if hovered or pressed
             elem = Some(lbut.clone());
         }
     }
-    if !changed {
+    if !changed && elem.is_none() {
+        // If nothing changed and nothing is hovered/pressed, don't update help.
         return;
     }
+
     let Some(p_gear) = q_gear
         .iter()
         .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
     else {
         return;
     };
-    let gear = if let Some(lbut) = &elem {
+
+    let gear_for_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => p_gear.get_hand(&inv.hand),
             LoadoutButton::InventoryNext(invnext) => {
-                let idx = invnext.idx.unwrap_or_default();
+                let idx = invnext.idx.unwrap_or(0); // Default to 0 if None
                 p_gear.get_next(idx).unwrap_or_default()
             }
             LoadoutButton::Van(gear) => gear.clone(),
         }
     } else {
+        // If nothing is hovered, potentially show help for the currently equipped right-hand item
+        // or a generic message. For now, let's use a generic message.
         Gear::none()
     };
+
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                Hand::Left => "(Click to remove the item from your Left Hand)",
-                Hand::Right => "(Click to remove the item from your Right Hand)",
+                Hand::Left => "(Click to unequip Left Hand item)",
+                Hand::Right => "(Click to unequip Right Hand item)",
             },
-            LoadoutButton::InventoryNext(_) => "(Click to remove the item from your Backpack)",
-            LoadoutButton::Van(_) => "(Click to add the item to your Inventory's first empty slot)",
+            LoadoutButton::InventoryNext(_) => "(Click to unequip Backpack item)",
+            LoadoutButton::Van(_) => "(Click to equip item)",
         }
     } else {
         ""
     };
-    let (help_title, help_text) = if matches!(gear.kind, GearKind::None) {
+
+    let (help_title, help_text) = if matches!(gear_for_help.kind, GearKind::None) && elem.is_none()
+    {
+        // If nothing is hovered AND the "default" gear is None
         (
-            "Help and Item description:".to_string(), 
-            "Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here.".to_string(),
+            "Loadout Management:".to_string(),
+            "Select gear from the Van Inventory to add to your Player Inventory. \nClick on items in your Player Inventory to return them to the van. \nHover over any item to see its description and associated evidence here.".to_string(),
         )
     } else {
-        let o_evidence = Evidence::try_from(&gear.kind).ok();
+        let o_evidence = Evidence::try_from(&gear_for_help.kind).ok();
         let ev_state = match o_evidence {
-            Some(ev) => interaction_query
+            Some(ev) => interaction_query_journal_buttons // Use the renamed query
                 .iter()
                 .find(|t| t.class == TruckButtonType::Evidence(ev))
                 .map(|t| t.status)
@@ -345,28 +355,40 @@ pub fn update_loadout_buttons(
                 status.status_desc,
             )
         };
-        let gear_name = gear.get_display_name();
-        let gear_desc = gear.get_description();
+        let gear_name = gear_for_help.get_display_name();
+        let gear_desc = gear_for_help.get_description();
         (
-            format!("{gear_name}:"),
+            format!("{}:", gear_name),
             format!(
-                "{gear_desc}{}\n\n{}\n\n{click_help}",
-                evidence_text, status.help_text
+                "{}{}{}{}",
+                gear_desc,
+                if evidence_text.is_empty() && status.help_text.is_empty() && click_help.is_empty()
+                {
+                    ""
+                } else {
+                    "\n"
+                },
+                evidence_text,
+                if status.help_text.is_empty() && click_help.is_empty() {
+                    ""
+                } else {
+                    "\n"
+                },
             ),
         )
     };
+
     for (mut text, ohelp_body, ohelp_title) in &mut qh {
         if ohelp_body.is_some() && help_text != text.0 {
             text.0.clone_from(&help_text);
         }
-
         if ohelp_title.is_some() && help_title != text.0 {
             text.0.clone_from(&help_title);
         }
     }
 }
 
-pub fn button_clicked(
+fn button_clicked(
     mut ev_clk: EventReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
@@ -385,10 +407,19 @@ pub fn button_clicked(
             p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
-            p_gear.take_next(invnext.idx.expect("Truck UI should always specify IDX"));
+            if let Some(idx) = invnext.idx {
+                p_gear.take_next(idx);
+            }
         }
         LoadoutButton::Van(gear) => {
             p_gear.append(gear.clone());
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (update_loadout_buttons, button_clicked).run_if(in_state(GameState::Truck)),
+    );
 }

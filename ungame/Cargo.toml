@@ -16,9 +16,13 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unlight = { path = "../unlight" }
+unmapload = { path = "../unmapload" }
+unprofile = { path = "../unprofile" }
+
 
 bevy = { workspace = true }
 rand = { workspace = true }
+tiled = { workspace = true }
 ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
 ndarray = { workspace = true }

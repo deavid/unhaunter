@@ -267,7 +267,6 @@ impl CachedBoardPos {
         let (rx, ry) = self.relative_ranges(root, board_x, board_y);
         self.angle_range_array.slice(s![rx, ry])
     }
-
 }
 impl Default for CachedBoardPos {
     /// Creates a new instance with default values

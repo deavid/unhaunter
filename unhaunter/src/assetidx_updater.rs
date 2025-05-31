@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::{Read, Write};
@@ -18,11 +20,12 @@ fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
 
 fn get_asset_list() -> Result<Vec<String>> {
     let mut list = vec![];
-    let assets_dir = "assets/";
-    for entry in WalkDir::new(assets_dir).into_iter().filter_map(|e| e.ok()) {
+    let assets_dir = crate::utils::find_assets_directory().context("Assets directory not found")?;
+
+    for entry in WalkDir::new(&assets_dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path.is_file() {
-            let relative_path = path.strip_prefix(assets_dir)?;
+            let relative_path = path.strip_prefix(&assets_dir)?;
             list.push(relative_path.to_string_lossy().to_string());
         }
     }
@@ -33,10 +36,11 @@ fn get_asset_list() -> Result<Vec<String>> {
 pub fn update_assetidx_files() -> Result<()> {
     let asset_list = get_asset_list()?;
     let asset_types = get_asset_types();
+    let assets_dir = crate::utils::find_assets_directory().context("Assets directory not found")?;
 
     for (folder_name, ext_list) in asset_types {
         for ext in &ext_list {
-            let asset_list_path = format!("assets/index/{folder_name}-{ext}.assetidx");
+            let asset_list_path = assets_dir.join(format!("index/{folder_name}-{ext}.assetidx"));
             let mut expected_file_contents: String = asset_list
                 .iter()
                 .filter(|p| p.starts_with(folder_name) && p.ends_with(ext))
@@ -52,7 +56,7 @@ pub fn update_assetidx_files() -> Result<()> {
                     continue;
                 }
             }
-            eprintln!("Updating assetidx: {}", asset_list_path);
+            eprintln!("Updating assetidx: {:?}", asset_list_path);
             let mut asset_list_file =
                 File::create(&asset_list_path).with_context(|| "Failed to create assetidx")?;
 

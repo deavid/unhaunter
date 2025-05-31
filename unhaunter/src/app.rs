@@ -2,9 +2,12 @@ use bevy::prelude::*;
 use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
+use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::plugin::UnhaunterCorePlugin;
+use uncore::resources::cli_options::CliOptions;
 use uncore::{platform::plt, resources::object_interaction::ObjectInteractionConfig};
+use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
@@ -12,22 +15,25 @@ use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
 use unlight::plugin::UnhaunterLightPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
+use unmapload::plugin::UnhaunterMapLoadPlugin;
 use unmenu::plugin::UnhaunterMenuPlugin;
 use unmenusettings::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc::plugin::UnhaunterNPCPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
+use unprofile::plugin::UnhaunterProfilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
-use unstd::plugins::summary::UnhaunterSummaryPlugin;
+use unsummary::summary::UnhaunterSummaryPlugin;
 use untmxmap::plugin::UnhaunterTmxMapPlugin;
 use untruck::plugin::UnhaunterTruckPlugin;
 use unwalkie::plugin::UnhaunterWalkiePlugin;
 
-pub fn app_run() {
+pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
+    app.insert_resource(cli_options);
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: format!("Unhaunter {}", plt::VERSION),
@@ -73,6 +79,10 @@ pub fn app_run() {
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,
         UnhaunterWalkiePlugin,
+        UnhaunterCoreMenuPlugin,
+        UnhaunterMapLoadPlugin,
+        UnhaunterCampaignPlugin,
+        UnhaunterProfilePlugin,
     ));
     app.add_systems(Update, crate::report_timer::report_performance);
     #[cfg(not(target_arch = "wasm32"))]
@@ -99,13 +109,19 @@ fn set_window_icon(
     // This only works on native. WASM uses the HTML icon.
     {
         use winit::window::Icon;
-
+        let Some(assets_path) = crate::utils::find_assets_directory() else {
+            warn!("Assets directory not found.");
+            return;
+        };
         // here we use the `image` crate to load our icon data from a png file
         // this is not a very bevy-native solution, but it will do
+        let Ok(img) = image::open(assets_path.join("favicon-512x512.png")) else {
+            warn!("Failed to load icon image.");
+            return;
+        };
+
         let (icon_rgba, icon_width, icon_height) = {
-            let image = image::open("favicon-512x512.png")
-                .expect("Failed to open icon path")
-                .into_rgba8();
+            let image = img.into_rgba8();
             let (width, height) = image.dimensions();
             let rgba = image.into_raw();
             (rgba, width, height)

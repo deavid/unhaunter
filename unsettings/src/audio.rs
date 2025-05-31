@@ -41,7 +41,7 @@ impl Default for AudioSettings {
 }
 
 /// Represents the different settings available for the audio
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
 pub enum AudioSettingsValue {
     /// The master volume level.

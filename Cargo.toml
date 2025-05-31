@@ -2,6 +2,7 @@
 members = [
     "ungame",
     "tools/ghost_radio",
+    "tools/text_to_speech/walkie_voice_generator",
     "tools/ghost_list",
     "uncore",
     "ungear",
@@ -19,16 +20,23 @@ members = [
     "unmenusettings",
     "unfog",
     "unwalkie",
+    "uncoremenu",
+    "unmapload",
+    "uncampaign",
+    "unprofile",
+    "unsummary",
+    "unwalkiecore",
 ]
 resolver = "3"
 
 [workspace.package]
-version = "0.2.7"
+version = "0.3.0"
 edition = "2024"
 description = "2D isometric Game about investigating paranormal hauntings"
 repository = "https://github.com/deavid/unhaunter/"
 license = "Apache-2.0"
 authors = ["David Martínez Martí <deavidsedice@gmail.com>"]
+homepage = "https://unhaunter.com"
 
 [workspace.dependencies]
 rand = { version = "0.9", default-features = false, features = [
@@ -39,7 +47,7 @@ rand = { version = "0.9", default-features = false, features = [
 enum-iterator = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ron = "0.9"
+ron = "0.10"
 image = "0.25"
 regex = "1.7"
 clap = "4.5"
@@ -50,19 +58,21 @@ ordered-float = { version = "5.0", features = ["serde"] }
 hierarchical_pathfinding = "0.5"
 walkdir = "2.5"
 glob = "0.3"
-tiled = { version = "0.14", features = ["wasm"] }
+tiled = { version = "0.14", default-features = false }
 wasm-bindgen = "0.2"
 normalize-path = "0.2"
 itertools = "0.14.0"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-
-bevy = "0.15"
+bevy = { version = "0.15", features = ["jpeg", "serialize"] }
 bevy-persistent = { version = "0.7", features = ["all"] }
 bevy_framepace = "0.18"
 bevy_dylib = "0.15"
+bevy_picking = "0.15"
 ndarray = "0.16.1"
+sha2 = "0.10"
+rayon = "1.7"
 
 # winit is not for WASM, and needs to be in sync with bevy version
 winit = "0.30"
@@ -95,6 +105,18 @@ untmxmap = { path = "untmxmap" }
 unsettings = { path = "unsettings" }
 unmenusettings = { path = "unmenusettings" }
 unwalkie = { path = "unwalkie" }
+uncoremenu = { path = "uncoremenu" }
+unmapload = { path = "unmapload" }
+uncampaign = { path = "uncampaign" }
+unprofile = { path = "unprofile" }
+unsummary = { path = "unsummary" }
+unwalkie_types = { path = "unwalkie_types" }
+
+clap = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
+ron = { workspace = true }
+sha2 = { workspace = true }
+rayon = { workspace = true }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
@@ -106,11 +128,14 @@ anyhow = { workspace = true }
 name = "unhaunter_game"
 path = "unhaunter/src/bin/unhaunter.rs"
 
+[[bin]]
+name = "walkie_voice_generator"
+path = "tools/text_to_speech/walkie_voice_generator/src/main.rs"
+required-features = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "unhaunter/src/lib.rs"
-
 
 [target.'cfg(target_os = "linux")'.dependencies]
 bevy_dylib = { workspace = true }
@@ -147,7 +172,7 @@ overflow-checks = false
 lto = "thin"
 codegen-units = 1
 
-# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE. 
+# TODO: wasm-pack v0.13.2 or v0.14.0 is going to implement custom profiles with --profile $PROFILE.
 # This will allow us to have a custom profile for WASM builds, and then make it much more aggressive.
 
 [profile.release.package."*"]

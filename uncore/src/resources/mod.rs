@@ -1,11 +1,15 @@
 pub mod board_data;
+pub mod cli_options;
+pub mod current_evidence_readings;
 pub mod difficulty_state;
 pub mod ghost_guess;
+pub mod hint_ui_state;
+pub mod looking_gear;
 pub mod manual;
 pub mod maps;
+pub mod mission_select_mode;
 pub mod object_interaction;
+pub mod potential_id_timer;
 pub mod roomdb;
 pub mod summary_data;
 pub mod visibility_data;
-pub mod looking_gear;
-pub mod walkie;

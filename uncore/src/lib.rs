@@ -2,12 +2,13 @@ pub mod assets;
 pub mod behavior;
 pub mod colors;
 pub mod components;
-pub mod controlkeys;
 pub mod difficulty;
 pub mod events;
 pub mod metric_recorder;
+pub mod noise;
 pub mod platform;
 pub mod plugin;
+pub mod random_seed;
 pub mod resources;
 pub mod states;
 pub mod systemparam;
@@ -15,7 +16,6 @@ pub mod systems;
 pub mod traits;
 pub mod types;
 pub mod utils;
-pub mod random_seed;
 
 /// Enables/disables debug logs related to the player.
 pub const DEBUG_PLAYER: bool = false;

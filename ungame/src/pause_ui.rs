@@ -12,7 +12,7 @@ const PAUSEUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);
 const PAUSEUI_ACCENT_COLOR: Color = Color::srgba(0.290, 0.596, 0.706, 1.0);
 const PAUSEUI_TEXT_COLOR: Color = Color::srgba(0.7, 0.82, 0.85, 1.0);
 
-pub fn keyboard(
+fn keyboard(
     game_state: Res<State<GameState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     mut next_state: ResMut<NextState<AppState>>,
@@ -26,17 +26,17 @@ pub fn keyboard(
     }
     if keyboard_input.just_pressed(KeyCode::KeyQ) {
         game_next_state.set(GameState::None);
-        next_state.set(AppState::MainMenu);
+        next_state.set(AppState::MissionSelect);
     }
 }
 
-pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
+fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn_recursive();
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<GameAssets>,
@@ -124,7 +124,7 @@ pub fn setup_ui(
     // ---
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(GameState::Pause), setup_ui)
         .add_systems(OnExit(GameState::Pause), cleanup)
         .add_systems(Update, keyboard);

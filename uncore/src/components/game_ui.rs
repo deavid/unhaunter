@@ -28,5 +28,8 @@ pub struct HeldObjectUI;
 #[derive(Component, Debug)]
 pub struct RightSideGearUI;
 
+#[derive(Component, Debug, Default)]
+pub struct WalkieTextUIRoot;
+
 #[derive(Component, Debug)]
 pub struct WalkieText;

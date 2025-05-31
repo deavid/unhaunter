@@ -1,0 +1,17 @@
+[package]
+name = "unprofile"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+bevy-persistent = { workspace = true }
+dirs = { workspace = true }
+uncore = { path = "../uncore" }
+ron = { workspace = true }

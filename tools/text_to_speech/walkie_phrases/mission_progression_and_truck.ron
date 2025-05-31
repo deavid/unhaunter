@@ -1,0 +1,118 @@
+WalkiePhraseFile(
+  event_lines: [
+    WalkieEventConceptEntry(
+      name: "PlayerLeavesTruckWithoutChangingLoadout", // Player starts mission (after 1st), leaves truck without interacting with Loadout tab IF their previous loadout was different/custom.
+      lines: [
+        // This hint is a bit more advanced and assumes the player has already learned about loadouts.
+        // Might be tagged to only appear after a few missions or if a certain achievement is met.
+        WalkieLineEntry(
+          tts_text: "Off you go then. You are sure you have got the right kit for this one? The loadout screen is there if you need a different setup.",
+          subtitle_text: "Off you go then. You're sure you've got the right kit for this one? The loadout screen is there if you need a different setup.",
+          tags: [FriendlyReminder, Questioning, Guidance, MediumLength, ContextualHint], // ContextualHint implies game knows loadout was default/unchanged
+        ),
+        WalkieLineEntry(
+          tts_text: "Just a thought, but did you check your loadout before heading in? Always good to tailor your gear to the job.",
+          subtitle_text: "Just a thought, but did you check your loadout before heading in? Always good to tailor your gear to the job.",
+          tags: [ReminderLow, Questioning, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Sticking with the standard issue kit today, are we? Fair enough, but the loadout tab lets you mix things up.",
+          subtitle_text: "Sticking with the standard issue kit today, are we? Fair enough, but the loadout tab lets you mix things up.",
+          tags: [NeutralObservation, Humorous, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Remember, you can customise your gear selection in the truck via the loadout tab if this current set is not ideal.",
+          subtitle_text: "Remember, you can customise your gear selection in the truck via the loadout tab if this current set isn't ideal.",
+          tags: [ReminderMedium, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Each haunting can be different. Do not forget you can change what gear you take in from the truck's loadout screen.",
+          subtitle_text: "Each haunting can be different. Don't forget you can change what gear you take in from the truck's loadout screen.",
+          tags: [Guidance, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just quickly, before you get too far, are you happy with your current equipment? The loadout can be adjusted in the van.",
+          subtitle_text: "Just quickly, before you get too far, are you happy with your current equipment? The loadout can be adjusted in the van.",
+          tags: [FriendlyReminder, Questioning, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The loadout tab is your friend for kitting yourself out properly. Just saying, in case you forgot to take a peek.",
+          subtitle_text: "The loadout tab is your friend for kitting yourself out properly. Just saying, in case you forgot to take a peek.",
+          tags: [ReminderLow, SnarkyHumor, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "If you find yourself wishing you had a different tool, remember you can usually change your loadout back at the truck.",
+          subtitle_text: "If you find yourself wishing you had a different tool, remember you can usually change your loadout back at the truck.",
+          tags: [Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Going in with that selection then? Alright. The loadout screen is always there for a rethink if needed.",
+          subtitle_text: "Going in with that selection then? Alright. The loadout screen is always there for a rethink if needed.",
+          tags: [NeutralObservation, Encouraging, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Just checking you are all set with your gear. The truck's loadout panel lets you fine tune your choices for each job.",
+          subtitle_text: "Just checking you're all set with your gear. The truck's loadout panel lets you fine-tune your choices for each job.",
+          tags: [FriendlyReminder, Guidance, MediumLength],
+        ),
+      ],
+    ),
+    // Most other truck-related hints are covered by evidence gathering (return to log), repellent crafting, etc.
+    // This scenario focuses on the "End Mission" part.
+    WalkieEventConceptEntry(
+      name: "AllObjectivesMetReminderToEndMission", // Ghost expelled, breach gone, player has confirmed, but lingers in truck without ending.
+      lines: [
+        WalkieLineEntry(
+          tts_text: "Well, that is another one dealt with. Excellent work. Just need to hit that 'End Mission' button on the panel to make it official.",
+          subtitle_text: "Well, that's another one dealt with. Excellent work. Just need to hit that 'End Mission' button on the panel to make it official.",
+          tags: [PositiveReinforcement, DirectHint, DelayedObservation, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Looks like a clean sweep. All paranormal activity ceased. The 'End Mission' button is calling your name.",
+          subtitle_text: "Looks like a clean sweep. All paranormal activity ceased. The 'End Mission' button is calling your name.",
+          tags: [Encouraging, DirectHint, Humorous, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "So, are we just going to sit here admiring the truck's interior, or are you going to end the mission? It is all done.",
+          subtitle_text: "So, are we just going to sit here admiring the truck's interior, or are you going to end the mission? It's all done.",
+          tags: [SnarkyHumor, SlightlyImpatient, Questioning, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "With the ghost gone and the breach sealed, our work here is complete. Time to press the 'End Mission' button and get paid.",
+          subtitle_text: "With the ghost gone and the breach sealed, our work here is complete. Time to press the 'End Mission' button and get paid.",
+          tags: [NeutralObservation, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Another successful de-haunting. All that is left is to hit 'End Mission' on your console there.",
+          subtitle_text: "Another successful de-haunting. All that's left is to hit 'End Mission' on your console there.",
+          tags: [PositiveReinforcement, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The site is clear. You have done your bit. Just need to finalise the report by ending the mission in the truck.",
+          subtitle_text: "The site is clear. You've done your bit. Just need to finalise the report by ending the mission in the truck.",
+          tags: [Encouraging, Guidance, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "Is there something else, or did you forget the big shiny 'End Mission' button? Job is finished.",
+          subtitle_text: "Is there something else, or did you forget the big shiny 'End Mission' button? Job is finished.",
+          tags: [Questioning, SnarkyHumor, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "You have successfully expelled the entity. Please proceed to the truck console and select 'End Mission' to conclude.",
+          subtitle_text: "You've successfully expelled the entity. Please proceed to the truck console and select 'End Mission' to conclude.",
+          tags: [FormalishReminder, DirectHint, MediumLength], // FormalishReminder could be a new tag if needed for a slightly different tone
+        ),
+        WalkieLineEntry(
+          tts_text: "Great work out there. The ghost is gone. Now, let us just wrap it up officially. 'End Mission' button, if you please.",
+          subtitle_text: "Great work out there. The ghost is gone. Now, let's just wrap it up officially. 'End Mission' button, if you please.",
+          tags: [PositiveReinforcement, SlightlyImpatient, DirectHint, MediumLength],
+        ),
+        WalkieLineEntry(
+          tts_text: "The haunting has ceased. All objectives complete. Your final task is to hit 'End Mission' in the truck.",
+          subtitle_text: "The haunting has ceased. All objectives complete. Your final task is to hit 'End Mission' in the truck.",
+          tags: [NeutralObservation, DirectHint, MediumLength],
+        ),
+      ],
+    ),
+  ],
+)

@@ -1,5 +1,7 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
+use crate::gear_stuff::GearStuff;
+use crate::gear_usable::GearUsable;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -9,8 +11,7 @@ use uncore::components::player_inventory::{Inventory, InventoryNext, InventorySt
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::events::sound::SoundEvent;
 use uncore::resources::looking_gear::LookingGear;
-use uncore::systemparam::gear_stuff::GearStuff;
-use uncore::traits::gear_usable::GearUsable;
+use uncore::states::GameState;
 use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unsettings::audio::{AudioSettings, SoundOutput};
 
@@ -19,10 +20,7 @@ use unsettings::audio::{AudioSettings, SoundOutput};
 /// This system iterates through the player's gear and calls the `update` method
 /// for each piece of gear, allowing gear to update their state based on time,
 /// player actions, or environmental conditions.
-pub fn update_playerheld_gear_data(
-    mut q_gear: Query<(&Position, &mut PlayerGear)>,
-    mut gs: GearStuff,
-) {
+fn update_playerheld_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
     for (position, mut playergear) in q_gear.iter_mut() {
         for (gear, epos) in playergear.as_vec_mut().into_iter() {
             gear.update(&mut gs, position, &epos);
@@ -31,7 +29,7 @@ pub fn update_playerheld_gear_data(
 }
 
 /// System for updating the internal state of all gear deployed in the environment.
-pub fn update_deployed_gear_data(
+fn update_deployed_gear_data(
     mut q_gear: Query<(&Position, &DeployedGear, &mut DeployedGearData)>,
     mut gs: GearStuff,
 ) {
@@ -44,7 +42,7 @@ pub fn update_deployed_gear_data(
 
 /// System for updating the sprites of deployed gear to reflect their internal
 /// state.
-pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearData)>) {
+fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearData)>) {
     for (mut sprite, gear_data) in q_gear.iter_mut() {
         let new_index = gear_data.gear.get_sprite_idx() as usize;
         if let Some(texture_atlas) = &mut sprite.texture_atlas {
@@ -57,7 +55,7 @@ pub fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGea
 
 /// System to handle the SoundEvent, playing the sound with volume adjusted by
 /// distance.
-pub fn sound_playback_system(
+fn sound_playback_system(
     mut sound_events: EventReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     gc: Res<GameConfig>,
@@ -72,6 +70,9 @@ pub fn sound_playback_system(
         else {
             return;
         };
+        if !player_position.is_finite() {
+            warn!("Player position is not finite: {player_position:?}")
+        }
         let dist = sound_event
             .position
             .map(|pos| player_position.distance(&pos))
@@ -108,7 +109,7 @@ pub fn sound_playback_system(
     }
 }
 
-pub fn keyboard_gear(
+fn keyboard_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     looking_gear: Res<LookingGear>,
@@ -130,7 +131,7 @@ pub fn keyboard_gear(
     }
 }
 
-pub fn update_gear_ui(
+fn update_gear_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
@@ -178,4 +179,13 @@ pub fn update_gear_ui(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(FixedUpdate, update_playerheld_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_data)
+        .add_systems(FixedUpdate, update_deployed_gear_sprites)
+        .add_systems(FixedUpdate, update_gear_ui)
+        .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
+        .add_systems(Update, sound_playback_system);
 }

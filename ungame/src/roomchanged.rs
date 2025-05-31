@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore::behavior::component::RoomState;
 use uncore::behavior::Behavior;
+use uncore::behavior::component::RoomState;
 use uncore::components::board::position::Position;
 use uncore::components::game::GCameraArena;
 use uncore::components::game_config::GameConfig;
@@ -21,7 +21,7 @@ use unstd::systemparam::interactivestuff::InteractiveStuff;
 ///   enters the starting area).
 ///
 /// * Updating the game's collision and lighting data after room-related changes.
-pub fn roomchanged_event(
+fn roomchanged_event(
     mut ev_bdr: EventWriter<BoardDataToRebuild>,
     mut ev_room: EventReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
@@ -65,7 +65,7 @@ pub fn roomchanged_event(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_event::<RoomChangedEvent>()
         .add_systems(Update, roomchanged_event);
 }

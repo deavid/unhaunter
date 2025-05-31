@@ -16,6 +16,8 @@ pub struct SpiritBox {
     pub charge: f32,
     pub display_glitch_timer: f32,
     pub interference2_timer: f32,
+    pub last_good_answer: f32,
+    pub blinking_hint_active: bool,
 }
 
 impl GearUsable for SpiritBox {
@@ -79,7 +81,19 @@ impl GearUsable for SpiritBox {
         // Normal status
         let msg = if self.enabled {
             if self.ghost_answer {
-                "EVP Detected!".to_string()
+                if self.blinking_hint_active
+                    && self.display_glitch_timer <= 0.0
+                    && self.interference2_timer <= 0.0
+                {
+                    if self.mode_frame % 20 < 10 {
+                        // Blinking effect
+                        "> EVP Detected! <".to_string()
+                    } else {
+                        "  EVP Detected!  ".to_string()
+                    }
+                } else {
+                    "EVP Detected!".to_string()
+                }
             } else {
                 "Scanning..".to_string()
             }
@@ -93,6 +107,16 @@ impl GearUsable for SpiritBox {
         // Don't allow toggling if currently glitching severely
         if self.display_glitch_timer <= 0.2 {
             self.enabled = !self.enabled;
+        }
+    }
+
+    fn is_sound_showing_evidence(&self) -> f32 {
+        // SpiritBox is playing a sound/answering when it's enabled, not glitching,
+        // and ghost_answer is true (which means it's actively replying)
+        if self.enabled && self.display_glitch_timer <= 0.0 && self.last_good_answer > 0.0 {
+            1.0
+        } else {
+            0.0
         }
     }
 
@@ -132,6 +156,8 @@ impl GearUsable for SpiritBox {
         }
 
         if !self.enabled {
+            // Ensure hint is off when disabled
+            self.blinking_hint_active = false;
             return;
         }
         let mut rng = random_seed::rng();
@@ -139,7 +165,7 @@ impl GearUsable for SpiritBox {
         let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z + rng.random_range(-K..K) + rng.random_range(-K..K),
+            z: pos.z,
             global_z: pos.global_z,
         };
         let bpos = posk.to_board_position();
@@ -163,7 +189,8 @@ impl GearUsable for SpiritBox {
         if gs.bf.evidences.contains(&Evidence::SpiritBox) {
             let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
             let temp_clamped = (temp_celsius - 3.0).clamp(0.5, 10.0);
-            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0;
+            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
+                * gs.bf.ghost_dynamics.spirit_box_clarity.max(0.0);
             // info!(
             //     "charge: {:.2} sound:{:.2} temp:{:.2} light:{:.2}",
             //     self.charge,
@@ -175,6 +202,7 @@ impl GearUsable for SpiritBox {
         if self.ghost_answer {
             if delta > 3.0 {
                 self.ghost_answer = false;
+                self.last_good_answer = 0.0;
             }
         } else if delta > 0.3 && self.interference2_timer <= 0.0 && self.display_glitch_timer <= 0.0
         {
@@ -194,17 +222,44 @@ impl GearUsable for SpiritBox {
                 3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
                 _ => self.ghost_answer = false,
             }
+            if self.ghost_answer {
+                self.last_good_answer = sec;
+            }
         } else if delta > 0.3 && self.interference2_timer > 0.0 && self.display_glitch_timer <= 0.0
         {
             self.last_change_secs = sec;
             self.ghost_answer = true;
+            self.last_good_answer = 0.0;
             gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+        }
+
+        // Update blinking_hint_active
+        const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+        // Spirit Box shows evidence when ghost_answer is true and it's not glitching/interfered.
+        // last_good_answer > 0 indicates a "real" answer, not just interference.
+        if self.ghost_answer
+            && self.last_good_answer > 0.0
+            && self.display_glitch_timer <= 0.0
+            && self.interference2_timer <= 0.0
+        {
+            let count = gs
+                .player_profile
+                .times_evidence_acknowledged_on_gear
+                .get(&Evidence::SpiritBox)
+                .copied()
+                .unwrap_or(0);
+            self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+        } else {
+            self.blinking_hint_active = false;
         }
     }
     fn is_electronic(&self) -> bool {
         true
     }
 
+    fn needs_darkness(&self) -> bool {
+        true
+    }
     fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
         if warning_level < 0.0001 || !self.enabled {
             return;
@@ -224,6 +279,18 @@ impl GearUsable for SpiritBox {
             self.interference2_timer = rng.random_range(0.3..0.8);
             self.ghost_answer = true;
         }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn can_enable(&self) -> bool {
+        true
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
     }
 }
 

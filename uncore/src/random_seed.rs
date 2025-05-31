@@ -82,7 +82,7 @@ thread_local! {
 /// use uncore::random_seed;
 ///
 /// let mut rng = random_seed::rng();
-/// let random_number: u32 = rng.gen();
+/// let random_number: u32 = rng.random();
 /// ```
 ///
 /// # Returns

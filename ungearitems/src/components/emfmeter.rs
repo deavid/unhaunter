@@ -1,5 +1,5 @@
 use uncore::random_seed;
-use uncore::systemparam::gear_stuff::GearStuff;
+use ungear::gear_stuff::GearStuff;
 
 use uncore::{
     components::board::position::Position,
@@ -10,7 +10,7 @@ use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum EMFLevel {
     #[default]
     None,
@@ -71,34 +71,44 @@ pub struct EMFMeter {
     pub last_sound_secs: f32,
     pub last_meter_update_secs: f32,
     pub display_glitch_timer: f32,
+    pub blinking_hint_active: bool,
 }
 
 impl GearUsable for EMFMeter {
+    // Default is_enabled() is fine if it just checks self.enabled
+    // fn is_enabled(&self) -> bool { self.enabled }
+
+    // Default can_enable() is fine if it's always true
+    // fn can_enable(&self) -> bool { true }
+
+    // Override is_enabled to consider glitch state
+    fn is_enabled(&self) -> bool {
+        self.enabled && self.display_glitch_timer <= 0.0
+    }
+
+    // Override can_enable to consider glitch state
+    fn can_enable(&self) -> bool {
+        self.display_glitch_timer <= 0.0
+    }
+
     fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.enabled {
-            true => {
-                // Occasionally show blank screen during glitch
-                if self.display_glitch_timer > 0.0
-                    && random_seed::rng().random_range(0.0..1.0) < 0.3
-                {
-                    // Alternative if EMFMeterGlitch doesn't exist yet
-                    if self.display_glitch_timer > 0.0
-                        && random_seed::rng().random_range(0.0..1.0) < 0.3
-                    {
-                        // Temporarily show as off or randomly flicker between levels
-                        match random_seed::rng().random_range(0..3) {
-                            0 => GearSpriteID::EMFMeterOff,
-                            1 => GearSpriteID::EMFMeter4,
-                            _ => self.emf_level.to_spriteid(),
-                        }
-                    } else {
-                        self.emf_level.to_spriteid()
-                    }
-                } else {
-                    self.emf_level.to_spriteid()
+        // Use self.is_enabled() to check if the device is truly on and not glitching.
+        // However, if we want to show a flickering or off state visually when it's
+        // `enabled` but `display_glitch_timer > 0.0`, we need to check `self.enabled` directly here.
+        if self.enabled {
+            if self.display_glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
+                // Flicker when glitching but enabled
+                match random_seed::rng().random_range(0..3) {
+                    0 => GearSpriteID::EMFMeterOff,
+                    1 => GearSpriteID::EMFMeter4, // Example: flicker to a high reading or specific glitch sprite
+                    _ => self.emf_level.to_spriteid(), // Or back to its current reading sprite
                 }
+            } else {
+                // Normal operation, not glitching or glitch not causing visual disruption this frame
+                self.emf_level.to_spriteid()
             }
-            false => GearSpriteID::EMFMeterOff,
+        } else {
+            GearSpriteID::EMFMeterOff
         }
     }
 
@@ -112,9 +122,9 @@ impl GearUsable for EMFMeter {
 
     fn get_status(&self) -> String {
         let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
+        let on_s = on_off(self.enabled); // Show "ON"/"OFF" based on the internal enabled state
 
-        // Show garbled text when glitching
+        // Show garbled text when enabled but glitching
         if self.enabled && self.display_glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Reading: ERR0R\nEnergy: ###.###",
@@ -125,13 +135,20 @@ impl GearUsable for EMFMeter {
             return format!("{name}:  {on_s}\n{garbled}");
         }
 
-        // Regular display
-        let msg = if self.enabled {
+        // Regular display (when truly on and not glitching, checked by self.is_enabled())
+        let msg = if self.is_enabled() {
+            let emf_status_text = self.emf_level.to_status();
+            let blinking_emf_text = if self.frame_counter % 30 < 15
+                && self.blinking_hint_active
+                && self.emf_level == EMFLevel::EMF5
+            {
+                format!(">[{}]<", emf_status_text)
+            } else {
+                format!("  {}  ", emf_status_text)
+            };
             format!(
                 "Reading: {:>6.1}mG {}\nEnergy: {:>9.3}T",
-                self.emf,
-                self.emf_level.to_status(),
-                self.miasma_pressure_2,
+                self.emf, blinking_emf_text, self.miasma_pressure_2,
             )
         } else {
             "".to_string()
@@ -140,7 +157,14 @@ impl GearUsable for EMFMeter {
     }
 
     fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        self.enabled = !self.enabled;
+        if self.enabled {
+            // If it's on, turn it off (regardless of glitch state, user can always turn off)
+            self.enabled = false;
+        } else if self.can_enable() {
+            // If it's off and can be enabled (not glitching), turn it on
+            self.enabled = true;
+        }
+        // If it's off and cannot be enabled (e.g., glitching), attempting to turn on does nothing.
     }
 
     fn update(&mut self, gs: &mut GearStuff, pos: &Position, ep: &EquipmentPosition) {
@@ -198,14 +222,23 @@ impl GearUsable for EMFMeter {
             let mut new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
             self.emf -= 0.2 * gs.difficulty.0.equipment_sensitivity;
             self.emf /= 1.4_f32.powf(gs.difficulty.0.equipment_sensitivity);
-            if gs.bf.evidences.contains(&Evidence::EMFLevel5) {
-                new_emf = f32::tanh(new_emf / 40.0) * 45.0;
-            } else {
-                // If there's no possibility of EMF5, remap it so it's always below 20 mGauss.
-                new_emf = f32::tanh(new_emf / 19.0) * 15.0;
-            }
+            let emf5_evidence = gs.bf.ghost_dynamics.emf_level5_clarity.max(-0.2);
+            new_emf =
+                f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0)) * (15.0 + emf5_evidence * 30.0);
             self.emf = self.emf.max(new_emf);
             self.emf_level = EMFLevel::from_milligauss(self.emf);
+
+            // Update blinking_hint_active
+            const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+            if self.emf_level == EMFLevel::EMF5 {
+                let count = gs
+                    .player_profile
+                    .times_evidence_acknowledged_on_gear
+                    .get(&Evidence::EMFLevel5)
+                    .copied()
+                    .unwrap_or(0);
+                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+            }
         }
         if self.enabled {
             let delta = 10.0 / (self.emf + 0.5).powf(1.5);
@@ -264,8 +297,35 @@ impl GearUsable for EMFMeter {
         }
     }
 
+    fn is_status_text_showing_evidence(&self) -> f32 {
+        if self.is_enabled() {
+            if let EMFLevel::EMF5 = self.emf_level {
+                return 1.0;
+            }
+        }
+        0.0
+    }
+
+    fn is_icon_showing_evidence(&self) -> f32 {
+        // The icon shows evidence if it's the EMF5 sprite (EMFMeter4)
+        // and the device is truly enabled (not glitching).
+        if self.is_enabled() {
+            if let EMFLevel::EMF5 = self.emf_level {
+                // Check if current sprite is indeed the EMF5 sprite.
+                // get_sprite_idx() already considers glitches for visual representation.
+                // However, for "evidence signal", we care about the underlying data if not glitching.
+                return 1.0;
+            }
+        }
+        0.0
+    }
+
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
     }
 }
 

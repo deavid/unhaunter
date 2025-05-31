@@ -27,4 +27,5 @@ pub struct CollisionFieldData {
     pub see_through: bool,
     pub wall_orientation: Orientation,
     pub is_dynamic: bool,
+    pub stair_offset: i32,
 }

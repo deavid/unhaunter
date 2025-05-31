@@ -7,7 +7,7 @@
 //! visual elements of the manual efficiently.
 use bevy::prelude::*;
 use uncore::colors;
-use uncore::platform::plt::FONT_SCALE;
+use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 
 pub fn grid_img_text2(
@@ -53,6 +53,7 @@ pub fn grid_img_text2(
             align_content: AlignContent::Center,
             ..default()
         })
+        .insert(BackgroundColor(Color::BLACK.with_alpha(0.4)))
         .with_children(|parent| {
             let contents: Vec<(&Handle<Image>, String)> =
                 contents.into_iter().map(|(a, b)| (a, b.into())).collect();
@@ -104,12 +105,17 @@ pub fn header(
 ) {
     parent
         .spawn(Node {
-            width: Val::Percent(100.0),
+            width: Val::Percent(90.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             flex_direction: FlexDirection::Column,
+            // margin: UiRect::vertical(Val::Percent(2.0)),
+            // padding: UiRect::all(Val::Percent(2.0)),
+            flex_shrink: 0.5,
+            flex_grow: 0.01,
             ..default()
         })
+        .insert(BackgroundColor(Color::BLACK.with_alpha(0.4)))
         .with_children(|parent| {
             // Headline
             parent
@@ -139,23 +145,25 @@ pub fn header(
 }
 
 pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: impl Into<String>) {
-    parent.spawn(Node {
-        flex_grow: 0.2,
-        flex_basis: Val::Px(0.0),
-        ..default()
-    });
-
     parent
         .spawn(Node {
-            width: Val::Percent(100.0),
+            width: Val::Percent(90.0),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             flex_direction: FlexDirection::Column,
-            margin: UiRect::all(Val::Percent(0.5)),
             flex_grow: 0.0,
+            flex_shrink: 0.5,
             flex_basis: Val::Percent(1.0),
+            margin: UiRect::vertical(Val::Px(5.0 * UI_SCALE)),
+            padding: UiRect::vertical(Val::Px(2.0 * UI_SCALE)),
             ..default()
         })
+        .insert(BackgroundColor(Color::Srgba(Srgba {
+            red: 0.1,
+            green: 0.1,
+            blue: 0.15,
+            alpha: 0.9,
+        })))
         .with_children(|parent| {
             // Summary Text
             parent

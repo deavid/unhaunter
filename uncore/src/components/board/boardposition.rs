@@ -13,6 +13,35 @@ pub struct BoardPosition {
 }
 
 impl BoardPosition {
+    // Tile sizes: Tiles are supposed to be divisible in a subgrid of 3x3x11,
+    // where each sub-cube is 20cm x 20cm x 20cm.
+    // Therefore, a single tile measures 60xm x 60cm x 220cm
+
+    /// Size of the tile in X direction: 60cm
+    pub fn size_x_meters() -> f32 {
+        0.60
+    }
+
+    /// Size of the tile in Y direction: 60cm
+    pub fn size_y_meters() -> f32 {
+        0.60
+    }
+
+    /// Size of the tile in Z direction: 220cm
+    pub fn size_z_meters() -> f32 {
+        2.20
+    }
+
+    /// Area of a tile: 0.36m² - 3600cm²
+    pub fn area_per_tile_m2() -> f32 {
+        Self::size_x_meters() * Self::size_y_meters()
+    }
+
+    /// Volume of a tile: 0.216 m³ - 216 Liters
+    pub fn volume_per_tile_m3() -> f32 {
+        Self::size_x_meters() * Self::size_y_meters() * Self::size_z_meters()
+    }
+
     pub fn from_ndidx(pos: (usize, usize, usize)) -> Self {
         Self {
             x: pos.0 as i64,
@@ -142,6 +171,15 @@ impl BoardPosition {
                 out.push(pos);
             }
         }
+    }
+
+    pub fn is_valid(&self, map_size: (usize, usize, usize)) -> bool {
+        self.x >= 0
+            && self.x < map_size.0 as i64
+            && self.y >= 0
+            && self.y < map_size.1 as i64
+            && self.z >= 0
+            && self.z < map_size.2 as i64
     }
 
     pub fn iter_xy_neighbors_nosize(&self, dist: i64) -> NeighborsIterator {

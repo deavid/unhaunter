@@ -8,8 +8,8 @@ use uncore::difficulty::CurrentDifficulty;
 use uncore::events::board_data_rebuild::BoardDataToRebuild;
 use uncore::events::roomchanged::InteractionExecutionType;
 use uncore::events::sound::SoundEvent;
-use unstd::systemparam::interactivestuff::InteractiveStuff;
 use uncore::random_seed;
+use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 #[derive(Debug, Clone)]
 pub enum GhostEvent {
@@ -20,7 +20,6 @@ pub enum GhostEvent {
 #[derive(Component)]
 struct FlickerTimer(Timer);
 
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn trigger_ghost_events(
     mut commands: Commands,
     q_player: Query<(&Position, &PlayerSprite)>,
@@ -70,7 +69,7 @@ pub fn trigger_ghost_events(
                 0 => GhostEvent::DoorSlam,
                 _ => GhostEvent::LightFlicker,
             };
-            warn!("Event: {:?}", event);
+            // warn!("Event: {:?}", event);
             match event {
                 GhostEvent::DoorSlam => {
                     // Find doors in the player's room
@@ -123,7 +122,7 @@ pub fn trigger_ghost_events(
                                 collision: true,
                             });
                         }
-                        warn!("Slamming door: {:?}", door_to_slam);
+                        // warn!("Slamming door: {:?}", door_to_slam);
                     }
                 }
                 GhostEvent::LightFlicker => {
@@ -149,7 +148,7 @@ pub fn trigger_ghost_events(
                                         0.5,
                                         TimerMode::Once,
                                     )));
-                                warn!("Flickering light: {:?}", entity);
+                                // warn!("Flickering light: {:?}", entity);
                                 flicker = true;
                             }
                         }

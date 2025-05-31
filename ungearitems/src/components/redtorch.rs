@@ -68,7 +68,19 @@ impl GearUsable for RedTorch {
     }
 
     fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        self.enabled = !self.enabled;
+        if self.can_enable() {
+            self.enabled = !self.enabled;
+        } else if self.is_enabled() {
+            self.enabled = false;
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.enabled && self.battery_level > 0.0 && self.display_glitch_timer <= 0.01
+    }
+
+    fn can_enable(&self) -> bool {
+        self.battery_level > 0.0 && self.display_glitch_timer <= 0.01
     }
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
@@ -95,6 +107,10 @@ impl GearUsable for RedTorch {
     }
 
     fn is_electronic(&self) -> bool {
+        true
+    }
+
+    fn needs_darkness(&self) -> bool {
         true
     }
 

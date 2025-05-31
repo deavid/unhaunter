@@ -48,6 +48,19 @@ impl Position {
         }
     }
 
+    pub fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.global_z.is_finite()
+    }
+
+    pub fn lerp(&self, other: &Self, t: f32) -> Self {
+        Self {
+            x: self.x + (other.x - self.x) * t,
+            y: self.y + (other.y - self.y) * t,
+            z: self.z + (other.z - self.z) * t,
+            global_z: self.global_z,
+        }
+    }
+
     pub fn with_random(&self, range: f32) -> Self {
         let mut rng = random_seed::rng();
         Self {
@@ -70,7 +83,9 @@ impl Position {
     pub fn to_screen_coord(self) -> Vec3 {
         let x = self.x * PERSPECTIVE_X[0] + self.y * PERSPECTIVE_Y[0] + self.z * PERSPECTIVE_Z[0];
         let y = self.x * PERSPECTIVE_X[1] + self.y * PERSPECTIVE_Y[1] + self.z * PERSPECTIVE_Z[1];
-        let z = self.x * PERSPECTIVE_X[2] + self.y * PERSPECTIVE_Y[2] + self.z * PERSPECTIVE_Z[2];
+        let z = self.x * PERSPECTIVE_X[2]
+            + self.y * PERSPECTIVE_Y[2]
+            + self.z.round() * PERSPECTIVE_Z[2];
         Vec3::new(x, y, z + self.global_z)
     }
 
@@ -94,17 +109,29 @@ impl Position {
         self.distance2(other).sqrt()
     }
 
+    pub fn distance_zf(&self, other: &Self, zf: f32) -> f32 {
+        self.distance2_zf(other, zf).sqrt()
+    }
+
     pub fn distance2(&self, other: &Self) -> f32 {
+        self.distance2_zf(other, 6.0)
+    }
+
+    pub fn distance2_zf(&self, other: &Self, zf: f32) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
-        let dz = self.z - other.z;
+        let dz = (self.z - other.z) * zf;
         dx * dx + dy * dy + dz * dz
     }
 
     pub fn distance_taxicab(&self, other: &Self) -> f32 {
+        self.distance_taxicab_zf(other, 6.0)
+    }
+
+    pub fn distance_taxicab_zf(&self, other: &Self, zf: f32) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
-        let dz = self.z - other.z;
+        let dz = (self.z - other.z) * zf;
         dx.abs() + dy.abs() + dz.abs()
     }
 
@@ -112,7 +139,15 @@ impl Position {
         BoardPosition {
             x: self.x.round() as i64,
             y: self.y.round() as i64,
-            z: 0,
+            z: self.z.round() as i64,
+        }
+    }
+
+    pub fn to_board_position_size(self, map_size: (usize, usize, usize)) -> BoardPosition {
+        BoardPosition {
+            x: (self.x.round() as i64).clamp(0, map_size.0 as i64 - 1),
+            y: (self.y.round() as i64).clamp(0, map_size.1 as i64 - 1),
+            z: (self.z.round() as i64).clamp(0, map_size.2 as i64 - 1),
         }
     }
 
