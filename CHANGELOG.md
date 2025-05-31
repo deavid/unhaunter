@@ -2,7 +2,7 @@
 
 * New campaign with 15 new maps!
 * Progression system with money, experience and leveling up.
-* Walkie Talkie buddy extended aggresively with an additional Hint UI.
+* Walkie Talkie buddy extended aggressively with an additional Hint UI.
 * Now missions are graded from A to F.
 * New design for the menu.
 * The menu now works with the mouse as well as keyboard.
