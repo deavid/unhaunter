@@ -24,6 +24,11 @@ fn potential_id_prompt_system(
     mut walkie_play: ResMut<WalkiePlay>,
     time: Res<Time>,
 ) {
+    let difficulty_info = &difficulty.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
     const PROMPT_DELAY_SECONDS: f32 = 20.0;
 

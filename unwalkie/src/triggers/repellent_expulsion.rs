@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use std::any::Any;
 use uncore::components::repellent_particle::RepellentParticle;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::ghost::types::GhostType;
@@ -233,7 +234,13 @@ fn trigger_repellent_provokes_strong_reaction_system(
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
     mut tracker: Local<Option<RepellentReactionTracker>>,
     mut prev_rep_active_state: Local<PrevRepellentActiveState>,
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         *tracker = None;
@@ -331,7 +338,13 @@ fn trigger_repellent_exhausted_correct_type_system(
     ghost_query: Query<&GhostSprite>,
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
     mut check_state: Local<RepellentExhaustedCheckState>,
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // 1. System Run Condition Checks & Reset
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         *check_state = RepellentExhaustedCheckState::default(); // Reset on state change
