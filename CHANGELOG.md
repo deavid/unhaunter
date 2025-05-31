@@ -1,25 +1,17 @@
-### Version 0.3.0 - unreleased
+### Version 0.3.0 - 2025-05-31
 
-**beta 1**
-
-*  New design for the menu.
-*  The menu now works with the mouse as well as keyboard.
-
-**beta 2**
-
-* Multi-floor support and stairs.
+* New campaign with 15 new maps!
+* Progression system with money, experience and leveling up.
+* Walkie Talkie buddy extended aggresively with an additional Hint UI.
+* Now missions are graded from A to F.
+* New design for the menu.
+* The menu now works with the mouse as well as keyboard.
+* Multi-floor support and stairs. Maps can now have multiple floors.
 * Controls are now fully configurable via config file. (User must edit file manually)
-* Flashlight is now more focused which aids the player to identify the flashlight is on.
-
-**beta 2.1**
-
-* Fix for maps with only 1 floor.
-
-**next**
-
-* Added 3 new maps: The Whispering Shed, Apartment 4A and Crimson Comb.
-* Added 2 new maps: The willow Creek Cottage and The Quiet Stacks.
-* Fix menu mouse hover stealing item selected.
+* Flashlight and lighting rework to make it look moodier.
+* Additional spritesheets.
+* New contributed map `Tarin Library` (thanks!!)
+* New website! https://www.unhaunter.com
 
 ### Version 0.2.7 - 2025-03-26
 

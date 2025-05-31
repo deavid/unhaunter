@@ -4,8 +4,14 @@ Dare to enter a world where shadows whisper and every creak could be a ghostly p
 
 This 2D isometric game seamlessly blends exploration, puzzle-solving, and strategic investigation, offering a unique blend of thrills and chills for those brave enough to confront the unknown.
 
+Join our discord server:
+
 [![Unhaunter Discord Banner 2](https://discord.com/api/guilds/1374650085127749745/widget.png?style=banner2)](https://discord.gg/Ux7CGfvVtV)
-    
+
+Check the game website: [Unhaunter.com](https://www.unhaunter.com/)
+
+The game can be played from the browser, [click here](https://www.unhaunter.com/) for more instructions.
+
 Here are some screenshots of the game:
 
 ![Screenshot1](screenshots/unhaunter-c1.png)
@@ -17,10 +23,6 @@ Here are some screenshots of the game:
 ![Screenshot4](screenshots/unhaunter-c4.png)
 
 ![Screenshot5](screenshots/unhaunter-c5.png)
-
-Play directly in the browser here: [https://deavid.github.io/unhaunter/](https://deavid.github.io/unhaunter/)
-
-Or compile the game yourself for Windows or Linux following the instructions in this page. It's quite simple.
 
 ## Gameplay
 
@@ -111,7 +113,7 @@ Once you're certain there are no more ghosts, go back to the van and click "End 
 
 ## Building and Installing
 
-There are no pre-built binaries or installers for Unhaunter. To play, you'll need to build it from source.
+Everyone is welcome to try the game from sources or do their own changes. You can just try to play from source code, it's easy.
 
 1.  Clone the repository:
 
@@ -141,7 +143,6 @@ You'll need to have Rust and the necessary dependencies for Bevy installed.
 
     Run this command from the game's source folder.
 
-**Note:** Unhaunter is being actively developed and built using Bevy version `0.13.0`. While it should run on a wide range of computers, configurations haven't been extensively tested.
 
 ## Profiling
 
@@ -173,7 +174,7 @@ For more information on profiling Bevy, see:
 
 A WASM version of Unhaunter is available to play directly in your web browser:
 
-[https://deavid.github.io/unhaunter/](https://deavid.github.io/unhaunter/)
+[See more instructions on Unhaunter.com](https://www.unhaunter.com/)
 
 Please note that this version is primarily intended as a demo.
 
@@ -198,7 +199,7 @@ Using dynamic linking for incremental builds (small code changes) can significan
 cargo run --features bevy/dynamic_linking
 ```
 
-This is mainly beneficial for debug builds. For fresh builds, the difference is negligible.
+This is mainly beneficial for debug builds. For fresh builds, the difference is negligible. This only works on Linux.
 
 You can profile the build process to identify further optimizations using:
 
@@ -265,6 +266,7 @@ This is only worth it if you plan to compile Unhaunter a lot with different smal
 
 ## Community
 
-Unhaunter has a Matrix room for discussion and collaboration. Access public, anyone can join.
+Unhaunter has a Matrix room for discussion and collaboration. Access public, anyone can join. We also have a Discord server.
 
-[Matrix Room](https://matrix.to/#/#unhaunter:matrix.org)
+* [Matrix Room](https://matrix.to/#/#unhaunter:matrix.org)
+* [Discord Server](https://discord.gg/Ux7CGfvVtV)

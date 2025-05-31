@@ -1,0 +1,78 @@
+name: Release Main Build
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # MODIFIED: Trigger on final version tags like v0.3.0 (no hyphens)
+
+permissions:
+  contents: write # Required for gh release upload
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (tagged commit)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }} # Checkout the specific tag
+          fetch-depth: 0 # Fetch all history to allow changelog extraction / access to tag messages
+
+      - name: Update APT
+        run: |
+          sudo apt-get update
+
+      - name: Install Linux Build Dependencies (if any)
+        run: |
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
+      - name: Install Windows Cross-Compile Dependencies (mingw)
+        run: |
+          sudo apt-get install -y mingw-w64 zip
+
+      - name: Install WASM deps
+        run: |
+          cargo install wasm-pack
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-gnu,wasm32-unknown-unknown
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Extract Release Notes from CHANGELOG.md
+        id: extract_changelog
+        run: |
+          NOTES=$(./extract_changelog_section.sh "${{ steps.get_version.outputs.VERSION }}" CHANGELOG.md)
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${{ steps.get_version.outputs.VERSION }}. Please see the full changelog file."
+          fi
+          # Escape newlines for multiline notes in GitHub Actions output
+          NOTES="${NOTES//'%'/'%25'}"
+          NOTES="${NOTES//$'\n'/'%0A'}"
+          NOTES="${NOTES//$'\r'/'%0D'}"
+          echo "RELEASE_NOTES=$NOTES" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Build and Package Artifacts (justfile)
+        run: just package-all
+
+      - name: Create GitHub Release and Upload Artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+          RELEASE_NOTES: ${{ steps.extract_changelog.outputs.RELEASE_NOTES }}
+        run: |
+          gh release create $TAG_NAME \
+            --latest \
+            --title "Unhaunter ${{ steps.get_version.outputs.VERSION }}" \
+            --notes "$RELEASE_NOTES" \
+            releases/unhaunter-*
