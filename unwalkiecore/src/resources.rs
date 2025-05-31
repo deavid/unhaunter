@@ -47,9 +47,8 @@ impl Default for WalkiePlay {
 impl WalkiePlay {
     /// Try to set the event to be played. If it's not ready, the system needs to keep retrying.
     pub fn set(&mut self, event: WalkieEvent, time: f64) -> bool {
-        if self.priority_bar < event.priority().value() {
-            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.2;
-        } else {
+        if self.priority_bar > event.priority().value() {
+            // dbg!(&self.priority_bar, event);
             return false;
         }
         self.urgent_pending = false;
@@ -75,6 +74,11 @@ impl WalkiePlay {
             // Wait between messages
             return false;
         }
+
+        if self.priority_bar < event.priority().value() {
+            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.199;
+        }
+
         count += 1;
         let mut rng = random_seed::rng();
         let max_dice_value = saved_count * saved_count.clamp(0, 10);
