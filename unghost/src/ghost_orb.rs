@@ -44,7 +44,8 @@ pub fn spawn_ghost_orb_particles(
             board_data
                 .ghost_dynamics
                 .floating_orbs_clarity
-                .clamp(0.0, 1.0) as f64,
+                .clamp(0.0, 1.0)
+                .cbrt() as f64,
         )
     {
         return;
@@ -52,12 +53,6 @@ pub fn spawn_ghost_orb_particles(
 
     // For each ghost breach
     for (_breach_entity, breach_pos) in breach_query.iter() {
-        // Mark breach_entity as unused
-        // Only spawn with a certain probability to keep the number of particles reasonable
-        if !rng.random_bool(0.5) {
-            continue;
-        }
-
         // Convert to Vec3 for base position
         let mut base_position = breach_pos.to_vec3();
         base_position.z += 0.45;

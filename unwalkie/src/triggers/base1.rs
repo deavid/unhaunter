@@ -7,6 +7,7 @@ use uncore::{
     difficulty::CurrentDifficulty,
     resources::roomdb::RoomDB,
     states::{AppState, GameState},
+    types::gear_kind::GearKind, // Added import for GearKind
 };
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
@@ -88,8 +89,8 @@ fn ghost_near_hunt(
         // Not in tutorial mode, no need to tell the player.
         return;
     }
-    // Find the active player's position
-    let Some((player_pos, _player_gear)) = qp.iter().find_map(|(player, pos, gear)| {
+    // Find the active player's position and gear
+    let Some((player_pos, player_gear)) = qp.iter().find_map(|(player, pos, gear)| {
         if player.id == gc.player_id {
             Some((*pos, gear))
         } else {
@@ -98,6 +99,19 @@ fn ghost_near_hunt(
     }) else {
         return;
     };
+
+    // If player has RepellentFlask, disable this system
+    let has_repellent = player_gear.left_hand.kind == GearKind::RepellentFlask
+        || player_gear.right_hand.kind == GearKind::RepellentFlask
+        || player_gear
+            .inventory
+            .iter()
+            .any(|item| item.kind == GearKind::RepellentFlask);
+
+    if has_repellent {
+        return;
+    }
+
     let player_bpos = player_pos.to_board_position();
 
     if roomdb.room_tiles.get(&player_bpos).is_none() {

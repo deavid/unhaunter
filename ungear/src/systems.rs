@@ -70,6 +70,9 @@ fn sound_playback_system(
         else {
             return;
         };
+        if !player_position.is_finite() {
+            warn!("Player position is not finite: {player_position:?}")
+        }
         let dist = sound_event
             .position
             .map(|pos| player_position.distance(&pos))

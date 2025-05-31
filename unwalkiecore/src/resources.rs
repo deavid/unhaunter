@@ -47,12 +47,8 @@ impl Default for WalkiePlay {
 impl WalkiePlay {
     /// Try to set the event to be played. If it's not ready, the system needs to keep retrying.
     pub fn set(&mut self, event: WalkieEvent, time: f64) -> bool {
-        // TODO: Priority should lower by the count of times played, and we need to know what is the highest priority event that is attempting to play.
-        // ... to know the highest priority that tries to play we need to compute some kind of running average of the inverse of priority, so it decays over time.
-        // ... if an event of lower priority attempts to play, compared to the average priority in the queue, we should ignore it.
-        if self.priority_bar < event.priority().value() {
-            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.2;
-        } else {
+        if self.priority_bar > event.priority().value() {
+            // dbg!(&self.priority_bar, event);
             return false;
         }
         self.urgent_pending = false;
@@ -78,6 +74,11 @@ impl WalkiePlay {
             // Wait between messages
             return false;
         }
+
+        if self.priority_bar < event.priority().value() {
+            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.199;
+        }
+
         count += 1;
         let mut rng = random_seed::rng();
         let max_dice_value = saved_count * saved_count.clamp(0, 10);
@@ -95,7 +96,9 @@ impl WalkiePlay {
             return true;
         }
         if let Some(in_event) = &self.event {
-            if event.priority().is_urgent() && !in_event.priority().is_urgent() {
+            if event.priority().value() > in_event.priority().value() * 50.0
+                && event.priority().value() > 5.0
+            {
                 self.urgent_pending = true;
             }
             return false;

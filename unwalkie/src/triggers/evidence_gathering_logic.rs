@@ -3,6 +3,7 @@ use bevy::utils::HashMap;
 use enum_iterator::all;
 use uncore::{
     components::player_sprite::PlayerSprite,
+    difficulty::CurrentDifficulty,
     resources::{board_data::BoardData, current_evidence_readings::CurrentEvidenceReadings},
     states::{AppState, GameState},
     types::evidence::Evidence, // For identifying gear types
@@ -27,8 +28,14 @@ fn trigger_emf_non_emf5_fixation_system(
     mut walkie_play: ResMut<WalkiePlay>,
     truck_button_query: Query<&TruckUIButton>,
     board_data: Res<BoardData>,
+    current_difficulty_res: Res<CurrentDifficulty>,
     mut incorrect_marker_state: Local<IncorrectEvidenceMarkedState>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         // If not in the right state, reset the timer state
@@ -94,11 +101,16 @@ fn trigger_journal_conflicting_evidence_system(
     truck_button_query: Query<&TruckUIButton>,
     board_data: Res<BoardData>,
     mut tracker: Local<ConflictingEvidenceTracker>,
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         // If not in the right state, reset the tracker
         *tracker = ConflictingEvidenceTracker::default();
+        return;
+    }
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
         return;
     }
 
@@ -417,8 +429,13 @@ fn trigger_evidence_confirmed_feedback_system(
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
     truck_button_query: Query<&TruckUIButton>,
-    // TODO: player_profile: Res<Persistent<PlayerProfileData>>, // For experience-based limiting
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // System Run Condition
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         return;

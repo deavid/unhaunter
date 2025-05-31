@@ -76,7 +76,6 @@ pub enum WalkieEvent {
     GearInVan,
     /// When the Ghost rage is near its limit.
     GhostNearHunt,
-    // MissionStartEasy, // Removed as per task
 
     // --- Tutorial and Difficulty Intros ---
     /// Chapter intros based on difficulty/chapter number
@@ -580,7 +579,7 @@ impl WalkieEvent {
             WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
             WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
             WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,
-            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::Low,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::High,
         }
     }
     /// This function returns hint text to display to the player for various events.

@@ -5,7 +5,7 @@ use uncore::{
     events::hint::OnScreenHintEvent,
     platform::plt,
     resources::hint_ui_state::{HintAnimationPhase, HintUiState},
-    states::{AppState, GameState},
+    states::AppState,
 };
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;
@@ -39,7 +39,7 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(OnEnter(AppState::InGame), setup_hint_ui_system)
         .add_systems(
             Update,
-            hint_ui_event_and_animation_system.run_if(in_state(GameState::None)),
+            hint_ui_event_and_animation_system.run_if(in_state(AppState::InGame)),
         )
         .add_systems(OnExit(AppState::InGame), cleanup_hint_ui_system);
 }
@@ -89,7 +89,6 @@ fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) 
 }
 
 /// Handles `OnScreenHintEvent`s and manages hint animations.
-/// Renamed from handle_hint_events_and_animate to match plan.
 fn hint_ui_event_and_animation_system(
     mut events: EventReader<OnScreenHintEvent>,
     mut ui_state: ResMut<HintUiState>,

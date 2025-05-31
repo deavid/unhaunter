@@ -5,7 +5,9 @@ use bevy_persistent::Persistent;
 use uncore::behavior::component::Door;
 use uncore::behavior::{Behavior, TileState};
 use uncore::components::board::direction::Direction;
-use uncore::components::{board::position::Position, player_sprite::PlayerSprite};
+use uncore::components::board::position::Position;
+use uncore::components::player::Hiding;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::{AppState, GameState};
 use uncore::types::gear_kind::GearKind;
@@ -231,19 +233,19 @@ fn trigger_struggling_with_grab_drop(
 ) {
     // 1. System Run Condition
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
-        if full_and_failed_grab_timer.is_some() {
-            *full_and_failed_grab_timer = None;
-        }
+        *full_and_failed_grab_timer = None;
         return;
     }
 
     let Ok((player_gear, player_sprite)) = player_query.get_single() else {
-        if full_and_failed_grab_timer.is_some() {
-            *full_and_failed_grab_timer = None;
-        }
+        *full_and_failed_grab_timer = None;
         return;
     };
-
+    if player_gear.held_item.is_some() {
+        // If the player is already grabbing something, just skip this hint.
+        *full_and_failed_grab_timer = None;
+        return;
+    }
     // 2.b. Check Player Full State
     let right_hand_full = !player_gear.empty_right_handed();
     let inventory_full = player_gear
@@ -303,10 +305,7 @@ fn trigger_struggling_with_hide_unhide(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<
-        &uncore::components::player_sprite::PlayerSprite,
-        Without<uncore::components::player::Hiding>,
-    >,
+    player_query: Query<&PlayerSprite, Without<Hiding>>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -363,7 +362,7 @@ fn trigger_player_stays_hidden_too_long(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    hiding_query: Query<Entity, With<uncore::components::player::Hiding>>,
+    hiding_query: Query<Entity, With<Hiding>>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
@@ -417,7 +416,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&Position, Entity), Without<uncore::components::player::Hiding>>,
+    player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
     mut near_hiding_timer: Local<Option<f32>>,

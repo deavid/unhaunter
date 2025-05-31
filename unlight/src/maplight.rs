@@ -417,8 +417,8 @@ fn apply_lighting(
     cursor_exp /= 2.8 / difficulty.0.darkness_intensity;
 
     if !cursor_exp.is_normal() {
-        cursor_exp = bf.current_exposure;
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
+        cursor_exp = bf.current_exposure;
     }
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
@@ -1175,7 +1175,11 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.3, // Visible light darkness threshold
                     player_visibility_to_tile,
                     3.0, // Scaling factor for UV
-                ) * board_data.ghost_dynamics.uv_ectoplasm_clarity.max(0.0).powi(2)
+                ) * board_data
+                    .ghost_dynamics
+                    .uv_ectoplasm_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
@@ -1195,7 +1199,11 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.3,
                     player_visibility_to_tile,
                     3.0, // Scaling factor for Red
-                ) * board_data.ghost_dynamics.rl_presence_clarity.max(0.0).powi(2)
+                ) * board_data
+                    .ghost_dynamics
+                    .rl_presence_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
@@ -1216,7 +1224,11 @@ fn report_environmental_visual_evidence_clarity_system(
                     0.2, // Visible light darkness threshold
                     player_visibility_to_tile,
                     5.0, // Scaling factor for Orbs (IR is usually strong)
-                ) * board_data.ghost_dynamics.floating_orbs_clarity.max(0.0).powi(2)
+                ) * board_data
+                    .ghost_dynamics
+                    .floating_orbs_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
