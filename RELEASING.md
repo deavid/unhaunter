@@ -1,89 +1,72 @@
-# RELEASE DIST PROCESS
+Release Process Main/Stable
+============================
 
-**NOTE:** These are being migrated to "Justfile" which runs with the 'just' command.
+**Pre-checks**
 
-These are just "dirty" notes on how to make the builds for releasing.
+- [ ] Merge origin/beta and origin/main to ensure no changes are being left behind.
+  `git merge origin/beta origin/main`
 
-I will try to automate a script later on.
+- [ ] Run `cargo test` and ensure no failures.
 
+- [ ] Run `cargo clippy` and ensure no warnings or errors.
 
-rust_unhaunter$ cd unhaunter_dist/
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/assets/ . -R
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.md .
-rust_unhaunter/unhaunter_dist$ ls
-assets  CHANGELOG.md  NOTES.md  PROJECT_FILE_DESCRIPTIONS.md  README.md
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.png .
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.ico .
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/*.html .
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/LICENSE .
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/screenshots . -R
-rust_unhaunter/unhaunter_dist$
+- [ ] Run `cargo fmt --all` and ensure no errors.
 
-# Linux x64
+**Changelog + Version bump**
 
-cargo build --release
+- [ ] Review and update `CHANGELOG.md` for the new version
 
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/release/unhaunter_game unhaunter_game_linux_x64
+- [ ] Review `README.md` to see if anything needs updating.
 
+- [ ] Update the version in `/Cargo.toml` on the `[workspace.package]` section.
 
-# WASM
+**Post-checks**
 
-rust_unhaunter/unhaunter$ wasm-pack build --release --target web
+- [ ] Run `RUSTFLAGS="-D warnings" just build-all` and ensure no warnings or errors.
 
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/pkg . -R
+**Commit**
 
-# Windows builds:
-# https://bevy-cheatbook.github.io/setup/cross/linux-windows.html
+- [ ] Commit the changes as "Release 0.X.X"
 
-# Windows x64 - GNU (There's also a MSVC version)
-# rustup target add x86_64-pc-windows-gnu
-# :: If mingw-w64 is missing: error: Error calling dlltool 'x86_64-w64-mingw32-dlltool': No such file or directory (os error 2)
-# sudo apt install mingw-w64
+- [ ] Open pull request to merge these changes into origin/next, then onto origin/beta, and finally to origin/main.
 
-rust_unhaunter/unhaunter$ cargo build --target x86_64-pc-windows-gnu --release
+- [ ] Checkout the origin/main branch and create a tag "v0.x.x". `git tag v0.x.x`
 
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-gnu/release/un
-haunter_game.exe unhaunter_game_windows_x64_gnu.exe
+- [ ] Push the new tag to Github - this will trigger the release. `git push origin v0.x.x`
 
-# Windows x64 - MSVC
-# rustup target add x86_64-pc-windows-msvc
-# cargo install xwin
-# deavid@deavws:~$ xwin --accept-license splat --output $HOME/.xwin
+- [ ] Wait for release (GitHub actions) confirm that everything looks correct, that the release was created.
 
-# For Windows MSVC cross compilation - $HOME/.cargo/config:
-# [target.x86_64-pc-windows-msvc]
-# linker = "lld"
-# rustflags = [
-#     "-Lnative=/home/me/.xwin/crt/lib/x86_64",
-#     "-Lnative=/home/me/.xwin/sdk/lib/um/x86_64",
-#     "-Lnative=/home/me/.xwin/sdk/lib/ucrt/x86_64",
-# ]
+**Website**
 
-CARGO_FEATURE_PURE=1 cargo build --target=x86_64-pc-windows-msvc --release
-
-# Still fails on zstd-sys saying:
-warning: zstd-sys@2.0.15+zstd.1.5.7: GNU compiler is not supported for this target
-error occurred in cc-rs: failed to find tool "lib.exe": No such file or directory (os error 2)
-
-zstd-sys is a crate that puts bindings to the zstd library, which might be confused by the
-cross compilation to windows MSVC.
-
-This crate is brought by Tiled for de-compression purposes.
-
-# tiled = { version = "0.14", default-features = false }
-# Asking for "wasm" was asking for zstd. This is only for zlib compression. Not needed.
-# Now it builds.
-
-rust_unhaunter/unhaunter_dist$ cp ../unhaunter/target/x86_64-pc-windows-msvc/release/unhaunter_game.exe unhaunter_game_windows_x64_msvc.exe
+- [ ] Go to website branch and add announcement, update the website after the new release.
 
 
-###### Packaging
+### Notes: Windows MSVC cross build from Linux (Optional)
 
-rust_unhaunter/unhaunter_dist$ cd ..
-rust_unhaunter$ ln -s unhaunter_dist unhaunter_v0_2_7
+If anyone is interested in this variant, here are the original notes I took.
 
-rust_unhaunter$ zip -r unhaunter_v0_2_7_wasm_windows_linux.zip unhaunter_v0_2_7
+Very poorly tested. Do at your own risk.
 
-rust_unhaunter$ unlink unhaunter_v0_2_7
+`rustup target add x86_64-pc-windows-msvc`
 
-Resulting ZIP in the parent folder.
+`cargo install xwin`
+
+`xwin --accept-license splat --output $HOME/.xwin`
+
+For Windows MSVC cross compilation in your `$HOME/.cargo/config` add:
+
+```
+[target.x86_64-pc-windows-msvc]
+linker = "lld"
+rustflags = [
+    "-Lnative=/home/me/.xwin/crt/lib/x86_64",
+    "-Lnative=/home/me/.xwin/sdk/lib/um/x86_64",
+    "-Lnative=/home/me/.xwin/sdk/lib/ucrt/x86_64",
+]
+```
+
+To build it, execute:
+
+`CARGO_FEATURE_PURE=1 cargo build --target=x86_64-pc-windows-msvc --release`
+
+

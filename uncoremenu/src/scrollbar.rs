@@ -35,7 +35,7 @@ pub struct ScrollbarUpArrow;
 pub struct ScrollbarDownArrow;
 
 /// Ensures that the keyboard-selected item remains visible in the scrollable list by adjusting scroll position
-pub fn ensure_selected_item_visible(
+fn ensure_selected_item_visible(
     mut keyboard_nav_events: EventReader<KeyboardNavigate>,
     mut container_query: Query<
         (Entity, &Node, &ComputedNode, &mut ScrollPosition),
@@ -106,7 +106,7 @@ pub fn ensure_selected_item_visible(
 }
 
 /// Updates the scroll position based on mouse wheel input when hovering over the list
-pub fn update_scroll_position(
+fn update_scroll_position(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     hover_map: Res<HoverMap>,
     mut scrolled_node_query: Query<&mut ScrollPosition, With<ScrollableListContainer>>,
@@ -135,7 +135,7 @@ pub fn update_scroll_position(
 }
 
 /// Updates the scrollbar thumb position and visual state based on the current scroll position
-pub fn update_scrollbar(
+fn update_scrollbar(
     // Query container node, scroll position, and its children
     scroll_container_query: Query<
         (&ScrollPosition, &ComputedNode, &Children),
@@ -273,7 +273,7 @@ pub fn update_scrollbar(
 }
 
 /// Handles click interactions with the scrollbar buttons to scroll the content
-pub fn handle_scrollbar_interactions(
+fn handle_scrollbar_interactions(
     mut scroll_container_query: Query<(Entity, &mut ScrollPosition), With<ScrollableListContainer>>,
     up_arrow_query: Query<&Interaction, (With<ScrollbarUpArrow>, Changed<Interaction>)>,
     down_arrow_query: Query<&Interaction, (With<ScrollbarDownArrow>, Changed<Interaction>)>,
@@ -344,6 +344,8 @@ pub fn handle_scrollbar_interactions(
 ///
 /// This function should be called within a `with_children` closure
 /// where the scrollbar is intended to be placed.
+///
+/// This is not a system but a helper function.
 pub fn build_scrollbar_ui(scrollbar: &mut ChildBuilder, handles: &GameAssets) {
     scrollbar
         .spawn(Node {
@@ -453,4 +455,16 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildBuilder, handles: &GameAssets) {
                     });
                 });
         });
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            update_scroll_position,
+            update_scrollbar,
+            handle_scrollbar_interactions,
+            ensure_selected_item_visible,
+        ),
+    );
 }

@@ -13,6 +13,7 @@ use uncore::components::board::position::Position;
 use uncore::components::focus_ring::FocusRing;
 use uncore::components::game::GameSound;
 use uncore::components::game::GameSprite;
+use uncore::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use uncore::components::ghost_breach::GhostBreach;
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Stamina;
@@ -194,6 +195,7 @@ pub fn spawn_ghosts(
         .insert(GameSprite)
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
+        .insert(GhostBehaviorDynamics::default())
         .insert(ghost_spawn)
         .with_children(|parent| {
             parent

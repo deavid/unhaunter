@@ -1,13 +1,18 @@
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use bevy_persistent::Persistent;
 
 use uncore::behavior::component::Door;
 use uncore::behavior::{Behavior, TileState};
 use uncore::components::board::direction::Direction;
-use uncore::components::{board::position::Position, player_sprite::PlayerSprite};
+use uncore::components::board::position::Position;
+use uncore::components::player::Hiding;
+use uncore::components::player_sprite::PlayerSprite;
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::{AppState, GameState};
-use unprofile::data::PlayerProfileData;
+use uncore::types::gear_kind::GearKind;
+use ungear::components::playergear::PlayerGear;
+use unprofile::PlayerProfileData;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
@@ -25,23 +30,32 @@ fn check_player_stuck_at_start(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut stuck_time: Local<f32>,
+    mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
-    let mut min_time_secs: f32 = 30.0;
+    let mut min_time_secs: f32 = 7.0;
     if app_state.get() != &AppState::InGame {
-        *stuck_time = 0.0;
+        stuck_timer.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        *stuck_time = 0.0;
+        stuck_timer.reset();
         return;
     }
     let Ok((player_position, player_sprite)) = player_query.get_single() else {
         return;
     };
 
+    if player_profile.statistics.total_missions_completed > 1 {
+        min_time_secs = 15.0;
+    }
     if player_profile.statistics.total_missions_completed > 3 {
+        min_time_secs = 30.0;
+    }
+    if player_profile.statistics.total_missions_completed > 6 {
+        min_time_secs = 60.0;
+    }
+    if player_profile.statistics.total_missions_completed > 9 {
         min_time_secs = 90.0;
     }
     // If the player is already inside the location, reset the stuck time
@@ -50,7 +64,7 @@ fn check_player_stuck_at_start(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        *stuck_time = 0.0;
+        stuck_timer.reset();
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
         return;
     }
@@ -58,14 +72,14 @@ fn check_player_stuck_at_start(
     let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
 
     if distance_from_spawn < PLAYER_STUCK_MAX_DISTANCE {
-        *stuck_time += time.delta_secs();
+        stuck_timer.tick(time.delta());
     } else {
-        *stuck_time = 0.0;
+        stuck_timer.reset();
         walkie_play.mark(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 
-    if *stuck_time > min_time_secs {
-        // warn!("Player stuck at start for {} seconds", *stuck_time);
+    if stuck_timer.elapsed_secs() > min_time_secs {
+        // warn!("Player stuck at start for {} seconds", stuck_timer.elapsed_secs());
         walkie_play.set(WalkieEvent::PlayerStuckAtStart, time.elapsed_secs_f64());
     }
 }
@@ -81,12 +95,12 @@ fn check_erratic_movement_early(
     roomdb: Res<RoomDB>,
     player_query: Query<(&Position, &Direction, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut not_entered_location_time: Local<f32>,
+    mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *not_entered_location_time = 0.0;
+        not_entered_timer.reset();
         *avg_position = None;
         return;
     }
@@ -112,7 +126,7 @@ fn check_erratic_movement_early(
         .get(&player_position.to_board_position())
         .is_some()
     {
-        *not_entered_location_time = 0.0;
+        not_entered_timer.reset();
         walkie_play.mark(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
         return;
     }
@@ -121,20 +135,19 @@ fn check_erratic_movement_early(
     let distance_from_spawn = player_position.distance(&player_sprite.spawn_position);
     let distance_from_avg = player_position.distance(m_avg);
 
-    if distance_from_avg > 2.0 {
-        *not_entered_location_time = 0.0;
+    if distance_from_avg > 3.0 {
+        not_entered_timer.reset();
         return;
     }
-
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
         && player_direction.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
-        *not_entered_location_time += time.delta_secs();
+        not_entered_timer.tick(time.delta());
     }
 
-    if *not_entered_location_time > ERRATIC_MOVEMENT_EARLY_SECONDS {
+    if not_entered_timer.elapsed_secs() > ERRATIC_MOVEMENT_EARLY_SECONDS {
         walkie_play.set(WalkieEvent::ErraticMovementEarly, time.elapsed_secs_f64());
     }
 }
@@ -151,14 +164,14 @@ fn check_door_interaction_hesitation(
     player_query: Query<(&Position, &PlayerSprite)>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut hesitation_timer: Local<f32>,
+    mut hesitation_timer: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset();
         return;
     }
 
@@ -173,7 +186,7 @@ fn check_door_interaction_hesitation(
         .is_none();
 
     if !is_outside {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset();
         return;
     }
 
@@ -191,151 +204,167 @@ fn check_door_interaction_hesitation(
 
     let distance_to_door = player_position.distance(door_position);
     if distance_to_door > 1.5 || door_behavior.state() != TileState::Closed {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset();
         return;
     }
 
-    *hesitation_timer += time.delta_secs();
+    hesitation_timer.tick(time.delta());
 
-    if *hesitation_timer > 10.0
+    if hesitation_timer.elapsed_secs() > 3.0
         && walkie_play.set(
             WalkieEvent::DoorInteractionHesitation,
             time.elapsed_secs_f64(),
         )
     {
-        *hesitation_timer = 0.0;
+        hesitation_timer.reset();
     }
 }
 
-/// Triggers a walkie-talkie event if the player tries to pick up an item but their right hand and inventory are full.
+/// Triggers a walkie-talkie event if the player attempts to grab an item when their inventory and hand are full,
+/// and this state of attempting to grab while full persists.
 fn trigger_struggling_with_grab_drop(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&ungear::components::playergear::PlayerGear, &PlayerSprite)>,
-    mut fail_timer: Local<f32>,
+    player_query: Query<(&PlayerGear, &PlayerSprite)>,
+    mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
-    if app_state.get() != &AppState::InGame {
-        *fail_timer = 0.0;
+    // 1. System Run Condition
+    if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
+        *full_and_failed_grab_timer = None;
         return;
     }
-    if *game_state.get() != GameState::None {
-        *fail_timer = 0.0;
-        return;
-    }
+
     let Ok((player_gear, player_sprite)) = player_query.get_single() else {
+        *full_and_failed_grab_timer = None;
         return;
     };
-    // If right hand is not empty and all inventory slots are full, increment timer
-    let right_full = !player_gear.empty_right_handed();
-    let all_full = player_gear
-        .inventory
+    if player_gear.held_item.is_some() {
+        // If the player is already grabbing something, just skip this hint.
+        *full_and_failed_grab_timer = None;
+        return;
+    }
+    // 2.b. Check Player Full State
+    let right_hand_full = !player_gear.empty_right_handed();
+    let inventory_full = player_gear
+        .as_vec()
         .iter()
-        .all(|g| !matches!(g.kind, uncore::types::gear_kind::GearKind::None));
-    if right_full && all_full {
-        if keyboard_input.just_pressed(player_sprite.controls.grab) {
-            *fail_timer += time.delta_secs();
+        .all(|(g, _)| !matches!(g.kind, GearKind::None)); // Corrected to use GearKind::None
+    let player_is_completely_full = right_hand_full && inventory_full;
+
+    // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
+    if keyboard_input.just_pressed(player_sprite.controls.grab) && player_is_completely_full {
+        if full_and_failed_grab_timer.is_none() {
+            *full_and_failed_grab_timer = Some(Stopwatch::new());
+            // Timer starts, will be ticked below if it's Some.
         }
-        if *fail_timer > 2.0 {
-            walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64());
-            *fail_timer = 0.0;
+        // If timer was already Some (player pressed grab again while full and timer running), it just continues.
+    } else if !player_is_completely_full && full_and_failed_grab_timer.is_some() {
+        // Player is no longer full, so reset the timer.
+        *full_and_failed_grab_timer = None;
+    }
+
+    // 3.d. Triggering Logic (if timer is Some)
+    if let Some(ref mut timer_ref) = *full_and_failed_grab_timer {
+        timer_ref.tick(time.delta()); // Tick the timer each frame it's Some
+
+        // Re-check player_is_completely_full because they might have dropped/used an item
+        // through a means other than the grab key (e.g., using a consumable from inventory directly)
+        // which would not have reset the timer in the block above.
+        let updated_right_hand_full = !player_gear.empty_right_handed();
+        let updated_inventory_full = player_gear
+            .inventory // Assuming inventory is the correct field name
+            .iter()
+            .all(|g| !matches!(g.kind, GearKind::None));
+        let updated_player_is_completely_full = updated_right_hand_full && updated_inventory_full;
+
+        if updated_player_is_completely_full {
+            if timer_ref.elapsed_secs() > 5.0 {
+                // Duration player struggles
+                // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
+                if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
+                    *full_and_failed_grab_timer = None; // Reset timer after successful trigger
+                }
+            }
+        } else {
+            // Player resolved the full state while timer was running
+            *full_and_failed_grab_timer = None;
         }
-    } else {
-        *fail_timer = 0.0;
     }
 }
 
-/// Triggers a walkie-talkie event if the player struggles with hiding/unhiding actions.
+/// Triggers a walkie-talkie event if the player struggles to hide by holding [E] for over 2 seconds while not hidden.
 ///
-/// This includes:
-/// - Trying to hide while carrying an item (right hand not empty)
-/// - Unhiding immediately after hiding (within 2 seconds)
-/// - Failing to hide during a hunt due to carrying an item
+/// This detects when a player holds the hide key ([E]) for over 2 seconds consecutively
+/// without successfully hiding, indicating they're struggling because they're carrying a house item.
 fn trigger_struggling_with_hide_unhide(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
-        Without<uncore::components::player::Hiding>,
-    >,
-    hiding_query: Query<
-        (Entity, &ungear::components::playergear::PlayerGear),
-        With<uncore::components::player::Hiding>,
-    >,
-    ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut last_hide_state: Local<Option<(bool, f32)>>, // (is_hiding, time_of_change)
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    player_query: Query<&PlayerSprite, Without<Hiding>>,
+    mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
     if *game_state.get() != GameState::None {
-        *last_hide_state = None;
+        *hide_key_timer = None;
         return;
     }
-    // Determine if player is hiding
-    let (is_hiding, player_gear) = if let Ok((_, gear)) = hiding_query.get_single() {
-        (true, gear)
-    } else if let Ok((_, gear)) = player_query.get_single() {
-        (false, gear)
-    } else {
+
+    // Only proceed if player is not hiding
+    let Ok(player_sprite) = player_query.get_single() else {
+        *hide_key_timer = None;
         return;
     };
-    let now = time.elapsed_secs_f64() as f32;
 
-    // Track hide/unhide transitions
-    if let Some((was_hiding, last_change_time)) = *last_hide_state {
-        if !was_hiding && is_hiding {
-            // Player just hid
-            // If right hand is not empty, trigger event
-            if !player_gear.empty_right_handed() {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((true, now));
-        } else if was_hiding && !is_hiding {
-            // Player just unhid
-            let hide_duration = now - last_change_time;
-            if hide_duration < 2.0 {
-                walkie_play.set(
-                    WalkieEvent::StrugglingWithHideUnhide,
-                    time.elapsed_secs_f64(),
-                );
-            }
-            *last_hide_state = Some((false, now));
+    // Check if the hide key (activate key, typically [E]) is currently pressed
+    let hide_key_pressed = keyboard_input.pressed(player_sprite.controls.activate);
+
+    if hide_key_pressed {
+        // Start or continue timer if key is pressed
+        if hide_key_timer.is_none() {
+            *hide_key_timer = Some(Stopwatch::new());
         }
-        // else: no state change
-    } else {
-        *last_hide_state = Some((is_hiding, now));
-    }
 
-    // If a hunt is ongoing, and player is hiding with an item in hand, trigger event
-    let hunt_active = ghost_query.iter().any(|g| g.hunting > 0.0);
-    if hunt_active && is_hiding && !player_gear.empty_right_handed() {
-        walkie_play.set(
-            WalkieEvent::StrugglingWithHideUnhide,
-            time.elapsed_secs_f64(),
-        );
+        if let Some(ref mut timer) = *hide_key_timer {
+            timer.tick(time.delta());
+
+            // If player has been holding [E] for over 2 seconds while not hidden, trigger event
+            if timer.elapsed_secs() > 2.0
+                && walkie_play.set(
+                    WalkieEvent::StrugglingWithHideUnhide,
+                    time.elapsed_secs_f64(),
+                )
+            {
+                // FIXME: Additional verification and tuning is needed for this trigger.
+                // Reset timer after successful trigger to avoid spam
+                *hide_key_timer = None;
+            }
+        }
+    } else {
+        // Reset timer if key is not pressed
+        *hide_key_timer = None;
     }
 }
 
 /// Triggers a walkie-talkie event if the player stays hidden for too long after a hunt ends.
 ///
 /// If the player remains hidden for 10+ seconds after the ghost's hunt ends, this event is triggered to inform them it's safe to unhide.
+/// This event will not fire if any ghost's rage is above 20% of its rage limit.
 fn trigger_player_stays_hidden_too_long(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    hiding_query: Query<Entity, With<uncore::components::player::Hiding>>,
+    hiding_query: Query<Entity, With<Hiding>>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut post_hunt_hidden_timer: Local<Option<f32>>, // Time spent hidden after hunt ended
+    mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
         *post_hunt_hidden_timer = None;
@@ -356,10 +385,17 @@ fn trigger_player_stays_hidden_too_long(
         *post_hunt_hidden_timer = None;
         return;
     }
+    // Check if any ghost's rage is above 20% of its rage limit
+    let high_rage = ghost_query.iter().any(|g| g.rage > g.rage_limit * 0.2);
+    if high_rage {
+        *post_hunt_hidden_timer = None;
+        return;
+    }
     // Player is hiding and hunt is over
     let now = time.elapsed_secs_f64() as f32;
     if let Some(start_time) = *post_hunt_hidden_timer {
         if now - start_time > 10.0 {
+            // FIXME: Additional verification and tuning is needed for this trigger.
             walkie_play.set(
                 WalkieEvent::PlayerStaysHiddenTooLong,
                 time.elapsed_secs_f64(),
@@ -380,10 +416,10 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&Position, Entity), Without<uncore::components::player::Hiding>>,
+    player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
     ghost_query: Query<&uncore::components::ghost_sprite::GhostSprite>,
-    mut near_hiding_timer: Local<Option<f32>>, // Time spent near hiding spot during hunt
+    mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
         *near_hiding_timer = None;
@@ -413,6 +449,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
         let now = time.elapsed_secs_f64() as f32;
         if let Some(start) = *near_hiding_timer {
             if now - start > 2.0 {
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 walkie_play.set(
                     WalkieEvent::HuntActiveNearHidingSpotNoHide,
                     time.elapsed_secs_f64(),
@@ -435,14 +472,14 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            crate::triggers::locomotion_interaction::check_player_stuck_at_start,
-            crate::triggers::locomotion_interaction::check_erratic_movement_early,
-            crate::triggers::locomotion_interaction::check_door_interaction_hesitation,
-            crate::triggers::locomotion_interaction::trigger_struggling_with_grab_drop,
-            crate::triggers::locomotion_interaction::trigger_struggling_with_hide_unhide,
-            crate::triggers::locomotion_interaction::trigger_player_stays_hidden_too_long,
-            crate::triggers::locomotion_interaction::trigger_hunt_active_near_hiding_spot_no_hide, // Register new system
+            check_player_stuck_at_start,
+            check_erratic_movement_early,
+            check_door_interaction_hesitation,
+            trigger_struggling_with_grab_drop, // This is the modified system
+            trigger_struggling_with_hide_unhide,
+            trigger_player_stays_hidden_too_long,
+            trigger_hunt_active_near_hiding_spot_no_hide,
         )
-            .run_if(in_state(uncore::states::GameState::None)),
+            .run_if(in_state(GameState::None)), // Corrected in_state path
     );
 }

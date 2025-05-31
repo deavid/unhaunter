@@ -44,6 +44,7 @@ fn walkie_talk(
     time: Res<Time>,
 ) {
     let mut rng = random_seed::rng();
+    walkie_play.priority_bar /= 1.2;
 
     let Some(walkie_event) = walkie_play.event.clone() else {
         stopwatch.reset();
@@ -102,9 +103,14 @@ fn walkie_talk(
                     .unwrap_or_default();
                 use rand::Rng;
                 let mut rng = random_seed::rng();
-                let dice = rng.random_range(0..=saved_count);
-                info!("hint dice: {:?}: {}/{}", walkie_event, dice, saved_count);
-                if dice < 3 {
+                let dice = rng.random_range(0..=saved_count.pow(2));
+                info!(
+                    "hint dice: {:?}: {}/{}",
+                    walkie_event,
+                    dice,
+                    saved_count.pow(2)
+                );
+                if dice < 8 {
                     hint_event_writer.send(OnScreenHintEvent {
                         hint_text: hint_text.to_string(),
                     });

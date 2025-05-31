@@ -24,6 +24,7 @@ pub struct Thermometer {
     pub temp_l1: f32,
     pub frame_counter: u16,
     pub display_glitch_timer: f32,
+    pub blinking_hint_active: bool,
 }
 
 impl Default for Thermometer {
@@ -35,6 +36,7 @@ impl Default for Thermometer {
             temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
             display_glitch_timer: Default::default(),
+            blinking_hint_active: false,
         }
     }
 }
@@ -72,7 +74,18 @@ impl GearUsable for Thermometer {
 
         // Regular display
         let msg = if self.enabled {
-            format!("Temperature: {:>5.1}ºC", kelvin_to_celsius(self.temp))
+            let temp_celsius = kelvin_to_celsius(self.temp);
+            if self.blinking_hint_active {
+                let temp_str = format!("{:>5.1}ºC", temp_celsius);
+                let blinking_temp_str = if self.frame_counter % 30 < 15 {
+                    format!(">[{}]<", temp_str.trim())
+                } else {
+                    format!("  {}  ", temp_str.trim())
+                };
+                format!("Temperature: {}", blinking_temp_str)
+            } else {
+                format!("Temperature: {:>5.1}ºC", temp_celsius)
+            }
         } else {
             "".to_string()
         };
@@ -105,7 +118,29 @@ impl GearUsable for Thermometer {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;
+
+            // Update blinking_hint_active
+            const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+            if kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0 {
+                let count = gs
+                    .player_profile
+                    .times_evidence_acknowledged_on_gear
+                    .get(&Evidence::FreezingTemp)
+                    .copied()
+                    .unwrap_or(0);
+                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+            } else {
+                self.blinking_hint_active = false;
+            }
+        } else {
+            // Ensure blinking_hint_active is false if not updating temp this frame,
+            // or if we want it to strictly follow the evidence condition.
+            // For now, let's ensure it's false if the condition isn't met.
+            if !(kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0) {
+                self.blinking_hint_active = false;
+            }
         }
+
         // Decrement glitch timer if active
         if self.display_glitch_timer > 0.0 {
             self.display_glitch_timer -= gs.time.delta_secs();
@@ -178,6 +213,10 @@ impl GearUsable for Thermometer {
             0.0
         }
     }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
+    }
 }
 
 impl From<Thermometer> for Gear {
@@ -186,7 +225,7 @@ impl From<Thermometer> for Gear {
     }
 }
 
-pub fn temperature_update(
+fn temperature_update(
     mut bf: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,
@@ -195,6 +234,7 @@ pub fn temperature_update(
     difficulty: Res<CurrentDifficulty>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
+    let freezing = bf.ghost_dynamics.freezing_temp_clarity;
 
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();
@@ -212,12 +252,12 @@ pub fn temperature_update(
         if bpos.z < 0 || bpos.z >= bf.map_size.2 as i64 {
             continue;
         }
-        let freezing = gs.class.evidences().contains(&Evidence::FreezingTemp);
-        let ghost_target_temp: f32 = celsius_to_kelvin(if freezing { -3.0 } else { 1.0 });
-        const GHOST_MAX_POWER: f32 = 2.0;
+        let ghost_target_temp: f32 = celsius_to_kelvin(1.0 - 4.0 * freezing);
+        const GHOST_MAX_POWER: f32 = 1.0;
         const BREACH_MAX_POWER: f32 = 20.0;
         let ghost_in_room = roomdb.room_tiles.get(&bpos);
         let breach_in_room = roomdb.room_tiles.get(&gs.spawn_point);
+        let power = freezing * 0.5 + 0.5;
         for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
             if ghost_in_room != roomdb.room_tiles.get(&npos)
                 || !bf.collision_field[npos.ndidx()].player_free
@@ -226,7 +266,8 @@ pub fn temperature_update(
                 continue;
             }
             let t = &mut bf.temperature_field[npos.ndidx()];
-            *t = (*t + ghost_target_temp * GHOST_MAX_POWER) / (1.0 + GHOST_MAX_POWER);
+            *t = (*t + ghost_target_temp * GHOST_MAX_POWER * power)
+                / (1.0 + GHOST_MAX_POWER * power);
         }
         for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
             if breach_in_room != roomdb.room_tiles.get(&gs.spawn_point)
@@ -236,7 +277,8 @@ pub fn temperature_update(
                 continue;
             }
             let t = &mut bf.temperature_field[npos.ndidx()];
-            *t = (*t + ghost_target_temp * BREACH_MAX_POWER) / (1.0 + BREACH_MAX_POWER)
+            *t = (*t + ghost_target_temp * BREACH_MAX_POWER * power)
+                / (1.0 + BREACH_MAX_POWER * power)
         }
     }
 
@@ -331,4 +373,8 @@ pub fn temperature_update(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, temperature_update);
 }

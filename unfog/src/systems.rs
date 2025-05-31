@@ -18,14 +18,15 @@ use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::resources::visibility_data::VisibilityData;
+use uncore::states::AppState;
 use uncore::types::root::game_assets::GameAssets;
 use unstd::plugins::board::rebuild_collision_data;
 
 use crate::components::MiasmaSprite;
 use crate::metrics;
-use crate::resources::{MiasmaConfig, PerlinNoiseTable};
+use crate::resources::MiasmaConfig;
 
-pub fn initialize_miasma(
+fn initialize_miasma(
     mut board_data: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     config: Res<MiasmaConfig>,
@@ -69,7 +70,7 @@ pub fn initialize_miasma(
     warn!("Done: Miasma Init");
 }
 
-pub fn spawn_miasma(
+fn spawn_miasma(
     time: Res<Time>,
     vf: Res<VisibilityData>,
     mut q_miasma: Query<(Entity, &mut MiasmaSprite)>,
@@ -217,10 +218,10 @@ pub fn spawn_miasma(
     measure.end_ms();
 }
 
-pub fn animate_miasma_sprites(
+fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
-    noise_table: Res<PerlinNoiseTable>,
+    noise_table: Res<uncore::noise::PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();
@@ -290,7 +291,7 @@ pub fn animate_miasma_sprites(
     measure.end_ms();
 }
 
-pub fn update_miasma(
+fn update_miasma(
     mut board_data: ResMut<BoardData>,
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
@@ -607,4 +608,16 @@ pub fn update_miasma(
     board_data.miasma.velocity_field = new_velocities;
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        initialize_miasma.run_if(on_event::<LevelReadyEvent>),
+    );
+    app.add_systems(Update, spawn_miasma);
+    app.add_systems(
+        Update,
+        (animate_miasma_sprites, update_miasma).run_if(in_state(AppState::InGame)),
+    );
 }

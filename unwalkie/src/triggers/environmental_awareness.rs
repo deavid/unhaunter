@@ -1,6 +1,6 @@
-use std::any::Any;
-
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
+use std::any::Any; // Added import
 
 use uncore::{
     components::{
@@ -11,9 +11,9 @@ use uncore::{
 };
 
 use uncore::resources::roomdb::RoomDB;
-use uncore::traits::gear_usable::GearUsable;
 use uncore::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
+use ungear::gear_usable::GearUsable;
 use ungearitems::components::thermometer::Thermometer;
 use unwalkiecore::{WalkiePlay, events::WalkieEvent};
 
@@ -30,14 +30,14 @@ fn trigger_darkness_level_system(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    mut seconds_dark: Local<f32>,
+    mut stopwatch: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
-        *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
     let Ok((player_pos, _)) = qp.get_single() else {
@@ -48,17 +48,17 @@ fn trigger_darkness_level_system(
 
     if player_room.is_none() {
         // Player is not inside the location, no need to remind them.
-        *seconds_dark = 0.0;
+        stopwatch.reset();
         return;
     }
 
-    if board_data.exposure_lux < 0.1 {
-        *seconds_dark += time.delta_secs();
-        if *seconds_dark > 10.0 {
+    if board_data.exposure_lux < 0.4 {
+        stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
+        if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
         }
     } else {
-        *seconds_dark = 0.0;
+        stopwatch.reset(); // Changed from *seconds_dark = 0.0;
     }
 }
 
@@ -71,6 +71,7 @@ fn trigger_breach_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_breach: Query<&Position, With<GhostBreach>>,
+    truck_button_query: Query<&uncore::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -78,6 +79,16 @@ fn trigger_breach_showcase(
     if *game_state.get() != GameState::None {
         return;
     }
+
+    // Check if any evidence is confirmed
+    for button_data in truck_button_query.iter() {
+        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class {
+            if button_data.status == uncore::types::truck_button::TruckButtonState::Pressed {
+                return; // Don't fire if any evidence is confirmed
+            }
+        }
+    }
+
     let Ok((player_pos, _)) = qp.get_single() else {
         return;
     };
@@ -107,6 +118,7 @@ fn trigger_ghost_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_ghost: Query<&Position, With<uncore::components::ghost_sprite::GhostSprite>>,
+    truck_button_query: Query<&uncore::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -114,6 +126,16 @@ fn trigger_ghost_showcase(
     if *game_state.get() != GameState::None {
         return;
     }
+
+    // Check if any evidence is confirmed
+    for button_data in truck_button_query.iter() {
+        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class {
+            if button_data.status == uncore::types::truck_button::TruckButtonState::Pressed {
+                return; // Don't fire if any evidence is confirmed
+            }
+        }
+    }
+
     let Ok((player_pos, _)) = qp.get_single() else {
         return;
     };
@@ -162,8 +184,9 @@ fn trigger_room_lights_on_gear_needs_dark(
     // Use GearUsable::needs_darkness for the right hand gear
     if player_gear.right_hand.needs_darkness()
         && player_gear.right_hand.is_enabled()
-        && board_data.exposure_lux > 0.5
+        && board_data.light_field[player_bpos.ndidx()].lux > 0.5
     {
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         walkie_play.set(
             WalkieEvent::RoomLightsOnGearNeedsDark,
             time.elapsed_secs_f64(),
@@ -177,7 +200,7 @@ fn trigger_thermometer_non_freezing_fixation(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    mut timer: Local<f32>,
+    mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
     qp: Query<(&PlayerGear, &PlayerSprite)>,
 ) {
@@ -188,15 +211,15 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     }
     if app_state.get() != &AppState::InGame {
-        *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     if *game_state.get() != GameState::None {
-        *timer = 0.0;
+        stopwatch.reset();
         return;
     }
     let Ok((player_gear, _)) = qp.get_single() else {
-        *timer = 0.0;
+        stopwatch.reset();
         return;
     };
     // Check if right hand is a Thermometer and enabled
@@ -205,26 +228,27 @@ fn trigger_thermometer_non_freezing_fixation(
             .right_hand
             .data
             .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d))
+            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d.as_ref()))
         {
             if thermo.enabled {
                 let temp_c = uncore::kelvin_to_celsius(thermo.temp);
                 if (1.0..=10.0).contains(&temp_c) {
-                    *timer += time.delta_secs();
-                    if *timer > REQUIRED_DURATION {
+                    stopwatch.tick(time.delta());
+                    if stopwatch.elapsed_secs() > REQUIRED_DURATION {
+                        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                         walkie_play.set(
                             WalkieEvent::ThermometerNonFreezingFixation,
                             time.elapsed_secs_f64(),
                         );
                         *trigger_count += 1;
-                        *timer = 0.0;
+                        stopwatch.reset();
                     }
-                    return;
+                    return; // Return to avoid resetting stopwatch if conditions are met
                 }
             }
         }
     }
-    *timer = 0.0;
+    stopwatch.reset();
 }
 
 /// Registers the environmental awareness systems to the Bevy app.

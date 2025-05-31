@@ -139,10 +139,14 @@ pub fn menu_event(
     menu_items: Query<(&MenuID, &MenuItemInteractive)>,
 ) {
     for ev in click_events.read() {
-        // Find the MenuID associated with the clicked item's identifier (ev.0)
+        if ev.state != AppState::MainMenu {
+            warn!("MenuItemClicked event received in state: {:?}", ev.state);
+            continue;
+        }
+        // Find the MenuID associated with the clicked item's identifier
         if let Some((menu_id, _)) = menu_items
             .iter()
-            .find(|(_, interactive)| interactive.identifier == ev.0)
+            .find(|(_, interactive)| interactive.identifier == ev.pos)
         {
             match menu_id {
                 MenuID::Campaign => {
@@ -172,7 +176,7 @@ pub fn menu_event(
                 }
             }
         } else {
-            warn!("Clicked menu item identifier {} not found in query", ev.0);
+            warn!("Clicked menu item identifier {} not found in query", ev.pos);
         }
     }
 }

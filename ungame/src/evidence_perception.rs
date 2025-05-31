@@ -12,7 +12,7 @@ use ungear::{
 // This system is responsible for determining what evidence the player *perceives*
 // from their handheld gear's UI and sound, and reporting that to CurrentEvidenceReadings.
 // Environmental evidences (Orbs, UV Ecto, RL Pres) are handled by maplight.rs.
-pub fn update_current_evidence_readings_from_player_perception_system(
+fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
     player_query: Query<(Entity, &PlayerGear, &PlayerSprite)>, // PlayerSprite for controls for LookingGear
     looking_gear: Res<LookingGear>,
@@ -57,7 +57,6 @@ pub fn update_current_evidence_readings_from_player_perception_system(
                 clarity,
                 current_game_time_secs,
                 delta_time_secs,
-                // source_gear_entity_id: gear_owner_entity, // Discarded for now
             );
         }
     };
@@ -82,9 +81,6 @@ pub fn update_current_evidence_readings_from_player_perception_system(
     );
 
     // --- "Next" Inventory Slot (Icon for [Q] cycle) ---
-    // This logic should ideally mirror exactly what `ungear/src/systems.rs :: update_gear_ui`
-    // determines is the "next_item" for the `InventoryNext` UI element.
-    // Using `get_next_non_empty()` is a common way to get that.
     if let Some(next_gear_in_q_slot) = player_gear.get_next_non_empty() {
         if next_gear_in_q_slot.kind != GearKind::None {
             process_gear(
@@ -96,7 +92,7 @@ pub fn update_current_evidence_readings_from_player_perception_system(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         update_current_evidence_readings_from_player_perception_system,

@@ -12,9 +12,9 @@
   <property name="map_preview_image" type="string" value="maps/previews/stage4b.png"/>
   <property name="required_deposit" type="int" value="1121"/>
   <property name="mission_reward_base" type="int" value="577"/>
-  <property name="grade_a_score_threshold" type="int" value="700"/>
-  <property name="grade_b_score_threshold" type="int" value="550"/>
-  <property name="grade_c_score_threshold" type="int" value="350"/>
+  <property name="grade_a_score_threshold" type="int" value="650"/>
+  <property name="grade_b_score_threshold" type="int" value="450"/>
+  <property name="grade_c_score_threshold" type="int" value="250"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
   <property name="min_player_level" type="int" value="7"/>
  </properties>

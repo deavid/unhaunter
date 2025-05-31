@@ -1,10 +1,12 @@
 // untruck/src/ui.rs
-use super::{TruckUI, activity, journalui, loadoutui, sanity, sensors};
+use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::truck::TruckUI;
 use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
 use uncore::difficulty::CurrentDifficulty;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore::states::{AppState, GameState};
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use unstd::materials::UIPanelMaterial;
@@ -31,9 +33,10 @@ impl FromTab for TruckTab {
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
+    game_state: Res<State<GameState>>,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
 ) {
@@ -44,6 +47,11 @@ pub fn setup_ui(
         MARGIN_PERCENT,
         MARGIN_PERCENT,
     );
+    let init_vis = if *game_state == GameState::Truck {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
+    };
 
     type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
     let panel_material = materials.add(UIPanelMaterial {
@@ -216,7 +224,7 @@ pub fn setup_ui(
                 .spawn(Button)
                 .insert(Node {
                     min_height: Val::Px(60.0 * UI_SCALE),
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     align_content: AlignContent::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -250,7 +258,7 @@ pub fn setup_ui(
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
-                    border: MARGIN,
+                    border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
                     position_type: PositionType::Relative,
                     ..default()
                 })
@@ -337,14 +345,14 @@ pub fn setup_ui(
                 margin: MARGIN,
                 ..default()
             },
-            Visibility::Hidden,
+            init_vis,
             BackgroundColor(colors::TRUCKUI_BGCOLOR),
         ))
         .insert(TruckUI)
         .with_children(truck_ui);
 }
 
-pub fn update_tab_interactions(
+fn update_tab_interactions(
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     mut qt: Query<(
         Ref<Interaction>,
@@ -409,4 +417,12 @@ pub fn update_tab_interactions(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::InGame), setup_ui)
+        .add_systems(
+            Update,
+            update_tab_interactions.run_if(in_state(GameState::Truck)),
+        );
 }

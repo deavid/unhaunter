@@ -21,5 +21,6 @@ anyhow = { workspace = true }
 ordered-float = { workspace = true }
 itertools = { workspace = true }
 ndarray = { workspace = true }
+noise = { workspace = true }
 
 unsettings = { path = "../unsettings" }

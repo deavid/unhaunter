@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::data::PlayerProfileData;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -6,7 +8,6 @@ use std::path::PathBuf;
 
 /// Helper function to locate the fixture directory for schema snapshots.
 /// Returns `Some(PathBuf)` if the directory exists, or `None` if it does not.
-#[allow(dead_code)]
 pub fn get_fixture_directory() -> Option<PathBuf> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").ok()?;
     let fixture_dir = PathBuf::from(manifest_dir).join("tests/fixtures/player_profiles");
@@ -18,8 +19,13 @@ pub fn get_fixture_directory() -> Option<PathBuf> {
     }
 }
 
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, snapshot_schema_system)
+        .add_systems(Startup, validate_schema_snapshots);
+}
+
 /// System to create a versioned snapshot of the player profile schema.
-pub fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>>) {
+fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>>) {
     #[cfg(all(debug_assertions, target_os = "linux"))]
     {
         use ron::ser::{PrettyConfig, to_string_pretty};
@@ -48,7 +54,7 @@ pub fn snapshot_schema_system(_player_profile: Res<Persistent<PlayerProfileData>
 }
 
 /// System to validate schema snapshots against the current `PlayerProfileData` definition.
-pub fn validate_schema_snapshots() {
+fn validate_schema_snapshots() {
     #[cfg(all(debug_assertions, target_os = "linux"))]
     {
         use crate::data::PlayerProfileData;

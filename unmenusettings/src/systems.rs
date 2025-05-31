@@ -16,7 +16,33 @@ use uncoremenu::templates;
 use unsettings::audio::AudioSettings;
 use unsettings::game::GameplaySettings;
 
-pub fn item_highlight_system(
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            item_highlight_system,
+            menu_routing_system,
+            menu_back_event,
+            menu_settings_class_selected,
+            menu_audio_setting_selected,
+            menu_save_audio_setting,
+            menu_gameplay_setting_selected,
+            menu_save_gameplay_setting,
+            menu_integration_system,
+            handle_escape,
+        )
+            .run_if(in_state(AppState::SettingsMenu)),
+    )
+    .add_event::<MenuEvent>()
+    .add_event::<MenuEvBack>()
+    .add_event::<MenuSettingClassSelected>()
+    .add_event::<AudioSettingSelected>()
+    .add_event::<SaveAudioSetting>()
+    .add_event::<GameplaySettingSelected>()
+    .add_event::<SaveGameplaySetting>();
+}
+
+fn item_highlight_system(
     menu: Query<&SettingsMenu>,
     mut menu_items: Query<(&MenuItem, &mut TextColor)>,
 ) {
@@ -32,7 +58,7 @@ pub fn item_highlight_system(
     }
 }
 
-pub fn menu_routing_system(
+fn menu_routing_system(
     mut ev_menu: EventReader<MenuEvent>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut ev_class: EventWriter<MenuSettingClassSelected>,
@@ -76,7 +102,7 @@ pub fn menu_routing_system(
     }
 }
 
-pub fn menu_back_event(
+fn menu_back_event(
     mut events: EventReader<MenuEvBack>,
     mut next_state: ResMut<NextState<SettingsState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
@@ -105,7 +131,7 @@ pub fn menu_back_event(
     }
 }
 
-pub fn menu_settings_class_selected(
+fn menu_settings_class_selected(
     mut commands: Commands,
     mut events: EventReader<MenuSettingClassSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -145,7 +171,7 @@ pub fn menu_settings_class_selected(
     }
 }
 
-pub fn menu_audio_setting_selected(
+fn menu_audio_setting_selected(
     mut commands: Commands,
     mut events: EventReader<AudioSettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -258,7 +284,7 @@ pub fn menu_audio_setting_selected(
     }
 }
 
-pub fn menu_save_audio_setting(
+fn menu_save_audio_setting(
     mut events: EventReader<SaveAudioSetting>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
@@ -303,7 +329,7 @@ pub fn menu_save_audio_setting(
     }
 }
 
-pub fn menu_gameplay_setting_selected(
+fn menu_gameplay_setting_selected(
     mut commands: Commands,
     mut events: EventReader<GameplaySettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
@@ -417,7 +443,7 @@ pub fn menu_gameplay_setting_selected(
     }
 }
 
-pub fn menu_save_gameplay_setting(
+fn menu_save_gameplay_setting(
     mut events: EventReader<SaveGameplaySetting>,
     mut ev_back: EventWriter<MenuEvBack>,
     mut gameplay_settings: ResMut<Persistent<GameplaySettings>>,
@@ -444,7 +470,7 @@ pub fn menu_save_gameplay_setting(
     }
 }
 
-pub fn menu_integration_system(
+fn menu_integration_system(
     mut menu_clicks: EventReader<MenuItemClicked>,
     mut menu_events: EventWriter<MenuEvent>,
     menu_items: Query<(&MenuItem, &MenuItemInteractive)>,
@@ -464,8 +490,15 @@ pub fn menu_integration_system(
         }
 
         for click_event in menu_clicks.read() {
+            if click_event.state != AppState::SettingsMenu {
+                warn!(
+                    "MenuItemClicked event received in state: {:?}",
+                    click_event.state
+                );
+                continue;
+            }
             warn!("Settings menu received click event: {:?}", click_event);
-            let clicked_idx = click_event.0;
+            let clicked_idx = click_event.pos;
 
             // Find the menu item with this index
             if let Some((menu_item, _)) = menu_items
@@ -484,7 +517,7 @@ pub fn menu_integration_system(
 }
 
 /// Handles the ESC key events from the core menu system
-pub fn handle_escape(
+fn handle_escape(
     mut escape_events: EventReader<uncoremenu::systems::MenuEscapeEvent>,
     mut menu_events: EventWriter<MenuEvent>,
 ) {

@@ -8,15 +8,78 @@ use crate::ConceptTrait;
 /// Defines the different voice line concepts available in this module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Base1Concept {
+    AllObjectivesMetReminderToEndMission,
     GearInVan,
     GhostNearHunt,
-    MissionStartEasy,
+    PlayerLeavesTruckWithoutChangingLoadout,
 }
 
 impl Base1Concept {
     /// Retrieves a vector of `VoiceLineData` for this concept variant.
     pub fn get_lines(&self) -> Vec<VoiceLineData> {
         match self {
+            Self::AllObjectivesMetReminderToEndMission => vec![
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_01.ogg".to_string(),
+                    subtitle_text: "All objectives complete. Time to wrap this up and head back to the truck for mission end.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_02.ogg".to_string(),
+                    subtitle_text: "That's everything on the checklist. You can return to the van now to finish the mission.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_03.ogg".to_string(),
+                    subtitle_text: "Job well done. All tasks completed. Head back to the truck when you're ready to conclude the mission.".to_string(),
+                    tags: vec![WalkieTag::Encouraging, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_04.ogg".to_string(),
+                    subtitle_text: "Mission objectives achieved. You can exit the location and return to the vehicle to end this assignment.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::LongDetailed, WalkieTag::ReminderMedium],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_05.ogg".to_string(),
+                    subtitle_text: "Everything's done here. The truck is waiting for you to complete the mission paperwork.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_06.ogg".to_string(),
+                    subtitle_text: "All boxes ticked. Time to pack it in and head back to the van for mission completion.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_07.ogg".to_string(),
+                    subtitle_text: "You've accomplished everything required. The truck is your ticket home, so to speak.".to_string(),
+                    tags: vec![WalkieTag::Encouraging, WalkieTag::MediumLength, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_08.ogg".to_string(),
+                    subtitle_text: "Task completion confirmed. Return to the vehicle to finalize your mission report.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_09.ogg".to_string(),
+                    subtitle_text: "That's a wrap on this one. Head back to the truck to close out the mission officially.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::MediumLength, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/allobjectivesmetremindertoendmission_10.ogg".to_string(),
+                    subtitle_text: "All done here. The van is where you need to be to put the finishing touches on this assignment.".to_string(),
+                    tags: vec![WalkieTag::LongDetailed, WalkieTag::NeutralObservation, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+            ],
             Self::GearInVan => vec![
                 VoiceLineData {
                     ogg_path: "walkie/generated/base1/gearinvan_01.ogg".to_string(),
@@ -279,60 +342,66 @@ impl Base1Concept {
                     length_seconds: 5,
                 },
             ],
-            Self::MissionStartEasy => vec![
+            Self::PlayerLeavesTruckWithoutChangingLoadout => vec![
                 VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_01.ogg".to_string(),
-                    subtitle_text: "Alright, you're on site. Reports indicate significant paranormal activity. Standard procedure: locate, identify, and neutralize the entity.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::NeutralObservation],
-                    length_seconds: 10,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_02.ogg".to_string(),
-                    subtitle_text: "Unhaunter, this is base. Seems you've arrived. We've got multiple reports of disturbances. Get in there; assess the situation, and deal with the problem.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::NeutralObservation],
-                    length_seconds: 10,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_03.ogg".to_string(),
-                    subtitle_text: "Looks like you made it. This should be a good one to warm you up. Get inside and find what's causing all that ruckus.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_04.ogg".to_string(),
-                    subtitle_text: "Okay, you're at the location. Shouldn't be anything too crazy in there... just, you know, the usual ghostly stuff. Head in when you're ready.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::MediumLength, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_05.ogg".to_string(),
-                    subtitle_text: "Welcome to the job, Unhaunter. This is a pretty standard haunting, so it's a good place to start. Get inside and do your thing.".to_string(),
-                    tags: vec![WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 9,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_06.ogg".to_string(),
-                    subtitle_text: "Alright... Rookie... This is it. Don't mess it up! Explore the location and take measurements. Find the ghost and expel it.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::LongDetailed, WalkieTag::SlightlyImpatient, WalkieTag::SnarkyHumor],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_07.ogg".to_string(),
-                    subtitle_text: "This is a good opportunity to practice, the entity should be easy to deal with. Use the thermometer to find the ghost room.".to_string(),
-                    tags: vec![WalkieTag::DirectHint, WalkieTag::Encouraging, WalkieTag::FirstTimeHint, WalkieTag::MediumLength],
-                    length_seconds: 8,
-                },
-                VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_08.ogg".to_string(),
-                    subtitle_text: "Base to Unhaunter, we are getting some readings here... Go inside and see what is that about.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::NeutralObservation, WalkieTag::ShortBrevity],
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_01.ogg".to_string(),
+                    subtitle_text: "Hold on, did you check your gear setup? You might want to customize your loadout before heading out.".to_string(),
+                    tags: vec![WalkieTag::LongDetailed, WalkieTag::Questioning, WalkieTag::ReminderMedium],
                     length_seconds: 6,
                 },
                 VoiceLineData {
-                    ogg_path: "walkie/generated/base1/missionstarteasy_09.ogg".to_string(),
-                    subtitle_text: "Hello there. I'm picking up some faint activity, so it's not a total waste of time. See if you can find the source.".to_string(),
-                    tags: vec![WalkieTag::FirstTimeHint, WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::SnarkyHumor],
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_02.ogg".to_string(),
+                    subtitle_text: "Wait a second. You left with the default gear. Are you sure that's what you want for this mission?".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::Questioning, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_03.ogg".to_string(),
+                    subtitle_text: "You might want to double-check your equipment selection. The truck has plenty of options to choose from.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_04.ogg".to_string(),
+                    subtitle_text: "Did you customize your loadout? Different missions might need different tools, you know.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::Questioning, WalkieTag::ReminderMedium],
+                    length_seconds: 5,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_05.ogg".to_string(),
+                    subtitle_text: "Standard loadout detected. Consider reviewing the gear options in the truck for optimal results.".to_string(),
+                    tags: vec![WalkieTag::FormalishReminder, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
                     length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_06.ogg".to_string(),
+                    subtitle_text: "You're using the basic setup. That might work, but the truck has better equipment available.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::NeutralObservation, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_07.ogg".to_string(),
+                    subtitle_text: "No gear changes? Bold strategy. Hope the default kit is what you actually need in there.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::ReminderMedium, WalkieTag::SnarkyHumor],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_08.ogg".to_string(),
+                    subtitle_text: "You could optimize your equipment selection. The van has specialized tools that might be more effective.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderLow],
+                    length_seconds: 7,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_09.ogg".to_string(),
+                    subtitle_text: "Default gear it is, then. Just remember, the truck inventory exists for a reason.".to_string(),
+                    tags: vec![WalkieTag::MediumLength, WalkieTag::ReminderLow, WalkieTag::SnarkyHumor],
+                    length_seconds: 6,
+                },
+                VoiceLineData {
+                    ogg_path: "walkie/generated/base1/playerleavestruckwithoutchangingloadout_10.ogg".to_string(),
+                    subtitle_text: "You might be missing out on better equipment. The truck's gear selection could give you an edge.".to_string(),
+                    tags: vec![WalkieTag::DirectHint, WalkieTag::LongDetailed, WalkieTag::ReminderMedium],
+                    length_seconds: 6,
                 },
             ],
         }

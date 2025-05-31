@@ -5,6 +5,7 @@ use uncore::behavior::Behavior;
 use uncore::colors;
 use uncore::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
+    WalkieTextUIRoot,
 };
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -13,30 +14,72 @@ use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::GameplaySettings;
 
-pub fn cleanup(mut commands: Commands, qg: Query<Entity, With<GameUI>>) {
+fn cleanup(
+    mut commands: Commands,
+    qg: Query<Entity, With<GameUI>>,
+    qwt: Query<Entity, With<WalkieTextUIRoot>>,
+) {
     // Despawn game UI if not used
     for gui in qg.iter() {
         commands.entity(gui).despawn_recursive();
     }
+    for gui in qwt.iter() {
+        commands.entity(gui).despawn_recursive();
+    }
 }
 
-pub fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn pause(mut qg: Query<&mut Visibility, With<GameUI>>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Hidden;
     }
 }
 
-pub fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
+fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
     for mut vis in qg.iter_mut() {
         *vis = Visibility::Visible;
     }
 }
 
-pub fn setup_ui(
+fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
+    // Spawn independent WalkieText UI
+    commands
+        .spawn((
+            WalkieTextUIRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(10.0),
+                left: Val::Percent(20.0),
+                width: Val::Percent(60.0),
+                height: Val::Auto,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ZIndex(100),
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn(Text::new(""))
+                .insert(TextFont {
+                    font: handles.fonts.chakra.w400i_regular.clone(),
+                    font_size: 18.0 * FONT_SCALE,
+                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                })
+                .insert(TextLayout::new_with_justify(JustifyText::Center))
+                .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
+                .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
+                .insert(Node {
+                    padding: UiRect::axes(Val::Px(10.0 * UI_SCALE), Val::Px(1.0 * UI_SCALE)),
+                    ..default()
+                })
+                .insert(WalkieText);
+        });
+
+    // Spawn vignette for the damage background
     commands
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -211,31 +254,6 @@ pub fn setup_ui(
                 flex_grow: 0.5,
                 ..default()
             });
-
-            parent
-                .spawn(Text::new(""))
-                .insert(TextFont {
-                    font: handles.fonts.chakra.w400i_regular.clone(),
-                    font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
-                })
-                .insert(TextLayout::new_with_justify(JustifyText::Center))
-                .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
-                .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
-                .insert(Node {
-                    align_self: AlignSelf::Center,
-                    justify_self: JustifySelf::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_grow: 0.1,
-                    margin: UiRect::bottom(Val::Px(-6.0 * UI_SCALE)),
-                    padding: UiRect::all(Val::Px(-1.0 * UI_SCALE)),
-                    ..default()
-                })
-                .insert(WalkieText);
-            parent.spawn(Node {
-                flex_grow: 0.5,
-                ..default()
-            });
         });
 
         // Main game viewport - middle
@@ -292,7 +310,7 @@ pub fn setup_ui(
     info!("Game UI loaded");
 }
 
-pub fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
+fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
     parent
         .spawn((
             Text::default(),
@@ -378,8 +396,7 @@ fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
 /// objects.It displays the held object's name and provides instructions for
 /// dropping or moving the object. When the player is not holding an object, the UI
 /// reverts to displaying the player's gear information.
-#[allow(clippy::type_complexity)]
-pub fn toggle_held_object_ui(
+fn toggle_held_object_ui(
     // mut held_object_ui: Query<
     //     (&mut Visibility, &mut Node),
     //     (With<HeldObjectUI>, Without<RightSideGearUI>),
@@ -463,7 +480,7 @@ pub fn toggle_held_object_ui(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup_ui)
         .add_systems(OnExit(AppState::InGame), cleanup)
         .add_systems(OnEnter(GameState::None), resume)

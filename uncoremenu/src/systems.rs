@@ -2,10 +2,14 @@ use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, Princip
 use crate::events::KeyboardNavigate;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore::colors;
+use uncore::states::AppState;
 
 /// Event sent when a menu item is clicked
 #[derive(Event, Debug, Clone, Copy)]
-pub struct MenuItemClicked(pub usize);
+pub struct MenuItemClicked {
+    pub state: AppState,
+    pub pos: usize,
+}
 
 /// Event sent when keyboard navigation changes the selected item
 #[derive(Event, Debug, Clone, Copy)]
@@ -17,7 +21,7 @@ pub struct MenuEscapeEvent;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.
-pub fn menu_mouse_movement_system(
+fn menu_mouse_movement_system(
     mut mouse_motion_events: EventReader<MouseMotion>,
     mut mouse_tracker: Query<&mut MenuMouseTracker>,
 ) {
@@ -33,12 +37,13 @@ pub fn menu_mouse_movement_system(
 /// Handles mouse interaction with menu items, including hover and click states.
 /// Only processes hover events after mouse movement is detected to prevent unwanted
 /// initial hover states.
-pub fn menu_interaction_system(
+fn menu_interaction_system(
     mut menu_query: Query<&mut MenuRoot>,
     interaction_query: Query<(&Interaction, &MenuItemInteractive), Changed<Interaction>>,
     mouse_tracker: Query<&MenuMouseTracker>,
     mut click_events: EventWriter<MenuItemClicked>,
     mut selection_events: EventWriter<MenuItemSelected>,
+    app_state: Res<State<AppState>>,
 ) {
     let mouse_moved = mouse_tracker
         .iter()
@@ -58,7 +63,10 @@ pub fn menu_interaction_system(
                 }
             }
             Interaction::Pressed => {
-                click_events.send(MenuItemClicked(menu_item.identifier));
+                click_events.send(MenuItemClicked {
+                    state: **app_state,
+                    pos: menu_item.identifier,
+                });
             }
             Interaction::None => {}
         }
@@ -67,7 +75,7 @@ pub fn menu_interaction_system(
 
 /// Handles keyboard navigation for menu items, including up/down arrows,
 /// enter for selection, and escape key events.
-pub fn menu_keyboard_system(
+fn menu_keyboard_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut menu_query: Query<&mut MenuRoot>,
     menu_items: Query<&MenuItemInteractive>,
@@ -75,6 +83,7 @@ pub fn menu_keyboard_system(
     mut keyboard_nav_events: EventWriter<KeyboardNavigate>,
     mut click_events: EventWriter<MenuItemClicked>,
     mut escape_events: EventWriter<MenuEscapeEvent>,
+    app_state: Res<State<AppState>>,
 ) {
     let Ok(mut menu) = menu_query.get_single_mut() else {
         return;
@@ -108,7 +117,10 @@ pub fn menu_keyboard_system(
 
     // Handle enter key for selection
     if keyboard_input.just_pressed(KeyCode::Enter) {
-        click_events.send(MenuItemClicked(menu.selected_item));
+        click_events.send(MenuItemClicked {
+            state: **app_state,
+            pos: menu.selected_item,
+        });
     }
 
     // Handle escape key
@@ -119,7 +131,7 @@ pub fn menu_keyboard_system(
 
 /// Updates the visual state of menu items based on selection and hover states.
 /// Sets appropriate colors for both the background and text elements.
-pub fn update_menu_item_visuals(
+fn update_menu_item_visuals(
     menu_query: Query<&MenuRoot>,
     mut menu_items: Query<(
         &mut BackgroundColor,
@@ -189,4 +201,16 @@ pub fn update_menu_item_visuals(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            menu_mouse_movement_system,
+            menu_interaction_system,
+            menu_keyboard_system,
+            update_menu_item_visuals,
+        ),
+    );
 }

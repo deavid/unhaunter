@@ -48,6 +48,10 @@ impl Position {
         }
     }
 
+    pub fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.global_z.is_finite()
+    }
+
     pub fn lerp(&self, other: &Self, t: f32) -> Self {
         Self {
             x: self.x + (other.x - self.x) * t,

@@ -111,4 +111,8 @@ impl GhostSprite {
             ..self
         }
     }
+
+    pub fn get_health(&self) -> f32 {
+        1.0 - (self.repellent_hits as f32 / 1000.0)
+    }
 }

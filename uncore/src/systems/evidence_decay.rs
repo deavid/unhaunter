@@ -6,7 +6,7 @@ use enum_iterator::all;
 const DECAY_START_THRESHOLD_SECONDS: f64 = 0.1; // 100ms
 const FULL_DECAY_DURATION_SECONDS: f64 = 10.0; // Time for clarity to go from 1.0 to 0.0 if not updated
 
-pub fn decay_evidence_clarity_system(
+fn decay_evidence_clarity_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
     time: Res<Time>,
     mut last_report: Local<f64>,
@@ -51,4 +51,8 @@ pub fn decay_evidence_clarity_system(
             }
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, decay_evidence_clarity_system);
 }

@@ -60,7 +60,6 @@ pub enum AudioSettingsMenu {
 
 impl AudioSettingsMenu {
     pub fn menu_event(&self) -> MenuEvent {
-        #[allow(clippy::match_single_binding)]
         match self {
             // <-- add here the events for specific menus
             Self::VolumeMaster
@@ -186,7 +185,6 @@ pub enum GameplaySettingsMenu {
 
 impl GameplaySettingsMenu {
     pub fn menu_event(&self) -> MenuEvent {
-        #[allow(clippy::match_single_binding)]
         match self {
             GameplaySettingsMenu::MovementStyle => MenuEvent::EditGameplaySetting(*self),
             GameplaySettingsMenu::CameraControls => MenuEvent::EditGameplaySetting(*self),

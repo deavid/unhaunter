@@ -1,6 +1,9 @@
 use crate::{
     celsius_to_kelvin,
-    components::board::{boardposition::BoardPosition, position::Position},
+    components::{
+        board::{boardposition::BoardPosition, position::Position},
+        ghost_behavior_dynamics::GhostBehaviorDynamics,
+    },
     types::{
         board::{
             fielddata::{CollisionFieldData, LightFieldData},
@@ -32,7 +35,10 @@ pub struct BoardData {
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
+
+    /// Evidences of the current ghost
     pub evidences: HashSet<Evidence>,
+    pub ghost_dynamics: GhostBehaviorDynamics,
 
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
@@ -55,6 +61,17 @@ pub struct BoardData {
 
     pub map_path: String,      // Path to the current map file
     pub level_ready_time: f32, // Time when the level became ready
+}
+
+impl BoardData {
+    /// Returns if the given position has light above a fixed threshold.
+    pub fn is_lit(&self, pos: BoardPosition) -> bool {
+        if let Some(light_data) = self.light_field.get(pos.ndidx()) {
+            light_data.lux > 0.5
+        } else {
+            false
+        }
+    }
 }
 
 impl FromWorld for BoardData {
@@ -93,6 +110,7 @@ impl FromWorld for BoardData {
             },
             map_path: String::new(), // Initialize map_path with an empty string
             level_ready_time: 0.0,   // Initialize level_ready_time
+            ghost_dynamics: GhostBehaviorDynamics::default(),
         }
     }
 }

@@ -1,10 +1,11 @@
 use crate::types::evidence::{Evidence, EvidenceError};
+use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize}; // Add this
 
 /// Represents the different types of gear available in the game.
 ///
 /// Each variant holds a specific gear struct with its own attributes and behavior.
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)] // Add Eq, Hash
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, Sequence)]
 pub enum GearKind {
     Thermometer,
     EMFMeter,
@@ -36,6 +37,20 @@ impl GearKind {
 
     pub fn is_some(&self) -> bool {
         !self.is_none()
+    }
+
+    pub fn is_evidence_tool_for(&self, evidence_type: Evidence) -> bool {
+        match self {
+            GearKind::Thermometer => evidence_type == Evidence::FreezingTemp,
+            GearKind::EMFMeter => evidence_type == Evidence::EMFLevel5,
+            GearKind::Recorder => evidence_type == Evidence::EVPRecording,
+            GearKind::GeigerCounter => evidence_type == Evidence::CPM500,
+            GearKind::UVTorch => evidence_type == Evidence::UVEctoplasm,
+            GearKind::SpiritBox => evidence_type == Evidence::SpiritBox,
+            GearKind::RedTorch => evidence_type == Evidence::RLPresence,
+            GearKind::Videocam => evidence_type == Evidence::FloatingOrbs,
+            _ => false,
+        }
     }
 }
 

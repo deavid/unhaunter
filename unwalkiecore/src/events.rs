@@ -8,8 +8,13 @@ use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
 use crate::generated::player_wellbeing::PlayerWellbeingConcept;
 use crate::generated::repellent_and_expulsion::RepellentAndExpulsionConcept;
+use crate::generated::tutorial_chapter_intros::TutorialChapterIntrosConcept;
+use crate::generated::tutorial_gear_explanations::TutorialGearExplanationsConcept;
+use bevy::log::warn;
 use bevy::prelude::Event;
 use enum_iterator::Sequence;
+use uncore::difficulty::Difficulty;
+use uncore::types::gear_kind::GearKind;
 use unwalkie_types::VoiceLineData;
 
 /// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
@@ -22,31 +27,45 @@ pub struct WalkieTalkingEvent {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum WalkieEventPriority {
+    VeryLow,
     Low,
     Medium,
     High,
+    VeryHigh,
     Urgent,
 }
 
 impl WalkieEventPriority {
     pub fn value(&self) -> f32 {
         match self {
+            WalkieEventPriority::VeryLow => 0.01,
             WalkieEventPriority::Low => 0.1,
             WalkieEventPriority::Medium => 1.0,
             WalkieEventPriority::High => 10.0,
-            WalkieEventPriority::Urgent => 100.0,
+            WalkieEventPriority::VeryHigh => 100.0,
+            WalkieEventPriority::Urgent => 1000.0,
         }
     }
     pub fn time_factor(&self) -> f32 {
         match self {
-            WalkieEventPriority::Low => 1.5,
+            WalkieEventPriority::VeryLow => 1.4,
+            WalkieEventPriority::Low => 1.2,
             WalkieEventPriority::Medium => 1.0,
-            WalkieEventPriority::High => 0.2,
+            WalkieEventPriority::High => 0.5,
+            WalkieEventPriority::VeryHigh => 0.2,
             WalkieEventPriority::Urgent => 0.05,
         }
     }
     pub fn is_urgent(&self) -> bool {
         matches!(self, WalkieEventPriority::Urgent)
+    }
+}
+
+struct NullVoice;
+
+impl ConceptTrait for NullVoice {
+    fn get_lines(&self) -> Vec<VoiceLineData> {
+        vec![]
     }
 }
 
@@ -57,11 +76,15 @@ pub enum WalkieEvent {
     GearInVan,
     /// When the Ghost rage is near its limit.
     GhostNearHunt,
-    /// Welcome message for easy difficulty.
-    MissionStartEasy,
+
+    // --- Tutorial and Difficulty Intros ---
+    /// Chapter intros based on difficulty/chapter number
+    ChapterIntro(Difficulty),
+    /// Explanations for specific gear items
+    GearExplanation(GearKind),
 
     // --- Locomotion and Interaction Events ---
-    /// Player hasn't moved significantly from the start.
+    /// Player hasn\'t moved significantly from the start.
     PlayerStuckAtStart,
     /// Player exhibits erratic movement early on.
     ErraticMovementEarly,
@@ -83,7 +106,7 @@ pub enum WalkieEvent {
     GhostShowcase,
     /// Player uses gear that requires darkness in a lit room.
     RoomLightsOnGearNeedsDark,
-    /// Player is using the Thermometer, it's showing cold (1-10°C) but not freezing, and lingers too long.
+    /// Player is using the Thermometer, it\'s showing cold (1-10°C) but not freezing, and lingers too long.
     ThermometerNonFreezingFixation,
     /// Player selects gear but does not activate it.
     GearSelectedNotActivated,
@@ -93,6 +116,10 @@ pub enum WalkieEvent {
     LowHealthGeneralWarning,
     /// Player's sanity is critically low and they haven't returned to the truck.
     VeryLowSanityNoTruckReturn,
+    /// Player's sanity dropped due to darkness.
+    SanityDroppedBelowThresholdDarkness,
+    /// Player's sanity dropped due to ghost proximity.
+    SanityDroppedBelowThresholdGhost,
 
     // --- Consumables and Defense Events ---
     /// Player used quartz, and it cracked during use.
@@ -150,7 +177,23 @@ pub enum WalkieEvent {
     RLPresenceEvidenceConfirmed,
     /// CPM 500 evidence has been confirmed.
     CPM500EvidenceConfirmed,
-    // TODO: Add other event categories here
+
+    // --- Proactive Crafting Prompts ---
+    PotentialGhostIDWithNewEvidence,
+
+    // --- Mission Progression and Truck Events ---
+    /// Player has found evidence but not logged it via C key.
+    ClearEvidenceFoundNoActionCKey,
+    /// Player has found evidence but not logged it in the truck.
+    ClearEvidenceFoundNoActionTruck,
+    /// Player is in the truck with evidence but hasn't updated the journal.
+    InTruckWithEvidenceNoJournal,
+    /// Player is warned about a hunt but doesn't evade.
+    HuntWarningNoPlayerEvasion,
+    /// All objectives are met, reminding the player to end the mission.
+    AllObjectivesMetReminderToEndMission,
+    /// Player leaves the truck without changing their loadout.
+    PlayerLeavesTruckWithoutChangingLoadout,
 }
 
 impl WalkieEvent {
@@ -158,7 +201,74 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => Box::new(Base1Concept::GearInVan),
             WalkieEvent::GhostNearHunt => Box::new(Base1Concept::GhostNearHunt),
-            WalkieEvent::MissionStartEasy => Box::new(Base1Concept::MissionStartEasy),
+            WalkieEvent::ChapterIntro(difficulty) => match difficulty {
+                Difficulty::TutorialChapter1 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter1Intro)
+                }
+                Difficulty::TutorialChapter2 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter2Intro)
+                }
+                Difficulty::TutorialChapter3 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter3Intro)
+                }
+                Difficulty::TutorialChapter4 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter4Intro)
+                }
+                Difficulty::TutorialChapter5 => {
+                    Box::new(TutorialChapterIntrosConcept::TutorialChapter5Intro)
+                }
+                Difficulty::StandardChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::StandardChallengeIntro)
+                }
+                Difficulty::HardChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::HardChallengeIntro)
+                }
+                Difficulty::ExpertChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::ExpertChallengeIntro)
+                }
+                Difficulty::MasterChallenge => {
+                    Box::new(TutorialChapterIntrosConcept::MasterChallengeIntro)
+                }
+            },
+            WalkieEvent::GearExplanation(gear_kind) => match gear_kind {
+                GearKind::Flashlight => {
+                    Box::new(TutorialGearExplanationsConcept::FlashlightEnabledIntro)
+                }
+                GearKind::Thermometer => {
+                    Box::new(TutorialGearExplanationsConcept::ThermometerEnabledIntro)
+                }
+                GearKind::EMFMeter => {
+                    Box::new(TutorialGearExplanationsConcept::EMFMeterEnabledIntro)
+                }
+                GearKind::UVTorch => Box::new(TutorialGearExplanationsConcept::UVTorchEnabledIntro),
+                GearKind::Videocam => {
+                    Box::new(TutorialGearExplanationsConcept::VideocamEnabledIntro)
+                }
+                GearKind::Recorder => {
+                    Box::new(TutorialGearExplanationsConcept::RecorderEnabledIntro)
+                }
+                GearKind::GeigerCounter => {
+                    Box::new(TutorialGearExplanationsConcept::GeigerCounterEnabledIntro)
+                }
+                GearKind::SpiritBox => {
+                    Box::new(TutorialGearExplanationsConcept::SpiritBoxEnabledIntro)
+                }
+                GearKind::RedTorch => {
+                    Box::new(TutorialGearExplanationsConcept::RedTorchEnabledIntro)
+                }
+                GearKind::Salt => Box::new(TutorialGearExplanationsConcept::SaltSelectedIntro),
+                GearKind::QuartzStone => {
+                    Box::new(TutorialGearExplanationsConcept::QuartzStoneSelectedIntro)
+                }
+                GearKind::SageBundle => {
+                    Box::new(TutorialGearExplanationsConcept::SageBundleSelectedIntro)
+                }
+
+                _ => {
+                    warn!("No gear explanation concept for gear kind: {:?}", gear_kind);
+                    Box::new(NullVoice)
+                }
+            },
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => {
                 Box::new(LocomotionAndInteractionConcept::PlayerStuckAtStart)
@@ -209,6 +319,12 @@ impl WalkieEvent {
             }
             WalkieEvent::VeryLowSanityNoTruckReturn => {
                 Box::new(PlayerWellbeingConcept::VeryLowSanityNoTruckReturn)
+            }
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => {
+                Box::new(PlayerWellbeingConcept::SanityDroppedBelowThresholdDarkness)
+            }
+            WalkieEvent::SanityDroppedBelowThresholdGhost => {
+                Box::new(PlayerWellbeingConcept::SanityDroppedBelowThresholdGhost)
             }
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => {
@@ -285,6 +401,29 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => {
                 Box::new(EvidenceGatheringAndLogicConcept::CPM500EvidenceConfirmed)
             }
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => {
+                Box::new(EvidenceGatheringAndLogicConcept::PotentialGhostIDWithNewEvidencePrompt)
+            }
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => {
+                Box::new(EvidenceGatheringAndLogicConcept::ClearEvidenceFoundNoActionCKey)
+            }
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => {
+                Box::new(EvidenceGatheringAndLogicConcept::ClearEvidenceFoundNoActionTruck)
+            }
+            WalkieEvent::InTruckWithEvidenceNoJournal => {
+                Box::new(EvidenceGatheringAndLogicConcept::InTruckWithEvidenceNoJournal)
+            }
+            WalkieEvent::HuntWarningNoPlayerEvasion => {
+                Box::new(GhostBehaviorAndHuntingConcept::HuntWarningNoPlayerEvasion)
+            }
+            WalkieEvent::AllObjectivesMetReminderToEndMission => {
+                Box::new(Base1Concept::AllObjectivesMetReminderToEndMission)
+            }
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => {
+                Box::new(Base1Concept::PlayerLeavesTruckWithoutChangingLoadout)
+            }
         }
     }
 
@@ -293,27 +432,31 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => 120.0 * count,
             WalkieEvent::GhostNearHunt => 120.0 * count.cbrt(),
-            WalkieEvent::MissionStartEasy => 3600.0 * 24.0 * 7.0, // Effectively once per week
+            // WalkieEvent::MissionStartEasy => 3600.0 * 24.0 * 7.0, // Removed
+            WalkieEvent::ChapterIntro(_) => 3600.0 * 24.0 * 365.0, // Effectively once (very long cooldown)
+            WalkieEvent::GearExplanation(_) => 3600.0 * 24.0 * 365.0, // Effectively once (very long cooldown)
 
             // --- Locomotion and Interaction ---
-            WalkieEvent::PlayerStuckAtStart => 60.0 * count,
+            WalkieEvent::PlayerStuckAtStart => 180.0 * count,
             WalkieEvent::ErraticMovementEarly => 3600.0 * 24.0, // Effectively once per day (mission)
             WalkieEvent::DoorInteractionHesitation => 3600.0 * 24.0, // Effectively once per day (mission)
-            WalkieEvent::StrugglingWithGrabDrop => 90.0 * count,
-            WalkieEvent::StrugglingWithHideUnhide => 75.0 * count,
+            WalkieEvent::StrugglingWithGrabDrop => 180.0 * count,
+            WalkieEvent::StrugglingWithHideUnhide => 180.0 * count,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => 30.0 * count,
 
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => 90.0 * count,
+            WalkieEvent::DarkRoomNoLightUsed => 180.0 * count,
             WalkieEvent::BreachShowcase => 9000.0 * count,
-            WalkieEvent::GhostShowcase => 900.0 * count,
+            WalkieEvent::GhostShowcase => 9000.0 * count,
             WalkieEvent::RoomLightsOnGearNeedsDark => 90.0 * count,
             WalkieEvent::ThermometerNonFreezingFixation => 120.0 * count,
-            WalkieEvent::GearSelectedNotActivated => 60.0 * count,
+            WalkieEvent::GearSelectedNotActivated => 300.0 * count,
 
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
             WalkieEvent::VeryLowSanityNoTruckReturn => 120.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => 120.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdGhost => 120.0 * count,
 
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => 60.0 * count,
@@ -328,27 +471,38 @@ impl WalkieEvent {
 
             // --- Repellent and Expulsion ---
             WalkieEvent::GhostExpelledPlayerLingers => 120.0 * count,
-            WalkieEvent::HasRepellentEntersLocation => 120.0 * count,
-            WalkieEvent::RepellentUsedTooFar => 60.0 * count, // Trigger every minute if conditions met
-            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::GhostExpelledPlayerMissed => 90.0 * count, // Trigger every 1.5 minutes if conditions met
-            WalkieEvent::DidNotSwitchStartingGearInHotspot => 180.0 * count, // Trigger every 3 minutes if conditions met
-            WalkieEvent::DidNotCycleToOtherGear => 90.0 * count, // Trigger every 1.5 minutes if conditions met
+            WalkieEvent::HasRepellentEntersLocation => 300.0 * count,
+            WalkieEvent::RepellentUsedTooFar => 60.0 * count,
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => 90.0 * count,
+            WalkieEvent::RepellentExhaustedGhostPresentCorrectType => 90.0 * count,
+            WalkieEvent::GhostExpelledPlayerMissed => 180.0 * count,
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => 180.0 * count,
+            WalkieEvent::DidNotCycleToOtherGear => 180.0 * count,
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => 300.0 * count, // Trigger every 5 minutes if conditions met
             WalkieEvent::EMFNonEMF5Fixation => 120.0 * count, // Trigger every 2 minutes if conditions met
             WalkieEvent::JournalConflictingEvidence => 300.0 * count, // Trigger every 5 minutes if conditions met
 
             // --- Evidence Confirmation Events ---
-            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
-            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count.powi(2), // e.g. 3min, then 12min, etc.
+            WalkieEvent::FreezingTempsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => 180.0 * count,
+            WalkieEvent::EVPEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::RLPresenceEvidenceConfirmed => 180.0 * count,
+            WalkieEvent::CPM500EvidenceConfirmed => 180.0 * count,
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => 180.0 * count,
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => 120.0 * count,
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => 120.0 * count,
+            WalkieEvent::InTruckWithEvidenceNoJournal => 120.0 * count,
+            WalkieEvent::HuntWarningNoPlayerEvasion => 120.0 * count,
+            WalkieEvent::AllObjectivesMetReminderToEndMission => 180.0 * count,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => 120.0 * count,
         }
     }
 
@@ -360,26 +514,30 @@ impl WalkieEvent {
     pub fn priority(&self) -> WalkieEventPriority {
         match self {
             WalkieEvent::GearInVan => WalkieEventPriority::Low,
-            WalkieEvent::GhostNearHunt => WalkieEventPriority::Urgent,
-            WalkieEvent::MissionStartEasy => WalkieEventPriority::Medium,
+            WalkieEvent::GhostNearHunt => WalkieEventPriority::VeryLow,
+            WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
+            WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryLow,
+
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
             WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
             WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::High,
-            WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Low,
-            WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Low,
+            WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Medium,
+            WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Medium,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
-            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Low,
-            WalkieEvent::BreachShowcase => WalkieEventPriority::Low,
-            WalkieEvent::GhostShowcase => WalkieEventPriority::Low,
+            WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium,
+            WalkieEvent::BreachShowcase => WalkieEventPriority::VeryLow,
+            WalkieEvent::GhostShowcase => WalkieEventPriority::VeryLow,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
-            WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Low,
-            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::High,
+            WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Medium,
+            WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Medium,
             WalkieEvent::EMFNonEMF5Fixation => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
             WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::High,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieEventPriority::Medium,
+            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieEventPriority::High,
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => WalkieEventPriority::Medium,
             WalkieEvent::QuartzShatteredFeedback => WalkieEventPriority::High,
@@ -390,27 +548,38 @@ impl WalkieEvent {
             // --- Ghost Behavior and Hunting ---
             WalkieEvent::PlayerStaysHiddenTooLong => WalkieEventPriority::Low,
             // --- Repellent and Expulsion ---
-            WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::Medium,
+            WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::High,
             WalkieEvent::HasRepellentEntersLocation => WalkieEventPriority::Medium,
-            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::Low,
+            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::High,
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => WalkieEventPriority::Medium,
             WalkieEvent::GhostExpelledPlayerMissed => WalkieEventPriority::Medium,
             WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::High,
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
-            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Medium,
+            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Low,
             WalkieEvent::JournalConflictingEvidence => WalkieEventPriority::Medium,
 
             // --- Evidence Confirmation Events ---
-            WalkieEvent::FreezingTempsEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::FloatingOrbsEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::UVEctoplasmEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::EMFLevel5EvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::EVPEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::Medium,
-            WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::Medium,
+            WalkieEvent::FreezingTempsEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::FloatingOrbsEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::UVEctoplasmEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::EMFLevel5EvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::EVPEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::SpiritBoxEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::RLPresenceEvidenceConfirmed => WalkieEventPriority::VeryHigh,
+            WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::VeryHigh,
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => WalkieEventPriority::VeryLow,
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => WalkieEventPriority::VeryLow,
+            WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
+            WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
+            WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::High,
         }
     }
     /// This function returns hint text to display to the player for various events.
@@ -420,12 +589,55 @@ impl WalkieEvent {
         match &self {
             // --- Base1 ---
             WalkieEvent::GearInVan => "Return to van; check Loadout tab for gear.",
-            WalkieEvent::GhostNearHunt => "Ghost is hunting! Hide [E] or create distance!",
-            WalkieEvent::MissionStartEasy => "Approach the building to start investigating.",
+            WalkieEvent::GhostNearHunt => {
+                "Ghost is about to hunt! Find a hiding spot (Hold [E] to hide) or create distance!"
+            }
+            WalkieEvent::ChapterIntro(difficulty) => match difficulty {
+                Difficulty::TutorialChapter1 => {
+                    "Approach the building to start investigating. Gear limited to: Flashlight, EMF & Thermometer."
+                }
+                Difficulty::TutorialChapter2 => {
+                    "Enter the location when ready. Gear has been extended with UV Torch & Video Cam."
+                }
+                Difficulty::TutorialChapter3 => {
+                    "Find the ghost and the breach. Recorder & Geiger Counter have been added to the truck."
+                }
+                Difficulty::TutorialChapter4 => {
+                    "Carefully explore the location. All main gear is now available: Spirit Box & Red Torch added."
+                }
+                Difficulty::TutorialChapter5 => {
+                    "Identify the ghost. Defensive items: Salt, Quartz & Sage are now available."
+                }
+                Difficulty::StandardChallenge => "Standard contract. Identify the entity.",
+                Difficulty::HardChallenge => "This will be a challenge. Expect aggression.",
+                Difficulty::ExpertChallenge => "Expert level: a highly dangerous entity awaits.",
+                Difficulty::MasterChallenge => {
+                    "Master challenge: face the ultimate paranormal threat."
+                }
+            },
+            WalkieEvent::GearExplanation(gear_kind) => match gear_kind {
+                GearKind::Flashlight => "Flashlight: [TAB] to toggle modes. High-beam overheats.",
+                GearKind::Thermometer => "Thermometer: Detects Freezing Temps (<0°C).",
+                GearKind::EMFMeter => "EMF Meter: Reads energy. \"EMF5\" is key evidence.",
+                GearKind::UVTorch => "UV Torch: Makes some ghosts turn green.",
+                GearKind::Videocam => {
+                    "Video Cam: Look using the night vision to see if there are floating orbs."
+                }
+                GearKind::Recorder => "Digital Recorder: Record for EVPs (ghost voices).",
+                GearKind::GeigerCounter => "Geiger Counter: Finds High Radiation (>500cpm).",
+                GearKind::SpiritBox => "Spirit Box: Some ghosts talk throught it.",
+                GearKind::RedTorch => "Red Torch: Some ghosts glow orange under it.",
+                GearKind::Salt => "Salt: Place to track the ghost (UV might be needed).",
+                GearKind::QuartzStone => "Quartz Stone: Hold for protection. Cracks/shatters.",
+                GearKind::SageBundle => "Sage Bundle: Light to cleanse area, deters ghost.",
+                _ => "This gear has specific uses. Check Journal for details.",
+            },
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => "Use [WASD] or Arrow Keys to move.",
-            WalkieEvent::ErraticMovementEarly => "Try smoother [WASD] movements to navigate.",
+            WalkieEvent::ErraticMovementEarly => {
+                "Movement is isometric by default, you'll get used to in no time;\nSettings -> Gameplay -> Movement Style"
+            }
             WalkieEvent::DoorInteractionHesitation => "Press [E] near door to open.",
             WalkieEvent::StrugglingWithGrabDrop => "Use [F] to grab small items, [G] to drop.",
             WalkieEvent::StrugglingWithHideUnhide => {
@@ -446,10 +658,10 @@ impl WalkieEvent {
                 "That was the ghost! Observe its appearance and behavior."
             }
             WalkieEvent::RoomLightsOnGearNeedsDark => {
-                "This gear (UV/VideoCam) works best in darkness. Turn off room lights [E]."
+                "This gear works best in darkness. Turn off room lights."
             }
             WalkieEvent::ThermometerNonFreezingFixation => {
-                "Journal Check: Cold is good, but <0°C is 'Freezing Temps' evidence."
+                "Journal Check: Cold is good, but <0°C is \'Freezing Temps\' evidence."
             }
             WalkieEvent::GearSelectedNotActivated => "Activate gear in your right hand with [R].",
 
@@ -457,6 +669,12 @@ impl WalkieEvent {
             WalkieEvent::LowHealthGeneralWarning => "Health low! Return to the van to recover.",
             WalkieEvent::VeryLowSanityNoTruckReturn => {
                 "Sanity critical! Go to the van immediately!"
+            }
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => {
+                "Sanity dropping in darkness! Find light or return to truck."
+            }
+            WalkieEvent::SanityDroppedBelowThresholdGhost => {
+                "Sanity dropping near ghost! Increase distance or use Quartz."
             }
 
             // --- Consumables and Defense ---
@@ -474,24 +692,24 @@ impl WalkieEvent {
                 "Ghost is agitated! Sage from the truck can help calm it or aid escape."
             }
             WalkieEvent::SageActivatedIneffectively => {
-                "For Sage to work, ensure its smoke reaches the ghost's area."
+                "For Sage to work, ensure its smoke reaches the ghost\'s area."
             }
             WalkieEvent::SageUnusedDefensivelyDuringHunt => {
-                "Sage could have helped during that hunt! Use [R]/[Tab] to activate if equipped."
+                "Sage could have helped during that hunt! Use [R] to activate if equipped."
             }
 
             // --- Repellent and Expulsion Events ---
             WalkieEvent::GhostExpelledPlayerLingers => {
-                "Ghost gone! Return to van and select 'End Mission'."
+                "Ghost gone! Return to van and select \'End Mission\'."
             }
             WalkieEvent::HasRepellentEntersLocation => {
-                "Repellent equipped! Use [R]/[Tab] near ghost/breach."
+                "Repellent equipped! Use [R] to open the bottle and ensure to be close to the ghost."
             }
             WalkieEvent::RepellentUsedTooFar => {
                 "Repellent used too far away! Get closer to the ghost or its breach."
             }
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => {
-                "Strong ghost reaction to repellent! Is it the correct type?"
+                "Strong ghost reaction to repellent! It might be the correct type."
             }
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => {
                 "Correct repellent type, but you ran out! Craft more in the van."
@@ -508,7 +726,7 @@ impl WalkieEvent {
                 "Stuck on one tool? Press [Q] to cycle to other gear."
             }
             WalkieEvent::JournalPointsToOneGhostNoCraft => {
-                "Journal identified ghost! Go to truck and 'Craft Repellent'."
+                "Journal identified ghost! Go to truck and \'Craft Repellent\'."
             }
             WalkieEvent::EMFNonEMF5Fixation => {
                 "Journal Check: EMF activity noted, but EMF Level 5 is the specific evidence."
@@ -540,17 +758,31 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => {
                 "500+ CPM on Geiger! Log with [C] or in truck journal."
             }
+
+            // --- Proactive Crafting Prompts ---
+            WalkieEvent::PotentialGhostIDWithNewEvidence => {
+                "Potential ID! Log new evidence in truck to confirm & craft repellent."
+            }
+
+            // --- Mission Progression and Truck Events ---
+            WalkieEvent::ClearEvidenceFoundNoActionCKey => {
+                "Evidence found! Press [C] to quick-log it."
+            }
+            WalkieEvent::ClearEvidenceFoundNoActionTruck => {
+                "Evidence found! Log it in the Journal in the truck."
+            }
+            WalkieEvent::InTruckWithEvidenceNoJournal => {
+                "New evidence collected. Go to the truck and update your findings."
+            }
+            WalkieEvent::HuntWarningNoPlayerEvasion => {
+                "Hunt starting! Hide or run! Press and Hold [E] near big furniture to hide."
+            }
+            WalkieEvent::AllObjectivesMetReminderToEndMission => {
+                "All objectives complete! Return to truck and 'End Mission'."
+            }
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => {
+                "Remember to check the Loadout tab in the truck to equip different gear."
+            }
         }
-    }
-}
-
-/// Implementation of FromStr for WalkieEvent to convert string IDs back to enum values
-impl std::str::FromStr for WalkieEvent {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        enum_iterator::all::<WalkieEvent>()
-            .find(|event| format!("{:?}", event) == s)
-            .ok_or(())
     }
 }

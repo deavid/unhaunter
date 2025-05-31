@@ -1,6 +1,7 @@
-use super::{TruckUIGhostGuess, uibutton::TruckButtonType}; // Assuming TruckUIGhostGuess and uibutton are still relevant here
+use super::uibutton::TruckButtonType; // Assuming TruckUIGhostGuess and uibutton are still relevant here
 use bevy::prelude::*;
 use uncore::colors;
+use uncore::components::truck::TruckUIGhostGuess;
 use uncore::difficulty::CurrentDifficulty; // Use CurrentDifficulty
 use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::evidence::Evidence;
@@ -68,7 +69,7 @@ pub fn setup_journal_ui(
                         Text::new(evidence.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 16.0 * FONT_SCALE,
+                            font_size: 18.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -151,7 +152,7 @@ pub fn setup_journal_ui(
                         Text::new(ghost_type.name()),
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
-                            font_size: 15.0 * FONT_SCALE, // Slightly reduced font size
+                            font_size: 18.0 * FONT_SCALE,
                             font_smoothing: bevy::text::FontSmoothing::AntiAliased,
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
@@ -217,7 +218,7 @@ pub fn setup_journal_ui(
             min_width: Val::Px(0.0),
             max_width: Val::Percent(60.0),
             min_height: Val::Px(30.0 * UI_SCALE),
-            border: UiRect::all(Val::Px(MARGIN_PERCENT)),
+            border: UiRect::all(Val::Px(4.0 * UI_SCALE)),
             margin: UiRect::all(Val::Px(30.0 * UI_SCALE)).with_left(Val::Percent(20.0)),
             justify_content: JustifyContent::Center,
             flex_direction: FlexDirection::Column,

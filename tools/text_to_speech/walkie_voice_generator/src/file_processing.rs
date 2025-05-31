@@ -444,23 +444,26 @@ pub fn process_audio_generation_task(
     manifest_mutex: &Arc<Mutex<HashMap<String, WalkieLineManifestEntry>>>,
     all_generated_ogg_paths_mutex: &Arc<Mutex<HashSet<String>>>,
 ) -> Result<(), anyhow::Error> {
-    let combined_signature =
+    // 1. Calculate signature for current TTS text (used to check if audio content changed)
+    let current_tts_signature =
         calculate_combined_signature(&task.line_entry.tts_text, &task.script_hash);
 
-    let mut needs_regeneration = true;
-    // Check against existing manifest entry
-    {
+    // 2. Get existing manifest entry (if any)
+    let existing_entry_opt: Option<WalkieLineManifestEntry> = {
         let manifest = manifest_mutex.lock().unwrap();
-        if let Some(existing_entry) = manifest.get(&task.detailed_manifest_key) {
-            if existing_entry.combined_signature == combined_signature
-                && task.ogg_path_absolute.exists()
-            {
-                needs_regeneration = false;
-            }
-        }
-    }
+        manifest.get(&task.detailed_manifest_key).cloned()
+    };
 
-    // Check for forced regeneration
+    // 3. Determine if audio needs regeneration
+    let mut needs_audio_regeneration = match &existing_entry_opt {
+        Some(existing_entry) => {
+            existing_entry.combined_signature != current_tts_signature // Audio content changed
+                || !task.ogg_path_absolute.exists() // Audio file missing
+        }
+        None => true, // No existing entry, so must generate audio
+    };
+
+    // Apply force_regenerate_pattern if provided
     if let Some(pattern) = &task.force_regenerate_pattern {
         if pattern == "all"
             || task.conceptual_id.contains(pattern)
@@ -469,56 +472,109 @@ pub fn process_audio_generation_task(
                     .conceptual_id
                     .starts_with(pattern.trim_end_matches('*')))
         {
-            needs_regeneration = true;
-            println!(
-                "Forcing regeneration for: {} (from {}) due to pattern '{}'",
-                task.detailed_manifest_key, task.ron_filename_str, pattern
-            );
+            if !needs_audio_regeneration {
+                // Only print if it's an override of existing up-to-date audio
+                println!(
+                    "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
+                    task.detailed_manifest_key, task.ron_filename_str, pattern
+                );
+            }
+            needs_audio_regeneration = true;
         }
     }
 
-    if needs_regeneration {
+    // 4. Handle audio generation and determine actual audio duration
+    let mut actual_duration_seconds: u32;
+
+    if needs_audio_regeneration {
         println!(
             "Regenerating audio for: {} (from {}), line {}",
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
-
         let (_temp_wav_path, final_ogg_path) = generate_audio_for_line(
             &task.line_entry.tts_text,
             &task.ron_file_sub_dir,
             &task.line_specific_filename_stem,
         )?;
-        let duration_seconds = get_audio_duration(&final_ogg_path)?;
-
-        let mut tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
-        tags_vec.sort_by_key(|a| format!("{:?}", a));
-
-        let new_entry = WalkieLineManifestEntry {
-            ron_file_source: task.ron_filename_str.clone(),
-            conceptual_id: task.conceptual_id.clone(),
-            line_index: task.line_idx,
-            tts_text: task.line_entry.tts_text.clone(),
-            subtitle_text: task.line_entry.subtitle_text.clone(),
-            tags: tags_vec,
-            ogg_path: task.ogg_path_relative_to_generated_dir.clone(),
-            length_seconds: duration_seconds,
-            generation_script_hash: task.script_hash.clone(),
-            combined_signature,
-        };
-        // Update manifest
-        {
-            let mut manifest = manifest_mutex.lock().unwrap();
-            manifest.insert(task.detailed_manifest_key.clone(), new_entry);
-        }
-        println!("Updated manifest for {}", task.detailed_manifest_key);
+        actual_duration_seconds = get_audio_duration(&final_ogg_path)?;
     } else {
+        // Audio is considered up-to-date, try to get duration from existing manifest or file
+        actual_duration_seconds = existing_entry_opt.as_ref().map_or(0, |e| e.length_seconds);
+
+        // If duration from manifest is 0 (or entry didn't exist but we decided not to regen),
+        // and OGG file exists, try to read its duration directly.
+        if actual_duration_seconds == 0 && task.ogg_path_absolute.exists() {
+            println!(
+                "Audio up-to-date for {}, but duration is 0 in manifest or manifest missing. Fetching duration from existing OGG: {}",
+                task.detailed_manifest_key,
+                task.ogg_path_absolute.display()
+            );
+            match get_audio_duration(&task.ogg_path_absolute) {
+                Ok(d) => actual_duration_seconds = d,
+                Err(e) => {
+                    eprintln!(
+                        "Warning: Failed to get audio duration for existing file {}: {}. Using duration 0.",
+                        task.ogg_path_absolute.display(),
+                        e
+                    );
+                    actual_duration_seconds = 0; // Fallback to 0 if reading fails
+                }
+            }
+        }
         println!(
             "Skipping audio generation (already up-to-date): {} (from {}), line {}",
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
     }
 
-    // Track OGG path
+    // 5. Prepare the potential new manifest entry with current data from RON
+    let mut current_tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
+    current_tags_vec.sort_by_key(|a| format!("{:?}", a));
+
+    let potential_new_entry = WalkieLineManifestEntry {
+        ron_file_source: task.ron_filename_str.clone(),
+        conceptual_id: task.conceptual_id.clone(),
+        line_index: task.line_idx,
+        tts_text: task.line_entry.tts_text.clone(), // Current TTS text from RON
+        subtitle_text: task.line_entry.subtitle_text.clone(), // Current subtitle from RON
+        tags: current_tags_vec,                     // Current tags from RON
+        ogg_path: task.ogg_path_relative_to_generated_dir.clone(),
+        length_seconds: actual_duration_seconds, // Determined duration
+        generation_script_hash: task.script_hash.clone(),
+        combined_signature: current_tts_signature, // Signature of current TTS text
+    };
+
+    // 6. Determine if the manifest entry itself needs to be updated by comparing all fields
+    let manifest_needs_update = match &existing_entry_opt {
+        Some(existing_entry) => {
+            // Compare all fields of the existing entry with the potential new one
+            existing_entry.ron_file_source != potential_new_entry.ron_file_source
+                || existing_entry.conceptual_id != potential_new_entry.conceptual_id
+                || existing_entry.line_index != potential_new_entry.line_index
+                || existing_entry.tts_text != potential_new_entry.tts_text
+                || existing_entry.subtitle_text != potential_new_entry.subtitle_text
+                || existing_entry.tags != potential_new_entry.tags
+                || existing_entry.ogg_path != potential_new_entry.ogg_path
+                || existing_entry.length_seconds != potential_new_entry.length_seconds
+                || existing_entry.generation_script_hash
+                    != potential_new_entry.generation_script_hash
+                || existing_entry.combined_signature != potential_new_entry.combined_signature
+        }
+        None => true, // No existing entry, so manifest needs update
+    };
+
+    if manifest_needs_update {
+        let mut manifest = manifest_mutex.lock().unwrap();
+        manifest.insert(task.detailed_manifest_key.clone(), potential_new_entry);
+        println!("Updated manifest for {}", task.detailed_manifest_key);
+    } else {
+        println!(
+            "Manifest entry for {} is already up-to-date.",
+            task.detailed_manifest_key
+        );
+    }
+
+    // Always track the OGG path as active for the current run
     {
         let mut all_ogg_paths = all_generated_ogg_paths_mutex.lock().unwrap();
         all_ogg_paths.insert(task.ogg_path_relative_to_generated_dir.clone());
@@ -532,17 +588,21 @@ pub fn process_audio_generation_task_single_thread(
     manifest: &mut HashMap<String, WalkieLineManifestEntry>,
     all_generated_ogg_paths_from_manifest: &mut HashSet<String>,
 ) -> Result<(), anyhow::Error> {
-    let combined_signature =
+    // 1. Calculate signature for current TTS text
+    let current_tts_signature =
         calculate_combined_signature(&task.line_entry.tts_text, &task.script_hash);
 
-    let mut needs_regeneration = true;
-    if let Some(existing_entry) = manifest.get(&task.detailed_manifest_key) {
-        if existing_entry.combined_signature == combined_signature
-            && task.ogg_path_absolute.exists()
-        {
-            needs_regeneration = false;
+    // 2. Get existing manifest entry (if any)
+    let existing_entry_opt = manifest.get(&task.detailed_manifest_key).cloned();
+
+    // 3. Determine if audio needs regeneration
+    let mut needs_audio_regeneration = match &existing_entry_opt {
+        Some(existing_entry) => {
+            existing_entry.combined_signature != current_tts_signature
+                || !task.ogg_path_absolute.exists()
         }
-    }
+        None => true,
+    };
 
     if let Some(pattern) = &task.force_regenerate_pattern {
         if pattern == "all"
@@ -552,50 +612,101 @@ pub fn process_audio_generation_task_single_thread(
                     .conceptual_id
                     .starts_with(pattern.trim_end_matches('*')))
         {
-            needs_regeneration = true;
-            println!(
-                "Forcing regeneration for: {} (from {}) due to pattern '{}'",
-                task.detailed_manifest_key, task.ron_filename_str, pattern
-            );
+            if !needs_audio_regeneration {
+                println!(
+                    "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
+                    task.detailed_manifest_key, task.ron_filename_str, pattern
+                );
+            }
+            needs_audio_regeneration = true;
         }
     }
 
-    if needs_regeneration {
+    // 4. Handle audio generation and determine duration
+    let mut actual_duration_seconds: u32;
+
+    if needs_audio_regeneration {
         println!(
             "Regenerating audio for: {} (from {}), line {}",
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
-
         let (_temp_wav_path, final_ogg_path) = generate_audio_for_line(
             &task.line_entry.tts_text,
             &task.ron_file_sub_dir,
             &task.line_specific_filename_stem,
         )?;
-        let duration_seconds = get_audio_duration(&final_ogg_path)?;
-
-        let mut tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
-        tags_vec.sort_by_key(|a| format!("{:?}", a));
-
-        let new_entry = WalkieLineManifestEntry {
-            ron_file_source: task.ron_filename_str.clone(),
-            conceptual_id: task.conceptual_id.clone(),
-            line_index: task.line_idx,
-            tts_text: task.line_entry.tts_text.clone(),
-            subtitle_text: task.line_entry.subtitle_text.clone(),
-            tags: tags_vec,
-            ogg_path: task.ogg_path_relative_to_generated_dir.clone(),
-            length_seconds: duration_seconds,
-            generation_script_hash: task.script_hash.clone(),
-            combined_signature,
-        };
-        manifest.insert(task.detailed_manifest_key.clone(), new_entry);
-        println!("Updated manifest for {}", task.detailed_manifest_key);
+        actual_duration_seconds = get_audio_duration(&final_ogg_path)?;
     } else {
+        actual_duration_seconds = existing_entry_opt.as_ref().map_or(0, |e| e.length_seconds);
+        if actual_duration_seconds == 0 && task.ogg_path_absolute.exists() {
+            println!(
+                "Audio up-to-date for {}, but duration is 0 in manifest or manifest missing. Fetching duration from existing OGG: {}",
+                task.detailed_manifest_key,
+                task.ogg_path_absolute.display()
+            );
+            match get_audio_duration(&task.ogg_path_absolute) {
+                Ok(d) => actual_duration_seconds = d,
+                Err(e) => {
+                    eprintln!(
+                        "Warning: Failed to get audio duration for existing file {}: {}. Using duration 0.",
+                        task.ogg_path_absolute.display(),
+                        e
+                    );
+                    actual_duration_seconds = 0;
+                }
+            }
+        }
         println!(
             "Skipping audio generation (already up-to-date): {} (from {}), line {}",
             task.conceptual_id, task.ron_filename_str, task.line_idx
         );
     }
+
+    // 5. Prepare the potential new manifest entry
+    let mut current_tags_vec: Vec<WalkieTag> = task.line_entry.tags.iter().cloned().collect();
+    current_tags_vec.sort_by_key(|a| format!("{:?}", a));
+
+    let potential_new_entry = WalkieLineManifestEntry {
+        ron_file_source: task.ron_filename_str.clone(),
+        conceptual_id: task.conceptual_id.clone(),
+        line_index: task.line_idx,
+        tts_text: task.line_entry.tts_text.clone(),
+        subtitle_text: task.line_entry.subtitle_text.clone(),
+        tags: current_tags_vec,
+        ogg_path: task.ogg_path_relative_to_generated_dir.clone(),
+        length_seconds: actual_duration_seconds,
+        generation_script_hash: task.script_hash.clone(),
+        combined_signature: current_tts_signature,
+    };
+
+    // 6. Determine if manifest needs to be updated
+    let manifest_needs_update = match &existing_entry_opt {
+        Some(existing_entry) => {
+            existing_entry.ron_file_source != potential_new_entry.ron_file_source
+                || existing_entry.conceptual_id != potential_new_entry.conceptual_id
+                || existing_entry.line_index != potential_new_entry.line_index
+                || existing_entry.tts_text != potential_new_entry.tts_text
+                || existing_entry.subtitle_text != potential_new_entry.subtitle_text
+                || existing_entry.tags != potential_new_entry.tags
+                || existing_entry.ogg_path != potential_new_entry.ogg_path
+                || existing_entry.length_seconds != potential_new_entry.length_seconds
+                || existing_entry.generation_script_hash
+                    != potential_new_entry.generation_script_hash
+                || existing_entry.combined_signature != potential_new_entry.combined_signature
+        }
+        None => true,
+    };
+
+    if manifest_needs_update {
+        manifest.insert(task.detailed_manifest_key.clone(), potential_new_entry);
+        println!("Updated manifest for {}", task.detailed_manifest_key);
+    } else {
+        println!(
+            "Manifest entry for {} is already up-to-date.",
+            task.detailed_manifest_key
+        );
+    }
+
     all_generated_ogg_paths_from_manifest.insert(task.ogg_path_relative_to_generated_dir.clone());
     Ok(())
 }

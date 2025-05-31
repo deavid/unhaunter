@@ -13,7 +13,7 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `bf` - A mutable reference to the `BoardData` resource.
 /// * `ev_bdr` - An event reader for `BoardDataToRebuild` events.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
-pub fn boardfield_update(
+fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: EventReader<BoardDataToRebuild>,
     mut qt: Query<(Entity, &Position, &Behavior)>,
@@ -23,8 +23,6 @@ pub fn boardfield_update(
         return;
     }
 
-    // Here we will recreate the field (if needed? - not sure how to detect that) ...
-    // maybe add a timer since last update.
     let mut bdr = BoardDataToRebuild::default();
 
     // Merge all the incoming events into a single one.
@@ -43,14 +41,11 @@ pub fn boardfield_update(
 
     if bdr.lighting {
         let mut lens = qt.transmute_lens::<(&Position, &Behavior)>();
-        // for _ in 0..32 {
-        //     rebuild_lighting_field(&mut bf, &lens.query(), &mut avg_time);
-        // }
         rebuild_lighting_field(&mut bf, &lens.query(), &mut avg_time);
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(PostUpdate, boardfield_update)
         .add_event::<BoardDataToRebuild>();
 }

@@ -5,7 +5,6 @@ use crate::components::player_sprite::PlayerSprite;
 use crate::resources::board_data::BoardData;
 use bevy::prelude::*;
 
-#[allow(clippy::type_complexity)]
 /// Synchronizes the map entity field with the current positions of entities.
 ///
 /// This system updates the `BoardData` resource to reflect the current positions
@@ -14,7 +13,7 @@ use bevy::prelude::*;
 ///
 /// Optimized to only process entities within a reasonable radius of the player
 /// using the map_entity_field for efficient entity lookup.
-pub fn sync_map_entity_field(
+fn sync_map_entity_field(
     mut board_data: ResMut<BoardData>,
     game_config: Res<GameConfig>,
     player_query: Query<(&PlayerSprite, &Position)>,
@@ -81,4 +80,8 @@ pub fn sync_map_entity_field(
             entity_vec.push(entity);
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, sync_map_entity_field);
 }

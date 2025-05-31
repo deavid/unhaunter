@@ -1,13 +1,14 @@
 use uncore::random_seed;
-use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position,
     types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
 };
+use ungear::gear_stuff::GearStuff;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
+// Added
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct GeigerCounter {
@@ -21,22 +22,16 @@ pub struct GeigerCounter {
     pub last_sound_time_secs: f32,
     pub display_glitch_timer: f32,
     pub output_sound: f32,
+    pub blinking_hint_active: bool,
 }
 
 impl GeigerCounter {
     pub fn calculate_output_sound(&self, gs: &GearStuff) -> f32 {
-        // if the glitch timer is running, then apply a random value.
-        if self.display_glitch_timer > 0.0 {
-            let mut rng = random_seed::rng();
-            return rng.random_range(0.0..1000.0);
-        }
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        if gs.bf.evidences.contains(&Evidence::CPM500) {
-            f32::tanh(avg_snd.sqrt() / 20.0) * 980.0
-        } else {
-            f32::tanh(avg_snd.sqrt() / 10.0) * 480.0
-        }
+        let evidence = gs.bf.ghost_dynamics.cpm500_clarity.cbrt().max(-0.05);
+
+        f32::tanh(avg_snd.sqrt() / (10.0 + evidence * 2.0)) * (480.0 + evidence * 500.0)
     }
 }
 
@@ -99,8 +94,17 @@ impl GearUsable for GeigerCounter {
         }
         // Regular display: use self.is_enabled() to check if it's truly operational
         let msg = if self.is_enabled() {
-            // Use sound_display here, NOT output_sound!
-            format!("Reading: {:.1}cpm", self.sound_display)
+            let cpm_text = format!("{:.1}", self.sound_display);
+            if self.blinking_hint_active {
+                let blinking_cpm_text = if self.frame_counter % 30 < 15 {
+                    format!(">[{}]<", cpm_text)
+                } else {
+                    format!("  {}  ", cpm_text)
+                };
+                format!("Reading: {}cpm", blinking_cpm_text)
+            } else {
+                format!("Reading: {}cpm", cpm_text)
+            }
         } else {
             "".to_string()
         };
@@ -149,18 +153,23 @@ impl GearUsable for GeigerCounter {
 
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 12.0 / gs.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 20.0 * gs.difficulty.0.equipment_sensitivity;
         if self.enabled {
             // Calculate the *current* output sound.
             let current_output_sound = self.calculate_output_sound(gs);
-
             // Smooth the *current* output to get sound_a1 (first IIR filter).
             self.sound_a1 = (self.sound_a1 * mass + current_output_sound * mass.recip())
                 / (mass + mass.recip());
 
+            let mass = mass
+                * if current_output_sound > self.sound_a2 {
+                    1.0
+                } else {
+                    4.0
+                };
             // Smooth sound_a1 to get output_sound (second IIR filter).
-            // Crucial change:  Use sound_a1 *here*, not current_output_sound!
-            self.output_sound = (self.output_sound * 10.0 + self.sound_a1) / 11.0;
+            self.output_sound =
+                (self.output_sound * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
 
             self.sound_a2 =
                 (self.sound_a2 * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
@@ -183,7 +192,29 @@ impl GearUsable for GeigerCounter {
         if self.display_secs_since_last_update > 0.5 {
             self.display_secs_since_last_update = 0.0; // Reset the timer
             self.sound_display = self.output_sound; // Update the display value
+
+            // Update blinking_hint_active
+            const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+            // Consider evidence showing if cpm is >= 500 and not glitching
+            if self.sound_display >= 499.9 && self.display_glitch_timer <= 0.0 {
+                let count = gs
+                    .player_profile
+                    .times_evidence_acknowledged_on_gear
+                    .get(&Evidence::CPM500)
+                    .copied()
+                    .unwrap_or(0);
+                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+            } else {
+                self.blinking_hint_active = false;
+            }
+        } else {
+            // Ensure blinking_hint_active is false if not updating display this frame,
+            // or if we want it to strictly follow the evidence condition.
+            if !(self.sound_display >= 499.9 && self.display_glitch_timer <= 0.0) {
+                self.blinking_hint_active = false;
+            }
         }
+
         // Decrement glitch timer if active
         if self.display_glitch_timer > 0.0 {
             self.display_glitch_timer -= gs.time.delta_secs();
@@ -214,8 +245,6 @@ impl GearUsable for GeigerCounter {
 
         // Random EMF spikes
         if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            self.sound_a1 = rng.random_range(0.0..400.0);
-            // Jumble numbers temporarily
             self.display_glitch_timer = 0.3;
         }
     }
@@ -226,6 +255,10 @@ impl GearUsable for GeigerCounter {
         } else {
             0.0
         }
+    }
+
+    fn is_blinking_hint_active(&self) -> bool {
+        self.blinking_hint_active
     }
 }
 

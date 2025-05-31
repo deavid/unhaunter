@@ -16,7 +16,7 @@ use uncore::events::loadlevel::LevelReadyEvent;
 use uncore::events::roomchanged::RoomChangedEvent;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
-use uncore::states::AppState;
+use uncore::states::{AppState, GameState};
 use uncore::{celsius_to_kelvin, random_seed};
 use unlight::prebake::prebake_lighting_field;
 use unstd::board::tiledata::PreMesh;
@@ -37,12 +37,13 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `ev_room` - Event writer for room changed events
 /// * `roomdb` - Room database resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
-pub fn after_level_ready(
+fn after_level_ready(
     mut bf: ResMut<BoardData>,
     mut ev: EventReader<LevelReadyEvent>,
     mut ev_room: EventWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
-    mut next_game_state: ResMut<NextState<AppState>>,
+    mut next_app_state: ResMut<NextState<AppState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     if ev.is_empty() {
         return;
@@ -53,7 +54,8 @@ pub fn after_level_ready(
     let open_van = ev.read().next().unwrap().open_van;
 
     // Switch to in-game state
-    next_game_state.set(AppState::InGame);
+    next_app_state.set(AppState::InGame);
+    next_game_state.set(GameState::None);
 
     // Store ambient temperature for reference
     let ambient_temp = bf.ambient_temp;
@@ -196,7 +198,7 @@ pub fn after_level_ready(
 /// * `query` - Query to find entities with PreMesh components
 /// * `images` - Asset storage for image data
 /// * `meshes` - Asset storage for mesh creation
-pub fn process_pre_meshes(
+fn process_pre_meshes(
     mut commands: Commands,
     query: Query<(Entity, &PreMesh)>,
     images: Res<Assets<Image>>,
@@ -251,7 +253,7 @@ pub fn process_pre_meshes(
 /// # Arguments
 /// * `bf` - Board data resource for collision/lighting fields
 /// * `qt` - Query to access all level entities with behaviors and positions
-pub fn load_map_add_prebaked_lighting(
+fn load_map_add_prebaked_lighting(
     mut bf: ResMut<BoardData>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
@@ -263,4 +265,14 @@ pub fn load_map_add_prebaked_lighting(
 
     // Log completion
     info!("Map loaded with prebaked lighting data");
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    use bevy::prelude::on_event; // Corrected import path
+    use uncore::events::loadlevel::LevelReadyEvent; // Ensure this is imported
+    app.add_systems(Update, (process_pre_meshes, after_level_ready))
+        .add_systems(
+            Update,
+            load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>), // Pass the function itself
+        );
 }

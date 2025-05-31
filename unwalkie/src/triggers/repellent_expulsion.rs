@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use std::any::Any;
 use uncore::components::repellent_particle::RepellentParticle;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::board_data::BoardData;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::ghost::types::GhostType;
@@ -13,11 +14,11 @@ use uncore::{
     states::{AppState, GameState},
 };
 use ungear::components::playergear::PlayerGear;
-use ungearitems::components::repellentflask::RepellentFlask as RepellentFlaskData;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone
-const LINGER_THRESHOLD_SECONDS: f64 = 30.0;
+const LINGER_THRESHOLD_SECONDS: f64 = 10.0;
 
 fn trigger_ghost_expelled_player_lingers_system(
     time: Res<Time>,
@@ -86,20 +87,15 @@ fn trigger_has_repellent_enters_location_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>, // Removed PlayerSprite component as it's not directly used here
+    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     roomdb: Res<RoomDB>,
-    mut player_was_previously_outside: Local<bool>, // Tracks if player was outside in the last check
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
-        // If not in the right state, ensure the flag is reset for the next valid entry
-        *player_was_previously_outside = true;
         return;
     }
 
     let Ok((player_gear, player_pos)) = player_query.get_single() else {
-        // No player found
-        *player_was_previously_outside = true; // Reset state
         return;
     };
 
@@ -107,23 +103,11 @@ fn trigger_has_repellent_enters_location_system(
     let has_valid_repellent = player_gear.as_vec().iter().any(|(gear, _epos)| {
         if gear.kind == GearKind::RepellentFlask {
             if let Some(rep_data_dyn) = gear.data.as_ref() {
-                if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_data_dyn)
-                {
-                    return rep_data.liquid_content.is_some() && rep_data.qty > 0;
-                }
+                return rep_data_dyn.can_enable();
             }
         }
         false
     });
-
-    if !has_valid_repellent {
-        // Player doesn't have a filled repellent, update flag and exit
-        *player_was_previously_outside = roomdb
-            .room_tiles
-            .get(&player_pos.to_board_position())
-            .is_none();
-        return;
-    }
 
     // 4. Determine Current Location Status
     let player_is_currently_inside = roomdb
@@ -131,29 +115,22 @@ fn trigger_has_repellent_enters_location_system(
         .get(&player_pos.to_board_position())
         .is_some();
 
-    // 5. Detect Transition from Outside to Inside
-    if player_is_currently_inside && *player_was_previously_outside {
-        // Player just entered the location with a valid repellent
+    if player_is_currently_inside && has_valid_repellent {
         walkie_play.set(
             WalkieEvent::HasRepellentEntersLocation,
             time.elapsed_secs_f64(),
         );
-        // Note: The global WalkiePlay cooldown will manage re-triggering for this event.
-        // No need to explicitly prevent re-triggering within this system beyond the state transition.
     }
-
-    // 6. Update Previous Location Status for the next frame
-    *player_was_previously_outside = !player_is_currently_inside;
 }
 
-const EFFECTIVE_REPELLENT_RANGE: f32 = 4.0; // Configurable distance in game units
+const EFFECTIVE_REPELLENT_RANGE: f32 = 3.0;
+const TOO_FAR_DURATION_SECONDS: f64 = 5.0;
 
-// Local state to track if the repellent was active in the previous frame
+// Local state to track when the "too far" condition started
 #[derive(Default)]
 struct PrevRepellentState {
     was_active: bool,
-    // We might also store which flask (if player could have multiple, though unlikely now)
-    // or the entity_id of the player to handle multiplayer later. For now, simple bool.
+    too_far_started: Option<f64>,
 }
 
 fn trigger_repellent_used_too_far_system(
@@ -189,15 +166,13 @@ fn trigger_repellent_used_too_far_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active = rep_data.active && rep_data.qty > 0;
         }
     }
 
-    // 3. Detect Activation: Was not active previously, but is active now.
-    if current_repellent_is_active && !prev_repellent_state.was_active {
-        // Repellent was just activated by the player this frame.
-
+    // 3. Check if repellent is active and player is too far
+    if current_repellent_is_active {
         // Determine target position for distance check
         let target_pos: Position = ghost_pos_query
             .get_single()
@@ -211,10 +186,22 @@ fn trigger_repellent_used_too_far_system(
             });
 
         let distance = player_pos.distance(&target_pos);
+        let is_too_far = distance > EFFECTIVE_REPELLENT_RANGE;
 
-        if distance > EFFECTIVE_REPELLENT_RANGE {
-            walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+        if is_too_far {
+            if prev_repellent_state.too_far_started.is_none() {
+                prev_repellent_state.too_far_started = Some(time.elapsed_secs_f64());
+            } else if let Some(start_time) = prev_repellent_state.too_far_started {
+                if time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS {
+                    walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+                    prev_repellent_state.too_far_started = None; // Reset after triggering
+                }
+            }
+        } else {
+            prev_repellent_state.too_far_started = None; // Reset if not too far
         }
+    } else {
+        prev_repellent_state.too_far_started = None; // Reset if repellent not active
     }
 
     // 4. Update previous state for next frame
@@ -222,13 +209,11 @@ fn trigger_repellent_used_too_far_system(
 }
 
 const REACTION_WINDOW_SECONDS: f32 = 5.0;
-const RAGE_SPIKE_THRESHOLD: f32 = 30.0; // How much rage must increase to be considered a spike
 const PARTICLE_NEARBY_THRESHOLD: f32 = 3.5; // How close particles need to be to the ghost
 
 #[derive(Default)]
 struct RepellentReactionTracker {
     repellent_activated_time: f32,
-    initial_ghost_rage: f32,
     initial_ghost_hunting_state: f32, // Using f32 to directly compare with GhostSprite.hunting
                                       // Potentially add ghost_entity_id if multiple ghosts were possible
 }
@@ -245,11 +230,17 @@ fn trigger_repellent_provokes_strong_reaction_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
-    mut ghost_query: Query<(&mut GhostSprite, &Position)>, // GhostSprite needs to be mutable if we were to add times_hunted
+    mut ghost_query: Query<(&GhostSprite, &Position)>,
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
     mut tracker: Local<Option<RepellentReactionTracker>>,
     mut prev_rep_active_state: Local<PrevRepellentActiveState>,
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         *tracker = None;
@@ -278,7 +269,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
             None
         }
     }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_flask_gear) {
+        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
             current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
         }
     }
@@ -287,7 +278,6 @@ fn trigger_repellent_provokes_strong_reaction_system(
         // Repellent was just activated this frame by the player
         *tracker = Some(RepellentReactionTracker {
             repellent_activated_time: time.elapsed_secs(),
-            initial_ghost_rage: ghost_sprite.rage,
             initial_ghost_hunting_state: ghost_sprite.hunting,
         });
     }
@@ -298,20 +288,17 @@ fn trigger_repellent_provokes_strong_reaction_system(
         let time_since_activation = time.elapsed_secs() - tracker_data.repellent_activated_time;
 
         if time_since_activation <= REACTION_WINDOW_SECONDS {
-            let rage_increase = ghost_sprite.rage - tracker_data.initial_ghost_rage;
             let hunt_just_started =
                 ghost_sprite.hunting > 0.0 && tracker_data.initial_ghost_hunting_state == 0.0;
             // Also consider if hunt_warning_active just became true, if initial_ghost_hunting_state was low and warning was false
             let warning_just_started = ghost_sprite.hunt_warning_active
                 && ghost_sprite.hunting < 1.0
-                && tracker_data.initial_ghost_hunting_state < 1.0
-                && ghost_sprite.rage > tracker_data.initial_ghost_rage;
+                && tracker_data.initial_ghost_hunting_state < 1.0;
 
             let particles_nearby = repellent_particle_query
                 .iter()
                 .any(|particle_pos| ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD);
-
-            if (rage_increase > RAGE_SPIKE_THRESHOLD || hunt_just_started || warning_just_started)
+            if (hunt_just_started || warning_just_started)
                 && particles_nearby
                 && walkie_play.set(
                     WalkieEvent::RepellentUsedGhostEnragesPlayerFlees,
@@ -348,10 +335,16 @@ fn trigger_repellent_exhausted_correct_type_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<&PlayerGear, With<PlayerSprite>>,
-    ghost_query: Query<&GhostSprite>, // To check if ghost is present and its type/hits
+    ghost_query: Query<&GhostSprite>,
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
     mut check_state: Local<RepellentExhaustedCheckState>,
+    current_difficulty_res: Res<CurrentDifficulty>,
 ) {
+    let difficulty_info = &current_difficulty_res.0;
+    if !difficulty_info.difficulty.is_tutorial_difficulty() {
+        return;
+    }
+
     // 1. System Run Condition Checks & Reset
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         *check_state = RepellentExhaustedCheckState::default(); // Reset on state change
@@ -367,6 +360,10 @@ fn trigger_repellent_exhausted_correct_type_system(
         return;
     };
 
+    if ghost_sprite.get_health() < 0.0 {
+        return;
+    }
+
     // 2. Detect if a Repellent Flask was emptied and it was of the correct type for the current ghost
     if check_state.pending_check_for_ghost_type.is_none() {
         // Only check for new exhaustion events
@@ -374,7 +371,7 @@ fn trigger_repellent_exhausted_correct_type_system(
             if gear.kind == GearKind::RepellentFlask {
                 if let Some(rep_data_dyn) = gear.data.as_ref() {
                     if let Some(rep_data) =
-                        <dyn Any>::downcast_ref::<RepellentFlaskData>(rep_data_dyn)
+                        <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
                     {
                         // Condition 1: Flask is now empty
                         if rep_data.qty == 0 {
@@ -408,10 +405,9 @@ fn trigger_repellent_exhausted_correct_type_system(
             *check_state = RepellentExhaustedCheckState::default(); // Ghost changed type? Unlikely but reset.
             return;
         }
-
         let particles_are_few = repellent_particle_query.iter().count() < 10; // Threshold for "few" particles
         let time_since_exhaustion = time.elapsed_secs() - check_state.time_exhaustion_confirmed;
-
+        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
         if particles_are_few || time_since_exhaustion > MAX_PARTICLE_CLEAR_WAIT_SECONDS {
             walkie_play.set(
                 WalkieEvent::RepellentExhaustedGhostPresentCorrectType,
@@ -524,7 +520,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, trigger_repellent_provokes_strong_reaction_system);
     app.add_systems(Update, trigger_repellent_used_too_far_system);
     app.add_systems(Update, trigger_repellent_exhausted_correct_type_system);
-    app.init_resource::<ProcessedMissedExpulsionGhosts>() // Initialize the resource
+    app.init_resource::<ProcessedMissedExpulsionGhosts>()
         .add_systems(
             Update,
             reset_processed_missed_expulsion_ghosts_on_new_mission,
@@ -534,6 +530,4 @@ pub(crate) fn app_setup(app: &mut App) {
             trigger_ghost_expelled_player_missed_simplified_system
                 .after(reset_processed_missed_expulsion_ghosts_on_new_mission),
         );
-
-    // ... other systems for this module ...
 }

@@ -25,6 +25,9 @@ impl Direction {
             dz: 0.0,
         }
     }
+    pub fn is_finite(&self) -> bool {
+        self.dx.is_finite() && self.dy.is_finite() && self.dz.is_finite()
+    }
 
     pub fn to_vec3(&self) -> Vec3 {
         Vec3 {

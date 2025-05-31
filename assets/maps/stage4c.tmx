@@ -13,8 +13,8 @@
   <property name="required_deposit" type="int" value="1698"/>
   <property name="mission_reward_base" type="int" value="865"/>
   <property name="grade_a_score_threshold" type="int" value="600"/>
-  <property name="grade_b_score_threshold" type="int" value="450"/>
-  <property name="grade_c_score_threshold" type="int" value="350"/>
+  <property name="grade_b_score_threshold" type="int" value="400"/>
+  <property name="grade_c_score_threshold" type="int" value="200"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
   <property name="min_player_level" type="int" value="7"/>
  </properties>

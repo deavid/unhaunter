@@ -124,13 +124,26 @@ pub fn compute_visibility(
             };
             dst_f /= 1.0 + ((npds - 1.5) / k).clamp(0.0, 6.0);
             let vf_np = &mut vis_field[np];
+            // Apply a visibility penalty to collision tiles that are in positive X or Y direction
+            let mut visibility_factor = 1.0;
+            if !(ncf.player_free || ncf.see_through) {
+                // Check if the neighbor is in positive X or Y direction relative to current tile
+                if npos.x > pos.x || npos.y < pos.y {
+                    if ncf.is_dynamic {
+                        visibility_factor = (0.5 / (npds + 1.0)).cbrt(); // Doors have less penalty
+                    } else {
+                        visibility_factor = 0.2 / (npds + 1.0); // Apply the penalization
+                    }
+                }
+            }
+
             if *vf_np < -0.000001 {
                 if ncf.player_free || ncf.see_through {
                     queue.push_front((npos.clone(), pos.clone()));
                 }
-                *vf_np = dst_f;
+                *vf_np = dst_f * visibility_factor;
             } else {
-                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f);
+                *vf_np = 1.0 - (1.0 - *vf_np) * (1.0 - dst_f * visibility_factor);
             }
             if ncf.stair_offset != 0 && start.z == npos.z {
                 // Move up/down stairs too
@@ -157,7 +170,7 @@ pub fn compute_visibility(
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
-pub fn player_visibility_system(
+fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bf: Res<BoardData>,
     gc: Res<GameConfig>,
@@ -205,8 +218,8 @@ pub fn player_visibility_system(
 ///
 /// * Adjusts tile and sprite colors based on lighting, visibility, and exposure,
 ///   creating a realistic and atmospheric visual experience.
-#[allow(clippy::type_complexity, clippy::too_many_arguments)]
-pub fn apply_lighting(
+#[expect(clippy::type_complexity)]
+fn apply_lighting(
     mut qt2: Query<
         (
             &Position,
@@ -225,7 +238,6 @@ pub fn apply_lighting(
     gc: Res<GameConfig>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
-        // Create a ParamSet for Sprite queries
         Query<(
             &Position,
             &mut Sprite,
@@ -234,7 +246,7 @@ pub fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
-            Option<&GhostOrbParticle>, // Added GhostOrbParticle
+            Option<&GhostOrbParticle>,
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -245,7 +257,6 @@ pub fn apply_lighting(
             ),
         >,
     )>,
-    // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
     miasma_config: Res<MiasmaConfig>,
     mut visible: Local<HashSet<Entity>>,
@@ -253,7 +264,7 @@ pub fn apply_lighting(
     let measure = APPLY_LIGHTING.time_measure();
 
     let mut rng = random_seed::rng();
-    let gamma_exp: f32 = difficulty.0.environment_gamma;
+    let _gamma_exp: f32 = difficulty.0.environment_gamma;
     let dark_gamma: f32 = difficulty.0.darkness_intensity;
     let light_gamma: f32 = difficulty.0.environment_gamma.recip();
 
@@ -336,10 +347,19 @@ pub fn apply_lighting(
             continue;
         }
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors(1, board_dim) {
+        for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
             let lf = &bf.light_field[npos.ndidx()];
-            cursor_exp += lf.lux.powf(gamma_exp);
-            exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
+            let vis = vf.visibility_field[npos.ndidx()]
+                * if bf.collision_field[npos.ndidx()].player_free {
+                    1.0
+                } else {
+                    0.01
+                };
+
+            cursor_exp += lf.lux * vis;
+            exp_count += 1.0 * vis;
+            // cursor_exp += lf.lux.powf(gamma_exp);
+            // exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
         }
         player_pos = *pos;
     }
@@ -387,16 +407,19 @@ pub fn apply_lighting(
     let f_e1 = 0.1;
     bf.exposure_lux = bf.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
     // Ensure the base is not negative before applying the power function
-    let normalized_exp = (cursor_exp / center_exp).clamp(-10.0, 10.0);
+    let normalized_exp = (cursor_exp / center_exp.clamp(0.00001, 10000.0)).clamp(-10.0, 10.0);
     cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
-    assert!(cursor_exp.is_normal());
-
     // Minimum exp - controls how dark we can see
-    cursor_exp += 0.001 / difficulty.0.environment_gamma;
+    cursor_exp += 0.001 / difficulty.0.environment_gamma + difficulty.0.darkness_intensity;
 
     // Compensate overall to make the scene brighter
-    cursor_exp /= 2.8;
+    cursor_exp /= 2.8 / difficulty.0.darkness_intensity;
+
+    if !cursor_exp.is_normal() {
+        warn!("cursor_exp is not 'normal': {}", cursor_exp);
+        cursor_exp = bf.current_exposure;
+    }
     let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
     let max_acc = 1.05;
     bf.current_exposure_accel =
@@ -619,16 +642,23 @@ pub fn apply_lighting(
                     + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
                     / 2.0
             };
-            const K_COLD: f32 = 0.5;
+            const K_COLD: f32 = 0.6;
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
             const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
+            let dark_color2 = lerp_color(
+                DARK_COLOR2,
+                Color::BLACK,
+                (dark_gamma / 4.0 + exposure * dark_gamma)
+                    .tanh()
+                    .clamp(0.0, 1.0),
+            );
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 32.0);
+            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
             let dark2 = lerp_color(
                 Color::WHITE,
-                DARK_COLOR2,
+                dark_color2,
                 exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
             );
             new_mat.data.ambient_color = dark.with_alpha(0.0).into();
@@ -810,37 +840,40 @@ pub fn apply_lighting(
                 dst_color = dst_color.with_luminance(l);
                 let r = dst_color.to_srgba().red;
                 let g = dst_color.to_srgba().green;
-                let e_uv = if bf.evidences.contains(&Evidence::UVEctoplasm) {
-                    ld.ultraviolet * 6.0 * difficulty.0.evidence_visibility.sqrt()
-                } else {
-                    0.0
-                };
-                let e_rl = if bf.evidences.contains(&Evidence::RLPresence) {
-                    (ld.red * 32.0 * difficulty.0.evidence_visibility.sqrt()).clamp(0.0, 1.5)
-                } else {
-                    0.0
-                };
+                let e_uv = ld.ultraviolet * 13.0 * bf.ghost_dynamics.uv_ectoplasm_clarity.max(0.0);
+                let e_rl = (ld.red * 52.0 * bf.ghost_dynamics.rl_presence_clarity.max(0.0))
+                    .clamp(0.0, 1.5);
                 let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
                 let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
                     .clamp(0.001, 0.999);
                 opacity = opacity * f + orig_opacity * (1.0 - f);
-                let srgba = dst_color.with_luminance(l * ld.visible).to_srgba();
+                opacity *= (bf.ghost_dynamics.visual_alpha_multiplier * 0.5
+                    + 0.5
+                    + e_uv
+                    + e_rl
+                    + ld.ultraviolet * 2.0
+                    + ld.red * 10.0
+                    + ld.infrared)
+                    .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
+                let srgba = dst_color
+                    .with_luminance((l * ld.visible - ld.infrared).clamp(0.0, 1.0))
+                    .to_srgba();
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl + e_infra / 3.0)
-                    .with_green(g * ld.visible + e_uv + e_rl / 2.0 + e_infra)
+                    .with_red(r * ld.visible + e_rl * 1.1 + e_infra / 3.0)
+                    .with_green(g * ld.visible + e_uv + e_rl + e_infra)
                     .into();
             }
             smooth = 1.0;
-            dst_color = lerp_color(
-                sprite.color,
-                dst_color,
-                0.04 * difficulty.0.evidence_visibility,
-            );
+            dst_color = lerp_color(sprite.color, dst_color, 0.1);
         }
         if sprite_type == SpriteType::Breach {
             smooth = 2.0;
-            let e_nv = ld.ultraviolet - ld.infrared * 3.0
-                + (difficulty.0.evidence_visibility / 2.0 + ld.visible - ld.infrared).powi(3);
+            let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.0.evidence_visibility
+                - ld.infrared * 3.0
+                + (difficulty.0.evidence_visibility / 7.0
+                    + ld.visible * difficulty.0.evidence_visibility
+                    - ld.infrared)
+                    .powi(3);
             opacity *= ((dst_color.luminance() / 2.0) + e_nv / 4.0).clamp(0.0, 0.9);
             opacity = opacity.min(visibility).cbrt();
             let l = dst_color.luminance();
@@ -854,9 +887,18 @@ pub fn apply_lighting(
 
             dst_color = lin_dst_color
                 .with_green(
-                    lin_dst_color.green + ld.ultraviolet * 10.0 * (1.3 - osc1 + rnd_f / 14.0),
+                    lin_dst_color.green
+                        + ld.ultraviolet
+                            * difficulty.0.evidence_visibility
+                            * (1.3 - osc1 + rnd_f / 14.0),
                 )
-                .with_red(lin_dst_color.red + ld.ultraviolet * 11.0 * (1.4 - osc1 + rnd_f / 24.0))
+                .with_red(
+                    lin_dst_color.red
+                        + ld.ultraviolet
+                            * difficulty.0.evidence_visibility
+                            * 1.2
+                            * (1.4 - osc1 + rnd_f / 24.0),
+                )
                 .into();
         }
         let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
@@ -949,7 +991,7 @@ pub fn apply_lighting(
 }
 
 /// System to manage ambient sound levels based on visibility.
-pub fn ambient_sound_system(
+fn ambient_sound_system(
     vf: Res<VisibilityData>,
     qas: Query<(&AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
@@ -1071,7 +1113,7 @@ fn calculate_clarity_for_visual_evidence(
     }
 }
 
-pub fn report_environmental_visual_evidence_clarity_system(
+fn report_environmental_visual_evidence_clarity_system(
     mut current_evidence_readings: ResMut<CurrentEvidenceReadings>,
     board_data: Res<BoardData>,           // bf
     visibility_data: Res<VisibilityData>, // vf
@@ -1133,7 +1175,11 @@ pub fn report_environmental_visual_evidence_clarity_system(
                     0.3, // Visible light darkness threshold
                     player_visibility_to_tile,
                     3.0, // Scaling factor for UV
-                )
+                ) * board_data
+                    .ghost_dynamics
+                    .uv_ectoplasm_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
@@ -1153,7 +1199,11 @@ pub fn report_environmental_visual_evidence_clarity_system(
                     0.3,
                     player_visibility_to_tile,
                     3.0, // Scaling factor for Red
-                )
+                ) * board_data
+                    .ghost_dynamics
+                    .rl_presence_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
@@ -1174,7 +1224,11 @@ pub fn report_environmental_visual_evidence_clarity_system(
                     0.2, // Visible light darkness threshold
                     player_visibility_to_tile,
                     5.0, // Scaling factor for Orbs (IR is usually strong)
-                )
+                ) * board_data
+                    .ghost_dynamics
+                    .floating_orbs_clarity
+                    .max(0.0)
+                    .powi(2)
             } else {
                 0.0
             };
@@ -1195,4 +1249,17 @@ pub fn report_environmental_visual_evidence_clarity_system(
     for (entity_id, entity_pos) in breach_query.iter() {
         process_entity(entity_id, entity_pos, false);
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            player_visibility_system,
+            apply_lighting,
+            report_environmental_visual_evidence_clarity_system.after(apply_lighting),
+        )
+            .chain(),
+    )
+    .add_systems(Update, ambient_sound_system);
 }

@@ -17,8 +17,7 @@ use ungear::components::playergear::PlayerGear;
 use unsettings::game::{GameplaySettings, MovementStyle};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
-#[allow(clippy::type_complexity, clippy::too_many_arguments)]
-pub fn keyboard_player(
+fn keyboard_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(
@@ -61,9 +60,31 @@ pub fn keyboard_player(
     let dt = time.delta_secs() * 60.0;
     for (mut pos, mut dir, player, mut anim, player_gear, hiding, mut stamina) in players.iter_mut()
     {
-        let col_delta = colhand.delta(&pos);
-        pos.x -= col_delta.x;
-        pos.y -= col_delta.y;
+        if !dir.is_finite() {
+            warn!("Player direction is not finite: {dir:?}");
+            *dir = Direction::zero();
+        }
+        if !pos.is_finite() {
+            warn!("Player position is not finite: {pos:?}");
+            if let Some((_, int_pos, _, _, _)) = interactables.iter().next() {
+                // Emergency: try to put a valid position from any interactable object, so the game remains playable.
+                *pos = *int_pos;
+            }
+        }
+
+        let mut col_delta;
+        if hiding.is_none() {
+            col_delta = colhand.delta(&pos);
+            if col_delta.is_finite() {
+                pos.x -= col_delta.x;
+                pos.y -= col_delta.y;
+            } else {
+                warn!("Player collision delta is not finite: {col_delta:?}");
+                col_delta = Vec3::ZERO;
+            }
+        } else {
+            col_delta = Vec3::ZERO;
+        }
         let mut d = Direction {
             dx: 0.0,
             dy: 0.0,
@@ -223,7 +244,7 @@ pub fn keyboard_player(
     }
 }
 
-pub fn stairs_player(
+fn stairs_player(
     mut players: Query<(&mut Position, &PlayerSprite)>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
     gc: Res<GameConfig>,
@@ -277,4 +298,11 @@ pub fn stairs_player(
     if !in_stairs && player_pos.z.fract().abs() > 0.001 {
         player_pos.z = player_bpos.z as f32;
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(
+        Update,
+        (keyboard_player, stairs_player).run_if(in_state(uncore::states::GameState::None)),
+    );
 }

@@ -16,3 +16,4 @@ ungearitems = { path = "../ungearitems" }
 bevy = { workspace = true }
 rand = { workspace = true }
 ordered-float = { workspace = true }
+enum-iterator = { workspace = true }

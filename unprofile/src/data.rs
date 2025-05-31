@@ -1,6 +1,7 @@
 use bevy::{prelude::Resource, utils::HashMap};
 use serde::{Deserialize, Serialize};
 use uncore::difficulty::Difficulty;
+use uncore::types::evidence::Evidence;
 use uncore::types::grade::Grade;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -106,4 +107,8 @@ pub struct PlayerProfileData {
     /// Tracks statistics for each walkie event, keyed by the event ID
     #[serde(default)]
     pub walkie_event_stats: HashMap<String, WalkieEventStats>,
+    #[serde(default)]
+    pub times_evidence_acknowledged_on_gear: HashMap<Evidence, u32>,
+    #[serde(default)]
+    pub times_evidence_acknowledged_in_journal: HashMap<Evidence, u32>,
 }

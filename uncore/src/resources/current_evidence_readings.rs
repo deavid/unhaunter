@@ -46,7 +46,7 @@ impl CurrentEvidenceReadings {
         }
 
         // Ramping up
-        const RAMP_UP_DURATION_SECONDS: f32 = 2.0; // Time to go from current to target
+        const RAMP_UP_DURATION_SECONDS: f32 = 5.0; // Time to go from current to target
         let increase_this_frame = (1.0 / RAMP_UP_DURATION_SECONDS) * delta_time_secs;
         reading.clarity = (reading.clarity + increase_this_frame).min(target_clarity);
 

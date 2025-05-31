@@ -11,7 +11,7 @@ pub struct GameplaySettings {
     pub character_controls: CharacterControls,
 }
 
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
 pub enum GameplaySettingsValue {
     movement_style(MovementStyle),

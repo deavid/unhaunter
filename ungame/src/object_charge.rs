@@ -37,7 +37,6 @@ fn accumulate_charge(
 struct WithinDischargeRange;
 
 /// System to check ghost proximity to objects
-#[allow(clippy::too_many_arguments)]
 fn check_ghost_proximity(
     // Access the object interaction configuration
     config: Res<ObjectInteractionConfig>,
@@ -141,7 +140,7 @@ fn discharge_objects(
 }
 
 /// Adds the object charge management systems to the Bevy app.
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (accumulate_charge, check_ghost_proximity, discharge_objects).chain(),

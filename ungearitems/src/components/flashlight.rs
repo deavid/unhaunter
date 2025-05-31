@@ -1,8 +1,8 @@
 use uncore::random_seed;
-use uncore::systemparam::gear_stuff::GearStuff;
 use uncore::{
     components::board::position::Position, types::gear::equipmentposition::EquipmentPosition,
 };
+use ungear::gear_stuff::GearStuff;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;

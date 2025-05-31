@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
 
-pub struct UnprofilePlugin;
+pub struct UnhaunterProfilePlugin;
 
-impl Plugin for UnprofilePlugin {
+impl Plugin for UnhaunterProfilePlugin {
     fn build(&self, app: &mut App) {
         let config_dir_path = dirs::config_dir()
             .map(|native_config_dir| native_config_dir.join("unhaunter-game").join("config"))
@@ -33,15 +33,17 @@ impl Plugin for UnprofilePlugin {
         {
             #[cfg(target_os = "linux")]
             {
-                use crate::dev_tools;
-                app.add_systems(Startup, dev_tools::snapshot_schema_system)
-                    .add_systems(Startup, dev_tools::validate_schema_snapshots);
+                crate::dev_tools::app_setup(app);
             }
         }
 
         // Make sure any stuck deposit is properly set on startup
-        app.add_systems(Startup, recover_stuck_insurance_deposit);
+        app_setup(app);
     }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Startup, recover_stuck_insurance_deposit);
 }
 
 fn recover_stuck_insurance_deposit(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {

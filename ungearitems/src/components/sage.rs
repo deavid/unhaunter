@@ -154,8 +154,7 @@ pub struct SageSmokeParticle;
 pub struct SmokeParticleTimer(pub Timer);
 
 /// System to handle smoke particle logic.
-#[allow(clippy::type_complexity)]
-pub fn sage_smoke_system(
+fn sage_smoke_system(
     mut commands: Commands,
     time: Res<Time>,
     mut smoke_particles: Query<
@@ -219,4 +218,8 @@ pub fn sage_smoke_system(
     }
 
     measure.end_ms();
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, sage_smoke_system);
 }
