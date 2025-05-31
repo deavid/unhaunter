@@ -49,13 +49,23 @@ pub(crate) fn update_ghost_behavior_dynamics_system(
         for evidence_type in Evidence::all() {
             // Evidence::all() comes from enum_iterator trait
             let (offset_x, offset_y) = dynamics.noise_offsets.get_evidence_offsets(evidence_type);
-
+            // Some evidences are easier than others, so this is to adjust and make it fair.
+            let ev_diff_mult = match evidence_type {
+                Evidence::FreezingTemp => 1.0,
+                Evidence::FloatingOrbs => 1.0,
+                Evidence::UVEctoplasm => 1.0,
+                Evidence::EMFLevel5 => 1.0,
+                Evidence::EVPRecording => 1.0,
+                Evidence::SpiritBox => 1.0,
+                Evidence::RLPresence => 1.0,
+                Evidence::CPM500 => 0.3,
+            };
             let scaled_value = calculate_noise_multiplier(
                 &noise_table,
                 elapsed_seconds,
                 offset_x,
                 offset_y,
-                evidence_visibility_recip,
+                evidence_visibility_recip * ev_diff_mult,
             );
 
             let evidence_presence_max = if ghost_sprite.class.evidences().contains(&evidence_type) {
