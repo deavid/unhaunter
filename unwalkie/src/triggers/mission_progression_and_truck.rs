@@ -5,7 +5,7 @@ use uncore::{
         player_sprite::PlayerSprite,
     },
     states::{AppState, GameState},
-    types::evidence::Evidence,
+    types::{evidence::Evidence, gear_kind::GearKind},
 };
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
@@ -69,6 +69,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     mut exited_truck_time: Local<Option<f64>>,
     mut empty_right_handed: Local<bool>,
     mut discoverable_evidences_with_current_gear: Local<HashSet<Evidence>>,
+    mut has_repellent_flask: Local<bool>,
     mut last_gear_evidences_change_time: Local<Option<f64>>,
 ) {
     if *app_state.get() != AppState::InGame {
@@ -94,15 +95,22 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
             if player_sprite.id == game_config.player_id {
                 // Calculate current set of discoverable evidences from player's gear
                 let mut new_discoverable_evidences = HashSet::new();
+                let mut new_has_repellent_flask = false;
 
                 // Check left hand gear
                 if let Ok(evidence) = Evidence::try_from(&player_gear.left_hand.kind) {
                     new_discoverable_evidences.insert(evidence);
                 }
+                if player_gear.left_hand.kind == GearKind::RepellentFlask {
+                    new_has_repellent_flask = true;
+                }
 
                 // Check right hand gear
                 if let Ok(evidence) = Evidence::try_from(&player_gear.right_hand.kind) {
                     new_discoverable_evidences.insert(evidence);
+                }
+                if player_gear.right_hand.kind == GearKind::RepellentFlask {
+                    new_has_repellent_flask = true;
                 }
 
                 // Check inventory gear
@@ -110,11 +118,17 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
                     if let Ok(evidence) = Evidence::try_from(&gear_item.kind) {
                         new_discoverable_evidences.insert(evidence);
                     }
+                    if gear_item.kind == GearKind::RepellentFlask {
+                        new_has_repellent_flask = true;
+                    }
                 }
 
-                // Check if the set of discoverable evidences has changed
-                if *discoverable_evidences_with_current_gear != new_discoverable_evidences {
+                // Check if the set of discoverable evidences has changed OR repellent flask status changed
+                if *discoverable_evidences_with_current_gear != new_discoverable_evidences
+                    || *has_repellent_flask != new_has_repellent_flask
+                {
                     *discoverable_evidences_with_current_gear = new_discoverable_evidences;
+                    *has_repellent_flask = new_has_repellent_flask;
                     *last_gear_evidences_change_time = Some(time.elapsed_secs_f64());
                 }
                 *empty_right_handed = player_gear.empty_right_handed();
@@ -130,7 +144,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
         }
         let too_long_checking_evidence =
             (exited_time - last_gear_evidences_change_time.unwrap_or(exited_time)) > 120.0;
-        let trigger = *empty_right_handed || too_long_checking_evidence;
+        let trigger = (*empty_right_handed || too_long_checking_evidence) && !*has_repellent_flask;
         if trigger
             && walkie_play.set(
                 WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout,
