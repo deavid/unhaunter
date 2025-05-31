@@ -198,13 +198,11 @@ fn trigger_repellent_used_too_far_system(
 }
 
 const REACTION_WINDOW_SECONDS: f32 = 5.0;
-const RAGE_SPIKE_THRESHOLD: f32 = 18.0;
 const PARTICLE_NEARBY_THRESHOLD: f32 = 3.5; // How close particles need to be to the ghost
 
 #[derive(Default)]
 struct RepellentReactionTracker {
     repellent_activated_time: f32,
-    initial_ghost_rage: f32,
     initial_ghost_hunting_state: f32, // Using f32 to directly compare with GhostSprite.hunting
                                       // Potentially add ghost_entity_id if multiple ghosts were possible
 }
@@ -221,7 +219,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
-    mut ghost_query: Query<(&mut GhostSprite, &Position)>, // GhostSprite needs to be mutable if we were to add times_hunted
+    mut ghost_query: Query<(&GhostSprite, &Position)>,
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
     mut tracker: Local<Option<RepellentReactionTracker>>,
     mut prev_rep_active_state: Local<PrevRepellentActiveState>,
@@ -263,7 +261,6 @@ fn trigger_repellent_provokes_strong_reaction_system(
         // Repellent was just activated this frame by the player
         *tracker = Some(RepellentReactionTracker {
             repellent_activated_time: time.elapsed_secs(),
-            initial_ghost_rage: ghost_sprite.rage,
             initial_ghost_hunting_state: ghost_sprite.hunting,
         });
     }
@@ -274,20 +271,18 @@ fn trigger_repellent_provokes_strong_reaction_system(
         let time_since_activation = time.elapsed_secs() - tracker_data.repellent_activated_time;
 
         if time_since_activation <= REACTION_WINDOW_SECONDS {
-            let rage_increase = ghost_sprite.rage - tracker_data.initial_ghost_rage;
             let hunt_just_started =
                 ghost_sprite.hunting > 0.0 && tracker_data.initial_ghost_hunting_state == 0.0;
             // Also consider if hunt_warning_active just became true, if initial_ghost_hunting_state was low and warning was false
             let warning_just_started = ghost_sprite.hunt_warning_active
                 && ghost_sprite.hunting < 1.0
-                && tracker_data.initial_ghost_hunting_state < 1.0
-                && ghost_sprite.rage > tracker_data.initial_ghost_rage;
+                && tracker_data.initial_ghost_hunting_state < 1.0;
 
             let particles_nearby = repellent_particle_query
                 .iter()
                 .any(|particle_pos| ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD);
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-            if (rage_increase > RAGE_SPIKE_THRESHOLD || hunt_just_started || warning_just_started)
+            if (hunt_just_started || warning_just_started)
                 && particles_nearby
                 && walkie_play.set(
                     WalkieEvent::RepellentUsedGhostEnragesPlayerFlees,
