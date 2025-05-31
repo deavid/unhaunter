@@ -3,8 +3,8 @@ title = "Beta Testing Release"
 path = "beta"
 template = "beta.html"
 [extra]
-beta_available = true
-beta_version = "v0.3.0-beta5"
+beta_available = false
+beta_version = "v0.3.0"
 +++
 
 ## New shiny things to test!
