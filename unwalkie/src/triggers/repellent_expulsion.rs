@@ -281,7 +281,6 @@ fn trigger_repellent_provokes_strong_reaction_system(
             let particles_nearby = repellent_particle_query
                 .iter()
                 .any(|particle_pos| ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD);
-            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
             if (hunt_just_started || warning_just_started)
                 && particles_nearby
                 && walkie_play.set(
