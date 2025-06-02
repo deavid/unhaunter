@@ -56,8 +56,8 @@ fn lose_sanity(
             // prevent sanity from being lost outside of the location.
             mean_sound.0 /= 1.8_f32.powf(dt);
         }
-        let crazy =
-            lux.recip() / f_temp * f_temp2 * mean_sound.0 * 10.0 + mean_sound.0 / f_temp * f_temp2;
+        let crazy = lux.max(0.00001).recip() / f_temp * f_temp2 * mean_sound.0 * 10.0
+            + mean_sound.0 / f_temp * f_temp2;
         let sanity_recover: f32 = if ps.sanity() < difficulty.0.max_recoverable_sanity {
             4.0 / 100.0 / difficulty.0.sanity_drain_rate
         } else {

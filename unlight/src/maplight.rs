@@ -1069,7 +1069,9 @@ fn ambient_sound_system(
         const SMOOTH: f32 = 60.0;
         let volume_factor =
             2.0 * audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
-        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001).ln();
+        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001)
+            .max(0.000001)
+            .ln();
         let v = match gamesound.class {
             SoundType::BackgroundHouse => {
                 (ln_volume * SMOOTH + house_volume.ln() * health * sanity) / (SMOOTH + 1.0)

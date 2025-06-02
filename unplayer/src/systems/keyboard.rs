@@ -136,7 +136,8 @@ fn keyboard_player(
         let Some(pressure) = board_data.miasma.pressure_field.get(bpos.ndidx()) else {
             continue;
         };
-        let miasma_factor = (*pressure / 100.0).sqrt().clamp(0.0, 0.7);
+        // NOTE: miasma pressure can be negative.
+        let miasma_factor = (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7);
 
         // --- Stamina Modification ---
         // Increase depletion rate based on miasma.

@@ -70,6 +70,6 @@ impl PlayerSprite {
     pub fn sanity(&self) -> f32 {
         const LINEAR: f32 = 30.0;
         const SCALE: f32 = 100.0;
-        (SCALE * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
+        (SCALE * LINEAR) / ((self.crazyness + LINEAR * LINEAR).max(0.01).sqrt())
     }
 }
