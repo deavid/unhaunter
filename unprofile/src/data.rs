@@ -1,5 +1,6 @@
-use bevy::{prelude::Resource, utils::HashMap};
+use bevy::prelude::*; // Consolidate to one bevy prelude import
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uncore::difficulty::Difficulty;
 use uncore::types::evidence::Evidence;
 use uncore::types::grade::Grade;

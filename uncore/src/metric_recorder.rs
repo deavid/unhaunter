@@ -1,5 +1,5 @@
 use bevy::diagnostic::{DiagnosticMeasurement, DiagnosticPath};
-use bevy::utils::Instant;
+use std::time::Instant;
 use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use std::sync::{LazyLock, Mutex, mpsc};
 

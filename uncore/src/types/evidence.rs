@@ -1,4 +1,4 @@
-use bevy::utils::HashSet;
+use std::collections::HashSet;
 use enum_iterator::Sequence;
 use enum_iterator::all;
 use serde::{Deserialize, Serialize};

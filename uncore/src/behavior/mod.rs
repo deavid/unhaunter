@@ -22,8 +22,9 @@
 pub mod component;
 
 use anyhow::Context;
-use bevy::{ecs::component::Component, utils::HashMap};
+use bevy::{ecs::component::Component};
 use fastapprox::faster;
+use std::collections::HashMap;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 

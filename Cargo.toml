@@ -65,11 +65,11 @@ itertools = "0.14.0"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-bevy = { version = "0.15", features = ["jpeg", "serialize"] }
-bevy-persistent = { version = "0.7", features = ["all"] }
+bevy = { version = "0.16", features = ["jpeg", "serialize"] }
+bevy-persistent = { version = "0.8.0", features = ["all"] }
 bevy_framepace = "0.18"
-bevy_dylib = "0.15"
-bevy_picking = "0.15"
+bevy_dylib = "0.16"
+bevy_picking = "0.16"
 ndarray = "0.16.1"
 sha2 = "0.10"
 rayon = "1.7"

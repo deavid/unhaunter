@@ -21,7 +21,7 @@ use rand::{RngCore, SeedableRng};
 ///
 /// A `u64` seed value derived from the current system time.
 pub fn heavy_rng_seed() -> u64 {
-    use bevy::utils::SystemTime;
+    use std::time::SystemTime;
     let now = SystemTime::now();
     let mut hasher = DefaultHasher::new();
     now.hash(&mut hasher);
