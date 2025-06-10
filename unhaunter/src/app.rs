@@ -1,3 +1,4 @@
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
@@ -52,7 +53,9 @@ pub fn app_run(cli_options: CliOptions) {
     app.init_resource::<CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
-    app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
+    app.add_plugins(FrameTimeDiagnosticsPlugin::new(1024));
+    // app.add_plugins(LogDiagnosticsPlugin::default());
+
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
 

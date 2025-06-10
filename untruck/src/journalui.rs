@@ -10,7 +10,7 @@ use uncore::types::root::game_assets::GameAssets;
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 
 pub fn setup_journal_ui(
-    p: &mut ChildBuilder,
+    p: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     difficulty: &CurrentDifficulty,
 ) {
@@ -21,7 +21,7 @@ pub fn setup_journal_ui(
         TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 25.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         },
         Node {
             margin: UiRect::all(Val::Px(4.0 * UI_SCALE)),
@@ -31,7 +31,7 @@ pub fn setup_journal_ui(
 
     // Evidence selection
     p.spawn(Node {
-        justify_content: JustifyContent::FlexStart,
+        justify_content: JustifyContent::Stretch,
         row_gap: Val::Px(4.0 * UI_SCALE),
         column_gap: Val::Px(4.0 * UI_SCALE),
         display: Display::Grid,
@@ -70,7 +70,7 @@ pub fn setup_journal_ui(
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
                             font_size: 18.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
                         TextLayout::default(), // Ensure TextLayout is added
@@ -96,7 +96,7 @@ pub fn setup_journal_ui(
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             Node {
@@ -109,7 +109,7 @@ pub fn setup_journal_ui(
 
     // Ghost selection
     p.spawn(Node {
-        justify_content: JustifyContent::FlexStart,
+        justify_content: JustifyContent::Stretch,
         display: Display::Grid,
         grid_template_columns: vec![
             // Define columns for the grid
@@ -153,7 +153,7 @@ pub fn setup_journal_ui(
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
                             font_size: 18.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(colors::TRUCKUI_TEXT_COLOR),
                         TextLayout::default(), // Ensure TextLayout is added
@@ -179,7 +179,7 @@ pub fn setup_journal_ui(
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             Node {
@@ -193,7 +193,7 @@ pub fn setup_journal_ui(
             TextFont {
                 font: handles.fonts.titillium.w600_semibold.clone(),
                 font_size: 20.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
         );
@@ -237,7 +237,7 @@ pub fn setup_journal_ui(
                 TextFont {
                     font: handles.fonts.titillium.w600_semibold.clone(),
                     font_size: 23.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),
                 TextLayout::default(),

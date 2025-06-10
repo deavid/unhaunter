@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use enum_iterator::all;
 use uncore::{
     components::player_sprite::PlayerSprite,
@@ -185,7 +185,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
         return;
     }
 
-    let Ok((_player_sprite, player_gear)) = player_query.get_single() else {
+    let Ok((_player_sprite, player_gear)) = player_query.single() else {
         tracked_state.tracked_clear_evidence.clear();
         return;
     };

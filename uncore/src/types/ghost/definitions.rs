@@ -53,7 +53,8 @@ impl GhostSet {
 mod tests {
     use super::*;
     use crate::types::evidence::Evidence;
-    use bevy::utils::{HashMap, HashSet};
+    use bevy_platform::collections::HashMap;
+    use bevy_platform::collections::HashSet;
     use enum_iterator::all;
 
     #[test]

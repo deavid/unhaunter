@@ -57,7 +57,7 @@ impl UnhaunterMapLoader {
         tmx_assets: &Res<Assets<TmxMap>>,
         tsx_assets: &Res<Assets<TsxSheet>>,
     ) -> tiled::Map {
-        let now = bevy::utils::Instant::now();
+        let now = bevy_platform::time::Instant::now();
         let mut loader =
             tiled::Loader::<tiled::DefaultResourceCache, TmxMemoryReader>::with_cache_and_reader(
                 tiled::DefaultResourceCache::new(),

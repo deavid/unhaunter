@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use bevy_persistent::Persistent;
+use bevy_platform::collections::{HashMap, HashSet};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::states::GameState;
 use uncore::types::ghost::types::GhostType;
@@ -30,10 +30,10 @@ fn update_journal_button_blinking_system(
     profile_data: Res<Persistent<PlayerProfileData>>,
     mut button_query: Query<(&mut TruckUIButton, &mut BorderColor)>,
     time: Res<Time>,
-    mut seen_evidence_hints: ResMut<SeenEvidenceHints>, // MODIFIED: Use ResMut
+    mut seen_evidence_hints: ResMut<SeenEvidenceHints>,
 ) {
     // Create a temporary map of evidence button states
-    let mut evidence_button_states = bevy::utils::HashMap::new();
+    let mut evidence_button_states = HashMap::new();
     for (btn_config, _) in button_query.iter() {
         if let TruckButtonType::Evidence(ev) = btn_config.class {
             evidence_button_states.insert(ev, btn_config.status);
@@ -151,7 +151,7 @@ fn update_journal_ghost_blinking_system(
 ) {
     // Get the actual mission ghost type from GhostSprite
     let actual_mission_ghost_type: Option<GhostType> =
-        ghost_sprite_query.get_single().ok().map(|gs| gs.class);
+        ghost_sprite_query.single().ok().map(|gs| gs.class);
 
     // Count enabled ghost buttons and track their states
     let mut enabled_ghost_buttons = Vec::new();

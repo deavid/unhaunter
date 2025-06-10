@@ -53,7 +53,7 @@ pub fn trigger_ghost_events(
         roomdb.room_tiles.contains_key(&bpos)
     }) {
         // Find the ghost
-        let Ok((_ghost, ghost_pos)) = q_ghost.get_single() else {
+        let Ok((_ghost, ghost_pos)) = q_ghost.single() else {
             return;
         };
 
@@ -111,13 +111,13 @@ pub fn trigger_ghost_events(
                             ));
 
                             // Play door slam sound effect
-                            interactive_stuff.sound_events.send(SoundEvent {
+                            interactive_stuff.sound_events.write(SoundEvent {
                                 sound_file: "sounds/door-close.ogg".to_string(),
                                 volume: 1.0,
                                 position: Some(*door_position),
                             });
 
-                            ev_bdr.send(BoardDataToRebuild {
+                            ev_bdr.write(BoardDataToRebuild {
                                 lighting: true,
                                 collision: true,
                             });
@@ -153,7 +153,7 @@ pub fn trigger_ghost_events(
                             }
                         }
                         if flicker {
-                            ev_bdr.send(BoardDataToRebuild {
+                            ev_bdr.write(BoardDataToRebuild {
                                 lighting: true,
                                 collision: true,
                             });
@@ -177,7 +177,7 @@ fn update_flicker_timers(
             // Reset the light to its original state using the public method
             behavior.p.light.flickering = false;
             commands.entity(entity).remove::<FlickerTimer>();
-            ev_bdr.send(BoardDataToRebuild {
+            ev_bdr.write(BoardDataToRebuild {
                 lighting: true,
                 collision: true,
             });

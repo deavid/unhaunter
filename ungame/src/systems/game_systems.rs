@@ -16,7 +16,7 @@ use unsettings::game::GameplaySettings;
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // 2D orthographic camera - Arena
@@ -26,7 +26,7 @@ fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     };
     commands
         .spawn(Camera2d)
-        .insert(projection)
+        .insert(Projection::Orthographic(projection))
         .insert(GCameraArena)
         .insert(Direction::zero());
 }
@@ -39,17 +39,17 @@ fn cleanup(
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // Despawn game sprites if not used
     for gs in qgs.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 
     // Despawn game sound
     for gs in qs.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 }
 

@@ -11,7 +11,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::root::game_assets::GameAssets;
 
 pub fn grid_img_text2(
-    parent: &mut ChildBuilder<'_>,
+    parent: &mut ChildSpawnerCommands<'_>,
     regular_font: &Handle<Font>,
     bold_font: &Handle<Font>,
     colxrow: (u16, u16),
@@ -20,12 +20,12 @@ pub fn grid_img_text2(
     let font_regular = TextFont {
         font: regular_font.clone(),
         font_size: 16.0 * FONT_SCALE,
-        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+        ..default()
     };
     let font_bold = TextFont {
         font: bold_font.clone(),
         font_size: 16.0 * FONT_SCALE,
-        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+        ..default()
     };
     let color_regular = TextColor(colors::DIALOG_TEXT_COLOR);
     let color_bold = TextColor(colors::DIALOG_BOLD_TEXT_COLOR);
@@ -98,7 +98,7 @@ pub fn grid_img_text2(
 }
 
 pub fn header(
-    parent: &mut ChildBuilder,
+    parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     title: impl Into<String>,
     subtitle: impl Into<String>,
@@ -123,7 +123,7 @@ pub fn header(
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 32.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(Color::WHITE));
 
@@ -133,7 +133,7 @@ pub fn header(
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(Color::WHITE));
         });
@@ -144,7 +144,11 @@ pub fn header(
     });
 }
 
-pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: impl Into<String>) {
+pub fn summary_text(
+    parent: &mut ChildSpawnerCommands,
+    handles: &GameAssets,
+    summary: impl Into<String>,
+) {
     parent
         .spawn(Node {
             width: Val::Percent(90.0),
@@ -171,7 +175,7 @@ pub fn summary_text(parent: &mut ChildBuilder, handles: &GameAssets, summary: im
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(Color::WHITE));
         });

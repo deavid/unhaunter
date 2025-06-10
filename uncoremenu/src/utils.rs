@@ -20,7 +20,7 @@ pub fn create_menu_selection_system<
 >() -> impl FnMut(Query<&T, With<Interaction>>, EventWriter<E>) + Send + Sync + 'static {
     move |query: Query<&T, With<Interaction>>, mut event_writer: EventWriter<E>| {
         for menu_identifier in query.iter() {
-            event_writer.send(E::from(*menu_identifier));
+            event_writer.write(E::from(*menu_identifier));
         }
     }
 }

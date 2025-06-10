@@ -121,7 +121,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         return;
     }
 
-    let Ok((player_sprite, player_pos, light_level)) = player_query.get_single() else {
+    let Ok((player_sprite, player_pos, light_level)) = player_query.single() else {
         *darkness_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;
@@ -202,7 +202,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
         return;
     }
 
-    let Ok((player_sprite, player_pos, maybe_hiding)) = player_query.get_single() else {
+    let Ok((player_sprite, player_pos, maybe_hiding)) = player_query.single() else {
         *interaction_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;

@@ -1,5 +1,5 @@
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
-use bevy::picking::focus::HoverMap;
+use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
@@ -50,7 +50,7 @@ fn ensure_selected_item_visible(
     const SCROLL_MARGIN_PX: f32 = 80.0;
 
     if let Ok((_entity, _node, container_computed, mut scroll_position)) =
-        container_query.get_single_mut()
+        container_query.single_mut()
     {
         let container_height = container_computed.size().y;
         let current_scroll_y = scroll_position.offset_y;
@@ -156,7 +156,7 @@ fn update_scrollbar(
     >,
 ) {
     // Get container info and children list
-    if let Ok((scroll_position, container_node, children)) = scroll_container_query.get_single() {
+    if let Ok((scroll_position, container_node, children)) = scroll_container_query.single() {
         let scroll_y = scroll_position.offset_y;
         let container_height = container_node.size().y;
 
@@ -164,7 +164,7 @@ fn update_scrollbar(
         let mut content_height = 0.0;
         for child_entity in children.iter() {
             // Get the ComputedNode for each child item
-            if let Ok(child_node) = item_node_query.get(*child_entity) {
+            if let Ok(child_node) = item_node_query.get(child_entity) {
                 // Add the child's height to the total content height
                 content_height += child_node.size().y + 2.0;
                 // Note: This assumes no vertical margin/padding between items.
@@ -176,7 +176,7 @@ fn update_scrollbar(
         let has_scrollable_content = content_height > container_height;
 
         // Update up/down arrow colors based on scroll position
-        if let Ok((children, interaction)) = arrow_up_query.get_single() {
+        if let Ok((children, interaction)) = arrow_up_query.single() {
             if let Some(child) = children.first() {
                 if let Ok(mut image) = thumb_image_query.get_mut(*child) {
                     // Set transparency/color for up arrow
@@ -200,7 +200,7 @@ fn update_scrollbar(
             }
         }
 
-        if let Ok((children, interaction)) = arrow_down_query.get_single() {
+        if let Ok((children, interaction)) = arrow_down_query.single() {
             if let Some(child) = children.first() {
                 if let Ok(mut image) = thumb_image_query.get_mut(*child) {
                     // Set transparency/color for down arrow
@@ -226,9 +226,9 @@ fn update_scrollbar(
         }
 
         // Update thumb position and visibility
-        if let Ok((mut thumb_node, children)) = thumb_query.get_single_mut() {
+        if let Ok((mut thumb_node, children)) = thumb_query.single_mut() {
             // If we have a track, calculate the thumb position
-            if let Ok(track_node) = track_query.get_single() {
+            if let Ok(track_node) = track_query.single() {
                 let track_height = track_node.size().y;
 
                 if has_scrollable_content {
@@ -286,9 +286,9 @@ fn handle_scrollbar_interactions(
     mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     // Handle the up arrow button
-    if let Ok(interaction) = up_arrow_query.get_single() {
+    if let Ok(interaction) = up_arrow_query.single() {
         if *interaction == Interaction::Pressed {
-            if let Ok((_, mut scroll_position)) = scroll_container_query.get_single_mut() {
+            if let Ok((_, mut scroll_position)) = scroll_container_query.single_mut() {
                 // Scroll up by 60px when clicking the up arrow
                 scroll_position.offset_y = (scroll_position.offset_y - 60.0).max(0.0);
             }
@@ -296,9 +296,9 @@ fn handle_scrollbar_interactions(
     }
 
     // Handle the down arrow button
-    if let Ok(interaction) = down_arrow_query.get_single() {
+    if let Ok(interaction) = down_arrow_query.single() {
         if *interaction == Interaction::Pressed {
-            if let Ok((_, mut scroll_position)) = scroll_container_query.get_single_mut() {
+            if let Ok((_, mut scroll_position)) = scroll_container_query.single_mut() {
                 // Scroll down by 60px when clicking the down arrow
                 scroll_position.offset_y += 60.0;
             }
@@ -306,9 +306,9 @@ fn handle_scrollbar_interactions(
     }
 
     // Handle thumb drag start
-    if let Ok((interaction, _)) = thumb_query.get_single() {
+    if let Ok((interaction, _)) = thumb_query.single() {
         if *interaction == Interaction::Pressed && mouse_button_input.pressed(MouseButton::Left) {
-            if let Ok((entity, _)) = scroll_container_query.get_single() {
+            if let Ok((entity, _)) = scroll_container_query.single() {
                 if drag_state.is_none() {
                     // Start dragging - store the current cursor position and scroll container entity
                     if let Some(event) = cursor_moved_events.read().last() {
@@ -346,7 +346,7 @@ fn handle_scrollbar_interactions(
 /// where the scrollbar is intended to be placed.
 ///
 /// This is not a system but a helper function.
-pub fn build_scrollbar_ui(scrollbar: &mut ChildBuilder, handles: &GameAssets) {
+pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAssets) {
     scrollbar
         .spawn(Node {
             width: Val::Px(48.0),
@@ -408,7 +408,7 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildBuilder, handles: &GameAssets) {
                             justify_self: JustifySelf::Center,
                             ..default()
                         })
-                        .insert(PickingBehavior {
+                        .insert(Pickable {
                             should_block_lower: false,
                             ..default()
                         });

@@ -46,7 +46,7 @@ fn roomchanged_event(
             // dbg!(&behavior);
         }
     }
-    ev_bdr.send(BoardDataToRebuild {
+    ev_bdr.write(BoardDataToRebuild {
         lighting: true,
         collision: true,
     });

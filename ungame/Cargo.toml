@@ -21,6 +21,7 @@ unprofile = { path = "../unprofile" }
 
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 tiled = { workspace = true }
 ordered-float = { workspace = true }

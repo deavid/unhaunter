@@ -57,13 +57,13 @@ fn menu_interaction_system(
                     for mut menu in menu_query.iter_mut() {
                         if menu.selected_item != menu_item.identifier {
                             menu.selected_item = menu_item.identifier;
-                            selection_events.send(MenuItemSelected(menu_item.identifier));
+                            selection_events.write(MenuItemSelected(menu_item.identifier));
                         }
                     }
                 }
             }
             Interaction::Pressed => {
-                click_events.send(MenuItemClicked {
+                click_events.write(MenuItemClicked {
                     state: **app_state,
                     pos: menu_item.identifier,
                 });
@@ -85,7 +85,7 @@ fn menu_keyboard_system(
     mut escape_events: EventWriter<MenuEscapeEvent>,
     app_state: Res<State<AppState>>,
 ) {
-    let Ok(mut menu) = menu_query.get_single_mut() else {
+    let Ok(mut menu) = menu_query.single_mut() else {
         return;
     };
 
@@ -111,13 +111,13 @@ fn menu_keyboard_system(
     // Update selection if changed
     if let Some(new_idx) = new_selection {
         menu.selected_item = new_idx;
-        selection_events.send(MenuItemSelected(new_idx));
-        keyboard_nav_events.send(KeyboardNavigate(new_idx)); // Send the new event
+        selection_events.write(MenuItemSelected(new_idx));
+        keyboard_nav_events.write(KeyboardNavigate(new_idx)); // Send the new event
     }
 
     // Handle enter key for selection
     if keyboard_input.just_pressed(KeyCode::Enter) {
-        click_events.send(MenuItemClicked {
+        click_events.write(MenuItemClicked {
             state: **app_state,
             pos: menu.selected_item,
         });
@@ -125,7 +125,7 @@ fn menu_keyboard_system(
 
     // Handle escape key
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        escape_events.send(MenuEscapeEvent);
+        escape_events.write(MenuEscapeEvent);
     }
 }
 
@@ -141,11 +141,11 @@ fn update_menu_item_visuals(
     )>,
     mut text_queries: ParamSet<(
         Query<&mut TextColor>,
-        Query<(&mut TextColor, &Parent), With<PrincipalMenuText>>,
+        Query<(&mut TextColor, &ChildOf), With<PrincipalMenuText>>,
     )>,
 ) {
     // Skip if there are no menus
-    let Ok(menu) = menu_query.get_single() else {
+    let Ok(menu) = menu_query.single() else {
         return;
     };
     let selected_item = menu.selected_item;
@@ -180,7 +180,7 @@ fn update_menu_item_visuals(
         let mut principal_query = text_queries.p1();
         for (mut text_color, parent) in principal_query.iter_mut() {
             // Check if this principal text's parent is in our children list
-            if children.iter().any(|&child_id| parent.get() == child_id) {
+            if children.iter().any(|child_id| parent.parent() == child_id) {
                 if text_color.0 != target_text_color {
                     text_color.0 = target_text_color;
                 }

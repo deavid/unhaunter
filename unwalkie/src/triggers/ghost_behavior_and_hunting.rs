@@ -32,7 +32,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
         return;
     }
 
-    let Ok((player_current_pos, maybe_hiding, player_gear)) = q_player.get_single() else {
+    let Ok((player_current_pos, maybe_hiding, player_gear)) = q_player.single() else {
         if warning_timer.is_some() {
             *warning_timer = None;
             *player_pos_at_warning = None;

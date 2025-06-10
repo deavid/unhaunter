@@ -12,5 +12,6 @@ uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }

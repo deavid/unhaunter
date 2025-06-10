@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unprofile::{PlayerProfileData, data::WalkieEventStats};
+use unprofile::PlayerProfileData;
 use unwalkiecore::{WalkiePlay, WalkieSoundState};
 
 /// System that updates the WalkieEventStats in the player profile
@@ -22,7 +22,7 @@ pub fn update_walkie_stats(
             let stats = player_profile
                 .walkie_event_stats
                 .entry(event_id.clone())
-                .or_insert_with(WalkieEventStats::default);
+                .or_default();
             if now - stats.last_played_at_time < 5.0 {
                 // If the event was played recently, do not update the stats
                 return;

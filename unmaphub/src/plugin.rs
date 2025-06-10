@@ -34,6 +34,6 @@ fn setup_systems(mut commands: Commands, mut next_state: ResMut<NextState<MapHub
 fn cleanup_systems(mut commands: Commands, q_camera: Query<Entity, With<MapHubCamera>>) {
     // Despawn the camera
     for entity in q_camera.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

@@ -1,4 +1,4 @@
-PROJECT: 
+PROJECT:
 /home/deavid/git/rust/bevy-website
 
 
@@ -1086,7 +1086,7 @@ The method `ArchetypeEntity::entity` has been renamed to `ArchetypeEntity::id`
 
 All `Command` types in `bevy_ecs`, such as `Spawn`, `SpawnBatch`, `Insert`, etc., have been made private. Use the equivalent methods on `Commands` or `EntityCommands` instead.
 
-If you were working with `ChildBuilder`, recreate these commands using a closure. For example, you might migrate a Command to insert components like:
+If you were working with `ChildSpawnerCommands`, recreate these commands using a closure. For example, you might migrate a Command to insert components like:
 
 ```rust
 // 0.12
@@ -3781,12 +3781,12 @@ For now, the `<=0.12.0` behavior can be recovered by simply removing the `EventU
 fn main() {
     let mut app = App::new()
         .add_plugins(DefaultPlugins);
-    
+
     /* ... */
 
     // If this resource is absent, events are dropped the same way as <=0.12.0.
     app.world.remove_resource::<EventUpdateSignal>();
-    
+
     /* ... */
 
     app.run();
@@ -5640,7 +5640,7 @@ Peering deep into the mists of time (predictions are _extra_ hard when your team
 
 +++
 title = "Bevy 0.16"
-date = 2025-04-24 
+date = 2025-04-24
 [extra]
 image = "planet.jpg"
 show_image = true
@@ -6613,7 +6613,7 @@ It is now possible to configure the line style (such as solid or dotted) of gizm
 
 You can configure the behavior of spawned audio with the `PlaybackMode` enum. One of its variants, `PlaybackMode::Despawn`, would despawn the entity when the audio finished playing.
 
-There was previously a bug where this would only despawn the entity and not its children. This has been fixed, so now `despawn_recursive()` is called when the audio finishes.
+There was previously a bug where this would only despawn the entity and not its children. This has been fixed, so now .despawn()` is called when the audio finishes.
 
 If you relied on this behavior, consider using `PlaybackMode::Remove` to just remove the audio components from the entity or `AudioSink::empty()` to check whether any audio is finished and manually `despawn()` it.
 
@@ -7027,7 +7027,7 @@ The UV-mapping of `Triangle2d` has changed with this PR: the main difference is 
 
 Generally speaking, this means that the first two points will have coordinates `[_, 0.]`, while the third coordinate will be `[_, 1.]`, with the exact values depending on the position of the third point relative to the first two. For acute triangles, the first two vertices always have UV-coordinates `[0., 0.]` and `[1., 0.]` respectively. For obtuse triangles, the third point will have coordinate `[0., 1.]` or `[1., 1.]`, with the coordinate of one of the two other points shifting to maintain proportionality.
 
-For example: 
+For example:
 
 - The default `Triangle2d` has UV-coordinates `[0., 0.]`, `[0., 1.]`, [`0.5, 1.]`.
 - The triangle with vertices `vec2(0., 0.)`, `vec2(1., 0.)`, `vec2(2., 1.)` has UV-coordinates `[0., 0.]`, `[0.5, 0.]`, `[1., 1.]`.
@@ -8015,7 +8015,7 @@ The internal `UpdateState` has been removed and replaced internally by the AppLi
 
 The `UpdateMode` now accepts only two values: `Continuous` and `Reactive`, but the latter exposes 3 new properties to enable reactive to device, user or window events. The previous `UpdateMode::Reactive` is now equivalent to `UpdateMode::reactive()`, while `UpdateMode::ReactiveLowPower` to `UpdateMode::reactive_low_power()`.
 
-The `ApplicationLifecycle` has been renamed as `AppLifecycle`, and now contains the possible values of the application state inside the event loop: 
+The `ApplicationLifecycle` has been renamed as `AppLifecycle`, and now contains the possible values of the application state inside the event loop:
 
 - `Idle`: the loop has not started yet
 - `Running` (previously called `Started`): the loop is running
@@ -8705,7 +8705,7 @@ fn main() {
 fn on_resize(trigger: Trigger<Resize>, query: Query<&mut Size>) {
     let size = query.get_mut(trigger.entity()).unwrap();
     size.value = trigger.event().size;
-} 
+}
 ```
 
 Notice that observers can use system parameters like [`Query`], just like a normal system.
@@ -9050,7 +9050,7 @@ We know that state machines are very much a matter of taste; so if our design is
 ECS Queries can now be combined, returning the data for entities that are contained in both queries.
 
 ```rust
-fn helper_function(a: &mut Query<&A>, b: &mut Query<&B>){    
+fn helper_function(a: &mut Query<&A>, b: &mut Query<&B>){
     let a_and_b: QueryLens<(Entity, &A, &B)> = a.join(b);
     assert!(a_and_b.iter().len() <= a.len());
     assert!(a_and_b.iter().len() <= b.len());
@@ -9583,7 +9583,7 @@ commands.spawn(NodeBundle {
         ..default()
     },
     border_color: BorderColor(Color::BLACK),
-    // Apply the radius to all corners. 
+    // Apply the radius to all corners.
     // Optionally, you could use `BorderRadius::all`.
     border_radius: BorderRadius {
         top_left: Val::Px(50.0),
@@ -10452,7 +10452,7 @@ fn check_for_gltf_extras(
         Option<&GltfMaterialExtras>,
     )>,
 ) {
-    // use the extras' data 
+    // use the extras' data
     for (id, name, scene_extras, extras, mesh_extras, material_extras) in
         gltf_extras_per_entity.iter()
     {
@@ -10818,10 +10818,10 @@ Similar to other retained gizmos, [`ShowLightGizmo`] can be configured per-insta
 Geometric shapes find a variety of applications in game development, ranging from rendering simple items to the screen for display / debugging to use in
 colliders, physics, raycasting, and more.
 
-For this, geometric shape primitives were [introduced in Bevy 0.13](https://bevy.org/news/bevy-0-13/#primitive-shapes), and work on this area has continued with Bevy 0.14, which brings the addition of 
-[`Triangle3d`] and [`Tetrahedron`] 3D primitives, along with [`Rhombus`], [`Annulus`], [`Arc2d`], [`CircularSegment`], and [`CircularSector`] 2D 
-primitives. As usual, these each have methods for querying geometric information like perimeter, area, and volume, and they all support meshing (where 
-applicable) as well as gizmo display. 
+For this, geometric shape primitives were [introduced in Bevy 0.13](https://bevy.org/news/bevy-0-13/#primitive-shapes), and work on this area has continued with Bevy 0.14, which brings the addition of
+[`Triangle3d`] and [`Tetrahedron`] 3D primitives, along with [`Rhombus`], [`Annulus`], [`Arc2d`], [`CircularSegment`], and [`CircularSector`] 2D
+primitives. As usual, these each have methods for querying geometric information like perimeter, area, and volume, and they all support meshing (where
+applicable) as well as gizmo display.
 
 [`Triangle3d`]: https://docs.rs/bevy/0.14.0/bevy/math/primitives/struct.Triangle3d.html
 [`Tetrahedron`]: https://docs.rs/bevy/0.14.0/bevy/math/primitives/struct.Tetrahedron.html
@@ -10967,8 +10967,8 @@ fn gamepad_system(
 -      if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South)) {
 +      if gamepad.just_pressed(GamepadButton::South) {
             println!("just pressed South");
-        } 
-         
+        }
+
 -      let right_trigger = button_axes
 -           .get(GamepadButton::new(
 -               gamepad,
@@ -10977,7 +10977,7 @@ fn gamepad_system(
 -           .unwrap();
 +      let right_trigger = gamepad.get(GamepadButton::RightTrigger2).unwrap();
         if right_trigger.abs() > 0.01 {
-            info!("RightTrigger2 value is {}", right_trigger);      
+            info!("RightTrigger2 value is {}", right_trigger);
         }
 
 -        let left_stick_x = axes
@@ -10985,7 +10985,7 @@ fn gamepad_system(
 -           .unwrap();
 +       let left_stick_x = gamepad.get(GamepadAxis::LeftStickX).unwrap();
         if left_stick_x.abs() > 0.01 {
-            info!("LeftStickX value is {}", left_stick_x);        
+            info!("LeftStickX value is {}", left_stick_x);
         }
     }
 }
@@ -11103,7 +11103,7 @@ let ui_node = ExtractedUiNode {
                     color,
                     rect,
                     image,
--                   atlas_size: Some(atlas_size * scale_factor),      
+-                   atlas_size: Some(atlas_size * scale_factor),
 +                   atlas_scaling: Some(Vec2::splat(scale_factor)),
                     clip,
                     flip_x,
@@ -11272,7 +11272,7 @@ Users currently directly accessing the `Events` resource for mutation should mov
 --- BEGIN FILE `release-content/0.15/migration-guides/13855_Align_Scenewrite_to_world_with_to_match_DynamicScenewrite_.md` ---
 
 
-`Scene::write_to_world_with` no longer returns an `InstanceInfo`. 
+`Scene::write_to_world_with` no longer returns an `InstanceInfo`.
 
 Before
 
@@ -11742,9 +11742,9 @@ Try replacing `bundle_info.iter_components()` with `bundle_info.components()` or
 --- BEGIN FILE `release-content/0.15/migration-guides/14382_Disallow_empty_cubic_and_rational_curves.md` ---
 
 
-The `to_curve` method on Bevy’s cubic splines is now fallible (returning a `Result`), meaning that any existing calls will need to be updated by handling the possibility of an error variant. 
+The `to_curve` method on Bevy’s cubic splines is now fallible (returning a `Result`), meaning that any existing calls will need to be updated by handling the possibility of an error variant.
 
-Similarly, any custom implementation of `CubicGenerator` or `RationalGenerator` will need to be amended to include an `Error` type and be made fallible itself. 
+Similarly, any custom implementation of `CubicGenerator` or `RationalGenerator` will need to be amended to include an `Error` type and be made fallible itself.
 
 Finally, the fields of `CubicCurve` and `RationalCurve` are now private, so any direct constructions of these structs from segments will need to be replaced with the new `CubicCurve::from_segments` and `RationalCurve::from_segments` methods.
 
@@ -11914,7 +11914,7 @@ The `get_conflicts` method of `Access` now returns an `AccessConflict` enum inst
 --- BEGIN FILE `release-content/0.15/migration-guides/14650_Improve_the_gizmo_for_Plane3d_reusing_grid.md` ---
 
 
-The optional builder methods on 
+The optional builder methods on
 
 ```rust
 
@@ -11928,7 +11928,7 @@ changed from
 - `segment_count`
 - `axis_count`
 
-to 
+to
 
 - `cell_count`
 - `spacing`
@@ -11995,7 +11995,7 @@ The gizmos methods function signature changes as follows:
 
 
 - users have to adjust their usages of `arc_2d`:
-  - before: 
+  - before:
 
 ```rust
 arc_2d(
@@ -12007,11 +12007,11 @@ arc_2d(
 )
 ```
 
-  - after: 
+  - after:
 
 ```rust
 arc_2d(
-  // this `+ arc_angle * 0.5` quirk is only if you want to preserve the previous behavior 
+  // this `+ arc_angle * 0.5` quirk is only if you want to preserve the previous behavior
   // with the new API.
   // feel free to try to fix this though since your current calls to this function most likely
   // involve some computations to counter-act that quirk in the first place
@@ -12475,7 +12475,7 @@ The types of the fields border and border_radius of `ExtractedUiNode` have been 
 
 The `DynamicScene` format is changed to use custom serialize impls so old scene files will need updating:
 
-Old: 
+Old:
 
 ```ron
 (
@@ -12587,7 +12587,7 @@ The following methods for `DynamicSceneBuilder` have been renamed:
 
 
 - `Commands::add` and `Commands::push` have been replaced with `Commands::queue`.
-- `ChildBuilder::add_command` has been renamed to `ChildBuilder::queue_command`.
+- `ChildSpawnerCommands::add_command` has been renamed to `ChildSpawnerCommands::queue_command`.
 
 
 --- END FILE `release-content/0.15/migration-guides/15234_Rename_Add_to_Queue_for_methods_with_deferred_semantics.md` ---
@@ -12649,7 +12649,7 @@ Note that the order in which `#[reflect(opaque)]` appears does not matter.
 --- BEGIN FILE `release-content/0.15/migration-guides/15263_change_return_type_of_Worldresource_ref_to_Ref.md` ---
 
 
-Previously `World::get_resource_ref::<T>` and `World::resource_ref::<T>` would return a `Res<T>` which was inconsistent with the rest of the `World` API (notably `resource_scope`). This has been fixed and the methods now return `Ref<T>`. 
+Previously `World::get_resource_ref::<T>` and `World::resource_ref::<T>` would return a `Res<T>` which was inconsistent with the rest of the `World` API (notably `resource_scope`). This has been fixed and the methods now return `Ref<T>`.
 
 This means it is no longer possible to get `Res<T>` from `World`. If you were relying on this, you should try using `Ref<T>` instead since it has the same functionality.
 
@@ -13141,7 +13141,7 @@ A similar processor system should also be added to the serialization side, but t
 --- BEGIN FILE `release-content/0.15/migration-guides/15489_Migrate_bevy_sprite_to_required_components.md` ---
 
 
-Replace all uses of `SpriteBundle` with `Sprite`. There are several new convenience constructors: `Sprite::from_image`, `Sprite::from_atlas_image`, `Sprite::from_color`. 
+Replace all uses of `SpriteBundle` with `Sprite`. There are several new convenience constructors: `Sprite::from_image`, `Sprite::from_atlas_image`, `Sprite::from_color`.
 
 WARNING: use of `Handle<Image>` and `TextureAtlas` as components on sprite entities will NO LONGER WORK. Use the fields on `Sprite` instead. I would have removed the `Component` impls from `TextureAtlas` and `Handle<Image>` except it is still used within ui. We should fix this moving forward with the migration.
 
@@ -13243,7 +13243,7 @@ Style has a new field `OverflowClipMargin`.  It allows users to set the visible 
 There are three associated constructor functions `content_box`, `padding_box` and `border_box`:
 
 - `content_box`: elements painted outside of the content box area (the innermost part of the node excluding the padding and border) of the node are clipped. This is the new default behaviour.
-- `padding_box`: elements painted outside outside of the padding area of the node are clipped. 
+- `padding_box`: elements painted outside outside of the padding area of the node are clipped.
 - `border_box`:  elements painted outside of the bounds of the node are clipped. This matches the behaviour from Bevy 0.14.
 
 There is also a `with_margin` method that increases the size of the visible area by the given number in logical pixels, negative margin values are clamped to zero.
@@ -13591,7 +13591,7 @@ use bevy::render::mesh::MeshAabb;
 --- BEGIN FILE `release-content/0.15/migration-guides/15690_Migrate_bevy_picking.md` ---
 
 
-This API hasn’t shipped yet, so I didn’t bother with a deprecation. However, for any crates tracking main the changes are as follows: 
+This API hasn’t shipped yet, so I didn’t bother with a deprecation. However, for any crates tracking main the changes are as follows:
 
 Previous api:
 
@@ -14544,7 +14544,7 @@ While this has always been possible, it was quite onerous:
 ```rust
 // We need to manually track which events this system has read
 // using a system-local `EventCursor`, previously called `ManualEventReader`.
-fn mutate_events(mut events: ResMut<Events<MyEvent>>, mut local_cursor: Local<EventCursor<MyEvent>>){    
+fn mutate_events(mut events: ResMut<Events<MyEvent>>, mut local_cursor: Local<EventCursor<MyEvent>>){
     for event in local_cursor.read_mut(&mut *events){
         event.some_mutation();
     }
@@ -14554,7 +14554,7 @@ fn mutate_events(mut events: ResMut<Events<MyEvent>>, mut local_cursor: Local<Ev
 Now, you can simply use the new [`EventMutator`] system param, which keeps track of this bookkeeping for you.
 
 ```rust
-fn mutate_events(mut event_mutator: EventMutator<MyEvent>>){    
+fn mutate_events(mut event_mutator: EventMutator<MyEvent>>){
     for event in event_mutator.read(){
         event.some_mutation();
     }
@@ -14774,7 +14774,7 @@ The surfaces of meshes can now be randomly sampled. This can be used for things 
 
 This consists of:
 
-1. The `Mesh::triangles` method, which allows the extraction of a `Mesh`'s list of 
+1. The `Mesh::triangles` method, which allows the extraction of a `Mesh`'s list of
   triangles (`Triangle3d`).
 2. The `UniformMeshSampler` type, which allows the creation of a [`Distribution`] that
   uniformly samples points in space (`Vec3`) from a collection of triangles.
@@ -14788,7 +14788,7 @@ let mut rng = StdRng::seed_from_u64(8765309);
 // the wrong format or if its vertex/index data is malformed.
 let triangles = my_mesh.triangles().unwrap();
 
-// Construct the distribution. This can fail in some cases - most notably if 
+// Construct the distribution. This can fail in some cases - most notably if
 // the mesh surface has zero area.
 let distribution = UniformMeshSampler::try_new(triangles).unwrap();
 
@@ -14922,14 +14922,14 @@ letting you access the soon-to-be-dropped value to perform bookkeeping and clean
 The above example would be fixed by simply replacing the `on_remove` hook with the new `on_replace` hook:
 
 ```diff
-21                     .resource_mut::<EntityLookupById>()                                          
-22                     .insert(this, entity);       
-23             })                                   
--24             .on_remove(|mut world, entity, _| {  
+21                     .resource_mut::<EntityLookupById>()
+22                     .insert(this, entity);
+23             })
+-24             .on_remove(|mut world, entity, _| {
 +24             .on_replace(|mut world, entity, _| {
-25                 let this = *world.entity(entity).get::<Self>().unwrap();                         
-26                 world.resource_mut::<EntityLookupById>().remove(&this);                          
-27             });                                  
+25                 let this = *world.entity(entity).get::<Self>().unwrap();
+26                 world.resource_mut::<EntityLookupById>().remove(&this);
+27             });
 ```
 
 
@@ -15127,7 +15127,7 @@ approximating properties via numerical methods.
 ```rust
 // A curve defined by a function, which may be challenging to store as data.
 let exponential_curve = FunctionCurve::new(
-  interval(0.0, 10.0).unwrap(), 
+  interval(0.0, 10.0).unwrap(),
   |t| f32::exp(2.0 * t)
 );
 
@@ -15214,7 +15214,7 @@ Then whenever a new player needs to be spawned, developers would initialize and 
 
 ```rust
 commands.spawn(PlayerBundle {
-    player: Player { 
+    player: Player {
         name: "hello".into(),
         ..default()
     },
@@ -15453,7 +15453,7 @@ struct NameText;
 commands.spawn(Text::new("Name: "))
     .with_child((
         TextSpan::new("Unknown"),
-        NameText, 
+        NameText,
     ));
 
 fn set_name(mut names: Query<&mut TextSpan, With<NameText>>) {
@@ -15601,7 +15601,7 @@ command.spawn(AudioPlayer(assets.load("music.mp3")));
 
 `AudioPlayer` requires the `PlaybackSettings` component.
 
-Non-standard audio from arbitrary `Decodable` trait impls can use the `AudioSourcePlayer` component, which also requires `PlaybackSettings`.  
+Non-standard audio from arbitrary `Decodable` trait impls can use the `AudioSourcePlayer` component, which also requires `PlaybackSettings`.
 
 ### IDE Integration
 
@@ -15706,7 +15706,7 @@ schedule.add_systems(system);
 --- BEGIN FILE `release-content/0.15/release-notes/14833_Rewrite_screenshots.md` ---
 
 
-Screenshots can now be taken with a new observer based API that allows targeting any `RenderTarget` that can be used with a `Camera`, not just windows. 
+Screenshots can now be taken with a new observer based API that allows targeting any `RenderTarget` that can be used with a `Camera`, not just windows.
 
 ```rust
 // Capture the primary window
@@ -15806,7 +15806,7 @@ This feature was contributed to Bevy by Foresight Spatial Labs. It is based on a
 
 The Bevy Remote Protocol allows the ECS of a running
 Bevy application to be interacted with remotely. This can be used, for example,
-to inspect and edit entities and their components at runtime. We anticipate 
+to inspect and edit entities and their components at runtime. We anticipate
 that this will be used to create things like inspectors which monitor the
 content of the ECS from a separate process. We're planning on using BRP in the
 upcoming Bevy Editor to communicate with remote Bevy apps.
@@ -16076,7 +16076,7 @@ even if you pinky promise not to read any data that's being written to.
 
 ```rust
 // This system is forbidden!
-// 
+//
 // Inside the body of the function, we could choose to mutate the `AnimationPlayer` itself
 // while reading its value!
 fn animate_anything(query: Query<(&AnimationPlayer, EntityMut)> ){}
@@ -16242,7 +16242,7 @@ animation_clip.add_curve_to_target(
         animated_field!(TextFont::font_size),
         // Oscillate the font size during the length of the animation.
         FunctionCurve::new(
-            Interval::UNIT, 
+            Interval::UNIT,
             |t| 25.0 * f32::sin(TAU * t) + 50.0
         )
     )
@@ -16505,7 +16505,7 @@ let e2: Entity = world.spawn_empty().id();
 // Note: use World::get_entity or World::get_entity_mut instead to receive a Result
 
 // You can still pass a single ID as normal:
-let eref = world.entity(e1);  
+let eref = world.entity(e1);
 let emut = world.entity_mut(e1);
 
 // But you can also pass in an array of IDs (any amount N supported!):
@@ -16577,7 +16577,7 @@ simultaneously playing animations, now support *additive blending*.
 
 Additive blending is a technique which allows separately authored animations
 to be applied on top of an arbitrary base animation. For instance, an animation
-in which a character swings a weapon may be applied additively on top of a 
+in which a character swings a weapon may be applied additively on top of a
 walking or running animation.
 
 Within an animation graph itself, this is accomplished by using `Add` nodes.
@@ -16585,15 +16585,15 @@ The situation above might be described with an animation graph that looks
 something like this (weights omitted):
 
 ```
-┌─────┐                              
-│Walk ┼─┐                            
-└─────┘ │ ┌─────┐                    
-        ┼─┼Blend┼─┐                  
+┌─────┐
+│Walk ┼─┐
+└─────┘ │ ┌─────┐
+        ┼─┼Blend┼─┐
 ┌─────┐ │ └─────┘ │ ┌─────┐   ┌─────┐
 │Run  ┼─┘         ┼─┤Add  ┼───┼Root │
 └─────┘   ┌─────┐ │ └─────┘   └─────┘
-          │Swing┼─┘                  
-          └─────┘                    
+          │Swing┼─┘
+          └─────┘
 ```
 
 The `Add` node functions by taking its first input (here, a blend of the 'Walk'
@@ -16918,7 +16918,7 @@ let args = ArgList::new()
 let result = function.call(args);
 ```
 
-Calling a function returns a [`FunctionResult`] which contains our [`Return`] data 
+Calling a function returns a [`FunctionResult`] which contains our [`Return`] data
 or a [`FunctionError`] if something went wrong.
 
 ```rust
@@ -17078,7 +17078,7 @@ This means that if you have a generic function like `fn foo<T>()`, you have to c
 Most of these limitations are due to Rust itself.
 The [lack of variadics] and [issues with coherence] are among the two biggest difficulties
 to work around.
-Despite this, we will be looking into ways of improving the ergonomics and capabilities 
+Despite this, we will be looking into ways of improving the ergonomics and capabilities
 of this feature in future releases.
 
 We already have a [PR](https://github.com/bevyengine/bevy/pull/15074) up to add support for overloaded functions: functions with a variable
@@ -17130,7 +17130,7 @@ For example, you might want to serialize your type as a map that includes a few 
 but you still want to use the reflection serializer for each value.
 
 Unfortunately, not only does this not nest well within serializers,
-but it also means you need to manually capture a reference to the `TypeRegistry` 
+but it also means you need to manually capture a reference to the `TypeRegistry`
 so that you can pass it down to the nested reflection serializers.
 What this basically means is that you can't use custom logic along with reflection-based serialization.
 
@@ -17163,7 +17163,7 @@ impl SerializeWithRegistry for MyType {
 }
 ```
 
-With your custom serialization and deserialization logic in place, you can then register the 
+With your custom serialization and deserialization logic in place, you can then register the
 [`ReflectSerializeWithRegistry`] and [`ReflectDeserializeWithRegistry`] type data for your type
 to have the reflection serializer/deserializer make use of your custom logic for all instances
 of your type.
@@ -17272,9 +17272,9 @@ can be used to override any reflect serialization logic.
 
 #### Contextual Serialization Errors
 
-Sometimes when working with the reflection serializer and deserializer, 
-it can be difficult to track down the source of an error. 
-Since we can't tell whether a type can be serialized or not until runtime, 
+Sometimes when working with the reflection serializer and deserializer,
+it can be difficult to track down the source of an error.
+Since we can't tell whether a type can be serialized or not until runtime,
 an un-serializable type might slip into a type that is supposed to be serializable.
 
 In Bevy 0.15, a new default [`debug`] feature has been added to the `bevy_reflect` crate,
@@ -18156,7 +18156,7 @@ assert!(id == SystemId::from_entity(cached_id.entity));
 --- BEGIN FILE `release-content/0.16/migration-guides/16702_pencil2_Fix_typos_across_bevy.md` ---
 
 
-> 
+>
 This section is optional. If there are no breaking changes, you can delete this section.
 
 
@@ -18333,7 +18333,7 @@ Finally, if you manually implemented audio muting using an audio sink's volume, 
 --- BEGIN FILE `release-content/0.16/migration-guides/16827_doc_fix_camera_link.md` ---
 
 
-> 
+>
 This section is optional. If there are no breaking changes, you can delete this section.
 
 
@@ -18574,8 +18574,8 @@ If you were queuing the structs of event-related commands directly, you will nee
 --- BEGIN FILE `release-content/0.16/migration-guides/17041_ExtractedSprites_slice_buffer.md` ---
 
 
-- `ExtractedSprite` has a new `kind: ExtractedSpriteKind` field with variants `Single` and `Slices`. 
-  - `Single` represents a single sprite. `ExtractedSprite`’s `anchor`, `rect`, `scaling_mode` and `custom_size` fields have been moved into `Single`. 
+- `ExtractedSprite` has a new `kind: ExtractedSpriteKind` field with variants `Single` and `Slices`.
+  - `Single` represents a single sprite. `ExtractedSprite`’s `anchor`, `rect`, `scaling_mode` and `custom_size` fields have been moved into `Single`.
   - `Slices` contains a range that indexes into a new resource `ExtractedSlices`. Slices are used to draw elements composed from multiple sprites such as text or nine-patched borders.
 
 - `ComputedTextureSlices::extract_sprites` has been renamed to `extract_slices`. Its `transform` and `original_entity` parameters have been removed.
@@ -18913,11 +18913,11 @@ fn handle_event_component<T: Event + Component>(event_component: T) {
 
 Entity relationships are now built-in to the ECS, providing significant performance and user-experience improvements. There are several changes you may need in order to update your existing code.
 
-First, when adding children to an entity with `EntityCommands::with_children()`, the method now passes a `ChildSpawnerCommands` type to the closure instead of a `ChildBuilder`. `ChildSpawnerCommands` is slightly different from `ChildBuilder`, but is still able to accomplish the same things as before.
+First, when adding children to an entity with `EntityCommands::with_children()`, the method now passes a `ChildSpawnerCommands` type to the closure instead of a `ChildSpawnerCommands`. `ChildSpawnerCommands` is slightly different from `ChildSpawnerCommands`, but is still able to accomplish the same things as before.
 
 ```rust
 // 0.15
-commands.spawn_empty().with_children(|builder: &mut ChildBuilder<'_>| {
+commands.spawn_empty().with_children(|builder: &mut ChildSpawnerCommands<'_>| {
     // Spawn a child of the parent entity;
     builder.spawn(MyComponent(255));
 
@@ -18962,18 +18962,18 @@ commands.entity(parent)
     .add_children(&[child1, child2]);
 ```
 
-Despawning has also been changed to remove the complexities of `despawn_recursive()` and `despawn_descendants()` from `EntityCommands`:
+Despawning has also been changed to remove the complexities of .despawn()` and `.despawn()` from `EntityCommands`:
 
 |Action|0.15|0.16|
 |-|-|-|
-|Despawn parent and children|`despawn_recursive()`|`despawn()`|
-|Despawn children|`despawn_descendants()`|`despawn_related::<Children>()`|
+|Despawn parent and children|.despawn()`|`despawn()`|
+|Despawn children|`.despawn()`|`despawn_related::<Children>()`|
 |Despawn parent|`despawn()`|`remove::<Children>()`, then `despawn()`|
 
 ```rust
 // 0.15
-commands.entity(parent).despawn_recursive();
-commands.entity(parent).despawn_descendants();
+commands.entity(parent).despawn();
+commands.entity(parent).despawn();
 commands.entity(parent).despawn();
 
 // 0.16
@@ -19022,7 +19022,7 @@ The segment type constructors changed so if someone previously created a Segment
 
 
 - `PointerAction::Pressed` has been separated into two variants, `PointerAction::Press` and `PointerAction::Release`.
-- `PointerAction::Moved` has been renamed to `PointerAction::Move`. 
+- `PointerAction::Moved` has been renamed to `PointerAction::Move`.
 - `PointerAction::Canceled` has been renamed to `PointerAction::Cancel`.
 
 
@@ -19588,7 +19588,7 @@ critical-section = ["bevy/critical-section"]
 
 [dependencies]
 # We disable default features to ensure we don't accidentally enable `std` on `no_std` targets, for
-# example. 
+# example.
 bevy = { version = "0.16", default-features = false }
 ```
 
@@ -19692,7 +19692,7 @@ type Result = anyhow::Result;
 --- BEGIN FILE `release-content/0.16/migration-guides/18083_Improved_DeriveEvent.md` ---
 
 
-In **Bevy 0.16** you can now use `#[derive(Event)]` for more specialized implementations. 
+In **Bevy 0.16** you can now use `#[derive(Event)]` for more specialized implementations.
 
 ```rust
 // 0.15
@@ -20071,7 +20071,7 @@ Below are some tables showing where items have been moved to
 #### Removed
 
 `TypeRegistrationPlugin` no longer exists. If you can’t use a default `App` but still need `Name` registered, do so manually.
-  
+
 ```rust
 // Before
 app.add_plugins(TypeRegistrationPlugin);
@@ -20166,7 +20166,7 @@ now rely on `bevy_log` instead (or `tracing` itself, being sure to keep the vers
 **Removed Items**
 
 - `assert_object_safe` was removed in part because the term is now outdated (replaced with _dyn compatibility_) and otherwise because it is trivial to inline.
-  
+
   ```rust
   // Before
   const _: () = assert_object_safe::<dyn MyTrait>();
@@ -20174,7 +20174,7 @@ now rely on `bevy_log` instead (or `tracing` itself, being sure to keep the vers
   // After
   const _: Option<Box<dyn MyTrait>> = None;
   ```
-  
+
 - `hashbrown` was removed from `bevy_utils` as a re-export due to its significant API change from `hashbrown` 0.14 to 0.15.
   Instead of exposing a large public API out of our direct control, we've taken a more explicit subset and moved it into `bevy_platform::collections`, mimicking the layout of the standard library.
   If you need access to `hashbrown`, take a direct dependency instead.
@@ -20192,7 +20192,7 @@ now rely on `bevy_log` instead (or `tracing` itself, being sure to keep the vers
       }
   }
   ```
-  
+
 - `dbg`, `info`, `warn`, and `error` were all removed due to minimal use within the engine.
   If you still wish to use them, make sure you have taken a direct dependency on `tracing`.
   You can use the below as a replacement:
@@ -20222,10 +20222,10 @@ now rely on `bevy_log` instead (or `tracing` itself, being sure to keep the vers
       }
   }
   ```
-  
+
 - `StableHashMap` and `StableHashSet` were removed due to minimal use within the engine.
   You can use the below as a replacement:
-  
+
   ```rust
   /// A stable hash-map.
   pub type StableHashMap<K, V> = bevy::platform_support::collections::HashMap<K, V, bevy::platform_support::hash::FixedState>;
@@ -20356,10 +20356,10 @@ struct Player {
     health: u32,
 }
 
-// Creates a `Player` with one of the following based on the provided arguments:  
-// - No name and 100 health  
-// - A name and 100 health  
-// - No name and custom health  
+// Creates a `Player` with one of the following based on the provided arguments:
+// - No name and 100 health
+// - A name and 100 health
+// - No name and custom health
 // - A name and custom health
 let create_player = (|| Player {
     name: None,
@@ -20843,7 +20843,7 @@ let e1 = world.spawn_empty().id();
 let e2 = world.spawn(Likes(e1)).id();
 let e3 = world.spawn(Likes(e1)).id();
 
-// e1 is liked by e2 and e3 
+// e1 is liked by e2 and e3
 let liked_by = world.entity(e1).get::<LikedBy>().unwrap();
 assert_eq!(&**liked_by, &[e2, e3]);
 ```
@@ -20958,7 +20958,7 @@ There are a number of spawn wrapper variants, which provide additional flexibili
 world.spawn((
     Name::new("Root"),
     Children::spawn((
-        Spawn(Name::new("Child1")),   
+        Spawn(Name::new("Child1")),
         SpawnIter(["Child2", "Child3"].into_iter().map(Name::new)),
         SpawnWith(|parent: &mut ChildSpawner| {
             parent.spawn(Name::new("Child4"));
@@ -21033,15 +21033,15 @@ Bevy has powerful support for [automatic instancing] for any entities that share
 
 The new `MeshTag` component allows adding a custom `u32` tag to mesh-material entities that can be referenced in the vertex shader for a material. In combination with storage textures or the [`ShaderStorageBuffer` asset] added in **Bevy 0.15**, this provides a flexible new mechanism to access external data on a per-instance basis or otherwise tag your mesh instances.
 
-Spawn a mesh tag with a mesh-material entity: 
+Spawn a mesh tag with a mesh-material entity:
 ```rust
 commands.spawn((
-    // Clone a mesh and material handle to enable automatic instancing 
+    // Clone a mesh and material handle to enable automatic instancing
     Mesh3d(mesh_handle.clone()),
     MeshMaterial3d(material_handle.clone()),
     // The mesh tag can be any `u32` that is meaningful to your application, like
-    // a particular variant of an enum or an index into some external data 
-    MeshTag(1234), 
+    // a particular variant of an enum or an index into some external data
+    MeshTag(1234),
 ));
 ```
 
@@ -21255,7 +21255,7 @@ In **Bevy 0.16** we reworked and expanded Required Component syntax to support i
     E::SOME_CONST, // inline associated const
     F::new(1), // inline constructor
     G = returns_g(), // an expression that returns G
-    H = SomethingElse::new(), // expression returns SomethingElse, where SomethingElse: Into<H> 
+    H = SomethingElse::new(), // expression returns SomethingElse, where SomethingElse: Into<H>
 )]
 struct Foo;
 ```

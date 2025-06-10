@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
 use uncore::behavior::Behavior;
@@ -115,7 +115,7 @@ fn spawn_miasma(
         }
         if miasma_sprite.life < -2.0 {
             miasma_sprite.life = -2.0;
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
         if miasma_sprite.despawn {
             continue;

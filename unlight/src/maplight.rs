@@ -12,9 +12,11 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use bevy::utils::HashSet;
-use bevy::{color::palettes::css, prelude::*, utils::HashMap};
+use bevy::audio::Volume;
+use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
+use bevy_platform::collections::HashMap;
+use bevy_platform::collections::HashSet;
 use core::f32;
 use ndarray::{Array3, s};
 use rand::Rng;
@@ -993,7 +995,7 @@ fn apply_lighting(
 /// System to manage ambient sound levels based on visibility.
 fn ambient_sound_system(
     vf: Res<VisibilityData>,
-    qas: Query<(&AudioSink, &GameSound)>,
+    mut qas: Query<(&mut AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<(&PlayerSprite, &Position)>, // Added Position to the query
@@ -1065,11 +1067,11 @@ fn ambient_sound_system(
     if timer.just_finished() {
         // dbg!(health, sanity);
     }
-    for (sink, gamesound) in qas.iter() {
+    for (mut sink, gamesound) in qas.iter_mut() {
         const SMOOTH: f32 = 60.0;
         let volume_factor =
             2.0 * audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
-        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001)
+        let ln_volume = (sink.volume().to_linear() / (volume_factor + 0.0000001) + 0.000001)
             .max(0.000001)
             .ln();
         let v = match gamesound.class {
@@ -1092,7 +1094,7 @@ fn ambient_sound_system(
             }
         };
         let new_volume = v.exp() * volume_factor;
-        sink.set_volume(new_volume.clamp(0.00001, 10.0));
+        sink.set_volume(Volume::Linear(new_volume.clamp(0.00001, 10.0)));
     }
     measure.end_ms();
 }

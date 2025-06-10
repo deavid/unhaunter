@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
-use bevy::utils::{HashMap, Instant};
+use bevy_platform::collections::HashMap;
+use bevy_platform::collections::HashSet;
+use bevy_platform::time::Instant;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use uncore::components::board::position::Position;

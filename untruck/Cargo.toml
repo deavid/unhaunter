@@ -17,6 +17,7 @@ unprofile = { path = "../unprofile" }
 unwalkiecore = { path = "../unwalkiecore" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 fastapprox = { workspace = true }
 ordered-float = { workspace = true }

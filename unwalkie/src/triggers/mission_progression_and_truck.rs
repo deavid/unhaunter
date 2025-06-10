@@ -1,4 +1,5 @@
-use bevy::{prelude::*, time::Stopwatch, utils::HashSet};
+use bevy::{prelude::*, time::Stopwatch};
+use bevy_platform::collections::HashSet;
 use uncore::{
     components::{
         game_config::GameConfig, ghost_breach::GhostBreach, ghost_sprite::GhostSprite,

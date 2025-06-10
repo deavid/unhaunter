@@ -125,10 +125,10 @@ fn trigger_quartz_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok(player_gear) = player_query.get_single() else {
+    let Ok(player_gear) = player_query.single() else {
         return;
     };
-    let Ok(ghost_sprite) = ghost_query.get_single() else {
+    let Ok(ghost_sprite) = ghost_query.single() else {
         return;
     };
 
@@ -210,10 +210,10 @@ fn trigger_sage_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok(player_gear) = player_query.get_single() else {
+    let Ok(player_gear) = player_query.single() else {
         return;
     };
-    let Ok(ghost_sprite) = ghost_query.get_single() else {
+    let Ok(ghost_sprite) = ghost_query.single() else {
         return;
     };
 
@@ -304,14 +304,14 @@ fn trigger_sage_activated_ineffectively_system(
     }
 
     // 2. Get Player & Ghost Info
-    let Ok((player_entity, player_gear)) = player_query.get_single() else {
+    let Ok((player_entity, player_gear)) = player_query.single() else {
         // Assuming single player
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
         }
         return;
     };
-    let Ok(ghost_sprite) = ghost_query.get_single() else {
+    let Ok(ghost_sprite) = ghost_query.single() else {
         // Assuming single ghost
         if tracker.is_tracking_this_sage_burn {
             *tracker = SageEffectivenessTracker::default();
@@ -449,10 +449,10 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     }
 
     // 2. Get Player & Ghost Info
-    let Ok(player_gear) = player_query.get_single() else {
+    let Ok(player_gear) = player_query.single() else {
         return;
     };
-    let Ok(ghost_sprite) = ghost_query.get_single() else {
+    let Ok(ghost_sprite) = ghost_query.single() else {
         // If ghost is gone, and we were in a hunt, treat hunt as ended.
         if matches!(tracker.phase, HuntPhaseForSageCheck::InHunt { .. }) {
             // info!("Ghost despawned during tracked hunt, resetting HuntSageUsageTracker.");

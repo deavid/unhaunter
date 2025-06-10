@@ -11,6 +11,7 @@ authors.workspace = true
 uncore = { path = "../uncore" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 bevy_framepace = { workspace = true }
 serde = { workspace = true }
 enum-iterator = { workspace = true }

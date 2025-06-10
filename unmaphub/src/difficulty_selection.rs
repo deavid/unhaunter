@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::Instant;
+use bevy_platform::time::Instant;
 use uncore::colors;
 use uncore::difficulty::{CurrentDifficulty, Difficulty};
 use uncore::events::map_selected::MapSelectedEvent;
@@ -85,7 +85,7 @@ pub fn setup_systems(
 /// Cleans up the difficulty selection screen UI
 pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<DifficultySelectionUI>>) {
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }
 
@@ -180,7 +180,7 @@ pub fn update_difficulty_description(
     for ev in ev_menu_selection.read() {
         let total_displayed_difficulties = displayed_difficulties.len();
 
-        if let Ok((mut text, mut text_color)) = q_desc_text.get_single_mut() {
+        if let Ok((mut text, mut text_color)) = q_desc_text.single_mut() {
             if ev.0 == total_displayed_difficulties {
                 text.0 = "Select a challenge level for your custom mission.".to_string();
                 text_color.0 = colors::MENU_ITEM_COLOR_OFF;
@@ -330,7 +330,7 @@ pub fn setup_ui(
                             TextFont {
                                 font: handles.fonts.titillium.w300_light.clone(),
                                 font_size: 19.0 * FONT_SCALE,
-                                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                ..default()
                             },
                             TextColor(colors::MENU_ITEM_COLOR_OFF),
                             Node {

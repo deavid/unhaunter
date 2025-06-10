@@ -1,4 +1,4 @@
-use std::f32::consts::TAU;
+use std::{f32::consts::TAU, time::Duration};
 
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
@@ -21,7 +21,7 @@ pub struct OrbSpawnTimer(pub Timer);
 impl Default for OrbSpawnTimer {
     fn default() -> Self {
         OrbSpawnTimer(Timer::new(
-            bevy::utils::Duration::from_secs_f32(0.2),
+            Duration::from_secs_f32(0.2),
             TimerMode::Repeating,
         ))
     }
@@ -96,7 +96,7 @@ pub fn update_ghost_orb_particles(
 
         // Despawn if lifetime is over
         if particle.life <= 0.0 {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
             continue;
         }
 
@@ -181,7 +181,7 @@ pub fn update_ghost_orb_particles(
             }
         } else {
             // Out of board bounds, despawn the particle
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

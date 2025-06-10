@@ -3,7 +3,7 @@ use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
-pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Tools of the Adept";
     let subtitle = "Learn to use Salt, Quartz, and Sage to handle paranormal threats.";
     let grid = vec![

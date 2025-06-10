@@ -2,10 +2,9 @@ use crate::utils::{
     apply_prebaked_contributions, create_stair_wave_edges, identify_active_light_sources,
     is_in_bounds, propagate_from_wave_edges, update_exposure_and_stats,
 };
-use bevy::{
-    prelude::*,
-    utils::{HashSet, Instant},
-};
+use bevy::prelude::*;
+use bevy_platform::collections::HashSet;
+use bevy_platform::time::Instant;
 use ndarray::Array3;
 use uncore::{
     behavior::{Behavior, Orientation},

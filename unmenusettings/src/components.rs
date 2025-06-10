@@ -1,6 +1,5 @@
-use bevy::utils::Instant;
-
 use bevy::prelude::*;
+use bevy_platform::time::Instant;
 use unsettings::{audio::AudioSettingsValue, game::GameplaySettingsValue};
 
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};

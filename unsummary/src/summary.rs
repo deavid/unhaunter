@@ -27,12 +27,12 @@ pub fn cleanup(
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // Despawn UI if not used
     for ui_entity in qu.iter() {
-        commands.entity(ui_entity).despawn_recursive();
+        commands.entity(ui_entity).despawn();
     }
 }
 
@@ -184,7 +184,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 32.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
 
@@ -193,7 +193,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::MapMissionName);
@@ -203,7 +203,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::DifficultyName);
@@ -214,7 +214,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::GhostList);
@@ -224,7 +224,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::TimeTaken);
@@ -234,7 +234,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::PlayersAlive);
@@ -262,7 +262,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 28.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(Node {
                             grid_column: GridPlacement::span(2),
@@ -278,7 +278,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::FinalScore);
@@ -308,7 +308,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::BaseReward);
@@ -321,7 +321,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::GradeMultiplier);
@@ -334,7 +334,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()))
                         .insert(SummaryUIType::CalculatedEarnings);
@@ -365,7 +365,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()));
 
@@ -377,7 +377,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()));
 
@@ -389,7 +389,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::GRAY.into()));
 
@@ -415,7 +415,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 26.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(Node {
                             grid_column: GridPlacement::span(2),
@@ -428,7 +428,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 26.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
 
@@ -446,7 +446,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(css::ORANGE_RED.into()));
                 });

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 
 use crate::materials::CustomMaterial1;
 

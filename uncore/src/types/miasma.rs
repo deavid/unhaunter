@@ -1,4 +1,5 @@
-use bevy::{math::Vec2, utils::HashMap};
+use bevy::{math::Vec2};
+use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 
 #[derive(Debug, Clone, Default)]

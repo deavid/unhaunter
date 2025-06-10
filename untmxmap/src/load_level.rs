@@ -32,7 +32,7 @@ fn load_level_handler(
         &mut tilesetdb,
     );
 
-    evw.send(LevelLoadedEvent {
+    evw.write(LevelLoadedEvent {
         map_filepath,
         layers,
         floor_mapping,

@@ -13,10 +13,8 @@ use crate::{
         miasma::MiasmaGrid,
     },
 };
-use bevy::{
-    prelude::*,
-    utils::{HashMap, HashSet},
-};
+use bevy::prelude::*;
+use bevy_platform::collections::{HashMap, HashSet};
 use ndarray::{Array2, Array3};
 
 #[derive(Clone, Debug, Resource)]

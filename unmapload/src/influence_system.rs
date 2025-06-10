@@ -5,7 +5,7 @@
 //! either attractive or repulsive to ghost energy.
 
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use uncore::components::board::position::Position;
 use uncore::components::ghost_influence::GhostInfluence;
 use uncore::resources::board_data::BoardData;
@@ -44,7 +44,7 @@ fn assign_ghost_influence_system(
 
         // Get ghost spawn positions - if ghost is already spawned, use its position
         let mut ghost_spawn_points = Vec::new();
-        if let Ok(ghost_pos) = ghost_spawn_query.get_single() {
+        if let Ok(ghost_pos) = ghost_spawn_query.single() {
             ghost_spawn_points.push(*ghost_pos);
         } else {
             // Fallback to breach position if no ghost is spawned yet
@@ -80,7 +80,7 @@ fn assign_ghost_influence_system(
         }
 
         // Start timing the simulation
-        let start = bevy::utils::Instant::now();
+        let start = bevy_platform::time::Instant::now();
 
         // Use the simulation-based selection function to determine optimal setup
         let (_, selected_objects) = crate::selection::select_influence_objects_with_simulation(

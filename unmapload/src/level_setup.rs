@@ -5,8 +5,8 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use bevy_persistent::Persistent;
+use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, GameSprite};
@@ -96,12 +96,12 @@ fn load_level_handler(
 
     // Despawn existing game entities
     for gs in qgs.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 
     // Despawn existing ambient sounds
     for gs in qgs2.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 
     // Set temperature from difficulty
@@ -259,7 +259,7 @@ fn load_level_handler(
     entity_spawning::spawn_ghosts(&mut p, &mut commands, &mut ghost_spawn_points);
 
     // Send level ready event
-    ev_level_ready.send(LevelReadyEvent { open_van });
+    ev_level_ready.write(LevelReadyEvent { open_van });
     warn!("Done: load_level_handler");
 }
 

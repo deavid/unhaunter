@@ -28,7 +28,7 @@ pub(crate) fn setup_ui_main_cat(
     menu_items: &[(String, MenuEvent)],
 ) {
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 
     // Create new UI with uncoremenu templates
@@ -141,17 +141,17 @@ fn cleanup(
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // Clean up menu entities
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 
     // Clean up timer
     for e in qtimer.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }
 
@@ -163,7 +163,7 @@ pub(crate) fn app_setup(app: &mut App) {
             setup_ui_main_cat_system,
             |mut commands: Commands| {
                 commands.spawn(SettingsStateTimer {
-                    state_entered_at: bevy::utils::Instant::now(),
+                    state_entered_at: bevy_platform::time::Instant::now(),
                 });
             },
         )

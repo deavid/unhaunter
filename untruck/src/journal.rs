@@ -1,6 +1,7 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use bevy::{prelude::*, utils::HashSet};
+use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use bevy_platform::collections::HashSet;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::truck::TruckUIGhostGuess;
@@ -61,7 +62,7 @@ fn button_system(
         }
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             if let Some(truckui_event) = tui_button.pressed() {
-                ev_truckui.send(truckui_event.clone());
+                ev_truckui.write(truckui_event.clone());
             }
 
             // Acknowledgement Logic Start

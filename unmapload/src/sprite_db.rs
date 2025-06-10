@@ -4,7 +4,7 @@
 //! The SpriteDB serves as a comprehensive lookup for tile visuals and behaviors throughout the game.
 
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use uncore::behavior::{Behavior, SpriteConfig};
 use uncore::types::quadcc::QuadCC;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};

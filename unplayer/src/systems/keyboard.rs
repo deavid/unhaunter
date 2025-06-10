@@ -227,7 +227,7 @@ fn keyboard_player(
                     interactables.iter().filter(|(e, _, _, _, _)| *e == entity)
                 {
                     if behavior.is_npc() {
-                        ev_npc.send(NpcHelpEvent::new(entity));
+                        ev_npc.write(NpcHelpEvent::new(entity));
                     }
                     if interactive_stuff.execute_interaction(
                         entity,
@@ -237,7 +237,7 @@ fn keyboard_player(
                         rs,
                         InteractionExecutionType::ChangeState,
                     ) {
-                        ev_room.send(RoomChangedEvent::default());
+                        ev_room.write(RoomChangedEvent::default());
                     }
                 }
             }

@@ -82,7 +82,7 @@ pub fn preplay_manual_system(
                         let map_filepath = maps.maps[difficulty_selection_state.selected_map_idx]
                             .path
                             .clone();
-                        ev_load_level.send(LoadLevelEvent { map_filepath });
+                        ev_load_level.write(LoadLevelEvent { map_filepath });
                         next_state.set(AppState::Loading);
                     }
                 } else {
@@ -91,7 +91,7 @@ pub fn preplay_manual_system(
                         .path
                         .clone();
 
-                    ev_load_level.send(LoadLevelEvent { map_filepath });
+                    ev_load_level.write(LoadLevelEvent { map_filepath });
                     next_state.set(AppState::Loading);
                 }
             }
@@ -114,7 +114,7 @@ fn manual_button_system(
     for (interaction, maybe_input, maybe_action) in &mut interaction_query {
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             if let Some(action) = maybe_action {
-                manual_events.send(PreplayManualNavigationEvent { action: *action });
+                manual_events.write(PreplayManualNavigationEvent { action: *action });
             }
         }
 
@@ -123,7 +123,7 @@ fn manual_button_system(
             for key in &input.keys {
                 if keyboard_input.just_pressed(*key) {
                     if let Some(action) = maybe_action {
-                        manual_events.send(PreplayManualNavigationEvent { action: *action });
+                        manual_events.write(PreplayManualNavigationEvent { action: *action });
                     }
                 }
             }
@@ -136,22 +136,22 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
         font_size: 30.0 * FONT_SCALE,
-        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+        ..default()
     };
 
-    let prev_button = |button: &mut ChildBuilder| {
+    let prev_button = |button: &mut ChildSpawnerCommands| {
         button
             .spawn(Text::new("Previous"))
             .insert(button_text_style.clone())
             .insert(TextColor(Color::WHITE));
     };
-    let continue_button = |button: &mut ChildBuilder| {
+    let continue_button = |button: &mut ChildSpawnerCommands| {
         button
             .spawn(Text::new("Continue"))
             .insert(button_text_style.clone())
             .insert(TextColor(Color::WHITE));
     };
-    let nav_buttons = |buttons: &mut ChildBuilder| {
+    let nav_buttons = |buttons: &mut ChildSpawnerCommands| {
         // Previous button
         buttons
             .spawn(Button)
@@ -189,7 +189,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
                 KeyCode::KeyE,
             ]));
     };
-    let page_content = |parent: &mut ChildBuilder| {
+    let page_content = |parent: &mut ChildSpawnerCommands| {
         // Page Content Container - Now Empty, content will be added later
         parent
             .spawn(Node {
@@ -275,11 +275,11 @@ pub fn cleanup_preplay_ui(
     q_camera: Query<Entity, With<ManualCamera>>,
 ) {
     for entity in q_manual_ui.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     for entity in q_camera.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 
@@ -292,17 +292,19 @@ fn redraw_manual_ui_system(
     manuals: Res<Manual>,
 ) {
     // Get the ManualUI entity
-    let Ok(_) = q_manual_ui.get_single() else {
+    let Ok(_) = q_manual_ui.single() else {
         return;
     };
 
     // Get the PageContent entity
-    let Ok(page_content_entity) = q_page_content.get_single() else {
+    let Ok(page_content_entity) = q_page_content.single() else {
         return;
     };
 
     // Despawn the existing page content
-    commands.entity(page_content_entity).despawn_descendants();
+    commands
+        .entity(page_content_entity)
+        .despawn_related::<Children>();
 
     // Redraw the page content
     commands

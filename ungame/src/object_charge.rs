@@ -8,7 +8,7 @@ use uncore::resources::object_interaction::ObjectInteractionConfig;
 use uncore::resources::roomdb::RoomDB;
 
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy_platform::collections::HashSet;
 
 /// System to accumulate charge on objects over time.
 fn accumulate_charge(
@@ -56,7 +56,7 @@ fn check_ghost_proximity(
     difficulty: Res<CurrentDifficulty>,
 ) {
     // Get ghost position and breach position
-    let Ok((ghost_position, mut ghost_sprite)) = ghost_query.get_single_mut() else {
+    let Ok((ghost_position, mut ghost_sprite)) = ghost_query.single_mut() else {
         return;
     };
     let breach_position = ghost_sprite.spawn_point.to_position();

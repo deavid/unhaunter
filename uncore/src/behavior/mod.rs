@@ -22,7 +22,11 @@
 pub mod component;
 
 use anyhow::Context;
-use bevy::{ecs::component::Component, utils::HashMap};
+use bevy::{
+    ecs::component::Component,
+    // utils::HashMap // Moved to bevy_platform
+};
+use bevy_platform::collections::HashMap;
 use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};

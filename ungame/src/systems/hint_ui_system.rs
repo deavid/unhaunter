@@ -96,8 +96,8 @@ fn hint_ui_event_and_animation_system(
     mut text_query: Query<&mut Text, With<HintBoxText>>,
     time: Res<Time>,
 ) {
-    if let Ok((mut hint_style, mut visibility)) = hint_box_query.get_single_mut() {
-        if let Ok(mut text_component) = text_query.get_single_mut() {
+    if let Ok((mut hint_style, mut visibility)) = hint_box_query.single_mut() {
+        if let Ok(mut text_component) = text_query.single_mut() {
             // Event Handling
             if let Some(event) = events.read().last() {
                 let slide_in_duration = ui_state.slide_in_duration;
@@ -175,6 +175,6 @@ fn hint_ui_event_and_animation_system(
 /// Cleans up the on-screen hint UI elements.
 fn cleanup_hint_ui_system(mut commands: Commands, query: Query<Entity, With<HintBoxUIRoot>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
