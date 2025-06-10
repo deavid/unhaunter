@@ -1,6 +1,5 @@
-use bevy::{math::Vec2};
+use bevy::{math::Vec2, utils::HashMap};
 use ndarray::Array3;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default)]
 pub struct MiasmaGrid {

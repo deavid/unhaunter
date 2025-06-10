@@ -1,5 +1,4 @@
-use bevy::{prelude::*};
-use std::collections::HashSet;
+use bevy::{prelude::*, utils::HashSet};
 
 use crate::types::{evidence::Evidence, ghost::types::GhostType};
 

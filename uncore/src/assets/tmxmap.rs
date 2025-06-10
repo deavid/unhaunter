@@ -3,8 +3,7 @@
 //! map properties without full XML DOM parsing, optimizing initial load times when
 //! inspecting multiple map files. The loaded asset (`TmxMap`) stores both the raw
 //! TMX bytes for full parsing later and the naively extracted properties.
-use bevy::{asset::AssetLoader, prelude::*};
-use std::collections::HashMap;
+use bevy::{asset::AssetLoader, prelude::*, utils::HashMap};
 use std::io::{BufRead, Cursor};
 use thiserror::Error;
 

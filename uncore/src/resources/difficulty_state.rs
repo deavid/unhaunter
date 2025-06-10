@@ -1,6 +1,6 @@
 use crate::difficulty::Difficulty;
 use bevy::prelude::*;
-use std::time::Instant;
+use bevy::utils::Instant;
 
 #[derive(Resource, Debug)]
 pub struct DifficultySelectionState {

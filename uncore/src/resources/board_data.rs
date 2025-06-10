@@ -15,9 +15,9 @@ use crate::{
 };
 use bevy::{
     prelude::*,
+    utils::{HashMap, HashSet},
 };
 use ndarray::{Array2, Array3};
-use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Resource)]
 pub struct BoardData {
