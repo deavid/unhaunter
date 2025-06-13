@@ -8,6 +8,7 @@ pub mod looking_gear;
 pub mod manual;
 pub mod maps;
 pub mod mission_select_mode;
+pub mod mouse_visibility;
 pub mod object_interaction;
 pub mod potential_id_timer;
 pub mod roomdb;

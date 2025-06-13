@@ -521,7 +521,7 @@ fn apply_lighting(
                 let mut lux_fl = [0_f32; 3];
                 let mut lightdata = LightData::default();
                 for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
-                    let fldir = fldir.with_max_dist(100.0);
+                    let fldir = fldir.with_max_dist(200.0);
                     let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
                     let lpos = *flpos + fldir / (100.0 / focus + 20.0);
                     let mut lpos = lpos.unrotate_by_dir(&fldir);

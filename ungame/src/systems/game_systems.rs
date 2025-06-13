@@ -77,13 +77,14 @@ fn keyboard(
         game_next_state.set(GameState::Pause);
     }
     for (mut transform, mut cam_dir) in camera.iter_mut() {
-        for (player, p_transform, p_dir) in pc.iter() {
+        for (player, p_transform, _p_dir) in pc.iter() {
             if player.id != gc.player_id {
                 continue;
             }
             // Camera movement
             let mut ref_point = p_transform.translation;
-            let sc_dir = p_dir.to_screen_coord();
+            // let sc_dir = p_dir.to_screen_coord();
+            let sc_dir = player.movement.to_screen_coord();
             const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
             ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
             ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;

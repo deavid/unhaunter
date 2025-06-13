@@ -12,6 +12,7 @@ use uncore::difficulty::CurrentDifficulty;
 use uncore::events::npc_help::NpcHelpEvent;
 use uncore::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore::resources::board_data::BoardData;
+use uncore::resources::mouse_visibility::MouseVisibility;
 use uncore::systemparam::collision_handler::CollisionHandler;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::{GameplaySettings, MovementStyle};
@@ -47,9 +48,10 @@ fn keyboard_player(
     game_settings: Res<Persistent<GameplaySettings>>,
     board_data: Res<BoardData>,
     mut avg_running: Local<f32>,
+    mouse_visibility: Res<MouseVisibility>,
 ) {
     const PLAYER_SPEED: f32 = 0.04;
-    const RUN_ADD_MULTIPLIER: f32 = 1.3; // Add Multiplier for running speed
+    const RUN_ADD_MULTIPLIER: f32 = 1.3;
     const DIR_MIN: f32 = 5.0;
     const DIR_MAX: f32 = 40.0;
     const DIR_STEPS: f32 = 15.0;
@@ -58,7 +60,8 @@ fn keyboard_player(
     const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
     const DIR_RED: f32 = 1.001;
     let dt = time.delta_secs() * 60.0;
-    for (mut pos, mut dir, player, mut anim, player_gear, hiding, mut stamina) in players.iter_mut()
+    for (mut pos, mut dir, mut player, mut anim, player_gear, hiding, mut stamina) in
+        players.iter_mut()
     {
         if !dir.is_finite() {
             warn!("Player direction is not finite: {dir:?}");
@@ -147,15 +150,15 @@ fn keyboard_player(
 
         let run_multiplier = 1.0 + RUN_ADD_MULTIPLIER * is_running;
 
-        dir.dx += DIR_MAG2 * d.dx;
-        dir.dy += DIR_MAG2 * d.dy;
-        let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
+        player.movement.dx += DIR_MAG2 * d.dx;
+        player.movement.dy += DIR_MAG2 * d.dy;
+        let dir_dist = (player.movement.dx.powi(2) + player.movement.dy.powi(2)).sqrt();
         if dir_dist > DIR_MAX {
-            dir.dx *= DIR_MAX / dir_dist;
-            dir.dy *= DIR_MAX / dir_dist;
+            player.movement.dx *= DIR_MAX / dir_dist;
+            player.movement.dy *= DIR_MAX / dir_dist;
         } else if dir_dist > DIR_MIN {
-            dir.dx /= DIR_RED;
-            dir.dy /= DIR_RED;
+            player.movement.dx /= DIR_RED;
+            player.movement.dy /= DIR_RED;
         }
 
         // --- Check if Player is Hiding ---
@@ -178,8 +181,8 @@ fn keyboard_player(
 
         *avg_running = (*avg_running + is_running * dt) / (1.0 + dt);
 
-        dir.dx += DIR_MAG3 * d.dx * (*avg_running + 0.5);
-        dir.dy += DIR_MAG3 * d.dy * (*avg_running + 0.5);
+        player.movement.dx += DIR_MAG3 * d.dx * (*avg_running + 0.5);
+        player.movement.dy += DIR_MAG3 * d.dy * (*avg_running + 0.5);
 
         pos.x += pdx;
         pos.y += pdy;
@@ -239,6 +242,18 @@ fn keyboard_player(
                     ) {
                         ev_room.write(RoomChangedEvent::default());
                     }
+                }
+            }
+        }
+
+        if !mouse_visibility.is_visible {
+            if d.distance() > 0.1 {
+                *dir = player.movement;
+            } else {
+                let dir_dist = (dir.dx.powi(2) + dir.dy.powi(2)).sqrt();
+                if dir_dist > DIR_MIN {
+                    dir.dx /= DIR_RED;
+                    dir.dy /= DIR_RED;
                 }
             }
         }
