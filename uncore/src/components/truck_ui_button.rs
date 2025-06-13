@@ -38,8 +38,7 @@ impl TruckUIButton {
             TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
                 self.status = match self.status {
                     TruckButtonState::Off => TruckButtonState::Pressed,
-                    TruckButtonState::Pressed => TruckButtonState::Discard,
-                    TruckButtonState::Discard => TruckButtonState::Off,
+                    TruckButtonState::Pressed | TruckButtonState::Discard => TruckButtonState::Off,
                 };
                 None
             }
@@ -47,6 +46,20 @@ impl TruckUIButton {
             TruckButtonType::ExitTruck => Some(TruckUIEvent::ExitTruck),
             TruckButtonType::EndMission => Some(TruckUIEvent::EndMission),
         }
+    }
+
+    /// Explicitly toggle the Discard state (Shift+Click)
+    pub fn toggle_discard(&mut self) -> Option<TruckUIEvent> {
+        match self.class {
+            TruckButtonType::Evidence(_) | TruckButtonType::Ghost(_) => {
+                self.status = match self.status {
+                    TruckButtonState::Discard => TruckButtonState::Off,
+                    _ => TruckButtonState::Discard,
+                };
+            }
+            _ => {}
+        }
+        None
     }
 
     pub fn border_color(&self, interaction: Interaction) -> Color {

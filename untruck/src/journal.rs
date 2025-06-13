@@ -34,32 +34,45 @@ fn button_system(
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     mut potential_id_timer: ResMut<PotentialIDTimer>,
+    keyboard_input: Res<ButtonInput<KeyCode>>, // Add this resource
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
     let mut clicked_ghost_type: Option<GhostType> = None;
+
+    let shift_pressed =
+        keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight);
 
     // --- 1. GATHER INPUTS ---
     // First pass: Handle evidence button clicks and detect ghost button clicks.
     for (interaction, _, _, _, mut tui_button) in &mut interaction_query {
         // Skip buttons that use hold timer or are currently disabled from a previous frame
         if tui_button.disabled || tui_button.hold_duration.is_some() {
-            if *interaction == Interaction::Pressed {
-                // If a disabled button is somehow clicked, log it and do nothing
-                warn!("Clicked a disabled button: {:?}", tui_button.class);
-            }
             continue;
         }
 
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             match tui_button.class {
                 TruckButtonType::Evidence(_) => {
-                    tui_button.pressed();
+                    if shift_pressed {
+                        tui_button.toggle_discard();
+                    } else {
+                        tui_button.pressed();
+                    }
                 }
                 TruckButtonType::Ghost(ghost_type) => {
-                    clicked_ghost_type = Some(ghost_type);
+                    if shift_pressed {
+                        tui_button.toggle_discard();
+                        if gg.ghost_type == Some(ghost_type) {
+                            gg.ghost_type = None;
+                        }
+                    } else {
+                        tui_button.pressed();
+                        clicked_ghost_type = Some(ghost_type);
+                    }
                 }
                 _ => {
+                    // For Craft, End, etc.
                     if let Some(truckui_event) = tui_button.pressed() {
                         ev_truckui.write(truckui_event);
                     }
@@ -83,14 +96,21 @@ fn button_system(
         }
     }
 
-
-    // --- 2. UPDATE GHOSTGUESS RESOURCE (THE CORE LOGIC) ---
-
-    // Get the full list of possible ghosts based on current evidence.
+    // --- 2. UPDATE GHOSTGUESS RESOURCE ---
     let possible_ghosts: Vec<GhostType> = GhostType::all()
         .filter(|ghost_type| {
             let ghost_ev = ghost_type.evidences();
-            ghost_ev.is_superset(&selected_evidences_found)
+            let mut is_discarded = false;
+            for (_, _, _, _, tui_button) in &interaction_query {
+                if let TruckButtonType::Ghost(gh) = tui_button.class {
+                    if gh == *ghost_type && tui_button.status == TruckButtonState::Discard {
+                        is_discarded = true;
+                        break;
+                    }
+                }
+            }
+            !is_discarded
+                && ghost_ev.is_superset(&selected_evidences_found)
                 && ghost_ev.is_disjoint(&selected_evidences_missing)
         })
         .collect();
@@ -116,7 +136,7 @@ fn button_system(
         gg.ghost_type = Some(possible_ghosts[0]);
     }
 
-    // --- 3. UPDATE UI FROM THE GHOSTGUESS RESOURCE ---
+    // --- 3. UPDATE UI FROM STATE ---
     // Second pass: Update visuals and disabled states of all buttons based on the now-finalized GhostGuess.
     for (interaction_ref, mut bgcolor, mut border_color, children, mut tui_button) in
         &mut interaction_query
@@ -125,19 +145,29 @@ fn button_system(
 
         // Update ghost buttons' state and disabled status
         if let TruckButtonType::Ghost(gh) = tui_button.class {
-            tui_button.disabled = !possible_ghosts.contains(&gh);
-            tui_button.status = if gg.ghost_type == Some(gh) {
-                TruckButtonState::Pressed
+            // --- MODIFIED LOGIC HERE ---
+            // A ghost button is disabled if it's not a possible candidate,
+            // UNLESS it is already in the Discard state (so it can be un-discarded).
+            if tui_button.status == TruckButtonState::Discard {
+                tui_button.disabled = false;
             } else {
-                TruckButtonState::Off
-            };
+                tui_button.disabled = !possible_ghosts.contains(&gh);
+            }
+
+            // The visual "Pressed" state is now purely based on GhostGuess.
+            if gg.ghost_type == Some(gh) && tui_button.status != TruckButtonState::Discard {
+                tui_button.status = TruckButtonState::Pressed;
+            } else if tui_button.status != TruckButtonState::Discard {
+                tui_button.status = TruckButtonState::Off;
+            }
         }
 
         // --- NEW LOGIC FOR EVIDENCE BUTTONS ---
         if let TruckButtonType::Evidence(ev) = tui_button.class {
             if tui_button.status == TruckButtonState::Off {
                 // An OFF button is disabled if clicking it (to mark as "found") is an impossible move.
-                let cannot_be_found = !possible_ghosts.is_empty() && possible_ghosts.iter().all(|g| !g.evidences().contains(&ev));
+                let cannot_be_found = !possible_ghosts.is_empty()
+                    && possible_ghosts.iter().all(|g| !g.evidences().contains(&ev));
                 tui_button.disabled = cannot_be_found;
             } else {
                 // A button that is already Pressed or Discarded is *never* disabled.
@@ -195,10 +225,15 @@ fn button_system(
     for (_interaction, _, _, _, tui_button) in &interaction_query {
         if let TruckButtonType::Evidence(clicked_evidence_type) = tui_button.class {
             if tui_button.status == TruckButtonState::Pressed {
-                if let Some((hinted_evidence, _)) = walkie_play.evidence_hinted_not_logged_via_walkie {
+                if let Some((hinted_evidence, _)) =
+                    walkie_play.evidence_hinted_not_logged_via_walkie
+                {
                     if hinted_evidence == clicked_evidence_type {
                         const JOURNAL_HINT_THRESHOLD: u32 = 3;
-                        let ack_count = profile_data.times_evidence_acknowledged_in_journal.entry(clicked_evidence_type).or_insert(0);
+                        let ack_count = profile_data
+                            .times_evidence_acknowledged_in_journal
+                            .entry(clicked_evidence_type)
+                            .or_insert(0);
                         if *ack_count < JOURNAL_HINT_THRESHOLD {
                             *ack_count += 1;
                             profile_data.set_changed();
