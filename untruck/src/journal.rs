@@ -5,6 +5,7 @@ use bevy_platform::collections::HashSet;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
 use uncore::components::truck::TruckUIGhostGuess;
+use uncore::difficulty::CurrentDifficulty;
 use uncore::events::truck::TruckUIEvent;
 use uncore::resources::ghost_guess::GhostGuess;
 use uncore::resources::potential_id_timer::PotentialIDTimer;
@@ -35,6 +36,7 @@ fn button_system(
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     mut potential_id_timer: ResMut<PotentialIDTimer>,
     keyboard_input: Res<ButtonInput<KeyCode>>, // Add this resource
+    difficulty: Res<CurrentDifficulty>,        // Add this parameter
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -164,14 +166,23 @@ fn button_system(
 
         // --- NEW LOGIC FOR EVIDENCE BUTTONS ---
         if let TruckButtonType::Evidence(ev) = tui_button.class {
-            if tui_button.status == TruckButtonState::Off {
-                // An OFF button is disabled if clicking it (to mark as "found") is an impossible move.
+            // Primary check: is the gear for this evidence even available?
+            if !difficulty
+                .0
+                .truck_gear
+                .iter()
+                .filter_map(|gear_kind| Evidence::try_from(gear_kind).ok())
+                .collect::<HashSet<_>>()
+                .contains(&ev)
+            {
+                tui_button.disabled = true;
+            } else if tui_button.status == TruckButtonState::Off {
+                // If gear is available, then apply the existing logic for 'Off' buttons
                 let cannot_be_found = !possible_ghosts.is_empty()
                     && possible_ghosts.iter().all(|g| !g.evidences().contains(&ev));
                 tui_button.disabled = cannot_be_found;
             } else {
-                // A button that is already Pressed or Discarded is *never* disabled.
-                // This preserves the user's input and prevents the blinking bug.
+                // If gear is available and button is already Pressed/Discard, it's never disabled.
                 tui_button.disabled = false;
             }
         }
