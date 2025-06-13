@@ -118,7 +118,7 @@ fn button_system(
 
     // --- 3. UPDATE UI FROM THE GHOSTGUESS RESOURCE ---
     // Second pass: Update visuals and disabled states of all buttons based on the now-finalized GhostGuess.
-    for (interaction_ref, mut color, mut border_color, children, mut tui_button) in
+    for (interaction_ref, mut bgcolor, mut border_color, children, mut tui_button) in
         &mut interaction_query
     {
         let interaction = *interaction_ref;
@@ -179,7 +179,7 @@ fn button_system(
         if !tui_button.blinking_hint_active {
             border_color.0 = current_border_color;
         }
-        *color = current_background_color.into();
+        *bgcolor = current_background_color.into();
         textcolor.0 = current_text_color;
     }
 

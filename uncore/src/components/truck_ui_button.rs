@@ -86,11 +86,13 @@ impl TruckUIButton {
                 TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed evidence
                 TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
             },
-            TruckButtonType::Ghost(_) => match self.status {
-                TruckButtonState::Off => colors::TRUCKUI_BGCOLOR.with_alpha(0.0),
-                TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed ghost, same as evidence
-                TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR,
-            },
+            TruckButtonType::Ghost(_) => {
+                match self.status {
+                    TruckButtonState::Off => colors::TRUCKUI_BGCOLOR,
+                    TruckButtonState::Pressed => Color::srgb(0.2, 0.8, 0.3), // Green color for confirmed ghost, same as evidence
+                    TruckButtonState::Discard => colors::BUTTON_END_MISSION_FGCOLOR, // Should not happen for ghosts, but for completeness.
+                }
+            }
             TruckButtonType::ExitTruck | TruckButtonType::CraftRepellent => match interaction {
                 Interaction::Pressed => colors::BUTTON_EXIT_TRUCK_FGCOLOR,
                 Interaction::Hovered => colors::BUTTON_EXIT_TRUCK_BGCOLOR,
@@ -102,8 +104,12 @@ impl TruckUIButton {
                 Interaction::None => colors::BUTTON_END_MISSION_BGCOLOR,
             },
         };
-        let alpha_disabled = if self.disabled { 0.05 } else { 1.0 };
-        color.with_alpha(color.alpha() * alpha_disabled)
+        if self.disabled {
+            let color = color.with_alpha(color.alpha() * 0.5);
+            color.with_luminance(color.luminance() * 0.5)
+        } else {
+            color
+        }
     }
 
     pub fn text_color(&self, _interaction: Interaction) -> Color {
