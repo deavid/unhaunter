@@ -36,10 +36,10 @@ pub fn setup_journal_ui(
         column_gap: Val::Px(4.0 * UI_SCALE),
         display: Display::Grid,
         grid_template_columns: vec![
-            GridTrack::auto(),
-            GridTrack::auto(),
-            GridTrack::auto(),
-            GridTrack::auto(),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
         ],
         grid_template_rows: vec![GridTrack::auto(), GridTrack::auto()],
         ..default()
@@ -113,11 +113,11 @@ pub fn setup_journal_ui(
         display: Display::Grid,
         grid_template_columns: vec![
             // Define columns for the grid
-            GridTrack::auto(),
-            GridTrack::auto(),
-            GridTrack::auto(),
-            GridTrack::auto(),
-            GridTrack::auto(),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
+            GridTrack::flex(1.0),
         ],
         grid_auto_rows: GridTrack::auto(), // Rows will adjust height automatically
         row_gap: Val::Px(2.0 * UI_SCALE),  // Reduced gap
