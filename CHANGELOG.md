@@ -1,3 +1,21 @@
+### Version 0.3.1 - DEV
+
+**Journal UI**
+
+* Discard evidence hidden away, now the user has to Shift+Click.
+* Simpler, better Ghost filtering logic.
+* If only one ghost is possible, it auto-selects. If the ghost selected is no longer possible, it de-selects.
+
+**Other:**
+
+* Bevy upgraded to version 0.16
+
+**Fixes:**
+
+*  Fixed error on negative miasma pressure that got NaN into player position and direction, making the game randomly unplayable.
+*  WASM: Prevent accidental closing of the tab via Ctrl+W.
+
+
 ### Version 0.3.0 - 2025-05-31
 
 * New campaign with 15 new maps!
