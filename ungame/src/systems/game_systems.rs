@@ -12,6 +12,7 @@ use uncore::{
 };
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
+use unstd::picking::CustomSpritePickingCamera;
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
@@ -28,7 +29,8 @@ fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
         .spawn(Camera2d)
         .insert(Projection::Orthographic(projection))
         .insert(GCameraArena)
-        .insert(Direction::zero());
+        .insert(Direction::zero())
+        .insert(CustomSpritePickingCamera);
 }
 
 fn cleanup(

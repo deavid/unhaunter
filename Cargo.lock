@@ -5392,6 +5392,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy_dylib",
+ "bevy_picking",
  "bevy_platform",
  "clap",
  "image",
@@ -5644,6 +5645,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
+ "bevy_picking",
  "bevy_platform",
  "enum-iterator",
  "fastapprox",

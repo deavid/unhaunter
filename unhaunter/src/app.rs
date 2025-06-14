@@ -24,6 +24,7 @@ use unplayer::plugin::UnhaunterPlayerPlugin;
 use unprofile::plugin::UnhaunterProfilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
+use unstd::picking::CustomSpritePickingPlugin;
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
@@ -65,6 +66,9 @@ pub fn app_run(cli_options: CliOptions) {
 
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
+
+    // Add picking support for our custom sprites
+    app.add_plugins(CustomSpritePickingPlugin);
 
     app.add_plugins((
         UnhaunterCorePlugin,
