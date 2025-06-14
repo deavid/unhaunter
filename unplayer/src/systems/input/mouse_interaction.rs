@@ -5,7 +5,7 @@ use bevy::{
 use uncore::{
     behavior::{Behavior, component::Interactive},
     components::{board::position::Position, move_to::MoveToTarget, player_sprite::PlayerSprite},
-    events::roomchanged::InteractionExecutionType,
+    events::roomchanged::{InteractionExecutionType, RoomChangedEvent},
     resources::mouse_visibility::MouseVisibility,
 };
 use unstd::systemparam::interactivestuff::InteractiveStuff;
@@ -28,6 +28,7 @@ pub(crate) fn mouse_interaction_system(
     mut interactive_stuff: InteractiveStuff,
     mut click_events: EventReader<Pointer<Click>>,
     mouse_visibility: Res<MouseVisibility>,
+    mut ev_room: EventWriter<RoomChangedEvent>,
 ) {
     // Only process clicks when mouse is visible
     if !mouse_visibility.is_visible {
@@ -83,18 +84,18 @@ pub(crate) fn mouse_interaction_system(
                     // ev_npc.write(NpcHelpEvent::new(interactive_entity));
                 }
 
-                let result = interactive_stuff.execute_interaction(
+                if interactive_stuff.execute_interaction(
                     interactive_entity,
                     interactive_pos,
                     Some(interactive),
                     behavior,
                     room_state,
                     InteractionExecutionType::ChangeState,
-                );
-                info!(
-                    "mouse_interaction_system: Interaction executed with result: {}",
-                    result
-                );
+                ) {
+                    ev_room.write(RoomChangedEvent::default());
+
+                    info!("mouse_interaction_system: Interaction executed.");
+                }
             } else {
                 info!("mouse_interaction_system: Player too far, setting up movement");
 
@@ -163,6 +164,7 @@ pub fn complete_pending_interaction_system(
     )>,
     q_pending: Query<&PendingInteraction>,
     mut interactive_stuff: InteractiveStuff,
+    mut ev_room: EventWriter<RoomChangedEvent>,
 ) {
     for (player_entity, player_pos) in q_player.iter() {
         debug!(
@@ -192,19 +194,18 @@ pub fn complete_pending_interaction_system(
                     info!("complete_pending_interaction_system: Executing pending interaction");
 
                     // Execute the interaction
-                    let result = interactive_stuff.execute_interaction(
+                    if interactive_stuff.execute_interaction(
                         pending.target_entity,
                         interactive_pos,
                         Some(interactive),
                         behavior,
                         room_state,
                         InteractionExecutionType::ChangeState,
-                    );
+                    ) {
+                        ev_room.write(RoomChangedEvent::default());
 
-                    info!(
-                        "complete_pending_interaction_system: Interaction executed with result: {}",
-                        result
-                    );
+                        info!("complete_pending_interaction_system: Interaction executed.");
+                    }
 
                     // Remove the pending interaction component
                     commands
