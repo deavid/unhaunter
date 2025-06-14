@@ -6,6 +6,7 @@ pub mod ghost_guess;
 pub mod hint_ui_state;
 pub mod looking_gear;
 pub mod manual;
+pub mod player_input;
 pub mod maps;
 pub mod mission_select_mode;
 pub mod mouse_visibility;
