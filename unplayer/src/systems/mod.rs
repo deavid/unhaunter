@@ -2,6 +2,7 @@ pub mod grabdrop;
 pub mod hide;
 pub mod input {
     pub mod keyboard;
+    pub mod mouse_interaction;
     pub mod mouse_pathing;
 }
 pub mod keyboard;
@@ -24,6 +25,9 @@ pub(crate) fn app_setup(app: &mut App) {
             input::keyboard::keyboard_input_system,
             input::mouse_pathing::click_to_move_pathing_system,
             input::mouse_pathing::click_to_move_update_system,
+            // Mouse interaction systems
+            input::mouse_interaction::mouse_interaction_system,
+            input::mouse_interaction::complete_pending_interaction_system,
             // Movement system runs after input
             movement::player_movement_system,
             // Stairs system runs last

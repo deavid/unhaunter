@@ -35,16 +35,23 @@ use unwalkie::plugin::UnhaunterWalkiePlugin;
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
     app.insert_resource(cli_options);
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: format!("Unhaunter {}", plt::VERSION),
-            resolution: default_resolution(),
-            // Enabling VSync might make it easier in WASM? (It doesn't)
-            present_mode: bevy::window::PresentMode::AutoVsync,
-            ..default()
-        }),
-        ..default()
-    }))
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: format!("Unhaunter {}", plt::VERSION),
+                    resolution: default_resolution(),
+                    // Enabling VSync might make it easier in WASM? (It doesn't)
+                    present_mode: bevy::window::PresentMode::AutoVsync,
+                    ..default()
+                }),
+                ..default()
+            })
+            .set(bevy::log::LogPlugin {
+                level: bevy::log::Level::INFO,
+                ..default()
+            }),
+    )
     .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,

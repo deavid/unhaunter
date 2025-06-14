@@ -87,6 +87,7 @@ fn setup_ui(
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(ZIndex(-5))
         .insert(BackgroundColor(css::BLACK.with_alpha(0.0).into()))
         .insert(GameUI)
@@ -103,6 +104,7 @@ fn setup_ui(
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(ZIndex(-4))
         .insert(GameUI)
         .insert(DamageBackground::new(0.7));
@@ -233,6 +235,7 @@ fn setup_ui(
             ..default()
         })
         .insert(colors::DEBUG_BCOLOR)
+        .insert(Pickable::IGNORE)
         .with_children(|parent| {
             // logo
             parent
@@ -264,6 +267,7 @@ fn setup_ui(
             flex_grow: 1.0,
             ..Default::default()
         })
+        .insert(Pickable::IGNORE)
         .insert(colors::DEBUG_BCOLOR);
 
         p.spawn(Node {
@@ -304,6 +308,7 @@ fn setup_ui(
             padding: UiRect::all(Val::Px(1.0)),
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(colors::DEBUG_BCOLOR)
         .insert(GameUI)
         .with_children(game_ui);

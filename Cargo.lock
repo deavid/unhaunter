@@ -5594,6 +5594,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_picking",
  "bevy_platform",
  "fastapprox",
  "ordered-float 5.0.0",
