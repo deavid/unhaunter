@@ -1,5 +1,12 @@
 ### Version 0.3.1 - DEV
 
+**Mouse Aiming**
+
+* Now you can hover with the mouse around and the flashlight will follow.
+* Flashlight visual enhanced for long range scan.
+* Clicking now will make the character walk towards the cursor.
+* Clicking nearby something activable/interactive, will also interact with it, as if it were the [E] key.
+
 **Journal UI**
 
 * Discard evidence hidden away, now the user has to Shift+Click.
