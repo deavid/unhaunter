@@ -21,10 +21,10 @@ fn cleanup(
 ) {
     // Despawn game UI if not used
     for gui in qg.iter() {
-        commands.entity(gui).despawn_recursive();
+        commands.entity(gui).despawn();
     }
     for gui in qwt.iter() {
-        commands.entity(gui).despawn_recursive();
+        commands.entity(gui).despawn();
     }
 }
 
@@ -67,7 +67,7 @@ fn setup_ui(
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400i_regular.clone(),
                     font_size: 18.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextLayout::new_with_justify(JustifyText::Center))
                 .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
@@ -87,6 +87,7 @@ fn setup_ui(
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(ZIndex(-5))
         .insert(BackgroundColor(css::BLACK.with_alpha(0.0).into()))
         .insert(GameUI)
@@ -103,12 +104,13 @@ fn setup_ui(
             position_type: PositionType::Absolute,
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(ZIndex(-4))
         .insert(GameUI)
         .insert(DamageBackground::new(0.7));
 
     // Spawn game UI
-    type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
+    type Cb<'a, 'b> = &'b mut ChildSpawnerCommands<'a>;
     let key_legend = |p: Cb| {
         // For now a reminder of the keys:
         let ch_control = game_settings.character_controls.to_string();
@@ -135,7 +137,7 @@ fn setup_ui(
                     .insert(TextFont {
                         font: handles.fonts.chakra.w300_light.clone(),
                         font_size: 16.0 * FONT_SCALE,
-                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        ..default()
                     })
                     .insert(TextLayout::new_with_justify(JustifyText::Center))
                     .insert(TextColor(colors::INVENTORY_STATS_COLOR))
@@ -233,6 +235,7 @@ fn setup_ui(
             ..default()
         })
         .insert(colors::DEBUG_BCOLOR)
+        .insert(Pickable::IGNORE)
         .with_children(|parent| {
             // logo
             parent
@@ -264,6 +267,7 @@ fn setup_ui(
             flex_grow: 1.0,
             ..Default::default()
         })
+        .insert(Pickable::IGNORE)
         .insert(colors::DEBUG_BCOLOR);
 
         p.spawn(Node {
@@ -304,20 +308,21 @@ fn setup_ui(
             padding: UiRect::all(Val::Px(1.0)),
             ..default()
         })
+        .insert(Pickable::IGNORE)
         .insert(colors::DEBUG_BCOLOR)
         .insert(GameUI)
         .with_children(game_ui);
     info!("Game UI loaded");
 }
 
-fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
+fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     parent
         .spawn((
             Text::default(),
             TextFont {
                 font: handles.fonts.chakra.w400_regular.clone(),
                 font_size: 22.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)),
             TextLayout::default(),
@@ -330,7 +335,7 @@ fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 .insert(TextFont {
                     font: handles.fonts.chakra.w400_regular.clone(),
                     font_size: 22.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                  })
                 .insert(TextColor(colors::INVENTORY_STATS_COLOR.with_alpha(1.0)));
             parent
@@ -338,7 +343,7 @@ fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 .insert(TextFont {
                     font: handles.fonts.victormono.w600_semibold.clone(),
                     font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(css::GREEN.with_alpha(1.0).into()));
             parent
@@ -348,7 +353,7 @@ fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
                 .insert(TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                  })
                 .insert(TextColor(colors::INVENTORY_STATS_COLOR));
         });
@@ -356,13 +361,13 @@ fn setup_ui_evidence(parent: &mut ChildBuilder, handles: &GameAssets) {
 
 /// Sets up the UI elements for displaying information about the map item being
 /// held by the player.
-fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
+fn _setup_ui_held_object(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     parent
         .spawn(Text::new("Object Name"))
         .insert(TextFont {
             font: handles.fonts.victormono.w600_semibold.clone(),
             font_size: 20.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(ElementObjectUI::Name);
@@ -373,7 +378,7 @@ fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 16.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(ElementObjectUI::Description);
@@ -384,7 +389,7 @@ fn _setup_ui_held_object(parent: &mut ChildBuilder, handles: &GameAssets) {
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 16.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(ElementObjectUI::Grab);
@@ -443,7 +448,7 @@ fn toggle_held_object_ui(
     // }
 
     // --- Retrieve Object Data ---
-    if let Ok(player_gear) = players.get_single() {
+    if let Ok(player_gear) = players.single() {
         if let Some(held_object) = &player_gear.held_item {
             if let Ok(behavior) = objects.get(held_object.entity) {
                 // --- Set Object Name ---

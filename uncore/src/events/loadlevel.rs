@@ -1,4 +1,5 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{prelude::*};
+use bevy_platform::collections::HashMap;
 
 use crate::types::tiledmap::map::MapLayer;
 

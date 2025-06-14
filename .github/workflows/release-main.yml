@@ -3,7 +3,7 @@ name: Release Main Build
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+' # MODIFIED: Trigger on final version tags like v0.3.0 (no hyphens)
+      - 'v[0-9]+\.[0-9]+\.[0-9]+' # MODIFIED: Trigger on final version tags like v0.3.0 (no hyphens)
 
 permissions:
   contents: write # Required for gh release upload

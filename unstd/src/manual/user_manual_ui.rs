@@ -23,29 +23,29 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
         font_size: 30.0 * FONT_SCALE,
-        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+        ..default()
     };
 
-    let prev_button = |button: &mut ChildBuilder| {
+    let prev_button = |button: &mut ChildSpawnerCommands| {
         button
             .spawn(Text::new("Previous"))
             .insert(button_text_style.clone())
             .insert(TextColor(Color::WHITE));
     };
-    let continue_button = |button: &mut ChildBuilder| {
+    let continue_button = |button: &mut ChildSpawnerCommands| {
         button
             .spawn(Text::new("Close"))
             .insert(button_text_style.clone())
             .insert(TextColor(Color::WHITE));
     };
-    let next_button = |button: &mut ChildBuilder| {
+    let next_button = |button: &mut ChildSpawnerCommands| {
         button
             .spawn(Text::new("Next"))
             .insert(button_text_style.clone())
             .insert(TextColor(Color::WHITE));
     };
 
-    let nav_buttons = |buttons: &mut ChildBuilder| {
+    let nav_buttons = |buttons: &mut ChildSpawnerCommands| {
         // Previous button
         buttons
             .spawn(Button)
@@ -88,7 +88,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
             .insert(BackgroundColor(Color::BLACK.with_alpha(0.2)))
             .with_children(next_button);
     };
-    let page_content = |parent: &mut ChildBuilder| {
+    let page_content = |parent: &mut ChildSpawnerCommands| {
         // Page Content Container
         parent
             .spawn(Node {
@@ -161,16 +161,16 @@ pub fn user_manual_system(
     for (interaction, children) in &mut interaction_query {
         if interaction.is_changed() && *interaction == Interaction::Pressed {
             for child in children.iter() {
-                if let Ok(text) = text_query.get(*child) {
+                if let Ok(text) = text_query.get(child) {
                     match text.0.as_str() {
                         "Previous" => {
-                            ev_navigation.send(ManualNavigationEvent::PreviousPage);
+                            ev_navigation.write(ManualNavigationEvent::PreviousPage);
                         }
                         "Next" => {
-                            ev_navigation.send(ManualNavigationEvent::NextPage);
+                            ev_navigation.write(ManualNavigationEvent::NextPage);
                         }
                         "Close" => {
-                            ev_navigation.send(ManualNavigationEvent::Close);
+                            ev_navigation.write(ManualNavigationEvent::Close);
                         }
                         _ => {}
                     }
@@ -180,11 +180,11 @@ pub fn user_manual_system(
     }
 
     if keyboard_input.just_pressed(KeyCode::ArrowLeft) {
-        ev_navigation.send(ManualNavigationEvent::PreviousPage);
+        ev_navigation.write(ManualNavigationEvent::PreviousPage);
     } else if keyboard_input.just_pressed(KeyCode::ArrowRight) {
-        ev_navigation.send(ManualNavigationEvent::NextPage);
+        ev_navigation.write(ManualNavigationEvent::NextPage);
     } else if keyboard_input.just_pressed(KeyCode::Escape) {
-        ev_navigation.send(ManualNavigationEvent::Close);
+        ev_navigation.write(ManualNavigationEvent::Close);
     }
 }
 
@@ -205,17 +205,19 @@ fn redraw_manual_ui_system(
     manuals: Res<Manual>,
 ) {
     // Get the ManualUI entity
-    let Ok(_) = q_manual_ui.get_single() else {
+    let Ok(_) = q_manual_ui.single() else {
         return;
     };
 
     // Get the PageContent entity
-    let Ok(page_content_entity) = q_page_content.get_single() else {
+    let Ok(page_content_entity) = q_page_content.single() else {
         return;
     };
 
     // Despawn the existing page content
-    commands.entity(page_content_entity).despawn_descendants();
+    commands
+        .entity(page_content_entity)
+        .despawn_related::<Children>();
 
     // Redraw the page content, changed "draw_page_content_obsolete"
     commands
@@ -271,7 +273,7 @@ fn update_navigation_button_visibility(
 ) {
     for (children, mut visibility) in &mut button_query {
         for child in children.iter() {
-            if let Ok(text) = text_query.get(*child) {
+            if let Ok(text) = text_query.get(child) {
                 let is_first = text.0 == "Previous"
                     && current_manual_page.1 == 0
                     && current_manual_page.0 == 0;
@@ -297,12 +299,12 @@ pub fn cleanup(
 ) {
     // Despawn the manual UI
     for entity in q_manual_ui.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     // Despawn the manual camera
     for entity in q_camera.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 

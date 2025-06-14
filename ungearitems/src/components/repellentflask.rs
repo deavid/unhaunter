@@ -1,4 +1,4 @@
-use bevy::utils::HashSet;
+use bevy_platform::collections::HashSet;
 use fastapprox::faster;
 use ndarray::Array3;
 use uncore::components::board::boardposition::BoardPosition;

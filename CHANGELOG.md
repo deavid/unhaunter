@@ -1,8 +1,33 @@
+### Version 0.3.1 - DEV
+
+**Mouse Aiming**
+
+* Now you can hover with the mouse around and the flashlight will follow.
+* Flashlight visual enhanced for long range scan.
+* Clicking now will make the character walk towards the cursor.
+* Clicking nearby something activable/interactive, will also interact with it, as if it were the [E] key.
+
+**Journal UI**
+
+* Discard evidence hidden away, now the user has to Shift+Click.
+* Simpler, better Ghost filtering logic.
+* If only one ghost is possible, it auto-selects. If the ghost selected is no longer possible, it de-selects.
+
+**Other:**
+
+* Bevy upgraded to version 0.16
+
+**Fixes:**
+
+*  Fixed error on negative miasma pressure that got NaN into player position and direction, making the game randomly unplayable.
+*  WASM: Prevent accidental closing of the tab via Ctrl+W.
+
+
 ### Version 0.3.0 - 2025-05-31
 
 * New campaign with 15 new maps!
 * Progression system with money, experience and leveling up.
-* Walkie Talkie buddy extended aggresively with an additional Hint UI.
+* Walkie Talkie buddy extended aggressively with an additional Hint UI.
 * Now missions are graded from A to F.
 * New design for the menu.
 * The menu now works with the mouse as well as keyboard.

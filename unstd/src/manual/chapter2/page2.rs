@@ -3,7 +3,7 @@ use super::super::utils::{grid_img_text2, header};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
-pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Ghost Hunts and the Truck";
     let subtitle = "Surviving the paranormal and using your truck as your headquarters.";
     let grid = vec![

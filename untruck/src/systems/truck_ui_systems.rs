@@ -25,7 +25,7 @@ pub struct HoldSoundEntity(pub Option<Entity>);
 
 fn cleanup(mut commands: Commands, qtui: Query<Entity, With<TruckUI>>) {
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }
 
@@ -94,7 +94,7 @@ fn hold_button_system(
         With<Button>,
     >,
     mut node_query: Query<&mut Node>,
-    progress_query: Query<(Entity, &Parent), With<ProgressIndicator>>,
+    progress_query: Query<(Entity, &ChildOf), With<ProgressIndicator>>,
     mut ev_truckui: EventWriter<TruckUIEvent>,
     mut hold_sound: Local<Option<Entity>>,
 ) {
@@ -134,7 +134,7 @@ fn hold_button_system(
                     // Only spawn a new progress bar if none exists for this button
                     let has_progress_bar = progress_query
                         .iter()
-                        .any(|(_, parent)| parent.get() == button_entity);
+                        .any(|(_, parent)| parent.parent() == button_entity);
 
                     if !has_progress_bar {
                         // Create progress bar with very distinctive appearance
@@ -170,7 +170,7 @@ fn hold_button_system(
                         ))
                         .insert(PlaybackSettings {
                             mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::new(
+                            volume: bevy::audio::Volume::Linear(
                                 1.0 * audio_settings.volume_master.as_f32()
                                     * audio_settings.volume_effects.as_f32(),
                             ),
@@ -191,7 +191,7 @@ fn hold_button_system(
                     let progress = (*hold_timer / hold_duration).clamp(0.0, 1.0);
 
                     for (progress_entity, parent) in &progress_query {
-                        if parent.get() == button_entity {
+                        if parent.parent() == button_entity {
                             if let Ok(mut node) = node_query.get_mut(progress_entity) {
                                 // We only cover up to 99% to avoid overflowing the button due to the borders.
                                 node.width = Val::Percent(progress.abs().sqrt() * 99.0);
@@ -207,11 +207,11 @@ fn hold_button_system(
                         match button_class {
                             TruckButtonType::CraftRepellent => {
                                 button.disabled = true; // Disable button to prevent multiple triggers
-                                ev_truckui.send(TruckUIEvent::CraftRepellent);
+                                ev_truckui.write(TruckUIEvent::CraftRepellent);
                                 info!("Sent CraftRepellent event");
                             }
                             TruckButtonType::EndMission => {
-                                ev_truckui.send(TruckUIEvent::EndMission);
+                                ev_truckui.write(TruckUIEvent::EndMission);
                                 info!("Sent EndMission event");
                             }
                             _ => {}
@@ -232,8 +232,8 @@ fn hold_button_system(
 
                     // Stop sound
                     if let Some(entity) = hold_sound.take() {
-                        if let Some(cmd_e) = commands.get_entity(entity) {
-                            cmd_e.despawn_recursive();
+                        if let Ok(mut cmd_e) = commands.get_entity(entity) {
+                            cmd_e.despawn();
                         }
                     }
                 }
@@ -243,7 +243,7 @@ fn hold_button_system(
 
     // Clean up progress bars for buttons that are no longer being held or are disabled
     for (entity, parent) in progress_query.iter() {
-        let button_entity = parent.get();
+        let button_entity = parent.parent();
         let button_is_active = active_buttons.contains(&button_entity);
 
         // Also get the button to check if it's disabled
@@ -254,7 +254,7 @@ fn hold_button_system(
             .unwrap_or(false);
 
         if !button_is_active || button_is_disabled {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -328,7 +328,7 @@ fn truckui_event_handle(
                                 ))
                                 .insert(PlaybackSettings {
                                     mode: bevy::audio::PlaybackMode::Despawn,
-                                    volume: bevy::audio::Volume::new(
+                                    volume: bevy::audio::Volume::Linear(
                                         1.0 * audio_settings.volume_master.as_f32()
                                             * audio_settings.volume_effects.as_f32(),
                                     ),
@@ -336,6 +336,7 @@ fn truckui_event_handle(
                                     paused: false,
                                     spatial: false,
                                     spatial_scale: None,
+                                    ..Default::default()
                                 });
                         }
                     }

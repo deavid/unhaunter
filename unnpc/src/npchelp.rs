@@ -41,7 +41,7 @@ pub fn keyboard(
 
 pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }
 
@@ -95,7 +95,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 35.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(colors::TRUCKUI_ACCENT_COLOR))
                         .insert(Node {
@@ -114,7 +114,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.syne.w400_regular.clone(),
                             font_size: 21.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(colors::DIALOG_TEXT_COLOR))
                         .insert(Node {
@@ -132,7 +132,7 @@ pub fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.chakra.w300_light.clone(),
                             font_size: 25.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))
                         .insert(Node {
@@ -215,7 +215,7 @@ pub fn auto_call_npchelp(
         if dist < 4.5 {
             npc.trigger += dt;
             if npc.trigger > 1.0 {
-                ev_npc.send(NpcHelpEvent::new(entity));
+                ev_npc.write(NpcHelpEvent::new(entity));
             }
         } else {
             npc.trigger = 0.0;

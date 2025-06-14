@@ -12,6 +12,7 @@ uncore = { path = "../uncore" }
 ungear = { path = "../ungear" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
 enum-iterator = { workspace = true }

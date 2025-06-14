@@ -6,12 +6,12 @@ use uncore::types::root::game_assets::GameAssets;
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub fn setup_activity_ui(p: &mut ChildBuilder, handles: &GameAssets) {
+pub fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     p.spawn(Text::new("Activity"))
         .insert(TextFont {
             font: handles.fonts.londrina.w300_light.clone(),
             font_size: 35.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::TRUCKUI_ACCENT_COLOR))
         .insert(Node {
@@ -32,7 +32,7 @@ pub fn setup_activity_ui(p: &mut ChildBuilder, handles: &GameAssets) {
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 25.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(Node {
             margin: TEXT_MARGIN,

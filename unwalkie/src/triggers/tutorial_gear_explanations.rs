@@ -34,7 +34,7 @@ fn trigger_evidence_gear_explanations(
         return;
     }
 
-    if let Ok(player_gear) = player_gear_query.get_single() {
+    if let Ok(player_gear) = player_gear_query.single() {
         for gear_item in [&player_gear.left_hand, &player_gear.right_hand] {
             let gear_kind = &gear_item.kind;
             match gear_kind {
@@ -76,7 +76,7 @@ fn trigger_support_item_explanations(
         return;
     }
 
-    if let Ok(player_gear) = player_gear_query.get_single() {
+    if let Ok(player_gear) = player_gear_query.single() {
         let gear_kind = player_gear.right_hand.kind;
         if matches!(
             gear_kind,

@@ -36,7 +36,7 @@ pub struct GearHelp;
 pub struct GearHelpTitle;
 
 pub fn setup_loadout_ui(
-    p: &mut ChildBuilder,
+    p: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
@@ -94,13 +94,13 @@ pub fn setup_loadout_ui(
             },
         )
     };
-    let left_side = |p: &mut ChildBuilder| {
+    let left_side = |p: &mut ChildSpawnerCommands| {
         p.spawn((
             Text::new("Player Inventory:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             TextLayout::default(),
@@ -145,7 +145,7 @@ pub fn setup_loadout_ui(
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             TextLayout::default(),
@@ -214,7 +214,7 @@ pub fn setup_loadout_ui(
                 TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 25.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),
                 TextLayout::default(),
@@ -229,7 +229,7 @@ pub fn setup_loadout_ui(
                 TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
                     font_size: 16.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7)),
                 TextLayout::default(),
@@ -281,7 +281,7 @@ fn update_loadout_buttons(
         border.0 = colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha);
         bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha);
         if *int == Interaction::Pressed {
-            ev_clk.send(EventButtonClicked(lbut.clone()));
+            ev_clk.write(EventButtonClicked(lbut.clone()));
         }
         if *int != Interaction::None {
             // Only update help text if hovered or pressed

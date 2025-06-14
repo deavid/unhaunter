@@ -17,8 +17,9 @@ ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 tiled = { workspace = true }
 ordered-float = { workspace = true }
-bevy-persistent = { workspace = true }
 ndarray = { workspace = true }

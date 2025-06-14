@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy_platform::collections::HashSet;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::resources::current_evidence_readings::CurrentEvidenceReadings;
 use uncore::states::AppState;
@@ -27,7 +27,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
         return;
     }
     // Check if player already has a repellent flask
-    if let Ok(player_gear) = player_query.get_single() {
+    if let Ok(player_gear) = player_query.single() {
         for (gear, _epos) in player_gear.as_vec() {
             if gear.kind == GearKind::RepellentFlask {
                 // If player already has a repellent flask, no need to prompt to craft.

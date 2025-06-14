@@ -32,7 +32,7 @@ fn keyboard(
 
 fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
     for e in qtui.iter() {
-        commands.entity(e).despawn_recursive();
+        commands.entity(e).despawn();
     }
 }
 
@@ -84,7 +84,7 @@ fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 35.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(PAUSEUI_ACCENT_COLOR))
                         .insert(Node {
@@ -103,7 +103,7 @@ fn setup_ui(
                         .insert(TextFont {
                             font: handles.fonts.chakra.w300_light.clone(),
                             font_size: 25.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(PAUSEUI_TEXT_COLOR))
                         .insert(Node {

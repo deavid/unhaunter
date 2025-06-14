@@ -46,7 +46,7 @@ impl GearStuff<'_, '_> {
         };
 
         // Send the SoundEvent to be handled by the sound playback system
-        self.sound_events.send(sound_event);
+        self.sound_events.write(sound_event);
     }
 
     /// Plays a sound effect without having a position volume modifier.
@@ -59,6 +59,6 @@ impl GearStuff<'_, '_> {
         };
 
         // Send the SoundEvent to be handled by the sound playback system
-        self.sound_events.send(sound_event);
+        self.sound_events.write(sound_event);
     }
 }

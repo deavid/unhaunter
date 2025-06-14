@@ -1,4 +1,3 @@
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use uncore::resources::maps::Maps;
 use uncore::states::{AppState, GameState};
@@ -10,7 +9,6 @@ use uncore::types::root::font_assets::{
 use uncore::types::root::game_assets::GameAssets;
 use uncore::types::root::image_assets::ImageAssets;
 
-pub const FPS_DEBUG: bool = false;
 pub struct UnhaunterRootPlugin;
 
 impl Plugin for UnhaunterRootPlugin {
@@ -19,10 +17,6 @@ impl Plugin for UnhaunterRootPlugin {
             .init_state::<GameState>()
             .init_resource::<Maps>()
             .add_systems(Startup, (load_assets, finish_loading).chain());
-        if FPS_DEBUG {
-            app.add_plugins(FrameTimeDiagnosticsPlugin)
-                .add_plugins(LogDiagnosticsPlugin::default());
-        }
 
         arch_setup::app_setup(app);
     }
@@ -230,9 +224,6 @@ mod arch_setup {
     pub fn app_setup(app: &mut App) {
         app.add_plugins(bevy_framepace::FramepacePlugin)
             .add_systems(Startup, set_fps_limiter);
-        if FPS_DEBUG {
-            app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
-        }
     }
 }
 

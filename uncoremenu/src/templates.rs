@@ -5,7 +5,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
 use uncore::types::root::game_assets::GameAssets;
 
 /// Creates a standard menu background with the background image
-pub fn create_background(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn create_background(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     parent.spawn((
         ImageNode {
             image: handles.images.menu_background.clone(),
@@ -23,7 +23,7 @@ pub fn create_background(parent: &mut ChildBuilder, handles: &GameAssets) {
 }
 
 /// Creates a standard menu logo
-pub fn create_logo(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn create_logo(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     parent.spawn((
         ImageNode {
             image: handles.images.title.clone(),
@@ -44,7 +44,7 @@ pub fn create_logo(parent: &mut ChildBuilder, handles: &GameAssets) {
 
 /// Creates a standard menu left strip
 pub fn create_menu_strip<'a, T: Component + Copy>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     _handles: &GameAssets,  // Explicit unused parameter
     _items: &[(T, String)], // Explicit unused parameter
     selected_item_idx: usize,
@@ -83,7 +83,7 @@ pub fn create_menu_strip<'a, T: Component + Copy>(
 
 /// Creates a standard menu item within a strip
 pub fn create_menu_item<'a>(
-    strip: &'a mut ChildBuilder,
+    strip: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
     idx: usize,
     is_selected: bool,
@@ -115,7 +115,7 @@ pub fn create_menu_item<'a>(
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 38.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(if is_selected {
                     selected_color
@@ -129,7 +129,11 @@ pub fn create_menu_item<'a>(
 }
 
 /// Creates a standard help text at the bottom of the screen
-pub fn create_help_text(parent: &mut ChildBuilder, handles: &GameAssets, text: Option<String>) {
+pub fn create_help_text(
+    parent: &mut ChildSpawnerCommands,
+    handles: &GameAssets,
+    text: Option<String>,
+) {
     let default_help_text = format!(
         "Unhaunter {}    |    [Up]/[Down]: Change    |    [Enter]: Select    |    [ESC]: Go Back",
         VERSION
@@ -151,7 +155,7 @@ pub fn create_help_text(parent: &mut ChildBuilder, handles: &GameAssets, text: O
                 .insert(TextFont {
                     font: handles.fonts.titillium.w300_light.clone(),
                     font_size: 14.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
                 .insert(TextLayout {
@@ -216,7 +220,7 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
 
 /// Creates a content area with a grid layout, suitable for map/difficulty selection
 pub fn create_grid_content_area<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     _handles: &GameAssets, // Explicit unused parameter
     columns: usize,
 ) -> EntityCommands<'a> {
@@ -241,7 +245,7 @@ pub fn create_grid_content_area<'a>(
 
 /// Creates a content area with a description panel, suitable for settings
 pub fn create_description_content_area<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     handles: &GameAssets,
     description: impl Into<String>,
 ) -> EntityCommands<'a> {
@@ -263,7 +267,7 @@ pub fn create_description_content_area<'a>(
             .insert(TextFont {
                 font: handles.fonts.titillium.w300_light.clone(),
                 font_size: 19.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             })
             .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
             .insert(Node {
@@ -277,7 +281,7 @@ pub fn create_description_content_area<'a>(
 
 /// Creates a scrollable content area with text, suitable for manual pages
 pub fn create_scrollable_content_area<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     handles: &GameAssets,
     content: impl Into<String>,
 ) -> EntityCommands<'a> {
@@ -311,7 +315,7 @@ pub fn create_scrollable_content_area<'a>(
                         .insert(TextFont {
                             font: handles.fonts.chakra.w300_light.clone(),
                             font_size: 16.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
                         .insert(Node {
@@ -325,7 +329,7 @@ pub fn create_scrollable_content_area<'a>(
 }
 
 /// Creates a navigation button bar for manual/tutorial pages
-pub fn create_navigation_bar(parent: &mut ChildBuilder, handles: &GameAssets) -> Entity {
+pub fn create_navigation_bar(parent: &mut ChildSpawnerCommands, handles: &GameAssets) -> Entity {
     parent
         .spawn(Node {
             position_type: PositionType::Absolute,
@@ -355,7 +359,7 @@ pub fn create_navigation_bar(parent: &mut ChildBuilder, handles: &GameAssets) ->
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
                 });
@@ -375,7 +379,7 @@ pub fn create_navigation_bar(parent: &mut ChildBuilder, handles: &GameAssets) ->
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
                 });
@@ -385,7 +389,7 @@ pub fn create_navigation_bar(parent: &mut ChildBuilder, handles: &GameAssets) ->
 
 /// Creates a breadcrumb-style navigation in the left strip, showing the current section path
 pub fn create_breadcrumb_navigation<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     handles: &GameAssets,
     main_text: impl Into<String>,
     sub_text: impl Into<String>,
@@ -433,7 +437,7 @@ pub fn create_breadcrumb_navigation<'a>(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 38.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::WHITE));
                 });
@@ -454,7 +458,7 @@ pub fn create_breadcrumb_navigation<'a>(
                         .insert(TextFont {
                             font: handles.fonts.londrina.w300_light.clone(),
                             font_size: 30.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(colors::MENU_ITEM_COLOR_ON)); // Orange color for current item
                 });
@@ -465,7 +469,7 @@ pub fn create_breadcrumb_navigation<'a>(
 
 /// Creates a content area with a semi-transparent background and selectable items
 pub fn create_selectable_content_area<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     _handles: &GameAssets, // Explicit unused parameter
     initial_selection: usize,
 ) -> EntityCommands<'a> {
@@ -500,7 +504,7 @@ pub fn create_selectable_content_area<'a>(
 
 /// Creates a selectable item for the content area
 pub fn create_content_item<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
@@ -510,7 +514,7 @@ pub fn create_content_item<'a>(
 }
 
 pub fn create_content_item_disabled<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
     handles: &GameAssets,
 ) -> EntityCommands<'a> {
@@ -518,7 +522,7 @@ pub fn create_content_item_disabled<'a>(
 }
 
 pub fn create_content_item_enabled<'a>(
-    parent: &'a mut ChildBuilder,
+    parent: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
@@ -557,7 +561,7 @@ pub fn create_content_item_enabled<'a>(
             Color::NONE
         }))
         // Allow mouse wheel scrolling to work through this element
-        .insert(PickingBehavior {
+        .insert(Pickable {
             should_block_lower: false,
             ..default()
         })
@@ -567,10 +571,10 @@ pub fn create_content_item_enabled<'a>(
                 .insert(TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
                     font_size: 24.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 // Allow mouse wheel scrolling to work through text as well
-                .insert(PickingBehavior {
+                .insert(Pickable {
                     should_block_lower: false,
                     ..default()
                 })
@@ -590,7 +594,7 @@ pub fn create_content_item_enabled<'a>(
 /// Creates a persistent player status bar displaying Level, XP progress, and Bank.
 /// Should be added to a root UI node of a menu screen.
 pub fn create_player_status_bar(
-    parent: &mut ChildBuilder,
+    parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     player_profile: &unprofile::data::PlayerProfileData,
 ) {
@@ -618,7 +622,7 @@ pub fn create_player_status_bar(
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_ON))
                 .insert(Node {
@@ -670,7 +674,7 @@ pub fn create_player_status_bar(
                 .insert(TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 })
                 .insert(TextColor(colors::MENU_ITEM_COLOR_ON));
         });

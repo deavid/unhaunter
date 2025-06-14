@@ -12,11 +12,12 @@ use uncore::{
 };
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
+use unstd::picking::CustomSpritePickingCamera;
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // 2D orthographic camera - Arena
@@ -26,9 +27,10 @@ fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     };
     commands
         .spawn(Camera2d)
-        .insert(projection)
+        .insert(Projection::Orthographic(projection))
         .insert(GCameraArena)
-        .insert(Direction::zero());
+        .insert(Direction::zero())
+        .insert(CustomSpritePickingCamera);
 }
 
 fn cleanup(
@@ -39,17 +41,17 @@ fn cleanup(
 ) {
     // Despawn old camera if exists
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
 
     // Despawn game sprites if not used
     for gs in qgs.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 
     // Despawn game sound
     for gs in qs.iter() {
-        commands.entity(gs).despawn_recursive();
+        commands.entity(gs).despawn();
     }
 }
 
@@ -77,13 +79,14 @@ fn keyboard(
         game_next_state.set(GameState::Pause);
     }
     for (mut transform, mut cam_dir) in camera.iter_mut() {
-        for (player, p_transform, p_dir) in pc.iter() {
+        for (player, p_transform, _p_dir) in pc.iter() {
             if player.id != gc.player_id {
                 continue;
             }
             // Camera movement
             let mut ref_point = p_transform.translation;
-            let sc_dir = p_dir.to_screen_coord();
+            // let sc_dir = p_dir.to_screen_coord();
+            let sc_dir = player.movement.to_screen_coord();
             const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
             ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
             ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;

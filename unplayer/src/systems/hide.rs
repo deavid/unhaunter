@@ -1,6 +1,6 @@
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use uncore::behavior::Behavior;
 use uncore::components::animation::AnimationTimer;
 use uncore::components::board::mapcolor::MapColor;
@@ -121,7 +121,9 @@ fn unhide_player(
                     color: Color::WHITE.with_alpha(1.0),
                 });
 
-            commands.entity(hiding.hiding_spot).despawn_descendants();
+            commands
+                .entity(hiding.hiding_spot)
+                .despawn_related::<Children>();
         }
     }
 }

@@ -1,3 +1,4 @@
+use crate::components::board::direction::Direction;
 use crate::components::board::position::Position;
 use bevy::prelude::*;
 use unsettings::controls::ControlKeys; // Added import
@@ -21,6 +22,8 @@ pub struct PlayerSprite {
     pub health: f32,
     /// The player's initial spawn position when the level started.
     pub spawn_position: Position,
+    /// The player's movement direction based on WASD controls.
+    pub movement: Direction,
 }
 
 impl PlayerSprite {
@@ -33,6 +36,7 @@ impl PlayerSprite {
             mean_sound: 0.0,
             health: 100.0,
             spawn_position,
+            movement: Direction::zero(),
         }
     }
 
@@ -70,6 +74,6 @@ impl PlayerSprite {
     pub fn sanity(&self) -> f32 {
         const LINEAR: f32 = 30.0;
         const SCALE: f32 = 100.0;
-        (SCALE * LINEAR) / ((self.crazyness + LINEAR * LINEAR).sqrt())
+        (SCALE * LINEAR) / ((self.crazyness + LINEAR * LINEAR).max(0.01).sqrt())
     }
 }

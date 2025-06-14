@@ -9,7 +9,7 @@ use super::root::game_assets::GameAssets;
 pub struct ManualPageData {
     pub title: String,
     pub subtitle: String,
-    pub draw_fn: fn(&mut ChildBuilder, &GameAssets),
+    pub draw_fn: fn(&mut ChildSpawnerCommands, &GameAssets),
 }
 
 #[derive(Debug, Clone)]

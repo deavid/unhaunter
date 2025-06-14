@@ -1,5 +1,6 @@
 // ------------ Bevy map loading utils --------------------
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
 use uncore::{
     events::loadlevel::FloorLevelMapping,

@@ -14,7 +14,7 @@
 //!   * Custom: Main Menu -> Difficulty Selection -> Mission Selection -> Game
 //! - Proper UI mapping between list items and the original maps collection
 
-use bevy::picking::PickingBehavior;
+use bevy::picking::Pickable;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
@@ -94,11 +94,11 @@ fn cleanup_ui(
     camera_query: Query<Entity, With<MissionSelectCamera>>,
 ) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     for entity in camera_query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 
@@ -134,7 +134,7 @@ fn handle_selection_input(
     ev_menu_clicks.clear();
 
     if selected_identifier.is_none() && keyboard_input.just_pressed(KeyCode::Enter) {
-        if let Ok(root) = menu_root.get_single() {
+        if let Ok(root) = menu_root.single() {
             selected_identifier = Some(root.selected_item);
         }
     }
@@ -186,7 +186,7 @@ fn handle_selection_input(
                                 "Insufficient money in bank for deposit. Required: ${}, Available: ${}",
                                 desired_total_deposit, player_profile.progression.bank
                             );
-                            if let Ok(mut text) = q_desc_text.get_single_mut() {
+                            if let Ok(mut text) = q_desc_text.single_mut() {
                                 text.0 = format!(
                                     "Insufficient Money in Bank for deposit. Required: ${}, Available: ${}",
                                     desired_total_deposit, player_profile.progression.bank
@@ -208,7 +208,7 @@ fn handle_selection_input(
                     panic!("Profile persistence failed!");
                 }
 
-                ev_load_level.send(LoadLevelEvent {
+                ev_load_level.write(LoadLevelEvent {
                     map_filepath: mission_data.map_filepath.clone(),
                 });
                 next_app_state.set(AppState::Loading);
@@ -252,7 +252,7 @@ pub fn update_mission_selection(
             let map = &maps_resource.maps[original_map_idx];
             let mission_data = &map.mission_data;
 
-            if let Ok(mut text) = q_desc_text.get_single_mut() {
+            if let Ok(mut text) = q_desc_text.single_mut() {
                 let base_reward = mission_data.mission_reward_base;
                 let required_deposit = mission_data.required_deposit;
                 let potential_reward_range = format!(
@@ -293,7 +293,7 @@ pub fn update_mission_selection(
                 warn!("MissionDescriptionText not found in UI.");
             }
 
-            if let Ok(mut image) = q_preview_image.get_single_mut() {
+            if let Ok(mut image) = q_preview_image.single_mut() {
                 let initial_preview = if mission_data.preview_image_path.is_empty() {
                     "img/placeholder_mission.png".to_string()
                 } else {
@@ -304,7 +304,7 @@ pub fn update_mission_selection(
             } else {
                 warn!("MissionPreviewImage not found in UI.");
             }
-        } else if let Ok(mut text) = q_desc_text.get_single_mut() {
+        } else if let Ok(mut text) = q_desc_text.single_mut() {
             text.0 = "Select a mission to view details.".to_string();
         }
     }
@@ -378,7 +378,7 @@ pub fn setup_ui(
                     .insert(TextFont {
                         font: handles.fonts.londrina.w300_light.clone(),
                         font_size: 24.0 * FONT_SCALE,
-                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        ..default()
                     })
                     .insert(TextColor(colors::MENU_ITEM_COLOR_OFF));
 
@@ -627,7 +627,7 @@ pub fn setup_ui(
                                         flex_basis: Val::Px(16.0),
                                         flex_shrink: 0.0,
                                         ..Default::default()
-                                    }).insert(PickingBehavior { should_block_lower: false, ..default() });
+                                    }).insert(Pickable { should_block_lower: false, ..default() });
                                 }
 
                                 // Add locked missions - but just the first one because we just want to show the player that there are locked missions
@@ -643,7 +643,7 @@ pub fn setup_ui(
                                         flex_basis: Val::Px(16.0),
                                         flex_shrink: 0.0,
                                         ..default()
-                                    }).insert(PickingBehavior { should_block_lower: false, ..default() });
+                                    }).insert(Pickable { should_block_lower: false, ..default() });
                                 }
 
                                 templates::create_content_item(
@@ -664,7 +664,7 @@ pub fn setup_ui(
                                     flex_basis: Val::Px(64.0),
                                     flex_shrink: 0.0,
                                     ..default()
-                                }).insert(PickingBehavior { should_block_lower: false, ..default() });
+                                }).insert(Pickable { should_block_lower: false, ..default() });
                             });
 
                         scrollbar::build_scrollbar_ui(list_and_scrollbar_container, &handles);
@@ -709,7 +709,7 @@ pub fn setup_ui(
                                     .insert(TextFont {
                                         font: handles.fonts.titillium.w300_light.clone(),
                                         font_size: 19.0 * FONT_SCALE,
-                                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                                        ..default()
                                     })
                                     .insert(TextColor(colors::MENU_DESC_TEXT_COLOR))
                                     .insert(TextLayout {
@@ -747,7 +747,7 @@ pub fn setup_ui(
 
 /// Helper function to create a mission list item in the UI
 fn create_mission_list_item(
-    mission_list: &mut ChildBuilder,
+    mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     map: &uncore::types::root::map::Map,
     player_profile: &unprofile::data::PlayerProfileData,
@@ -777,7 +777,7 @@ fn create_mission_list_item(
         } else {
             Color::NONE
         }))
-        .insert(PickingBehavior {
+        .insert(Pickable {
             should_block_lower: false,
             ..default()
         })
@@ -790,7 +790,7 @@ fn create_mission_list_item(
                     align_items: AlignItems::Center,
                     ..default()
                 })
-                .insert(PickingBehavior {
+                .insert(Pickable {
                     should_block_lower: false,
                     ..default()
                 })
@@ -800,7 +800,7 @@ fn create_mission_list_item(
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(if !is_selected {
                             colors::MENU_ITEM_COLOR_OFF
@@ -810,7 +810,7 @@ fn create_mission_list_item(
                         // Add the PrincipalMenuText marker for visual state updates
                         uncoremenu::components::PrincipalMenuText,
                     ))
-                    .insert(PickingBehavior {
+                    .insert(Pickable {
                         should_block_lower: false,
                         ..default()
                     });
@@ -846,7 +846,7 @@ fn create_mission_list_item(
 
 /// Helper function to create a locked mission list item
 fn create_locked_mission_item(
-    mission_list: &mut ChildBuilder,
+    mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     mission_data: &uncore::types::mission_data::MissionData,
 ) {
@@ -858,7 +858,7 @@ fn create_locked_mission_item(
             ..default()
         })
         .insert(BackgroundColor(Color::NONE))
-        .insert(PickingBehavior {
+        .insert(Pickable {
             should_block_lower: false,
             ..default()
         })
@@ -871,7 +871,7 @@ fn create_locked_mission_item(
                     align_items: AlignItems::Center,
                     ..default()
                 })
-                .insert(PickingBehavior {
+                .insert(Pickable {
                     should_block_lower: false,
                     ..default()
                 })
@@ -884,13 +884,13 @@ fn create_locked_mission_item(
                         TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)),
                         // Add the PrincipalMenuText marker for visual state updates
                         uncoremenu::components::PrincipalMenuText,
                     ))
-                    .insert(PickingBehavior {
+                    .insert(Pickable {
                         should_block_lower: false,
                         ..default()
                     });
@@ -899,11 +899,11 @@ fn create_locked_mission_item(
                         .insert(TextFont {
                             font: handles.fonts.titillium.w400_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         })
                         .insert(TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)));
                 })
-                .insert(PickingBehavior {
+                .insert(Pickable {
                     should_block_lower: false,
                     ..default()
                 });
@@ -916,14 +916,14 @@ fn trigger_initial_scroll_if_needed(
     container_query: Query<&ComputedNode, With<ScrollableListContainer>>,
 ) {
     if let Some(target_idx) = initial_scroll_target.0 {
-        if let Ok(container_node) = container_query.get_single() {
+        if let Ok(container_node) = container_query.single() {
             if container_node.size().y > 0.0 {
                 // Check if container height is calculated
                 info!(
                     "Initial scroll: UI ready. Triggering scroll to index: {}",
                     target_idx
                 );
-                ev_keyboard_nav.send(KeyboardNavigate(target_idx));
+                ev_keyboard_nav.write(KeyboardNavigate(target_idx));
                 initial_scroll_target.0 = None; // Clear the target so this doesn't run again
             } else {
                 // Log that UI is not ready, will retry next frame.

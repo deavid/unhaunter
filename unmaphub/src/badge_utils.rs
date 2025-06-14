@@ -10,7 +10,7 @@ impl BadgeUtils {
     ///
     /// If grade is NA, no badge will be shown unless show_na is true
     pub fn create_badge(
-        parent: &mut ChildBuilder,
+        parent: &mut ChildSpawnerCommands,
         handles: &GameAssets,
         grade: Grade,
         size: f32,
@@ -39,7 +39,7 @@ impl BadgeUtils {
                     ..default()
                 },
             ))
-            .insert(PickingBehavior {
+            .insert(Pickable {
                 should_block_lower: false,
                 ..default()
             })
@@ -52,7 +52,7 @@ impl BadgeUtils {
     ///
     /// If grade is NA, no badge will be shown unless show_na is true
     pub fn create_badge_with_label(
-        parent: &mut ChildBuilder,
+        parent: &mut ChildSpawnerCommands,
         handles: &GameAssets,
         grade: Grade,
         size: f32,
@@ -80,7 +80,7 @@ impl BadgeUtils {
                     TextFont {
                         font: handles.fonts.chakra.w400_regular.clone(),
                         font_size: size * 0.75,
-                        font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                        ..default()
                     },
                     TextColor(grade.color()),
                     Node {

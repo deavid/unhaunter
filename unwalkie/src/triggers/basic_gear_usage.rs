@@ -43,7 +43,7 @@ fn trigger_gear_selected_not_activated_system(
         return;
     }
 
-    let Ok((player_sprite, player_gear, player_pos)) = player_query.get_single() else {
+    let Ok((player_sprite, player_gear, player_pos)) = player_query.single() else {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -190,7 +190,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 
     // 2. Get Player & Ghost Info
-    let Ok((_player_sprite, player_gear, player_pos)) = player_query.get_single() else {
+    let Ok((_player_sprite, player_gear, player_pos)) = player_query.single() else {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -198,7 +198,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     };
     // Ghost's current position (if available) and its definitive spawn_point (breach)
     let (ghost_spawn_bpos, current_ghost_live_pos_opt): (BoardPosition, Option<Position>) =
-        match ghost_query.get_single() {
+        match ghost_query.single() {
             Ok((gs, g_pos)) => (gs.spawn_point.clone(), Some(*g_pos)),
             Err(_) => (board_data.breach_pos.to_board_position(), None), // Fallback if no GhostSprite
         };
@@ -367,7 +367,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 2. Get Player Info & Location Check
-    let Ok((player_sprite, player_gear, player_pos)) = player_query.get_single() else {
+    let Ok((player_sprite, player_gear, player_pos)) = player_query.single() else {
         *tracker = GearCycleUsageTracker::default();
         return;
     };

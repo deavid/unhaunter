@@ -3,7 +3,7 @@ use super::super::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use uncore::types::root::game_assets::GameAssets;
 
-pub fn draw(parent: &mut ChildBuilder, handles: &GameAssets) {
+pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Paranormal Investigator Needed!";
     let subtitle = "
 Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.

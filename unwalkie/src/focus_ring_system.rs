@@ -11,7 +11,7 @@ use unwalkiecore::events::WalkieEvent;
 /// when the GhostShowcase or BreachShowcase events are triggered.
 pub fn focus_ring_showcase_system(
     mut ev_walkie_talking: EventReader<WalkieTalkingEvent>,
-    mut query_ghost_focus_rings: Query<&mut FocusRing, With<Parent>>,
+    mut query_ghost_focus_rings: Query<&mut FocusRing, With<ChildOf>>,
     query_ghosts: Query<(Entity, &Children), With<GhostSprite>>,
     query_breaches: Query<(Entity, &Children), With<GhostBreach>>,
 ) {
@@ -21,7 +21,7 @@ pub fn focus_ring_showcase_system(
                 // Set pulse timer on ghost focus ring
                 for (_ghost_entity, children) in query_ghosts.iter() {
                     for child in children.iter() {
-                        if let Ok(mut focus_ring) = query_ghost_focus_rings.get_mut(*child) {
+                        if let Ok(mut focus_ring) = query_ghost_focus_rings.get_mut(child) {
                             focus_ring.pulse_timer = 30.0;
                         }
                     }
@@ -31,7 +31,7 @@ pub fn focus_ring_showcase_system(
                 // Set pulse timer on breach focus ring
                 for (_breach_entity, children) in query_breaches.iter() {
                     for child in children.iter() {
-                        if let Ok(mut focus_ring) = query_ghost_focus_rings.get_mut(*child) {
+                        if let Ok(mut focus_ring) = query_ghost_focus_rings.get_mut(child) {
                             focus_ring.pulse_timer = 30.0;
                         }
                     }

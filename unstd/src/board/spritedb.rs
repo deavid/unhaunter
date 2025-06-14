@@ -1,5 +1,6 @@
 use super::tiledata::MapTileComponents;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use uncore::behavior::SpriteCVOKey;
 
 /// The `SpriteDB` resource stores a database of pre-built Bevy components and

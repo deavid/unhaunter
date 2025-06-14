@@ -231,11 +231,12 @@ pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::new(0.00001),
+            volume: bevy::audio::Volume::Linear(0.00001),
             speed: 1.0,
             paused: false,
             spatial: false,
             spatial_scale: None,
+            ..default()
         })
         .insert(GameSound {
             class: SoundType::BackgroundHouse,
@@ -248,11 +249,12 @@ pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::new(0.00001),
+            volume: bevy::audio::Volume::Linear(0.00001),
             speed: 1.0,
             paused: false,
             spatial: false,
             spatial_scale: None,
+            ..default()
         })
         .insert(GameSound {
             class: SoundType::BackgroundStreet,
@@ -265,11 +267,12 @@ pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
         ))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::new(0.00001),
+            volume: bevy::audio::Volume::Linear(0.00001),
             speed: 1.0,
             paused: false,
             spatial: false,
             spatial_scale: None,
+            ..default()
         })
         .insert(GameSound {
             class: SoundType::HeartBeat,
@@ -280,11 +283,12 @@ pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
         .spawn(AudioPlayer::new(p.asset_server.load("sounds/insane-1.ogg")))
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::new(0.00001),
+            volume: bevy::audio::Volume::Linear(0.00001),
             speed: 1.0,
             paused: false,
             spatial: false,
             spatial_scale: None,
+            ..default()
         })
         .insert(GameSound {
             class: SoundType::Insane,

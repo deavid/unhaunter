@@ -46,7 +46,9 @@ fn item_highlight_system(
     menu: Query<&SettingsMenu>,
     mut menu_items: Query<(&MenuItem, &mut TextColor)>,
 ) {
-    let menu = menu.single(); // Assuming you have only one Menu component
+    let Ok(menu) = menu.single() else {
+        return;
+    }; // Assuming you have only one Menu component
     for (item, mut text_color) in &mut menu_items {
         let is_selected = item.idx == menu.selected_item_idx;
         let color = if is_selected {
@@ -70,31 +72,31 @@ fn menu_routing_system(
     for ev in ev_menu.read() {
         match ev {
             MenuEvent::Back(menu_back) => {
-                ev_back.send(menu_back.to_owned());
+                ev_back.write(menu_back.to_owned());
             }
             MenuEvent::None => {}
             MenuEvent::SettingClassSelected(menu_settings_level1) => {
-                ev_class.send(MenuSettingClassSelected {
+                ev_class.write(MenuSettingClassSelected {
                     menu: menu_settings_level1.to_owned(),
                 });
             }
             MenuEvent::EditAudioSetting(audio_settings_menu) => {
-                ev_audio_setting.send(AudioSettingSelected {
+                ev_audio_setting.write(AudioSettingSelected {
                     setting: *audio_settings_menu,
                 });
             }
             MenuEvent::SaveAudioSetting(setting_value) => {
-                ev_save_audio_setting.send(SaveAudioSetting {
+                ev_save_audio_setting.write(SaveAudioSetting {
                     value: *setting_value,
                 });
             }
             MenuEvent::EditGameplaySetting(gameplay_settings_menu) => {
-                ev_game_setting.send(GameplaySettingSelected {
+                ev_game_setting.write(GameplaySettingSelected {
                     setting: *gameplay_settings_menu,
                 });
             }
             MenuEvent::SaveGameplaySetting(setting_value) => {
-                ev_save_game_setting.send(SaveGameplaySetting {
+                ev_save_game_setting.write(SaveGameplaySetting {
                     value: *setting_value,
                 });
             }
@@ -125,7 +127,7 @@ fn menu_back_event(
                 setup_ui_main_cat(&mut commands, &handles, &qtui, "Settings", &menu_items);
             }
             SettingsState::Lv3ValueEdit(menu) => {
-                ev_menu.send(MenuSettingClassSelected { menu: *menu });
+                ev_menu.write(MenuSettingClassSelected { menu: *menu });
             }
         }
     }
@@ -186,7 +188,7 @@ fn menu_audio_setting_selected(
 
         // Clean up old UI
         for e in qtui.iter() {
-            commands.entity(e).despawn_recursive();
+            commands.entity(e).despawn();
         }
 
         // Create new UI with uncoremenu templates
@@ -325,7 +327,7 @@ fn menu_save_audio_setting(
         if let Err(e) = audio_settings.persist() {
             error!("Error persisting Audio Settings: {e:?}");
         }
-        ev_back.send(MenuEvBack);
+        ev_back.write(MenuEvBack);
     }
 }
 
@@ -344,7 +346,7 @@ fn menu_gameplay_setting_selected(
 
         // Clean up old UI
         for e in qtui.iter() {
-            commands.entity(e).despawn_recursive();
+            commands.entity(e).despawn();
         }
 
         // Create new UI with uncoremenu templates
@@ -466,7 +468,7 @@ fn menu_save_gameplay_setting(
         if let Err(e) = gameplay_settings.persist() {
             error!("Error persisting Gameplay Settings: {e:?}");
         }
-        ev_back.send(MenuEvBack);
+        ev_back.write(MenuEvBack);
     }
 }
 
@@ -480,7 +482,7 @@ fn menu_integration_system(
     const GRACE_PERIOD_SECS: f32 = 0.1;
 
     // Get time since state entered
-    if let Ok(timer) = state_timer.get_single() {
+    if let Ok(timer) = state_timer.single() {
         let time_in_state = timer.state_entered_at.elapsed().as_secs_f32();
 
         // Ignore events that happened too soon after state transition
@@ -506,7 +508,7 @@ fn menu_integration_system(
                 .find(|(_, interactive)| interactive.identifier == clicked_idx)
             {
                 // Send the corresponding menu event
-                menu_events.send(menu_item.on_activate);
+                menu_events.write(menu_item.on_activate);
                 warn!("Activating menu item: {:?}", menu_item.on_activate);
             } else {
                 warn!("No menu item found with index {}", clicked_idx);
@@ -523,7 +525,7 @@ fn handle_escape(
 ) {
     if !escape_events.is_empty() {
         // If ESC was pressed, send a Back event
-        menu_events.send(MenuEvent::Back(MenuEvBack));
+        menu_events.write(MenuEvent::Back(MenuEvBack));
         escape_events.clear();
     }
 }

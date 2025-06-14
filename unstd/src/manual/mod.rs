@@ -29,7 +29,7 @@ pub fn create_manual() -> Manual {
 }
 
 pub fn draw_manual_page(
-    parent: &mut ChildBuilder,
+    parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     manual: &Manual,
     current_page: &CurrentManualPage,

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
+use bevy_platform::collections::HashSet;
 use std::any::Any;
 use uncore::components::repellent_particle::RepellentParticle;
 use uncore::difficulty::CurrentDifficulty;
@@ -43,7 +43,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     let ghost_is_present = !ghost_query.is_empty();
 
     // 3. Check Player Location
-    let Ok(player_pos) = player_query.get_single() else {
+    let Ok(player_pos) = player_query.single() else {
         // No player found, reset timer
         if ghost_gone_and_player_in_location_timestamp.is_some() {
             *ghost_gone_and_player_in_location_timestamp = None;
@@ -95,7 +95,7 @@ fn trigger_has_repellent_enters_location_system(
         return;
     }
 
-    let Ok((player_gear, player_pos)) = player_query.get_single() else {
+    let Ok((player_gear, player_pos)) = player_query.single() else {
         return;
     };
 
@@ -152,7 +152,7 @@ fn trigger_repellent_used_too_far_system(
         return;
     }
 
-    let Ok((player_gear, player_pos)) = player_query.get_single() else {
+    let Ok((player_gear, player_pos)) = player_query.single() else {
         prev_repellent_state.was_active = false;
         return;
     };
@@ -175,12 +175,12 @@ fn trigger_repellent_used_too_far_system(
     if current_repellent_is_active {
         // Determine target position for distance check
         let target_pos: Position = ghost_pos_query
-            .get_single()
+            .single()
             .copied() // Use live ghost position if available
             .unwrap_or_else(|_| {
                 // Fallback: use ghost's spawn_point (breach)
                 ghost_sprite_query
-                    .get_single()
+                    .single()
                     .map(|gs| gs.spawn_point.to_position_center())
                     .unwrap_or_else(|_| board_data.breach_pos) // Final fallback
             });
@@ -248,12 +248,12 @@ fn trigger_repellent_provokes_strong_reaction_system(
         return;
     }
 
-    let Ok((player_gear, _player_pos)) = player_query.get_single() else {
+    let Ok((player_gear, _player_pos)) = player_query.single() else {
         *tracker = None;
         prev_rep_active_state.was_active = false;
         return;
     };
-    let Ok((ghost_sprite, ghost_pos)) = ghost_query.get_single_mut() else {
+    let Ok((ghost_sprite, ghost_pos)) = ghost_query.single_mut() else {
         // Assuming one ghost
         *tracker = None;
         prev_rep_active_state.was_active = false;
@@ -351,10 +351,10 @@ fn trigger_repellent_exhausted_correct_type_system(
         return;
     }
 
-    let Ok(player_gear) = player_query.get_single() else {
+    let Ok(player_gear) = player_query.single() else {
         return;
     };
-    let Ok(ghost_sprite) = ghost_query.get_single() else {
+    let Ok(ghost_sprite) = ghost_query.single() else {
         // Ghost is not present (e.g., already expelled), so this hint is irrelevant.
         *check_state = RepellentExhaustedCheckState::default();
         return;
@@ -472,7 +472,7 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
         return; // No ghosts were removed this frame.
     }
 
-    let Ok(player_pos) = player_query.get_single() else {
+    let Ok(player_pos) = player_query.single() else {
         // No player found, cannot determine location.
         return;
     };

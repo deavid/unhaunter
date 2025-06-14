@@ -1,5 +1,6 @@
 use crate::events::WalkieEvent;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use rand::Rng;
 use uncore::random_seed;
 use uncore::types::evidence::Evidence;
