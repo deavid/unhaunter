@@ -542,7 +542,9 @@ fn apply_lighting(
                     let dist = (lpos.distance(&rpos) + 1.0)
                         .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 4.0));
                     let flvis = flvismap[p];
-                    let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
+                    let fl = flpower / (dist + FL_MIN_DST)
+                        * flvis.clamp(0.0001, 1.0)
+                        * (focus - 2.0).clamp(0.5, 8.0);
                     let flsrgba = flcolor.to_srgba();
                     lux_fl[0] += fl * flsrgba.red;
                     lux_fl[1] += fl * flsrgba.green;
