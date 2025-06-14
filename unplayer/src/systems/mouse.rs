@@ -88,7 +88,7 @@ fn mouse_aim_system(
     {
         // The vector from the player to the mouse in world coordinates.
         let aim_vec = mouse_world_pos.delta(*player_pos);
-        let clamped_aim_vec = aim_vec.with_max_dist(AIM_MAX_DISTANCE) * 20.0;
+        let clamped_aim_vec = aim_vec.with_max_dist(AIM_MAX_DISTANCE) * 30.0;
 
         // This is now the correct aiming direction.
         *player_dir = clamped_aim_vec;

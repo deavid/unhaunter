@@ -522,7 +522,7 @@ fn apply_lighting(
                 let mut lightdata = LightData::default();
                 for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
                     let fldir = fldir.with_max_dist(200.0);
-                    let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
+                    let focus = (fldir.distance() - 4.0).max(4.0) / 20.0;
                     let lpos = *flpos + fldir / (100.0 / focus + 20.0);
                     let mut lpos = lpos.unrotate_by_dir(&fldir);
                     let mut rpos = rpos.unrotate_by_dir(&fldir);
@@ -531,16 +531,16 @@ fn apply_lighting(
                     lpos.x = 0.0;
                     lpos.y = 0.0;
                     if rpos.x > 0.0 {
-                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
+                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
                         rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                     }
                     if rpos.x < 0.0 {
                         rpos.x =
-                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
+                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
                         rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                     }
                     let dist = (lpos.distance(&rpos) + 1.0)
-                        .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
+                        .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 4.0));
                     let flvis = flvismap[p];
                     let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
                     let flsrgba = flcolor.to_srgba();
