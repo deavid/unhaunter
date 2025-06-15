@@ -28,6 +28,8 @@ pub(crate) fn app_setup(app: &mut App) {
             // Mouse interaction systems
             input::mouse_interaction::mouse_interaction_system,
             input::mouse_interaction::complete_pending_interaction_system,
+            input::mouse_interaction::mouse_right_click_gear_system,
+            input::mouse_interaction::mouse_scroll_gear_system,
             // Movement system runs after input
             movement::player_movement_system,
             // Stairs system runs last
