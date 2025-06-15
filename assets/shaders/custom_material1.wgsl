@@ -13,6 +13,7 @@ struct CustomMaterial {
     sheet_idx: u32,
     sprite_width: f32,
     sprite_height: f32,
+    y_anchor: f32,
 };
 
 @group(2) @binding(0)
@@ -64,7 +65,7 @@ fn fragment(
     // Applying pixel-perfect sampling on the gamma corrected base color
     let uv = sprite_uv; // Using the corrected UV for sprite sheets
     let texel_per_px = abs(dpdx(mesh.uv.x) * material.sprite_width); // 0.1 at 10x zoom. Amount of texels that fit in one screen pixel.
-    
+
     // We need to account that the pixels are centered 0.5 texels to a side, so we need to apply a correction
     let d_factor = 0.5;
     let d_corr = vec2<f32>(d_factor * sign(dpdx(mesh.uv.x)), d_factor * sign(dpdy(mesh.uv.y)));
@@ -132,7 +133,7 @@ fn fragment(
     var wbl: f32 = 2.0 / (max(min_dst, distance(uv_w, ptbl)-dz));
     var wbr: f32 = 2.0 / (max(min_dst, distance(uv_w, ptbr)-dz));
     var wct: f32 = 1.0 / (max(min_dst, distance(uv_w, cnt)));
-    
+
     var wtt: f32 = (wct+wtl+wtr+wbl+wbr);
 
     var wpf: f32 = 3.0;
@@ -148,7 +149,7 @@ fn fragment(
     var gtr: f32 = material.gtr;
     var gbl: f32 = material.gbl;
     var gbr: f32 = material.gbr;
-    
+
     // Interpolate gamma values based on UV coordinates. Assume uv coordinates are normalized [0,1] within each sprite cell.
     var gamma: f32 = (gc * wct + gtl * wtl + gtr * wtr + gbl * wbl + gbr * wbr) / (wct+wtl+wtr+wbl+wbr);
     var wcf: f32 = 1.2; // <- softening effect. Higher increases the edge variability
