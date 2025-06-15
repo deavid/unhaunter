@@ -1,6 +1,6 @@
 use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
-    picking::events::{Click, Pointer},
+    picking::events::{Click, Out, Over, Pointer},
     prelude::*,
 };
 use uncore::{
@@ -296,6 +296,43 @@ pub(crate) fn mouse_scroll_gear_system(
                     playergear.cycle_reverse(&looking_gear.hand());
                 }
             }
+        }
+    }
+}
+
+/// System that tracks mouse hover over interactive entities.
+///
+/// This system updates the `HoverState` component of interactive entities
+/// when the mouse hovers over them, and resets the state when the mouse leaves.
+pub(crate) fn mouse_hover_interactive_system(
+    mut q_interactives: Query<(Entity, &Position, &mut Interactive, &Behavior)>,
+    mut hover_events: EventReader<Pointer<Over>>,
+    mut exit_events: EventReader<Pointer<Out>>,
+) {
+    for over_event in hover_events.read() {
+        if let Ok((entity, _position, mut interactive, _behavior)) =
+            q_interactives.get_mut(over_event.target)
+        {
+            // Mouse entered an interactive entity
+            info!(
+                "mouse_hover_interactive_system: Mouse entered interactive entity {:?}",
+                entity
+            );
+            interactive.hovered = true;
+        }
+    }
+
+    for exit_event in exit_events.read() {
+        if let Ok((entity, _position, mut interactive, _behavior)) =
+            q_interactives.get_mut(exit_event.target)
+        {
+            // Mouse exited an interactive entity
+            info!(
+                "mouse_hover_interactive_system: Mouse exited interactive entity {:?}",
+                entity
+            );
+
+            interactive.hovered = false;
         }
     }
 }

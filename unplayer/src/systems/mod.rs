@@ -11,6 +11,7 @@ pub mod movement;
 pub mod sanityhealth;
 
 use bevy::prelude::*;
+use uncore::states::AppState;
 use uncore::states::GameState;
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -30,13 +31,14 @@ pub(crate) fn app_setup(app: &mut App) {
             input::mouse_interaction::complete_pending_interaction_system,
             input::mouse_interaction::mouse_right_click_gear_system,
             input::mouse_interaction::mouse_scroll_gear_system,
+            input::mouse_interaction::mouse_hover_interactive_system,
             // Movement system runs after input
             movement::player_movement_system,
             // Stairs system runs last
             keyboard::stairs_player,
         )
             .chain()
-            .run_if(in_state(GameState::None)),
+            .run_if(in_state(GameState::None).and(in_state(AppState::InGame))),
     );
 
     mouse::app_setup(app);

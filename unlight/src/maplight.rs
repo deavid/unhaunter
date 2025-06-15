@@ -21,6 +21,7 @@ use core::f32;
 use ndarray::{Array3, s};
 use rand::Rng;
 use std::collections::VecDeque;
+use uncore::behavior::component::Interactive;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, MapTileSprite};
@@ -229,6 +230,7 @@ fn apply_lighting(
             &Behavior,
             &mut Visibility,
             Option<&GhostInfluence>,
+            Option<&Interactive>,
         ),
         With<MapTileSprite>,
     >,
@@ -477,14 +479,17 @@ fn apply_lighting(
     }
 
     for e in visible.iter() {
-        if rng.random_range(0..100) < 5 {
+        if rng.random_range(0..100) < 15 {
             entities.push(e.to_owned());
         }
     }
 
     for entity in entities.iter() {
         let min_threshold: f32 = rng.random::<f32>() / 10.0;
-        if let Ok((pos, mat, behavior, mut vis, o_ghost_influence)) = qt2.get_mut(*entity) {
+        if let Ok((pos, mat, behavior, mut vis, o_ghost_influence, o_interactive)) =
+            qt2.get_mut(*entity)
+        {
+            let on_hover = o_interactive.map(|x| x.hovered).unwrap_or_default();
             let mut opacity: f32 = 1.0;
             if behavior.p.display.auto_hide {
                 // Make big objects semitransparent when the player is behind them
@@ -697,6 +702,16 @@ fn apply_lighting(
             };
             // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
             lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
+            if on_hover {
+                lux_c += 1.0;
+                new_mat.data.ambient_color = Color::srgb(0.20, 0.20, 0.0).into();
+                new_mat.data.color = Color::srgb(
+                    (new_color.red + 0.5).min(1.0),
+                    (new_color.green + 0.5).min(1.0),
+                    new_color.blue * 0.3,
+                )
+                .into();
+            }
             new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
             new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
             new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
