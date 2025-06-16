@@ -303,6 +303,10 @@ fn custom_sprite_picking(
 /// 4. Samples the texture at the calculated UV position
 /// 5. Checks if the alpha value exceeds the threshold
 ///
+/// **Important:** The UV coordinate system has Y-axis flipped compared to world coordinates.
+/// In the mesh UV space: V=0.0 is the top of the sprite, V=1.0 is the bottom.
+/// This matches the CustomMaterial1 shader's expectation.
+///
 /// Returns `true` if the click hit an opaque part of the sprite, `false` otherwise.
 fn pixel_perfect_hit_test(
     cursor_world_pos: Vec2,
@@ -353,9 +357,13 @@ fn pixel_perfect_hit_test(
     // Handle horizontal flipping - check if sprite is flipped
     let is_flipped = sprite_transform.affine().x_axis.x < 0.0;
     let (u_local, v_local) = if is_flipped {
-        (1.0 - local_x, local_y)
+        // Y-axis is flipped in UV space: V=0.0 is top, V=1.0 is bottom
+        // So we need to flip local_y to match the mesh UV layout
+        (1.0 - local_x, 1.0 - local_y)
     } else {
-        (local_x, local_y)
+        // Y-axis is flipped in UV space: V=0.0 is top, V=1.0 is bottom
+        // So we need to flip local_y to match the mesh UV layout
+        (local_x, 1.0 - local_y)
     };
 
     // Calculate UV coordinates within the sprite sheet
