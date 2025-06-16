@@ -4,7 +4,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use bevy::prelude::*;
 use uncore::{
     components::board::{boardposition::BoardPosition, position::Position},
-    resources::board_data::BoardData,
+    resources::{board_data::BoardData, visibility_data::VisibilityData},
 };
 
 /// A* pathfinding node for the priority queue
@@ -48,8 +48,26 @@ fn heuristic(a: &BoardPosition, b: &BoardPosition) -> i32 {
     ((a.x - b.x).abs() + (a.y - b.y).abs()) as i32
 }
 
+/// Helper function to check if a board position is visible to the player
+fn is_visible(
+    pos: &BoardPosition,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> bool {
+    if let Some(idx) = pos.ndidx_checked(board_data.map_size) {
+        if let Some(visibility) = visibility_data.visibility_field.get(idx) {
+            return *visibility > 0.0; // Assume visibility > 0 means visible
+        }
+    }
+    false // Out of bounds or no visibility data means not visible
+}
+
 /// Gets valid neighboring positions for pathfinding
-fn get_neighbors(pos: &BoardPosition, board_data: &BoardData) -> Vec<BoardPosition> {
+fn get_neighbors(
+    pos: &BoardPosition,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> Vec<BoardPosition> {
     let mut neighbors = Vec::new();
 
     // Check 4-directional movement (up, down, left, right)
@@ -67,10 +85,11 @@ fn get_neighbors(pos: &BoardPosition, board_data: &BoardData) -> Vec<BoardPositi
             z: pos.z, // Stay on same floor for now
         };
 
-        // Check if the neighbor is within bounds and walkable
+        // Check if the neighbor is within bounds, walkable, and visible
         if let Some(idx) = neighbor.ndidx_checked(board_data.map_size) {
             if let Some(collision_data) = board_data.collision_field.get(idx) {
-                if collision_data.player_free {
+                if collision_data.player_free && is_visible(&neighbor, board_data, visibility_data)
+                {
                     neighbors.push(neighbor);
                 }
             }
@@ -109,7 +128,12 @@ fn reconstruct_path(
 
 /// Performs A* pathfinding from start to goal position
 /// Returns a vector of BoardPositions representing the path, or empty vector if no path found
-pub fn find_path(start: Position, goal: Position, board_data: &BoardData) -> Vec<BoardPosition> {
+pub fn find_path(
+    start: Position,
+    goal: Position,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> Vec<BoardPosition> {
     let start_board = start.to_board_position();
     let goal_board = goal.to_board_position();
 
@@ -118,11 +142,15 @@ pub fn find_path(start: Position, goal: Position, board_data: &BoardData) -> Vec
         return vec![start_board];
     }
 
-    // Check if start and goal positions are valid and walkable
+    // Check if start and goal positions are valid, walkable, and visible
     if let Some(start_idx) = start_board.ndidx_checked(board_data.map_size) {
         if let Some(start_collision) = board_data.collision_field.get(start_idx) {
             if !start_collision.player_free {
                 warn!("Start position {:?} is not walkable", start_board);
+                return Vec::new();
+            }
+            if !is_visible(&start_board, board_data, visibility_data) {
+                warn!("Start position {:?} is not visible", start_board);
                 return Vec::new();
             }
         }
@@ -135,6 +163,10 @@ pub fn find_path(start: Position, goal: Position, board_data: &BoardData) -> Vec
         if let Some(goal_collision) = board_data.collision_field.get(goal_idx) {
             if !goal_collision.player_free {
                 warn!("Goal position {:?} is not walkable", goal_board);
+                return Vec::new();
+            }
+            if !is_visible(&goal_board, board_data, visibility_data) {
+                warn!("Goal position {:?} is not visible", goal_board);
                 return Vec::new();
             }
         }
@@ -160,14 +192,14 @@ pub fn find_path(start: Position, goal: Position, board_data: &BoardData) -> Vec
         // Check if we reached the goal
         if current_pos == goal_board {
             let raw_path = reconstruct_path(&came_from, start_board, goal_board);
-            return smooth_path(raw_path, board_data);
+            return smooth_path(raw_path, board_data, visibility_data);
         }
 
         // Move current to closed set
         closed_set.insert(current_pos.clone());
 
         // Check all neighbors
-        for neighbor in get_neighbors(&current_pos, board_data) {
+        for neighbor in get_neighbors(&current_pos, board_data, visibility_data) {
             if closed_set.contains(&neighbor) {
                 continue;
             }
@@ -200,6 +232,7 @@ pub fn find_path_to_interactive(
     start: Position,
     goal: Position,
     board_data: &BoardData,
+    visibility_data: &VisibilityData,
 ) -> Vec<BoardPosition> {
     let start_board = start.to_board_position();
     let goal_board = goal.to_board_position();
@@ -209,11 +242,15 @@ pub fn find_path_to_interactive(
         return vec![start_board];
     }
 
-    // Check if start position is valid and walkable
+    // Check if start position is valid, walkable, and visible
     if let Some(start_idx) = start_board.ndidx_checked(board_data.map_size) {
         if let Some(start_collision) = board_data.collision_field.get(start_idx) {
             if !start_collision.player_free {
                 warn!("Start position {:?} is not walkable", start_board);
+                return Vec::new();
+            }
+            if !is_visible(&start_board, board_data, visibility_data) {
+                warn!("Start position {:?} is not visible", start_board);
                 return Vec::new();
             }
         }
@@ -222,9 +259,13 @@ pub fn find_path_to_interactive(
         return Vec::new();
     }
 
-    // Check if goal position is within bounds (but don't check walkability - treat as walkable)
+    // Check if goal position is within bounds and visible (but don't check walkability - treat as walkable)
     if goal_board.ndidx_checked(board_data.map_size).is_none() {
         warn!("Goal position {:?} is out of bounds", goal_board);
+        return Vec::new();
+    }
+    if !is_visible(&goal_board, board_data, visibility_data) {
+        warn!("Goal position {:?} is not visible", goal_board);
         return Vec::new();
     }
 
@@ -245,14 +286,16 @@ pub fn find_path_to_interactive(
         // Check if we reached the goal
         if current_pos == goal_board {
             let raw_path = reconstruct_path(&came_from, start_board, goal_board);
-            return smooth_path(raw_path, board_data);
+            return smooth_path(raw_path, board_data, visibility_data);
         }
 
         // Move current to closed set
         closed_set.insert(current_pos.clone());
 
         // Check all neighbors - use special function that treats goal as walkable
-        for neighbor in get_neighbors_to_interactive(&current_pos, board_data, &goal_board) {
+        for neighbor in
+            get_neighbors_to_interactive(&current_pos, board_data, visibility_data, &goal_board)
+        {
             if closed_set.contains(&neighbor) {
                 continue;
             }
@@ -282,6 +325,7 @@ pub fn find_path_to_interactive(
 fn get_neighbors_to_interactive(
     pos: &BoardPosition,
     board_data: &BoardData,
+    visibility_data: &VisibilityData,
     goal: &BoardPosition,
 ) -> Vec<BoardPosition> {
     let mut neighbors = Vec::new();
@@ -303,12 +347,15 @@ fn get_neighbors_to_interactive(
 
         // Check if the neighbor is within bounds
         if let Some(idx) = neighbor.ndidx_checked(board_data.map_size) {
-            // If this is the goal position, always treat it as walkable
+            // If this is the goal position, always treat it as walkable (but still check visibility)
             if neighbor == *goal {
-                neighbors.push(neighbor);
+                if is_visible(&neighbor, board_data, visibility_data) {
+                    neighbors.push(neighbor);
+                }
             } else if let Some(collision_data) = board_data.collision_field.get(idx) {
-                // For non-goal positions, check walkability normally
-                if collision_data.player_free {
+                // For non-goal positions, check walkability and visibility normally
+                if collision_data.player_free && is_visible(&neighbor, board_data, visibility_data)
+                {
                     neighbors.push(neighbor);
                 }
             }
@@ -320,8 +367,12 @@ fn get_neighbors_to_interactive(
 
 /// Smooths a path by removing unnecessary waypoints using line-of-sight checks.
 /// This creates more natural-looking paths that move diagonally when possible
-/// while still avoiding collisions.
-pub fn smooth_path(path: Vec<BoardPosition>, board_data: &BoardData) -> Vec<BoardPosition> {
+/// while still avoiding collisions and invisible areas.
+pub fn smooth_path(
+    path: Vec<BoardPosition>,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> Vec<BoardPosition> {
     if path.len() <= 2 {
         return path; // Can't smooth paths with 2 or fewer points
     }
@@ -334,7 +385,7 @@ pub fn smooth_path(path: Vec<BoardPosition>, board_data: &BoardData) -> Vec<Boar
         let mut furthest_visible = current_index + 1;
 
         for i in (current_index + 2)..path.len() {
-            if has_line_of_sight(&path[current_index], &path[i], board_data) {
+            if has_line_of_sight(&path[current_index], &path[i], board_data, visibility_data) {
                 furthest_visible = i;
             } else {
                 break; // Can't see further, stop here
@@ -350,7 +401,13 @@ pub fn smooth_path(path: Vec<BoardPosition>, board_data: &BoardData) -> Vec<Boar
 
 /// Checks if there's a clear line of sight between two board positions.
 /// Uses a simple ray-casting approach to sample points along the line.
-fn has_line_of_sight(from: &BoardPosition, to: &BoardPosition, board_data: &BoardData) -> bool {
+/// Also checks visibility in addition to collision.
+fn has_line_of_sight(
+    from: &BoardPosition,
+    to: &BoardPosition,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> bool {
     // If positions are the same, there's always line of sight
     if from == to {
         return true;
@@ -360,8 +417,8 @@ fn has_line_of_sight(from: &BoardPosition, to: &BoardPosition, board_data: &Boar
     let dx = (to.x - from.x).abs();
     let dy = (to.y - from.y).abs();
     if dx <= 1 && dy <= 1 && dx + dy <= 2 {
-        // Adjacent or diagonal neighbors - check if destination is walkable
-        return is_walkable(to, board_data);
+        // Adjacent or diagonal neighbors - check if destination is walkable and visible
+        return is_walkable_and_visible(to, board_data, visibility_data);
     }
 
     // For longer distances, sample points along the line
@@ -382,13 +439,13 @@ fn has_line_of_sight(from: &BoardPosition, to: &BoardPosition, board_data: &Boar
             z: from.z, // Stay on same Z level
         };
 
-        if !is_walkable(&sample_pos, board_data) {
+        if !is_walkable_and_visible(&sample_pos, board_data, visibility_data) {
             return false;
         }
     }
 
     // Also check the final destination
-    is_walkable(to, board_data)
+    is_walkable_and_visible(to, board_data, visibility_data)
 }
 
 /// Helper function to check if a board position is walkable
@@ -399,6 +456,15 @@ fn is_walkable(pos: &BoardPosition, board_data: &BoardData) -> bool {
         }
     }
     false
+}
+
+/// Helper function to check if a board position is both walkable and visible
+fn is_walkable_and_visible(
+    pos: &BoardPosition,
+    board_data: &BoardData,
+    visibility_data: &VisibilityData,
+) -> bool {
+    is_walkable(pos, board_data) && is_visible(pos, board_data, visibility_data)
 }
 
 #[cfg(test)]
@@ -420,14 +486,21 @@ mod tests {
         board_data
     }
 
+    fn create_test_visibility_data(size: (usize, usize, usize)) -> VisibilityData {
+        VisibilityData {
+            visibility_field: Array3::from_elem(size, 1.0), // All visible
+        }
+    }
+
     #[test]
     fn test_pathfinding_simple() {
         let board_data = create_test_board_data((10, 10, 1));
+        let visibility_data = create_test_visibility_data((10, 10, 1));
 
         let start = Position::new_i64(0, 0, 0);
         let goal = Position::new_i64(3, 3, 0);
 
-        let path = find_path(start, goal, &board_data);
+        let path = find_path(start, goal, &board_data, &visibility_data);
 
         assert!(!path.is_empty());
         assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
@@ -437,6 +510,7 @@ mod tests {
     #[test]
     fn test_pathfinding_no_path() {
         let mut board_data = create_test_board_data((5, 5, 1));
+        let visibility_data = create_test_visibility_data((5, 5, 1));
 
         // Create a wall blocking the path
         for y in 0..5 {
@@ -447,7 +521,7 @@ mod tests {
         let start = Position::new_i64(0, 0, 0);
         let goal = Position::new_i64(4, 0, 0);
 
-        let path = find_path(start, goal, &board_data);
+        let path = find_path(start, goal, &board_data, &visibility_data);
 
         assert!(path.is_empty());
     }
@@ -455,11 +529,12 @@ mod tests {
     #[test]
     fn test_pathfinding_interactive() {
         let board_data = create_test_board_data((10, 10, 1));
+        let visibility_data = create_test_visibility_data((10, 10, 1));
 
         let start = Position::new_i64(0, 0, 0);
         let goal = Position::new_i64(3, 3, 0);
 
-        let path = find_path_to_interactive(start, goal, &board_data);
+        let path = find_path_to_interactive(start, goal, &board_data, &visibility_data);
 
         assert!(!path.is_empty());
         assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
@@ -469,6 +544,7 @@ mod tests {
     #[test]
     fn test_pathfinding_interactive_goal_blocked() {
         let mut board_data = create_test_board_data((5, 5, 1));
+        let visibility_data = create_test_visibility_data((5, 5, 1));
 
         // Create a wall at the goal position
         let goal_position = Position::new_i64(4, 4, 0);
@@ -482,7 +558,7 @@ mod tests {
         let start = Position::new_i64(0, 0, 0);
         let goal = goal_position;
 
-        let path = find_path_to_interactive(start, goal, &board_data);
+        let path = find_path_to_interactive(start, goal, &board_data, &visibility_data);
 
         assert!(!path.is_empty());
         assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
@@ -492,6 +568,7 @@ mod tests {
     #[test]
     fn test_path_smoothing() {
         let board_data = create_test_board_data((10, 10, 1));
+        let visibility_data = create_test_visibility_data((10, 10, 1));
 
         // Create a zig-zag path
         let mut path = Vec::new();
@@ -501,7 +578,7 @@ mod tests {
         }
 
         // Smooth the path
-        let smoothed_path = smooth_path(path.clone(), &board_data);
+        let smoothed_path = smooth_path(path.clone(), &board_data, &visibility_data);
 
         // Check that the smoothed path is shorter and still valid
         assert!(smoothed_path.len() < path.len());
@@ -517,11 +594,12 @@ mod tests {
     #[test]
     fn test_line_of_sight() {
         let board_data = create_test_board_data((10, 10, 1));
+        let visibility_data = create_test_visibility_data((10, 10, 1));
 
         // Direct line, should have line of sight
         let from = BoardPosition { x: 0, y: 0, z: 0 };
         let to = BoardPosition { x: 5, y: 0, z: 0 };
-        assert!(has_line_of_sight(&from, &to, &board_data));
+        assert!(has_line_of_sight(&from, &to, &board_data, &visibility_data));
 
         // Blocked by wall, should not have line of sight
         let mut blocked_board_data = board_data.clone();
@@ -529,17 +607,32 @@ mod tests {
         if let Some(idx) = wall_pos.ndidx_checked(blocked_board_data.map_size) {
             blocked_board_data.collision_field[idx].player_free = false;
         }
-        assert!(!has_line_of_sight(&from, &to, &blocked_board_data));
+        assert!(!has_line_of_sight(
+            &from,
+            &to,
+            &blocked_board_data,
+            &visibility_data
+        ));
 
         // Diagonal line, should have line of sight if no walls
         let to_diag = BoardPosition { x: 3, y: 3, z: 0 };
-        assert!(has_line_of_sight(&from, &to_diag, &board_data));
+        assert!(has_line_of_sight(
+            &from,
+            &to_diag,
+            &board_data,
+            &visibility_data
+        ));
 
         // Diagonal line blocked by wall, should not have line of sight
         let diag_wall_pos = BoardPosition { x: 2, y: 2, z: 0 };
         if let Some(idx) = diag_wall_pos.ndidx_checked(blocked_board_data.map_size) {
             blocked_board_data.collision_field[idx].player_free = false;
         }
-        assert!(!has_line_of_sight(&from, &to_diag, &blocked_board_data));
+        assert!(!has_line_of_sight(
+            &from,
+            &to_diag,
+            &blocked_board_data,
+            &visibility_data
+        ));
     }
 }

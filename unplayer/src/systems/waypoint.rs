@@ -10,6 +10,7 @@ use uncore::{
     events::roomchanged::{InteractionExecutionType, RoomChangedEvent},
     resources::{
         board_data::BoardData, mouse_visibility::MouseVisibility, player_input::PlayerInput,
+        visibility_data::VisibilityData,
     },
 };
 use unstd::systemparam::interactivestuff::InteractiveStuff;
@@ -36,6 +37,7 @@ pub fn waypoint_creation_system(
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
     board_data: Res<BoardData>,
+    visibility_data: Res<VisibilityData>,
 ) {
     // Only process clicks when mouse is visible
     if !mouse_visibility.is_visible {
@@ -96,6 +98,7 @@ pub fn waypoint_creation_system(
                     interactive_entity,
                     &mut waypoint_queue,
                     &board_data,
+                    &visibility_data,
                 );
             }
             interactive_clicked = true;
@@ -127,6 +130,7 @@ pub fn waypoint_creation_system(
                 target,
                 &mut waypoint_queue,
                 &board_data,
+                &visibility_data,
             );
         }
     }
@@ -344,6 +348,7 @@ fn create_pathfinding_waypoints(
     target_pos: Position,
     waypoint_queue: &mut WaypointQueue,
     board_data: &BoardData,
+    visibility_data: &VisibilityData,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -354,7 +359,7 @@ fn create_pathfinding_waypoints(
     );
 
     // Use pathfinding to get a sequence of board positions
-    let path = find_path(start_pos, target_pos, board_data);
+    let path = find_path(start_pos, target_pos, board_data, visibility_data);
 
     if path.is_empty() {
         info!("No path found from {:?} to {:?}", start_pos, target_pos);
@@ -396,6 +401,7 @@ fn create_pathfinding_waypoints_to_interaction(
     interaction_target: Entity,
     waypoint_queue: &mut WaypointQueue,
     board_data: &BoardData,
+    visibility_data: &VisibilityData,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -406,7 +412,7 @@ fn create_pathfinding_waypoints_to_interaction(
     );
 
     // Use pathfinding to get a sequence of board positions (treating target as walkable)
-    let path = find_path_to_interactive(start_pos, target_pos, board_data);
+    let path = find_path_to_interactive(start_pos, target_pos, board_data, visibility_data);
 
     if path.is_empty() {
         info!("No path found from {:?} to {:?}", start_pos, target_pos);
