@@ -3,12 +3,9 @@ use uncore::{
     components::{
         board::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position},
         game::GCameraArena,
-        move_to::MoveToTarget,
         player_sprite::PlayerSprite,
     },
-    resources::{
-        board_data::BoardData, mouse_visibility::MouseVisibility, player_input::PlayerInput,
-    },
+    resources::{board_data::BoardData, mouse_visibility::MouseVisibility},
 };
 
 /// Converts screen coordinates to world coordinates using the game's isometric projection.
@@ -186,13 +183,20 @@ fn is_path_clear(start_pos: &Position, end_pos: &Position, board_data: &BoardDat
 /// System that handles click-to-move functionality with simple obstacle avoidance.
 ///
 /// When the player left-clicks, this system converts the screen coordinates to world coordinates
-/// and uses simple obstacle avoidance to find a walkable target position. If the clicked position
-/// is blocked, it automatically finds the nearest walkable alternative within a small radius.
+/// and creates waypoint entities for movement. If the clicked position is blocked, it automatically
+/// finds the nearest walkable alternative within a small radius.
 pub fn click_to_move_pathing_system(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
-    q_player: Query<(Entity, &Position), With<PlayerSprite>>,
+    mut q_player: Query<
+        (
+            Entity,
+            &Position,
+            &mut uncore::components::waypoint::WaypointQueue,
+        ),
+        With<PlayerSprite>,
+    >,
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
     board_data: Res<BoardData>,
@@ -215,7 +219,7 @@ pub fn click_to_move_pathing_system(
     let Ok((camera, camera_transform)) = q_camera.single() else {
         return;
     };
-    let Ok((player_entity, player_pos)) = q_player.single() else {
+    let Ok((player_entity, player_pos, mut waypoint_queue)) = q_player.single_mut() else {
         return;
     };
 
@@ -227,40 +231,35 @@ pub fn click_to_move_pathing_system(
 
     // Use obstacle avoidance to find a walkable target position
     if let Some(walkable_target) = find_walkable_target(player_pos, target, &board_data) {
-        commands
-            .entity(player_entity)
-            .insert(MoveToTarget::new(walkable_target));
+        // Clear existing waypoints
+        for waypoint_entity in waypoint_queue.0.drain(..) {
+            commands.entity(waypoint_entity).despawn();
+        }
+
+        // Create a movement waypoint
+        let waypoint_entity = commands
+            .spawn((
+                Sprite {
+                    color: Color::srgba(1.0, 0.0, 0.0, 0.8),
+                    ..default()
+                },
+                walkable_target,
+                uncore::components::waypoint::Waypoint {
+                    waypoint_type: uncore::components::waypoint::WaypointType::MoveTo,
+                    order: 0,
+                },
+                uncore::components::waypoint::WaypointOwner(player_entity),
+            ))
+            .id();
+
+        waypoint_queue.push(waypoint_entity);
     }
 }
 
 /// System that updates player movement based on click-to-move target position.
 ///
-/// This system reads the `MoveToTarget` component and converts it into movement input
-/// by updating the `PlayerInput` resource. When the player reaches the target,
-/// the `MoveToTarget` component is removed.
-pub fn click_to_move_update_system(
-    mut commands: Commands,
-    q_player: Query<(Entity, &Position, &MoveToTarget)>,
-    mut player_input: ResMut<PlayerInput>,
-) {
-    for (entity, pos, target) in q_player.iter() {
-        let current = Vec2::new(pos.x, pos.y);
-        let target_pos = Vec2::new(target.position.x, target.position.y);
-        let to_target = target_pos - current;
-
-        const ARRIVAL_THRESHOLD: f32 = 0.1;
-        if to_target.length_squared() > ARRIVAL_THRESHOLD * ARRIVAL_THRESHOLD {
-            // Move towards target
-            player_input.movement = to_target.normalize();
-        } else {
-            // We've reached the target
-            player_input.movement = Vec2::ZERO;
-
-            // Only remove MoveToTarget if there's no interaction to perform
-            // If there's an interaction, let the complete_pending_interaction_system handle it
-            if target.interaction_target.is_none() {
-                commands.entity(entity).remove::<MoveToTarget>();
-            }
-        }
-    }
+/// This system is now deprecated in favor of the waypoint system.
+/// Kept for compatibility but does nothing as waypoint systems handle movement.
+pub fn click_to_move_update_system() {
+    // This system is deprecated - waypoint systems now handle movement
 }

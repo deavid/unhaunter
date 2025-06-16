@@ -101,7 +101,8 @@ pub fn spawn_player(
             Timer::from_seconds(0.20, TimerMode::Repeating),
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ))
-        .insert(Stamina::default());
+        .insert(Stamina::default())
+        .insert(uncore::components::waypoint::WaypointQueue::default());
 
     // Determine if the van should be open based on distance to van and difficulty setting
     dist_to_van < 8.0 && p.difficulty.0.van_auto_open
