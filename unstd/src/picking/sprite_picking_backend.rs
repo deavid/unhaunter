@@ -73,6 +73,28 @@ pub struct CustomSpritePickingSettings {
     /// Default is 16x16 pixels, which works well for typical sprite sizes.
     /// Adjust based on your sprite dimensions and desired click tolerance.
     pub tile_size: Vec2,
+
+    /// When `true`, enables checking neighboring pixels for more forgiving hit detection.
+    ///
+    /// If the exact pixel under the cursor doesn't meet the alpha threshold,
+    /// the system will check nearby pixels. This makes small sprites easier to click
+    /// and provides better user experience on touch devices.
+    /// Only applies when using `CustomSpritePickingMode::AlphaThreshold`.
+    pub check_neighbors: bool,
+
+    /// When `true`, uses 8-way connectivity (including diagonals) for neighbor checking.
+    ///
+    /// When `false`, uses 4-way connectivity (cardinal directions only).
+    /// 8-way provides more forgiving hit detection but checks more pixels.
+    /// Only relevant when `check_neighbors` is `true`.
+    pub use_8_way_neighbors: bool,
+
+    /// Distance in pixels to check for neighboring pixels.
+    ///
+    /// A value of 1 checks immediate neighbors, 2 checks up to 2 pixels away, etc.
+    /// Higher values provide more forgiving clicking but may affect precision.
+    /// Only relevant when `check_neighbors` is `true`.
+    pub neighbor_distance: u32,
 }
 
 impl Default for CustomSpritePickingSettings {
@@ -81,6 +103,9 @@ impl Default for CustomSpritePickingSettings {
             require_markers: false,
             picking_mode: CustomSpritePickingMode::AlphaThreshold(ALPHA_THRESHOLD),
             tile_size: Vec2::new(16.0, 16.0),
+            check_neighbors: true,
+            use_8_way_neighbors: true,
+            neighbor_distance: 1,
         }
     }
 }
@@ -243,6 +268,7 @@ fn custom_sprite_picking(
                             material_handle,
                             &materials,
                             &images,
+                            &settings,
                         )
                     }
                 };
@@ -314,6 +340,7 @@ fn pixel_perfect_hit_test(
     material_handle: &MeshMaterial2d<CustomMaterial1>,
     materials: &Assets<CustomMaterial1>,
     images: &Assets<Image>,
+    settings: &CustomSpritePickingSettings,
 ) -> bool {
     // Get the material data
     let Some(material) = materials.get(&material_handle.0) else {
@@ -392,39 +419,82 @@ fn pixel_perfect_hit_test(
     let final_v = base_v + margin_v * cell_height;
 
     // Sample the texture at the calculated UV coordinates
-    let tex_x = (final_u * image.width() as f32) as u32;
-    let tex_y = (final_v * image.height() as f32) as u32;
+    let center_tex_x = (final_u * image.width() as f32) as i32;
+    let center_tex_y = (final_v * image.height() as f32) as i32;
 
-    // Clamp to texture bounds
-    let tex_x = tex_x.min(image.width() - 1);
-    let tex_y = tex_y.min(image.height() - 1);
+    // Helper function to check alpha at specific texture coordinates
+    let check_pixel_alpha = |tex_x: i32, tex_y: i32| -> bool {
+        // Bounds check
+        if tex_x < 0 || tex_y < 0 || tex_x >= image.width() as i32 || tex_y >= image.height() as i32
+        {
+            return false;
+        }
 
-    // Sample the pixel - calculate the pixel index in the raw data
-    let pixel_index = (tex_y * image.width() + tex_x) as usize;
+        let pixel_index = (tex_y as u32 * image.width() + tex_x as u32) as usize;
 
-    // Get pixel data based on texture format
-    match &image.texture_descriptor.format {
-        bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb
-        | bevy::render::render_resource::TextureFormat::Rgba8Unorm => {
-            if let Some(ref pixel_data) = image.data {
-                let alpha_index = pixel_index * 4 + 3;
-                if alpha_index < pixel_data.len() {
-                    let alpha_byte = pixel_data[alpha_index];
-                    let alpha = alpha_byte as f32 / 255.0;
-                    alpha > ALPHA_THRESHOLD
+        // Get pixel data based on texture format
+        match &image.texture_descriptor.format {
+            bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb
+            | bevy::render::render_resource::TextureFormat::Rgba8Unorm => {
+                if let Some(ref pixel_data) = image.data {
+                    let alpha_index = pixel_index * 4 + 3;
+                    if alpha_index < pixel_data.len() {
+                        let alpha_byte = pixel_data[alpha_index];
+                        let alpha = alpha_byte as f32 / 255.0;
+                        alpha > ALPHA_THRESHOLD
+                    } else {
+                        false
+                    }
                 } else {
-                    warn!("CustomSpritePicking: Pixel index out of bounds");
                     false
                 }
-            } else {
-                warn!("CustomSpritePicking: Image data not available");
-                false
+            }
+            _ => {
+                // For other formats, assume opaque for now
+                true
             }
         }
-        _ => {
-            // For other formats, assume opaque for now
-            // TODO: Add support for more texture formats if needed
-            true
+    };
+
+    // Check the center pixel first
+    if check_pixel_alpha(center_tex_x, center_tex_y) {
+        return true;
+    }
+
+    // If neighbor checking is disabled or we're not in alpha threshold mode, stop here
+    if !settings.check_neighbors {
+        return false;
+    }
+
+    // Generate neighbor offsets based on settings
+    let mut neighbor_offsets = Vec::new();
+    let distance = settings.neighbor_distance as i32;
+
+    for dy in -distance..=distance {
+        for dx in -distance..=distance {
+            // Skip the center pixel (already checked)
+            if dx == 0 && dy == 0 {
+                continue;
+            }
+
+            // For 4-way connectivity, skip diagonal pixels
+            if !settings.use_8_way_neighbors && dx != 0 && dy != 0 {
+                continue;
+            }
+
+            neighbor_offsets.push((dx, dy));
         }
     }
+
+    // Check each neighbor pixel
+    for (dx, dy) in neighbor_offsets {
+        let neighbor_x = center_tex_x + dx;
+        let neighbor_y = center_tex_y + dy;
+
+        if check_pixel_alpha(neighbor_x, neighbor_y) {
+            return true;
+        }
+    }
+
+    false
 }
