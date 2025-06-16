@@ -519,7 +519,7 @@ pub fn detect_stair_area(
             );
             // Calculate start and end waypoints for stair traversal
             let (start_waypoint, end_waypoint) =
-                calculate_stair_waypoints(stair_pos, stair_component, behavior);
+                calculate_stair_waypoints(stair_pos, stair_component, behavior, stairs_query);
             info!(
                 "Calculated waypoints: start={:?}, end={:?}",
                 start_waypoint, end_waypoint
@@ -539,33 +539,95 @@ pub fn detect_stair_area(
     None
 }
 
+/// Detects the actual direction of stairs by analyzing the paired stair
+/// Returns true if the stairs go in the "positive" direction (for XAxis: +Y, for YAxis: +X)
+/// Returns false if the stairs go in the "negative" direction (for XAxis: -Y, for YAxis: -X)
+fn detect_stair_direction(
+    stair_pos: &Position,
+    stair_component: &Stairs,
+    behavior: &Behavior,
+    stairs_query: &Query<(Entity, &Position, &Stairs, &Behavior)>,
+) -> bool {
+    let target_z = stair_pos.z + stair_component.z as f32;
+    let stair_bpos = stair_pos.to_board_position();
+
+    // Look for paired stairs on the target floor
+    for (_paired_entity, paired_pos, paired_component, paired_behavior) in stairs_query.iter() {
+        let paired_bpos = paired_pos.to_board_position();
+
+        // Check if this could be a paired stair
+        if paired_bpos.z as f32 != target_z {
+            continue;
+        }
+
+        // Paired stairs should have opposite Z direction
+        if paired_component.z != -stair_component.z {
+            continue;
+        }
+
+        // Paired stairs should have same orientation
+        if paired_behavior.orientation() != behavior.orientation() {
+            continue;
+        }
+
+        match behavior.orientation() {
+            Orientation::XAxis => {
+                // For XAxis stairs, check if X coordinates are close and Y direction
+                if (paired_bpos.x - stair_bpos.x).abs() <= 2 {
+                    // If paired stair is at higher Y, stairs go in positive Y direction
+                    return paired_bpos.y > stair_bpos.y;
+                }
+            }
+            Orientation::YAxis => {
+                // For YAxis stairs, check if Y coordinates are close and X direction
+                if (paired_bpos.y - stair_bpos.y).abs() <= 2 {
+                    // If paired stair is at higher X, stairs go in positive X direction
+                    return paired_bpos.x > stair_bpos.x;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Default to positive direction if no paired stair found
+    true
+}
+
 /// Calculates the start and end waypoints for traversing stairs
 /// Based on the stairs_player system logic in keyboard.rs
 pub fn calculate_stair_waypoints(
     stair_pos: &Position,
     stair_component: &Stairs,
     behavior: &Behavior,
+    stairs_query: &Query<(Entity, &Position, &Stairs, &Behavior)>,
 ) -> (Position, Position) {
+    // Detect the actual direction of the stairs
+    let positive_direction =
+        detect_stair_direction(stair_pos, stair_component, behavior, stairs_query);
     match behavior.orientation() {
         Orientation::XAxis => {
             // For XAxis stairs, movement is in Y direction
             // Start: at the beginning of the stair area (no Z change)
             // End: at the end where Z transition is complete
 
-            let start_y = if stair_component.z > 0 {
-                // Going up: start at bottom of stairs area
-                stair_pos.y - 2.0 // Extended range
+            let (start_y, end_y) = if positive_direction {
+                // Stairs go in positive Y direction (normal)
+                if stair_component.z > 0 {
+                    // Going up: start at bottom, end at top + offset
+                    (stair_pos.y - 2.0, stair_pos.y + 2.0)
+                } else {
+                    // Going down: start at top, end at bottom + offset
+                    (stair_pos.y + 2.0, stair_pos.y - 2.0)
+                }
             } else {
-                // Going down: start at top of stairs area
-                stair_pos.y + 2.0 // Extended range
-            };
-
-            let end_y = if stair_component.z > 0 {
-                // Going up: end at top of stairs area + offset for next floor
-                stair_pos.y + 2.0 // Extended range to reach paired stairs
-            } else {
-                // Going down: end at bottom of stairs area + offset for next floor
-                stair_pos.y - 2.0 // Extended range to reach paired stairs
+                // Stairs go in negative Y direction (mirrored)
+                if stair_component.z > 0 {
+                    // Going up: start at top, end at bottom + offset
+                    (stair_pos.y + 2.0, stair_pos.y - 2.0)
+                } else {
+                    // Going down: start at bottom, end at top + offset
+                    (stair_pos.y - 2.0, stair_pos.y + 2.0)
+                }
             };
 
             let start_waypoint = Position {
@@ -586,20 +648,24 @@ pub fn calculate_stair_waypoints(
         }
         Orientation::YAxis => {
             // For YAxis stairs, movement is in X direction
-            let start_x = if stair_component.z > 0 {
-                // Going up: start at left of stairs area
-                stair_pos.x - 2.0 // Extended range
+            let (start_x, end_x) = if positive_direction {
+                // Stairs go in positive X direction (normal)
+                if stair_component.z > 0 {
+                    // Going up: start at left, end at right + offset
+                    (stair_pos.x - 2.0, stair_pos.x + 2.0)
+                } else {
+                    // Going down: start at right, end at left + offset
+                    (stair_pos.x + 2.0, stair_pos.x - 2.0)
+                }
             } else {
-                // Going down: start at right of stairs area
-                stair_pos.x + 2.0 // Extended range
-            };
-
-            let end_x = if stair_component.z > 0 {
-                // Going up: end at right of stairs area + offset for next floor
-                stair_pos.x + 2.0 // Extended range to reach paired stairs
-            } else {
-                // Going down: end at left of stairs area + offset for next floor
-                stair_pos.x - 2.0 // Extended range to reach paired stairs
+                // Stairs go in negative X direction (mirrored)
+                if stair_component.z > 0 {
+                    // Going up: start at right, end at left + offset
+                    (stair_pos.x + 2.0, stair_pos.x - 2.0)
+                } else {
+                    // Going down: start at left, end at right + offset
+                    (stair_pos.x - 2.0, stair_pos.x + 2.0)
+                }
             };
 
             let start_waypoint = Position {
