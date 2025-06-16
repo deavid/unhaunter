@@ -8,6 +8,7 @@ pub mod input {
 pub mod keyboard;
 pub mod mouse;
 pub mod movement;
+pub mod pathfinding;
 pub mod sanityhealth;
 pub mod walk_target_indicator;
 pub mod waypoint;

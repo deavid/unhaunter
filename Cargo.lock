@@ -5598,6 +5598,7 @@ dependencies = [
  "bevy_picking",
  "bevy_platform",
  "fastapprox",
+ "ndarray",
  "ordered-float 5.0.0",
  "rand 0.9.1",
  "uncore",

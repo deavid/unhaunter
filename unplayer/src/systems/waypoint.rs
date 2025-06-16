@@ -14,6 +14,8 @@ use uncore::{
 };
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
+use super::pathfinding::find_path;
+
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
 pub fn waypoint_creation_system(
@@ -98,24 +100,16 @@ pub fn waypoint_creation_system(
         if let Some(target) =
             screen_to_world_coords(cursor_pos, player_pos.z, camera, camera_transform)
         {
-            // Use obstacle avoidance to find a walkable target position
-            if let Some(walkable_target) = find_walkable_target(player_pos, target, &board_data) {
-                // Clear existing waypoints when creating new ones
-                clear_player_waypoints(
-                    &mut commands,
-                    &q_existing_waypoints,
-                    player_entity,
-                    &mut waypoint_queue,
-                );
-
-                // Create a movement waypoint
-                create_move_waypoint(
-                    &mut commands,
-                    player_entity,
-                    walkable_target,
-                    &mut waypoint_queue,
-                );
-            }
+            // Use pathfinding to create a sequence of waypoints
+            create_pathfinding_waypoints(
+                &mut commands,
+                &q_existing_waypoints,
+                player_entity,
+                *player_pos,
+                target,
+                &mut waypoint_queue,
+                &board_data,
+            );
         }
     }
 }
@@ -323,120 +317,53 @@ fn screen_to_world_coords(
     })
 }
 
-/// Simple obstacle avoidance by checking if the straight path is clear.
-fn find_walkable_target(
-    player_pos: &Position,
+/// Helper function to create waypoints using pathfinding
+fn create_pathfinding_waypoints(
+    commands: &mut Commands,
+    q_existing_waypoints: &Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
+    player_entity: Entity,
+    start_pos: Position,
     target_pos: Position,
+    waypoint_queue: &mut WaypointQueue,
     board_data: &BoardData,
-) -> Option<Position> {
-    let target_board_pos = target_pos.to_board_position();
+) {
+    // Clear existing waypoints first
+    clear_player_waypoints(
+        commands,
+        q_existing_waypoints,
+        player_entity,
+        waypoint_queue,
+    );
 
-    // First check if target is valid and walkable
-    if !target_board_pos.is_valid(board_data.map_size) {
-        return None;
+    // Use pathfinding to get a sequence of board positions
+    let path = find_path(start_pos, target_pos, board_data);
+
+    if path.is_empty() {
+        info!("No path found from {:?} to {:?}", start_pos, target_pos);
+        return;
     }
 
-    let collision = board_data.collision_field.get(target_board_pos.ndidx())?;
+    // Skip the first position (current player position) and create waypoints for the rest
+    for (i, board_pos) in path.iter().skip(1).enumerate() {
+        let world_pos = board_pos.to_position();
 
-    if !collision.player_free {
-        return None;
+        let waypoint_entity = commands
+            .spawn(Sprite {
+                color: Color::srgba(1.0, 0.0, 0.6, 0.8), // Red for move waypoints
+                custom_size: Some(Vec2::new(1.0, 1.0)),
+                ..default()
+            })
+            .insert(world_pos)
+            .insert(GameSprite)
+            .insert(Waypoint {
+                waypoint_type: WaypointType::MoveTo,
+                order: i as u32,
+            })
+            .insert(WaypointOwner(player_entity))
+            .id();
+
+        waypoint_queue.push(waypoint_entity);
     }
 
-    // If target is walkable, check if path is clear
-    if is_path_clear(player_pos, &target_pos, board_data) {
-        return Some(target_pos);
-    }
-
-    // Path is blocked - find alternative positions around target that have clearer paths
-    let search_radius = 2;
-    let mut best_pos = None;
-    let mut best_score = f32::MAX;
-
-    for dx in -search_radius..=search_radius {
-        for dy in -search_radius..=search_radius {
-            if dx == 0 && dy == 0 {
-                continue; // Skip the original target (already checked)
-            }
-
-            let test_board_pos = uncore::components::board::boardposition::BoardPosition {
-                x: target_board_pos.x + dx,
-                y: target_board_pos.y + dy,
-                z: target_board_pos.z,
-            };
-
-            // Check if position is valid and walkable
-            if !test_board_pos.is_valid(board_data.map_size) {
-                continue;
-            }
-
-            if let Some(collision) = board_data.collision_field.get(test_board_pos.ndidx()) {
-                if !collision.player_free {
-                    continue;
-                }
-            } else {
-                continue;
-            }
-
-            let test_pos = test_board_pos.to_position();
-
-            // Check if path to this alternative position is clearer
-            let path_clear = is_path_clear(player_pos, &test_pos, board_data);
-            if !path_clear {
-                continue;
-            }
-
-            // Score based on distance to original target (prefer positions close to original intent)
-            let distance_to_target = target_pos.distance(&test_pos);
-            if distance_to_target < best_score {
-                best_score = distance_to_target;
-                best_pos = Some(test_pos);
-            }
-        }
-    }
-
-    best_pos
-}
-
-/// Check if there's a clear path between two positions using simple line sampling.
-fn is_path_clear(start_pos: &Position, end_pos: &Position, board_data: &BoardData) -> bool {
-    let start_2d = Vec2::new(start_pos.x, start_pos.y);
-    let end_2d = Vec2::new(end_pos.x, end_pos.y);
-    let direction = end_2d - start_2d;
-    let distance = direction.length();
-
-    // If very close, consider path clear
-    if distance < 1.0 {
-        return true;
-    }
-
-    // Sample along the path every 0.5 units
-    let sample_step = 0.5;
-    let num_samples = (distance / sample_step).ceil() as i32;
-
-    for i in 1..num_samples {
-        let t = i as f32 / num_samples as f32;
-        let sample_point = start_2d + direction * t;
-
-        let sample_pos = Position {
-            x: sample_point.x,
-            y: sample_point.y,
-            z: start_pos.z, // Use same Z level
-            global_z: 0.0,
-        };
-
-        let board_pos = sample_pos.to_board_position();
-
-        // Check if this sample point is blocked
-        if !board_pos.is_valid(board_data.map_size) {
-            return false;
-        }
-
-        if let Some(collision) = board_data.collision_field.get(board_pos.ndidx()) {
-            if !collision.player_free {
-                return false;
-            }
-        }
-    }
-
-    true
+    info!("Created {} waypoints for pathfinding", path.len() - 1);
 }
