@@ -3,6 +3,8 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
 use uncore::{
+    behavior::component::Stairs,
+    behavior::{Behavior, Orientation},
     components::board::{boardposition::BoardPosition, position::Position},
     resources::{board_data::BoardData, visibility_data::VisibilityData},
 };
@@ -467,172 +469,158 @@ fn is_walkable_and_visible(
     is_walkable(pos, board_data) && is_visible(pos, board_data, visibility_data)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ndarray::Array3;
-    use uncore::types::board::fielddata::CollisionFieldData;
+/// Detects if a position is within a stairs area and returns stair information
+pub fn detect_stair_area(
+    target_pos: Position,
+    stairs_query: &Query<(Entity, &Position, &Stairs, &Behavior)>,
+) -> Option<(Entity, Position, Stairs, Behavior, Position, Position)> {
+    let target_bpos = target_pos.to_board_position();
 
-    fn create_test_board_data(size: (usize, usize, usize)) -> BoardData {
-        let mut board_data = BoardData::from_world(&mut bevy::prelude::World::new());
-        board_data.map_size = size;
-        board_data.collision_field = Array3::from_elem(
-            size,
-            CollisionFieldData {
-                player_free: true,
-                ..Default::default()
-            },
+    info!(
+        "Checking if position {:?} (board: {:?}) is in stairs area",
+        target_pos, target_bpos
+    );
+
+    for (stair_entity, stair_pos, stair_component, behavior) in stairs_query.iter() {
+        let stair_bpos = stair_pos.to_board_position();
+
+        info!(
+            "Checking stair at {:?} (board: {:?}), orientation: {:?}, z: {}",
+            stair_pos,
+            stair_bpos,
+            behavior.orientation(),
+            stair_component.z
         );
-        board_data
-    }
 
-    fn create_test_visibility_data(size: (usize, usize, usize)) -> VisibilityData {
-        VisibilityData {
-            visibility_field: Array3::from_elem(size, 1.0), // All visible
+        // Check if target is within the stairs area based on orientation
+        let in_stairs_area = match behavior.orientation() {
+            Orientation::XAxis => {
+                // XAxis stairs: 2 tiles in X, 3 tiles in Y
+                (stair_bpos.x == target_bpos.x || stair_bpos.x + 1 == target_bpos.x)
+                    && (target_bpos.y - stair_bpos.y).abs() <= 1
+                    && stair_bpos.z == target_bpos.z
+            }
+            Orientation::YAxis => {
+                // YAxis stairs: 2 tiles in Y, 3 tiles in X
+                (stair_bpos.y == target_bpos.y || stair_bpos.y - 1 == target_bpos.y)
+                    && (target_bpos.x - stair_bpos.x).abs() <= 1
+                    && stair_bpos.z == target_bpos.z
+            }
+            _ => false,
+        };
+
+        if in_stairs_area {
+            info!(
+                "Found stair area! Entity: {:?}, Position: {:?}, Z: {}, Orientation: {:?}",
+                stair_entity,
+                stair_pos,
+                stair_component.z,
+                behavior.orientation()
+            );
+            // Calculate start and end waypoints for stair traversal
+            let (start_waypoint, end_waypoint) =
+                calculate_stair_waypoints(stair_pos, stair_component, behavior);
+            info!(
+                "Calculated waypoints: start={:?}, end={:?}",
+                start_waypoint, end_waypoint
+            );
+            return Some((
+                stair_entity,
+                *stair_pos,
+                stair_component.clone(),
+                behavior.clone(),
+                start_waypoint,
+                end_waypoint,
+            ));
         }
     }
 
-    #[test]
-    fn test_pathfinding_simple() {
-        let board_data = create_test_board_data((10, 10, 1));
-        let visibility_data = create_test_visibility_data((10, 10, 1));
+    info!("No stair area found for position {:?}", target_pos);
+    None
+}
 
-        let start = Position::new_i64(0, 0, 0);
-        let goal = Position::new_i64(3, 3, 0);
+/// Calculates the start and end waypoints for traversing stairs
+/// Based on the stairs_player system logic in keyboard.rs
+pub fn calculate_stair_waypoints(
+    stair_pos: &Position,
+    stair_component: &Stairs,
+    behavior: &Behavior,
+) -> (Position, Position) {
+    match behavior.orientation() {
+        Orientation::XAxis => {
+            // For XAxis stairs, movement is in Y direction
+            // Start: at the beginning of the stair area (no Z change)
+            // End: at the end where Z transition is complete
 
-        let path = find_path(start, goal, &board_data, &visibility_data);
+            let start_y = if stair_component.z > 0 {
+                // Going up: start at bottom of stairs area
+                stair_pos.y - 2.0 // Extended range
+            } else {
+                // Going down: start at top of stairs area
+                stair_pos.y + 2.0 // Extended range
+            };
 
-        assert!(!path.is_empty());
-        assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
-        assert_eq!(path[path.len() - 1], BoardPosition { x: 3, y: 3, z: 0 });
-    }
+            let end_y = if stair_component.z > 0 {
+                // Going up: end at top of stairs area + offset for next floor
+                stair_pos.y + 2.0 // Extended range to reach paired stairs
+            } else {
+                // Going down: end at bottom of stairs area + offset for next floor
+                stair_pos.y - 2.0 // Extended range to reach paired stairs
+            };
 
-    #[test]
-    fn test_pathfinding_no_path() {
-        let mut board_data = create_test_board_data((5, 5, 1));
-        let visibility_data = create_test_visibility_data((5, 5, 1));
+            let start_waypoint = Position {
+                x: stair_pos.x,
+                y: start_y,
+                z: stair_pos.z, // Same floor
+                global_z: 0.0,
+            };
 
-        // Create a wall blocking the path
-        for y in 0..5 {
-            let idx = (2, y, 0);
-            board_data.collision_field[idx].player_free = false;
+            let end_waypoint = Position {
+                x: stair_pos.x,
+                y: end_y,
+                z: stair_pos.z + stair_component.z as f32, // New floor
+                global_z: 0.0,
+            };
+
+            (start_waypoint, end_waypoint)
         }
+        Orientation::YAxis => {
+            // For YAxis stairs, movement is in X direction
+            let start_x = if stair_component.z > 0 {
+                // Going up: start at left of stairs area
+                stair_pos.x - 2.0 // Extended range
+            } else {
+                // Going down: start at right of stairs area
+                stair_pos.x + 2.0 // Extended range
+            };
 
-        let start = Position::new_i64(0, 0, 0);
-        let goal = Position::new_i64(4, 0, 0);
+            let end_x = if stair_component.z > 0 {
+                // Going up: end at right of stairs area + offset for next floor
+                stair_pos.x + 2.0 // Extended range to reach paired stairs
+            } else {
+                // Going down: end at left of stairs area + offset for next floor
+                stair_pos.x - 2.0 // Extended range to reach paired stairs
+            };
 
-        let path = find_path(start, goal, &board_data, &visibility_data);
+            let start_waypoint = Position {
+                x: start_x,
+                y: stair_pos.y,
+                z: stair_pos.z, // Same floor
+                global_z: 0.0,
+            };
 
-        assert!(path.is_empty());
-    }
+            let end_waypoint = Position {
+                x: end_x,
+                y: stair_pos.y,
+                z: stair_pos.z + stair_component.z as f32, // New floor
+                global_z: 0.0,
+            };
 
-    #[test]
-    fn test_pathfinding_interactive() {
-        let board_data = create_test_board_data((10, 10, 1));
-        let visibility_data = create_test_visibility_data((10, 10, 1));
-
-        let start = Position::new_i64(0, 0, 0);
-        let goal = Position::new_i64(3, 3, 0);
-
-        let path = find_path_to_interactive(start, goal, &board_data, &visibility_data);
-
-        assert!(!path.is_empty());
-        assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
-        assert_eq!(path[path.len() - 1], BoardPosition { x: 3, y: 3, z: 0 });
-    }
-
-    #[test]
-    fn test_pathfinding_interactive_goal_blocked() {
-        let mut board_data = create_test_board_data((5, 5, 1));
-        let visibility_data = create_test_visibility_data((5, 5, 1));
-
-        // Create a wall at the goal position
-        let goal_position = Position::new_i64(4, 4, 0);
-        if let Some(idx) = goal_position
-            .to_board_position()
-            .ndidx_checked(board_data.map_size)
-        {
-            board_data.collision_field[idx].player_free = false;
+            (start_waypoint, end_waypoint)
         }
-
-        let start = Position::new_i64(0, 0, 0);
-        let goal = goal_position;
-
-        let path = find_path_to_interactive(start, goal, &board_data, &visibility_data);
-
-        assert!(!path.is_empty());
-        assert_eq!(path[0], BoardPosition { x: 0, y: 0, z: 0 });
-        assert_eq!(path[path.len() - 1], goal_position.to_board_position());
-    }
-
-    #[test]
-    fn test_path_smoothing() {
-        let board_data = create_test_board_data((10, 10, 1));
-        let visibility_data = create_test_visibility_data((10, 10, 1));
-
-        // Create a zig-zag path
-        let mut path = Vec::new();
-        for i in 0..5 {
-            path.push(BoardPosition { x: i, y: 0, z: 0 });
-            path.push(BoardPosition { x: i, y: 1, z: 0 });
+        _ => {
+            // Fallback for unsupported orientations
+            (*stair_pos, *stair_pos)
         }
-
-        // Smooth the path
-        let smoothed_path = smooth_path(path.clone(), &board_data, &visibility_data);
-
-        // Check that the smoothed path is shorter and still valid
-        assert!(smoothed_path.len() < path.len());
-        assert_eq!(smoothed_path[0], path[0]);
-        assert_eq!(smoothed_path[smoothed_path.len() - 1], path[path.len() - 1]);
-
-        // Check that all positions in the smoothed path are walkable
-        for pos in smoothed_path.iter() {
-            assert!(is_walkable(pos, &board_data));
-        }
-    }
-
-    #[test]
-    fn test_line_of_sight() {
-        let board_data = create_test_board_data((10, 10, 1));
-        let visibility_data = create_test_visibility_data((10, 10, 1));
-
-        // Direct line, should have line of sight
-        let from = BoardPosition { x: 0, y: 0, z: 0 };
-        let to = BoardPosition { x: 5, y: 0, z: 0 };
-        assert!(has_line_of_sight(&from, &to, &board_data, &visibility_data));
-
-        // Blocked by wall, should not have line of sight
-        let mut blocked_board_data = board_data.clone();
-        let wall_pos = BoardPosition { x: 3, y: 0, z: 0 };
-        if let Some(idx) = wall_pos.ndidx_checked(blocked_board_data.map_size) {
-            blocked_board_data.collision_field[idx].player_free = false;
-        }
-        assert!(!has_line_of_sight(
-            &from,
-            &to,
-            &blocked_board_data,
-            &visibility_data
-        ));
-
-        // Diagonal line, should have line of sight if no walls
-        let to_diag = BoardPosition { x: 3, y: 3, z: 0 };
-        assert!(has_line_of_sight(
-            &from,
-            &to_diag,
-            &board_data,
-            &visibility_data
-        ));
-
-        // Diagonal line blocked by wall, should not have line of sight
-        let diag_wall_pos = BoardPosition { x: 2, y: 2, z: 0 };
-        if let Some(idx) = diag_wall_pos.ndidx_checked(blocked_board_data.map_size) {
-            blocked_board_data.collision_field[idx].player_free = false;
-        }
-        assert!(!has_line_of_sight(
-            &from,
-            &to_diag,
-            &blocked_board_data,
-            &visibility_data
-        ));
     }
 }

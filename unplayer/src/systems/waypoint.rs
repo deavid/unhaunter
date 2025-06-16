@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use uncore::{
-    behavior::{Behavior, component::Interactive},
+    behavior::{Behavior, component::Interactive, component::Stairs},
     components::{
         board::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position},
         game::{GCameraArena, GameSprite},
@@ -15,7 +15,7 @@ use uncore::{
 };
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
-use super::pathfinding::{find_path, find_path_to_interactive};
+use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
@@ -33,6 +33,7 @@ pub fn waypoint_creation_system(
         &Behavior,
         Option<&uncore::behavior::component::RoomState>,
     )>,
+    q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
     mut click_events: EventReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
@@ -121,17 +122,44 @@ pub fn waypoint_creation_system(
         if let Some(target) =
             screen_to_world_coords(cursor_pos, player_pos.z, camera, camera_transform)
         {
-            // Use pathfinding to create a sequence of waypoints
-            create_pathfinding_waypoints(
-                &mut commands,
-                &q_existing_waypoints,
-                player_entity,
-                *player_pos,
-                target,
-                &mut waypoint_queue,
-                &board_data,
-                &visibility_data,
-            );
+            info!("Ground click detected at {:?}", target);
+
+            // First check if the click is in a stairs area
+            if let Some((
+                _stair_entity,
+                _stair_pos,
+                _stair_component,
+                _behavior,
+                start_waypoint,
+                end_waypoint,
+            )) = detect_stair_area(target, &q_stairs)
+            {
+                info!(
+                    "Stair area detected! Creating waypoints from {:?} to {:?}",
+                    start_waypoint, end_waypoint
+                );
+                // Create stair traversal waypoints
+                create_stair_waypoints(
+                    &mut commands,
+                    &q_existing_waypoints,
+                    player_entity,
+                    start_waypoint,
+                    end_waypoint,
+                    &mut waypoint_queue,
+                );
+            } else {
+                // Use pathfinding to create a sequence of waypoints
+                create_pathfinding_waypoints(
+                    &mut commands,
+                    &q_existing_waypoints,
+                    player_entity,
+                    *player_pos,
+                    target,
+                    &mut waypoint_queue,
+                    &board_data,
+                    &visibility_data,
+                );
+            }
         }
     }
 }
@@ -467,4 +495,65 @@ fn create_pathfinding_waypoints_to_interaction(
         "Created {} waypoints for pathfinding to interaction",
         path_len - 1
     );
+}
+
+/// Helper function to create waypoints for stair traversal
+fn create_stair_waypoints(
+    commands: &mut Commands,
+    q_existing_waypoints: &Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
+    player_entity: Entity,
+    start_waypoint: Position,
+    end_waypoint: Position,
+    waypoint_queue: &mut WaypointQueue,
+) {
+    // Clear existing waypoints first
+    clear_player_waypoints(
+        commands,
+        q_existing_waypoints,
+        player_entity,
+        waypoint_queue,
+    );
+
+    info!(
+        "Creating stair waypoints from {:?} to {:?}",
+        start_waypoint, end_waypoint
+    );
+
+    // Create start waypoint (on current floor)
+    let start_waypoint_entity = commands
+        .spawn(Sprite {
+            color: Color::srgba(0.0, 1.0, 1.0, 0.8), // Cyan for stair start
+            custom_size: Some(Vec2::new(1.0, 1.0)),
+            ..default()
+        })
+        .insert(start_waypoint)
+        .insert(GameSprite)
+        .insert(Waypoint {
+            waypoint_type: WaypointType::MoveTo,
+            order: 0,
+        })
+        .insert(WaypointOwner(player_entity))
+        .id();
+
+    waypoint_queue.push(start_waypoint_entity);
+
+    // Create end waypoint (on destination floor)
+    let end_waypoint_entity = commands
+        .spawn(Sprite {
+            color: Color::srgba(1.0, 1.0, 0.0, 0.8), // Yellow for stair end
+            custom_size: Some(Vec2::new(1.0, 1.0)),
+            ..default()
+        })
+        .insert(end_waypoint)
+        .insert(GameSprite)
+        .insert(Waypoint {
+            waypoint_type: WaypointType::MoveTo,
+            order: 1,
+        })
+        .insert(WaypointOwner(player_entity))
+        .id();
+
+    waypoint_queue.push(end_waypoint_entity);
+
+    info!("Created 2 waypoints for stair traversal");
 }
