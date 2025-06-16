@@ -14,7 +14,7 @@ use uncore::{
 };
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
-use super::pathfinding::find_path;
+use super::pathfinding::{find_path, find_path_to_interactive};
 
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
@@ -72,14 +72,32 @@ pub fn waypoint_creation_system(
                 &mut waypoint_queue,
             );
 
-            // Create interaction waypoint
-            create_interaction_waypoint(
-                &mut commands,
-                player_entity,
-                *interactive_pos,
-                interactive_entity,
-                &mut waypoint_queue,
-            );
+            // Check if we're close enough to interact directly
+            const INTERACTION_DISTANCE: f32 = 1.2;
+            let distance = player_pos.distance(interactive_pos);
+
+            if distance <= INTERACTION_DISTANCE {
+                // Close enough - create direct interaction waypoint
+                create_interaction_waypoint(
+                    &mut commands,
+                    player_entity,
+                    *interactive_pos,
+                    interactive_entity,
+                    &mut waypoint_queue,
+                );
+            } else {
+                // Too far - use pathfinding to get close, then create interaction waypoint
+                create_pathfinding_waypoints_to_interaction(
+                    &mut commands,
+                    &q_existing_waypoints,
+                    player_entity,
+                    *player_pos,
+                    *interactive_pos,
+                    interactive_entity,
+                    &mut waypoint_queue,
+                    &board_data,
+                );
+            }
             interactive_clicked = true;
         }
     }
@@ -366,4 +384,81 @@ fn create_pathfinding_waypoints(
     }
 
     info!("Created {} waypoints for pathfinding", path.len() - 1);
+}
+
+/// Helper function to create waypoints using pathfinding that end with an interaction
+fn create_pathfinding_waypoints_to_interaction(
+    commands: &mut Commands,
+    q_existing_waypoints: &Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
+    player_entity: Entity,
+    start_pos: Position,
+    target_pos: Position,
+    interaction_target: Entity,
+    waypoint_queue: &mut WaypointQueue,
+    board_data: &BoardData,
+) {
+    // Clear existing waypoints first
+    clear_player_waypoints(
+        commands,
+        q_existing_waypoints,
+        player_entity,
+        waypoint_queue,
+    );
+
+    // Use pathfinding to get a sequence of board positions (treating target as walkable)
+    let path = find_path_to_interactive(start_pos, target_pos, board_data);
+
+    if path.is_empty() {
+        info!("No path found from {:?} to {:?}", start_pos, target_pos);
+        // If no path, create direct interaction waypoint as fallback
+        create_interaction_waypoint(
+            commands,
+            player_entity,
+            target_pos,
+            interaction_target,
+            waypoint_queue,
+        );
+        return;
+    }
+
+    // Create movement waypoints for all but the last position
+    let path_len = path.len();
+    for (i, board_pos) in path.iter().skip(1).enumerate() {
+        // If this is the last waypoint, create an interaction waypoint instead
+        if i == path_len - 2 {
+            // Last iteration (path_len - 1 because we skip(1))
+            create_interaction_waypoint(
+                commands,
+                player_entity,
+                target_pos,
+                interaction_target,
+                waypoint_queue,
+            );
+        } else {
+            // Create regular movement waypoint
+            let world_pos = board_pos.to_position();
+
+            let waypoint_entity = commands
+                .spawn(Sprite {
+                    color: Color::srgba(1.0, 0.0, 0.6, 0.8), // Red for move waypoints
+                    custom_size: Some(Vec2::new(1.0, 1.0)),
+                    ..default()
+                })
+                .insert(world_pos)
+                .insert(GameSprite)
+                .insert(Waypoint {
+                    waypoint_type: WaypointType::MoveTo,
+                    order: i as u32,
+                })
+                .insert(WaypointOwner(player_entity))
+                .id();
+
+            waypoint_queue.push(waypoint_entity);
+        }
+    }
+
+    info!(
+        "Created {} waypoints for pathfinding to interaction",
+        path_len - 1
+    );
 }
