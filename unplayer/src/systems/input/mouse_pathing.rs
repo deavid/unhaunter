@@ -229,7 +229,7 @@ pub fn click_to_move_pathing_system(
     if let Some(walkable_target) = find_walkable_target(player_pos, target, &board_data) {
         commands
             .entity(player_entity)
-            .insert(MoveToTarget(walkable_target));
+            .insert(MoveToTarget::new(walkable_target));
     }
 }
 
@@ -245,7 +245,7 @@ pub fn click_to_move_update_system(
 ) {
     for (entity, pos, target) in q_player.iter() {
         let current = Vec2::new(pos.x, pos.y);
-        let target_pos = Vec2::new(target.0.x, target.0.y);
+        let target_pos = Vec2::new(target.position.x, target.position.y);
         let to_target = target_pos - current;
 
         const ARRIVAL_THRESHOLD: f32 = 0.1;
@@ -255,7 +255,12 @@ pub fn click_to_move_update_system(
         } else {
             // We've reached the target
             player_input.movement = Vec2::ZERO;
-            commands.entity(entity).remove::<MoveToTarget>();
+
+            // Only remove MoveToTarget if there's no interaction to perform
+            // If there's an interaction, let the complete_pending_interaction_system handle it
+            if target.interaction_target.is_none() {
+                commands.entity(entity).remove::<MoveToTarget>();
+            }
         }
     }
 }

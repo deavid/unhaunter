@@ -120,13 +120,13 @@ pub(crate) fn mouse_interaction_system(
                     target_pos
                 );
 
-                // Add both movement target and a component to remember which interactive to activate
+                // Add movement target with interaction
                 commands
                     .entity(player_entity)
-                    .insert(MoveToTarget(target_pos))
-                    .insert(PendingInteraction {
-                        target_entity: interactive_entity,
-                    });
+                    .insert(MoveToTarget::with_interaction(
+                        target_pos,
+                        interactive_entity,
+                    ));
             }
         } else {
             warn!(
@@ -139,26 +139,13 @@ pub(crate) fn mouse_interaction_system(
     }
 }
 
-/// Component to track that the player should interact with a specific object after reaching a target position.
-#[derive(Component)]
-pub struct PendingInteraction {
-    pub target_entity: Entity,
-}
-
 /// System that handles completing interactions after the player reaches their target.
 ///
-/// When the player reaches a position they were moving to for an interaction,
-/// this system automatically activates the intended interactive object.
+/// This system checks if the player has reached their movement target and if there's
+/// an interaction to perform, it executes it and cleans up the MoveToTarget component.
 pub fn complete_pending_interaction_system(
     mut commands: Commands,
-    q_player: Query<
-        (Entity, &Position),
-        (
-            With<PlayerSprite>,
-            With<PendingInteraction>,
-            Without<MoveToTarget>,
-        ),
-    >,
+    q_player: Query<(Entity, &Position, &MoveToTarget), With<PlayerSprite>>,
     q_interactives: Query<(
         Entity,
         &Position,
@@ -166,69 +153,70 @@ pub fn complete_pending_interaction_system(
         &Behavior,
         Option<&uncore::behavior::component::RoomState>,
     )>,
-    q_pending: Query<&PendingInteraction>,
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: EventWriter<RoomChangedEvent>,
 ) {
-    for (player_entity, player_pos) in q_player.iter() {
-        debug!(
-            "complete_pending_interaction_system: Player {:?} has pending interaction and reached target",
-            player_entity
-        );
-
-        if let Ok(pending) = q_pending.get(player_entity) {
+    for (player_entity, player_pos, move_target) in q_player.iter() {
+        // Check if there's an interaction target
+        if let Some(interaction_target) = move_target.interaction_target {
             debug!(
-                "complete_pending_interaction_system: Pending interaction with entity {:?}",
-                pending.target_entity
+                "complete_pending_interaction_system: Player {:?} has move target with interaction {:?}",
+                player_entity, interaction_target
             );
 
-            // Player has reached the target, now interact with the pending object
-            if let Ok((_, interactive_pos, interactive, behavior, room_state)) =
-                q_interactives.get(pending.target_entity)
-            {
-                let distance = player_pos.distance(interactive_pos);
-                const INTERACTION_DISTANCE: f32 = 1.4;
+            // Check if player has reached the target position
+            let current = Vec2::new(player_pos.x, player_pos.y);
+            let target_pos = Vec2::new(move_target.position.x, move_target.position.y);
+            let to_target = target_pos - current;
 
-                debug!(
-                    "complete_pending_interaction_system: Distance to target: {:.2}, threshold: {:.2}",
-                    distance, INTERACTION_DISTANCE
-                );
+            const ARRIVAL_THRESHOLD: f32 = 0.1;
+            if to_target.length_squared() <= ARRIVAL_THRESHOLD * ARRIVAL_THRESHOLD {
+                debug!("complete_pending_interaction_system: Player reached target position");
 
-                if distance <= INTERACTION_DISTANCE {
-                    info!("complete_pending_interaction_system: Executing pending interaction");
+                // Player has reached the target, now check if we can interact
+                if let Ok((_, interactive_pos, interactive, behavior, room_state)) =
+                    q_interactives.get(interaction_target)
+                {
+                    let distance = player_pos.distance(interactive_pos);
+                    const INTERACTION_DISTANCE: f32 = 1.4;
 
-                    // Execute the interaction
-                    if interactive_stuff.execute_interaction(
-                        pending.target_entity,
-                        interactive_pos,
-                        Some(interactive),
-                        behavior,
-                        room_state,
-                        InteractionExecutionType::ChangeState,
-                    ) {
-                        ev_room.write(RoomChangedEvent::default());
-
-                        info!("complete_pending_interaction_system: Interaction executed.");
-                    }
-
-                    // Remove the pending interaction component
-                    commands
-                        .entity(player_entity)
-                        .remove::<PendingInteraction>();
-                } else {
                     debug!(
-                        "complete_pending_interaction_system: Still too far from target, waiting"
+                        "complete_pending_interaction_system: Distance to target: {:.2}, threshold: {:.2}",
+                        distance, INTERACTION_DISTANCE
                     );
-                }
-            } else {
-                warn!(
-                    "complete_pending_interaction_system: Target entity no longer exists or is invalid, cleaning up"
-                );
 
-                // Target entity no longer exists or is invalid, clean up
-                commands
-                    .entity(player_entity)
-                    .remove::<PendingInteraction>();
+                    if distance <= INTERACTION_DISTANCE {
+                        info!("complete_pending_interaction_system: Executing interaction");
+
+                        // Execute the interaction
+                        if interactive_stuff.execute_interaction(
+                            interaction_target,
+                            interactive_pos,
+                            Some(interactive),
+                            behavior,
+                            room_state,
+                            InteractionExecutionType::ChangeState,
+                        ) {
+                            ev_room.write(RoomChangedEvent::default());
+                            info!("complete_pending_interaction_system: Interaction executed.");
+                        }
+
+                        // Remove the MoveToTarget component (interaction is complete)
+                        commands.entity(player_entity).remove::<MoveToTarget>();
+                    } else {
+                        debug!(
+                            "complete_pending_interaction_system: Still too far from target after reaching position"
+                        );
+                        // This shouldn't normally happen, but clean up if it does
+                        commands.entity(player_entity).remove::<MoveToTarget>();
+                    }
+                } else {
+                    warn!(
+                        "complete_pending_interaction_system: Target entity no longer exists or is invalid, cleaning up"
+                    );
+                    // Target entity no longer exists or is invalid, clean up
+                    commands.entity(player_entity).remove::<MoveToTarget>();
+                }
             }
         }
     }

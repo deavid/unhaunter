@@ -19,7 +19,7 @@ pub fn manage_walk_target_indicator(
     if has_move_target && !indicator_exists {
         // Player has a move target but no indicator exists - spawn one
         if let Ok(move_target) = player_query.single() {
-            let target_position = move_target.0;
+            let target_position = move_target.position;
 
             commands
                 .spawn(Sprite {
@@ -43,10 +43,10 @@ pub fn manage_walk_target_indicator(
         // Player has a move target and the indicator exists - update indicator's position
         if let Ok(move_target) = move_target_exists_query.single() {
             if let Ok((_indicator_entity, mut indicator_position)) = indicator_query.single_mut() {
-                indicator_position.x = move_target.0.x;
-                indicator_position.y = move_target.0.y;
-                indicator_position.z = move_target.0.z;
-                indicator_position.global_z = move_target.0.global_z + 0.01;
+                indicator_position.x = move_target.position.x;
+                indicator_position.y = move_target.position.y;
+                indicator_position.z = move_target.position.z;
+                indicator_position.global_z = move_target.position.global_z + 0.01;
             }
         }
     }
