@@ -9,6 +9,7 @@ pub mod keyboard;
 pub mod mouse;
 pub mod movement;
 pub mod sanityhealth;
+pub mod walk_target_indicator;
 
 use bevy::prelude::*;
 use uncore::states::AppState;
@@ -26,6 +27,8 @@ pub(crate) fn app_setup(app: &mut App) {
             input::keyboard::keyboard_input_system,
             input::mouse_pathing::click_to_move_pathing_system,
             input::mouse_pathing::click_to_move_update_system,
+            // Walk target indicator system runs after move target updates
+            walk_target_indicator::manage_walk_target_indicator,
             // Mouse interaction systems
             input::mouse_interaction::mouse_interaction_system,
             input::mouse_interaction::complete_pending_interaction_system,

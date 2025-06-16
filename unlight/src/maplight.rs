@@ -245,7 +245,7 @@ fn apply_lighting(
         Query<(
             &Position,
             &mut Sprite,
-            Option<&SpriteType>,
+            &SpriteType,
             Option<&GhostSprite>,
             Option<&MapColor>,
             Option<&UVReactive>,
@@ -754,7 +754,7 @@ fn apply_lighting(
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
     for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma, _o_orb) in qt.iter_mut() {
-        let sprite_type = o_type.cloned().unwrap_or_default();
+        let sprite_type = o_type.clone();
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
         let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
