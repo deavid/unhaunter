@@ -1,4 +1,4 @@
-use bevy::{math::Vec2};
+use bevy::math::Vec2;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 

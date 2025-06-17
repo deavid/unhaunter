@@ -4,7 +4,7 @@
 //! allowing for significant performance improvements by reusing calculations
 //! for static elements in the map.
 
-use bevy::{ecs::entity::Entity};
+use bevy::ecs::entity::Entity;
 use bevy_platform::collections::HashMap;
 
 use crate::components::board::boardposition::BoardPosition;
