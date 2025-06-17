@@ -6,6 +6,10 @@
 * Flashlight visual enhanced for long range scan.
 * Clicking now will make the character walk towards the cursor.
 * Clicking nearby something activable/interactive, will also interact with it, as if it were the [E] key.
+* Right click will enable/disable right hand equipment, like the [R] key.
+* Scrollwheel on the mouse will cycle through inventory like [Q].
+* Walking around with mouse has pathfinding and indicators for waypoints. Works on stairs too.
+
 
 **Journal UI**
 
@@ -20,6 +24,8 @@
 **Fixes:**
 
 *  Fixed error on negative miasma pressure that got NaN into player position and direction, making the game randomly unplayable.
+*  Fix for random crash when expelling an entity (sound file format error)
+*  Fix collision bug when a door is closed on top of the player.
 *  WASM: Prevent accidental closing of the tab via Ctrl+W.
 
 

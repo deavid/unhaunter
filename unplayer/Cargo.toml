@@ -22,3 +22,4 @@ bevy-persistent = { workspace = true }
 rand = { workspace = true }
 fastapprox = { workspace = true }
 ordered-float = { workspace = true }
+ndarray = { workspace = true }

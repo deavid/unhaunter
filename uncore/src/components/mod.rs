@@ -21,3 +21,4 @@ pub mod summary_ui;
 pub mod truck;
 pub mod truck_ui;
 pub mod truck_ui_button;
+pub mod waypoint;

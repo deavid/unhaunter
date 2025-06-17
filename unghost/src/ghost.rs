@@ -316,7 +316,7 @@ pub enum RoarType {
 }
 
 impl RoarType {
-    pub fn get_sound(&self) -> String {
+    pub fn get_sound(&self) -> Option<String> {
         let roar_sounds = match self {
             RoarType::Full => vec![
                 "sounds/ghost-roar-1.ogg",
@@ -336,10 +336,12 @@ impl RoarType {
                 "sounds/ghost-snore-3.ogg",
                 "sounds/ghost-snore-4.ogg",
             ],
-            RoarType::None => vec![""],
+            RoarType::None => return None,
         };
-        let random_roar = roar_sounds[random_seed::rng().random_range(0..roar_sounds.len())];
-        random_roar.to_string()
+
+        roar_sounds
+            .get(random_seed::rng().random_range(0..roar_sounds.len()))
+            .map(|s| s.to_string())
     }
 
     pub fn get_volume(&self) -> f32 {
@@ -563,8 +565,7 @@ fn ghost_enrage(
             should_roar = RoarType::Snore;
         }
         if *last_roar > roar_time {
-            let roar_sound = should_roar.get_sound();
-            if !roar_sound.is_empty() {
+            if let Some(roar_sound) = should_roar.get_sound() {
                 gs.play_audio(roar_sound, should_roar.get_volume(), gpos);
                 *last_roar = 0.0;
             }
@@ -719,11 +720,15 @@ fn ghost_fade_out_system(
         if let Some(_ghost_sprite) = ghost_sprite {
             if !fade_out.roared {
                 // Play the first roar at 100% volume
-                gs.play_audio(RoarType::Full.get_sound(), 1.0, position);
+                if let Some(roar_sound) = RoarType::Full.get_sound() {
+                    gs.play_audio(roar_sound, 1.0, position);
+                }
                 fade_out.roared = true;
             } else if fade_out.timer.finished() {
                 // Play the second roar at a lower volume
-                gs.play_audio(RoarType::Full.get_sound(), 0.2, position);
+                if let Some(roar_sound) = RoarType::Full.get_sound() {
+                    gs.play_audio(roar_sound, 0.2, position);
+                }
 
                 // Despawn the entity
                 commands.entity(entity).despawn();
