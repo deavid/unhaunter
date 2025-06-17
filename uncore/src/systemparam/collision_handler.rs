@@ -70,6 +70,10 @@ impl CollisionHandler<'_> {
 
             if !cf.player_free && Self::ENABLE_COLLISION {
                 let dpos = npos.to_position().to_vec3() - pos.to_vec3();
+                if dpos.length() < Self::PILLAR_SZ + Self::PLAYER_SZ / 2.0 {
+                    delta += dpos.normalize_or_zero() * 0.1;
+                    warn!("DPOS LEN: {:?}", dpos);
+                }
                 let mut dapos = dpos.abs();
                 dapos.z = 0.0;
                 dapos.x -= Self::PILLAR_SZ;
