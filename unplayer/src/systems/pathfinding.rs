@@ -617,16 +617,20 @@ pub fn calculate_stair_waypoints(
                     (stair_pos.y - 2.0, stair_pos.y + 2.0)
                 } else {
                     // Going down: start at top, end at bottom + offset
-                    (stair_pos.y + 2.0, stair_pos.y - 2.0)
+                    // This one is possibly unused.
+                    panic!("this case should not happen")
+                    // dbg!(stair_pos.y + 1.0, stair_pos.y - 1.0)
                 }
             } else {
                 // Stairs go in negative Y direction (mirrored)
                 if stair_component.z > 0 {
                     // Going up: start at top, end at bottom + offset
-                    (stair_pos.y + 2.0, stair_pos.y - 2.0)
+                    // This one is possibly unused.
+                    panic!("this case should not happen")
+                    // dbg!(stair_pos.y + 1.0, stair_pos.y - 1.0)
                 } else {
                     // Going down: start at bottom, end at top + offset
-                    (stair_pos.y - 2.0, stair_pos.y + 2.0)
+                    (stair_pos.y + 1.0, stair_pos.y - 3.0)
                 }
             };
 
@@ -652,19 +656,21 @@ pub fn calculate_stair_waypoints(
                 // Stairs go in positive X direction (normal)
                 if stair_component.z > 0 {
                     // Going up: start at left, end at right + offset
-                    (stair_pos.x - 2.0, stair_pos.x + 2.0)
+                    // dbg!(stair_pos.x - 1.0, stair_pos.x + 1.0)
+                    panic!("this case should not happen")
                 } else {
                     // Going down: start at right, end at left + offset
-                    (stair_pos.x + 2.0, stair_pos.x - 2.0)
+                    dbg!(stair_pos.x - 1.0, stair_pos.x + 3.0)
                 }
             } else {
                 // Stairs go in negative X direction (mirrored)
                 if stair_component.z > 0 {
                     // Going up: start at right, end at left + offset
-                    (stair_pos.x + 2.0, stair_pos.x - 2.0)
+                    dbg!(stair_pos.x + 2.0, stair_pos.x - 2.0)
                 } else {
                     // Going down: start at left, end at right + offset
-                    (stair_pos.x - 2.0, stair_pos.x + 2.0)
+                    // dbg!(stair_pos.x - 1.0, stair_pos.x + 1.0)
+                    panic!("this case should not happen")
                 }
             };
 
