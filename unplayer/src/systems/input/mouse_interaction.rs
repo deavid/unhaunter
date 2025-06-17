@@ -5,7 +5,7 @@ use bevy::{
 };
 use uncore::{
     behavior::{Behavior, component::Interactive},
-    components::{board::position::Position, player_sprite::PlayerSprite},
+    components::{board::position::Position, game_config::GameConfig, player_sprite::PlayerSprite},
     resources::looking_gear::LookingGear,
 };
 use ungear::components::playergear::PlayerGear;
@@ -82,35 +82,69 @@ pub(crate) fn mouse_scroll_gear_system(
 ///
 /// This system updates the `HoverState` component of interactive entities
 /// when the mouse hovers over them, and resets the state when the mouse leaves.
+/// Only allows hover/click on interactive entities that are on the same floor as the player.
 pub(crate) fn mouse_hover_interactive_system(
     mut q_interactives: Query<(Entity, &Position, &mut Interactive, &Behavior)>,
+    q_player: Query<(&Position, &PlayerSprite)>,
+    game_config: Res<GameConfig>,
     mut hover_events: EventReader<Pointer<Over>>,
     mut exit_events: EventReader<Pointer<Out>>,
 ) {
+    // Find the active player's position
+    let player_pos = q_player.iter().find_map(|(pos, player)| {
+        if player.id == game_config.player_id {
+            Some(pos)
+        } else {
+            None
+        }
+    });
+
+    let Some(player_pos) = player_pos else {
+        return; // No active player found
+    };
+
+    let player_floor = player_pos.z.round() as i32;
+
     for over_event in hover_events.read() {
-        if let Ok((entity, _position, mut interactive, _behavior)) =
+        if let Ok((entity, position, mut interactive, _behavior)) =
             q_interactives.get_mut(over_event.target)
         {
-            // Mouse entered an interactive entity
-            info!(
-                "mouse_hover_interactive_system: Mouse entered interactive entity {:?}",
-                entity
-            );
-            interactive.hovered = true;
+            let interactive_floor = position.z.round() as i32;
+
+            // Only allow hover if the interactive is on the same floor as the player
+            if interactive_floor == player_floor {
+                // Mouse entered an interactive entity on the same floor
+                info!(
+                    "mouse_hover_interactive_system: Mouse entered interactive entity {:?} on floor {}",
+                    entity, interactive_floor
+                );
+                interactive.hovered = true;
+            } else {
+                // Interactive is on a different floor, ignore the hover
+                debug!(
+                    "mouse_hover_interactive_system: Ignoring hover on entity {:?} - player on floor {}, interactive on floor {}",
+                    entity, player_floor, interactive_floor
+                );
+            }
         }
     }
 
     for exit_event in exit_events.read() {
-        if let Ok((entity, _position, mut interactive, _behavior)) =
+        if let Ok((entity, position, mut interactive, _behavior)) =
             q_interactives.get_mut(exit_event.target)
         {
-            // Mouse exited an interactive entity
-            info!(
-                "mouse_hover_interactive_system: Mouse exited interactive entity {:?}",
-                entity
-            );
+            let interactive_floor = position.z.round() as i32;
 
-            interactive.hovered = false;
+            // Only process exit events for interactives on the same floor as the player
+            if interactive_floor == player_floor {
+                // Mouse exited an interactive entity on the same floor
+                info!(
+                    "mouse_hover_interactive_system: Mouse exited interactive entity {:?} on floor {}",
+                    entity, interactive_floor
+                );
+
+                interactive.hovered = false;
+            }
         }
     }
 }

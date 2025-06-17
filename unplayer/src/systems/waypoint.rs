@@ -19,6 +19,7 @@ use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive}
 
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
+/// Only allows clicks on interactive entities that are on the same floor as the player.
 pub fn waypoint_creation_system(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
@@ -53,6 +54,9 @@ pub fn waypoint_creation_system(
         return;
     };
 
+    // Find the active player's position and floor
+    let player_floor = player_pos.z.round() as i32;
+
     // Track if any interactive object was clicked via picking events
     let mut interactive_clicked = false;
 
@@ -67,6 +71,22 @@ pub fn waypoint_creation_system(
         if let Ok((interactive_entity, interactive_pos, _interactive, _behavior, _room_state)) =
             q_interactives.get(click_event.target)
         {
+            let interactive_floor = interactive_pos.z.round() as i32;
+
+            // Only allow clicks on interactives that are on the same floor as the player
+            if interactive_floor != player_floor {
+                debug!(
+                    "waypoint_creation_system: Ignoring click on interactive entity {:?} - player on floor {}, interactive on floor {}",
+                    interactive_entity, player_floor, interactive_floor
+                );
+                continue; // Skip this click
+            }
+
+            info!(
+                "waypoint_creation_system: Creating waypoint to interactive entity {:?} on floor {}",
+                interactive_entity, interactive_floor
+            );
+
             // Clear existing waypoints when creating new ones
             clear_player_waypoints(
                 &mut commands,
