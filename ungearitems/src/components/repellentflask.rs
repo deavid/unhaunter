@@ -5,6 +5,7 @@ use uncore::components::board::boardposition::BoardPosition;
 use uncore::components::board::mapcolor::MapColor;
 use uncore::components::board::{direction::Direction, position::Position};
 use uncore::components::repellent_particle::RepellentParticle;
+use uncore::components::sprite_type::SpriteType;
 use uncore::metric_recorder::SendMetric;
 use uncore::random_seed;
 use uncore::resources::board_data::BoardData;
@@ -142,7 +143,8 @@ impl GearUsable for RepellentFlask {
             .insert(MapColor {
                 color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
             })
-            .insert(RepellentParticle::new(liquid_content));
+            .insert(RepellentParticle::new(liquid_content))
+            .insert(SpriteType::Other);
     }
 
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
