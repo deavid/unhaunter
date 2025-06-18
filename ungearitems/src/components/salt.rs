@@ -9,7 +9,10 @@ use uncore::components::board::mapcolor::MapColor;
 use uncore::metric_recorder::SendMetric;
 use uncore::random_seed;
 use uncore::{
-    components::{board::position::Position, game::GameSprite, ghost_sprite::GhostSprite},
+    components::{
+        board::position::Position, game::GameSprite, ghost_sprite::GhostSprite,
+        sprite_type::SpriteType,
+    },
     types::gear::equipmentposition::EquipmentPosition,
 };
 
@@ -69,6 +72,7 @@ impl GearUsable for SaltData {
                 .insert(SaltPile)
                 .insert(GameSprite)
                 .insert(*pos)
+                .insert(SpriteType::Other)
                 .id();
             gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
         }
@@ -155,6 +159,7 @@ fn salt_pile_system(
                             30.0,
                             TimerMode::Once,
                         )))
+                        .insert(SpriteType::Other)
                         .id();
                 }
 

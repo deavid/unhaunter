@@ -14,6 +14,7 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::sprite_type::SpriteType;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
 use uncore::random_seed;
@@ -662,7 +663,8 @@ fn spawn_salty_trace(
         .insert(MapColor {
             color: css::DARK_GRAY.with_alpha(0.5).into(),
         })
-        .insert(GameSprite);
+        .insert(GameSprite)
+        .insert(SpriteType::Other);
 }
 
 fn ghost_fade_out_system(
@@ -713,7 +715,8 @@ fn ghost_fade_out_system(
                 .insert(SmokeParticleTimer(Timer::from_seconds(
                     5.0,
                     TimerMode::Once,
-                )));
+                )))
+                .insert(SpriteType::Other);
         }
 
         // Play roar sounds
