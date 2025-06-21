@@ -173,6 +173,7 @@ bevy_platform = { workspace = true }
 ordered-float = { workspace = true }
 walkdir = { workspace = true }
 anyhow = { workspace = true }
+bevy_kira_audio = "0.23.0"
 
 [[bin]]
 name = "unhaunter_game"
