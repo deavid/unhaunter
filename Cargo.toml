@@ -65,8 +65,55 @@ itertools = "0.14.0"
 dirs = "6.0"
 strum = { version = "0.27", features = ["derive"] }
 noise = { version = "0.9.0", features = ["std"] }
-bevy = { version = "0.16", features = ["jpeg", "serialize"] }
-bevy-persistent = { version = "0.8", features = ["all"] }
+
+bevy = { version = "0.16", features = [
+    "jpeg",
+    "serialize",
+    # default features that we do want (avoiding bevy_audio)
+    # "android-game-activity",
+    # "android_shared_stdcxx",
+    "animation",
+    "async_executor",
+    "bevy_asset",
+    # "bevy_audio",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_gilrs",
+    # "bevy_gizmos",
+    # "bevy_gltf",
+    "bevy_input_focus",
+    "bevy_log",
+    # "bevy_mesh_picking_backend",
+    # "bevy_pbr",
+    "bevy_picking",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_sprite",
+    "bevy_sprite_picking_backend",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_ui_picking_backend",
+    "bevy_window",
+    "bevy_winit",
+    "custom_cursor",
+    "default_font",
+    # "hdr",
+    "multi_threaded",
+    "png",
+    # "smaa_luts",
+    "std",
+    "sysinfo_plugin",
+    # "tonemapping_luts",
+    # "vorbis",
+    "webgl2",
+    "x11",
+], default-features = false }
+
+bevy-persistent = { version = "0.8", features = [
+    "ron",
+    "pretty",
+], default-features = false }
 bevy_platform = "0.16.1"
 bevy_framepace = "0.19"
 bevy_dylib = "0.16"
