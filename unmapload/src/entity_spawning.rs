@@ -5,13 +5,13 @@
 
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use bevy_kira_audio::prelude::*;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
 use uncore::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::focus_ring::FocusRing;
-use uncore::components::game::GameSound;
 use uncore::components::game::GameSprite;
 use uncore::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use uncore::components::ghost_breach::GhostBreach;
@@ -90,10 +90,7 @@ pub fn spawn_player(
             p.difficulty.0.player_gear.clone(),
         ))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
-        // Update the SpatialListener to use the ear offset from audio settings
-        .insert(SpatialListener::new(
-            -p.audio_settings.sound_output.to_ear_offset(),
-        ))
+        // Note: SpatialListener removed as bevy_kira_audio handles spatial audio differently
         .insert(SpriteType::Player)
         .insert(player_position)
         .insert(Direction::new_right())
@@ -213,9 +210,12 @@ pub fn spawn_ghosts(
         });
 }
 
-/// Spawns ambient sound entities for the game environment.
+/// Creates ambient sound entities with audio playback using bevy_kira_audio.
 ///
-/// This function creates audio entities for various ambient sounds:
+/// This function creates and stores the audio instance handles in the AmbientSoundInstances resource
+/// instead of creating entities with AudioPlayer components.
+///
+/// Spawns the following ambient sounds:
 /// - Background house sounds
 /// - Background street sounds
 /// - Heartbeat sounds
@@ -223,75 +223,53 @@ pub fn spawn_ghosts(
 ///
 /// # Arguments
 /// * `p` - System parameters containing asset server
-/// * `commands` - Command buffer for entity creation
-pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
+/// * `audio` - Audio resource for playing sounds
+/// * `ambient_instances` - Resource to store audio instance handles
+pub fn spawn_ambient_sounds(
+    p: &LoadLevelSystemParam,
+    audio: &Res<Audio>,
+    ambient_instances: &mut ResMut<uncore::resources::audio::AmbientSoundInstances>,
+) {
+    // Clear any existing instances
+    ambient_instances.instances.clear();
+
     // Spawn background house sound
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/background-noise-house-1.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::BackgroundHouse,
-        });
+    let house_handle = audio
+        .play(p.asset_server.load("sounds/background-noise-house-1.ogg"))
+        .looped()
+        .with_volume(0.00001)
+        .handle();
+    ambient_instances
+        .instances
+        .insert(SoundType::BackgroundHouse, house_handle);
 
     // Spawn background street sound
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/ambient-clean.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::BackgroundStreet,
-        });
+    let street_handle = audio
+        .play(p.asset_server.load("sounds/ambient-clean.ogg"))
+        .looped()
+        .with_volume(0.00001)
+        .handle();
+    ambient_instances
+        .instances
+        .insert(SoundType::BackgroundStreet, street_handle);
 
     // Spawn heartbeat sound
-    commands
-        .spawn(AudioPlayer::new(
-            p.asset_server.load("sounds/heartbeat-1.ogg"),
-        ))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::HeartBeat,
-        });
+    let heartbeat_handle = audio
+        .play(p.asset_server.load("sounds/heartbeat-1.ogg"))
+        .looped()
+        .with_volume(0.00001)
+        .handle();
+    ambient_instances
+        .instances
+        .insert(SoundType::HeartBeat, heartbeat_handle);
 
     // Spawn insane sound
-    commands
-        .spawn(AudioPlayer::new(p.asset_server.load("sounds/insane-1.ogg")))
-        .insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Loop,
-            volume: bevy::audio::Volume::Linear(0.00001),
-            speed: 1.0,
-            paused: false,
-            spatial: false,
-            spatial_scale: None,
-            ..default()
-        })
-        .insert(GameSound {
-            class: SoundType::Insane,
-        });
+    let insane_handle = audio
+        .play(p.asset_server.load("sounds/insane-1.ogg"))
+        .looped()
+        .with_volume(0.00001)
+        .handle();
+    ambient_instances
+        .instances
+        .insert(SoundType::Insane, insane_handle);
 }

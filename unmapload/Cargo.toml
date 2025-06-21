@@ -23,3 +23,4 @@ rand = { workspace = true }
 tiled = { workspace = true }
 ordered-float = { workspace = true }
 ndarray = { workspace = true }
+bevy_kira_audio = { workspace = true }

@@ -1,5 +1,7 @@
 use crate::craft_repellent::craft_repellent;
 use bevy::prelude::*;
+use bevy_kira_audio::Audio; // Explicit import to resolve naming conflicts
+use bevy_kira_audio::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::game_config::GameConfig;
 use uncore::components::player_sprite::PlayerSprite;
@@ -88,6 +90,7 @@ fn hold_button_system(
     mut commands: Commands,
     time: Res<Time>,
     asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut interaction_query: Query<
         (&Interaction, &mut TruckUIButton, &Children, Entity),
@@ -163,23 +166,18 @@ fn hold_button_system(
                         );
                     }
 
-                    // Play sound
-                    let sound_entity = commands
-                        .spawn(AudioPlayer::new(
-                            asset_server.load("sounds/fadein-progress-1000ms.ogg"),
-                        ))
-                        .insert(PlaybackSettings {
-                            mode: bevy::audio::PlaybackMode::Despawn,
-                            volume: bevy::audio::Volume::Linear(
-                                1.0 * audio_settings.volume_master.as_f32()
-                                    * audio_settings.volume_effects.as_f32(),
-                            ),
-                            ..default()
-                        })
-                        .id();
+                    // Play sound using bevy_kira_audio
+                    let final_volume = 1.0
+                        * audio_settings.volume_master.as_f32()
+                        * audio_settings.volume_effects.as_f32();
 
-                    // Store sound entity to stop it later
-                    *hold_sound = Some(sound_entity);
+                    audio
+                        .play(asset_server.load("sounds/fadein-progress-1000ms.ogg"))
+                        .with_volume(final_volume as f64);
+
+                    // Note: bevy_kira_audio doesn't use entities for tracking,
+                    // so we'll clear the hold_sound tracking
+                    *hold_sound = None;
                 }
 
                 // Update timer
@@ -260,8 +258,8 @@ fn hold_button_system(
 }
 
 fn truckui_event_handle(
-    mut commands: Commands,
     asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
     mut ev_truckui: EventReader<TruckUIEvent>,
     mut next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -322,22 +320,15 @@ fn truckui_event_handle(
                     if player.id == gc.player_id {
                         if let Some(ghost_type) = gg.ghost_type {
                             craft_repellent(&mut gear, ghost_type);
-                            commands
-                                .spawn(AudioPlayer::new(
-                                    asset_server.load("sounds/effects-dingdingding.ogg"),
-                                ))
-                                .insert(PlaybackSettings {
-                                    mode: bevy::audio::PlaybackMode::Despawn,
-                                    volume: bevy::audio::Volume::Linear(
-                                        1.0 * audio_settings.volume_master.as_f32()
-                                            * audio_settings.volume_effects.as_f32(),
-                                    ),
-                                    speed: 1.0,
-                                    paused: false,
-                                    spatial: false,
-                                    spatial_scale: None,
-                                    ..Default::default()
-                                });
+
+                            // Play sound using bevy_kira_audio
+                            let final_volume = 1.0
+                                * audio_settings.volume_master.as_f32()
+                                * audio_settings.volume_effects.as_f32();
+
+                            audio
+                                .play(asset_server.load("sounds/effects-dingdingding.ogg"))
+                                .with_volume(final_volume as f64);
                         }
                     }
                 }

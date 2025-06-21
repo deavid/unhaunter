@@ -2,6 +2,7 @@ use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
+use bevy_kira_audio::AudioPlugin;
 use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore::difficulty::CurrentDifficulty;
@@ -53,6 +54,8 @@ pub fn app_run(cli_options: CliOptions) {
                 ..default()
             }),
     )
+    // Add bevy_kira_audio plugin to replace the disabled bevy_audio
+    .add_plugins(AudioPlugin)
     .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,

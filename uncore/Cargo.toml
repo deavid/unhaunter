@@ -23,5 +23,6 @@ ordered-float = { workspace = true }
 itertools = { workspace = true }
 ndarray = { workspace = true }
 noise = { workspace = true }
+bevy_kira_audio = { workspace = true }
 
 unsettings = { path = "../unsettings" }

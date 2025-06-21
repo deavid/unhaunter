@@ -1,5 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
+use bevy_kira_audio::Audio; // Explicit import to resolve naming conflicts
+use bevy_kira_audio::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::platform::plt::VERSION;
 use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
@@ -45,6 +47,7 @@ pub struct MenuUILayout;
 #[derive(Component, Debug, Default)]
 pub struct MenuSound {
     despawn: bool,
+    instance_handle: Option<Handle<AudioInstance>>,
 }
 
 pub fn app_setup(app: &mut App) {
@@ -187,6 +190,7 @@ pub fn menu_event(
 pub fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
     mut q_sound: Query<&mut MenuSound>,
     app_state: Res<State<AppState>>,
     audio_settings: Res<Persistent<AudioSettings>>,
@@ -200,48 +204,47 @@ pub fn manage_title_song(
             menusound.despawn = false;
         }
     } else if should_play_song {
-        commands
-            .spawn(MenuSound::default())
-            .insert(AudioPlayer::<AudioSource>(
-                asset_server.load("music/unhaunter_intro.ogg"),
-            ))
-            .insert(PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::Linear(
-                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32(),
-                ),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-                ..default()
-            });
+        // Play looped music using bevy_kira_audio
+        let final_volume =
+            audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+
+        let instance_handle = audio
+            .play(asset_server.load("music/unhaunter_intro.ogg"))
+            .looped()
+            .with_volume(final_volume as f64)
+            .handle();
+
+        // Spawn a marker entity to track music state
+        commands.spawn(MenuSound {
+            despawn: false,
+            instance_handle: Some(instance_handle),
+        });
     }
 }
 
 pub fn despawn_sound(
     mut commands: Commands,
-    mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
+    mut qs: Query<(Entity, &mut MenuSound)>,
+    mut audio_instances: ResMut<Assets<AudioInstance>>,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
-    for (entity, mut sink, menusound) in &mut qs {
-        let vol = sink.volume().to_linear();
-        let v = if menusound.despawn {
-            vol / 1.02
-        } else {
-            let desired_vol =
-                audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
-            const STEPS: f32 = 120.0;
-            if vol < desired_vol / 2.0 {
-                vol * 1.02
-            } else {
-                (vol * STEPS + desired_vol) / (STEPS + 1.0)
+    for (entity, menusound) in &mut qs {
+        if let Some(instance_handle) = &menusound.instance_handle {
+            if let Some(instance) = audio_instances.get_mut(instance_handle) {
+                let desired_vol =
+                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+
+                if menusound.despawn {
+                    // Fade out and stop using default tween (which provides smooth transition)
+                    instance.set_volume(0.0, AudioTween::default());
+                    instance.stop(AudioTween::default());
+                    commands.entity(entity).despawn();
+                    info!("Song fading out and despawned");
+                } else {
+                    // Set volume to desired level with smooth transition
+                    instance.set_volume(desired_vol as f64, AudioTween::default());
+                }
             }
-        };
-        sink.set_volume(bevy::audio::Volume::Linear(v));
-        if v < 0.001 {
-            commands.entity(entity).despawn();
-            info!("Song despawned");
         }
     }
 }

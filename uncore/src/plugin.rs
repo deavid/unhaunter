@@ -1,4 +1,5 @@
 use crate::events::hint::OnScreenHintEvent;
+use crate::resources::audio::AmbientSoundInstances;
 use crate::resources::current_evidence_readings::CurrentEvidenceReadings;
 use crate::resources::hint_ui_state::HintUiState;
 use crate::resources::mission_select_mode::CurrentMissionSelectMode;
@@ -17,6 +18,7 @@ impl Plugin for UnhaunterCorePlugin {
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
         app.init_resource::<HintUiState>();
+        app.init_resource::<AmbientSoundInstances>();
         app.init_resource::<crate::noise::PerlinNoise>();
         app.init_resource::<crate::resources::player_input::PlayerInput>();
         app.add_event::<OnScreenHintEvent>();

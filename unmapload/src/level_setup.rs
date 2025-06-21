@@ -5,6 +5,7 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy_kira_audio::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
@@ -13,6 +14,7 @@ use uncore::components::game::{GameSound, GameSprite};
 use uncore::components::ghost_influence::InfluenceType;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
+use uncore::resources::audio::AmbientSoundInstances;
 use uncore::resources::board_data::BoardData;
 use uncore::resources::roomdb::RoomDB;
 use uncore::types::board::fielddata::{CollisionFieldData, LightFieldData};
@@ -85,6 +87,8 @@ fn load_level_handler(
     mut p: LoadLevelSystemParam,
     mut ev_level_ready: EventWriter<LevelReadyEvent>,
     time: Res<Time>,
+    audio: Res<Audio>,
+    mut ambient_instances: ResMut<AmbientSoundInstances>,
 ) {
     // Get the loaded event or return early if none
     let mut ev_iter = ev.read();
@@ -179,7 +183,7 @@ fn load_level_handler(
     p.roomdb.room_tiles.clear();
 
     // Spawn ambient sound entities
-    entity_spawning::spawn_ambient_sounds(&p, &mut commands);
+    entity_spawning::spawn_ambient_sounds(&p, &audio, &mut ambient_instances);
 
     // Initialize board data resource
     commands.init_resource::<BoardData>();

@@ -14,6 +14,7 @@ uncoremenu = { path = "../uncoremenu" }
 unprofile = { path = "../unprofile" }
 
 bevy = { workspace = true }
+bevy_kira_audio = { workspace = true }
 bevy-persistent = { workspace = true }
 enum-iterator = { workspace = true }
 anyhow.workspace = true

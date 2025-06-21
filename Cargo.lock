@@ -5299,6 +5299,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "bevy_platform",
  "enum-iterator",
  "fastapprox",
@@ -5365,6 +5366,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "enum-iterator",
  "fastapprox",
  "rand 0.9.1",
@@ -5514,6 +5516,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "bevy_platform",
  "fastapprox",
  "ndarray",
@@ -5556,6 +5559,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "bevy_platform",
  "ndarray",
  "ordered-float 5.0.0",
@@ -5576,6 +5580,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "enum-iterator",
  "serde",
  "uncore",
@@ -5709,6 +5714,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "bevy_platform",
  "enum-iterator",
  "fastapprox",
@@ -5729,6 +5735,7 @@ version = "0.3.0-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_kira_audio",
  "bevy_platform",
  "enum-iterator",
  "rand 0.9.1",

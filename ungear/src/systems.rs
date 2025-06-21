@@ -2,8 +2,9 @@ use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
 use crate::gear_stuff::GearStuff;
 use crate::gear_usable::GearUsable;
-use bevy::audio::SpatialScale;
 use bevy::prelude::*;
+use bevy_kira_audio::Audio; // Explicit import to resolve naming conflicts
+use bevy_kira_audio::prelude::*;
 use bevy_persistent::Persistent;
 use uncore::components::board::position::Position;
 use uncore::components::game_config::GameConfig;
@@ -60,7 +61,7 @@ fn sound_playback_system(
     asset_server: Res<AssetServer>,
     gc: Res<GameConfig>,
     qp: Query<(Entity, &Position, &PlayerSprite)>,
-    mut commands: Commands,
+    audio: Res<Audio>,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
@@ -82,30 +83,37 @@ fn sound_playback_system(
             adjusted_volume /= 1.0 + dist * 0.4;
         }
 
-        // Spawn an AudioBundle with the adjusted volume
+        // Calculate final volume with user settings
+        let final_volume = adjusted_volume
+            * audio_settings.volume_effects.as_f32()
+            * audio_settings.volume_master.as_f32();
 
-        let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
-            asset_server.load(sound_event.sound_file.clone()),
-        ));
-        sound.insert(PlaybackSettings {
-            mode: bevy::audio::PlaybackMode::Despawn,
-            volume: bevy::audio::Volume::Linear(
-                adjusted_volume
-                    * audio_settings.volume_effects.as_f32()
-                    * audio_settings.volume_master.as_f32(),
-            ),
-            speed: 1.0,
-            paused: false,
-            spatial: sound_event.position.is_some()
-                && audio_settings.sound_output != SoundOutput::Mono,
-            spatial_scale: Some(SpatialScale::new(0.005)),
-            ..default()
-        });
+        // Load the audio asset
+        let audio_handle = asset_server.load(sound_event.sound_file.clone());
 
+        // Play sound using bevy_kira_audio with builder pattern
         if let Some(position) = sound_event.position {
-            let mut spos_vec = position.to_screen_coord();
-            spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
-            sound.insert(Transform::from_translation(spos_vec));
+            let spatial_enabled =
+                sound_event.position.is_some() && audio_settings.sound_output != SoundOutput::Mono;
+
+            if spatial_enabled {
+                // Calculate panning based on position relative to player
+                let player_pos = player_position.to_screen_coord();
+                let sound_pos = position.to_screen_coord();
+                let relative_x = sound_pos.x - player_pos.x;
+
+                // Convert to panning value (-1.0 to 1.0)
+                let panning = (relative_x / 500.0).clamp(-1.0, 1.0) as f64;
+
+                audio
+                    .play(audio_handle)
+                    .with_volume(final_volume as f64)
+                    .with_panning(panning);
+            } else {
+                audio.play(audio_handle).with_volume(final_volume as f64);
+            }
+        } else {
+            audio.play(audio_handle).with_volume(final_volume as f64);
         }
     }
 }

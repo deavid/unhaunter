@@ -110,6 +110,8 @@ bevy = { version = "0.16", features = [
     "x11",
 ], default-features = false }
 
+bevy_kira_audio = "0.23.0"
+
 bevy-persistent = { version = "0.8", features = [
     "ron",
     "pretty",
