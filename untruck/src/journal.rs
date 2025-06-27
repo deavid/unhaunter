@@ -99,7 +99,8 @@ fn button_system(
     }
 
     // --- 2. UPDATE GHOSTGUESS RESOURCE ---
-    let possible_ghosts: Vec<GhostType> = GhostType::all()
+    let possible_ghosts: Vec<GhostType> = difficulty.0.ghost_set.as_vec()
+        .into_iter()
         .filter(|ghost_type| {
             let ghost_ev = ghost_type.evidences();
             let mut is_discarded = false;
