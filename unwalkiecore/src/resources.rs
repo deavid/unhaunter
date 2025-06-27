@@ -82,9 +82,9 @@ impl WalkiePlay {
 
         count += 1;
         let mut rng = random_seed::rng();
-        let max_dice_value = saved_count * saved_count.clamp(0, 10);
+        let max_dice_value = saved_count * saved_count.clamp(0, 4);
         let dice = rng.random_range(0..=max_dice_value);
-        if dice > 3 {
+        if dice > 1 {
             // Skip playing this event, played too many times.
             info!(
                 "WalkiePlay: skipped: {:?}  play dice: {}/{}",
