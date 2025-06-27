@@ -3,7 +3,6 @@ use bevy_platform::collections::HashSet;
 use std::any::Any;
 use uncore::components::repellent_particle::RepellentParticle;
 use uncore::difficulty::CurrentDifficulty;
-use uncore::resources::board_data::BoardData;
 use uncore::types::gear_kind::GearKind;
 use uncore::types::ghost::types::GhostType;
 use uncore::{
@@ -139,11 +138,7 @@ fn trigger_repellent_used_too_far_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
-    // Query for live ghost position
-    ghost_pos_query: Query<&Position, (With<GhostSprite>, Without<PlayerSprite>)>,
-    // Query GhostSprite component to get its spawn_point (breach_pos)
-    ghost_sprite_query: Query<&GhostSprite, Without<PlayerSprite>>,
-    board_data: Res<BoardData>, // Fallback for breach_pos if GhostSprite not available
+    ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
     mut prev_repellent_state: Local<PrevRepellentState>,
 ) {
     // 1. System Run Condition Checks
@@ -153,6 +148,12 @@ fn trigger_repellent_used_too_far_system(
     }
 
     let Ok((player_gear, player_pos)) = player_query.single() else {
+        prev_repellent_state.was_active = false;
+        return;
+    };
+
+    // 2. Get ghost data or return early if no ghost exists
+    let Ok((ghost_pos, ghost_sprite)) = ghost_query.single() else {
         prev_repellent_state.was_active = false;
         return;
     };
@@ -173,18 +174,12 @@ fn trigger_repellent_used_too_far_system(
 
     // 3. Check if repellent is active and player is too far
     if current_repellent_is_active {
-        // Determine target position for distance check
-        let target_pos: Position = ghost_pos_query
-            .single()
-            .copied() // Use live ghost position if available
-            .unwrap_or_else(|_| {
-                // Fallback: use ghost's spawn_point (breach)
-                ghost_sprite_query
-                    .single()
-                    .map(|gs| gs.spawn_point.to_position_center())
-                    .unwrap_or_else(|_| board_data.breach_pos) // Final fallback
-            });
+        let target_pos: Position = *ghost_pos;
 
+        if ghost_sprite.get_health() < 0.5 {
+            // Don't warn on this if the ghost is about to die.
+            return;
+        }
         let distance = player_pos.distance(&target_pos);
         let is_too_far = distance > EFFECTIVE_REPELLENT_RANGE;
 

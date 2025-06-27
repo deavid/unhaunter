@@ -70,7 +70,7 @@ impl WalkiePlay {
             .unwrap_or_default();
 
         if time - self.last_message_time
-            < (10.0 + count as f64 * 20.0 + saved_count as f64 * 2.0) * min_delay_mult
+            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0) * min_delay_mult
         {
             // Wait between messages
             return false;

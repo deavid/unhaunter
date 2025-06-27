@@ -521,7 +521,7 @@ impl WalkieEvent {
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
             WalkieEvent::ErraticMovementEarly => WalkieEventPriority::Urgent,
-            WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::High,
+            WalkieEvent::DoorInteractionHesitation => WalkieEventPriority::Medium,
             WalkieEvent::StrugglingWithGrabDrop => WalkieEventPriority::Medium,
             WalkieEvent::StrugglingWithHideUnhide => WalkieEventPriority::Medium,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
@@ -550,11 +550,11 @@ impl WalkieEvent {
             // --- Repellent and Expulsion ---
             WalkieEvent::GhostExpelledPlayerLingers => WalkieEventPriority::High,
             WalkieEvent::HasRepellentEntersLocation => WalkieEventPriority::Medium,
-            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::High,
-            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::High,
+            WalkieEvent::RepellentUsedTooFar => WalkieEventPriority::Medium,
+            WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieEventPriority::Medium,
             WalkieEvent::RepellentExhaustedGhostPresentCorrectType => WalkieEventPriority::Medium,
             WalkieEvent::GhostExpelledPlayerMissed => WalkieEventPriority::Medium,
-            WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::High,
+            WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieEventPriority::Medium,
             WalkieEvent::DidNotCycleToOtherGear => WalkieEventPriority::Medium,
             // --- Evidence Gathering ---
             WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieEventPriority::Low,
@@ -571,15 +571,15 @@ impl WalkieEvent {
             WalkieEvent::CPM500EvidenceConfirmed => WalkieEventPriority::VeryHigh,
 
             // --- Proactive Crafting Prompts ---
-            WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::High,
+            WalkieEvent::PotentialGhostIDWithNewEvidence => WalkieEventPriority::VeryHigh,
 
             // --- Mission Progression and Truck Events ---
             WalkieEvent::ClearEvidenceFoundNoActionCKey => WalkieEventPriority::VeryLow,
             WalkieEvent::ClearEvidenceFoundNoActionTruck => WalkieEventPriority::VeryLow,
             WalkieEvent::InTruckWithEvidenceNoJournal => WalkieEventPriority::Medium,
             WalkieEvent::HuntWarningNoPlayerEvasion => WalkieEventPriority::Urgent,
-            WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::High,
-            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::High,
+            WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieEventPriority::Medium,
+            WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => WalkieEventPriority::Medium,
         }
     }
     /// This function returns hint text to display to the player for various events.
