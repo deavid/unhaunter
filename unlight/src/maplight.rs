@@ -481,6 +481,13 @@ fn apply_lighting(
     for e in visible.iter() {
         if rng.random_range(0..100) < 15 {
             entities.push(e.to_owned());
+        } else if let Ok((_pos, _mat, _behavior, _vis, _o_ghost_influence, o_interactive)) =
+            qt2.get(*e)
+        {
+            // Ensure entities with hover state changes are always processed
+            if o_interactive.map(|x| x.hovered).unwrap_or_default() {
+                entities.push(*e);
+            }
         }
     }
 
