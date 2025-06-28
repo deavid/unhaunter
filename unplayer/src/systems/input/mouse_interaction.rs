@@ -114,7 +114,7 @@ pub(crate) fn mouse_hover_interactive_system(
             // Only allow hover if the interactive is on the same floor as the player
             if interactive_floor == player_floor {
                 // Mouse entered an interactive entity on the same floor
-                info!(
+                debug!(
                     "mouse_hover_interactive_system: Mouse entered interactive entity {:?} on floor {}",
                     entity, interactive_floor
                 );
@@ -138,7 +138,7 @@ pub(crate) fn mouse_hover_interactive_system(
             // Only process exit events for interactives on the same floor as the player
             if interactive_floor == player_floor {
                 // Mouse exited an interactive entity on the same floor
-                info!(
+                debug!(
                     "mouse_hover_interactive_system: Mouse exited interactive entity {:?} on floor {}",
                     entity, interactive_floor
                 );

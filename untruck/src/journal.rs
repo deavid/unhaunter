@@ -44,21 +44,39 @@ fn button_system(
     mut ev_force_discard: EventReader<ForceDiscardEvidenceEvent>,
 ) {
     // --- Handle ForceDiscardEvidenceEvents first ---
+    let mut force_discard_events = Vec::new();
     for event in ev_force_discard.read() {
-        println!(
+        force_discard_events.push(*event);
+        info!(
             "Journal: Received ForceDiscardEvidenceEvent for {:?}",
             event.0
         );
         for (_, _, _, _, mut tui_button) in interaction_query.iter_mut() {
             if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
                 if evidence_type == event.0 {
-                    println!(
-                        "Journal: Setting evidence {:?} button to Discard",
-                        evidence_type
+                    info!(
+                        "Journal: Setting evidence {:?} button from {:?} to Discard",
+                        evidence_type, tui_button.status
                     );
                     tui_button.status = TruckButtonState::Discard;
-                    // Potentially mark gg as changed if this directly affects it,
-                    // or ensure downstream logic correctly picks up this button state change.
+                    // Force mark the GhostGuess as changed to trigger update systems
+                    gg.set_changed();
+                }
+            }
+        }
+    }
+
+    // Debug: Only log the specific evidence button that was supposed to be discarded
+    if !force_discard_events.is_empty() {
+        for event in &force_discard_events {
+            for (_, _, _, _, tui_button) in interaction_query.iter() {
+                if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+                    if evidence_type == event.0 {
+                        info!(
+                            "Journal: Post-processing check: Evidence {:?} button status: {:?}",
+                            evidence_type, tui_button.status
+                        );
+                    }
                 }
             }
         }
@@ -112,6 +130,16 @@ fn button_system(
     // After handling clicks, now collect the final state of all evidence buttons
     for (_, _, _, _, tui_button) in &interaction_query {
         if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+            // Only log if we just processed a force discard event for this evidence
+            if force_discard_events
+                .iter()
+                .any(|event| event.0 == evidence_type)
+            {
+                info!(
+                    "Journal: Evidence {:?} button current status during collection: {:?}",
+                    evidence_type, tui_button.status
+                );
+            }
             match tui_button.status {
                 TruckButtonState::Pressed => {
                     selected_evidences_found.insert(evidence_type);
@@ -125,6 +153,32 @@ fn button_system(
     }
 
     // --- 2. UPDATE GHOSTGUESS RESOURCE ---
+
+    // Only log evidence states if there are changes or if we processed force discard events
+    let evidence_states_changed = gg.evidences_found != selected_evidences_found
+        || gg.evidences_missing != selected_evidences_missing;
+
+    if evidence_states_changed || !force_discard_events.is_empty() {
+        info!(
+            "Journal: Evidence found: {:?}, Evidence missing: {:?}",
+            selected_evidences_found, selected_evidences_missing
+        );
+    }
+
+    // Update the GhostGuess if there are changes
+    if evidence_states_changed {
+        info!(
+            "Journal: Updating evidences_found: {:?} -> {:?}",
+            gg.evidences_found, selected_evidences_found
+        );
+        info!(
+            "Journal: Updating evidences_missing: {:?} -> {:?}",
+            gg.evidences_missing, selected_evidences_missing
+        );
+        gg.evidences_found = selected_evidences_found.clone();
+        gg.evidences_missing = selected_evidences_missing.clone();
+    }
+
     let possible_ghosts: Vec<GhostType> = difficulty
         .0
         .ghost_set
@@ -254,17 +308,20 @@ fn button_system(
         textcolor.0 = current_text_color;
     }
 
-    // Update GhostGuess resource with the latest evidence sets (these might have changed)
-    if gg.evidences_found != selected_evidences_found {
-        println!(
-            "Journal: Updating evidences_found: {:?} -> {:?}",
+    // Update GhostGuess resource with the latest evidence sets (only if changed)
+    let final_found_changed = gg.evidences_found != selected_evidences_found;
+    let final_missing_changed = gg.evidences_missing != selected_evidences_missing;
+
+    if final_found_changed {
+        info!(
+            "Journal: Final update evidences_found: {:?} -> {:?}",
             gg.evidences_found, selected_evidences_found
         );
         gg.evidences_found = selected_evidences_found;
     }
-    if gg.evidences_missing != selected_evidences_missing {
-        println!(
-            "Journal: Updating evidences_missing: {:?} -> {:?}",
+    if final_missing_changed {
+        info!(
+            "Journal: Final update evidences_missing: {:?} -> {:?}",
             gg.evidences_missing, selected_evidences_missing
         );
         gg.evidences_missing = selected_evidences_missing;
@@ -298,6 +355,14 @@ fn button_system(
                 }
             }
         }
+    }
+
+    // Log final evidence state if any force discard events were processed
+    if !force_discard_events.is_empty() {
+        info!(
+            "Journal: Final GhostGuess evidences - Found: {:?}, Missing: {:?}",
+            gg.evidences_found, gg.evidences_missing
+        );
     }
 }
 

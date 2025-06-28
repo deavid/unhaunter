@@ -142,7 +142,7 @@ fn tmxmap_preload(
             } else {
                 display_name
             };
-            info!("Found map {display_name:?} at path {path:?}");
+            debug!("Found map {display_name:?} at path {path:?}");
 
             // Create mission_data if the map has relevant properties
             let mission_data = create_mission_data(tmx, &path);

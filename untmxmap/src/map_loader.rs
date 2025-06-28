@@ -20,7 +20,7 @@ impl<'a> tiled::ResourceReader for TmxMemoryReader<'a> {
         path: &std::path::Path,
     ) -> std::result::Result<Self::Resource, Self::Error> {
         let path = path.to_str().unwrap();
-        info!("Tiled - loading {path:?}");
+        debug!("Tiled - loading {path:?}");
         if let Some(map) = self.maps.maps.iter().find(|m| m.path == path) {
             let Some(map) = self.tmx_assets.get(&map.handle) else {
                 return Err(std::io::Error::new(

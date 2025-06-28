@@ -92,11 +92,15 @@ fn repellent_feedback_trigger_system(
 
                     // Attempt to play the walkie event
                     if walkie_play.set(walkie_event.clone(), time.elapsed_secs_f64()) {
-                        println!(
+                        info!(
                             "RepellentFeedback: Sending hint for evidence {:?} and forcing discard",
                             selected_evidence
                         );
                         ev_force_discard.write(ForceDiscardEvidenceEvent(selected_evidence));
+                        info!(
+                            "RepellentFeedback: Sent ForceDiscardEvidenceEvent for evidence {:?}",
+                            selected_evidence
+                        );
 
                         // Reset the stopwatch for this specific trigger
                         repellent_miss_stopwatch.reset();
