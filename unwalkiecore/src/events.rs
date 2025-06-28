@@ -5,6 +5,7 @@ use crate::generated::consumables_and_defense::ConsumablesAndDefenseConcept;
 use crate::generated::environmental_awareness::EnvironmentalAwarenessConcept;
 use crate::generated::evidence_gathering_and_logic::EvidenceGatheringAndLogicConcept;
 use crate::generated::ghost_behavior_and_hunting::GhostBehaviorAndHuntingConcept;
+use crate::generated::incorrect_repellent_hint::IncorrectRepellentHintConcept;
 use crate::generated::locomotion_and_interaction::LocomotionAndInteractionConcept;
 use crate::generated::player_wellbeing::PlayerWellbeingConcept;
 use crate::generated::repellent_and_expulsion::RepellentAndExpulsionConcept;
@@ -14,6 +15,7 @@ use bevy::log::warn;
 use bevy::prelude::Event;
 use enum_iterator::Sequence;
 use uncore::difficulty::Difficulty;
+use uncore::types::evidence::Evidence;
 use uncore::types::gear_kind::GearKind;
 use unwalkie_types::VoiceLineData;
 
@@ -194,6 +196,8 @@ pub enum WalkieEvent {
     AllObjectivesMetReminderToEndMission,
     /// Player leaves the truck without changing their loadout.
     PlayerLeavesTruckWithoutChangingLoadout,
+    /// Player is using the wrong repellent, hint to discard a specific evidence.
+    IncorrectRepellentHint(Evidence),
 }
 
 impl WalkieEvent {
@@ -201,6 +205,9 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => Box::new(Base1Concept::GearInVan),
             WalkieEvent::GhostNearHunt => Box::new(Base1Concept::GhostNearHunt),
+            WalkieEvent::IncorrectRepellentHint(evidence) => Box::new(
+                Self::evidence_to_incorrect_repellent_hint_concept(*evidence),
+            ),
             WalkieEvent::ChapterIntro(difficulty) => match difficulty {
                 Difficulty::TutorialChapter1 => {
                     Box::new(TutorialChapterIntrosConcept::TutorialChapter1Intro)
@@ -503,6 +510,7 @@ impl WalkieEvent {
             WalkieEvent::HuntWarningNoPlayerEvasion => 120.0 * count,
             WalkieEvent::AllObjectivesMetReminderToEndMission => 180.0 * count,
             WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => 120.0 * count,
+            WalkieEvent::IncorrectRepellentHint(_) => 10.0 * count,
         }
     }
 
@@ -515,6 +523,7 @@ impl WalkieEvent {
         match self {
             WalkieEvent::GearInVan => WalkieEventPriority::Low,
             WalkieEvent::GhostNearHunt => WalkieEventPriority::VeryLow,
+            WalkieEvent::IncorrectRepellentHint(_) => WalkieEventPriority::VeryHigh,
             WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
             WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryLow,
 
@@ -783,6 +792,44 @@ impl WalkieEvent {
             WalkieEvent::PlayerLeavesTruckWithoutChangingLoadout => {
                 "Remember to check the Loadout tab in the truck to equip different gear."
             }
+            WalkieEvent::IncorrectRepellentHint(evidence) => {
+                // This will be dynamically formatted by the caller or a helper.
+                // For now, return a generic placeholder or a format string.
+                // The actual formatting will happen in the trigger system or WalkiePlay.
+                // However, the plan asks for the formatted string here.
+                // Let's assume a helper function `format_evidence_name` exists for now.
+                Box::leak(
+                    format!(
+                        "Journal Updated: {} has been ruled out as a possibility.",
+                        evidence.name()
+                    )
+                    .into_boxed_str(),
+                )
+            }
+        }
+    }
+
+    /// Maps an Evidence enum to the corresponding IncorrectRepellentHintConcept variant
+    fn evidence_to_incorrect_repellent_hint_concept(
+        evidence: Evidence,
+    ) -> IncorrectRepellentHintConcept {
+        match evidence {
+            Evidence::FreezingTemp => {
+                IncorrectRepellentHintConcept::IncorrectRepellentHintFreezingTemp
+            }
+            Evidence::FloatingOrbs => {
+                IncorrectRepellentHintConcept::IncorrectRepellentHintFloatingOrbs
+            }
+            Evidence::UVEctoplasm => {
+                IncorrectRepellentHintConcept::IncorrectRepellentHintUVEctoplasm
+            }
+            Evidence::EMFLevel5 => IncorrectRepellentHintConcept::IncorrectRepellentHintEMFLevel5,
+            Evidence::EVPRecording => {
+                IncorrectRepellentHintConcept::IncorrectRepellentHintEVPRecording
+            }
+            Evidence::SpiritBox => IncorrectRepellentHintConcept::IncorrectRepellentHintSpiritBox,
+            Evidence::RLPresence => IncorrectRepellentHintConcept::IncorrectRepellentHintRLPresence,
+            Evidence::CPM500 => IncorrectRepellentHintConcept::IncorrectRepellentHintCPM500,
         }
     }
 }

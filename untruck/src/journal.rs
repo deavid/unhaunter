@@ -16,6 +16,10 @@ use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 
+/// Event to force discard an evidence type in the journal UI.
+#[derive(Event, Debug, Clone, Copy)]
+pub struct ForceDiscardEvidenceEvent(pub Evidence);
+
 fn button_system(
     mut interaction_query: Query<
         (
@@ -37,7 +41,29 @@ fn button_system(
     mut potential_id_timer: ResMut<PotentialIDTimer>,
     keyboard_input: Res<ButtonInput<KeyCode>>, // Add this resource
     difficulty: Res<CurrentDifficulty>,        // Add this parameter
+    mut ev_force_discard: EventReader<ForceDiscardEvidenceEvent>,
 ) {
+    // --- Handle ForceDiscardEvidenceEvents first ---
+    for event in ev_force_discard.read() {
+        println!(
+            "Journal: Received ForceDiscardEvidenceEvent for {:?}",
+            event.0
+        );
+        for (_, _, _, _, mut tui_button) in interaction_query.iter_mut() {
+            if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+                if evidence_type == event.0 {
+                    println!(
+                        "Journal: Setting evidence {:?} button to Discard",
+                        evidence_type
+                    );
+                    tui_button.status = TruckButtonState::Discard;
+                    // Potentially mark gg as changed if this directly affects it,
+                    // or ensure downstream logic correctly picks up this button state change.
+                }
+            }
+        }
+    }
+
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
     let mut clicked_ghost_type: Option<GhostType> = None;
@@ -99,7 +125,10 @@ fn button_system(
     }
 
     // --- 2. UPDATE GHOSTGUESS RESOURCE ---
-    let possible_ghosts: Vec<GhostType> = difficulty.0.ghost_set.as_vec()
+    let possible_ghosts: Vec<GhostType> = difficulty
+        .0
+        .ghost_set
+        .as_vec()
         .into_iter()
         .filter(|ghost_type| {
             let ghost_ev = ghost_type.evidences();
@@ -227,9 +256,17 @@ fn button_system(
 
     // Update GhostGuess resource with the latest evidence sets (these might have changed)
     if gg.evidences_found != selected_evidences_found {
+        println!(
+            "Journal: Updating evidences_found: {:?} -> {:?}",
+            gg.evidences_found, selected_evidences_found
+        );
         gg.evidences_found = selected_evidences_found;
     }
     if gg.evidences_missing != selected_evidences_missing {
+        println!(
+            "Journal: Updating evidences_missing: {:?} -> {:?}",
+            gg.evidences_missing, selected_evidences_missing
+        );
         gg.evidences_missing = selected_evidences_missing;
     }
 
@@ -280,8 +317,10 @@ fn ghost_guess_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, ghost_guess_system).add_systems(
-        FixedUpdate,
-        button_system.run_if(in_state(GameState::Truck)),
-    );
+    app.add_event::<ForceDiscardEvidenceEvent>()
+        .add_systems(Update, ghost_guess_system)
+        .add_systems(
+            FixedUpdate,
+            button_system.run_if(in_state(GameState::Truck)),
+        );
 }

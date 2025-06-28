@@ -5739,6 +5739,7 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.9.1",
+ "serde",
  "uncore",
  "unwalkie_types",
 ]

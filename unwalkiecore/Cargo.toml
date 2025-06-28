@@ -16,3 +16,4 @@ bevy = { workspace = true }
 bevy_platform = { workspace = true }
 enum-iterator = { workspace = true }
 rand = { workspace = true }
+serde = { workspace = true }
