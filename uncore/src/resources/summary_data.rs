@@ -61,7 +61,7 @@ impl SummaryData {
     pub fn calculate_score(&mut self) -> i64 {
         // Calculate base score without difficulty multiplier
         let mut base_score = (250.0 * self.ghosts_unhaunted as f64)
-            / (1.0 + self.repellent_used_amt as f64)
+            / (1.0 + self.repellent_used_amt.pow(2) as f64)
             / (1.0 + (self.ghost_types.len() as u32 - self.ghosts_unhaunted) as f64);
 
         // Sanity modifier
