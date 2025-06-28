@@ -154,10 +154,12 @@ impl GearUsable for RepellentFlask {
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
         !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
     }
-    fn do_fill_liquid(&mut self, ghost_type: GhostType) {
+    fn do_fill_liquid(&mut self, ghost_type: GhostType) -> bool {
+        let was_not_new = self.active || self.qty != Self::MAX_QTY;
         self.liquid_content = Some(ghost_type);
         self.active = false;
         self.qty = Self::MAX_QTY;
+        was_not_new
     }
 }
 

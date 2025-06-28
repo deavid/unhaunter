@@ -48,7 +48,10 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send + Any {
         false
     }
     /// Repellent fill
-    fn do_fill_liquid(&mut self, _ghost_type: GhostType) {}
+    /// returns true if the refill was done and consumed repellent (if the bottle was not full and unopened before)
+    fn do_fill_liquid(&mut self, _ghost_type: GhostType) -> bool {
+        false
+    }
 
     /// Quartz update helper
     fn aux_quartz_update(
