@@ -20,6 +20,10 @@ use crate::metrics;
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
+
+// Colors for repellent particles
+const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
+const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
 use std::ops::{Add, Mul};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
@@ -240,7 +244,18 @@ fn repellent_update(
         }
         let life_factor = rep.life_factor();
         let rev_factor = 1.01 - life_factor;
-        mapcolor.color.set_alpha(life_factor.cbrt() / 2.0 + 0.01);
+
+        // Handle color transition
+        let life_factor = rep.life_factor();
+        let alpha = life_factor.cbrt() / 2.0 + 0.01;
+
+        if rep.hit_correct {
+            mapcolor.color = ELECTRIC_BLUE.with_alpha(alpha.cbrt());
+        } else if rep.hit_incorrect {
+            mapcolor.color = BRIGHT_RED.with_alpha(alpha.cbrt());
+        } else {
+            mapcolor.color = RepellentParticle::DEFAULT_COLOR.with_alpha(alpha);
+        }
         let bpos = r_pos.to_board_position();
         let rr_pos = Position {
             x: r_pos.x + rng.random_range(-0.5..0.5),
@@ -325,8 +340,12 @@ fn repellent_update(
                 let dist2b = (dist2 + 1.0) * 2.0;
                 if ghost.class == rep.class {
                     ghost.repellent_hits_frame += dt * 50.2 / dist2b;
+                    // Correct repellent - turn electric blue
+                    rep.hit_correct = true;
                 } else {
+                    // Incorrect repellent - turn bright red
                     ghost.repellent_misses_frame += dt * 50.2 / dist2b;
+                    rep.hit_incorrect = true;
                 }
                 rep.life -= 20.0 * dt / dist2b;
                 // cmd.entity(entity).despawn();
