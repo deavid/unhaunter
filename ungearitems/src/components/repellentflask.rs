@@ -320,14 +320,15 @@ fn repellent_update(
             rep.life = 0.0;
         }
         for (g_pos, mut ghost) in &mut qgs {
-            let dist = g_pos.distance(&r_pos);
-            if dist < 1.5 {
+            let dist2 = g_pos.distance2(&r_pos);
+            if dist2 < 4.5 {
+                let dist2b = (dist2 + 1.0) * 2.0;
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += dt * 183.2 / (dist + 1.0);
+                    ghost.repellent_hits_frame += dt * 50.2 / dist2b;
                 } else {
-                    ghost.repellent_misses_frame += dt * 183.2 / (dist + 1.0);
+                    ghost.repellent_misses_frame += dt * 50.2 / dist2b;
                 }
-                rep.life -= 20.0 * dt;
+                rep.life -= 20.0 * dt / dist2b;
                 // cmd.entity(entity).despawn();
             }
         }
@@ -335,13 +336,27 @@ fn repellent_update(
     for (_pos, mut ghost) in &mut qgs {
         if ghost.repellent_hits_frame > 1.0 {
             ghost.repellent_hits += 1;
+            ghost.repellent_hits_delta = 1.0;
             ghost.repellent_hits_frame = 0.0;
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+        } else {
+            ghost.repellent_hits_delta -= dt;
+            ghost.repellent_hits_delta = ghost
+                .repellent_hits_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_hits_frame);
         }
         if ghost.repellent_misses_frame > 1.0 {
             ghost.repellent_misses += 1;
+            ghost.repellent_misses_delta = 1.0;
             ghost.repellent_misses_frame = 0.0;
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+        } else {
+            ghost.repellent_misses_delta -= dt;
+            ghost.repellent_misses_delta = ghost
+                .repellent_misses_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_misses_frame);
         }
     }
 

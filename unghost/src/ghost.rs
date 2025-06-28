@@ -811,6 +811,56 @@ fn calculate_weighted_distance_squared(ghost_pos: &Position, player_pos: &Positi
     dx * dx + dy * dy + dz * dz
 }
 
+/// Apply a visual "glitch" effect to ghosts by modifying their Transform scale
+/// This creates a visual indication of ghost instability without affecting position or movement
+fn ghost_scale_glitch_system(
+    time: Res<Time>,
+    mut q_ghost: Query<(&GhostSprite, &mut Transform), (With<GhostSprite>, Without<FadeOut>)>,
+) {
+    let mut rng = random_seed::rng();
+    let dt = time.delta_secs();
+
+    for (ghost, mut transform) in q_ghost.iter_mut() {
+        if ghost.repellent_hits_delta > 0.0 {
+            // Apply scale glitch based on repellent hits
+            let glitch_intensity = ghost.repellent_hits_delta.clamp(0.0, 1.0);
+
+            // Generate random scale variations
+            let scale_x = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8
+                - glitch_intensity * 0.2;
+            let scale_y = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8;
+            let scale_z = 1.0; // Keep Z scale consistent
+
+            // Apply the glitch scale
+            transform.scale = transform
+                .scale
+                .lerp(Vec3::new(scale_x, scale_y, scale_z), dt * 0.5);
+        } else if ghost.repellent_misses_delta > 0.0 {
+            let glitch_intensity = ghost.repellent_misses_delta.clamp(0.0, 1.0);
+            // Generate random scale variations
+            let scale_x = 1.0 + glitch_intensity * 0.15;
+            let scale_y = 1.0 + glitch_intensity * 0.1;
+            let scale_z = 1.0; // Keep Z scale consistent
+
+            // Apply the glitch scale
+            transform.scale = transform
+                .scale
+                .lerp(Vec3::new(scale_x, scale_y, scale_z), dt * 0.2);
+        } else {
+            // Restore normal scale when no glitch
+            if transform.scale != Vec3::ONE {
+                // Smoothly interpolate back to normal scale
+                transform.scale = transform.scale.lerp(Vec3::ONE, dt * 0.5);
+
+                // Snap to exactly 1.0 when very close to avoid floating point drift
+                if (transform.scale - Vec3::ONE).length() < 0.01 {
+                    transform.scale = Vec3::ONE;
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -819,6 +869,7 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_enrage,
             ghost_fade_out_system,
             update_ghost_warning_field,
+            ghost_scale_glitch_system,
             crate::systems::dynamic_behavior_update::update_ghost_behavior_dynamics_system,
         ),
     );

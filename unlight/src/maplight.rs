@@ -883,11 +883,27 @@ fn apply_lighting(
                     + ld.infrared)
                     .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
                 let srgba = dst_color
-                    .with_luminance((l * ld.visible - ld.infrared).clamp(0.0, 1.0))
+                    .with_luminance(
+                        (l * ld.visible - ld.infrared - gs.repellent_hits_delta * 3.0)
+                            .clamp(0.0, 1.0),
+                    )
                     .to_srgba();
+
+                let k_hit = (gs.repellent_hits_delta + gs.repellent_misses_delta)
+                    .clamp(0.0, 1.0)
+                    .cbrt();
+                opacity = opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
+
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl * 1.1 + e_infra / 3.0)
-                    .with_green(g * ld.visible + e_uv + e_rl + e_infra)
+                    .with_red(
+                        r * ld.visible
+                            + e_rl * 1.1
+                            + e_infra / 3.0
+                            + gs.repellent_misses_delta / 2.0,
+                    )
+                    .with_green(
+                        g * ld.visible + e_uv + e_rl + e_infra + gs.repellent_misses_delta / 2.5,
+                    )
                     .into();
             }
             smooth = 1.0;
