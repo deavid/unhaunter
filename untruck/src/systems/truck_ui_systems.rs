@@ -338,6 +338,9 @@ fn truckui_event_handle(
                                     spatial_scale: None,
                                     ..Default::default()
                                 });
+
+                            // Automatically exit the truck after crafting repellent
+                            game_next_state.set(GameState::None);
                         }
                     }
                 }
