@@ -63,6 +63,8 @@ impl WalkiePlay {
             }
         }
         let min_delay_mult = event.priority().time_factor() as f64;
+        let repeat_behavior = event.repeat_behavior();
+        let timing_mult = repeat_behavior.timing_multiplier();
         let saved_count = self
             .other_mission_event_count
             .get(&event)
@@ -70,7 +72,9 @@ impl WalkiePlay {
             .unwrap_or_default();
 
         if time - self.last_message_time
-            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0) * min_delay_mult
+            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0)
+                * min_delay_mult
+                * timing_mult
         {
             // Wait between messages
             return false;
@@ -83,12 +87,13 @@ impl WalkiePlay {
         count += 1;
         let mut rng = random_seed::rng();
         let max_dice_value = saved_count * saved_count.clamp(0, 4);
+        let dice_threshold = repeat_behavior.dice_threshold();
         let dice = rng.random_range(0..=max_dice_value);
-        if dice > 1 {
+        if dice > dice_threshold {
             // Skip playing this event, played too many times.
             info!(
-                "WalkiePlay: skipped: {:?}  play dice: {}/{}",
-                event, dice, max_dice_value
+                "WalkiePlay: skipped: {:?}  play dice: {}/{} (threshold: {})",
+                event, dice, max_dice_value, dice_threshold
             );
             let event_stats = self.played_events.entry(event).or_default();
             event_stats.last_played = time;
@@ -106,10 +111,8 @@ impl WalkiePlay {
         }
 
         warn!(
-            "WalkiePlay: {:?} - play dice: {}/{}",
-            event,
-            dice,
-            saved_count.pow(2)
+            "WalkiePlay: {:?} - play dice: {}/{} (threshold: {})",
+            event, dice, max_dice_value, dice_threshold
         );
         self.event = Some(event.clone());
         self.played_events.insert(
