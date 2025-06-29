@@ -3,46 +3,67 @@ title = "Beta Testing Release"
 path = "beta"
 template = "beta.html"
 [extra]
-beta_available = false
-beta_version = "v0.3.0"
+beta_available = true
+beta_version = "v0.3.1-beta1"
 +++
 
 ## New shiny things to test!
 
-**Beta 5**
+### Beta 1
 
-* New walkie talkie automatic generation tool
-* Added a ton of new voice lines and triggers for the walkie talkie buddy
-* Added new stats on how many times a voice line has been activated that are persisted on disk
-* Now the game reads the new stats to make voice lines to be less frequent as they've been presented before several times.
-* Added new hint system that goes along with the walkie talkie buddy
-* New focus vignette and indicator for Ghost and Breach to give visual aid to the player to find them.
-* Added proper Ghost Orbs that visually look like orbs.
+**Mouse Aiming**
 
-**Beta 4**
+* Now you can hover with the mouse around and the flashlight will follow.
+* Flashlight visual enhanced for long range scan.
+* Clicking now will make the character walk towards the cursor.
+* Clicking nearby something activable/interactive, will also interact with it, as if it were the [E] key.
+* Right click will enable/disable right hand equipment, like the [R] key.
+* Scrollwheel on the mouse will cycle through inventory like [Q].
+* Walking around with mouse has pathfinding and indicators for waypoints. Works on stairs too.
 
-* New Campaign mode
-* Player leveling up by gaining Score (EXP)
-* Unlock maps as you progress
-* Money system. Earn money and risk losing it when you die.
-* Grades and Badges for completing missions. Do it really well, get an A. Do it badly, get an F.
-* Reworked the old "New Game" menu into Custom Mission, simplified and more elegant.
+**Journal UI**
 
-**Beta 3**
+* Discard evidence hidden away, now the user has to Shift+Click.
+* Simpler, better Ghost filtering logic.
+* If only one ghost is possible, it auto-selects. If the ghost selected is no longer possible, it de-selects.
+* Improved UI element visibility with adjusted border thickness and padding.
+* Implemented repellent crafting limits and refund system based on difficulty level.
+* Player automatically exits truck after crafting repellent.
+* Added GrayMan to TmpEMFUVOrbs ghost set - now we have 6 ghosts for missions 4, 5 and 6.
 
-* 15 New maps! Can you conquer all of them?
+**Gameplay Improvements:**
 
-**Fix: Beta 2.1**
+* Miasma can now spread through half-walls and other see-through obstacles.
+* Temperature spreads more realistically through walls and obstacles, including through stairs.
+* Repellent particles now change color upon hitting ghosts (electric blue for correct, bright red for incorrect).
+* Smart hint system provides feedback for incorrect repellent usage.
+* Adjusted Temps/Geiger to be easier and more reliable to get.
 
-* Maps with 1 floor were not loading and crashing the game.
+**Walkie-Talkie System:**
 
-**Beta 2**
+* Ghost hunt warnings are now only triggered if the player is inside the location and the ghost is sufficiently healthy.
+* Walkie-talkie hints for player sanity and wellbeing are now more sensitive and frequent.
+* Increased repeat frequency for hints about crafting repellents when enough evidence is gathered.
+* Walkie event priority is reduced if messages have been played before to avoid repetition.
+* Adjusted timing and delays for better hint delivery.
 
-* Multi-floor support and stairs.
-* Controls are now fully configurable via config file. (User must edit file manually)
-* Flashlight is now more focused which aids the player to identify the flashlight is on.
+**UI/UX Enhancements:**
 
-**Beta 1**
+* Increased visible duration for hint UI messages.
+* Better camera reference point for improved player centering.
+* Adjusted flashlight lighting effect.
 
-* New design for the menu
-* The menu now works with the mouse as well as keyboard
+**Other:**
+
+* Bevy upgraded to version 0.16
+* Complete overhaul of the `ghost_list` CLI tool.
+
+**Fixes:**
+
+* Fixed error on negative miasma pressure that got NaN into player position and direction, making the game randomly unplayable.
+* Fix for random crash when expelling an entity (sound file format error)
+* Fix collision bug when a door is closed on top of the player.
+* WASM: Prevent accidental closing of the tab via Ctrl+W.
+* Fixed bug where ghost guess auto-selection wasn't always working properly.
+* Fixed ghost guess resource to use difficulty-specific ghost sets.
+* Fixed log spam when music volume setting was zero.
