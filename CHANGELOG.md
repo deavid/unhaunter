@@ -1,4 +1,4 @@
-### Version 0.3.1 - DEV
+### Version 0.3.1-beta1 - 2025-06-29
 
 **Mouse Aiming**
 
