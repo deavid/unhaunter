@@ -385,7 +385,23 @@ fn update_miasma(
             // }
 
             // Process each neighbor (up, down, left, right):
-            let neighbors = [bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
+            let mut neighbors = vec![bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
+
+            // Add stair connections for very strong miasma transmission
+            let cp = &board_data.collision_field[p];
+            if cp.stair_offset != 0 {
+                let stair_target_z = bpos.z + cp.stair_offset as i64;
+                if stair_target_z >= 0 && stair_target_z < board_data.map_size.2 as i64 {
+                    let stair_neighbor = BoardPosition {
+                        x: bpos.x,
+                        y: bpos.y,
+                        z: stair_target_z,
+                    };
+                    // Add stair neighbor - we'll handle the extra strength in the exchange calculation
+                    neighbors.push(stair_neighbor);
+                }
+            }
+
             let neighbors = neighbors
                 .into_iter()
                 .filter(|nb_pos| {
@@ -435,8 +451,15 @@ fn update_miasma(
                 let max_exchange_inwards = (-p2).min(p1) / 4.0; // Max negative exchange
 
                 let mut exchange = delta_pressure * diffusion_rate * dt / nb_len;
-                if !is_room {
-                    // Diffuse slower outside of rooms
+
+                // Check if this is a stair connection for super strong miasma flow
+                let is_stair_connection = neighbor_pos.z != bpos.z;
+                if is_stair_connection {
+                    // Miasma flows extremely strongly through stairs - like air
+                    // Use 100x stronger diffusion for stairs (increased from 50x)
+                    exchange = delta_pressure * diffusion_rate * dt * 100.0 / nb_len;
+                } else if !is_room {
+                    // Diffuse slower outside of rooms (only for non-stair connections)
                     exchange /= 10.0;
                 }
 
@@ -446,15 +469,18 @@ fn update_miasma(
                     .velocity_field
                     .get(p)
                     .unwrap_or(&Vec2::ZERO);
-                // Adjust exchange based on velocity components
-                if neighbor_pos == bpos.top() {
-                    exchange -= velocity.y * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.bottom() {
-                    exchange += velocity.y * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.left() {
-                    exchange -= velocity.x * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.right() {
-                    exchange += velocity.x * EXCHANGE_VEL_SCALE;
+                // Skip velocity adjustments for stair connections since they're vertical
+                if !is_stair_connection {
+                    // Adjust exchange based on velocity components
+                    if neighbor_pos == bpos.top() {
+                        exchange -= velocity.y * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.bottom() {
+                        exchange += velocity.y * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.left() {
+                        exchange -= velocity.x * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.right() {
+                        exchange += velocity.x * EXCHANGE_VEL_SCALE;
+                    }
                 }
 
                 exchange = exchange.clamp(max_exchange_inwards, max_exchange_outwards);
