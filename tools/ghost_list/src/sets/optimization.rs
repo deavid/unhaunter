@@ -381,12 +381,119 @@ pub fn handle_optimize_set_command(
         "Generating optimized set of size {} (balance_factor: {:?}, max_overlap: {:?})",
         size, balance_factor, max_overlap
     );
-    eprintln!("Optimize-set command logic not yet implemented.");
-    // TODO: Implement logic for optimize-set.
-    // This would likely iterate through combinations of ghosts of `size`.
-    // A specialized scoring function would be needed that incorporates `balance_factor`
-    // (e.g., how much to weigh even evidence distribution) and `max_overlap`
-    // (e.g., penalizing sets where ghosts share too many evidences, or too many ghosts share the same evidence).
+
+    if size == 0 {
+        eprintln!("Error: Set size must be greater than 0");
+        return;
+    }
+
+    let balance_weight = balance_factor.unwrap_or(0.5); // Default 50% weight on balance
+    let max_overlap_limit = max_overlap.unwrap_or(3); // Default max 3 shared evidences
+
+    let all_ghosts: Vec<GhostType> = all::<GhostType>().collect();
+
+    if size > all_ghosts.len() {
+        eprintln!(
+            "Error: Requested set size {} exceeds total number of ghosts {}",
+            size,
+            all_ghosts.len()
+        );
+        return;
+    }
+
+    println!(
+        "Optimizing for evidence balance (weight: {:.1}) and overlap control (max: {} shared evidences)...",
+        balance_weight, max_overlap_limit
+    );
+
+    let max_combinations_to_check = 50_000; // Reasonable limit for performance
+    let mut scored_sets: Vec<(HashSet<GhostType>, f32)> = Vec::new();
+
+    for (idx, ghost_combination) in all_ghosts.iter().combinations(size).enumerate() {
+        if idx >= max_combinations_to_check {
+            println!(
+                "⚠️  Reached combination limit of {}. Results may not be exhaustive.",
+                max_combinations_to_check
+            );
+            break;
+        }
+
+        let ghost_set: HashSet<GhostType> = ghost_combination.into_iter().cloned().collect();
+
+        // Check overlap constraint first (hard constraint)
+        if violates_overlap_constraint(&ghost_set, max_overlap_limit) {
+            continue;
+        }
+
+        // Calculate optimization score
+        let score = calculate_optimization_score(&ghost_set, balance_weight);
+
+        if score > 0.0 {
+            scored_sets.push((ghost_set, score));
+        }
+    }
+
+    if scored_sets.is_empty() {
+        println!("❌ No sets found meeting the optimization criteria.");
+        return;
+    }
+
+    // Sort by score (higher is better)
+    scored_sets.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+    // Show top results
+    let num_to_show = scored_sets.len().min(10);
+    println!(
+        "\n✅ Found {} optimized set(s). Showing top {}:",
+        scored_sets.len(),
+        num_to_show
+    );
+
+    println!("| Rank | Score | Ghosts | Balance Score | Overlap Score |");
+    println!("|------|-------|--------|---------------|---------------|");
+
+    for (rank, (ghost_set, total_score)) in scored_sets.iter().take(num_to_show).enumerate() {
+        let ghost_names: Vec<&str> = ghost_set.iter().map(|g| g.name()).sorted().collect();
+        let balance_score = calculate_balance_score(ghost_set);
+        let overlap_score = calculate_overlap_score(ghost_set);
+
+        println!(
+            "| {} | {:.1} | {} | {:.1} | {:.1} |",
+            rank + 1,
+            total_score,
+            ghost_names.join(", "),
+            balance_score,
+            overlap_score
+        );
+    }
+
+    // Show detailed analysis for the best set
+    if let Some((best_set, best_score)) = scored_sets.first() {
+        println!("\n📋 Best Optimized Set Analysis:");
+        println!("  Total Score: {:.1}", best_score);
+
+        // Evidence analysis
+        let all_evidences_in_set = get_all_evidences_in_set(best_set);
+        println!(
+            "  Evidence Types Used: {} of {}",
+            all_evidences_in_set.len(),
+            all::<Evidence>().count()
+        );
+
+        let evidence_names: Vec<&str> = all_evidences_in_set
+            .iter()
+            .map(|e| e.name())
+            .sorted()
+            .collect();
+        println!("  Evidences: {}", evidence_names.join(", "));
+
+        // Ghost details
+        println!("\n  Ghost Details:");
+        for ghost in best_set.iter().sorted_by_key(|g| g.name()) {
+            let ghost_evidences: Vec<&str> = ghost.evidences().iter().map(|e| e.name()).collect();
+            println!("    • {}: {}", ghost.name(), ghost_evidences.join(", "));
+        }
+    }
 }
 
 pub fn handle_diverse_set_command(size: usize, min_evidence_coverage: Option<usize>) {
@@ -394,11 +501,129 @@ pub fn handle_diverse_set_command(size: usize, min_evidence_coverage: Option<usi
         "Generating diverse set of size {} (min_evidence_coverage: {:?})",
         size, min_evidence_coverage
     );
-    eprintln!("Diverse-set command logic not yet implemented.");
-    // TODO: Implement logic for diverse-set.
-    // This would iterate through combinations of ghosts of `size`.
-    // Scoring would prioritize maximizing the number of unique evidence types present across all ghosts in the set.
-    // `min_evidence_coverage` would be a threshold for this score or a filter.
+
+    let all_ghosts: Vec<GhostType> = all::<GhostType>().collect();
+    let all_evidence_types: Vec<Evidence> = all::<Evidence>().collect();
+
+    if size == 0 {
+        eprintln!("Error: Set size must be greater than 0");
+        return;
+    }
+
+    if size > all_ghosts.len() {
+        eprintln!(
+            "Error: Set size {} is larger than total available ghosts ({})",
+            size,
+            all_ghosts.len()
+        );
+        return;
+    }
+
+    let min_coverage = min_evidence_coverage.unwrap_or(all_evidence_types.len() / 2);
+    println!(
+        "Finding sets that cover at least {} unique evidence types...\n",
+        min_coverage
+    );
+
+    let mut best_sets: Vec<(HashSet<GhostType>, usize)> = Vec::new();
+    let mut max_diversity_found = 0;
+
+    // We'll check a reasonable number of combinations to avoid performance issues
+    let max_combinations_to_check = 10_000;
+    let mut combinations_checked = 0;
+
+    for combination in all_ghosts.iter().combinations(size) {
+        if combinations_checked >= max_combinations_to_check {
+            break;
+        }
+        combinations_checked += 1;
+
+        let ghost_set: HashSet<GhostType> = combination.into_iter().cloned().collect();
+        let diversity_score = calculate_evidence_diversity(&ghost_set);
+
+        // Only consider sets that meet minimum coverage requirement
+        if diversity_score >= min_coverage {
+            if diversity_score > max_diversity_found {
+                max_diversity_found = diversity_score;
+                best_sets.clear();
+                best_sets.push((ghost_set, diversity_score));
+            } else if diversity_score == max_diversity_found {
+                best_sets.push((ghost_set, diversity_score));
+            }
+        }
+    }
+
+    if best_sets.is_empty() {
+        println!(
+            "❌ No sets found that meet the minimum evidence coverage of {} types.",
+            min_coverage
+        );
+        println!("💡 Try lowering --min-evidence-coverage or increasing --size");
+        return;
+    }
+
+    // Sort by additional criteria (e.g., alphabetical for consistency)
+    best_sets.sort_by(|(set_a, _), (set_b, _)| {
+        let names_a: Vec<&str> = set_a.iter().map(|g| g.name()).sorted().collect();
+        let names_b: Vec<&str> = set_b.iter().map(|g| g.name()).sorted().collect();
+        names_a.cmp(&names_b)
+    });
+
+    // Show top results (limit to avoid spam)
+    let max_results = 5.min(best_sets.len());
+
+    println!(
+        "✅ Found {} diverse set(s) with maximum coverage of {} evidence types:",
+        best_sets.len(),
+        max_diversity_found
+    );
+    println!("| Set | Ghosts | Evidence Types Covered |");
+    println!("|-----|--------|-----------------------|");
+
+    for (i, (ghost_set, diversity)) in best_sets.iter().take(max_results).enumerate() {
+        let ghost_names: Vec<&str> = ghost_set.iter().map(|g| g.name()).sorted().collect();
+        let covered_evidence = get_evidence_types_covered(ghost_set.clone());
+        let evidence_names: Vec<&str> =
+            covered_evidence.iter().map(|e| e.name()).sorted().collect();
+
+        println!(
+            "| {} | {} | {} ({}) |",
+            i + 1,
+            ghost_names.join(", "),
+            evidence_names.join(", "),
+            diversity
+        );
+    }
+
+    if best_sets.len() > max_results {
+        println!(
+            "\n... and {} more sets with the same diversity score",
+            best_sets.len() - max_results
+        );
+    }
+
+    if combinations_checked >= max_combinations_to_check {
+        println!(
+            "\n⚠️  Note: Only checked {} combinations due to performance limits.",
+            max_combinations_to_check
+        );
+        println!("Results may not be exhaustive for larger set sizes.");
+    }
+}
+
+fn calculate_evidence_diversity(ghost_set: &HashSet<GhostType>) -> usize {
+    let covered_evidence = get_evidence_types_covered(ghost_set.clone());
+    covered_evidence.len()
+}
+
+fn get_evidence_types_covered(ghost_set: HashSet<GhostType>) -> HashSet<Evidence> {
+    let mut covered_evidence = HashSet::new();
+    for ghost in ghost_set {
+        for evidence in ghost.evidences() {
+            covered_evidence.insert(evidence);
+        }
+    }
+    covered_evidence
 }
 
 pub fn handle_tutorial_set_command(size: usize, beginner_friendly: bool) {
@@ -406,10 +631,292 @@ pub fn handle_tutorial_set_command(size: usize, beginner_friendly: bool) {
         "Generating tutorial set of size {} (beginner_friendly: {})",
         size, beginner_friendly
     );
-    eprintln!("Tutorial-set command logic not yet implemented.");
-    // TODO: Implement logic for tutorial-set.
-    // "beginner_friendly" is subjective. Could mean:
-    // - Prioritizing ghosts with very common / distinct evidences.
-    // - Ensuring high identifiability (e.g., using `is_set_uniquely_identifiable` with a low evidence count).
-    // - Could use a predefined list of "easy" evidences or ghost characteristics.
+
+    let all_ghosts: Vec<GhostType> = all::<GhostType>().collect();
+
+    if size == 0 {
+        eprintln!("Error: Set size must be greater than 0");
+        return;
+    }
+
+    if size > all_ghosts.len() {
+        eprintln!(
+            "Error: Set size {} is larger than total available ghosts ({})",
+            size,
+            all_ghosts.len()
+        );
+        return;
+    }
+
+    // Define "beginner-friendly" criteria
+    let beginner_evidences = if beginner_friendly {
+        // These are relatively common and easy to understand evidence types
+        vec![
+            "EMF Level 5",
+            "Freezing Temps",
+            "Spirit Box",
+            "UV Ectoplasm",
+        ]
+    } else {
+        // Include all evidence types for advanced tutorial sets
+        all::<Evidence>().map(|e| e.name()).collect()
+    };
+
+    println!(
+        "Criteria: {} evidence types, uniqueness required",
+        if beginner_friendly {
+            "beginner-friendly"
+        } else {
+            "all"
+        }
+    );
+
+    let mut suitable_sets: Vec<(HashSet<GhostType>, f32)> = Vec::new();
+    let max_combinations_to_check = 5_000; // Reduced for tutorial sets
+    let mut combinations_checked = 0;
+
+    for combination in all_ghosts.iter().combinations(size) {
+        if combinations_checked >= max_combinations_to_check {
+            break;
+        }
+        combinations_checked += 1;
+
+        let ghost_set: HashSet<GhostType> = combination.into_iter().cloned().collect();
+
+        // Score the set for tutorial suitability
+        let tutorial_score =
+            calculate_tutorial_score(&ghost_set, &beginner_evidences, beginner_friendly);
+
+        // Only consider sets with a reasonable score
+        if tutorial_score > 0.0 {
+            suitable_sets.push((ghost_set, tutorial_score));
+        }
+    }
+
+    if suitable_sets.is_empty() {
+        println!("❌ No suitable tutorial sets found with the given criteria.");
+        println!("💡 Try adjusting --size or disable --beginner-friendly for more options");
+        return;
+    }
+
+    // Sort by tutorial score (higher is better)
+    suitable_sets.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    let max_results = 5.min(suitable_sets.len());
+
+    println!(
+        "\n✅ Found {} suitable tutorial set(s):",
+        suitable_sets.len()
+    );
+    println!("| Rank | Score | Ghosts | Key Evidence Types |");
+    println!("|------|-------|--------|--------------------|");
+
+    for (i, (ghost_set, score)) in suitable_sets.iter().take(max_results).enumerate() {
+        let ghost_names: Vec<&str> = ghost_set.iter().map(|g| g.name()).sorted().collect();
+        let covered_evidence = get_evidence_types_covered(ghost_set.clone());
+        let beginner_evidence_count = covered_evidence
+            .iter()
+            .filter(|e| beginner_evidences.contains(&e.name()))
+            .count();
+
+        println!(
+            "| {} | {:.1} | {} | {}/{} beginner-friendly |",
+            i + 1,
+            score,
+            ghost_names.join(", "),
+            beginner_evidence_count,
+            beginner_evidences.len()
+        );
+    }
+
+    if suitable_sets.len() > max_results {
+        println!(
+            "\n... and {} more suitable sets",
+            suitable_sets.len() - max_results
+        );
+    }
+
+    // Show details for the top set
+    if let Some((best_set, _)) = suitable_sets.first() {
+        println!("\n📋 Best Tutorial Set Details:");
+        for ghost in best_set.iter().sorted_by_key(|g| g.name()) {
+            let evidences: Vec<&str> = ghost.evidences().iter().map(|e| e.name()).collect();
+            let beginner_count = evidences
+                .iter()
+                .filter(|e| beginner_evidences.contains(e))
+                .count();
+            println!(
+                "  • {}: {} ({}/{} beginner-friendly)",
+                ghost.name(),
+                evidences.join(", "),
+                beginner_count,
+                evidences.len()
+            );
+        }
+    }
+
+    if combinations_checked >= max_combinations_to_check {
+        println!(
+            "\n⚠️  Note: Only checked {} combinations due to performance limits.",
+            max_combinations_to_check
+        );
+    }
+}
+
+fn calculate_tutorial_score(
+    ghost_set: &HashSet<GhostType>,
+    beginner_evidences: &[&str],
+    beginner_friendly: bool,
+) -> f32 {
+    let mut score = 0.0;
+
+    // Check uniqueness first - essential for tutorials
+    let all_evidence: HashSet<Evidence> = all::<Evidence>().collect();
+    if !is_set_uniquely_identifiable(ghost_set, &all_evidence) {
+        return 0.0; // Not suitable if not uniquely identifiable
+    }
+
+    score += 50.0; // Base score for uniqueness
+
+    // Count beginner-friendly evidence coverage
+    let covered_evidence = get_evidence_types_covered(ghost_set.clone());
+    let beginner_evidence_count = covered_evidence
+        .iter()
+        .filter(|e| beginner_evidences.contains(&e.name()))
+        .count();
+
+    if beginner_friendly {
+        // Higher score for more beginner-friendly evidence types
+        score += (beginner_evidence_count as f32 / beginner_evidences.len() as f32) * 30.0;
+
+        // Bonus if all beginner evidences are covered
+        if beginner_evidence_count == beginner_evidences.len() {
+            score += 20.0;
+        }
+
+        // Penalty for complex evidence types
+        let complex_evidences = ["500+ cpm", "RL Presence", "Floating Orbs"];
+        let complex_count = covered_evidence
+            .iter()
+            .filter(|e| complex_evidences.contains(&e.name()))
+            .count();
+        score -= complex_count as f32 * 5.0;
+    } else {
+        // For advanced tutorials, reward evidence diversity
+        score += covered_evidence.len() as f32 * 3.0;
+    }
+
+    // Bonus for good evidence distribution across ghosts
+    let evidence_per_ghost: Vec<usize> = ghost_set.iter().map(|g| g.evidences().len()).collect();
+    let avg_evidence = evidence_per_ghost.iter().sum::<usize>() as f32 / ghost_set.len() as f32;
+
+    // Prefer sets where ghosts have similar amounts of evidence (more balanced)
+    let variance: f32 = evidence_per_ghost
+        .iter()
+        .map(|&count| (count as f32 - avg_evidence).powi(2))
+        .sum::<f32>()
+        / ghost_set.len() as f32;
+    score -= variance; // Lower variance = higher score
+
+    score.max(0.0)
+}
+
+// Helper functions for optimize-set command
+
+fn violates_overlap_constraint(ghost_set: &HashSet<GhostType>, max_overlap: usize) -> bool {
+    let ghosts: Vec<&GhostType> = ghost_set.iter().collect();
+
+    // Check every pair of ghosts for evidence overlap
+    for i in 0..ghosts.len() {
+        for j in (i + 1)..ghosts.len() {
+            let ghost1_evidence: HashSet<Evidence> = ghosts[i].evidences().into_iter().collect();
+            let ghost2_evidence: HashSet<Evidence> = ghosts[j].evidences().into_iter().collect();
+
+            let overlap_count = ghost1_evidence.intersection(&ghost2_evidence).count();
+            if overlap_count > max_overlap {
+                return true; // Constraint violated
+            }
+        }
+    }
+    false
+}
+
+fn calculate_optimization_score(ghost_set: &HashSet<GhostType>, balance_weight: f32) -> f32 {
+    let balance_score = calculate_balance_score(ghost_set);
+    let overlap_score = calculate_overlap_score(ghost_set);
+
+    // Weighted combination of balance and overlap scores
+    balance_weight * balance_score + (1.0 - balance_weight) * overlap_score
+}
+
+fn calculate_balance_score(ghost_set: &HashSet<GhostType>) -> f32 {
+    // Calculate how evenly distributed the evidences are across the set
+    let mut evidence_counts: HashMap<Evidence, usize> = HashMap::new();
+
+    for ghost in ghost_set {
+        for evidence in ghost.evidences() {
+            *evidence_counts.entry(evidence).or_insert(0) += 1;
+        }
+    }
+
+    if evidence_counts.is_empty() {
+        return 0.0;
+    }
+
+    // Calculate the variance in evidence usage
+    let total_evidence_instances: usize = evidence_counts.values().sum();
+    let avg_usage = total_evidence_instances as f32 / evidence_counts.len() as f32;
+
+    let variance: f32 = evidence_counts
+        .values()
+        .map(|&count| (count as f32 - avg_usage).powi(2))
+        .sum::<f32>()
+        / evidence_counts.len() as f32;
+
+    // Convert variance to a score (lower variance = higher score)
+    // Use exponential decay to heavily penalize high variance
+    (-variance / 2.0).exp() * 100.0
+}
+
+fn calculate_overlap_score(ghost_set: &HashSet<GhostType>) -> f32 {
+    let ghosts: Vec<&GhostType> = ghost_set.iter().collect();
+    let mut total_overlap = 0;
+    let mut total_pairs = 0;
+
+    // Calculate average pairwise overlap
+    for i in 0..ghosts.len() {
+        for j in (i + 1)..ghosts.len() {
+            let ghost1_evidence: HashSet<Evidence> = ghosts[i].evidences().into_iter().collect();
+            let ghost2_evidence: HashSet<Evidence> = ghosts[j].evidences().into_iter().collect();
+
+            let overlap_count = ghost1_evidence.intersection(&ghost2_evidence).count();
+            total_overlap += overlap_count;
+            total_pairs += 1;
+        }
+    }
+
+    if total_pairs == 0 {
+        return 100.0; // Single ghost has perfect overlap score
+    }
+
+    let avg_overlap = total_overlap as f32 / total_pairs as f32;
+
+    // Score based on optimal overlap (around 2-3 shared evidences per pair)
+    let optimal_overlap = 2.5;
+    let deviation = (avg_overlap - optimal_overlap).abs();
+
+    // Exponential decay for deviation from optimal
+    (-deviation).exp() * 100.0
+}
+
+fn get_all_evidences_in_set(ghost_set: &HashSet<GhostType>) -> HashSet<Evidence> {
+    let mut all_evidences = HashSet::new();
+
+    for ghost in ghost_set {
+        for evidence in ghost.evidences() {
+            all_evidences.insert(evidence);
+        }
+    }
+
+    all_evidences
 }
