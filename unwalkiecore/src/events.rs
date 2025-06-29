@@ -69,11 +69,11 @@ impl WalkieRepeatBehavior {
     /// Returns the minimum delay multiplier for within-mission timing
     pub fn timing_multiplier(&self) -> f64 {
         match self {
-            WalkieRepeatBehavior::VeryLowRepeat => 3.0, // Much longer delays
-            WalkieRepeatBehavior::LowRepeat => 2.0,     // Longer delays
-            WalkieRepeatBehavior::NormalRepeat => 1.0,  // Default timing
-            WalkieRepeatBehavior::HighRepeat => 0.7,    // Shorter delays
-            WalkieRepeatBehavior::AlwaysRepeat => 0.5,  // Much shorter delays
+            WalkieRepeatBehavior::VeryLowRepeat => 0.80,
+            WalkieRepeatBehavior::LowRepeat => 0.90,
+            WalkieRepeatBehavior::NormalRepeat => 1.0,
+            WalkieRepeatBehavior::HighRepeat => 1.1,
+            WalkieRepeatBehavior::AlwaysRepeat => 1.2,
         }
     }
 }
@@ -91,12 +91,12 @@ impl WalkieEventPriority {
     }
     pub fn time_factor(&self) -> f32 {
         match self {
-            WalkieEventPriority::VeryLow => 1.4,
-            WalkieEventPriority::Low => 1.2,
+            WalkieEventPriority::VeryLow => 1.02,
+            WalkieEventPriority::Low => 1.01,
             WalkieEventPriority::Medium => 1.0,
-            WalkieEventPriority::High => 0.5,
-            WalkieEventPriority::VeryHigh => 0.2,
-            WalkieEventPriority::Urgent => 0.05,
+            WalkieEventPriority::High => 0.9,
+            WalkieEventPriority::VeryHigh => 0.8,
+            WalkieEventPriority::Urgent => 0.7,
         }
     }
     pub fn is_urgent(&self) -> bool {
@@ -566,7 +566,7 @@ impl WalkieEvent {
             WalkieEvent::GhostNearHunt => WalkieEventPriority::VeryLow,
             WalkieEvent::IncorrectRepellentHint(_) => WalkieEventPriority::VeryHigh,
             WalkieEvent::ChapterIntro(_) => WalkieEventPriority::Low,
-            WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryLow,
+            WalkieEvent::GearExplanation(_) => WalkieEventPriority::VeryHigh,
 
             // --- Locomotion and Interaction ---
             WalkieEvent::PlayerStuckAtStart => WalkieEventPriority::Medium,
@@ -577,8 +577,8 @@ impl WalkieEvent {
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieEventPriority::High,
             // --- Environmental Awareness ---
             WalkieEvent::DarkRoomNoLightUsed => WalkieEventPriority::Medium,
-            WalkieEvent::BreachShowcase => WalkieEventPriority::VeryLow,
-            WalkieEvent::GhostShowcase => WalkieEventPriority::VeryLow,
+            WalkieEvent::BreachShowcase => WalkieEventPriority::VeryHigh,
+            WalkieEvent::GhostShowcase => WalkieEventPriority::VeryHigh,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieEventPriority::Low,
             WalkieEvent::ThermometerNonFreezingFixation => WalkieEventPriority::Medium,
             WalkieEvent::GearSelectedNotActivated => WalkieEventPriority::Medium,
