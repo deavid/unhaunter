@@ -38,7 +38,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     }
 
     // Check if clear evidence uniquely identifies the correct ghost
-    const HIGH_CLARITY_THRESHOLD: f32 = 0.5;
+    const HIGH_CLARITY_THRESHOLD: f32 = 0.25;
 
     // Collect all clear evidences
     for evidence in enum_iterator::all::<Evidence>() {

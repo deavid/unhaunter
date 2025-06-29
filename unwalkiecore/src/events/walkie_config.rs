@@ -247,8 +247,8 @@ impl WalkieEvent {
             WalkieEvent::QuartzCrackedFeedback => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::QuartzShatteredFeedback => WalkieRepeatBehavior::NormalRepeat,
 
-            // Important gameplay hints - normal repeat frequency
-            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieRepeatBehavior::NormalRepeat,
+            // Important gameplay hints - should repeat often to help with crafting decisions
+            WalkieEvent::JournalPointsToOneGhostNoCraft => WalkieRepeatBehavior::HighRepeat,
 
             // Useful information - should repeat a lot
             WalkieEvent::AllObjectivesMetReminderToEndMission => WalkieRepeatBehavior::HighRepeat,
