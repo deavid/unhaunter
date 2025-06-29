@@ -1,5 +1,6 @@
 use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
@@ -17,6 +18,7 @@ use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
@@ -392,6 +394,7 @@ fn button_clicked(
     mut ev_clk: EventReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
+    mut craft_tracker: ResMut<RepellentCraftTracker>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
@@ -404,10 +407,52 @@ fn button_clicked(
     };
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
+            // Check if we're returning a full, unopened repellent flask for refund
+            let gear_to_remove = match inv.hand {
+                Hand::Left => &p_gear.left_hand,
+                Hand::Right => &p_gear.right_hand,
+            };
+
+            if gear_to_remove.kind == GearKind::RepellentFlask {
+                if let Some(rep_data) = gear_to_remove.data.as_ref() {
+                    if let Some(rep_flask) =
+                        <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+                    {
+                        // Check if it's full and unopened (qty == MAX_QTY && !active)
+                        if rep_flask.qty == 400 && !rep_flask.active {
+                            // MAX_QTY constant is 400
+                            craft_tracker.refund();
+                            info!("Refunded repellent craft: returned full, unopened bottle");
+                        }
+                    }
+                }
+            }
+
             p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
             if let Some(idx) = invnext.idx {
+                // Check if we're returning a full, unopened repellent flask for refund
+                if let Some(gear_to_remove) = p_gear.inventory.get(idx) {
+                    if gear_to_remove.kind == GearKind::RepellentFlask {
+                        if let Some(rep_data) = gear_to_remove.data.as_ref() {
+                            if let Some(rep_flask) = <dyn std::any::Any>::downcast_ref::<
+                                RepellentFlask,
+                            >(rep_data.as_ref())
+                            {
+                                // Check if it's full and unopened (qty == MAX_QTY && !active)
+                                if rep_flask.qty == 400 && !rep_flask.active {
+                                    // MAX_QTY constant is 400
+                                    craft_tracker.refund();
+                                    info!(
+                                        "Refunded repellent craft: returned full, unopened bottle"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
                 p_gear.take_next(idx);
             }
         }

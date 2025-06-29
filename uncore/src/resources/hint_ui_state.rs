@@ -35,7 +35,7 @@ impl Default for HintUiState {
             phase: HintAnimationPhase::Idle,
             animation_timer: Timer::from_seconds(0.0, TimerMode::Once), // Duration will be set dynamically
             slide_in_duration: Duration::from_millis(300),
-            visible_duration: Duration::from_secs(7),
+            visible_duration: Duration::from_secs(16),
             slide_out_duration: Duration::from_millis(300),
         }
     }

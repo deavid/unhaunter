@@ -82,7 +82,7 @@ pub fn waypoint_creation_system(
                 continue; // Skip this click
             }
 
-            info!(
+            debug!(
                 "waypoint_creation_system: Creating waypoint to interactive entity {:?} on floor {}",
                 interactive_entity, interactive_floor
             );
@@ -142,7 +142,7 @@ pub fn waypoint_creation_system(
         if let Some(target) =
             screen_to_world_coords(cursor_pos, player_pos.z, camera, camera_transform)
         {
-            info!("Ground click detected at {:?}", target);
+            debug!("Ground click detected at {:?}", target);
 
             // First check if the click is in a stairs area
             if let Some((
@@ -154,7 +154,7 @@ pub fn waypoint_creation_system(
                 end_waypoint,
             )) = detect_stair_area(target, &q_stairs)
             {
-                info!(
+                debug!(
                     "Stair area detected! Creating waypoints from {:?} to {:?}",
                     start_waypoint, end_waypoint
                 );
@@ -410,7 +410,7 @@ fn create_pathfinding_waypoints(
     let path = find_path(start_pos, target_pos, board_data, visibility_data);
 
     if path.is_empty() {
-        info!("No path found from {:?} to {:?}", start_pos, target_pos);
+        debug!("No path found from {:?} to {:?}", start_pos, target_pos);
         return;
     }
 
@@ -436,7 +436,7 @@ fn create_pathfinding_waypoints(
         waypoint_queue.push(waypoint_entity);
     }
 
-    info!("Created {} waypoints for pathfinding", path.len() - 1);
+    debug!("Created {} waypoints for pathfinding", path.len() - 1);
 }
 
 /// Helper function to create waypoints using pathfinding that end with an interaction
@@ -463,7 +463,7 @@ fn create_pathfinding_waypoints_to_interaction(
     let path = find_path_to_interactive(start_pos, target_pos, board_data, visibility_data);
 
     if path.is_empty() {
-        info!("No path found from {:?} to {:?}", start_pos, target_pos);
+        debug!("No path found from {:?} to {:?}", start_pos, target_pos);
         // If no path, create direct interaction waypoint as fallback
         create_interaction_waypoint(
             commands,
@@ -511,7 +511,7 @@ fn create_pathfinding_waypoints_to_interaction(
         }
     }
 
-    info!(
+    debug!(
         "Created {} waypoints for pathfinding to interaction",
         path_len - 1
     );
@@ -534,7 +534,7 @@ fn create_stair_waypoints(
         waypoint_queue,
     );
 
-    info!(
+    debug!(
         "Creating stair waypoints from {:?} to {:?}",
         start_waypoint, end_waypoint
     );
@@ -575,5 +575,5 @@ fn create_stair_waypoints(
 
     waypoint_queue.push(end_waypoint_entity);
 
-    info!("Created 2 waypoints for stair traversal");
+    debug!("Created 2 waypoints for stair traversal");
 }

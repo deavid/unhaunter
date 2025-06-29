@@ -17,7 +17,7 @@ impl GhostSet {
 
         match self {
             Self::TmpEMF => vec![LadyInWhite, BrownLady],
-            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa],
+            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa, GrayMan],
             Self::TmpEMFUVOrbsEVPCPM => vec![
                 Bugbear, Morag, Barghest, Boggart, Obayifo, WillOWisp, LaLlorona, Widow,
                 Leprechaun, Brume,

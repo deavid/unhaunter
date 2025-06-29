@@ -20,6 +20,10 @@ use crate::metrics;
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
+
+// Colors for repellent particles
+const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
+const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
 use std::ops::{Add, Mul};
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
@@ -150,10 +154,12 @@ impl GearUsable for RepellentFlask {
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
         !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
     }
-    fn do_fill_liquid(&mut self, ghost_type: GhostType) {
+    fn do_fill_liquid(&mut self, ghost_type: GhostType) -> bool {
+        let was_not_new = self.active || self.qty != Self::MAX_QTY;
         self.liquid_content = Some(ghost_type);
         self.active = false;
         self.qty = Self::MAX_QTY;
+        was_not_new
     }
 }
 
@@ -240,7 +246,18 @@ fn repellent_update(
         }
         let life_factor = rep.life_factor();
         let rev_factor = 1.01 - life_factor;
-        mapcolor.color.set_alpha(life_factor.cbrt() / 2.0 + 0.01);
+
+        // Handle color transition
+        let life_factor = rep.life_factor();
+        let alpha = life_factor.cbrt() / 2.0 + 0.01;
+
+        if rep.hit_correct {
+            mapcolor.color = ELECTRIC_BLUE.with_alpha(alpha.cbrt());
+        } else if rep.hit_incorrect {
+            mapcolor.color = BRIGHT_RED.with_alpha(alpha.cbrt());
+        } else {
+            mapcolor.color = RepellentParticle::DEFAULT_COLOR.with_alpha(alpha);
+        }
         let bpos = r_pos.to_board_position();
         let rr_pos = Position {
             x: r_pos.x + rng.random_range(-0.5..0.5),
@@ -320,14 +337,19 @@ fn repellent_update(
             rep.life = 0.0;
         }
         for (g_pos, mut ghost) in &mut qgs {
-            let dist = g_pos.distance(&r_pos);
-            if dist < 1.5 {
+            let dist2 = g_pos.distance2(&r_pos);
+            if dist2 < 4.5 {
+                let dist2b = (dist2 + 1.0) * 2.0;
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += dt * 183.2 / (dist + 1.0);
+                    ghost.repellent_hits_frame += dt * 50.2 / dist2b;
+                    // Correct repellent - turn electric blue
+                    rep.hit_correct = true;
                 } else {
-                    ghost.repellent_misses_frame += dt * 183.2 / (dist + 1.0);
+                    // Incorrect repellent - turn bright red
+                    ghost.repellent_misses_frame += dt * 50.2 / dist2b;
+                    rep.hit_incorrect = true;
                 }
-                rep.life -= 20.0 * dt;
+                rep.life -= 20.0 * dt / dist2b;
                 // cmd.entity(entity).despawn();
             }
         }
@@ -335,13 +357,27 @@ fn repellent_update(
     for (_pos, mut ghost) in &mut qgs {
         if ghost.repellent_hits_frame > 1.0 {
             ghost.repellent_hits += 1;
+            ghost.repellent_hits_delta = 1.0;
             ghost.repellent_hits_frame = 0.0;
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+        } else {
+            ghost.repellent_hits_delta -= dt;
+            ghost.repellent_hits_delta = ghost
+                .repellent_hits_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_hits_frame);
         }
         if ghost.repellent_misses_frame > 1.0 {
             ghost.repellent_misses += 1;
+            ghost.repellent_misses_delta = 1.0;
             ghost.repellent_misses_frame = 0.0;
             ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+        } else {
+            ghost.repellent_misses_delta -= dt;
+            ghost.repellent_misses_delta = ghost
+                .repellent_misses_delta
+                .clamp(0.0, 1.0)
+                .max(ghost.repellent_misses_frame);
         }
     }
 

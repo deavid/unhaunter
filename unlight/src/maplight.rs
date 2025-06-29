@@ -481,6 +481,13 @@ fn apply_lighting(
     for e in visible.iter() {
         if rng.random_range(0..100) < 15 {
             entities.push(e.to_owned());
+        } else if let Ok((_pos, _mat, _behavior, _vis, _o_ghost_influence, o_interactive)) =
+            qt2.get(*e)
+        {
+            // Ensure entities with hover state changes are always processed
+            if o_interactive.map(|x| x.hovered).unwrap_or_default() {
+                entities.push(*e);
+            }
         }
     }
 
@@ -527,7 +534,7 @@ fn apply_lighting(
                 let mut lightdata = LightData::default();
                 for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
                     let fldir = fldir.with_max_dist(200.0);
-                    let focus = (fldir.distance() - 4.0).max(4.0) / 20.0;
+                    let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
                     let lpos = *flpos + fldir / (100.0 / focus + 20.0);
                     let mut lpos = lpos.unrotate_by_dir(&fldir);
                     let mut rpos = rpos.unrotate_by_dir(&fldir);
@@ -544,12 +551,13 @@ fn apply_lighting(
                             -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
                         rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                     }
-                    let dist = (lpos.distance(&rpos) + 1.0)
-                        .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 4.0));
+
+                    let dist = (lpos.distance(&rpos) + 0.1)
+                        .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
                     let flvis = flvismap[p];
                     let fl = flpower / (dist + FL_MIN_DST)
                         * flvis.clamp(0.0001, 1.0)
-                        * (focus - 2.0).clamp(0.5, 8.0);
+                        * (focus + 0.5).clamp(0.5, 8.0);
                     let flsrgba = flcolor.to_srgba();
                     lux_fl[0] += fl * flsrgba.red;
                     lux_fl[1] += fl * flsrgba.green;
@@ -875,11 +883,27 @@ fn apply_lighting(
                     + ld.infrared)
                     .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
                 let srgba = dst_color
-                    .with_luminance((l * ld.visible - ld.infrared).clamp(0.0, 1.0))
+                    .with_luminance(
+                        (l * ld.visible - ld.infrared - gs.repellent_hits_delta * 3.0)
+                            .clamp(0.0, 1.0),
+                    )
                     .to_srgba();
+
+                let k_hit = (gs.repellent_hits_delta + gs.repellent_misses_delta)
+                    .clamp(0.0, 1.0)
+                    .cbrt();
+                opacity = opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
+
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl * 1.1 + e_infra / 3.0)
-                    .with_green(g * ld.visible + e_uv + e_rl + e_infra)
+                    .with_red(
+                        r * ld.visible
+                            + e_rl * 1.1
+                            + e_infra / 3.0
+                            + gs.repellent_misses_delta / 2.0,
+                    )
+                    .with_green(
+                        g * ld.visible + e_uv + e_rl + e_infra + gs.repellent_misses_delta / 2.5,
+                    )
                     .into();
             }
             smooth = 1.0;

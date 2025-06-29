@@ -222,7 +222,7 @@ pub fn find_path(
     }
 
     // No path found
-    info!("No path found from {:?} to {:?}", start_board, goal_board);
+    debug!("No path found from {:?} to {:?}", start_board, goal_board);
     Vec::new()
 }
 
@@ -318,7 +318,7 @@ pub fn find_path_to_interactive(
     }
 
     // No path found
-    info!("No path found from {:?} to {:?}", start_board, goal_board);
+    debug!("No path found from {:?} to {:?}", start_board, goal_board);
     Vec::new()
 }
 
@@ -476,7 +476,7 @@ pub fn detect_stair_area(
 ) -> Option<(Entity, Position, Stairs, Behavior, Position, Position)> {
     let target_bpos = target_pos.to_board_position();
 
-    info!(
+    debug!(
         "Checking if position {:?} (board: {:?}) is in stairs area",
         target_pos, target_bpos
     );
@@ -484,7 +484,7 @@ pub fn detect_stair_area(
     for (stair_entity, stair_pos, stair_component, behavior) in stairs_query.iter() {
         let stair_bpos = stair_pos.to_board_position();
 
-        info!(
+        debug!(
             "Checking stair at {:?} (board: {:?}), orientation: {:?}, z: {}",
             stair_pos,
             stair_bpos,
@@ -510,7 +510,7 @@ pub fn detect_stair_area(
         };
 
         if in_stairs_area {
-            info!(
+            debug!(
                 "Found stair area! Entity: {:?}, Position: {:?}, Z: {}, Orientation: {:?}",
                 stair_entity,
                 stair_pos,
@@ -520,7 +520,7 @@ pub fn detect_stair_area(
             // Calculate start and end waypoints for stair traversal
             let (start_waypoint, end_waypoint) =
                 calculate_stair_waypoints(stair_pos, stair_component, behavior, stairs_query);
-            info!(
+            debug!(
                 "Calculated waypoints: start={:?}, end={:?}",
                 start_waypoint, end_waypoint
             );
@@ -535,7 +535,7 @@ pub fn detect_stair_area(
         }
     }
 
-    info!("No stair area found for position {:?}", target_pos);
+    debug!("No stair area found for position {:?}", target_pos);
     None
 }
 

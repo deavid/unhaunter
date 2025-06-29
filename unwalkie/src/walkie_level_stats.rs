@@ -23,7 +23,7 @@ pub fn load_walkie_event_stats(
     }
     for _event in ev_level_ready.read() {}
 
-    info!("Loading walkie event stats from player profile");
+    debug!("Loading walkie event stats from player profile");
 
     // Clear existing event count data
     walkie_play.other_mission_event_count.clear();
@@ -34,7 +34,7 @@ pub fn load_walkie_event_stats(
         // This relies on the Debug representation format used when storing the events
         if let Some(walkie_event) = parse_walkie_event(event_id_str) {
             // Store the play count in the other_mission_event_count HashMap
-            info!(
+            debug!(
                 "Loaded walkie event: {:?} with play count: {}",
                 walkie_event, stats.play_count
             );
@@ -46,7 +46,7 @@ pub fn load_walkie_event_stats(
         }
     }
 
-    info!(
+    debug!(
         "Loaded {} walkie event stats",
         walkie_play.other_mission_event_count.len()
     );

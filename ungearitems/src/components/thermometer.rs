@@ -301,9 +301,14 @@ fn temperature_update(
     const OTHER_CONDUCTIVITY: f32 = 2000.0;
     const WALL_CONDUCTIVITY: f32 = 0.00001;
     let smooth: f32 = 1.00 / difficulty.0.temperature_spread_speed;
+
+    // Collect all temperature changes before applying them
+    let mut temp_changes: std::collections::HashMap<(usize, usize, usize), Vec<f32>> =
+        std::collections::HashMap::new();
+
     for (p, temp) in old_temps.into_iter() {
         let cp = &bf.collision_field[p];
-        let free = (cp.player_free, cp.player_free || cp.is_dynamic);
+        let free = (cp.see_through, cp.see_through || cp.is_dynamic);
 
         let mut self_k = match free {
             (true, true) => INSIDE_CONDUCTIVITY,
@@ -312,64 +317,100 @@ fn temperature_update(
         };
         let bpos = BoardPosition::from_ndidx(p);
         let is_outside = roomdb.room_tiles.get(&bpos).is_none();
-        if is_outside && cp.player_free {
+        if is_outside && cp.see_through {
             self_k = OUTSIDE_CONDUCTIVITY;
         }
 
-        // let neighbors = bpos.xy_neighbors(1);
-        let neighbors = [bpos.left(), bpos.right(), bpos.top(), bpos.bottom()];
-        let n_idx = rng.random_range(0..neighbors.len());
-        let neigh = neighbors[n_idx].clone();
-        let neigh_ndidx = neigh.ndidx();
-        let Some(neigh_free) = bf
-            .collision_field
-            .get(neigh_ndidx)
-            .map(|ncp| (ncp.player_free, cp.player_free || cp.is_dynamic))
-        else {
-            continue;
-        };
+        // Check if this is a stair tile - if so, add vertical neighbor
+        let mut neighbors = vec![bpos.left(), bpos.right(), bpos.top(), bpos.bottom()];
 
-        let neigh_k = match neigh_free {
-            (true, true) => INSIDE_CONDUCTIVITY,
-            (false, false) => WALL_CONDUCTIVITY,
-            _ => OTHER_CONDUCTIVITY,
-        };
-        let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
-        if nis_outside && neigh_free.0 {
-            self_k = OUTSIDE_CONDUCTIVITY;
-        }
-        let neigh_temp = bf
-            .temperature_field
-            .get(neigh_ndidx)
-            .copied()
-            .unwrap_or(bf.ambient_temp);
-        let mid_temp = (temp * self_k.min(10.0) + neigh_temp * neigh_k.min(10.0))
-            / (self_k.min(10.0) + neigh_k.min(10.0));
-        let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
-        let diff = (temp + mid_temp * conductivity) / (conductivity + 1.0) - temp;
-        let mut new_temp1: f32;
-        let mut new_temp2: f32;
-        // Break conservation of energy to make a tendency of temps to go cold (by not going warm)
-        const COLD_EFFECT: f32 = 0.3;
-        let filter_cold_effect = kelvin_to_celsius(mid_temp - 5.0).clamp(0.0, 20.0) / 20.0;
-        let cold: f32 =
-            1.0 + COLD_EFFECT * filter_cold_effect.powi(2) * if is_outside { 0.0 } else { 1.0 };
-        if diff > 0.0 {
-            new_temp1 = temp + diff / cold;
-            new_temp2 = neigh_temp - diff;
-        } else {
-            new_temp1 = temp + diff;
-            new_temp2 = neigh_temp - diff / cold;
+        // Add stair connection as a neighbor with very high priority
+        if cp.stair_offset != 0 {
+            let stair_target_z = bpos.z + cp.stair_offset as i64;
+            if stair_target_z >= 0 && stair_target_z < bf.map_size.2 as i64 {
+                let stair_neighbor = BoardPosition {
+                    x: bpos.x,
+                    y: bpos.y,
+                    z: stair_target_z,
+                };
+                // Add stair neighbor - we'll process all neighbors now instead of random selection
+                neighbors.push(stair_neighbor);
+            }
         }
 
-        if is_outside || nis_outside {
-            let k: f32 = 0.2;
-            new_temp1 = (new_temp1 + bf.ambient_temp * k) / (1.00 + k);
-            new_temp2 = (new_temp2 + bf.ambient_temp * k) / (1.00 + k);
-        }
+        // Process ALL neighbors instead of randomly selecting just one
+        // This ensures proper diffusion through all connections including stairs
+        for neigh in neighbors {
+            let neigh_ndidx = neigh.ndidx();
+            let Some(neigh_free) = bf
+                .collision_field
+                .get(neigh_ndidx)
+                .map(|ncp| (ncp.see_through, ncp.see_through || ncp.is_dynamic))
+            else {
+                continue;
+            };
 
-        bf.temperature_field[p] = new_temp1;
-        bf.temperature_field[neigh_ndidx] = new_temp2;
+            // Check if this is a stair connection
+            let is_stair_connection = neigh.z != bpos.z;
+
+            let mut neigh_k = match neigh_free {
+                (true, true) => INSIDE_CONDUCTIVITY,
+                (false, false) => WALL_CONDUCTIVITY,
+                _ => OTHER_CONDUCTIVITY,
+            };
+
+            let nis_outside = roomdb.room_tiles.get(&neigh).is_none();
+            if nis_outside && neigh_free.0 && !is_stair_connection {
+                neigh_k = OUTSIDE_CONDUCTIVITY;
+            }
+            let neigh_temp = bf
+                .temperature_field
+                .get(neigh_ndidx)
+                .copied()
+                .unwrap_or(bf.ambient_temp);
+            let mid_temp = (temp * self_k.min(10.0) + neigh_temp * neigh_k.min(10.0))
+                / (self_k.min(10.0) + neigh_k.min(10.0));
+            let conductivity = (self_k.recip() + neigh_k.recip()).recip() / smooth;
+            let diff = (temp + mid_temp * conductivity) / (conductivity + 1.0) - temp;
+            let mut new_temp1: f32;
+            let mut new_temp2: f32;
+
+            // Break conservation of energy to make a tendency of temps to go cold (by not going warm)
+            const COLD_EFFECT: f32 = 0.2;
+            let filter_cold_effect = kelvin_to_celsius(mid_temp - 5.0).clamp(0.0, 20.0) / 20.0;
+            let cold: f32 =
+                1.0 + COLD_EFFECT * filter_cold_effect.powi(2) * if is_outside { 0.0 } else { 1.0 };
+
+            if diff > 0.0 {
+                new_temp1 = temp + (diff / cold);
+                new_temp2 = neigh_temp - diff;
+            } else {
+                new_temp1 = temp + diff;
+                new_temp2 = neigh_temp - (diff / cold);
+            }
+
+            if is_outside || nis_outside {
+                let k: f32 = 0.2;
+                new_temp1 = (new_temp1 + bf.ambient_temp * k) / (1.00 + k);
+                new_temp2 = (new_temp2 + bf.ambient_temp * k) / (1.00 + k);
+            }
+
+            // Store temperature changes instead of applying immediately
+            temp_changes.entry(p).or_default().push(new_temp1);
+            temp_changes.entry(neigh_ndidx).or_default().push(new_temp2);
+        }
+    }
+
+    // Apply all accumulated temperature changes by averaging them
+    for (pos_idx, changes) in temp_changes {
+        if !changes.is_empty() {
+            let avg_temp = changes.iter().sum::<f32>() / changes.len() as f32;
+            // Check for NaN and clamp to reasonable bounds
+            if avg_temp.is_finite() {
+                bf.temperature_field[pos_idx] =
+                    avg_temp.clamp(celsius_to_kelvin(-50.0), celsius_to_kelvin(100.0));
+            }
+        }
     }
 
     measure.end_ms();

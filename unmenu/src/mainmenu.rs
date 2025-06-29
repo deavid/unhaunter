@@ -200,22 +200,25 @@ pub fn manage_title_song(
             menusound.despawn = false;
         }
     } else if should_play_song {
-        commands
-            .spawn(MenuSound::default())
-            .insert(AudioPlayer::<AudioSource>(
-                asset_server.load("music/unhaunter_intro.ogg"),
-            ))
-            .insert(PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::Linear(
-                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32(),
-                ),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-                ..default()
-            });
+        // Only spawn the song if the volume is greater than 0
+        let desired_volume =
+            audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+        if desired_volume > 0.0 {
+            commands
+                .spawn(MenuSound::default())
+                .insert(AudioPlayer::<AudioSource>(
+                    asset_server.load("music/unhaunter_intro.ogg"),
+                ))
+                .insert(PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Loop,
+                    volume: bevy::audio::Volume::Linear(desired_volume),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                    spatial_scale: None,
+                    ..default()
+                });
+        }
     }
 }
 

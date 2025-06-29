@@ -4,7 +4,6 @@ use bevy_persistent::Persistent;
 
 use uncore::behavior::component::Door;
 use uncore::behavior::{Behavior, TileState};
-use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
@@ -93,7 +92,7 @@ fn check_erratic_movement_early(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
-    player_query: Query<(&Position, &Direction, &PlayerSprite)>,
+    player_query: Query<(&Position, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
@@ -113,7 +112,7 @@ fn check_erratic_movement_early(
         return;
     }
 
-    let Ok((player_position, player_direction, player_sprite)) = player_query.single() else {
+    let Ok((player_position, player_sprite)) = player_query.single() else {
         return;
     };
 
@@ -141,7 +140,7 @@ fn check_erratic_movement_early(
     }
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-        && player_direction.distance() > 60.0
+        && player_sprite.movement.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
         not_entered_timer.tick(time.delta());

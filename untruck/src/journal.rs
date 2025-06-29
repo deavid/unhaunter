@@ -9,12 +9,56 @@ use uncore::difficulty::CurrentDifficulty;
 use uncore::events::truck::TruckUIEvent;
 use uncore::resources::ghost_guess::GhostGuess;
 use uncore::resources::potential_id_timer::PotentialIDTimer;
-use uncore::states::GameState;
+use uncore::states::{AppState, GameState};
 use uncore::types::evidence::Evidence;
 use uncore::types::ghost::types::GhostType;
 use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
+
+/// Event to force discard an evidence type in the journal UI.
+#[derive(Event, Debug, Clone, Copy)]
+pub struct ForceDiscardEvidenceEvent(pub Evidence);
+
+/// System that handles ForceDiscardEvidenceEvents even when not in truck
+fn force_discard_evidence_system(
+    mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
+    mut ev_force_discard: EventReader<ForceDiscardEvidenceEvent>,
+    mut gg: ResMut<GhostGuess>,
+) {
+    for event in ev_force_discard.read() {
+        info!(
+            "Journal: Received ForceDiscardEvidenceEvent for {:?}",
+            event.0
+        );
+
+        let mut button_found = false;
+        for mut tui_button in interaction_query.iter_mut() {
+            if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
+                if evidence_type == event.0 {
+                    info!(
+                        "Journal: Setting evidence {:?} button from {:?} to Discard",
+                        evidence_type, tui_button.status
+                    );
+                    tui_button.status = TruckButtonState::Discard;
+                    button_found = true;
+                    break;
+                }
+            }
+        }
+
+        if button_found {
+            // Force mark the GhostGuess as changed to trigger update systems
+            gg.set_changed();
+            info!(
+                "Journal: ForceDiscardEvidenceEvent processed for {:?}",
+                event.0
+            );
+        } else {
+            warn!("Journal: Could not find evidence button for {:?}", event.0);
+        }
+    }
+}
 
 fn button_system(
     mut interaction_query: Query<
@@ -35,8 +79,8 @@ fn button_system(
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     mut potential_id_timer: ResMut<PotentialIDTimer>,
-    keyboard_input: Res<ButtonInput<KeyCode>>, // Add this resource
-    difficulty: Res<CurrentDifficulty>,        // Add this parameter
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -99,7 +143,38 @@ fn button_system(
     }
 
     // --- 2. UPDATE GHOSTGUESS RESOURCE ---
-    let possible_ghosts: Vec<GhostType> = GhostType::all()
+
+    // Check if evidence states have changed
+    let evidence_states_changed = gg.evidences_found != selected_evidences_found
+        || gg.evidences_missing != selected_evidences_missing;
+
+    // Only log evidence states if there are changes
+    if evidence_states_changed {
+        info!(
+            "Journal: Evidence found: {:?}, Evidence missing: {:?}",
+            selected_evidences_found, selected_evidences_missing
+        );
+    }
+
+    // Update the GhostGuess if there are changes
+    if evidence_states_changed {
+        info!(
+            "Journal: Updating evidences_found: {:?} -> {:?}",
+            gg.evidences_found, selected_evidences_found
+        );
+        info!(
+            "Journal: Updating evidences_missing: {:?} -> {:?}",
+            gg.evidences_missing, selected_evidences_missing
+        );
+        gg.evidences_found = selected_evidences_found.clone();
+        gg.evidences_missing = selected_evidences_missing.clone();
+    }
+
+    let possible_ghosts: Vec<GhostType> = difficulty
+        .0
+        .ghost_set
+        .as_vec()
+        .into_iter()
         .filter(|ghost_type| {
             let ghost_ev = ghost_type.evidences();
             let mut is_discarded = false;
@@ -224,11 +299,22 @@ fn button_system(
         textcolor.0 = current_text_color;
     }
 
-    // Update GhostGuess resource with the latest evidence sets (these might have changed)
-    if gg.evidences_found != selected_evidences_found {
+    // Update GhostGuess resource with the latest evidence sets (only if changed)
+    let final_found_changed = gg.evidences_found != selected_evidences_found;
+    let final_missing_changed = gg.evidences_missing != selected_evidences_missing;
+
+    if final_found_changed {
+        info!(
+            "Journal: Final update evidences_found: {:?} -> {:?}",
+            gg.evidences_found, selected_evidences_found
+        );
         gg.evidences_found = selected_evidences_found;
     }
-    if gg.evidences_missing != selected_evidences_missing {
+    if final_missing_changed {
+        info!(
+            "Journal: Final update evidences_missing: {:?} -> {:?}",
+            gg.evidences_missing, selected_evidences_missing
+        );
         gg.evidences_missing = selected_evidences_missing;
     }
 
@@ -279,8 +365,14 @@ fn ghost_guess_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, ghost_guess_system).add_systems(
-        FixedUpdate,
-        button_system.run_if(in_state(GameState::Truck)),
-    );
+    app.add_event::<ForceDiscardEvidenceEvent>()
+        .add_systems(Update, ghost_guess_system)
+        .add_systems(
+            Update,
+            force_discard_evidence_system.run_if(in_state(AppState::InGame)),
+        )
+        .add_systems(
+            FixedUpdate,
+            button_system.run_if(in_state(GameState::Truck)),
+        );
 }

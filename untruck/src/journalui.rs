@@ -51,7 +51,7 @@ pub fn setup_journal_ui(
                 .insert(Node {
                     min_width: Val::Px(0.0),
                     min_height: Val::Px(20.0 * UI_SCALE),
-                    border: UiRect::all(Val::Px(0.9)),
+                    border: UiRect::all(Val::Px(2.0)),
                     justify_content: JustifyContent::Center,
                     display: Display::Grid,
                     flex_direction: FlexDirection::Column,
@@ -135,7 +135,7 @@ pub fn setup_journal_ui(
                 .insert(Node {
                     min_width: Val::Px(0.0),
                     min_height: Val::Px(18.0 * UI_SCALE), // Slightly reduced height
-                    border: UiRect::all(Val::Px(0.9)),
+                    border: UiRect::all(Val::Px(2.0)),
                     justify_content: JustifyContent::Center,
                     padding: UiRect::new(Val::Px(4.0), Val::Px(2.0), Val::Px(0.0), Val::Px(2.0)), // Adjusted padding
                     display: Display::Flex, // Changed to Flex for better centering

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
 use uncore::components::ghost_sprite::GhostSprite;
+use uncore::resources::ghost_guess::GhostGuess;
 use uncore::states::GameState;
 use uncore::types::ghost::types::GhostType;
 use uncore::{
@@ -249,12 +250,15 @@ fn update_journal_ghost_blinking_system(
 
 fn clear_seen_evidence_hints_on_mission_change(
     mut seen_evidence_hints: ResMut<SeenEvidenceHints>,
+    mut ghost_guess: ResMut<GhostGuess>,
     mut level_loaded_events: EventReader<LevelLoadedEvent>,
 ) {
     // If any LevelLoadedEvent has occurred, it signifies a new level/mission has started.
     // We iterate through them to consume them for this reader and then clear the hints.
     for _event in level_loaded_events.read() {
         seen_evidence_hints.0.clear();
+        info!("Journal: Resetting GhostGuess for new mission");
+        *ghost_guess = GhostGuess::default();
     }
 }
 
