@@ -1,7 +1,4 @@
-
-use crate::events::walkie_types::{
-    WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior,
-};
+use crate::events::walkie_types::{WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior};
 
 impl WalkieEventPriority {
     pub fn value(&self) -> f32 {
@@ -16,8 +13,8 @@ impl WalkieEventPriority {
     }
     pub fn time_factor(&self) -> f32 {
         match self {
-            WalkieEventPriority::VeryLow => 1.02,
-            WalkieEventPriority::Low => 1.01,
+            WalkieEventPriority::VeryLow => 2.0,
+            WalkieEventPriority::Low => 1.3,
             WalkieEventPriority::Medium => 1.0,
             WalkieEventPriority::High => 0.9,
             WalkieEventPriority::VeryHigh => 0.8,
@@ -46,8 +43,8 @@ impl WalkieRepeatBehavior {
     /// Returns the minimum delay multiplier for within-mission timing
     pub fn timing_multiplier(&self) -> f64 {
         match self {
-            WalkieRepeatBehavior::VeryLowRepeat => 0.80,
-            WalkieRepeatBehavior::LowRepeat => 0.90,
+            WalkieRepeatBehavior::VeryLowRepeat => 0.95,
+            WalkieRepeatBehavior::LowRepeat => 0.98,
             WalkieRepeatBehavior::NormalRepeat => 1.0,
             WalkieRepeatBehavior::HighRepeat => 1.1,
             WalkieRepeatBehavior::AlwaysRepeat => 1.2,
@@ -83,9 +80,9 @@ impl WalkieEvent {
 
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => 120.0 * count,
-            WalkieEvent::VeryLowSanityNoTruckReturn => 120.0 * count,
-            WalkieEvent::SanityDroppedBelowThresholdDarkness => 120.0 * count,
-            WalkieEvent::SanityDroppedBelowThresholdGhost => 120.0 * count,
+            WalkieEvent::VeryLowSanityNoTruckReturn => 60.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => 90.0 * count,
+            WalkieEvent::SanityDroppedBelowThresholdGhost => 75.0 * count,
 
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => 60.0 * count,
@@ -161,9 +158,9 @@ impl WalkieEvent {
             WalkieEvent::EMFNonEMF5Fixation => WalkieEventPriority::Low,
             // --- Player Wellbeing ---
             WalkieEvent::LowHealthGeneralWarning => WalkieEventPriority::Medium,
-            WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::High,
-            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieEventPriority::Medium,
-            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieEventPriority::High,
+            WalkieEvent::VeryLowSanityNoTruckReturn => WalkieEventPriority::VeryHigh, // Upgraded from High to VeryHigh
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieEventPriority::High, // Upgraded from Medium to High
+            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieEventPriority::VeryHigh, // Upgraded from High to VeryHigh
             // --- Consumables and Defense ---
             WalkieEvent::QuartzCrackedFeedback => WalkieEventPriority::Medium,
             WalkieEvent::QuartzShatteredFeedback => WalkieEventPriority::High,
@@ -227,9 +224,9 @@ impl WalkieEvent {
                 WalkieRepeatBehavior::VeryLowRepeat
             }
 
-            // Critical safety warnings - normal repeat because the player should eventually learn this
+            // Critical safety warnings - high repeat because sanity warnings are crucial for player survival
             WalkieEvent::HuntWarningNoPlayerEvasion => WalkieRepeatBehavior::NormalRepeat,
-            WalkieEvent::VeryLowSanityNoTruckReturn => WalkieRepeatBehavior::NormalRepeat,
+            WalkieEvent::VeryLowSanityNoTruckReturn => WalkieRepeatBehavior::HighRepeat, // Upgraded from Normal to High
             WalkieEvent::LowHealthGeneralWarning => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::HuntActiveNearHidingSpotNoHide => WalkieRepeatBehavior::NormalRepeat,
 
@@ -268,12 +265,12 @@ impl WalkieEvent {
             WalkieEvent::DidNotSwitchStartingGearInHotspot => WalkieRepeatBehavior::LowRepeat,
             WalkieEvent::DidNotCycleToOtherGear => WalkieRepeatBehavior::LowRepeat,
 
-            // Contextual hints and reminders - normal repeat
+            // Contextual hints and reminders - high repeat for sanity warnings as they're critical
             WalkieEvent::PlayerStuckAtStart => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::GearSelectedNotActivated => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::RoomLightsOnGearNeedsDark => WalkieRepeatBehavior::NormalRepeat,
-            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieRepeatBehavior::NormalRepeat,
-            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieRepeatBehavior::NormalRepeat,
+            WalkieEvent::SanityDroppedBelowThresholdDarkness => WalkieRepeatBehavior::HighRepeat, // Upgraded from Normal to High
+            WalkieEvent::SanityDroppedBelowThresholdGhost => WalkieRepeatBehavior::HighRepeat, // Upgraded from Normal to High
             WalkieEvent::HasRepellentEntersLocation => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::RepellentUsedTooFar => WalkieRepeatBehavior::NormalRepeat,
             WalkieEvent::RepellentUsedGhostEnragesPlayerFlees => WalkieRepeatBehavior::NormalRepeat,
@@ -314,9 +311,7 @@ impl WalkieEvent {
                 // Aggressive downgrading for one-time events
                 match previous_mission_play_count {
                     0 => 0,
-                    1 => 2, // Drop 2 priority levels after first play
-                    2 => 3, // Drop 3 priority levels after second play
-                    _ => 4, // Drop to minimum after multiple plays
+                    _ => 4,
                 }
             }
             WalkieRepeatBehavior::LowRepeat => {
