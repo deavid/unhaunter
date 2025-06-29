@@ -8,6 +8,14 @@ use crate::analysis::{
 }; // Added new analysis handlers
 use crate::export::show_ghost_list;
 use crate::filtering::apply_evidence_filters;
+use crate::sets::comparison::{
+    handle_compare_sets_command, handle_diff_sets_command, handle_merge_sets_command,
+    handle_overlap_analysis_command,
+};
+use crate::sets::optimization::{
+    handle_diverse_set_command, handle_find_sets_command, handle_optimize_set_command,
+    handle_tutorial_set_command,
+};
 use crate::sets::{analyze_set, complete_set, test_set, validate_set};
 
 #[derive(Parser)]
@@ -230,8 +238,7 @@ impl Cli {
                 size,
                 max_results,
             }) => {
-                // optimization::handle_find_sets_command(target_evidence, *size, *max_results);
-                eprintln!("FindSets command is temporarily disabled for testing.");
+                handle_find_sets_command(target_evidence, *size, *max_results);
             }
             Some(Commands::Conflicts { evidence, show_all }) => {
                 handle_conflicts_command(evidence.as_deref(), *show_all);
@@ -250,38 +257,31 @@ impl Cli {
                 balance_factor,
                 max_overlap,
             }) => {
-                // optimization::handle_optimize_set_command(*size, *balance_factor, *max_overlap);
-                eprintln!("OptimizeSet command is temporarily disabled for testing.");
+                handle_optimize_set_command(*size, *balance_factor, *max_overlap);
             }
             Some(Commands::DiverseSet {
                 size,
                 min_evidence_coverage,
             }) => {
-                // optimization::handle_diverse_set_command(*size, *min_evidence_coverage);
-                eprintln!("DiverseSet command is temporarily disabled for testing.");
+                handle_diverse_set_command(*size, *min_evidence_coverage);
             }
             Some(Commands::TutorialSet {
                 size,
                 beginner_friendly,
             }) => {
-                // optimization::handle_tutorial_set_command(*size, *beginner_friendly);
-                eprintln!("TutorialSet command is temporarily disabled for testing.");
+                handle_tutorial_set_command(*size, *beginner_friendly);
             }
             Some(Commands::CompareSets { sets }) => {
-                // comparison::handle_compare_sets_command(sets.clone());
-                eprintln!("CompareSets command is temporarily disabled for testing.");
+                handle_compare_sets_command(sets.clone());
             }
             Some(Commands::OverlapAnalysis { sets }) => {
-                // comparison::handle_overlap_analysis_command(sets.clone());
-                eprintln!("OverlapAnalysis command is temporarily disabled for testing.");
+                handle_overlap_analysis_command(sets.clone());
             }
             Some(Commands::MergeSets { sets, optimize }) => {
-                // comparison::handle_merge_sets_command(sets.clone(), *optimize);
-                eprintln!("MergeSets command is temporarily disabled for testing.");
+                handle_merge_sets_command(sets.clone(), *optimize);
             }
             Some(Commands::DiffSets { old_set, new_set }) => {
-                // comparison::handle_diff_sets_command(old_set.clone(), new_set.clone());
-                eprintln!("DiffSets command is temporarily disabled for testing.");
+                handle_diff_sets_command(old_set.clone(), new_set.clone());
             }
             None => show_ghost_list(&ghosts, &self.format),
         }

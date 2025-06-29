@@ -54,7 +54,7 @@ pub fn handle_unique_combinations_command(min_evidence: Option<usize>, max_evide
 
                 let current_combo_set: HashSet<Evidence> = current_combo.iter().cloned().collect();
                 if current_combo_set.is_subset(&ghost_evidences) {
-                    matching_ghosts_for_this_combo.push(ghost.clone());
+                    matching_ghosts_for_this_combo.push(*ghost);
                 }
             }
 
