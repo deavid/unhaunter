@@ -72,7 +72,7 @@ pub fn validate_uniqueness(ghosts: &[GhostType], min_evidence: usize) {
     show_evidence_summary(ghosts);
 }
 
-fn show_evidence_summary(ghosts: &[GhostType]) {
+pub fn show_evidence_summary(ghosts: &[GhostType]) {
     let mut evidence_count: HashMap<Evidence, usize> = HashMap::new();
 
     for ghost in ghosts {
