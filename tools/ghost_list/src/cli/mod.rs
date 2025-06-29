@@ -3,10 +3,12 @@ use enum_iterator::all;
 use uncore::types::ghost::types::GhostType;
 
 use crate::analysis::show_stats;
+use crate::analysis::{
+    handle_conflicts_command, handle_correlation_command, handle_unique_combinations_command,
+}; // Added new analysis handlers
 use crate::export::show_ghost_list;
-use crate::analysis::{handle_conflicts_command, handle_correlation_command, handle_unique_combinations_command}; // Added new analysis handlers
 use crate::filtering::apply_evidence_filters;
-use crate::sets::{analyze_set, complete_set, test_set, validate_set, optimization, comparison}; // Added comparison
+use crate::sets::{analyze_set, complete_set, test_set, validate_set};
 
 #[derive(Parser)]
 #[command(name = "ghost_list")]
@@ -98,7 +100,11 @@ pub enum Commands {
         target_evidence: String,
         #[arg(long, help = "Desired number of ghosts in the set")]
         size: usize,
-        #[arg(long, help = "Maximum number of top sets to display", default_value = "5")]
+        #[arg(
+            long,
+            help = "Maximum number of top sets to display",
+            default_value = "5"
+        )]
         max_results: usize,
     },
     /// Analyze evidence conflicts and overlaps
@@ -128,7 +134,10 @@ pub enum Commands {
         size: usize,
         #[arg(long, help = "How much to weigh evidence balance (e.g., 0.0 to 1.0)")]
         balance_factor: Option<f32>, // Optional, can use default in handler
-        #[arg(long, help = "Maximum allowed overlap (e.g., max evidences shared between any two ghosts)")]
+        #[arg(
+            long,
+            help = "Maximum allowed overlap (e.g., max evidences shared between any two ghosts)"
+        )]
         max_overlap: Option<usize>, // Optional, can use default in handler
     },
     /// Find sets that maximize evidence diversity
@@ -142,7 +151,11 @@ pub enum Commands {
     TutorialSet {
         #[arg(long, help = "Desired number of ghosts in the set")]
         size: usize,
-        #[arg(long, help = "Optimize for beginner-friendliness", default_value = "true")]
+        #[arg(
+            long,
+            help = "Optimize for beginner-friendliness",
+            default_value = "true"
+        )]
         beginner_friendly: bool,
     },
     /// Compare multiple ghost sets (e.g., "Set1Name:GhostA,GhostB" "Set2Name:GhostC,GhostD")
@@ -212,28 +225,45 @@ impl Cli {
                 ghosts: ghost_names,
                 min_evidence,
             }) => validate_set(ghost_names, *min_evidence),
-            Some(Commands::FindSets { target_evidence, size, max_results }) => {
+            Some(Commands::FindSets {
+                target_evidence,
+                size,
+                max_results,
+            }) => {
                 // optimization::handle_find_sets_command(target_evidence, *size, *max_results);
                 eprintln!("FindSets command is temporarily disabled for testing.");
             }
             Some(Commands::Conflicts { evidence, show_all }) => {
                 handle_conflicts_command(evidence.as_deref(), *show_all);
             }
-            Some(Commands::UniqueCombinations { min_evidence, max_evidence }) => {
+            Some(Commands::UniqueCombinations {
+                min_evidence,
+                max_evidence,
+            }) => {
                 handle_unique_combinations_command(*min_evidence, *max_evidence);
             }
             Some(Commands::Correlate { evidence, with }) => {
                 handle_correlation_command(evidence, with.as_deref());
             }
-            Some(Commands::OptimizeSet { size, balance_factor, max_overlap }) => {
+            Some(Commands::OptimizeSet {
+                size,
+                balance_factor,
+                max_overlap,
+            }) => {
                 // optimization::handle_optimize_set_command(*size, *balance_factor, *max_overlap);
                 eprintln!("OptimizeSet command is temporarily disabled for testing.");
             }
-            Some(Commands::DiverseSet { size, min_evidence_coverage }) => {
+            Some(Commands::DiverseSet {
+                size,
+                min_evidence_coverage,
+            }) => {
                 // optimization::handle_diverse_set_command(*size, *min_evidence_coverage);
                 eprintln!("DiverseSet command is temporarily disabled for testing.");
             }
-            Some(Commands::TutorialSet { size, beginner_friendly }) => {
+            Some(Commands::TutorialSet {
+                size,
+                beginner_friendly,
+            }) => {
                 // optimization::handle_tutorial_set_command(*size, *beginner_friendly);
                 eprintln!("TutorialSet command is temporarily disabled for testing.");
             }

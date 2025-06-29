@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 pub fn handle_correlation_command(evidence1_str: &str, evidence2_str: Option<&str>) {
     // Try to parse evidence1
-    let evidence1 = match Evidence::from_name(evidence1_str) {
+    let evidence1 = match all::<Evidence>().find(|e| e.name().eq_ignore_ascii_case(evidence1_str)) {
         Some(e) => e,
         None => {
             eprintln!("Error: Could not parse primary evidence '{}'.", evidence1_str);
@@ -21,7 +21,7 @@ pub fn handle_correlation_command(evidence1_str: &str, evidence2_str: Option<&st
 
     if let Some(e2_str) = evidence2_str {
         // Correlate evidence1 with evidence2
-        let evidence2 = match Evidence::from_name(e2_str) {
+        let evidence2 = match all::<Evidence>().find(|e| e.name().eq_ignore_ascii_case(e2_str)) {
             Some(e) => e,
             None => {
                 eprintln!("Error: Could not parse secondary evidence '{}'.", e2_str);
@@ -67,11 +67,11 @@ pub fn handle_correlation_command(evidence1_str: &str, evidence2_str: Option<&st
         // Simple correlation metric: P(A|B) = P(A and B) / P(B)
         // Conditional probability of having E1 given E2
         if count_e2 > 0 {
-            println!("P({} | {}): {:.2}", evidence1.name_short(), evidence2.name_short(), count_both as f32 / count_e2 as f32);
+            println!("P({} | {}): {:.2}", evidence1.name(), evidence2.name(), count_both as f32 / count_e2 as f32);
         }
         // Conditional probability of having E2 given E1
         if count_e1 > 0 {
-            println!("P({} | {}): {:.2}", evidence2.name_short(), evidence1.name_short(), count_both as f32 / count_e1 as f32);
+            println!("P({} | {}): {:.2}", evidence2.name(), evidence1.name(), count_both as f32 / count_e1 as f32);
         }
 
 

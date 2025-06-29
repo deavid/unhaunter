@@ -11,7 +11,8 @@ use enum_iterator::all;
 
 pub fn handle_unique_combinations_command(min_evidence: Option<usize>, max_evidence: Option<usize>) {
     let min_e = min_evidence.unwrap_or(1); // Default min 1 evidence
-    let max_e = max_evidence.unwrap_or(Evidence::VARIANT_COUNT); // Default max all evidences a ghost can have (typically 3, but use Evidence::VARIANT_COUNT for theoretical max)
+    let all_evidence_count = all::<Evidence>().count();
+    let max_e = max_evidence.unwrap_or(all_evidence_count); // Default max all evidences a ghost can have
 
     if min_e == 0 || max_e == 0 {
         eprintln!("Error: min-evidence and max-evidence must be greater than 0.");
