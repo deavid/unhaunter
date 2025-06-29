@@ -158,8 +158,9 @@ fn spawn_miasma(
         .indexed_iter()
     {
         let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
-        if !board_data.collision_field[bp].player_free {
-            continue;
+        let collision = &board_data.collision_field[bp];
+        if !collision.player_free && !collision.see_through {
+            continue; // Skip only full walls, allow half-walls for miasma sprites
         }
         let bpos = BoardPosition::from_ndidx(bp);
         let player_dst2 = player_pos.distance2(&bpos.to_position_center());
@@ -279,7 +280,7 @@ fn animate_miasma_sprites(
         if !board_data
             .collision_field
             .get(bpos.ndidx())
-            .map(|x| x.player_free)
+            .map(|collision| collision.player_free)
             .unwrap_or_default()
         {
             let oc_pos = bpos.to_position_center();
@@ -370,8 +371,10 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             // Check for walls and closed doors (collision)
-            if !board_data.collision_field[p].player_free {
-                continue; // Skip walls and out-of-bounds
+            // Allow miasma to spread through half-walls (like repellent particles)
+            let collision = &board_data.collision_field[p];
+            if !collision.player_free && !collision.see_through {
+                continue; // Skip full walls that block both movement and sight
             }
             let p1 = board_data.miasma.pressure_field[p];
             let bpos = BoardPosition::from_ndidx(p);
@@ -409,7 +412,10 @@ fn update_miasma(
                     board_data
                         .collision_field
                         .get(n_idx)
-                        .map(|x| x.player_free)
+                        .map(|collision| {
+                            // Allow miasma to spread through half-walls (like repellent particles)
+                            collision.player_free || collision.see_through
+                        })
                         .unwrap_or(true)
                 })
                 .collect::<Vec<_>>();
@@ -514,7 +520,8 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             let delta = pressure_changes[p];
-            let is_room = room_present[p] && board_data.collision_field[p].player_free;
+            let collision = &board_data.collision_field[p];
+            let is_room = room_present[p] && (collision.player_free || collision.see_through);
 
             let Some(entry) = board_data.miasma.pressure_field.get_mut(p) else {
                 continue;
@@ -560,7 +567,9 @@ fn update_miasma(
                     // Consider outside to be zero pressure always.
                     return 0.0;
                 }
-                if board_data.collision_field[gp].player_free {
+                let collision = &board_data.collision_field[gp];
+                if collision.player_free || collision.see_through {
+                    // Allow pressure reading from half-walls (like repellent particles)
                     board_data.miasma.pressure_field[gp]
                 } else {
                     p_center
