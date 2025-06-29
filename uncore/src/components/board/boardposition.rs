@@ -94,6 +94,7 @@ impl BoardPosition {
         }
     }
 
+    /// DEPRECATED: This is wrong. The center of the tile is BoardPosition::to_position(). This actually gives you the bottom right edge.
     pub fn to_position_center(&self) -> Position {
         Position {
             x: self.x as f32 + 0.5,

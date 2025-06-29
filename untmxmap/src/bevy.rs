@@ -1,5 +1,6 @@
 // ------------ Bevy map loading utils --------------------
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
 use uncore::{
     events::loadlevel::FloorLevelMapping,
@@ -143,7 +144,7 @@ pub fn bevy_load_map(
                         floor_layers.push((i, child_layer));
                     }
                 }
-                info!("Floor level number: {floor_number} - name: {display_name}");
+                debug!("Floor level number: {floor_number} - name: {display_name}");
                 floor_levels.insert(
                     floor_number,
                     FloorLevel {
@@ -200,12 +201,12 @@ pub fn bevy_load_map(
             // Extract ghost influence requirements
             if let Some(attracting) = get_floor_ghost_attracting_objects(floor_level_layer) {
                 ghost_attracting_objects.insert(floor_num, attracting);
-                info!("Floor {floor_num} requires {attracting} ghost attracting objects");
+                debug!("Floor {floor_num} requires {attracting} ghost attracting objects");
             }
 
             if let Some(repelling) = get_floor_ghost_repelling_objects(floor_level_layer) {
                 ghost_repelling_objects.insert(floor_num, repelling);
-                info!("Floor {floor_num} requires {repelling} ghost repelling objects");
+                debug!("Floor {floor_num} requires {repelling} ghost repelling objects");
             }
         }
     }

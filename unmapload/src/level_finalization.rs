@@ -7,7 +7,7 @@
 //! - Computing usable area statistics for the level
 
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use rand::Rng;
 use uncore::behavior::Behavior;
 use uncore::components::board::boardposition::BoardPosition;
@@ -78,7 +78,7 @@ fn after_level_ready(
     }
 
     // Send room changed event with van open state
-    ev_room.send(RoomChangedEvent::init(open_van));
+    ev_room.write(RoomChangedEvent::init(open_van));
 
     // --- Calculate Usable Haunted Area ---
     let mut total_usable_area_m2 = 0.0;
@@ -97,7 +97,7 @@ fn after_level_ready(
 
                 // Add to room area calculation, organized by floor
                 if let Some(room_name) = roomdb.room_tiles.get(bpos) {
-                    let floor_rooms = rooms_per_floor.entry(bpos.z).or_insert_with(HashMap::new);
+                    let floor_rooms = rooms_per_floor.entry(bpos.z).or_default();
                     let room_area = floor_rooms.entry(room_name.clone()).or_insert(0.0);
                     *room_area += tile_area;
                 }

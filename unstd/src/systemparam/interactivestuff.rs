@@ -91,7 +91,7 @@ impl InteractiveStuff<'_, '_> {
             }
             if let Some(interactive) = interactive {
                 let sound_file = interactive.sound_for_moving_into_state(behavior);
-                self.sound_events.send(SoundEvent {
+                self.sound_events.write(SoundEvent {
                     sound_file,
                     volume: 1.0,
                     position: Some(*item_pos),
@@ -148,7 +148,7 @@ impl InteractiveStuff<'_, '_> {
             if ietype == InteractionExecutionType::ChangeState {
                 if let Some(interactive) = interactive {
                     let sound_file = interactive.sound_for_moving_into_state(&other.behavior);
-                    self.sound_events.send(SoundEvent {
+                    self.sound_events.write(SoundEvent {
                         sound_file,
                         volume: 1.0,
                         position: Some(*item_pos),

@@ -1,3 +1,4 @@
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::sprite::Material2dPlugin;
 use bevy::window::WindowResolution;
@@ -23,6 +24,7 @@ use unplayer::plugin::UnhaunterPlayerPlugin;
 use unprofile::plugin::UnhaunterProfilePlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unstd::materials::{CustomMaterial1, UIPanelMaterial};
+use unstd::picking::CustomSpritePickingPlugin;
 use unstd::plugins::board::UnhaunterBoardPlugin;
 use unstd::plugins::manual::UnhaunterManualPlugin;
 use unstd::plugins::root::UnhaunterRootPlugin;
@@ -34,16 +36,23 @@ use unwalkie::plugin::UnhaunterWalkiePlugin;
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();
     app.insert_resource(cli_options);
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: format!("Unhaunter {}", plt::VERSION),
-            resolution: default_resolution(),
-            // Enabling VSync might make it easier in WASM? (It doesn't)
-            present_mode: bevy::window::PresentMode::AutoVsync,
-            ..default()
-        }),
-        ..default()
-    }))
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: format!("Unhaunter {}", plt::VERSION),
+                    resolution: default_resolution(),
+                    // Enabling VSync might make it easier in WASM? (It doesn't)
+                    present_mode: bevy::window::PresentMode::AutoVsync,
+                    ..default()
+                }),
+                ..default()
+            })
+            .set(bevy::log::LogPlugin {
+                level: bevy::log::Level::INFO,
+                ..default()
+            }),
+    )
     .insert_resource(ClearColor(Color::srgb(0.04, 0.08, 0.14)))
     .insert_resource(Time::<Fixed>::from_duration(Duration::from_secs_f32(
         1.0 / 15.0,
@@ -52,9 +61,14 @@ pub fn app_run(cli_options: CliOptions) {
     app.init_resource::<CurrentDifficulty>()
         .init_resource::<ObjectInteractionConfig>();
 
-    app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin);
+    app.add_plugins(FrameTimeDiagnosticsPlugin::new(1024));
+    // app.add_plugins(LogDiagnosticsPlugin::default());
+
     app.add_plugins(Material2dPlugin::<CustomMaterial1>::default())
         .add_plugins(UiMaterialPlugin::<UIPanelMaterial>::default());
+
+    // Add picking support for our custom sprites
+    app.add_plugins(CustomSpritePickingPlugin);
 
     app.add_plugins((
         UnhaunterCorePlugin,

@@ -30,6 +30,10 @@ pub struct GhostSprite {
     /// Number of times the ghost has been hit with an incorrect type of repellent - in
     /// current frame.
     pub repellent_misses_frame: f32,
+    /// Ghost is being hit with the correct type of repellent
+    pub repellent_hits_delta: f32,
+    /// Ghost is being hit with the incorrect type of repellent
+    pub repellent_misses_delta: f32,
     /// The entity ID of the ghost's visual breach effect.
     pub breach_id: Option<Entity>,
     /// The ghost's current rage level, which influences its hunting behavior. Higher
@@ -86,6 +90,8 @@ impl GhostSprite {
             repellent_misses: 0,
             repellent_hits_frame: 0.0,
             repellent_misses_frame: 0.0,
+            repellent_hits_delta: 0.0,
+            repellent_misses_delta: 0.0,
             breach_id: None,
             rage: 0.0,
             hunting: 0.0,

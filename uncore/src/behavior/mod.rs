@@ -22,7 +22,12 @@
 pub mod component;
 
 use anyhow::Context;
-use bevy::{ecs::component::Component, utils::HashMap};
+use bevy::picking::Pickable;
+use bevy::{
+    ecs::component::Component,
+    // utils::HashMap // Moved to bevy_platform
+};
+use bevy_platform::collections::HashMap;
 use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
@@ -505,6 +510,7 @@ impl SpriteConfig {
                 .insert(component::Opaque)
                 .insert(component::UVSurface),
             Class::Door => entity
+                .insert(Pickable::default())
                 .insert(component::Interactive::new(
                     "sounds/door-open.ogg",
                     "sounds/door-close.ogg",
@@ -512,6 +518,7 @@ impl SpriteConfig {
                 .insert(component::FloorItemCollidable)
                 .insert(component::Door),
             Class::Switch => entity
+                .insert(Pickable::default())
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
@@ -522,6 +529,7 @@ impl SpriteConfig {
                 let opposite_side = self.properties.get_bool("switch:opposite_side");
 
                 entity
+                    .insert(Pickable::default())
                     .insert(component::Interactive::new(
                         "sounds/switch-on-1.ogg",
                         "sounds/switch-off-1.ogg",
@@ -531,10 +539,14 @@ impl SpriteConfig {
                         opposite_side,
                     ))
             }
-            Class::Breaker => entity.insert(component::Interactive::new(
-                "sounds/switch-on-1.ogg",
-                "sounds/switch-off-1.ogg",
-            )),
+            Class::Breaker => {
+                entity
+                    .insert(Pickable::default())
+                    .insert(component::Interactive::new(
+                        "sounds/switch-on-1.ogg",
+                        "sounds/switch-off-1.ogg",
+                    ))
+            }
             Class::Doorway => entity,
             Class::Decor => entity.insert(component::FloorItemCollidable),
             Class::Item => entity.insert(component::FloorItemCollidable),
@@ -542,6 +554,7 @@ impl SpriteConfig {
             Class::PlayerSpawn => entity,
             Class::GhostSpawn => entity,
             Class::VanEntry => entity
+                .insert(Pickable::default())
                 .insert(component::Interactive::new(
                     "sounds/door-open.ogg",
                     "sounds/door-close.ogg",
@@ -552,6 +565,7 @@ impl SpriteConfig {
                 .insert(component::RoomState::default())
                 .insert(component::Light),
             Class::FloorLamp => entity
+                .insert(Pickable::default())
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
@@ -559,6 +573,7 @@ impl SpriteConfig {
                 .insert(component::FloorItemCollidable)
                 .insert(component::Light),
             Class::TableLamp => entity
+                .insert(Pickable::default())
                 .insert(component::Interactive::new(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
@@ -580,6 +595,7 @@ impl SpriteConfig {
             Class::FakeBreach => entity,
             Class::FakeGhost => entity,
             Class::NPC => entity
+                .insert(Pickable::default())
                 .insert(component::NpcHelpDialog::new("NPC", &self.variant, layer))
                 .insert(component::Interactive::new(
                     "sounds/effects-dongdongdong.ogg",

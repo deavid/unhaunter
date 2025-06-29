@@ -153,7 +153,7 @@ impl GearUsable for GeigerCounter {
 
         self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 20.0 * gs.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 8.0 * gs.difficulty.0.equipment_sensitivity;
         if self.enabled {
             // Calculate the *current* output sound.
             let current_output_sound = self.calculate_output_sound(gs);
@@ -165,7 +165,7 @@ impl GearUsable for GeigerCounter {
                 * if current_output_sound > self.sound_a2 {
                     1.0
                 } else {
-                    4.0
+                    2.0
                 };
             // Smooth sound_a1 to get output_sound (second IIR filter).
             self.output_sound =

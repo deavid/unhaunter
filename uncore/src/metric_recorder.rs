@@ -1,6 +1,6 @@
 use bevy::diagnostic::{DiagnosticMeasurement, DiagnosticPath};
-use bevy::utils::Instant;
 use bevy::{diagnostic::DiagnosticsStore, prelude::*};
+use bevy_platform::time::Instant;
 use std::sync::{LazyLock, Mutex, mpsc};
 
 const CHANNEL_CAPACITY: usize = 2048;

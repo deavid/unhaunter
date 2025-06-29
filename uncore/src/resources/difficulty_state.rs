@@ -1,8 +1,8 @@
 use crate::difficulty::Difficulty;
-use bevy::prelude::*;
-use bevy::utils::Instant;
+use bevy::prelude::Resource;
+use bevy_platform::time::Instant;
 
-#[derive(Resource, Debug)]
+#[derive(Debug, Clone, Resource)]
 pub struct DifficultySelectionState {
     pub selected_difficulty: Difficulty,
     pub selected_map_idx: usize,

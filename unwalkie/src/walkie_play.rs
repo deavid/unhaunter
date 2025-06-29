@@ -87,7 +87,7 @@ fn walkie_talk(
             }
 
             // Fire WalkieTalkingEvent when transitioning to the Talking state
-            walkie_talking_writer.send(WalkieTalkingEvent {
+            walkie_talking_writer.write(WalkieTalkingEvent {
                 event: walkie_event.clone(),
             });
 
@@ -111,7 +111,7 @@ fn walkie_talk(
                     saved_count.pow(2)
                 );
                 if dice < 8 {
-                    hint_event_writer.send(OnScreenHintEvent {
+                    hint_event_writer.write(OnScreenHintEvent {
                         hint_text: hint_text.to_string(),
                     });
                 }
@@ -175,7 +175,7 @@ fn walkie_talk(
         .spawn(AudioPlayer::new(audio_source)) // Use AudioPlayer constructor with Handle<AudioSource>
         .insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Despawn,
-            volume: Volume::new(
+            volume: Volume::Linear(
                 walkie_volume
                     * audio_settings.volume_voice_chat.as_f32()
                     * audio_settings.volume_master.as_f32(),
@@ -184,6 +184,7 @@ fn walkie_talk(
             paused: false,
             spatial: false,
             spatial_scale: None,
+            ..default()
         })
         .insert(new_state_unwrapped);
 }

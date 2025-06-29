@@ -89,7 +89,7 @@ fn sound_playback_system(
         ));
         sound.insert(PlaybackSettings {
             mode: bevy::audio::PlaybackMode::Despawn,
-            volume: bevy::audio::Volume::new(
+            volume: bevy::audio::Volume::Linear(
                 adjusted_volume
                     * audio_settings.volume_effects.as_f32()
                     * audio_settings.volume_master.as_f32(),
@@ -99,6 +99,7 @@ fn sound_playback_system(
             spatial: sound_event.position.is_some()
                 && audio_settings.sound_output != SoundOutput::Mono,
             spatial_scale: Some(SpatialScale::new(0.005)),
+            ..default()
         });
 
         if let Some(position) = sound_event.position {

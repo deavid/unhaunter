@@ -18,7 +18,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     looking_gear: Res<LookingGear>,
     time: Res<Time>,
 ) {
-    let Ok((_player_entity, player_gear, _player_sprite)) = player_query.get_single() else {
+    let Ok((_player_entity, player_gear, _player_sprite)) = player_query.single() else {
         return;
     };
     let current_game_time_secs = time.elapsed_secs_f64();

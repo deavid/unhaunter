@@ -1,4 +1,5 @@
-use bevy::{prelude::Resource, utils::HashMap};
+use bevy::prelude::Resource;
+use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uncore::difficulty::Difficulty;
 use uncore::types::evidence::Evidence;

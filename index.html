@@ -13,6 +13,33 @@
 
         gtag('config', 'G-1XQY15JR0H');
     </script>
+    <script type="text/javascript">
+        // While playing the user might accidentally do Ctrl+W, so we try to detect this and prevent it.
+        let isCtrlPressed = false;
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey) {
+                if (!isCtrlPressed) {
+                    isCtrlPressed = true;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', function (event) {
+            if (!event.ctrlKey && isCtrlPressed) {
+                isCtrlPressed = false;
+            }
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+            if (isCtrlPressed) {
+                isCtrlPressed = false;
+                event.preventDefault();
+                event.returnValue = 'Are you sure you want to exit? Your game progress might be lost.';
+                return 'Are you sure you want to exit? Your game progress might be lost.'; // For older browsers
+            }
+        });
+    </script>
     <style type="text/css">
         *,
         body {

@@ -11,6 +11,7 @@ pub mod mission_progression_and_truck;
 pub mod player_wellbeing;
 pub mod potential_id_prompt;
 pub mod repellent_expulsion;
+pub mod repellent_feedback;
 pub mod truck_craft_prompt;
 pub mod tutorial_gear_explanations;
 pub mod tutorial_introductions;
@@ -34,4 +35,5 @@ pub(crate) fn app_setup(app: &mut App) {
     consumables_and_defense::app_setup(app);
     potential_id_prompt::app_setup(app);
     truck_craft_prompt::app_setup(app);
+    repellent_feedback::app_setup(app);
 }

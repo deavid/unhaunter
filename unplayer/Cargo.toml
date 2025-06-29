@@ -16,7 +16,10 @@ unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
 
 bevy = { workspace = true }
+bevy_picking = { workspace = true }
+bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }
 rand = { workspace = true }
 fastapprox = { workspace = true }
 ordered-float = { workspace = true }
+ndarray = { workspace = true }

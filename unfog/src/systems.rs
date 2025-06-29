@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
 use uncore::behavior::Behavior;
@@ -115,7 +115,7 @@ fn spawn_miasma(
         }
         if miasma_sprite.life < -2.0 {
             miasma_sprite.life = -2.0;
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
         if miasma_sprite.despawn {
             continue;
@@ -158,8 +158,9 @@ fn spawn_miasma(
         .indexed_iter()
     {
         let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
-        if !board_data.collision_field[bp].player_free {
-            continue;
+        let collision = &board_data.collision_field[bp];
+        if !collision.player_free && !collision.see_through {
+            continue; // Skip only full walls, allow half-walls for miasma sprites
         }
         let bpos = BoardPosition::from_ndidx(bp);
         let player_dst2 = player_pos.distance2(&bpos.to_position_center());
@@ -279,7 +280,7 @@ fn animate_miasma_sprites(
         if !board_data
             .collision_field
             .get(bpos.ndidx())
-            .map(|x| x.player_free)
+            .map(|collision| collision.player_free)
             .unwrap_or_default()
         {
             let oc_pos = bpos.to_position_center();
@@ -370,8 +371,10 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             // Check for walls and closed doors (collision)
-            if !board_data.collision_field[p].player_free {
-                continue; // Skip walls and out-of-bounds
+            // Allow miasma to spread through half-walls (like repellent particles)
+            let collision = &board_data.collision_field[p];
+            if !collision.player_free && !collision.see_through {
+                continue; // Skip full walls that block both movement and sight
             }
             let p1 = board_data.miasma.pressure_field[p];
             let bpos = BoardPosition::from_ndidx(p);
@@ -385,7 +388,23 @@ fn update_miasma(
             // }
 
             // Process each neighbor (up, down, left, right):
-            let neighbors = [bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
+            let mut neighbors = vec![bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
+
+            // Add stair connections for very strong miasma transmission
+            let cp = &board_data.collision_field[p];
+            if cp.stair_offset != 0 {
+                let stair_target_z = bpos.z + cp.stair_offset as i64;
+                if stair_target_z >= 0 && stair_target_z < board_data.map_size.2 as i64 {
+                    let stair_neighbor = BoardPosition {
+                        x: bpos.x,
+                        y: bpos.y,
+                        z: stair_target_z,
+                    };
+                    // Add stair neighbor - we'll handle the extra strength in the exchange calculation
+                    neighbors.push(stair_neighbor);
+                }
+            }
+
             let neighbors = neighbors
                 .into_iter()
                 .filter(|nb_pos| {
@@ -393,7 +412,10 @@ fn update_miasma(
                     board_data
                         .collision_field
                         .get(n_idx)
-                        .map(|x| x.player_free)
+                        .map(|collision| {
+                            // Allow miasma to spread through half-walls (like repellent particles)
+                            collision.player_free || collision.see_through
+                        })
                         .unwrap_or(true)
                 })
                 .collect::<Vec<_>>();
@@ -435,8 +457,15 @@ fn update_miasma(
                 let max_exchange_inwards = (-p2).min(p1) / 4.0; // Max negative exchange
 
                 let mut exchange = delta_pressure * diffusion_rate * dt / nb_len;
-                if !is_room {
-                    // Diffuse slower outside of rooms
+
+                // Check if this is a stair connection for super strong miasma flow
+                let is_stair_connection = neighbor_pos.z != bpos.z;
+                if is_stair_connection {
+                    // Miasma flows extremely strongly through stairs - like air
+                    // Use 100x stronger diffusion for stairs (increased from 50x)
+                    exchange = delta_pressure * diffusion_rate * dt * 100.0 / nb_len;
+                } else if !is_room {
+                    // Diffuse slower outside of rooms (only for non-stair connections)
                     exchange /= 10.0;
                 }
 
@@ -446,15 +475,18 @@ fn update_miasma(
                     .velocity_field
                     .get(p)
                     .unwrap_or(&Vec2::ZERO);
-                // Adjust exchange based on velocity components
-                if neighbor_pos == bpos.top() {
-                    exchange -= velocity.y * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.bottom() {
-                    exchange += velocity.y * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.left() {
-                    exchange -= velocity.x * EXCHANGE_VEL_SCALE;
-                } else if neighbor_pos == bpos.right() {
-                    exchange += velocity.x * EXCHANGE_VEL_SCALE;
+                // Skip velocity adjustments for stair connections since they're vertical
+                if !is_stair_connection {
+                    // Adjust exchange based on velocity components
+                    if neighbor_pos == bpos.top() {
+                        exchange -= velocity.y * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.bottom() {
+                        exchange += velocity.y * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.left() {
+                        exchange -= velocity.x * EXCHANGE_VEL_SCALE;
+                    } else if neighbor_pos == bpos.right() {
+                        exchange += velocity.x * EXCHANGE_VEL_SCALE;
+                    }
                 }
 
                 exchange = exchange.clamp(max_exchange_inwards, max_exchange_outwards);
@@ -488,7 +520,8 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             let delta = pressure_changes[p];
-            let is_room = room_present[p] && board_data.collision_field[p].player_free;
+            let collision = &board_data.collision_field[p];
+            let is_room = room_present[p] && (collision.player_free || collision.see_through);
 
             let Some(entry) = board_data.miasma.pressure_field.get_mut(p) else {
                 continue;
@@ -534,7 +567,9 @@ fn update_miasma(
                     // Consider outside to be zero pressure always.
                     return 0.0;
                 }
-                if board_data.collision_field[gp].player_free {
+                let collision = &board_data.collision_field[gp];
+                if collision.player_free || collision.see_through {
+                    // Allow pressure reading from half-walls (like repellent particles)
                     board_data.miasma.pressure_field[gp]
                 } else {
                     p_center

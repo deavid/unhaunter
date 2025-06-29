@@ -1,4 +1,4 @@
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use uncore::types::tiledmap::map::{
     MapLayer, MapLayerGroup, MapLayerType, MapTile, MapTileList, Pos,
 };

@@ -40,7 +40,7 @@ fn trigger_darkness_level_system(
         stopwatch.reset();
         return;
     }
-    let Ok((player_pos, _)) = qp.get_single() else {
+    let Ok((player_pos, _)) = qp.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -89,7 +89,7 @@ fn trigger_breach_showcase(
         }
     }
 
-    let Ok((player_pos, _)) = qp.get_single() else {
+    let Ok((player_pos, _)) = qp.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -136,7 +136,7 @@ fn trigger_ghost_showcase(
         }
     }
 
-    let Ok((player_pos, _)) = qp.get_single() else {
+    let Ok((player_pos, _)) = qp.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -171,7 +171,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     if *game_state.get() != GameState::None {
         return;
     }
-    let Ok((player_pos, _player, player_gear)) = qp.get_single() else {
+    let Ok((player_pos, _player, player_gear)) = qp.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -218,7 +218,7 @@ fn trigger_thermometer_non_freezing_fixation(
         stopwatch.reset();
         return;
     }
-    let Ok((player_gear, _)) = qp.get_single() else {
+    let Ok((player_gear, _)) = qp.single() else {
         stopwatch.reset();
         return;
     };

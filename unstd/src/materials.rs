@@ -26,6 +26,7 @@ pub struct CustomMaterial1Data {
     pub sheet_idx: u32,
     pub sprite_width: f32,
     pub sprite_height: f32,
+    pub y_anchor: f32,
 }
 
 impl CustomMaterial1Data {
@@ -70,6 +71,7 @@ impl Default for CustomMaterial1Data {
             sheet_idx: 0,
             sprite_width: 10000.0,
             sprite_height: 10000.0,
+            y_anchor: -0.25,
         }
     }
 }
@@ -94,6 +96,11 @@ impl CustomMaterial1 {
             color_texture: img_handle,
             data: default(),
         }
+    }
+
+    /// Get the texture handle for this material
+    pub fn texture(&self) -> &Handle<Image> {
+        &self.color_texture
     }
 }
 

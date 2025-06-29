@@ -17,7 +17,7 @@ impl GhostSet {
 
         match self {
             Self::TmpEMF => vec![LadyInWhite, BrownLady],
-            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa],
+            Self::TmpEMFUVOrbs => vec![Caoilte, Ceara, Orla, Finvarra, Kappa, GrayMan],
             Self::TmpEMFUVOrbsEVPCPM => vec![
                 Bugbear, Morag, Barghest, Boggart, Obayifo, WillOWisp, LaLlorona, Widow,
                 Leprechaun, Brume,
@@ -53,7 +53,8 @@ impl GhostSet {
 mod tests {
     use super::*;
     use crate::types::evidence::Evidence;
-    use bevy::utils::{HashMap, HashSet};
+    use bevy_platform::collections::HashMap;
+    use bevy_platform::collections::HashSet;
     use enum_iterator::all;
 
     #[test]

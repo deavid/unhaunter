@@ -13,6 +13,7 @@ use uncore::{
         board::{direction::Direction, position::Position},
         game::GameSprite,
         ghost_sprite::GhostSprite,
+        sprite_type::SpriteType,
     },
     types::gear::equipmentposition::EquipmentPosition,
     utils::format_time,
@@ -105,7 +106,8 @@ impl GearUsable for SageBundleData {
                     .insert(SmokeParticleTimer(Timer::from_seconds(
                         5.0,
                         TimerMode::Once,
-                    )));
+                    )))
+                    .insert(SpriteType::Other);
                 self.smoke_produced += 1;
             }
         }

@@ -39,6 +39,9 @@ pub struct MCamera;
 #[derive(Component, Debug)]
 pub struct MenuUI;
 
+#[derive(Component, Debug)]
+pub struct MenuUILayout;
+
 #[derive(Component, Debug, Default)]
 pub struct MenuSound {
     despawn: bool,
@@ -90,7 +93,7 @@ pub fn setup_ui(
             position_type: PositionType::Absolute,
             ..default()
         })
-        .insert(MenuUI) // Mark for cleanup
+        .insert(MenuUI)
         .id();
 
     // Call create_standard_menu_layout directly with commands, not with parent
@@ -103,7 +106,7 @@ pub fn setup_ui(
             "Unhaunter {}    |    [Up]/[Down]: Change    |    [Enter]: Select",
             VERSION
         )),
-        MenuUI, // Pass the marker component
+        MenuUILayout,
     );
 
     // Parent the menu layout to our root entity
@@ -123,10 +126,10 @@ pub fn cleanup(
     qm: Query<Entity, With<MenuUI>>,
 ) {
     for cam in qc.iter() {
-        commands.entity(cam).despawn_recursive();
+        commands.entity(cam).despawn();
     }
     for ui_entity in qm.iter() {
-        commands.entity(ui_entity).despawn_recursive();
+        commands.entity(ui_entity).despawn();
     }
 }
 
@@ -172,7 +175,7 @@ pub fn menu_event(
                 }
                 MenuID::Quit => {
                     info!("Sending AppExit event");
-                    exit.send(AppExit::default());
+                    exit.write(AppExit::default());
                 }
             }
         } else {
@@ -190,38 +193,42 @@ pub fn manage_title_song(
 ) {
     let should_play_song = !matches!(app_state.get(), AppState::InGame);
 
-    if let Ok(mut menusound) = q_sound.get_single_mut() {
+    if let Ok(mut menusound) = q_sound.single_mut() {
         if !should_play_song && !menusound.despawn {
             menusound.despawn = true;
         } else if should_play_song && menusound.despawn {
             menusound.despawn = false;
         }
     } else if should_play_song {
-        commands
-            .spawn(MenuSound::default())
-            .insert(AudioPlayer::<AudioSource>(
-                asset_server.load("music/unhaunter_intro.ogg"),
-            ))
-            .insert(PlaybackSettings {
-                mode: bevy::audio::PlaybackMode::Loop,
-                volume: bevy::audio::Volume::new(
-                    audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32(),
-                ),
-                speed: 1.0,
-                paused: false,
-                spatial: false,
-                spatial_scale: None,
-            });
+        // Only spawn the song if the volume is greater than 0
+        let desired_volume =
+            audio_settings.volume_music.as_f32() * audio_settings.volume_master.as_f32();
+        if desired_volume > 0.0 {
+            commands
+                .spawn(MenuSound::default())
+                .insert(AudioPlayer::<AudioSource>(
+                    asset_server.load("music/unhaunter_intro.ogg"),
+                ))
+                .insert(PlaybackSettings {
+                    mode: bevy::audio::PlaybackMode::Loop,
+                    volume: bevy::audio::Volume::Linear(desired_volume),
+                    speed: 1.0,
+                    paused: false,
+                    spatial: false,
+                    spatial_scale: None,
+                    ..default()
+                });
+        }
     }
 }
 
 pub fn despawn_sound(
     mut commands: Commands,
-    qs: Query<(Entity, &AudioSink, &MenuSound)>,
+    mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
-    for (entity, sink, menusound) in &qs {
-        let vol = sink.volume();
+    for (entity, mut sink, menusound) in &mut qs {
+        let vol = sink.volume().to_linear();
         let v = if menusound.despawn {
             vol / 1.02
         } else {
@@ -234,9 +241,9 @@ pub fn despawn_sound(
                 (vol * STEPS + desired_vol) / (STEPS + 1.0)
             }
         };
-        sink.set_volume(v);
+        sink.set_volume(bevy::audio::Volume::Linear(v));
         if v < 0.001 {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
             info!("Song despawned");
         }
     }

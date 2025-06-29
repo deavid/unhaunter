@@ -91,6 +91,33 @@ impl PlayerGear {
         self.inventory[last_idx] = old_hand;
     }
 
+    /// Cycle gear in reverse direction (backwards through inventory)
+    pub fn cycle_reverse(&mut self, hand: &Hand) {
+        let old_hand = self.get_hand(hand).clone();
+
+        // Find the last non-empty item in inventory (cycling backwards)
+        let Some((lidx, inv)) = self
+            .inventory
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|(_n, e)| !matches!(e.kind, GearKind::None))
+        else {
+            return;
+        };
+
+        match hand {
+            Hand::Left => self.left_hand = inv.clone(),
+            Hand::Right => self.right_hand = inv.clone(),
+        };
+
+        // Shift items forward (opposite of cycle)
+        for i in (1..=lidx).rev() {
+            self.inventory[i] = self.inventory[i - 1].clone()
+        }
+        self.inventory[0] = old_hand;
+    }
+
     pub fn swap(&mut self) {
         std::mem::swap(&mut self.right_hand, &mut self.left_hand);
     }

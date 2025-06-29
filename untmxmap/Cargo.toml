@@ -12,6 +12,7 @@ uncore = { path = "../uncore" }
 unstd = { path = "../unstd" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 normalize-path = { workspace = true }
 tiled = { workspace = true }
 glob = { workspace = true }

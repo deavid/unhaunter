@@ -1,5 +1,6 @@
 use crate::events::WalkieEvent;
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 use rand::Rng;
 use uncore::random_seed;
 use uncore::types::evidence::Evidence;
@@ -47,7 +48,17 @@ impl Default for WalkiePlay {
 impl WalkiePlay {
     /// Try to set the event to be played. If it's not ready, the system needs to keep retrying.
     pub fn set(&mut self, event: WalkieEvent, time: f64) -> bool {
-        if self.priority_bar > event.priority().value() {
+        // Get previous mission play count for priority calculation
+        let saved_count = self
+            .other_mission_event_count
+            .get(&event)
+            .copied()
+            .unwrap_or_default();
+
+        // Calculate effective priority based on previous mission play count
+        let effective_priority = event.effective_priority(saved_count);
+
+        if self.priority_bar > effective_priority.value() {
             // dbg!(&self.priority_bar, event);
             return false;
         }
@@ -61,33 +72,33 @@ impl WalkiePlay {
                 return false;
             }
         }
-        let min_delay_mult = event.priority().time_factor() as f64;
-        let saved_count = self
-            .other_mission_event_count
-            .get(&event)
-            .copied()
-            .unwrap_or_default();
+        let min_delay_mult = effective_priority.time_factor() as f64;
+        let repeat_behavior = event.repeat_behavior();
+        let timing_mult = repeat_behavior.timing_multiplier();
 
         if time - self.last_message_time
-            < (10.0 + count as f64 * 20.0 + saved_count as f64 * 2.0) * min_delay_mult
+            < (20.0 + count as f64 * 30.0 + saved_count as f64 * 10.0)
+                * min_delay_mult
+                * timing_mult
         {
             // Wait between messages
             return false;
         }
 
-        if self.priority_bar < event.priority().value() {
-            self.priority_bar = self.priority_bar * 0.8 + event.priority().value() * 0.199;
+        if self.priority_bar < effective_priority.value() {
+            self.priority_bar = self.priority_bar * 0.8 + effective_priority.value() * 0.199;
         }
 
         count += 1;
         let mut rng = random_seed::rng();
-        let max_dice_value = saved_count * saved_count.clamp(0, 10);
+        let max_dice_value = saved_count * saved_count.clamp(0, 4);
+        let dice_threshold = repeat_behavior.dice_threshold();
         let dice = rng.random_range(0..=max_dice_value);
-        if dice > 3 {
+        if dice > dice_threshold {
             // Skip playing this event, played too many times.
             info!(
-                "WalkiePlay: skipped: {:?}  play dice: {}/{}",
-                event, dice, max_dice_value
+                "WalkiePlay: skipped: {:?}  play dice: {}/{} (threshold: {})",
+                event, dice, max_dice_value, dice_threshold
             );
             let event_stats = self.played_events.entry(event).or_default();
             event_stats.last_played = time;
@@ -96,8 +107,16 @@ impl WalkiePlay {
             return true;
         }
         if let Some(in_event) = &self.event {
-            if event.priority().value() > in_event.priority().value() * 50.0
-                && event.priority().value() > 5.0
+            // Calculate effective priority for the current in-progress event for comparison
+            let in_event_saved_count = self
+                .other_mission_event_count
+                .get(in_event)
+                .copied()
+                .unwrap_or_default();
+            let in_event_effective_priority = in_event.effective_priority(in_event_saved_count);
+
+            if effective_priority.value() > in_event_effective_priority.value() * 50.0
+                && effective_priority.value() > 5.0
             {
                 self.urgent_pending = true;
             }
@@ -105,10 +124,8 @@ impl WalkiePlay {
         }
 
         warn!(
-            "WalkiePlay: {:?} - play dice: {}/{}",
-            event,
-            dice,
-            saved_count.pow(2)
+            "WalkiePlay: {:?} - play dice: {}/{} (threshold: {})",
+            event, dice, max_dice_value, dice_threshold
         );
         self.event = Some(event.clone());
         self.played_events.insert(

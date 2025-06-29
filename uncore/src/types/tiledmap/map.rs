@@ -1,6 +1,5 @@
+use bevy_platform::collections::HashMap;
 use std::{fmt::Debug, slice::Iter};
-
-use bevy::utils::HashMap;
 
 /// A simple 2D position with X and Y components that it is generic.
 ///

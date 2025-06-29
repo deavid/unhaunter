@@ -7,3 +7,8 @@ edition = "2024"
 uncore = { path = "../../uncore" }
 enum-iterator = { workspace = true }
 bevy = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+itertools = { workspace = true }
+serde = { workspace = true, features = ["derive"] } # Ensuring features are also inherited or matched
+serde_json = { workspace = true }
+csv = { workspace = true }

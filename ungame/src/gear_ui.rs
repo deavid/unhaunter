@@ -5,7 +5,7 @@ use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore::types::gear::spriteid::GearSpriteID;
 use uncore::types::root::game_assets::GameAssets;
 
-pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
+pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Leftmost side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Column,
@@ -33,7 +33,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
             .insert(TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 16.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             })
             .insert(TextColor(colors::INVENTORY_STATS_COLOR))
             .insert(Node {
@@ -55,7 +55,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
         .insert(TextFont {
             font: handles.fonts.victormono.w600_semibold.clone(),
             font_size: 15.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(Node {
@@ -75,7 +75,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildBuilder, handles: &GameAssets) {
         .insert(InventoryStats::left());
 }
 
-pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
+pub fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Right side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Row,
@@ -124,7 +124,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
             .insert(TextFont {
                 font: handles.fonts.victormono.w600_semibold.clone(),
                 font_size: 15.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             })
             .insert(TextColor(colors::INVENTORY_STATS_COLOR))
             .insert(Node {
@@ -146,7 +146,7 @@ pub fn setup_ui_gear_inv_right(p: &mut ChildBuilder, handles: &GameAssets) {
         .insert(TextFont {
             font: handles.fonts.chakra.w300_light.clone(),
             font_size: 16.0 * FONT_SCALE,
-            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+            ..default()
         })
         .insert(TextColor(colors::INVENTORY_STATS_COLOR))
         .insert(Node {

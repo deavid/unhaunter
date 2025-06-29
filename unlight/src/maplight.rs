@@ -12,13 +12,16 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use bevy::utils::HashSet;
-use bevy::{color::palettes::css, prelude::*, utils::HashMap};
+use bevy::audio::Volume;
+use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
+use bevy_platform::collections::HashMap;
+use bevy_platform::collections::HashSet;
 use core::f32;
 use ndarray::{Array3, s};
 use rand::Rng;
 use std::collections::VecDeque;
+use uncore::behavior::component::Interactive;
 use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::game::{GameSound, MapTileSprite};
@@ -227,6 +230,7 @@ fn apply_lighting(
             &Behavior,
             &mut Visibility,
             Option<&GhostInfluence>,
+            Option<&Interactive>,
         ),
         With<MapTileSprite>,
     >,
@@ -241,7 +245,7 @@ fn apply_lighting(
         Query<(
             &Position,
             &mut Sprite,
-            Option<&SpriteType>,
+            &SpriteType,
             Option<&GhostSprite>,
             Option<&MapColor>,
             Option<&UVReactive>,
@@ -475,14 +479,24 @@ fn apply_lighting(
     }
 
     for e in visible.iter() {
-        if rng.random_range(0..100) < 5 {
+        if rng.random_range(0..100) < 15 {
             entities.push(e.to_owned());
+        } else if let Ok((_pos, _mat, _behavior, _vis, _o_ghost_influence, o_interactive)) =
+            qt2.get(*e)
+        {
+            // Ensure entities with hover state changes are always processed
+            if o_interactive.map(|x| x.hovered).unwrap_or_default() {
+                entities.push(*e);
+            }
         }
     }
 
     for entity in entities.iter() {
         let min_threshold: f32 = rng.random::<f32>() / 10.0;
-        if let Ok((pos, mat, behavior, mut vis, o_ghost_influence)) = qt2.get_mut(*entity) {
+        if let Ok((pos, mat, behavior, mut vis, o_ghost_influence, o_interactive)) =
+            qt2.get_mut(*entity)
+        {
+            let on_hover = o_interactive.map(|x| x.hovered).unwrap_or_default();
             let mut opacity: f32 = 1.0;
             if behavior.p.display.auto_hide {
                 // Make big objects semitransparent when the player is behind them
@@ -519,8 +533,8 @@ fn apply_lighting(
                 let mut lux_fl = [0_f32; 3];
                 let mut lightdata = LightData::default();
                 for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
-                    let fldir = fldir.with_max_dist(100.0);
-                    let focus = (fldir.distance() - 4.0).max(1.0) / 20.0;
+                    let fldir = fldir.with_max_dist(200.0);
+                    let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
                     let lpos = *flpos + fldir / (100.0 / focus + 20.0);
                     let mut lpos = lpos.unrotate_by_dir(&fldir);
                     let mut rpos = rpos.unrotate_by_dir(&fldir);
@@ -529,18 +543,21 @@ fn apply_lighting(
                     lpos.x = 0.0;
                     lpos.y = 0.0;
                     if rpos.x > 0.0 {
-                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.1));
+                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
                         rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                     }
                     if rpos.x < 0.0 {
                         rpos.x =
-                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 3.0));
+                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
                         rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
                     }
-                    let dist = (lpos.distance(&rpos) + 1.0)
-                        .powf(fldir.distance().clamp(0.01, 30.0).recip().clamp(1.0, 3.0));
+
+                    let dist = (lpos.distance(&rpos) + 0.1)
+                        .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
                     let flvis = flvismap[p];
-                    let fl = flpower / (dist + FL_MIN_DST) * flvis.clamp(0.0001, 1.0);
+                    let fl = flpower / (dist + FL_MIN_DST)
+                        * flvis.clamp(0.0001, 1.0)
+                        * (focus + 0.5).clamp(0.5, 8.0);
                     let flsrgba = flcolor.to_srgba();
                     lux_fl[0] += fl * flsrgba.red;
                     lux_fl[1] += fl * flsrgba.green;
@@ -693,6 +710,16 @@ fn apply_lighting(
             };
             // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
             lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
+            if on_hover {
+                lux_c += 1.0;
+                new_mat.data.ambient_color = Color::srgb(0.20, 0.20, 0.0).into();
+                new_mat.data.color = Color::srgb(
+                    (new_color.red + 0.5).min(1.0),
+                    (new_color.green + 0.5).min(1.0),
+                    new_color.blue * 0.3,
+                )
+                .into();
+            }
             new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
             new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
             new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
@@ -735,7 +762,7 @@ fn apply_lighting(
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
     for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma, _o_orb) in qt.iter_mut() {
-        let sprite_type = o_type.cloned().unwrap_or_default();
+        let sprite_type = o_type.clone();
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
         let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
@@ -856,11 +883,27 @@ fn apply_lighting(
                     + ld.infrared)
                     .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
                 let srgba = dst_color
-                    .with_luminance((l * ld.visible - ld.infrared).clamp(0.0, 1.0))
+                    .with_luminance(
+                        (l * ld.visible - ld.infrared - gs.repellent_hits_delta * 3.0)
+                            .clamp(0.0, 1.0),
+                    )
                     .to_srgba();
+
+                let k_hit = (gs.repellent_hits_delta + gs.repellent_misses_delta)
+                    .clamp(0.0, 1.0)
+                    .cbrt();
+                opacity = opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
+
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl * 1.1 + e_infra / 3.0)
-                    .with_green(g * ld.visible + e_uv + e_rl + e_infra)
+                    .with_red(
+                        r * ld.visible
+                            + e_rl * 1.1
+                            + e_infra / 3.0
+                            + gs.repellent_misses_delta / 2.0,
+                    )
+                    .with_green(
+                        g * ld.visible + e_uv + e_rl + e_infra + gs.repellent_misses_delta / 2.5,
+                    )
                     .into();
             }
             smooth = 1.0;
@@ -993,7 +1036,7 @@ fn apply_lighting(
 /// System to manage ambient sound levels based on visibility.
 fn ambient_sound_system(
     vf: Res<VisibilityData>,
-    qas: Query<(&AudioSink, &GameSound)>,
+    mut qas: Query<(&mut AudioSink, &GameSound)>,
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<(&PlayerSprite, &Position)>, // Added Position to the query
@@ -1065,11 +1108,13 @@ fn ambient_sound_system(
     if timer.just_finished() {
         // dbg!(health, sanity);
     }
-    for (sink, gamesound) in qas.iter() {
+    for (mut sink, gamesound) in qas.iter_mut() {
         const SMOOTH: f32 = 60.0;
         let volume_factor =
             2.0 * audio_settings.volume_master.as_f32() * audio_settings.volume_ambient.as_f32();
-        let ln_volume = (sink.volume() / (volume_factor + 0.0000001) + 0.000001).ln();
+        let ln_volume = (sink.volume().to_linear() / (volume_factor + 0.0000001) + 0.000001)
+            .max(0.000001)
+            .ln();
         let v = match gamesound.class {
             SoundType::BackgroundHouse => {
                 (ln_volume * SMOOTH + house_volume.ln() * health * sanity) / (SMOOTH + 1.0)
@@ -1090,7 +1135,7 @@ fn ambient_sound_system(
             }
         };
         let new_volume = v.exp() * volume_factor;
-        sink.set_volume(new_volume.clamp(0.00001, 10.0));
+        sink.set_volume(Volume::Linear(new_volume.clamp(0.00001, 10.0)));
     }
     measure.end_ms();
 }

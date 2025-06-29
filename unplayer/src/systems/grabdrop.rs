@@ -6,6 +6,7 @@ use uncore::components::board::position::Position;
 use uncore::components::game::GameSprite;
 use uncore::components::player::HeldObject;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::sprite_type::SpriteType;
 use uncore::types::gear::equipmentposition::Hand;
 use uncore::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
@@ -240,7 +241,8 @@ fn deploy_gear(
                     .insert(GameSprite)
                     .insert(DeployedGearData {
                         gear: player_gear.right_hand.take(),
-                    });
+                    })
+                    .insert(SpriteType::Other);
                 player_gear.cycle(&Hand::Right);
 
                 // Play "Drop Item" sound effect (reused for gear deployment)

@@ -1,10 +1,10 @@
 use std::collections::VecDeque;
 
 use crate::utils::{find_wave_edge_tiles, is_in_bounds};
-use bevy::{
-    prelude::*,
-    utils::{HashMap, HashSet, Instant},
-};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
+use bevy_platform::collections::HashSet;
+use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use uncore::{
     behavior::{Behavior, Class},
@@ -100,9 +100,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             ));
 
             // Mark source position as visited
-            let source_visited = visited_by_source
-                .entry(source_id)
-                .or_insert_with(HashSet::new);
+            let source_visited = visited_by_source.entry(source_id).or_default();
             source_visited.insert((i as i64, j as i64, k as i64));
         }
     }
@@ -145,9 +143,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
             let collision = &bf.collision_field[neighbor_idx];
 
             // Check if already visited by this source
-            let source_visited = visited_by_source
-                .entry(source_id)
-                .or_insert_with(HashSet::new);
+            let source_visited = visited_by_source.entry(source_id).or_default();
             if source_visited.contains(&(nx, ny, nz)) {
                 continue;
             }

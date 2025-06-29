@@ -53,7 +53,7 @@ fn setup_ui(
         Visibility::Hidden
     };
 
-    type Cb<'a, 'b> = &'b mut ChildBuilder<'a>;
+    type Cb<'a, 'b> = &'b mut ChildSpawnerCommands<'a>;
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
     });
@@ -104,7 +104,7 @@ fn setup_ui(
                 TextFont {
                     font: handles.fonts.londrina.w300_light.clone(),
                     font_size: 35.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(txt_fg),
                 TextLayout::default(),
@@ -244,7 +244,7 @@ fn setup_ui(
                         TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(colors::BUTTON_EXIT_TRUCK_TXTCOLOR),
                         TextLayout::default(),
@@ -273,7 +273,7 @@ fn setup_ui(
                         TextFont {
                             font: handles.fonts.titillium.w600_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
-                            font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                            ..default()
                         },
                         TextColor(colors::BUTTON_END_MISSION_TXTCOLOR),
                         TextLayout::default(),

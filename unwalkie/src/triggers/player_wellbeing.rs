@@ -16,16 +16,17 @@ use unwalkiecore::{WalkieEvent, WalkiePlay}; // Corrected import for LightLevel
 
 // Constants for SanityDroppedBelowThresholdDarkness
 const LOW_LUX_THRESHOLD: f32 = 0.1;
-const MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS: f32 = 45.0;
+const MIN_TIME_IN_DARKNESS_FOR_HINT_SECONDS: f32 = 25.0; // Reduced from 45 to 25 seconds
 // SANITY_DROP_THRESHOLD_POINTS and MAX_SANITY_FOR_HINT_PERCENT are now shared
-const SANITY_DROP_THRESHOLD_POINTS_SHARED: f32 = 15.0;
-const MAX_SANITY_FOR_HINT_PERCENT_SHARED: f32 = 65.0;
+const SANITY_DROP_THRESHOLD_POINTS_SHARED: f32 = 10.0; // Reduced from 15 to 10 points
+const MAX_SANITY_FOR_HINT_PERCENT_SHARED: f32 = 70.0; // Increased from 65% to 70%
 
 // Constants for SanityDroppedBelowThresholdGhost
 const GHOST_PROXIMITY_THRESHOLD: f32 = 3.0;
-const MIN_INTERACTION_DURATION_SECONDS: f32 = 10.0;
+const MIN_INTERACTION_DURATION_SECONDS: f32 = 7.0; // Reduced from 10 to 7 seconds
 
-/// Triggers a warning if the player's sanity drops below 30% and they don't return to the truck within 20 seconds.
+/// Triggers a warning if the player's sanity drops below 45% and they don't return to the truck within 15 seconds.
+/// This has been made more sensitive to help players when their sanity is critically low.
 fn very_low_sanity_no_truck_return(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position)>,
@@ -42,7 +43,7 @@ fn very_low_sanity_no_truck_return(
     let Some((player, pos)) = qp.iter().next() else {
         return;
     };
-    if player.sanity() >= 30.0 {
+    if player.sanity() >= 45.0 {
         stopwatch.reset();
         return;
     }
@@ -53,8 +54,8 @@ fn very_low_sanity_no_truck_return(
         return;
     }
     stopwatch.tick(time.delta());
-    if stopwatch.elapsed_secs() > 20.0 {
-        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+    if stopwatch.elapsed_secs() > 15.0 {
+        // Reduced from 20 seconds to 15 seconds for more responsive warnings
         walkie_play.set(
             WalkieEvent::VeryLowSanityNoTruckReturn,
             time.elapsed_secs_f64(),
@@ -121,7 +122,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         return;
     }
 
-    let Ok((player_sprite, player_pos, light_level)) = player_query.get_single() else {
+    let Ok((player_sprite, player_pos, light_level)) = player_query.single() else {
         *darkness_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;
@@ -202,7 +203,7 @@ fn trigger_sanity_dropped_due_to_ghost_system(
         return;
     }
 
-    let Ok((player_sprite, player_pos, maybe_hiding)) = player_query.get_single() else {
+    let Ok((player_sprite, player_pos, maybe_hiding)) = player_query.single() else {
         *interaction_sanity_tracker = None;
         *hint_triggered_this_episode = false;
         return;

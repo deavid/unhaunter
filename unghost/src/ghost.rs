@@ -14,6 +14,7 @@ use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
 use uncore::components::ghost_sprite::GhostSprite;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
+use uncore::components::sprite_type::SpriteType;
 use uncore::difficulty::CurrentDifficulty;
 use uncore::metric_recorder::SendMetric;
 use uncore::random_seed;
@@ -316,7 +317,7 @@ pub enum RoarType {
 }
 
 impl RoarType {
-    pub fn get_sound(&self) -> String {
+    pub fn get_sound(&self) -> Option<String> {
         let roar_sounds = match self {
             RoarType::Full => vec![
                 "sounds/ghost-roar-1.ogg",
@@ -336,10 +337,12 @@ impl RoarType {
                 "sounds/ghost-snore-3.ogg",
                 "sounds/ghost-snore-4.ogg",
             ],
-            RoarType::None => vec![""],
+            RoarType::None => return None,
         };
-        let random_roar = roar_sounds[random_seed::rng().random_range(0..roar_sounds.len())];
-        random_roar.to_string()
+
+        roar_sounds
+            .get(random_seed::rng().random_range(0..roar_sounds.len()))
+            .map(|s| s.to_string())
     }
 
     pub fn get_volume(&self) -> f32 {
@@ -563,8 +566,7 @@ fn ghost_enrage(
             should_roar = RoarType::Snore;
         }
         if *last_roar > roar_time {
-            let roar_sound = should_roar.get_sound();
-            if !roar_sound.is_empty() {
+            if let Some(roar_sound) = should_roar.get_sound() {
                 gs.play_audio(roar_sound, should_roar.get_volume(), gpos);
                 *last_roar = 0.0;
             }
@@ -661,7 +663,8 @@ fn spawn_salty_trace(
         .insert(MapColor {
             color: css::DARK_GRAY.with_alpha(0.5).into(),
         })
-        .insert(GameSprite);
+        .insert(GameSprite)
+        .insert(SpriteType::Other);
 }
 
 fn ghost_fade_out_system(
@@ -712,18 +715,23 @@ fn ghost_fade_out_system(
                 .insert(SmokeParticleTimer(Timer::from_seconds(
                     5.0,
                     TimerMode::Once,
-                )));
+                )))
+                .insert(SpriteType::Other);
         }
 
         // Play roar sounds
         if let Some(_ghost_sprite) = ghost_sprite {
             if !fade_out.roared {
                 // Play the first roar at 100% volume
-                gs.play_audio(RoarType::Full.get_sound(), 1.0, position);
+                if let Some(roar_sound) = RoarType::Full.get_sound() {
+                    gs.play_audio(roar_sound, 1.0, position);
+                }
                 fade_out.roared = true;
             } else if fade_out.timer.finished() {
                 // Play the second roar at a lower volume
-                gs.play_audio(RoarType::Full.get_sound(), 0.2, position);
+                if let Some(roar_sound) = RoarType::Full.get_sound() {
+                    gs.play_audio(roar_sound, 0.2, position);
+                }
 
                 // Despawn the entity
                 commands.entity(entity).despawn();
@@ -803,6 +811,56 @@ fn calculate_weighted_distance_squared(ghost_pos: &Position, player_pos: &Positi
     dx * dx + dy * dy + dz * dz
 }
 
+/// Apply a visual "glitch" effect to ghosts by modifying their Transform scale
+/// This creates a visual indication of ghost instability without affecting position or movement
+fn ghost_scale_glitch_system(
+    time: Res<Time>,
+    mut q_ghost: Query<(&GhostSprite, &mut Transform), (With<GhostSprite>, Without<FadeOut>)>,
+) {
+    let mut rng = random_seed::rng();
+    let dt = time.delta_secs();
+
+    for (ghost, mut transform) in q_ghost.iter_mut() {
+        if ghost.repellent_hits_delta > 0.0 {
+            // Apply scale glitch based on repellent hits
+            let glitch_intensity = ghost.repellent_hits_delta.clamp(0.0, 1.0);
+
+            // Generate random scale variations
+            let scale_x = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8
+                - glitch_intensity * 0.2;
+            let scale_y = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8;
+            let scale_z = 1.0; // Keep Z scale consistent
+
+            // Apply the glitch scale
+            transform.scale = transform
+                .scale
+                .lerp(Vec3::new(scale_x, scale_y, scale_z), dt * 0.5);
+        } else if ghost.repellent_misses_delta > 0.0 {
+            let glitch_intensity = ghost.repellent_misses_delta.clamp(0.0, 1.0);
+            // Generate random scale variations
+            let scale_x = 1.0 + glitch_intensity * 0.15;
+            let scale_y = 1.0 + glitch_intensity * 0.1;
+            let scale_z = 1.0; // Keep Z scale consistent
+
+            // Apply the glitch scale
+            transform.scale = transform
+                .scale
+                .lerp(Vec3::new(scale_x, scale_y, scale_z), dt * 0.2);
+        } else {
+            // Restore normal scale when no glitch
+            if transform.scale != Vec3::ONE {
+                // Smoothly interpolate back to normal scale
+                transform.scale = transform.scale.lerp(Vec3::ONE, dt * 0.5);
+
+                // Snap to exactly 1.0 when very close to avoid floating point drift
+                if (transform.scale - Vec3::ONE).length() < 0.01 {
+                    transform.scale = Vec3::ONE;
+                }
+            }
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
@@ -811,6 +869,7 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_enrage,
             ghost_fade_out_system,
             update_ghost_warning_field,
+            ghost_scale_glitch_system,
             crate::systems::dynamic_behavior_update::update_ghost_behavior_dynamics_system,
         ),
     );

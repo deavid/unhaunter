@@ -1,5 +1,6 @@
 use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
 use uncore::colors;
 use uncore::components::game_config::GameConfig;
@@ -17,6 +18,7 @@ use uncore::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
@@ -36,7 +38,7 @@ pub struct GearHelp;
 pub struct GearHelpTitle;
 
 pub fn setup_loadout_ui(
-    p: &mut ChildBuilder,
+    p: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
@@ -94,13 +96,13 @@ pub fn setup_loadout_ui(
             },
         )
     };
-    let left_side = |p: &mut ChildBuilder| {
+    let left_side = |p: &mut ChildSpawnerCommands| {
         p.spawn((
             Text::new("Player Inventory:"),
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             TextLayout::default(),
@@ -145,7 +147,7 @@ pub fn setup_loadout_ui(
             TextFont {
                 font: handles.fonts.chakra.w300_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
-                font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                ..default()
             },
             TextColor(colors::TRUCKUI_TEXT_COLOR),
             TextLayout::default(),
@@ -214,7 +216,7 @@ pub fn setup_loadout_ui(
                 TextFont {
                     font: handles.fonts.chakra.w300_light.clone(),
                     font_size: 25.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR),
                 TextLayout::default(),
@@ -229,7 +231,7 @@ pub fn setup_loadout_ui(
                 TextFont {
                     font: handles.fonts.titillium.w400_regular.clone(),
                     font_size: 16.0 * FONT_SCALE,
-                    font_smoothing: bevy::text::FontSmoothing::AntiAliased,
+                    ..default()
                 },
                 TextColor(colors::TRUCKUI_TEXT_COLOR.with_alpha(0.7)),
                 TextLayout::default(),
@@ -281,7 +283,7 @@ fn update_loadout_buttons(
         border.0 = colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha);
         bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha);
         if *int == Interaction::Pressed {
-            ev_clk.send(EventButtonClicked(lbut.clone()));
+            ev_clk.write(EventButtonClicked(lbut.clone()));
         }
         if *int != Interaction::None {
             // Only update help text if hovered or pressed
@@ -392,6 +394,7 @@ fn button_clicked(
     mut ev_clk: EventReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
+    mut craft_tracker: ResMut<RepellentCraftTracker>,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
@@ -404,10 +407,52 @@ fn button_clicked(
     };
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
+            // Check if we're returning a full, unopened repellent flask for refund
+            let gear_to_remove = match inv.hand {
+                Hand::Left => &p_gear.left_hand,
+                Hand::Right => &p_gear.right_hand,
+            };
+
+            if gear_to_remove.kind == GearKind::RepellentFlask {
+                if let Some(rep_data) = gear_to_remove.data.as_ref() {
+                    if let Some(rep_flask) =
+                        <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+                    {
+                        // Check if it's full and unopened (qty == MAX_QTY && !active)
+                        if rep_flask.qty == 400 && !rep_flask.active {
+                            // MAX_QTY constant is 400
+                            craft_tracker.refund();
+                            info!("Refunded repellent craft: returned full, unopened bottle");
+                        }
+                    }
+                }
+            }
+
             p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
             if let Some(idx) = invnext.idx {
+                // Check if we're returning a full, unopened repellent flask for refund
+                if let Some(gear_to_remove) = p_gear.inventory.get(idx) {
+                    if gear_to_remove.kind == GearKind::RepellentFlask {
+                        if let Some(rep_data) = gear_to_remove.data.as_ref() {
+                            if let Some(rep_flask) = <dyn std::any::Any>::downcast_ref::<
+                                RepellentFlask,
+                            >(rep_data.as_ref())
+                            {
+                                // Check if it's full and unopened (qty == MAX_QTY && !active)
+                                if rep_flask.qty == 400 && !rep_flask.active {
+                                    // MAX_QTY constant is 400
+                                    craft_tracker.refund();
+                                    info!(
+                                        "Refunded repellent craft: returned full, unopened bottle"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
                 p_gear.take_next(idx);
             }
         }

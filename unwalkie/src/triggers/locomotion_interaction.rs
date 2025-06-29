@@ -4,7 +4,6 @@ use bevy_persistent::Persistent;
 
 use uncore::behavior::component::Door;
 use uncore::behavior::{Behavior, TileState};
-use uncore::components::board::direction::Direction;
 use uncore::components::board::position::Position;
 use uncore::components::player::Hiding;
 use uncore::components::player_sprite::PlayerSprite;
@@ -42,7 +41,7 @@ fn check_player_stuck_at_start(
         stuck_timer.reset();
         return;
     }
-    let Ok((player_position, player_sprite)) = player_query.get_single() else {
+    let Ok((player_position, player_sprite)) = player_query.single() else {
         return;
     };
 
@@ -93,7 +92,7 @@ fn check_erratic_movement_early(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
-    player_query: Query<(&Position, &Direction, &PlayerSprite)>,
+    player_query: Query<(&Position, &PlayerSprite)>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
@@ -113,7 +112,7 @@ fn check_erratic_movement_early(
         return;
     }
 
-    let Ok((player_position, player_direction, player_sprite)) = player_query.get_single() else {
+    let Ok((player_position, player_sprite)) = player_query.single() else {
         return;
     };
 
@@ -141,7 +140,7 @@ fn check_erratic_movement_early(
     }
     if distance_from_spawn > PLAYER_STUCK_MAX_DISTANCE
         && distance_from_spawn < PLAYER_ERRATIC_MAX_DISTANCE
-        && player_direction.distance() > 60.0
+        && player_sprite.movement.distance() > 60.0
     {
         // Ignore when the player is stuck or stopped.
         not_entered_timer.tick(time.delta());
@@ -175,7 +174,7 @@ fn check_door_interaction_hesitation(
         return;
     }
 
-    let Ok((player_position, _)) = player_query.get_single() else {
+    let Ok((player_position, _)) = player_query.single() else {
         return;
     };
 
@@ -237,7 +236,7 @@ fn trigger_struggling_with_grab_drop(
         return;
     }
 
-    let Ok((player_gear, player_sprite)) = player_query.get_single() else {
+    let Ok((player_gear, player_sprite)) = player_query.single() else {
         *full_and_failed_grab_timer = None;
         return;
     };
@@ -318,7 +317,7 @@ fn trigger_struggling_with_hide_unhide(
     }
 
     // Only proceed if player is not hiding
-    let Ok(player_sprite) = player_query.get_single() else {
+    let Ok(player_sprite) = player_query.single() else {
         *hide_key_timer = None;
         return;
     };
@@ -375,7 +374,7 @@ fn trigger_player_stays_hidden_too_long(
         return;
     }
     // Only proceed if player is hiding
-    if hiding_query.get_single().is_err() {
+    if hiding_query.single().is_err() {
         *post_hunt_hidden_timer = None;
         return;
     }
@@ -436,7 +435,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
         return;
     }
     // Get player position (not hiding)
-    let Ok((player_pos, _)) = player_query.get_single() else {
+    let Ok((player_pos, _)) = player_query.single() else {
         *near_hiding_timer = None;
         return;
     };

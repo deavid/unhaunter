@@ -18,6 +18,7 @@ unprofile = { path = "../unprofile" }
 untruck = { path = "../untruck" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 rand = { workspace = true }
 bevy-persistent = { workspace = true }
 enum-iterator = { workspace = true }

@@ -129,10 +129,13 @@ impl GearUsable for Gear {
         }
     }
 
-    fn do_fill_liquid(&mut self, ghost_type: GhostType) {
+    fn do_fill_liquid(&mut self, ghost_type: GhostType) -> bool {
         match &mut self.data {
             Some(x) => x.do_fill_liquid(ghost_type),
-            None => warn!("do_fill_liquid called on empty Gear"),
+            None => {
+                warn!("do_fill_liquid called on empty Gear");
+                false
+            }
         }
     }
 

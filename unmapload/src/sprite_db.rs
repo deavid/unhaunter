@@ -4,7 +4,7 @@
 //! The SpriteDB serves as a comprehensive lookup for tile visuals and behaviors throughout the game.
 
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy_platform::collections::HashMap;
 use uncore::behavior::{Behavior, SpriteConfig};
 use uncore::types::quadcc::QuadCC;
 use unstd::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
@@ -65,6 +65,8 @@ pub fn populate_sprite_db(
                         })
                         .clone();
                     cmat.data.sheet_idx = tileuid;
+                    // Set the y_anchor from the tileset
+                    cmat.data.y_anchor = tileset.y_anchor;
 
                     // Set alpha initially transparent to all materials
                     cmat.data.color.set_alpha(0.0);
@@ -87,6 +89,8 @@ pub fn populate_sprite_db(
                     cmat.data.sheet_cols = 1;
                     cmat.data.sheet_rows = 1;
                     cmat.data.sheet_idx = 0;
+                    // Set the y_anchor from the tileset
+                    cmat.data.y_anchor = tileset.y_anchor;
 
                     // Set alpha initially transparent to all materials
                     cmat.data.color.set_alpha(0.0);

@@ -5,6 +5,7 @@ use uncore::{
         board::position::Position, ghost_sprite::GhostSprite, player::Hiding,
         player_sprite::PlayerSprite,
     },
+    resources::roomdb::RoomDB,
     states::{AppState, GameState},
 };
 use ungear::components::playergear::PlayerGear;
@@ -20,6 +21,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     mut walkie_play: ResMut<WalkiePlay>,
     q_player: Query<(&Position, Option<&Hiding>, &PlayerGear), With<PlayerSprite>>,
     q_ghost: Query<&GhostSprite>,
+    roomdb: Res<RoomDB>,
     mut warning_timer: Local<Option<Stopwatch>>,
     mut player_pos_at_warning: Local<Option<Position>>,
 ) {
@@ -32,13 +34,24 @@ fn trigger_hunt_warning_no_player_evasion_system(
         return;
     }
 
-    let Ok((player_current_pos, maybe_hiding, player_gear)) = q_player.get_single() else {
+    let Ok((player_current_pos, maybe_hiding, player_gear)) = q_player.single() else {
         if warning_timer.is_some() {
             *warning_timer = None;
             *player_pos_at_warning = None;
         }
         return;
     };
+
+    // Check if player is inside a room (must be inside location for hunt warnings)
+    let player_bpos = player_current_pos.to_board_position();
+    if roomdb.room_tiles.get(&player_bpos).is_none() {
+        // Player is outside the location, reset timer and don't trigger
+        if warning_timer.is_some() {
+            *warning_timer = None;
+            *player_pos_at_warning = None;
+        }
+        return;
+    }
 
     // Check if player has RepellentFlask in inventory (hands or general inventory)
     let has_repellent = player_gear.left_hand.kind == GearKind::RepellentFlask
@@ -60,8 +73,11 @@ fn trigger_hunt_warning_no_player_evasion_system(
     let mut is_hunt_warning_active_for_any_ghost = false;
     for ghost_sprite in q_ghost.iter() {
         if ghost_sprite.hunt_warning_active {
-            is_hunt_warning_active_for_any_ghost = true;
-            break;
+            // Only trigger warning if ghost health is above 30%
+            if ghost_sprite.get_health() > 0.3 {
+                is_hunt_warning_active_for_any_ghost = true;
+                break;
+            }
         }
     }
 

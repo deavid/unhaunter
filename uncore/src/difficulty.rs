@@ -447,6 +447,21 @@ impl Difficulty {
         )
     }
 
+    /// Returns the maximum number of repellent bottles that can be crafted per mission.
+    pub fn repellent_craft_limit(&self) -> u32 {
+        match self {
+            Difficulty::TutorialChapter1 => 2,
+            Difficulty::TutorialChapter2 => 3,
+            Difficulty::TutorialChapter3 => 3,
+            Difficulty::TutorialChapter4 => 3,
+            Difficulty::TutorialChapter5 => 3,
+            Difficulty::StandardChallenge => 3,
+            Difficulty::HardChallenge => 3,
+            Difficulty::ExpertChallenge => 3,
+            Difficulty::MasterChallenge => 3,
+        }
+    }
+
     /// Returns the default tab selected in the van UI.
     pub fn default_van_tab(&self) -> TabContents {
         match self {
@@ -649,6 +664,7 @@ impl Difficulty {
             equipment_sensitivity: self.equipment_sensitivity(),
             van_auto_open: self.van_auto_open(),
             default_van_tab: self.default_van_tab(),
+            repellent_craft_limit: self.repellent_craft_limit(),
             player_gear: self.player_gear(),
             ghost_set: self.ghost_set(),
             difficulty: *self,
@@ -699,6 +715,7 @@ pub struct DifficultyStruct {
     // --- Gameplay ---
     pub van_auto_open: bool,
     pub default_van_tab: TabContents,
+    pub repellent_craft_limit: u32,
     pub player_gear: PlayerGearKind,
     pub ghost_set: GhostSet,
     // --- UI and Scoring ---
