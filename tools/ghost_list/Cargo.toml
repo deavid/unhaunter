@@ -7,3 +7,5 @@ edition = "2024"
 uncore = { path = "../../uncore" }
 enum-iterator = { workspace = true }
 bevy = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+itertools = { workspace = true }
