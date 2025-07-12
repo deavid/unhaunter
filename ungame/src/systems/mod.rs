@@ -8,4 +8,5 @@ pub(crate) fn app_setup(app: &mut App) {
     game_systems::app_setup(app);
     hint_acknowledge_system::app_setup(app);
     hint_ui_system::app_setup(app);
+    crate::environmental_mechanics::app_setup(app);
 }

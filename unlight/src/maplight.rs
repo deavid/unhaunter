@@ -511,7 +511,7 @@ fn apply_lighting(
                 }
             }
 
-            let mut bpos = pos.to_board_position();
+            let mut bpos = pos.to_board_position_size(bf.map_size);
             bpos.x += behavior.p.display.light_recv_offset.0;
             bpos.y += behavior.p.display.light_recv_offset.1;
 

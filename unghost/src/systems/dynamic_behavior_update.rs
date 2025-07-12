@@ -33,7 +33,7 @@ fn calculate_noise_multiplier(
     combined_noise.powf(power_scale) * 2.0 - 1.0 // Scale to [-1, 1]
 }
 
-pub(crate) fn update_ghost_behavior_dynamics_system(
+fn update_ghost_behavior_dynamics_system(
     time: Res<Time>,
     difficulty: Res<CurrentDifficulty>,
     noise_table: Res<uncore::noise::PerlinNoise>,
@@ -114,4 +114,8 @@ pub(crate) fn update_ghost_behavior_dynamics_system(
             *report_time = 0.0;
         }
     }
+}
+
+pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
+    app.add_systems(bevy::prelude::Update, update_ghost_behavior_dynamics_system);
 }

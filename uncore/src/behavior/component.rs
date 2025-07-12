@@ -22,6 +22,19 @@ pub struct Stairs {
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct FloorItemCollidable;
 
+/// Marker component that identifies entities that ghosts can interact with.
+///
+/// This component is automatically added to entities during map loading if they have:
+/// - Door behavior (for DoorSlam, DoorCreak, Lock interactions)
+/// - Switch/Light behavior (for Toggle interactions)
+/// - Breaker behavior (for TripBreaker interactions)
+/// - Object properties that enable ghost interaction (throwable, nudgeable, haunt_movable)
+///
+/// Using a marker component allows for fast ECS queries and avoids having to check
+/// behavior properties every frame during ghost interaction selection.
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct InteractableByGhost;
+
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
 pub struct RoomState {
     pub room_delta: BoardPosition,

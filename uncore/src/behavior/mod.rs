@@ -186,6 +186,9 @@ pub struct Properties {
 ///
 /// These properties determine how the player can interact with objects, such as
 /// whether they can be picked up, moved, or used as hiding spots.
+///
+/// Ghost interaction properties determine which objects ghosts can manipulate
+/// as part of the Ghost Interaction System (GIS).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub struct Object {
     pub pickable: bool,
@@ -193,6 +196,14 @@ pub struct Object {
     pub hidingspot: bool,
     pub weight: NotNan<f32>,
     pub name: String,
+
+    // Ghost interaction properties (GIS)
+    /// Can be thrown by ghosts with fast parabolic movement
+    pub throwable: bool,
+    /// Can be nudged by ghosts with small quick movements
+    pub nudgeable: bool,
+    /// Can be moved slowly by ghosts with eerie sliding motion
+    pub haunt_movable: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -605,6 +616,28 @@ impl SpriteConfig {
             Class::StairsDown => entity.insert(component::Stairs { z: -1 }),
             Class::StairsUp => entity.insert(component::Stairs { z: 1 }),
         };
+
+        // Add InteractableByGhost marker component for entities that ghosts can interact with
+        let should_add_ghost_interaction = match self.class {
+            // Doors, switches, and breakers can always be interacted with by ghosts
+            Class::Door | Class::Switch | Class::RoomSwitch | Class::Breaker => true,
+            // For other classes, check properties
+            _ => {
+                // Check for light capabilities (can be toggled by ghosts)
+                let has_light = self.properties.get_bool("light:can_emit_light");
+
+                // Check for object interaction properties
+                let has_object_interaction = self.properties.get_bool("object:throwable")
+                    || self.properties.get_bool("object:nudgeable")
+                    || self.properties.get_bool("object:haunt_movable");
+
+                has_light || has_object_interaction
+            }
+        };
+
+        if should_add_ghost_interaction {
+            entity.insert(component::InteractableByGhost);
+        }
     }
 
     pub fn set_properties(&self, p: &mut Properties) {
@@ -762,6 +795,18 @@ impl SpriteConfig {
         p.object.name = self.properties.get_string("object:name");
         if p.object.name.is_empty() {
             p.object.name.clone_from(&self.variant.clone());
+        }
+
+        // --- Load ghost interaction properties from Tiled data (GIS) ---
+        p.object.throwable = self.properties.get_bool("object:throwable");
+        p.object.nudgeable = self.properties.get_bool("object:nudgeable");
+        p.object.haunt_movable = self.properties.get_bool("object:haunt_movable");
+        // FIXME: For now if it's movable, we can do all GIS options, just to check, but this later has to be removed and
+        // on the tileset we need these properties.
+        if p.object.movable {
+            p.object.throwable = true;
+            p.object.nudgeable = true;
+            p.object.haunt_movable = true;
         }
     }
 

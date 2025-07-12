@@ -1,4 +1,5 @@
 pub mod boardfield_update;
+pub mod environmental_mechanics;
 pub mod evidence_perception;
 pub mod game_ui;
 pub mod gear_ui;

@@ -784,9 +784,11 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_fade_out_system,
             update_ghost_warning_field,
             ghost_scale_glitch_system,
-            crate::systems::dynamic_behavior_update::update_ghost_behavior_dynamics_system,
         ),
     );
+
+    // Initialize dynamic behavior update system
+    crate::systems::dynamic_behavior_update::app_setup(app);
 }
 
 // Helper functions for simplified ghost behavior processing

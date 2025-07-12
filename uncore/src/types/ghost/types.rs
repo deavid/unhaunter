@@ -2,6 +2,7 @@ use bevy_platform::collections::HashSet;
 use enum_iterator::{Sequence, all};
 
 use crate::types::evidence::Evidence;
+use crate::types::ghost::personality::GhostPersonality;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence)]
 pub enum GhostType {
@@ -172,6 +173,35 @@ impl GhostType {
             Ceara => Evidence::from_bits(0b11101100),
             Muirgheas => Evidence::from_bits(0b11110010),
             Domovoy => Evidence::from_bits(0b11110100),
+        }
+    }
+
+    /// Returns the personality profile for this ghost type, defining interaction rates
+    /// for different behavioral actions at calm and angry states.
+    pub fn personality(&self) -> GhostPersonality {
+        use GhostType::*;
+
+        match self {
+            // Aggressive ghosts - high interaction rates, especially violent actions
+            BeanSidhe | Dullahan | Barghest | Ghoul | Afrit => GhostPersonality::aggressive(),
+
+            // Poltergeist-style ghosts - focused on object manipulation
+            Leprechaun | WillOWisp | Phooka | Dybbuk | Tengu | Kappa => {
+                GhostPersonality::poltergeist()
+            }
+
+            // Subtle, atmospheric ghosts - more creaks and atmosphere, less violence
+            Widow | BaobhanSith | Ghostlight | LaLlorona | GrayMan | LadyInWhite | GreyLady
+            | BrownLady | Fionnuala | Ailill | Cairbre | Oonagh | Mider | Orla | Finvarra
+            | Caoilte | Ceara | Muirgheas => GhostPersonality::subtle(),
+
+            // Calm ghosts - very low interaction rates overall
+            HobsTally | Curupira | Aswang | Maresca | OldNan | Morag | Domovoy => {
+                GhostPersonality::calm()
+            }
+
+            // Default to standard personality for any remaining ghosts
+            _ => GhostPersonality::default(),
         }
     }
 }
