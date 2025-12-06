@@ -114,7 +114,7 @@ impl GearUsable for Thermometer {
         let n = self.frame_counter as usize % self.temp_l2.len();
         self.temp_l2[n] = (self.temp_l2[n] * air_mass + self.temp_l1) / (air_mass + 1.0);
         self.temp_l1 = (self.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
-        if self.frame_counter % 5 == 0 {
+        if self.frame_counter.is_multiple_of(5) {
             let sum_temp: f32 = self.temp_l2.iter().sum();
             let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
             self.temp = (avg_temp * 5.0).round() / 5.0;

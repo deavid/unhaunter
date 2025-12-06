@@ -133,10 +133,11 @@ fn handle_selection_input(
 
     ev_menu_clicks.clear();
 
-    if selected_identifier.is_none() && keyboard_input.just_pressed(KeyCode::Enter) {
-        if let Ok(root) = menu_root.single() {
-            selected_identifier = Some(root.selected_item);
-        }
+    if selected_identifier.is_none()
+        && keyboard_input.just_pressed(KeyCode::Enter)
+        && let Ok(root) = menu_root.single()
+    {
+        selected_identifier = Some(root.selected_item);
     }
 
     let mut go_back = false;

@@ -81,14 +81,14 @@ fn update_current_evidence_readings_from_player_perception_system(
     );
 
     // --- "Next" Inventory Slot (Icon for [Q] cycle) ---
-    if let Some(next_gear_in_q_slot) = player_gear.get_next_non_empty() {
-        if next_gear_in_q_slot.kind != GearKind::None {
-            process_gear(
-                &next_gear_in_q_slot,
-                false, // "Next" item preview generally doesn't show full status text
-                true,  // Icon is visible
-            );
-        }
+    if let Some(next_gear_in_q_slot) = player_gear.get_next_non_empty()
+        && next_gear_in_q_slot.kind != GearKind::None
+    {
+        process_gear(
+            &next_gear_in_q_slot,
+            false, // "Next" item preview generally doesn't show full status text
+            true,  // Icon is visible
+        );
     }
 }
 

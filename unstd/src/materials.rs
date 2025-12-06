@@ -1,4 +1,8 @@
 //! A shader and a material that uses it.
+
+#![allow(dead_code)]
+// dead_code: CustomMaterial1Data -> function `check` is never used - from some derive below. Probably upgrading Bevy will solve this.
+
 use bevy::{
     prelude::*,
     reflect::TypePath,
@@ -118,11 +122,11 @@ impl Material2d for CustomMaterial1 {
         _layout: &MeshVertexBufferLayoutRef,
         _key: Material2dKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        if let Some(fragment) = &mut descriptor.fragment {
-            if let Some(target_state) = &mut fragment.targets[0] {
-                target_state.blend = Some(BlendState::ALPHA_BLENDING);
-                // target_state.blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
-            }
+        if let Some(fragment) = &mut descriptor.fragment
+            && let Some(target_state) = &mut fragment.targets[0]
+        {
+            target_state.blend = Some(BlendState::ALPHA_BLENDING);
+            // target_state.blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
         }
         Ok(())
     }
@@ -166,10 +170,10 @@ impl Material2d for CustomMaterial2 {
         _layout: &MeshVertexBufferLayoutRef,
         _key: Material2dKey<Self>,
     ) -> Result<(), SpecializedMeshPipelineError> {
-        if let Some(fragment) = &mut descriptor.fragment {
-            if let Some(target_state) = &mut fragment.targets[0] {
-                target_state.blend = Some(BLEND_ADD);
-            }
+        if let Some(fragment) = &mut descriptor.fragment
+            && let Some(target_state) = &mut fragment.targets[0]
+        {
+            target_state.blend = Some(BLEND_ADD);
         }
         Ok(())
     }

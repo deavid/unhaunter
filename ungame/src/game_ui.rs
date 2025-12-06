@@ -448,38 +448,37 @@ fn toggle_held_object_ui(
     // }
 
     // --- Retrieve Object Data ---
-    if let Ok(player_gear) = players.single() {
-        if let Some(held_object) = &player_gear.held_item {
-            if let Ok(behavior) = objects.get(held_object.entity) {
-                // --- Set Object Name ---
-                for (mut text, _, _) in text_query
-                    .iter_mut()
-                    .filter(|(_, _, e)| **e == ElementObjectUI::Name)
-                {
-                    text.0.clone_from(&behavior.p.object.name);
-                }
+    if let Ok(player_gear) = players.single()
+        && let Some(held_object) = &player_gear.held_item
+        && let Ok(behavior) = objects.get(held_object.entity)
+    {
+        // --- Set Object Name ---
+        for (mut text, _, _) in text_query
+            .iter_mut()
+            .filter(|(_, _, e)| **e == ElementObjectUI::Name)
+        {
+            text.0.clone_from(&behavior.p.object.name);
+        }
 
-                // --- Set Object Description ---
-                for (mut text, _, _) in text_query
-                    .iter_mut()
-                    .filter(|(_, _, e)| **e == ElementObjectUI::Description)
-                {
-                    text.0 = "Object Description".into();
-                }
+        // --- Set Object Description ---
+        for (mut text, _, _) in text_query
+            .iter_mut()
+            .filter(|(_, _, e)| **e == ElementObjectUI::Description)
+        {
+            text.0 = "Object Description".into();
+        }
 
-                // --- Dynamic "Move" Action ---
-                for (mut text, mut color, _) in text_query
-                    .iter_mut()
-                    .filter(|(_, _, e)| **e == ElementObjectUI::Grab)
-                {
-                    if behavior.p.object.movable {
-                        text.0 = "[Grab]: Move Object".into();
-                        color.0 = colors::INVENTORY_STATS_COLOR;
-                    } else {
-                        text.0 = "[Grab]: -".into();
-                        color.0 = colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
-                    }
-                }
+        // --- Dynamic "Move" Action ---
+        for (mut text, mut color, _) in text_query
+            .iter_mut()
+            .filter(|(_, _, e)| **e == ElementObjectUI::Grab)
+        {
+            if behavior.p.object.movable {
+                text.0 = "[Grab]: Move Object".into();
+                color.0 = colors::INVENTORY_STATS_COLOR;
+            } else {
+                text.0 = "[Grab]: -".into();
+                color.0 = colors::INVENTORY_STATS_COLOR.with_alpha(0.3);
             }
         }
     }

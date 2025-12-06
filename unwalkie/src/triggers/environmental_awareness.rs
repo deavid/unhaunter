@@ -82,10 +82,10 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class {
-            if button_data.status == uncore::types::truck_button::TruckButtonState::Pressed {
-                return; // Don't fire if any evidence is confirmed
-            }
+        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == uncore::types::truck_button::TruckButtonState::Pressed
+        {
+            return; // Don't fire if any evidence is confirmed
         }
     }
 
@@ -129,10 +129,10 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class {
-            if button_data.status == uncore::types::truck_button::TruckButtonState::Pressed {
-                return; // Don't fire if any evidence is confirmed
-            }
+        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == uncore::types::truck_button::TruckButtonState::Pressed
+        {
+            return; // Don't fire if any evidence is confirmed
         }
     }
 
@@ -223,29 +223,27 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     };
     // Check if right hand is a Thermometer and enabled
-    if let GearKind::Thermometer = player_gear.right_hand.kind {
-        if let Some(thermo) = player_gear
+    if let GearKind::Thermometer = player_gear.right_hand.kind
+        && let Some(thermo) = player_gear
             .right_hand
             .data
             .as_ref()
             .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d.as_ref()))
-        {
-            if thermo.enabled {
-                let temp_c = uncore::kelvin_to_celsius(thermo.temp);
-                if (1.0..=10.0).contains(&temp_c) {
-                    stopwatch.tick(time.delta());
-                    if stopwatch.elapsed_secs() > REQUIRED_DURATION {
-                        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                        walkie_play.set(
-                            WalkieEvent::ThermometerNonFreezingFixation,
-                            time.elapsed_secs_f64(),
-                        );
-                        *trigger_count += 1;
-                        stopwatch.reset();
-                    }
-                    return; // Return to avoid resetting stopwatch if conditions are met
-                }
+        && thermo.enabled
+    {
+        let temp_c = uncore::kelvin_to_celsius(thermo.temp);
+        if (1.0..=10.0).contains(&temp_c) {
+            stopwatch.tick(time.delta());
+            if stopwatch.elapsed_secs() > REQUIRED_DURATION {
+                // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                walkie_play.set(
+                    WalkieEvent::ThermometerNonFreezingFixation,
+                    time.elapsed_secs_f64(),
+                );
+                *trigger_count += 1;
+                stopwatch.reset();
             }
+            return; // Return to avoid resetting stopwatch if conditions are met
         }
     }
     stopwatch.reset();

@@ -3,7 +3,7 @@
 //! Functions for processing RON files, generating audio, and managing generated files.
 
 use crate::constants::{
-    DURATION_SCRIPT_PATH, GENERATED_ASSETS_DIR, GENERATE_SCRIPT_PATH, TEMP_AUDIO_DIR,
+    DURATION_SCRIPT_PATH, GENERATE_SCRIPT_PATH, GENERATED_ASSETS_DIR, TEMP_AUDIO_DIR,
 };
 use crate::manifest_types::WalkieLineManifestEntry;
 use crate::ron_types::{WalkieLineEntry, WalkiePhraseFile};
@@ -245,11 +245,11 @@ pub fn cleanup_unused_files(
                 })?;
                 deleted_ogg_count += 1;
                 // Add parent directory to the set of potentially empty dirs
-                if let Some(parent_dir) = path.parent() {
-                    if parent_dir != root_dir {
-                        // Don't add the root itself
-                        potentially_empty_dirs.insert(parent_dir.to_path_buf());
-                    }
+                if let Some(parent_dir) = path.parent()
+                    && parent_dir != root_dir
+                {
+                    // Don't add the root itself
+                    potentially_empty_dirs.insert(parent_dir.to_path_buf());
                 }
             }
         }
@@ -464,23 +464,22 @@ pub fn process_audio_generation_task(
     };
 
     // Apply force_regenerate_pattern if provided
-    if let Some(pattern) = &task.force_regenerate_pattern {
-        if pattern == "all"
+    if let Some(pattern) = &task.force_regenerate_pattern
+        && (pattern == "all"
             || task.conceptual_id.contains(pattern)
             || (pattern.ends_with('*')
                 && task
                     .conceptual_id
-                    .starts_with(pattern.trim_end_matches('*')))
-        {
-            if !needs_audio_regeneration {
-                // Only print if it's an override of existing up-to-date audio
-                println!(
-                    "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
-                    task.detailed_manifest_key, task.ron_filename_str, pattern
-                );
-            }
-            needs_audio_regeneration = true;
+                    .starts_with(pattern.trim_end_matches('*'))))
+    {
+        if !needs_audio_regeneration {
+            // Only print if it's an override of existing up-to-date audio
+            println!(
+                "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
+                task.detailed_manifest_key, task.ron_filename_str, pattern
+            );
         }
+        needs_audio_regeneration = true;
     }
 
     // 4. Handle audio generation and determine actual audio duration
@@ -604,22 +603,21 @@ pub fn process_audio_generation_task_single_thread(
         None => true,
     };
 
-    if let Some(pattern) = &task.force_regenerate_pattern {
-        if pattern == "all"
+    if let Some(pattern) = &task.force_regenerate_pattern
+        && (pattern == "all"
             || task.conceptual_id.contains(pattern)
             || (pattern.ends_with('*')
                 && task
                     .conceptual_id
-                    .starts_with(pattern.trim_end_matches('*')))
-        {
-            if !needs_audio_regeneration {
-                println!(
-                    "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
-                    task.detailed_manifest_key, task.ron_filename_str, pattern
-                );
-            }
-            needs_audio_regeneration = true;
+                    .starts_with(pattern.trim_end_matches('*'))))
+    {
+        if !needs_audio_regeneration {
+            println!(
+                "Forcing audio regeneration for: {} (from {}) due to pattern '{}'",
+                task.detailed_manifest_key, task.ron_filename_str, pattern
+            );
         }
+        needs_audio_regeneration = true;
     }
 
     // 4. Handle audio generation and determine duration

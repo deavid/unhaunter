@@ -34,17 +34,17 @@ fn force_discard_evidence_system(
 
         let mut button_found = false;
         for mut tui_button in interaction_query.iter_mut() {
-            if let TruckButtonType::Evidence(evidence_type) = tui_button.class {
-                if evidence_type == event.0 {
-                    info!(
-                        "Journal: Setting evidence {:?} button from {:?} to Discard",
-                        evidence_type, tui_button.status
-                    );
-                    tui_button.status = TruckButtonState::Discard;
-                    tui_button.computer_locked = true;
-                    button_found = true;
-                    break;
-                }
+            if let TruckButtonType::Evidence(evidence_type) = tui_button.class
+                && evidence_type == event.0
+            {
+                info!(
+                    "Journal: Setting evidence {:?} button from {:?} to Discard",
+                    evidence_type, tui_button.status
+                );
+                tui_button.status = TruckButtonState::Discard;
+                tui_button.computer_locked = true;
+                button_found = true;
+                break;
             }
         }
 
@@ -180,11 +180,12 @@ fn button_system(
             let ghost_ev = ghost_type.evidences();
             let mut is_discarded = false;
             for (_, _, _, _, tui_button) in &interaction_query {
-                if let TruckButtonType::Ghost(gh) = tui_button.class {
-                    if gh == *ghost_type && tui_button.status == TruckButtonState::Discard {
-                        is_discarded = true;
-                        break;
-                    }
+                if let TruckButtonType::Ghost(gh) = tui_button.class
+                    && gh == *ghost_type
+                    && tui_button.status == TruckButtonState::Discard
+                {
+                    is_discarded = true;
+                    break;
                 }
             }
             !is_discarded
@@ -203,10 +204,10 @@ fn button_system(
     }
 
     // b) Auto-deselect if the currently selected ghost becomes invalid
-    if let Some(selected_ghost) = gg.ghost_type {
-        if !possible_ghosts.contains(&selected_ghost) {
-            gg.ghost_type = None;
-        }
+    if let Some(selected_ghost) = gg.ghost_type
+        && !possible_ghosts.contains(&selected_ghost)
+    {
+        gg.ghost_type = None;
     }
 
     // c) Auto-select if only one ghost is possible and nothing is selected
@@ -268,12 +269,11 @@ fn button_system(
             let mut disabled = gg.ghost_type.is_none();
             if !disabled {
                 for (player, gear) in q_gear.iter() {
-                    if player.id == gc.player_id {
-                        if let Some(ghost_type) = gg.ghost_type {
-                            if !gear.can_craft_repellent(ghost_type) {
-                                disabled = true;
-                            }
-                        }
+                    if player.id == gc.player_id
+                        && let Some(ghost_type) = gg.ghost_type
+                        && !gear.can_craft_repellent(ghost_type)
+                    {
+                        disabled = true;
                     }
                 }
             }
@@ -321,30 +321,28 @@ fn button_system(
 
     // Acknowledge hints
     for (_interaction, _, _, _, tui_button) in &interaction_query {
-        if let TruckButtonType::Evidence(clicked_evidence_type) = tui_button.class {
-            if tui_button.status == TruckButtonState::Pressed {
-                if let Some((hinted_evidence, _)) =
-                    walkie_play.evidence_hinted_not_logged_via_walkie
-                {
-                    if hinted_evidence == clicked_evidence_type {
-                        const JOURNAL_HINT_THRESHOLD: u32 = 3;
-                        let ack_count = profile_data
-                            .times_evidence_acknowledged_in_journal
-                            .entry(clicked_evidence_type)
-                            .or_insert(0);
-                        if *ack_count < JOURNAL_HINT_THRESHOLD {
-                            *ack_count += 1;
-                            profile_data.set_changed();
-                        }
-                        walkie_play.clear_evidence_hint();
-                    }
+        if let TruckButtonType::Evidence(clicked_evidence_type) = tui_button.class
+            && tui_button.status == TruckButtonState::Pressed
+        {
+            if let Some((hinted_evidence, _)) = walkie_play.evidence_hinted_not_logged_via_walkie
+                && hinted_evidence == clicked_evidence_type
+            {
+                const JOURNAL_HINT_THRESHOLD: u32 = 3;
+                let ack_count = profile_data
+                    .times_evidence_acknowledged_in_journal
+                    .entry(clicked_evidence_type)
+                    .or_insert(0);
+                if *ack_count < JOURNAL_HINT_THRESHOLD {
+                    *ack_count += 1;
+                    profile_data.set_changed();
                 }
+                walkie_play.clear_evidence_hint();
+            }
 
-                if let Some(potential_data) = &potential_id_timer.data {
-                    if potential_data.evidence == clicked_evidence_type {
-                        potential_id_timer.data = None;
-                    }
-                }
+            if let Some(potential_data) = &potential_id_timer.data
+                && potential_data.evidence == clicked_evidence_type
+            {
+                potential_id_timer.data = None;
             }
         }
     }

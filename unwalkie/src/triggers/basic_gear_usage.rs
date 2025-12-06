@@ -214,11 +214,11 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
             // In breach room
             in_hotspot = true;
         }
-        if let Some(ghost_live_pos) = current_ghost_live_pos_opt {
-            if player_room == roomdb.room_tiles.get(&ghost_live_pos.to_board_position()) {
-                // In live ghost's current room
-                in_hotspot = true;
-            }
+        if let Some(ghost_live_pos) = current_ghost_live_pos_opt
+            && player_room == roomdb.room_tiles.get(&ghost_live_pos.to_board_position())
+        {
+            // In live ghost's current room
+            in_hotspot = true;
         }
     }
     if !in_hotspot {
@@ -315,16 +315,15 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         }
     }
 
-    if let Some(current_tracker_ref) = tracker.as_ref() {
-        if current_tracker_ref.duration_in_hotspot_with_ineffective_tool_active
+    if let Some(current_tracker_ref) = tracker.as_ref()
+        && current_tracker_ref.duration_in_hotspot_with_ineffective_tool_active
             > HOTSPOT_DURATION_THRESHOLD
-            && walkie_play.set(
-                WalkieEvent::DidNotSwitchStartingGearInHotspot,
-                time.elapsed_secs_f64(),
-            )
-        {
-            *tracker = None; // Reset after triggering
-        }
+        && walkie_play.set(
+            WalkieEvent::DidNotSwitchStartingGearInHotspot,
+            time.elapsed_secs_f64(),
+        )
+    {
+        *tracker = None; // Reset after triggering
     }
 }
 
@@ -400,12 +399,10 @@ fn trigger_did_not_cycle_to_other_gear_system(
 
     if current_right_tool_kind != GearKind::None
         && Evidence::try_from(&current_right_tool_kind).is_ok()
+        && let Some(gear_data) = player_gear.right_hand.data.as_ref()
+        && gear_data.is_enabled()
     {
-        if let Some(gear_data) = player_gear.right_hand.data.as_ref() {
-            if gear_data.is_enabled() {
-                is_current_tool_an_active_evidence_tool = true;
-            }
-        }
+        is_current_tool_an_active_evidence_tool = true;
     }
 
     if is_current_tool_an_active_evidence_tool {
@@ -433,13 +430,11 @@ fn trigger_did_not_cycle_to_other_gear_system(
     if player_gear.left_hand.kind != GearKind::None &&
        player_gear.left_hand.kind != current_right_tool_kind && // Different tool
        Evidence::try_from(&player_gear.left_hand.kind).is_ok()
+        && let Some(lh_data) = player_gear.left_hand.data.as_ref()
+            && lh_data.can_enable()
     {
-        if let Some(lh_data) = player_gear.left_hand.data.as_ref() {
-            if lh_data.can_enable() {
-                // Check if it *can* be enabled
-                has_other_usable_evidence_tools = true;
-            }
-        }
+        // Check if it *can* be enabled
+        has_other_usable_evidence_tools = true;
     }
     // Check inventory if still no other tool found
     if !has_other_usable_evidence_tools {
@@ -447,13 +442,11 @@ fn trigger_did_not_cycle_to_other_gear_system(
             if gear_in_inv.kind != GearKind::None &&
                gear_in_inv.kind != current_right_tool_kind && // Different tool
                Evidence::try_from(&gear_in_inv.kind).is_ok()
+                && let Some(inv_data) = gear_in_inv.data.as_ref()
+                    && inv_data.can_enable()
             {
-                if let Some(inv_data) = gear_in_inv.data.as_ref() {
-                    if inv_data.can_enable() {
-                        has_other_usable_evidence_tools = true;
-                        break;
-                    }
-                }
+                has_other_usable_evidence_tools = true;
+                break;
             }
         }
     }

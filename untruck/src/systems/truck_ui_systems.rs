@@ -247,11 +247,11 @@ fn hold_button_system(
                     let progress = (*hold_timer / hold_duration).clamp(0.0, 1.0);
 
                     for (progress_entity, parent) in &progress_query {
-                        if parent.parent() == button_entity {
-                            if let Ok(mut node) = node_query.get_mut(progress_entity) {
-                                // We only cover up to 99% to avoid overflowing the button due to the borders.
-                                node.width = Val::Percent(progress.abs().sqrt() * 99.0);
-                            }
+                        if parent.parent() == button_entity
+                            && let Ok(mut node) = node_query.get_mut(progress_entity)
+                        {
+                            // We only cover up to 99% to avoid overflowing the button due to the borders.
+                            node.width = Val::Percent(progress.abs().sqrt() * 99.0);
                         }
                     }
 
@@ -292,10 +292,10 @@ fn hold_button_system(
                     button.hold_timer = None;
 
                     // Stop sound
-                    if let Some(entity) = hold_sound.take() {
-                        if let Ok(mut cmd_e) = commands.get_entity(entity) {
-                            cmd_e.despawn();
-                        }
+                    if let Some(entity) = hold_sound.take()
+                        && let Ok(mut cmd_e) = commands.get_entity(entity)
+                    {
+                        cmd_e.despawn();
                     }
                 }
             }
@@ -381,35 +381,35 @@ fn truckui_event_handle(
             TruckUIEvent::ExitTruck => game_next_state.set(GameState::None),
             TruckUIEvent::CraftRepellent => {
                 for (player, mut gear) in q_gear.iter_mut() {
-                    if player.id == gc.player_id {
-                        if let Some(ghost_type) = gg.ghost_type {
-                            let consumed_new_bottle = craft_repellent(&mut gear, ghost_type);
+                    if player.id == gc.player_id
+                        && let Some(ghost_type) = gg.ghost_type
+                    {
+                        let consumed_new_bottle = craft_repellent(&mut gear, ghost_type);
 
-                            // Only count as a craft if we actually consumed a new bottle
-                            if consumed_new_bottle {
-                                craft_tracker.craft();
-                            }
-
-                            commands
-                                .spawn(AudioPlayer::new(
-                                    asset_server.load("sounds/effects-dingdingding.ogg"),
-                                ))
-                                .insert(PlaybackSettings {
-                                    mode: bevy::audio::PlaybackMode::Despawn,
-                                    volume: bevy::audio::Volume::Linear(
-                                        1.0 * audio_settings.volume_master.as_f32()
-                                            * audio_settings.volume_effects.as_f32(),
-                                    ),
-                                    speed: 1.0,
-                                    paused: false,
-                                    spatial: false,
-                                    spatial_scale: None,
-                                    ..Default::default()
-                                });
-
-                            // Automatically exit the truck after crafting repellent
-                            game_next_state.set(GameState::None);
+                        // Only count as a craft if we actually consumed a new bottle
+                        if consumed_new_bottle {
+                            craft_tracker.craft();
                         }
+
+                        commands
+                            .spawn(AudioPlayer::new(
+                                asset_server.load("sounds/effects-dingdingding.ogg"),
+                            ))
+                            .insert(PlaybackSettings {
+                                mode: bevy::audio::PlaybackMode::Despawn,
+                                volume: bevy::audio::Volume::Linear(
+                                    1.0 * audio_settings.volume_master.as_f32()
+                                        * audio_settings.volume_effects.as_f32(),
+                                ),
+                                speed: 1.0,
+                                paused: false,
+                                spatial: false,
+                                spatial_scale: None,
+                                ..Default::default()
+                            });
+
+                        // Automatically exit the truck after crafting repellent
+                        game_next_state.set(GameState::None);
                     }
                 }
             }

@@ -51,19 +51,19 @@ fn sync_map_entity_field(
                     let current_bpos = current_pos.to_board_position();
 
                     // Only update if the entity has a MapEntityFieldBPos component
-                    if let Ok(mut old_bpos) = map_entity_bpos_query.get_mut(entity) {
-                        if old_bpos.0 != current_bpos {
-                            to_update.push((entity, current_bpos.clone(), old_bpos.0.clone()));
+                    if let Ok(mut old_bpos) = map_entity_bpos_query.get_mut(entity)
+                        && old_bpos.0 != current_bpos
+                    {
+                        to_update.push((entity, current_bpos.clone(), old_bpos.0.clone()));
 
-                            // info!(
-                            //     "Moved entity {:?} from {:?} to {:?}",
-                            //     entity,
-                            //     (x, y, z),
-                            //     current_bpos.ndidx()
-                            // );
-                            // Update the stored BoardPosition
-                            old_bpos.0 = current_bpos;
-                        }
+                        // info!(
+                        //     "Moved entity {:?} from {:?} to {:?}",
+                        //     entity,
+                        //     (x, y, z),
+                        //     current_bpos.ndidx()
+                        // );
+                        // Update the stored BoardPosition
+                        old_bpos.0 = current_bpos;
                     }
                 }
             }

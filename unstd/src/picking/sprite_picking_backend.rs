@@ -34,12 +34,13 @@ const ALPHA_THRESHOLD: f32 = 0.8;
 pub struct CustomSpritePickingCamera;
 
 /// How the custom sprite picking backend should handle sprite boundaries.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum CustomSpritePickingMode {
     /// Only consider the logical bounding box of sprites.
     ///
     /// This is the fastest method and works well for most use cases.
     /// The bounding box size is determined by [`CustomSpritePickingSettings::tile_size`].
+    #[default]
     BoundingBox,
     /// Use pixel-perfect picking with transparency threshold.
     ///
@@ -47,12 +48,6 @@ pub enum CustomSpritePickingMode {
     /// value is above the threshold (80%). This provides accurate hit detection that
     /// respects sprite transparency and actual sprite bounds.
     AlphaThreshold(f32),
-}
-
-impl Default for CustomSpritePickingMode {
-    fn default() -> Self {
-        Self::BoundingBox
-    }
 }
 
 /// Runtime settings for the custom sprite picking backend.

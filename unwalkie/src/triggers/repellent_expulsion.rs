@@ -100,10 +100,10 @@ fn trigger_has_repellent_enters_location_system(
 
     // 3. Check Repellent Status
     let has_valid_repellent = player_gear.as_vec().iter().any(|(gear, _epos)| {
-        if gear.kind == GearKind::RepellentFlask {
-            if let Some(rep_data_dyn) = gear.data.as_ref() {
-                return rep_data_dyn.can_enable();
-            }
+        if gear.kind == GearKind::RepellentFlask
+            && let Some(rep_data_dyn) = gear.data.as_ref()
+        {
+            return rep_data_dyn.can_enable();
         }
         false
     });
@@ -166,10 +166,9 @@ fn trigger_repellent_used_too_far_system(
         } else {
             None
         }
-    }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
-            current_repellent_is_active = rep_data.active && rep_data.qty > 0;
-        }
+    }) && let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref())
+    {
+        current_repellent_is_active = rep_data.active && rep_data.qty > 0;
     }
 
     // 3. Check if repellent is active and player is too far
@@ -186,11 +185,11 @@ fn trigger_repellent_used_too_far_system(
         if is_too_far {
             if prev_repellent_state.too_far_started.is_none() {
                 prev_repellent_state.too_far_started = Some(time.elapsed_secs_f64());
-            } else if let Some(start_time) = prev_repellent_state.too_far_started {
-                if time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS {
-                    walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
-                    prev_repellent_state.too_far_started = None; // Reset after triggering
-                }
+            } else if let Some(start_time) = prev_repellent_state.too_far_started
+                && time.elapsed_secs_f64() - start_time >= TOO_FAR_DURATION_SECONDS
+            {
+                walkie_play.set(WalkieEvent::RepellentUsedTooFar, time.elapsed_secs_f64());
+                prev_repellent_state.too_far_started = None; // Reset after triggering
             }
         } else {
             prev_repellent_state.too_far_started = None; // Reset if not too far
@@ -263,10 +262,9 @@ fn trigger_repellent_provokes_strong_reaction_system(
         } else {
             None
         }
-    }) {
-        if let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref()) {
-            current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
-        }
+    }) && let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref())
+    {
+        current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
     }
 
     if current_repellent_is_active_and_has_qty && !prev_rep_active_state.was_active {
@@ -363,29 +361,26 @@ fn trigger_repellent_exhausted_correct_type_system(
     if check_state.pending_check_for_ghost_type.is_none() {
         // Only check for new exhaustion events
         for (gear, _epos) in player_gear.as_vec() {
-            if gear.kind == GearKind::RepellentFlask {
-                if let Some(rep_data_dyn) = gear.data.as_ref() {
-                    if let Some(rep_data) =
-                        <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
-                    {
-                        // Condition 1: Flask is now empty
-                        if rep_data.qty == 0 {
-                            // Condition 2: Flask *was* filled with a type (which is still stored in liquid_content)
-                            if let Some(flask_content_type) = rep_data.liquid_content {
-                                // Condition 3: The flask's content type matches the current ghost's type
-                                // Condition 4: The ghost has registered hits from the correct repellent type
-                                // (ghost_sprite.repellent_hits implies hits from its own class type)
-                                if flask_content_type == ghost_sprite.class
-                                    && ghost_sprite.repellent_hits > 0
-                                {
-                                    // This flask, of the correct type, is now empty, and the ghost was affected.
-                                    check_state.pending_check_for_ghost_type =
-                                        Some(ghost_sprite.class);
-                                    check_state.time_exhaustion_confirmed = time.elapsed_secs();
-                                    // `liquid_content` is intentionally not cleared in RepellentFlaskData as per new design.
-                                    break; // Found a relevant exhausted flask
-                                }
-                            }
+            if gear.kind == GearKind::RepellentFlask
+                && let Some(rep_data_dyn) = gear.data.as_ref()
+                && let Some(rep_data) =
+                    <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
+            {
+                // Condition 1: Flask is now empty
+                if rep_data.qty == 0 {
+                    // Condition 2: Flask *was* filled with a type (which is still stored in liquid_content)
+                    if let Some(flask_content_type) = rep_data.liquid_content {
+                        // Condition 3: The flask's content type matches the current ghost's type
+                        // Condition 4: The ghost has registered hits from the correct repellent type
+                        // (ghost_sprite.repellent_hits implies hits from its own class type)
+                        if flask_content_type == ghost_sprite.class
+                            && ghost_sprite.repellent_hits > 0
+                        {
+                            // This flask, of the correct type, is now empty, and the ghost was affected.
+                            check_state.pending_check_for_ghost_type = Some(ghost_sprite.class);
+                            check_state.time_exhaustion_confirmed = time.elapsed_secs();
+                            // `liquid_content` is intentionally not cleared in RepellentFlaskData as per new design.
+                            break; // Found a relevant exhausted flask
                         }
                     }
                 }

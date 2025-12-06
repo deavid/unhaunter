@@ -1141,21 +1141,21 @@ fn execute_roar_decision(
 ) {
     if roar_decision.should_play_now {
         let roar_time_threshold = roar_decision.time_override.unwrap_or(3.0);
-        if *last_roar > roar_time_threshold {
-            if let Some(roar_sound) = roar_decision.roar_type.get_sound() {
-                gs.play_audio(
-                    roar_sound,
-                    roar_decision.roar_type.get_volume(),
-                    ghost_position,
-                );
-                *last_roar = 0.0;
+        if *last_roar > roar_time_threshold
+            && let Some(roar_sound) = roar_decision.roar_type.get_sound()
+        {
+            gs.play_audio(
+                roar_sound,
+                roar_decision.roar_type.get_volume(),
+                ghost_position,
+            );
+            *last_roar = 0.0;
 
-                if DEBUG_HUNTS {
-                    debug!(
-                        "Ghost roar: {:?} - Reason: {:?}",
-                        roar_decision.roar_type, roar_decision.reason
-                    );
-                }
+            if DEBUG_HUNTS {
+                debug!(
+                    "Ghost roar: {:?} - Reason: {:?}",
+                    roar_decision.roar_type, roar_decision.reason
+                );
             }
         }
     }

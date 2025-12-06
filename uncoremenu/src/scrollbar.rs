@@ -176,53 +176,47 @@ fn update_scrollbar(
         let has_scrollable_content = content_height > container_height;
 
         // Update up/down arrow colors based on scroll position
-        if let Ok((children, interaction)) = arrow_up_query.single() {
-            if let Some(child) = children.first() {
-                if let Ok(mut image) = thumb_image_query.get_mut(*child) {
-                    // Set transparency/color for up arrow
-                    let at_top = scroll_y <= 0.1;
-                    let is_disabled = at_top || !has_scrollable_content;
+        if let Ok((children, interaction)) = arrow_up_query.single()
+            && let Some(child) = children.first()
+            && let Ok(mut image) = thumb_image_query.get_mut(*child)
+        {
+            // Set transparency/color for up arrow
+            let at_top = scroll_y <= 0.1;
+            let is_disabled = at_top || !has_scrollable_content;
 
-                    // If disabled, use a very transparent gray color regardless of interaction
-                    image.color = if is_disabled {
-                        Color::srgba(0.5, 0.5, 0.5, 0.15) // Much more transparent and gray when disabled
-                    } else {
-                        // Normal coloring based on interaction state
-                        match *interaction {
-                            Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
-                            Interaction::Hovered => {
-                                uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8)
-                            }
-                            Interaction::None => Color::WHITE,
-                        }
-                    };
+            // If disabled, use a very transparent gray color regardless of interaction
+            image.color = if is_disabled {
+                Color::srgba(0.5, 0.5, 0.5, 0.15) // Much more transparent and gray when disabled
+            } else {
+                // Normal coloring based on interaction state
+                match *interaction {
+                    Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
+                    Interaction::Hovered => uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
+                    Interaction::None => Color::WHITE,
                 }
-            }
+            };
         }
 
-        if let Ok((children, interaction)) = arrow_down_query.single() {
-            if let Some(child) = children.first() {
-                if let Ok(mut image) = thumb_image_query.get_mut(*child) {
-                    // Set transparency/color for down arrow
-                    // Use the calculated content_height to determine if at the bottom
-                    let at_bottom = scroll_y >= (content_height - container_height - 0.1).max(0.0);
-                    let is_disabled = at_bottom || !has_scrollable_content;
+        if let Ok((children, interaction)) = arrow_down_query.single()
+            && let Some(child) = children.first()
+            && let Ok(mut image) = thumb_image_query.get_mut(*child)
+        {
+            // Set transparency/color for down arrow
+            // Use the calculated content_height to determine if at the bottom
+            let at_bottom = scroll_y >= (content_height - container_height - 0.1).max(0.0);
+            let is_disabled = at_bottom || !has_scrollable_content;
 
-                    // If disabled, use a very transparent gray color regardless of interaction
-                    image.color = if is_disabled {
-                        Color::srgba(0.5, 0.5, 0.5, 0.15) // Much more transparent and gray when disabled
-                    } else {
-                        // Normal coloring based on interaction state
-                        match *interaction {
-                            Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
-                            Interaction::Hovered => {
-                                uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8)
-                            }
-                            Interaction::None => Color::WHITE,
-                        }
-                    };
+            // If disabled, use a very transparent gray color regardless of interaction
+            image.color = if is_disabled {
+                Color::srgba(0.5, 0.5, 0.5, 0.15) // Much more transparent and gray when disabled
+            } else {
+                // Normal coloring based on interaction state
+                match *interaction {
+                    Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
+                    Interaction::Hovered => uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
+                    Interaction::None => Color::WHITE,
                 }
-            }
+            };
         }
 
         // Update thumb position and visibility
@@ -254,17 +248,17 @@ fn update_scrollbar(
                     thumb_node.top = Val::Px(thumb_position);
 
                     // Make thumb visible
-                    if let Some(child) = children.first() {
-                        if let Ok(mut image) = thumb_image_query.get_mut(*child) {
-                            image.color = Color::WHITE.with_alpha(0.2);
-                        }
+                    if let Some(child) = children.first()
+                        && let Ok(mut image) = thumb_image_query.get_mut(*child)
+                    {
+                        image.color = Color::WHITE.with_alpha(0.2);
                     }
                 } else {
                     // If there's no scrollable content, hide the thumb
-                    if let Some(child) = children.first() {
-                        if let Ok(mut image) = thumb_image_query.get_mut(*child) {
-                            image.color = Color::srgba(1.0, 1.0, 1.0, 0.0);
-                        }
+                    if let Some(child) = children.first()
+                        && let Ok(mut image) = thumb_image_query.get_mut(*child)
+                    {
+                        image.color = Color::srgba(1.0, 1.0, 1.0, 0.0);
                     }
                 }
             }
@@ -286,36 +280,33 @@ fn handle_scrollbar_interactions(
     mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     // Handle the up arrow button
-    if let Ok(interaction) = up_arrow_query.single() {
-        if *interaction == Interaction::Pressed {
-            if let Ok((_, mut scroll_position)) = scroll_container_query.single_mut() {
-                // Scroll up by 60px when clicking the up arrow
-                scroll_position.offset_y = (scroll_position.offset_y - 60.0).max(0.0);
-            }
-        }
+    if let Ok(interaction) = up_arrow_query.single()
+        && *interaction == Interaction::Pressed
+        && let Ok((_, mut scroll_position)) = scroll_container_query.single_mut()
+    {
+        // Scroll up by 60px when clicking the up arrow
+        scroll_position.offset_y = (scroll_position.offset_y - 60.0).max(0.0);
     }
 
     // Handle the down arrow button
-    if let Ok(interaction) = down_arrow_query.single() {
-        if *interaction == Interaction::Pressed {
-            if let Ok((_, mut scroll_position)) = scroll_container_query.single_mut() {
-                // Scroll down by 60px when clicking the down arrow
-                scroll_position.offset_y += 60.0;
-            }
-        }
+    if let Ok(interaction) = down_arrow_query.single()
+        && *interaction == Interaction::Pressed
+        && let Ok((_, mut scroll_position)) = scroll_container_query.single_mut()
+    {
+        // Scroll down by 60px when clicking the down arrow
+        scroll_position.offset_y += 60.0;
     }
 
     // Handle thumb drag start
-    if let Ok((interaction, _)) = thumb_query.single() {
-        if *interaction == Interaction::Pressed && mouse_button_input.pressed(MouseButton::Left) {
-            if let Ok((entity, _)) = scroll_container_query.single() {
-                if drag_state.is_none() {
-                    // Start dragging - store the current cursor position and scroll container entity
-                    if let Some(event) = cursor_moved_events.read().last() {
-                        *drag_state = Some((entity, event.position));
-                    }
-                }
-            }
+    if let Ok((interaction, _)) = thumb_query.single()
+        && *interaction == Interaction::Pressed
+        && mouse_button_input.pressed(MouseButton::Left)
+        && let Ok((entity, _)) = scroll_container_query.single()
+        && drag_state.is_none()
+    {
+        // Start dragging - store the current cursor position and scroll container entity
+        if let Some(event) = cursor_moved_events.read().last() {
+            *drag_state = Some((entity, event.position));
         }
     }
 

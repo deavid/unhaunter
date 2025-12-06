@@ -474,12 +474,11 @@ fn find_throw_destination(
 
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-            if let Some(collision_data) = board_data.collision_field.get(idx) {
-                if collision_data.player_free {
-                    return Some(candidate_pos);
-                }
-            }
+        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size)
+            && let Some(collision_data) = board_data.collision_field.get(idx)
+            && collision_data.player_free
+        {
+            return Some(candidate_pos);
         }
     }
 
@@ -499,12 +498,11 @@ fn find_throw_destination(
         };
 
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-            if let Some(collision_data) = board_data.collision_field.get(idx) {
-                if collision_data.player_free {
-                    return Some(candidate_pos);
-                }
-            }
+        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size)
+            && let Some(collision_data) = board_data.collision_field.get(idx)
+            && collision_data.player_free
+        {
+            return Some(candidate_pos);
         }
     }
 
@@ -537,12 +535,11 @@ fn find_movement_destination(
 
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-            if let Some(collision_data) = board_data.collision_field.get(idx) {
-                if collision_data.player_free {
-                    return Some(candidate_pos);
-                }
-            }
+        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size)
+            && let Some(collision_data) = board_data.collision_field.get(idx)
+            && collision_data.player_free
+        {
+            return Some(candidate_pos);
         }
     }
 
@@ -572,12 +569,11 @@ fn find_nudge_destination(
         };
 
         let board_pos = candidate_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-            if let Some(collision_data) = board_data.collision_field.get(idx) {
-                if collision_data.player_free {
-                    return Some(candidate_pos);
-                }
-            }
+        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size)
+            && let Some(collision_data) = board_data.collision_field.get(idx)
+            && collision_data.player_free
+        {
+            return Some(candidate_pos);
         }
     }
 

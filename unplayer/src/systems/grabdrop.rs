@@ -171,27 +171,27 @@ fn update_held_object_position(
 ) {
     let current_time = gs.time.elapsed_secs();
     for (player_pos, player_gear, direction) in players.iter() {
-        if let Some(held_object) = &player_gear.held_item {
-            if let Ok((mut object_pos, behavior)) = objects.get_mut(held_object.entity) {
-                // Match the object's position to the player's position
-                *object_pos = *player_pos;
+        if let Some(held_object) = &player_gear.held_item
+            && let Ok((mut object_pos, behavior)) = objects.get_mut(held_object.entity)
+        {
+            // Match the object's position to the player's position
+            *object_pos = *player_pos;
 
-                // Slightly elevate the object's Z position
-                const OBJECT_ELEVATION: f32 = 0.3;
-                object_pos.z += OBJECT_ELEVATION;
+            // Slightly elevate the object's Z position
+            const OBJECT_ELEVATION: f32 = 0.3;
+            object_pos.z += OBJECT_ELEVATION;
 
-                // --- Play Scraping Sound if Object is Movable and Player is Moving ---
-                if behavior.p.object.movable
+            // --- Play Scraping Sound if Object is Movable and Player is Moving ---
+            if behavior.p.object.movable
                 // Player is moving
                 && direction.distance() > 75.0 && current_time - *last_sound_time > 2.0
-                // Sound cooldown
-                {
-                    // Play "Move" sound effect
-                    gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1, player_pos);
+            // Sound cooldown
+            {
+                // Play "Move" sound effect
+                gs.play_audio("sounds/item-move-scrape.ogg".into(), 0.1, player_pos);
 
-                    // Update last sound time
-                    *last_sound_time = current_time;
-                }
+                // Update last sound time
+                *last_sound_time = current_time;
             }
         }
     }
@@ -287,32 +287,32 @@ fn retrieve_gear(
             }
 
             // Retrieve the closest gear
-            if let Some((closest_gear_entity, _)) = closest_gear {
-                if let Ok((_, _, deployed_gear_data)) = q_deployed.get(closest_gear_entity) {
-                    // Inventory Shifting Logic:
-                    if player_gear.right_hand.kind.is_some() {
-                        // Right hand is occupied, try to shift to inventory
-                        if let Some(empty_slot_index) = player_gear
-                            .inventory
-                            .iter()
-                            .position(|gear| gear.kind.is_none())
-                        {
-                            // Move right-hand gear to the empty slot
-                            player_gear.inventory[empty_slot_index] = player_gear.right_hand.take();
-                        } else {
-                            // No empty slot - play invalid action sound and skip retrieval
-                            gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
-                            return;
-                        }
+            if let Some((closest_gear_entity, _)) = closest_gear
+                && let Ok((_, _, deployed_gear_data)) = q_deployed.get(closest_gear_entity)
+            {
+                // Inventory Shifting Logic:
+                if player_gear.right_hand.kind.is_some() {
+                    // Right hand is occupied, try to shift to inventory
+                    if let Some(empty_slot_index) = player_gear
+                        .inventory
+                        .iter()
+                        .position(|gear| gear.kind.is_none())
+                    {
+                        // Move right-hand gear to the empty slot
+                        player_gear.inventory[empty_slot_index] = player_gear.right_hand.take();
+                    } else {
+                        // No empty slot - play invalid action sound and skip retrieval
+                        gs.play_audio("sounds/invalid-action-buzz.ogg".into(), 0.3, player_pos);
+                        return;
                     }
-
-                    // Now the right hand is free, proceed with retrieval
-                    player_gear.right_hand = deployed_gear_data.gear.clone();
-                    commands.entity(closest_gear_entity).despawn();
-
-                    // Play "Grab Item" sound effect (reused for gear retrieval)
-                    gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
                 }
+
+                // Now the right hand is free, proceed with retrieval
+                player_gear.right_hand = deployed_gear_data.gear.clone();
+                commands.entity(closest_gear_entity).despawn();
+
+                // Play "Grab Item" sound effect (reused for gear retrieval)
+                gs.play_audio("sounds/item-pickup-whoosh.ogg".into(), 1.0, player_pos);
             }
             // --
         }

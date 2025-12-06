@@ -727,13 +727,11 @@ fn apply_lighting(
             new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
             new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
             const DEBUG_SOUND: bool = false;
-            if DEBUG_SOUND {
-                if let Some(sf) = bf.sound_field.get(&bpos) {
-                    let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
-                    if l > 0.0001 {
-                        new_mat.data.gamma = 2.0;
-                        new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
-                    }
+            if DEBUG_SOUND && let Some(sf) = bf.sound_field.get(&bpos) {
+                let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
+                if l > 0.0001 {
+                    new_mat.data.gamma = 2.0;
+                    new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
                 }
             }
             const DEBUG_TEMPERATURE: bool = false;

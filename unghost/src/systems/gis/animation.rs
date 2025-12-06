@@ -1,16 +1,13 @@
 use bevy::prelude::*;
 use uncore::components::board::position::Position;
 
-use crate::components::interaction::{Locked, Tween, TweenEase, MotionBlur};
+use crate::components::interaction::{Locked, MotionBlur, Tween, TweenEase};
 
 /// Registers animation systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         bevy::prelude::Update,
-        (
-            tween_animation_system,
-            door_lock_timer_system,
-        ),
+        (tween_animation_system, door_lock_timer_system),
     );
 }
 

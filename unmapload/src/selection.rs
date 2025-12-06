@@ -92,42 +92,41 @@ pub fn select_influence_objects(
                 .floor_mapping
                 .ghost_attracting_objects
                 .get(&tiled_floor_num)
+                && attract_count > 0
             {
-                if attract_count > 0 {
-                    // info!(
-                    //     "Floor {floor_z} (Tiled floor {tiled_floor_num}) requires {attract_count} attractive objects"
+                // info!(
+                //     "Floor {floor_z} (Tiled floor {tiled_floor_num}) requires {attract_count} attractive objects"
+                // );
+                floors_with_requirements.insert(floor_z);
+
+                // Ensure we have enough objects for this floor
+                if floor_objects.len() < attract_count as usize {
+                    // warn!(
+                    //     "Floor {floor_z} requires {attract_count} attractive objects but only has {} movable objects",
+                    //     floor_objects.len()
                     // );
-                    floors_with_requirements.insert(floor_z);
+                    continue;
+                }
 
-                    // Ensure we have enough objects for this floor
-                    if floor_objects.len() < attract_count as usize {
-                        // warn!(
-                        //     "Floor {floor_z} requires {attract_count} attractive objects but only has {} movable objects",
-                        //     floor_objects.len()
-                        // );
-                        continue;
-                    }
+                // Shuffle objects for this floor to randomize selection
+                let mut floor_objects_clone = floor_objects.clone();
+                floor_objects_clone.shuffle(rng);
 
-                    // Shuffle objects for this floor to randomize selection
-                    let mut floor_objects_clone = floor_objects.clone();
-                    floor_objects_clone.shuffle(rng);
+                // Take what we need from this floor
+                let take_count = attract_count as usize;
+                for entity in floor_objects_clone.iter().take(take_count) {
+                    selected_objects.push((*entity, InfluenceType::Attractive));
+                    total_attractive += 1;
+                }
 
-                    // Take what we need from this floor
-                    let take_count = attract_count as usize;
-                    for entity in floor_objects_clone.iter().take(take_count) {
-                        selected_objects.push((*entity, InfluenceType::Attractive));
-                        total_attractive += 1;
-                    }
-
-                    // Remove selected objects from the available pool
-                    for entity in selected_objects
-                        .iter()
-                        .filter(|(_, influence_type)| *influence_type == InfluenceType::Attractive)
-                        .map(|(entity, _)| entity)
-                    {
-                        if let Some(pos) = floor_objects.iter().position(|&e| e == *entity) {
-                            floor_objects.swap_remove(pos);
-                        }
+                // Remove selected objects from the available pool
+                for entity in selected_objects
+                    .iter()
+                    .filter(|(_, influence_type)| *influence_type == InfluenceType::Attractive)
+                    .map(|(entity, _)| entity)
+                {
+                    if let Some(pos) = floor_objects.iter().position(|&e| e == *entity) {
+                        floor_objects.swap_remove(pos);
                     }
                 }
             }
@@ -137,42 +136,41 @@ pub fn select_influence_objects(
                 .floor_mapping
                 .ghost_repelling_objects
                 .get(&tiled_floor_num)
+                && repel_count > 0
             {
-                if repel_count > 0 {
-                    // info!(
-                    //     "Floor {floor_z} (Tiled floor {tiled_floor_num}) requires {repel_count} repulsive objects"
+                // info!(
+                //     "Floor {floor_z} (Tiled floor {tiled_floor_num}) requires {repel_count} repulsive objects"
+                // );
+                floors_with_requirements.insert(floor_z);
+
+                // Ensure we have enough objects for this floor
+                if floor_objects.len() < repel_count as usize {
+                    // warn!(
+                    //     "Floor {floor_z} requires {repel_count} repulsive objects but only has {} movable objects",
+                    //     floor_objects.len()
                     // );
-                    floors_with_requirements.insert(floor_z);
+                    continue;
+                }
 
-                    // Ensure we have enough objects for this floor
-                    if floor_objects.len() < repel_count as usize {
-                        // warn!(
-                        //     "Floor {floor_z} requires {repel_count} repulsive objects but only has {} movable objects",
-                        //     floor_objects.len()
-                        // );
-                        continue;
-                    }
+                // Shuffle objects for this floor to randomize selection
+                let mut floor_objects_clone = floor_objects.clone();
+                floor_objects_clone.shuffle(rng);
 
-                    // Shuffle objects for this floor to randomize selection
-                    let mut floor_objects_clone = floor_objects.clone();
-                    floor_objects_clone.shuffle(rng);
+                // Take what we need from this floor
+                let take_count = repel_count as usize;
+                for entity in floor_objects_clone.iter().take(take_count) {
+                    selected_objects.push((*entity, InfluenceType::Repulsive));
+                    total_repulsive += 1;
+                }
 
-                    // Take what we need from this floor
-                    let take_count = repel_count as usize;
-                    for entity in floor_objects_clone.iter().take(take_count) {
-                        selected_objects.push((*entity, InfluenceType::Repulsive));
-                        total_repulsive += 1;
-                    }
-
-                    // Remove selected objects from the available pool
-                    for entity in selected_objects
-                        .iter()
-                        .filter(|(_, influence_type)| *influence_type == InfluenceType::Repulsive)
-                        .map(|(entity, _)| entity)
-                    {
-                        if let Some(pos) = floor_objects.iter().position(|&e| e == *entity) {
-                            floor_objects.swap_remove(pos);
-                        }
+                // Remove selected objects from the available pool
+                for entity in selected_objects
+                    .iter()
+                    .filter(|(_, influence_type)| *influence_type == InfluenceType::Repulsive)
+                    .map(|(entity, _)| entity)
+                {
+                    if let Some(pos) = floor_objects.iter().position(|&e| e == *entity) {
+                        floor_objects.swap_remove(pos);
                     }
                 }
             }
@@ -193,25 +191,25 @@ pub fn select_influence_objects(
 
         // Try to find objects from unrestricted floors
         for floor_z in &unrestricted_floors {
-            if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z) {
-                if !floor_objects.is_empty() {
-                    // Shuffle objects for this floor to randomize selection
-                    floor_objects.shuffle(rng);
+            if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z)
+                && !floor_objects.is_empty()
+            {
+                // Shuffle objects for this floor to randomize selection
+                floor_objects.shuffle(rng);
 
-                    // Take what we need from this floor
-                    let take_count = needed.min(floor_objects.len());
-                    for entity in floor_objects.iter().take(take_count) {
-                        selected_objects.push((*entity, InfluenceType::Repulsive));
-                        total_repulsive += 1;
-                    }
+                // Take what we need from this floor
+                let take_count = needed.min(floor_objects.len());
+                for entity in floor_objects.iter().take(take_count) {
+                    selected_objects.push((*entity, InfluenceType::Repulsive));
+                    total_repulsive += 1;
+                }
 
-                    // Remove selected objects
-                    floor_objects.drain(0..take_count);
+                // Remove selected objects
+                floor_objects.drain(0..take_count);
 
-                    // Break if we've met the requirement
-                    if total_repulsive >= MIN_REPULSIVE {
-                        break;
-                    }
+                // Break if we've met the requirement
+                if total_repulsive >= MIN_REPULSIVE {
+                    break;
                 }
             }
         }
@@ -224,25 +222,25 @@ pub fn select_influence_objects(
 
         // Try to find objects from unrestricted floors
         for floor_z in &unrestricted_floors {
-            if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z) {
-                if !floor_objects.is_empty() {
-                    // Shuffle objects for this floor to randomize selection
-                    floor_objects.shuffle(rng);
+            if let Some(floor_objects) = objects_by_floor_copy.get_mut(floor_z)
+                && !floor_objects.is_empty()
+            {
+                // Shuffle objects for this floor to randomize selection
+                floor_objects.shuffle(rng);
 
-                    // Take what we need from this floor
-                    let take_count = needed.min(floor_objects.len());
-                    for entity in floor_objects.iter().take(take_count) {
-                        selected_objects.push((*entity, InfluenceType::Attractive));
-                        total_attractive += 1;
-                    }
+                // Take what we need from this floor
+                let take_count = needed.min(floor_objects.len());
+                for entity in floor_objects.iter().take(take_count) {
+                    selected_objects.push((*entity, InfluenceType::Attractive));
+                    total_attractive += 1;
+                }
 
-                    // Remove selected objects
-                    floor_objects.drain(0..take_count);
+                // Remove selected objects
+                floor_objects.drain(0..take_count);
 
-                    // Break if we've met the requirement
-                    if total_attractive >= MIN_ATTRACTIVE {
-                        break;
-                    }
+                // Break if we've met the requirement
+                if total_attractive >= MIN_ATTRACTIVE {
+                    break;
                 }
             }
         }

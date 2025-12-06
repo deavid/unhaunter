@@ -112,19 +112,20 @@ fn manual_button_system(
     mut manual_events: EventWriter<PreplayManualNavigationEvent>,
 ) {
     for (interaction, maybe_input, maybe_action) in &mut interaction_query {
-        if interaction.is_changed() && *interaction == Interaction::Pressed {
-            if let Some(action) = maybe_action {
-                manual_events.write(PreplayManualNavigationEvent { action: *action });
-            }
+        if interaction.is_changed()
+            && *interaction == Interaction::Pressed
+            && let Some(action) = maybe_action
+        {
+            manual_events.write(PreplayManualNavigationEvent { action: *action });
         }
 
         // --- Keyboard input handling ---
         if let Some(input) = maybe_input {
             for key in &input.keys {
-                if keyboard_input.just_pressed(*key) {
-                    if let Some(action) = maybe_action {
-                        manual_events.write(PreplayManualNavigationEvent { action: *action });
-                    }
+                if keyboard_input.just_pressed(*key)
+                    && let Some(action) = maybe_action
+                {
+                    manual_events.write(PreplayManualNavigationEvent { action: *action });
                 }
             }
         }

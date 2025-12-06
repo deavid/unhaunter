@@ -47,10 +47,10 @@ pub fn has_active_light_nearby(
                 let pos = (nx as usize, ny as usize, nz as usize);
                 let prebaked_data = &bf.prebaked_lighting[pos];
 
-                if let Some(source_id) = prebaked_data.light_info.source_id {
-                    if active_source_ids.contains(&source_id) {
-                        return true;
-                    }
+                if let Some(source_id) = prebaked_data.light_info.source_id
+                    && active_source_ids.contains(&source_id)
+                {
+                    return true;
                 }
             }
         }
@@ -98,10 +98,10 @@ pub fn identify_active_light_sources(
             continue;
         };
 
-        if behavior.p.light.light_emission_enabled {
-            if let Some(source_id) = bf.prebaked_lighting[*ndidx].light_info.source_id {
-                active_source_ids.insert(source_id);
-            }
+        if behavior.p.light.light_emission_enabled
+            && let Some(source_id) = bf.prebaked_lighting[*ndidx].light_info.source_id
+        {
+            active_source_ids.insert(source_id);
         }
     }
     // info!(

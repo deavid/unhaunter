@@ -59,28 +59,22 @@ pub fn generate_rust_code(
         for entry in fs::read_dir(output_path)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == "rs" {
-                        let file_name = path
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_str()
-                            .unwrap_or_default()
-                            .to_string();
-                        if file_name != "mod.rs" && !expected_module_filenames.contains(&file_name)
-                        {
-                            println!("Deleting unused Rust module file: {:?}", path);
-                            fs::remove_file(&path).map_err(|e| {
-                                anyhow::anyhow!(
-                                    "Failed to delete unused Rust file {:?}: {}",
-                                    path,
-                                    e
-                                )
-                            })?;
-                            deleted_rust_files_count += 1;
-                        }
-                    }
+            if path.is_file()
+                && let Some(extension) = path.extension()
+                && extension == "rs"
+            {
+                let file_name = path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default()
+                    .to_string();
+                if file_name != "mod.rs" && !expected_module_filenames.contains(&file_name) {
+                    println!("Deleting unused Rust module file: {:?}", path);
+                    fs::remove_file(&path).map_err(|e| {
+                        anyhow::anyhow!("Failed to delete unused Rust file {:?}: {}", path, e)
+                    })?;
+                    deleted_rust_files_count += 1;
                 }
             }
         }

@@ -413,18 +413,16 @@ fn button_clicked(
                 Hand::Right => &p_gear.right_hand,
             };
 
-            if gear_to_remove.kind == GearKind::RepellentFlask {
-                if let Some(rep_data) = gear_to_remove.data.as_ref() {
-                    if let Some(rep_flask) =
-                        <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
-                    {
-                        // Check if it's full and unopened (qty == MAX_QTY && !active)
-                        if rep_flask.qty == 400 && !rep_flask.active {
-                            // MAX_QTY constant is 400
-                            craft_tracker.refund();
-                            info!("Refunded repellent craft: returned full, unopened bottle");
-                        }
-                    }
+            if gear_to_remove.kind == GearKind::RepellentFlask
+                && let Some(rep_data) = gear_to_remove.data.as_ref()
+                && let Some(rep_flask) =
+                    <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+            {
+                // Check if it's full and unopened (qty == MAX_QTY && !active)
+                if rep_flask.qty == 400 && !rep_flask.active {
+                    // MAX_QTY constant is 400
+                    craft_tracker.refund();
+                    info!("Refunded repellent craft: returned full, unopened bottle");
                 }
             }
 
@@ -433,23 +431,17 @@ fn button_clicked(
         LoadoutButton::InventoryNext(invnext) => {
             if let Some(idx) = invnext.idx {
                 // Check if we're returning a full, unopened repellent flask for refund
-                if let Some(gear_to_remove) = p_gear.inventory.get(idx) {
-                    if gear_to_remove.kind == GearKind::RepellentFlask {
-                        if let Some(rep_data) = gear_to_remove.data.as_ref() {
-                            if let Some(rep_flask) = <dyn std::any::Any>::downcast_ref::<
-                                RepellentFlask,
-                            >(rep_data.as_ref())
-                            {
-                                // Check if it's full and unopened (qty == MAX_QTY && !active)
-                                if rep_flask.qty == 400 && !rep_flask.active {
-                                    // MAX_QTY constant is 400
-                                    craft_tracker.refund();
-                                    info!(
-                                        "Refunded repellent craft: returned full, unopened bottle"
-                                    );
-                                }
-                            }
-                        }
+                if let Some(gear_to_remove) = p_gear.inventory.get(idx)
+                    && gear_to_remove.kind == GearKind::RepellentFlask
+                    && let Some(rep_data) = gear_to_remove.data.as_ref()
+                    && let Some(rep_flask) =
+                        <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+                {
+                    // Check if it's full and unopened (qty == MAX_QTY && !active)
+                    if rep_flask.qty == 400 && !rep_flask.active {
+                        // MAX_QTY constant is 400
+                        craft_tracker.refund();
+                        info!("Refunded repellent craft: returned full, unopened bottle");
                     }
                 }
 

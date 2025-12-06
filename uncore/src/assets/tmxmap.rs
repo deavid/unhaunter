@@ -159,29 +159,29 @@ impl TmxMap {
             if grade_b.is_none() {
                 grade_b = Some((a_val as f32 / GOLDEN_RATIO).round() as i64);
             }
-            if let Some(b_val) = grade_b {
-                if grade_c.is_none() {
-                    grade_c = Some((b_val as f32 / GOLDEN_RATIO).round() as i64);
-                }
+            if let Some(b_val) = grade_b
+                && grade_c.is_none()
+            {
+                grade_c = Some((b_val as f32 / GOLDEN_RATIO).round() as i64);
             }
-            if let Some(c_val) = grade_c {
-                if grade_d.is_none() {
-                    grade_d = Some((c_val as f32 / GOLDEN_RATIO).round() as i64);
-                }
+            if let Some(c_val) = grade_c
+                && grade_d.is_none()
+            {
+                grade_d = Some((c_val as f32 / GOLDEN_RATIO).round() as i64);
             }
         } else if let Some(d_val) = grade_d {
             if grade_c.is_none() {
                 grade_c = Some((d_val as f32 * GOLDEN_RATIO).round() as i64);
             }
-            if let Some(c_val) = grade_c {
-                if grade_b.is_none() {
-                    grade_b = Some((c_val as f32 * GOLDEN_RATIO).round() as i64);
-                }
+            if let Some(c_val) = grade_c
+                && grade_b.is_none()
+            {
+                grade_b = Some((c_val as f32 * GOLDEN_RATIO).round() as i64);
             }
-            if let Some(b_val) = grade_b {
-                if grade_a.is_none() {
-                    grade_a = Some((b_val as f32 * GOLDEN_RATIO).round() as i64);
-                }
+            if let Some(b_val) = grade_b
+                && grade_a.is_none()
+            {
+                grade_a = Some((b_val as f32 * GOLDEN_RATIO).round() as i64);
             }
         }
 

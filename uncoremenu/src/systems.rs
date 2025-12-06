@@ -190,14 +190,12 @@ fn update_menu_item_visuals(
         }
 
         // If we didn't find any PrincipalMenuText, fall back to the old behavior
-        if !updated {
-            if let Some(child) = children.first() {
-                let mut standard_query = text_queries.p0();
-                if let Ok(mut text_color) = standard_query.get_mut(*child) {
-                    if text_color.0 != target_text_color {
-                        text_color.0 = target_text_color;
-                    }
-                }
+        if !updated && let Some(child) = children.first() {
+            let mut standard_query = text_queries.p0();
+            if let Ok(mut text_color) = standard_query.get_mut(*child)
+                && text_color.0 != target_text_color
+            {
+                text_color.0 = target_text_color;
             }
         }
     }
