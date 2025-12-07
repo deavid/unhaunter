@@ -150,7 +150,7 @@ pub(crate) fn app_setup(app: &mut App) {
 fn ghost_interaction_execution_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut ev_ghost_interaction: EventReader<GhostInteractionEvent>,
+    mut ev_ghost_interaction: MessageReader<GhostInteractionEvent>,
     q_targets: Query<(
         &Behavior,
         &Position,
@@ -159,8 +159,8 @@ fn ghost_interaction_execution_system(
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
     mut interactive_stuff: InteractiveStuff,
-    mut ev_bdr: EventWriter<BoardDataToRebuild>,
-    mut ev_room: EventWriter<RoomChangedEvent>,
+    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
+    mut ev_room: MessageWriter<RoomChangedEvent>,
     board_data: Res<BoardData>,
 ) {
     for event in ev_ghost_interaction.read() {
@@ -281,8 +281,8 @@ fn ghost_interaction_execution_system(
 /// Execute toggle interaction (lights, switches)
 fn execute_toggle_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut EventWriter<BoardDataToRebuild>,
-    ev_room: &mut EventWriter<RoomChangedEvent>,
+    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
+    ev_room: &mut MessageWriter<RoomChangedEvent>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -324,7 +324,7 @@ fn execute_toggle_interaction(
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut EventWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -368,7 +368,7 @@ fn execute_door_slam_interaction(
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut EventWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -615,7 +615,7 @@ fn execute_trip_breaker_interaction(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut EventWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,

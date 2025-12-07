@@ -10,7 +10,7 @@ use unwalkiecore::events::WalkieEvent;
 /// System that listens for WalkieTalkingEvent and activates the focus ring for ghosts and breaches
 /// when the GhostShowcase or BreachShowcase events are triggered.
 pub fn focus_ring_showcase_system(
-    mut ev_walkie_talking: EventReader<WalkieTalkingEvent>,
+    mut ev_walkie_talking: MessageReader<WalkieTalkingEvent>,
     mut query_ghost_focus_rings: Query<&mut FocusRing, With<ChildOf>>,
     query_ghosts: Query<(Entity, &Children), With<GhostSprite>>,
     query_breaches: Query<(Entity, &Children), With<GhostBreach>>,

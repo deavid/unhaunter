@@ -12,7 +12,7 @@ use unwalkie_types::VoiceLineData;
 use unwalkiecore::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 
 fn on_game_load(
-    mut ev_level_ready: EventReader<LevelReadyEvent>,
+    mut ev_level_ready: MessageReader<LevelReadyEvent>,
     mut walkie_play: ResMut<WalkiePlay>,
 ) {
     for _ in ev_level_ready.read() {
@@ -36,8 +36,8 @@ fn walkie_talk(
     asset_server: Res<AssetServer>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut hint_event_writer: EventWriter<OnScreenHintEvent>,
-    mut walkie_talking_writer: EventWriter<WalkieTalkingEvent>,
+    mut hint_event_writer: MessageWriter<OnScreenHintEvent>,
+    mut walkie_talking_writer: MessageWriter<WalkieTalkingEvent>,
     q_sound_state: Query<(Entity, &WalkieSoundState)>,
     mut qt: Query<&mut Text, With<WalkieText>>,
     mut stopwatch: Local<Stopwatch>,
@@ -156,20 +156,20 @@ fn walkie_talk(
     let new_state_unwrapped = new_state.unwrap();
 
     let sound_file = match new_state_unwrapped {
-        WalkieSoundState::Intro => "sounds/radio-on-zzt.ogg",
+        WalkieSoundState::Intro => "sounds/radio-on-zzt.ogg".to_string(),
         WalkieSoundState::Talking => {
             walkie_volume = 0.2;
             if let Some(voice_line) = &walkie_play.current_voice_line {
-                &voice_line.ogg_path
+                voice_line.ogg_path.clone()
             } else {
-                "sounds/radio-on-zzt.ogg"
+                "sounds/radio-on-zzt.ogg".to_string()
             }
         }
-        WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg",
+        WalkieSoundState::Outro => "sounds/radio-off-zzt.ogg".to_string(),
     };
 
     // For Bevy 0.15, we need to use AudioPlayer with the audio source asset
-    let audio_source = asset_server.load(sound_file);
+    let audio_source = asset_server.load(&sound_file);
 
     commands
         .spawn(AudioPlayer::new(audio_source)) // Use AudioPlayer constructor with Handle<AudioSource>

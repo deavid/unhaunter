@@ -36,7 +36,7 @@ pub struct ScrollbarDownArrow;
 
 /// Ensures that the keyboard-selected item remains visible in the scrollable list by adjusting scroll position
 fn ensure_selected_item_visible(
-    mut keyboard_nav_events: EventReader<KeyboardNavigate>,
+    mut keyboard_nav_events: MessageReader<KeyboardNavigate>,
     mut container_query: Query<
         (Entity, &Node, &ComputedNode, &mut ScrollPosition),
         With<ScrollableListContainer>,
@@ -53,7 +53,7 @@ fn ensure_selected_item_visible(
         container_query.single_mut()
     {
         let container_height = container_computed.size().y;
-        let current_scroll_y = scroll_position.offset_y;
+        let current_scroll_y = scroll_position.y;
 
         let mut sorted_items_data: Vec<_> = items_query
             .iter()
@@ -97,7 +97,7 @@ fn ensure_selected_item_visible(
             new_scroll_y = new_scroll_y.max(0.0);
 
             if (new_scroll_y - current_scroll_y).abs() > 0.1 {
-                scroll_position.offset_y = new_scroll_y;
+                scroll_position.y = new_scroll_y;
             }
 
             break;
@@ -107,7 +107,7 @@ fn ensure_selected_item_visible(
 
 /// Updates the scroll position based on mouse wheel input when hovering over the list
 fn update_scroll_position(
-    mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut mouse_wheel_events: MessageReader<MouseWheel>,
     hover_map: Res<HoverMap>,
     mut scrolled_node_query: Query<&mut ScrollPosition, With<ScrollableListContainer>>,
 ) {
@@ -126,8 +126,8 @@ fn update_scroll_position(
         for (_pointer, pointer_map) in hover_map.iter() {
             for (entity, _hit) in pointer_map.iter() {
                 if let Ok(mut scroll_position) = scrolled_node_query.get_mut(*entity) {
-                    scroll_position.offset_y -= scroll_amount;
-                    scroll_position.offset_y = scroll_position.offset_y.max(0.0);
+                    scroll_position.y -= scroll_amount;
+                    scroll_position.y = scroll_position.y.max(0.0);
                 }
             }
         }
@@ -157,7 +157,7 @@ fn update_scrollbar(
 ) {
     // Get container info and children list
     if let Ok((scroll_position, container_node, children)) = scroll_container_query.single() {
-        let scroll_y = scroll_position.offset_y;
+        let scroll_y = scroll_position.y;
         let container_height = container_node.size().y;
 
         // Calculate actual content height by summing children heights
@@ -276,7 +276,7 @@ fn handle_scrollbar_interactions(
         (With<ScrollbarThumb>, Changed<Interaction>),
     >,
     mut drag_state: Local<Option<(Entity, Vec2)>>,
-    mut cursor_moved_events: EventReader<CursorMoved>,
+    mut cursor_moved_events: MessageReader<CursorMoved>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
 ) {
     // Handle the up arrow button
@@ -285,7 +285,7 @@ fn handle_scrollbar_interactions(
         && let Ok((_, mut scroll_position)) = scroll_container_query.single_mut()
     {
         // Scroll up by 60px when clicking the up arrow
-        scroll_position.offset_y = (scroll_position.offset_y - 60.0).max(0.0);
+        scroll_position.y = (scroll_position.y - 60.0).max(0.0);
     }
 
     // Handle the down arrow button
@@ -294,7 +294,7 @@ fn handle_scrollbar_interactions(
         && let Ok((_, mut scroll_position)) = scroll_container_query.single_mut()
     {
         // Scroll down by 60px when clicking the down arrow
-        scroll_position.offset_y += 60.0;
+        scroll_position.y += 60.0;
     }
 
     // Handle thumb drag start
@@ -322,7 +322,7 @@ fn handle_scrollbar_interactions(
             if let Ok((_, mut scroll_position)) = scroll_container_query.get_mut(entity) {
                 // Make scroll speed relative to the estimated content size
                 // This is a rough approximation - adjust the multiplier as needed
-                scroll_position.offset_y = (scroll_position.offset_y + delta_y * 1.5).max(0.0);
+                scroll_position.y = (scroll_position.y + delta_y * 1.5).max(0.0);
 
                 // Update the stored start position for next frame's calculation
                 *drag_state = Some((entity, event.position));

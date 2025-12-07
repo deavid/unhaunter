@@ -25,7 +25,7 @@ pub fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
         height: Val::Px(0.0),
         ..default()
     })
-    .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+    .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
 
     p.spawn(Text::new("Instrumentation broken"))
         .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))

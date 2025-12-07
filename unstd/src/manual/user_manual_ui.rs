@@ -13,7 +13,7 @@ pub struct UserManualUI;
 #[derive(Component)]
 pub struct PageContent;
 
-#[derive(Debug, Clone, Copy, Event)]
+#[derive(Debug, Clone, Copy, Message)]
 pub enum ManualNavigationEvent {
     NextPage,
     PreviousPage,
@@ -151,7 +151,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
 
 pub fn user_manual_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut ev_navigation: EventWriter<ManualNavigationEvent>,
+    mut ev_navigation: MessageWriter<ManualNavigationEvent>,
     mut interaction_query: Query<
         (Ref<Interaction>, &Children),
         (Changed<Interaction>, With<Button>),
@@ -229,7 +229,7 @@ fn redraw_manual_ui_system(
 
 /// Handles manual navigation events.
 fn handle_manual_navigation(
-    mut ev_navigation: EventReader<ManualNavigationEvent>,
+    mut ev_navigation: MessageReader<ManualNavigationEvent>,
     mut current_manual_page: ResMut<CurrentManualPage>,
     manuals: Res<Manual>,
     mut next_state: ResMut<NextState<AppState>>,
@@ -322,6 +322,6 @@ pub fn app_setup(app: &mut App) {
                 .chain()
                 .run_if(in_state(AppState::UserManual)),
         ) // Add event handler system
-        .add_event::<ManualNavigationEvent>() // Register the event
+        .add_message::<ManualNavigationEvent>() // Register the event
         .insert_resource(CurrentManualPage::default());
 }

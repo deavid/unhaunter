@@ -244,7 +244,7 @@ fn salty_trace_system(
         }
 
         // --- Despawn ---
-        if salty_trace_timer.0.finished() && map_color.color.alpha() == 0.0 {
+        if salty_trace_timer.0.is_finished() && map_color.color.alpha() == 0.0 {
             commands.entity(entity).despawn();
         }
     }

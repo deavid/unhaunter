@@ -161,7 +161,7 @@ fn setup_ui(
             border: UiRect::all(Val::Px(1.50)),
             ..default()
         })
-        .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+        .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
 
         let base_node = Node {
             justify_content: JustifyContent::FlexStart,
@@ -235,7 +235,7 @@ fn setup_ui(
                 })
                 .insert(ZIndex(20))
                 .insert(BackgroundColor(Color::NONE))
-                .insert(BorderColor(Color::NONE))
+                .insert(BorderColor::all(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::ExitTruck.into_component())
                 .with_children(|btn| {
@@ -264,7 +264,7 @@ fn setup_ui(
                 })
                 .insert(ZIndex(20))
                 .insert(BackgroundColor(Color::NONE))
-                .insert(BorderColor(Color::NONE))
+                .insert(BorderColor::all(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::EndMission.into_component())
                 .with_children(|btn| {

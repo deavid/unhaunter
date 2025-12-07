@@ -7,7 +7,7 @@ use crate::types::tiledmap::map::MapLayer;
 ///
 /// This event initiates the level loading process, despawning existing entities,
 /// loading map data, and spawning new entities based on the TMX file.
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, Message)]
 pub struct LoadLevelEvent {
     /// The file path to the TMX map file to be loaded.
     pub map_filepath: String,
@@ -28,7 +28,7 @@ pub struct FloorLevelMapping {
     pub ghost_repelling_objects: HashMap<i32, i32>,
 }
 
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, Message)]
 pub struct LevelLoadedEvent {
     /// The file path that has been loaded.
     pub map_filepath: String,
@@ -38,7 +38,7 @@ pub struct LevelLoadedEvent {
     pub floor_mapping: FloorLevelMapping,
 }
 
-#[derive(Debug, Clone, Event, Default)]
+#[derive(Debug, Clone, Message, Default)]
 pub struct LevelReadyEvent {
     pub open_van: bool,
 }

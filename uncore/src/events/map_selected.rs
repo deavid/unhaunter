@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Clone, Event)]
+#[derive(Debug, Clone, Message)]
 pub struct MapSelectedEvent {
     pub map_idx: usize,
 }

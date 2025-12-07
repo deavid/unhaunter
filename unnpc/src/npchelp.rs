@@ -108,7 +108,7 @@ pub fn setup_ui(
                             height: Val::Px(0.0),
                             ..default()
                         })
-                        .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+                        .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
                     mid_blk
                         .spawn(Text::new(npcdata.dialog.clone()))
                         .insert(TextFont {
@@ -160,7 +160,7 @@ pub fn setup_ui(
 }
 
 pub fn npchelp_event(
-    mut ev_npc: EventReader<NpcHelpEvent>,
+    mut ev_npc: MessageReader<NpcHelpEvent>,
     mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -194,7 +194,7 @@ pub fn auto_call_npchelp(
         &Behavior,
         &mut NpcHelpDialog,
     )>,
-    mut ev_npc: EventWriter<NpcHelpEvent>,
+    mut ev_npc: MessageWriter<NpcHelpEvent>,
 ) {
     let Some((pos, _, dir)) = q_player
         .iter()
@@ -224,7 +224,7 @@ pub fn auto_call_npchelp(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_event::<NpcHelpEvent>()
+    app.add_message::<NpcHelpEvent>()
         .init_resource::<NpcUIData>()
         .add_systems(Update, npchelp_event)
         .add_systems(OnEnter(GameState::NpcHelp), setup_ui)

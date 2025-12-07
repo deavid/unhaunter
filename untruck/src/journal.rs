@@ -17,13 +17,13 @@ use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 
 /// Event to force discard an evidence type in the journal UI.
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct ForceDiscardEvidenceEvent(pub Evidence);
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck
 fn force_discard_evidence_system(
     mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
-    mut ev_force_discard: EventReader<ForceDiscardEvidenceEvent>,
+    mut ev_force_discard: MessageReader<ForceDiscardEvidenceEvent>,
     mut gg: ResMut<GhostGuess>,
 ) {
     for event in ev_force_discard.read() {
@@ -75,7 +75,7 @@ fn button_system(
     q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut q_textcolor: Query<&mut TextColor>,
     mut gg: ResMut<GhostGuess>,
-    mut ev_truckui: EventWriter<TruckUIEvent>,
+    mut ev_truckui: MessageWriter<TruckUIEvent>,
     gc: Res<GameConfig>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
@@ -294,7 +294,7 @@ fn button_system(
         let current_text_color = tui_button.text_color(current_interaction);
 
         if !tui_button.blinking_hint_active {
-            border_color.0 = current_border_color;
+            *border_color = BorderColor::all(current_border_color);
         }
         *bgcolor = current_background_color.into();
         textcolor.0 = current_text_color;
@@ -364,7 +364,7 @@ fn ghost_guess_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_event::<ForceDiscardEvidenceEvent>()
+    app.add_message::<ForceDiscardEvidenceEvent>()
         .add_systems(Update, ghost_guess_system)
         .add_systems(
             Update,

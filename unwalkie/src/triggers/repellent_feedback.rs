@@ -27,7 +27,7 @@ fn repellent_feedback_trigger_system(
     repellent_particle_query: Query<&RepellentParticle>,
     ghost_guess: Res<GhostGuess>,
     mut walkie_play: ResMut<WalkiePlay>,
-    mut ev_force_discard: EventWriter<ForceDiscardEvidenceEvent>,
+    mut ev_force_discard: MessageWriter<ForceDiscardEvidenceEvent>,
     mut hints_given: ResMut<RepellentHintsGiven>,
     app_state: Res<State<AppState>>,
 ) {

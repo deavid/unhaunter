@@ -30,7 +30,7 @@ fn initialize_miasma(
     mut board_data: ResMut<BoardData>,
     roomdb: Res<RoomDB>,
     config: Res<MiasmaConfig>,
-    mut level_ready: EventReader<LevelReadyEvent>,
+    mut level_ready: MessageReader<LevelReadyEvent>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     // Only run on LevelLoadedEvent
@@ -190,9 +190,9 @@ fn spawn_miasma(
                 .spawn(Sprite {
                     image: handles.images.miasma.clone(),
                     color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
-                    anchor: Anchor::Custom(handles.anchors.grid1x1),
                     ..default()
                 })
+                .insert(Anchor(handles.anchors.grid1x1))
                 .insert(MiasmaSprite {
                     base_position: pos,
                     radius: rng.random_range(0.15..0.45), // Small radius
@@ -648,7 +648,7 @@ fn update_miasma(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        initialize_miasma.run_if(on_event::<LevelReadyEvent>),
+        initialize_miasma.run_if(on_message::<LevelReadyEvent>),
     );
     app.add_systems(Update, spawn_miasma);
     app.add_systems(

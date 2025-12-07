@@ -74,13 +74,13 @@ pub fn spawn_player(
     commands
         .spawn(Sprite {
             image: p.handles.images.character1.clone(),
-            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             texture_atlas: Some(TextureAtlas {
                 layout: p.handles.images.character1_atlas.clone(),
                 ..Default::default()
             }),
             ..default()
         })
+        .insert(Anchor(p.handles.anchors.grid1x1x4))
         .insert(
             Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
@@ -160,10 +160,10 @@ pub fn spawn_ghosts(
     let breach_id = commands
         .spawn(Sprite {
             image: p.asset_server.load("img/breach.png"),
-            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
+        .insert(Anchor(p.handles.anchors.grid1x1x4))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Breach)
@@ -188,10 +188,10 @@ pub fn spawn_ghosts(
     commands
         .spawn(Sprite {
             image: p.asset_server.load("img/ghost.png"),
-            anchor: Anchor::Custom(p.handles.anchors.grid1x1x4),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
+        .insert(Anchor(p.handles.anchors.grid1x1x4))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Ghost)

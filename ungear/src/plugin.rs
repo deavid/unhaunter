@@ -8,7 +8,8 @@ pub struct UnhaunterGearPlugin;
 
 impl Plugin for UnhaunterGearPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GameConfig>().add_event::<SoundEvent>();
+        app.init_resource::<GameConfig>()
+            .add_message::<SoundEvent>();
 
         systems::app_setup(app);
     }

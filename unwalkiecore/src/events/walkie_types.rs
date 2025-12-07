@@ -1,4 +1,4 @@
-use bevy::prelude::Event;
+use bevy::prelude::Message;
 use enum_iterator::Sequence;
 use uncore::{
     difficulty::Difficulty,
@@ -7,7 +7,7 @@ use uncore::{
 
 /// Event that is fired when a walkie-talkie message starts talking (transitions from Intro to Talking state).
 /// This allows other systems to react when a specific walkie message starts playing.
-#[derive(Event, Debug, Clone)]
+#[derive(Message, Debug, Clone)]
 pub struct WalkieTalkingEvent {
     /// The walkie event that is currently playing
     pub event: WalkieEvent,

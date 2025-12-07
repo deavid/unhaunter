@@ -160,7 +160,7 @@ pub fn create_help_text(
                 .insert(TextColor(colors::MENU_ITEM_COLOR_OFF))
                 .insert(TextLayout {
                     // Center align text within its container
-                    justify: JustifyText::Center,
+                    justify: Justify::Center,
                     ..default()
                 });
         });
@@ -650,7 +650,7 @@ pub fn create_player_status_bar(
                     ..default()
                 })
                 .insert(BackgroundColor(colors::PANEL_BGCOLOR.with_alpha(0.5)))
-                .insert(BorderColor(colors::MENU_ITEM_COLOR_OFF))
+                .insert(BorderColor::all(colors::MENU_ITEM_COLOR_OFF))
                 .with_children(|progress_bar_container| {
                     // Actual Progress Fill
                     progress_bar_container

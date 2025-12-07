@@ -25,7 +25,7 @@ pub struct GearStuff<'w, 's> {
     /// Access to the current game time.
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
-    pub sound_events: EventWriter<'w, SoundEvent>,
+    pub sound_events: MessageWriter<'w, SoundEvent>,
     /// Access to the current difficulty.
     pub difficulty: Res<'w, CurrentDifficulty>,
     /// Audio settings from the game.

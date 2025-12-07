@@ -402,7 +402,7 @@ fn ghost_enrage(
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
     roomdb: Res<RoomDB>,
-    mut ev_ambient_mute: EventWriter<AmbientSoundMuteEvent>,
+    mut ev_ambient_mute: MessageWriter<AmbientSoundMuteEvent>,
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
@@ -641,7 +641,7 @@ fn ghost_fade_out_system(
                     gs.play_audio(roar_sound, 1.0, position);
                 }
                 fade_out.roared = true;
-            } else if fade_out.timer.finished() {
+            } else if fade_out.timer.is_finished() {
                 // Play the second roar at a lower volume
                 if let Some(roar_sound) = RoarType::Full.get_sound() {
                     gs.play_audio(roar_sound, 0.2, position);
@@ -650,7 +650,7 @@ fn ghost_fade_out_system(
                 // Despawn the entity
                 commands.entity(entity).despawn();
             }
-        } else if fade_out.timer.finished() {
+        } else if fade_out.timer.is_finished() {
             // Despawn the breach when its timer is done
             commands.entity(entity).despawn();
         }
@@ -801,7 +801,7 @@ fn update_ghost_timers_simple(ghost: &mut GhostSprite, dt: f32, time: &Res<Time>
     }
 
     // Update salty effect timers if active
-    if !ghost.salty_effect_timer.finished() && ghost.hunting <= 0.1 {
+    if !ghost.salty_effect_timer.is_finished() && ghost.hunting <= 0.1 {
         ghost.salty_effect_timer.tick(time.delta());
         ghost.salty_trace_spawn_timer.tick(time.delta());
     }
@@ -815,7 +815,7 @@ fn handle_salty_trace_spawning_simple(
     asset_server: &Res<AssetServer>,
     bf: &BoardData,
 ) {
-    if !ghost.salty_effect_timer.finished()
+    if !ghost.salty_effect_timer.is_finished()
         && ghost.hunting <= 0.1
         && ghost.salty_trace_spawn_timer.just_finished()
     {
@@ -925,7 +925,7 @@ fn handle_warning_phases(
     ghost: &mut GhostSprite,
     dt: f32,
     time: &Res<Time>,
-    ev_ambient_mute: &mut EventWriter<AmbientSoundMuteEvent>,
+    ev_ambient_mute: &mut MessageWriter<AmbientSoundMuteEvent>,
 ) -> WarningResult {
     let mut result = WarningResult {
         roar_triggered: false,
@@ -1067,7 +1067,7 @@ fn trigger_hunt_start(
     ghost: &mut GhostSprite,
     _rage_result: &RageUpdateResult,
     difficulty: &Res<CurrentDifficulty>,
-    ev_ambient_mute: &mut EventWriter<AmbientSoundMuteEvent>,
+    ev_ambient_mute: &mut MessageWriter<AmbientSoundMuteEvent>,
 ) {
     // Start Pre-Warning Phase (anticipatory audio muting)
     ghost.pre_warning_timer = 3.0;

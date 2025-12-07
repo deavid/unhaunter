@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Clone, Debug, Event, PartialEq, Eq)]
+#[derive(Clone, Debug, Message, PartialEq, Eq)]
 pub enum TruckUIEvent {
     EndMission,
     ExitTruck,

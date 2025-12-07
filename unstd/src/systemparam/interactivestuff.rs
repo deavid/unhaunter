@@ -9,7 +9,6 @@ use uncore::events::sound::SoundEvent;
 use uncore::resources::roomdb::RoomDB;
 use uncore::states::GameState;
 
-use bevy::ecs::event::EventWriter;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
@@ -34,7 +33,7 @@ pub struct InteractiveStuff<'w, 's> {
     /// interactions.
     pub commands: Commands<'w, 's>,
     /// Event writer for sending sound events.
-    pub sound_events: EventWriter<'w, SoundEvent>,
+    pub sound_events: MessageWriter<'w, SoundEvent>,
     /// Access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the materials used for rendering map tiles. Used to update tile

@@ -38,7 +38,7 @@ fn tween_animation_system(
         *position = tween.current_position();
 
         // If the animation is finished, remove the Tween component
-        if tween.timer.finished() {
+        if tween.timer.is_finished() {
             commands.entity(entity).remove::<Tween>();
 
             // For nudge animations, we might want to add a small return animation
@@ -61,7 +61,7 @@ fn door_lock_timer_system(
         locked.0.tick(time.delta());
 
         // If the timer is finished, remove the Locked component
-        if locked.0.finished() {
+        if locked.0.is_finished() {
             commands.entity(entity).remove::<Locked>();
         }
     }

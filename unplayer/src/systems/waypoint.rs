@@ -35,7 +35,7 @@ pub fn waypoint_creation_system(
         Option<&uncore::behavior::component::RoomState>,
     )>,
     q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
-    mut click_events: EventReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
+    mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
     board_data: Res<BoardData>,
@@ -69,7 +69,7 @@ pub fn waypoint_creation_system(
 
         // Check if clicked on an interactive entity
         if let Ok((interactive_entity, interactive_pos, _interactive, _behavior, _room_state)) =
-            q_interactives.get(click_event.target)
+            q_interactives.get(click_event.entity)
         {
             let interactive_floor = interactive_pos.z.round() as i32;
 
@@ -199,7 +199,7 @@ pub fn waypoint_following_system(
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,
-    mut ev_room: EventWriter<RoomChangedEvent>,
+    mut ev_room: MessageWriter<RoomChangedEvent>,
 ) {
     for (player_entity, player_pos, waypoint_queue) in q_player.iter() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {

@@ -40,20 +40,20 @@ pub enum PreplayManualNavigationAction {
     Previous,
 }
 
-#[derive(Debug, Clone, Copy, Event)]
+#[derive(Debug, Clone, Copy, Message)]
 pub struct PreplayManualNavigationEvent {
     pub action: PreplayManualNavigationAction,
 }
 
 // System for handling user interaction and page navigation within the pre-play manual.
 pub fn preplay_manual_system(
-    mut evr_manual_button: EventReader<PreplayManualNavigationEvent>,
+    mut evr_manual_button: MessageReader<PreplayManualNavigationEvent>,
     mut current_manual_page: ResMut<CurrentManualPage>,
     difficulty: Res<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
     maps: Res<Maps>,
     mut next_state: ResMut<NextState<AppState>>,
-    mut ev_load_level: EventWriter<LoadLevelEvent>,
+    mut ev_load_level: MessageWriter<LoadLevelEvent>,
     manual: Res<Manual>,
 ) {
     for ev in evr_manual_button.read() {
@@ -109,7 +109,7 @@ fn manual_button_system(
         With<Button>,
     >,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut manual_events: EventWriter<PreplayManualNavigationEvent>,
+    mut manual_events: MessageWriter<PreplayManualNavigationEvent>,
 ) {
     for (interaction, maybe_input, maybe_action) in &mut interaction_query {
         if interaction.is_changed()
@@ -328,5 +328,5 @@ pub fn app_setup(app: &mut App) {
                 .chain()
                 .run_if(in_state(AppState::PreplayManual)),
         )
-        .add_event::<PreplayManualNavigationEvent>(); //Add event
+        .add_message::<PreplayManualNavigationEvent>(); //Add event
 }

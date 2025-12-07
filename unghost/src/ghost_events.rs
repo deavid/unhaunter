@@ -32,11 +32,11 @@ fn update_flicker_timers(
     mut commands: Commands,
     time: Res<Time>,
     mut q_lights: Query<(Entity, &mut FlickerTimer, &mut behavior::Behavior)>,
-    mut ev_bdr: EventWriter<BoardDataToRebuild>,
+    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
 ) {
     for (entity, mut flicker_timer, mut behavior) in q_lights.iter_mut() {
         flicker_timer.timer.tick(time.delta());
-        if flicker_timer.timer.finished() {
+        if flicker_timer.timer.is_finished() {
             // Reset the light to its original state using the public method
             behavior.p.light.flickering = false;
             commands.entity(entity).remove::<FlickerTimer>();
@@ -49,7 +49,7 @@ fn update_flicker_timers(
 }
 
 pub fn app_setup(app: &mut App) {
-    app.add_event::<GhostInteractionEvent>();
+    app.add_message::<GhostInteractionEvent>();
     app.add_systems(
         Update,
         (

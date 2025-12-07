@@ -10,13 +10,13 @@ pub struct UnhaunterMenuSettingsPlugin;
 impl Plugin for UnhaunterMenuSettingsPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<SettingsState>()
-            .add_event::<MenuEvent>()
-            .add_event::<MenuEvBack>()
-            .add_event::<MenuSettingClassSelected>()
-            .add_event::<AudioSettingSelected>()
-            .add_event::<SaveAudioSetting>()
-            .add_event::<GameplaySettingSelected>()
-            .add_event::<SaveGameplaySetting>();
+            .add_message::<MenuEvent>()
+            .add_message::<MenuEvBack>()
+            .add_message::<MenuSettingClassSelected>()
+            .add_message::<AudioSettingSelected>()
+            .add_message::<SaveAudioSetting>()
+            .add_message::<GameplaySettingSelected>()
+            .add_message::<SaveGameplaySetting>();
 
         // Setup UI systems
         menu_ui::app_setup(app);

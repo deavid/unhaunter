@@ -11,7 +11,7 @@ pub enum InteractionExecutionType {
 ///
 /// This event is used to trigger actions like opening the van UI or updating the
 /// state of interactive objects based on the room's current state.
-#[derive(Clone, Debug, Default, Event)]
+#[derive(Clone, Debug, Default, Message)]
 pub struct RoomChangedEvent {
     /// Set to `true` if the event is triggered during level initialization.
     pub initialize: bool,

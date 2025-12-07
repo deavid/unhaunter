@@ -3,7 +3,7 @@ use std::time::Duration;
 
 /// Event that triggers ambient sound muting with configurable fade timings.
 /// Used by game systems to temporarily reduce ambient sound volume during important events.
-#[derive(Event, Debug, Clone)]
+#[derive(Message, Debug, Clone)]
 pub struct AmbientSoundMuteEvent {
     /// How quickly to fade out (default: 500ms)
     pub fade_out_duration: Duration,

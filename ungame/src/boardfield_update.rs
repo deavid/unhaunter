@@ -15,7 +15,7 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
 fn boardfield_update(
     mut bf: ResMut<BoardData>,
-    mut ev_bdr: EventReader<BoardDataToRebuild>,
+    mut ev_bdr: MessageReader<BoardDataToRebuild>,
     mut qt: Query<(Entity, &Position, &Behavior)>,
     mut avg_time: Local<(f32, f32)>,
 ) {
@@ -47,5 +47,5 @@ fn boardfield_update(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(PostUpdate, boardfield_update)
-        .add_event::<BoardDataToRebuild>();
+        .add_message::<BoardDataToRebuild>();
 }

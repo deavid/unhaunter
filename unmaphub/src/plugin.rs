@@ -10,7 +10,7 @@ pub struct UnhaunterMapHubPlugin;
 impl Plugin for UnhaunterMapHubPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<MapHubState>()
-            .add_event::<MapSelectedEvent>();
+            .add_message::<MapSelectedEvent>();
         app_setup_local(app); // Call local app_setup
         difficulty_selection::app_setup(app);
     }

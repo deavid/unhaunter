@@ -90,7 +90,7 @@ fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) 
 
 /// Handles `OnScreenHintEvent`s and manages hint animations.
 fn hint_ui_event_and_animation_system(
-    mut events: EventReader<OnScreenHintEvent>,
+    mut events: MessageReader<OnScreenHintEvent>,
     mut ui_state: ResMut<HintUiState>,
     mut hint_box_query: Query<(&mut Node, &mut Visibility), With<HintBoxUIRoot>>,
     mut text_query: Query<&mut Text, With<HintBoxText>>,
@@ -132,7 +132,7 @@ fn hint_ui_event_and_animation_system(
                         HINT_BOX_ONSCREEN_LEFT_PX,
                         eased_progress,
                     ));
-                    if ui_state.animation_timer.finished() {
+                    if ui_state.animation_timer.is_finished() {
                         hint_style.left = Val::Px(HINT_BOX_ONSCREEN_LEFT_PX);
                         let visible_duration = ui_state.visible_duration;
                         ui_state.phase = HintAnimationPhase::Visible;
@@ -141,7 +141,7 @@ fn hint_ui_event_and_animation_system(
                     }
                 }
                 HintAnimationPhase::Visible => {
-                    if ui_state.animation_timer.finished() {
+                    if ui_state.animation_timer.is_finished() {
                         let slide_out_duration = ui_state.slide_out_duration;
                         ui_state.phase = HintAnimationPhase::AnimatingOut;
                         ui_state.animation_timer.set_duration(slide_out_duration);
@@ -155,7 +155,7 @@ fn hint_ui_event_and_animation_system(
                         HINT_BOX_OFFSCREEN_LEFT_PX,
                         eased_progress,
                     ));
-                    if ui_state.animation_timer.finished() {
+                    if ui_state.animation_timer.is_finished() {
                         hint_style.left = Val::Px(HINT_BOX_OFFSCREEN_LEFT_PX);
                         *visibility = Visibility::Hidden;
                         ui_state.phase = HintAnimationPhase::Idle;

@@ -69,7 +69,7 @@ fn setup_ui(
                     font_size: 18.0 * FONT_SCALE,
                     ..default()
                 })
-                .insert(TextLayout::new_with_justify(JustifyText::Center))
+                .insert(TextLayout::new_with_justify(Justify::Center))
                 .insert(BackgroundColor(css::BLACK.with_alpha(0.6).into()))
                 .insert(TextColor(colors::WALKIE_TALKIE_COLOR))
                 .insert(Node {
@@ -139,7 +139,7 @@ fn setup_ui(
                         font_size: 16.0 * FONT_SCALE,
                         ..default()
                     })
-                    .insert(TextLayout::new_with_justify(JustifyText::Center))
+                    .insert(TextLayout::new_with_justify(Justify::Center))
                     .insert(TextColor(colors::INVENTORY_STATS_COLOR))
                     .insert(Node {
                         align_self: AlignSelf::Center,

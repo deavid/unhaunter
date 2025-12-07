@@ -6,7 +6,7 @@ pub struct UnhaunterWalkiePlugin;
 
 impl Plugin for UnhaunterWalkiePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<WalkieTalkingEvent>();
+        app.add_message::<WalkieTalkingEvent>();
         app.init_resource::<WalkiePlay>();
         app.init_resource::<PotentialIDTimer>();
 

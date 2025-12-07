@@ -9,9 +9,9 @@ pub struct UnhaunterMapLoadPlugin;
 
 impl Plugin for UnhaunterMapLoadPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<LoadLevelEvent>()
-            .add_event::<LevelLoadedEvent>()
-            .add_event::<LevelReadyEvent>();
+        app.add_message::<LoadLevelEvent>()
+            .add_message::<LevelLoadedEvent>()
+            .add_message::<LevelReadyEvent>();
 
         // Call the main app_setup from the module
         crate::module::app_setup(app);

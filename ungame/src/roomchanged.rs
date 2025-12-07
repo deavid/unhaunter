@@ -22,8 +22,8 @@ use unstd::systemparam::interactivestuff::InteractiveStuff;
 ///
 /// * Updating the game's collision and lighting data after room-related changes.
 fn roomchanged_event(
-    mut ev_bdr: EventWriter<BoardDataToRebuild>,
-    mut ev_room: EventReader<RoomChangedEvent>,
+    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
+    mut ev_room: MessageReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
     interactables: Query<(Entity, &Position, &Behavior, &RoomState), Without<PlayerSprite>>,
     gc: Res<GameConfig>,
@@ -66,6 +66,6 @@ fn roomchanged_event(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_event::<RoomChangedEvent>()
+    app.add_message::<RoomChangedEvent>()
         .add_systems(Update, roomchanged_event);
 }

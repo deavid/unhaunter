@@ -1,19 +1,15 @@
 //! A shader and a material that uses it.
 
-#![allow(dead_code)]
-// dead_code: CustomMaterial1Data -> function `check` is never used - from some derive below. Probably upgrading Bevy will solve this.
-
 use bevy::{
+    mesh::MeshVertexBufferLayoutRef,
     prelude::*,
     reflect::TypePath,
-    render::{
-        mesh::MeshVertexBufferLayoutRef,
-        render_resource::{
-            AsBindGroup, BlendComponent, BlendFactor, BlendOperation, BlendState,
-            RenderPipelineDescriptor, ShaderRef, ShaderType, SpecializedMeshPipelineError,
-        },
+    render::render_resource::{
+        AsBindGroup, BlendComponent, BlendFactor, BlendOperation, BlendState,
+        RenderPipelineDescriptor, ShaderType, SpecializedMeshPipelineError,
     },
-    sprite::{AlphaMode2d, Material2d, Material2dKey},
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d, Material2dKey},
 };
 
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
@@ -113,10 +109,6 @@ impl Material2d for CustomMaterial1 {
         "shaders/custom_material1.wgsl".into()
     }
 
-    fn alpha_mode(&self) -> AlphaMode2d {
-        AlphaMode2d::Blend
-    }
-
     fn specialize(
         descriptor: &mut RenderPipelineDescriptor,
         _layout: &MeshVertexBufferLayoutRef,
@@ -128,7 +120,16 @@ impl Material2d for CustomMaterial1 {
             target_state.blend = Some(BlendState::ALPHA_BLENDING);
             // target_state.blend = Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING);
         }
+
+        if let Some(depth_stencil) = &mut descriptor.depth_stencil {
+            depth_stencil.depth_write_enabled = false;
+        }
+
         Ok(())
+    }
+
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 }
 
@@ -175,7 +176,15 @@ impl Material2d for CustomMaterial2 {
         {
             target_state.blend = Some(BLEND_ADD);
         }
+
+        if let Some(depth_stencil) = &mut descriptor.depth_stencil {
+            depth_stencil.depth_write_enabled = false;
+        }
+
         Ok(())
+    }
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 }
 

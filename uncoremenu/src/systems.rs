@@ -5,24 +5,24 @@ use uncore::colors;
 use uncore::states::AppState;
 
 /// Event sent when a menu item is clicked
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct MenuItemClicked {
     pub state: AppState,
     pub pos: usize,
 }
 
 /// Event sent when keyboard navigation changes the selected item
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct MenuItemSelected(pub usize);
 
 /// Event sent when ESC is pressed in a menu
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct MenuEscapeEvent;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.
 fn menu_mouse_movement_system(
-    mut mouse_motion_events: EventReader<MouseMotion>,
+    mut mouse_motion_events: MessageReader<MouseMotion>,
     mut mouse_tracker: Query<&mut MenuMouseTracker>,
 ) {
     // Only process if there was mouse movement
@@ -41,8 +41,8 @@ fn menu_interaction_system(
     mut menu_query: Query<&mut MenuRoot>,
     interaction_query: Query<(&Interaction, &MenuItemInteractive), Changed<Interaction>>,
     mouse_tracker: Query<&MenuMouseTracker>,
-    mut click_events: EventWriter<MenuItemClicked>,
-    mut selection_events: EventWriter<MenuItemSelected>,
+    mut click_events: MessageWriter<MenuItemClicked>,
+    mut selection_events: MessageWriter<MenuItemSelected>,
     app_state: Res<State<AppState>>,
 ) {
     let mouse_moved = mouse_tracker
@@ -79,10 +79,10 @@ fn menu_keyboard_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut menu_query: Query<&mut MenuRoot>,
     menu_items: Query<&MenuItemInteractive>,
-    mut selection_events: EventWriter<MenuItemSelected>,
-    mut keyboard_nav_events: EventWriter<KeyboardNavigate>,
-    mut click_events: EventWriter<MenuItemClicked>,
-    mut escape_events: EventWriter<MenuEscapeEvent>,
+    mut selection_events: MessageWriter<MenuItemSelected>,
+    mut keyboard_nav_events: MessageWriter<KeyboardNavigate>,
+    mut click_events: MessageWriter<MenuItemClicked>,
+    mut escape_events: MessageWriter<MenuEscapeEvent>,
     app_state: Res<State<AppState>>,
 ) {
     let Ok(mut menu) = menu_query.single_mut() else {

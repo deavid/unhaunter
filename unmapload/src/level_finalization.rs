@@ -39,8 +39,8 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
     mut bf: ResMut<BoardData>,
-    mut ev: EventReader<LevelReadyEvent>,
-    mut ev_room: EventWriter<RoomChangedEvent>,
+    mut ev: MessageReader<LevelReadyEvent>,
+    mut ev_room: MessageWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
@@ -273,11 +273,11 @@ fn load_map_add_prebaked_lighting(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    use bevy::prelude::on_event; // Corrected import path
-    use uncore::events::loadlevel::LevelReadyEvent; // Ensure this is imported
+    use bevy::prelude::on_message;
+    use uncore::events::loadlevel::LevelReadyEvent;
     app.add_systems(Update, (process_pre_meshes, after_level_ready))
         .add_systems(
             Update,
-            load_map_add_prebaked_lighting.run_if(on_event::<LevelReadyEvent>), // Pass the function itself
+            load_map_add_prebaked_lighting.run_if(on_message::<LevelReadyEvent>),
         );
 }

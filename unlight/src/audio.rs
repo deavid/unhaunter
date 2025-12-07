@@ -174,7 +174,7 @@ fn update_ambient_sound_volumes(
 /// Registers the mute controller resource, mute events, and ambient sound volume systems.
 pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<AmbientMuteController>();
-    app.add_event::<AmbientSoundMuteEvent>();
+    app.add_message::<AmbientSoundMuteEvent>();
     app.add_systems(
         Update,
         (

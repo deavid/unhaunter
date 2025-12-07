@@ -49,7 +49,7 @@ fn hide_player(
             {
                 // Key is held down, tick the timer
                 timer.tick(time.delta());
-                if !timer.finished() {
+                if !timer.is_finished() {
                     continue;
                 }
                 timer.reset();

@@ -23,7 +23,7 @@ pub enum GhostInteractionType {
 }
 
 /// Event dispatched when a ghost performs an interaction with an environmental object
-#[derive(Event, Debug, Clone)]
+#[derive(Message, Debug, Clone)]
 pub struct GhostInteractionEvent {
     /// The entity that the ghost is interacting with
     pub target: Entity,

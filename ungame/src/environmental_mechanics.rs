@@ -26,7 +26,7 @@ fn fuse_box_overload_system(
     mut cooldown_timer: Local<Option<Timer>>,
     q_lights: Query<&Behavior, With<Light>>,
     q_breakers: Query<(Entity, &Behavior), Without<Light>>,
-    mut ev_ghost_interaction: EventWriter<GhostInteractionEvent>,
+    mut ev_ghost_interaction: MessageWriter<GhostInteractionEvent>,
 ) {
     // Initialize cooldown timer if it doesn't exist
     if cooldown_timer.is_none() {
@@ -38,7 +38,7 @@ fn fuse_box_overload_system(
         timer.tick(time.delta());
 
         // If still in cooldown, don't check for overload
-        if !timer.finished() {
+        if !timer.is_finished() {
             return;
         }
     }

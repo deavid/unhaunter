@@ -41,7 +41,7 @@ fn ghost_interaction_selection_system(
         Option<&Locked>,
         Option<&InteractableByGhost>,
     )>,
-    mut ev_ghost_interaction: EventWriter<GhostInteractionEvent>,
+    mut ev_ghost_interaction: MessageWriter<GhostInteractionEvent>,
 ) {
     let mut rng = random_seed::rng();
 

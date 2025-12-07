@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug, Message)]
 pub struct NpcHelpEvent {
     pub entity: Entity,
 }

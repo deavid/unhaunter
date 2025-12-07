@@ -49,7 +49,7 @@ impl MenuItem {
     }
 }
 
-#[derive(Event, Debug, Clone, Copy, Default)]
+#[derive(Message, Debug, Clone, Copy, Default)]
 pub enum MenuEvent {
     SaveAudioSetting(AudioSettingsValue),
     EditAudioSetting(AudioSettingsMenu),
@@ -67,30 +67,30 @@ impl MenuEvent {
     }
 }
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct MenuEvBack;
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct MenuSettingClassSelected {
     pub menu: MenuSettingsLevel1,
 }
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct AudioSettingSelected {
     pub setting: AudioSettingsMenu,
 }
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct SaveAudioSetting {
     pub value: AudioSettingsValue,
 }
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct GameplaySettingSelected {
     pub setting: GameplaySettingsMenu,
 }
 
-#[derive(Event, Debug, Clone, Copy)]
+#[derive(Message, Debug, Clone, Copy)]
 pub struct SaveGameplaySetting {
     pub value: GameplaySettingsValue,
 }

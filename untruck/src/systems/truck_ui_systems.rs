@@ -144,7 +144,7 @@ fn hold_button_system(
     >,
     mut node_query: Query<&mut Node>,
     progress_query: Query<(Entity, &ChildOf), With<ProgressIndicator>>,
-    mut ev_truckui: EventWriter<TruckUIEvent>,
+    mut ev_truckui: MessageWriter<TruckUIEvent>,
     mut hold_sound: Local<Option<Entity>>,
     craft_tracker: Res<RepellentCraftTracker>,
 ) {
@@ -323,7 +323,7 @@ fn hold_button_system(
 fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut ev_truckui: EventReader<TruckUIEvent>,
+    mut ev_truckui: MessageReader<TruckUIEvent>,
     mut next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     gg: Res<GhostGuess>,

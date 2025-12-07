@@ -48,7 +48,7 @@ pub fn app_setup(app: &mut App) {
 pub fn setup_systems(
     mut commands: Commands,
     handles: Res<GameAssets>,
-    mut map_selected_events: EventReader<MapSelectedEvent>,
+    mut map_selected_events: MessageReader<MapSelectedEvent>,
 ) {
     // Filter for non-tutorial difficulties to display
     let available_difficulties: Vec<Difficulty> = Difficulty::all()
@@ -91,7 +91,7 @@ pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<Difficul
 
 /// Handles clicks on difficulty options and the "Go Back" button
 pub fn handle_difficulty_click(
-    mut ev_menu_clicks: EventReader<MenuItemClicked>,
+    mut ev_menu_clicks: MessageReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
     difficulty_selection_state: Res<DifficultySelectionState>,
@@ -157,7 +157,7 @@ pub fn handle_difficulty_click(
 
 /// Updates the description text when a different difficulty is selected
 pub fn update_difficulty_description(
-    mut ev_menu_selection: EventReader<MenuItemSelected>,
+    mut ev_menu_selection: MessageReader<MenuItemSelected>,
     mut difficulty_selection_state: ResMut<DifficultySelectionState>,
     mut q_desc_text: Query<(&mut Text, &mut TextColor), With<DifficultyDescriptionUI>>,
     q_items: Query<(&DifficultySelectionItem, &MenuItemInteractive)>,
@@ -217,7 +217,7 @@ pub fn update_difficulty_description(
 
 /// Handles ESC key press to return to main menu
 pub fn handle_difficulty_escape(
-    mut ev_escape: EventReader<MenuEscapeEvent>,
+    mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
 ) {

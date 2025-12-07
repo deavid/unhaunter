@@ -33,13 +33,13 @@ pub(crate) fn app_setup(app: &mut App) {
         )
             .run_if(in_state(AppState::SettingsMenu)),
     )
-    .add_event::<MenuEvent>()
-    .add_event::<MenuEvBack>()
-    .add_event::<MenuSettingClassSelected>()
-    .add_event::<AudioSettingSelected>()
-    .add_event::<SaveAudioSetting>()
-    .add_event::<GameplaySettingSelected>()
-    .add_event::<SaveGameplaySetting>();
+    .add_message::<MenuEvent>()
+    .add_message::<MenuEvBack>()
+    .add_message::<MenuSettingClassSelected>()
+    .add_message::<AudioSettingSelected>()
+    .add_message::<SaveAudioSetting>()
+    .add_message::<GameplaySettingSelected>()
+    .add_message::<SaveGameplaySetting>();
 }
 
 fn item_highlight_system(
@@ -61,13 +61,13 @@ fn item_highlight_system(
 }
 
 fn menu_routing_system(
-    mut ev_menu: EventReader<MenuEvent>,
-    mut ev_back: EventWriter<MenuEvBack>,
-    mut ev_class: EventWriter<MenuSettingClassSelected>,
-    mut ev_audio_setting: EventWriter<AudioSettingSelected>,
-    mut ev_save_audio_setting: EventWriter<SaveAudioSetting>,
-    mut ev_game_setting: EventWriter<GameplaySettingSelected>,
-    mut ev_save_game_setting: EventWriter<SaveGameplaySetting>,
+    mut ev_menu: MessageReader<MenuEvent>,
+    mut ev_back: MessageWriter<MenuEvBack>,
+    mut ev_class: MessageWriter<MenuSettingClassSelected>,
+    mut ev_audio_setting: MessageWriter<AudioSettingSelected>,
+    mut ev_save_audio_setting: MessageWriter<SaveAudioSetting>,
+    mut ev_game_setting: MessageWriter<GameplaySettingSelected>,
+    mut ev_save_game_setting: MessageWriter<SaveGameplaySetting>,
 ) {
     for ev in ev_menu.read() {
         match ev {
@@ -105,11 +105,11 @@ fn menu_routing_system(
 }
 
 fn menu_back_event(
-    mut events: EventReader<MenuEvBack>,
+    mut events: MessageReader<MenuEvBack>,
     mut next_state: ResMut<NextState<SettingsState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
     settings_state: Res<State<SettingsState>>,
-    mut ev_menu: EventWriter<MenuSettingClassSelected>,
+    mut ev_menu: MessageWriter<MenuSettingClassSelected>,
     mut commands: Commands,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
@@ -135,7 +135,7 @@ fn menu_back_event(
 
 fn menu_settings_class_selected(
     mut commands: Commands,
-    mut events: EventReader<MenuSettingClassSelected>,
+    mut events: MessageReader<MenuSettingClassSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
@@ -175,7 +175,7 @@ fn menu_settings_class_selected(
 
 fn menu_audio_setting_selected(
     mut commands: Commands,
-    mut events: EventReader<AudioSettingSelected>,
+    mut events: MessageReader<AudioSettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
@@ -287,8 +287,8 @@ fn menu_audio_setting_selected(
 }
 
 fn menu_save_audio_setting(
-    mut events: EventReader<SaveAudioSetting>,
-    mut ev_back: EventWriter<MenuEvBack>,
+    mut events: MessageReader<SaveAudioSetting>,
+    mut ev_back: MessageWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
 ) {
     use unsettings::audio::AudioSettingsValue as v;
@@ -333,7 +333,7 @@ fn menu_save_audio_setting(
 
 fn menu_gameplay_setting_selected(
     mut commands: Commands,
-    mut events: EventReader<GameplaySettingSelected>,
+    mut events: MessageReader<GameplaySettingSelected>,
     mut next_state: ResMut<NextState<SettingsState>>,
     handles: Res<GameAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
@@ -446,8 +446,8 @@ fn menu_gameplay_setting_selected(
 }
 
 fn menu_save_gameplay_setting(
-    mut events: EventReader<SaveGameplaySetting>,
-    mut ev_back: EventWriter<MenuEvBack>,
+    mut events: MessageReader<SaveGameplaySetting>,
+    mut ev_back: MessageWriter<MenuEvBack>,
     mut gameplay_settings: ResMut<Persistent<GameplaySettings>>,
 ) {
     use unsettings::game::GameplaySettingsValue as v;
@@ -473,8 +473,8 @@ fn menu_save_gameplay_setting(
 }
 
 fn menu_integration_system(
-    mut menu_clicks: EventReader<MenuItemClicked>,
-    mut menu_events: EventWriter<MenuEvent>,
+    mut menu_clicks: MessageReader<MenuItemClicked>,
+    mut menu_events: MessageWriter<MenuEvent>,
     menu_items: Query<(&MenuItem, &MenuItemInteractive)>,
     state_timer: Query<&SettingsStateTimer>,
 ) {
@@ -520,8 +520,8 @@ fn menu_integration_system(
 
 /// Handles the ESC key events from the core menu system
 fn handle_escape(
-    mut escape_events: EventReader<uncoremenu::systems::MenuEscapeEvent>,
-    mut menu_events: EventWriter<MenuEvent>,
+    mut escape_events: MessageReader<uncoremenu::systems::MenuEscapeEvent>,
+    mut menu_events: MessageWriter<MenuEvent>,
 ) {
     if !escape_events.is_empty() {
         // If ESC was pressed, send a Back event

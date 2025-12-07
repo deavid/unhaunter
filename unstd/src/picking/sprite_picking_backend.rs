@@ -22,6 +22,7 @@
 use crate::materials::CustomMaterial1;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy_picking::PickingSystems;
 use bevy_picking::backend::prelude::*;
 
 /// Alpha threshold for pixel-perfect picking (80%)
@@ -112,7 +113,10 @@ pub struct CustomSpritePickingPlugin;
 impl Plugin for CustomSpritePickingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CustomSpritePickingSettings>()
-            .add_systems(PreUpdate, custom_sprite_picking.in_set(PickSet::Backend));
+            .add_systems(
+                PreUpdate,
+                custom_sprite_picking.in_set(PickingSystems::Backend),
+            );
     }
 }
 
@@ -150,7 +154,7 @@ fn custom_sprite_picking(
     )>,
     materials: Res<Assets<CustomMaterial1>>,
     images: Res<Assets<Image>>,
-    mut output: EventWriter<PointerHits>,
+    mut output: MessageWriter<PointerHits>,
 ) {
     // Filter and sort sprites by depth (Z order) for proper picking priority
     let mut sorted_sprites: Vec<_> = sprite_query

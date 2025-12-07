@@ -56,7 +56,7 @@ fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearDat
 /// System to handle the SoundEvent, playing the sound with volume adjusted by
 /// distance.
 fn sound_playback_system(
-    mut sound_events: EventReader<SoundEvent>,
+    mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
     gc: Res<GameConfig>,
     qp: Query<(Entity, &Position, &PlayerSprite)>,

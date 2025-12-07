@@ -37,7 +37,7 @@ pub(crate) fn mouse_right_click_gear_system(
 /// Scrolling up (positive Y) cycles forward (same as Q key).
 /// Scrolling down (negative Y) cycles backward (reverse direction).
 pub(crate) fn mouse_scroll_gear_system(
-    mut scroll_events: EventReader<MouseWheel>,
+    mut scroll_events: MessageReader<MouseWheel>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     looking_gear: Res<LookingGear>,
 ) {
@@ -89,8 +89,8 @@ pub(crate) fn mouse_hover_interactive_system(
     q_player: Query<(&Position, &PlayerSprite)>,
     game_config: Res<GameConfig>,
     visibility_data: Res<VisibilityData>,
-    mut hover_events: EventReader<Pointer<Over>>,
-    mut exit_events: EventReader<Pointer<Out>>,
+    mut hover_events: MessageReader<Pointer<Over>>,
+    mut exit_events: MessageReader<Pointer<Out>>,
 ) {
     // Find the active player's position
     let player_pos = q_player.iter().find_map(|(pos, player)| {
@@ -109,7 +109,7 @@ pub(crate) fn mouse_hover_interactive_system(
 
     for over_event in hover_events.read() {
         if let Ok((entity, position, mut interactive, _behavior)) =
-            q_interactives.get_mut(over_event.target)
+            q_interactives.get_mut(over_event.entity)
         {
             let interactive_floor = position.z.round() as i32;
 
@@ -156,7 +156,7 @@ pub(crate) fn mouse_hover_interactive_system(
 
     for exit_event in exit_events.read() {
         if let Ok((entity, position, mut interactive, _behavior)) =
-            q_interactives.get_mut(exit_event.target)
+            q_interactives.get_mut(exit_event.entity)
         {
             let interactive_floor = position.z.round() as i32;
 

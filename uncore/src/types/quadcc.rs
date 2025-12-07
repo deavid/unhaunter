@@ -40,7 +40,7 @@ impl From<QuadCC> for Mesh {
             ([right_x, top_y, 0.0], [0.0, 0.0, 1.0], [u_right, 0.0]),
             ([right_x, bottom_y, 0.0], [0.0, 0.0, 1.0], [u_right, 1.0]),
         ];
-        let indices = bevy::render::mesh::Indices::U32(vec![0, 2, 1, 0, 3, 2]);
+        let indices = bevy::mesh::Indices::U32(vec![0, 2, 1, 0, 3, 2]);
         let positions: Vec<_> = vertices.iter().map(|(p, _, _)| *p).collect();
         let normals: Vec<_> = vertices.iter().map(|(_, n, _)| *n).collect();
         let uvs: Vec<_> = vertices.iter().map(|(_, _, uv)| *uv).collect();

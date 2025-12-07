@@ -8,8 +8,8 @@ use uncore::{
 use unstd::tiledmap::MapTileSetDb;
 
 fn load_level_handler(
-    mut ev: EventReader<LoadLevelEvent>,
-    mut evw: EventWriter<LevelLoadedEvent>,
+    mut ev: MessageReader<LoadLevelEvent>,
+    mut evw: MessageWriter<LevelLoadedEvent>,
     asset_server: Res<AssetServer>,
     mut tilesetdb: ResMut<MapTileSetDb>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,

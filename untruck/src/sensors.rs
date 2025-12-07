@@ -30,7 +30,7 @@ pub fn setup_sensors_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
         height: Val::Px(0.0),
         ..default()
     })
-    .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+    .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
 
     let sensor1 = (
         Text::new("No Sensors"),

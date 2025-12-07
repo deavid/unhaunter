@@ -104,15 +104,15 @@ fn cleanup_ui(
 
 // System to handle mission selection clicks or keyboard confirmation (Enter/Escape)
 fn handle_selection_input(
-    mut ev_menu_clicks: EventReader<MenuItemClicked>,
-    mut ev_escape: EventReader<MenuEscapeEvent>,
+    mut ev_menu_clicks: MessageReader<MenuItemClicked>,
+    mut ev_escape: MessageReader<MenuEscapeEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     menu_root: Query<&MenuRoot>,
     maps_resource: Res<Maps>,
     ui_mapping: Res<UIMissionMapping>,
     mission_select_mode: Res<CurrentMissionSelectMode>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
-    mut ev_load_level: EventWriter<LoadLevelEvent>,
+    mut ev_load_level: MessageWriter<LoadLevelEvent>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut player_profile: ResMut<Persistent<unprofile::data::PlayerProfileData>>,
@@ -236,7 +236,7 @@ fn handle_selection_input(
 
 /// System to update the mission description and image when selection changes
 pub fn update_mission_selection(
-    mut ev_menu_selection: EventReader<MenuItemSelected>,
+    mut ev_menu_selection: MessageReader<MenuItemSelected>,
     asset_server: Res<AssetServer>,
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>,
     mut q_preview_image: Query<&mut ImageNode, With<MissionPreviewImage>>,
@@ -693,7 +693,7 @@ pub fn setup_ui(
                                     image: asset_server.load(&initial_preview_image_path),
                                     ..default()
                                 },
-                                BorderColor(colors::TRUCKUI_ACCENT2_COLOR),
+                                BorderColor::all(colors::TRUCKUI_ACCENT2_COLOR),
                                 MissionPreviewImage,
                             ));
 
@@ -714,7 +714,7 @@ pub fn setup_ui(
                                     })
                                     .insert(TextColor(colors::MENU_DESC_TEXT_COLOR))
                                     .insert(TextLayout {
-                                        justify: JustifyText::Left,
+                                        justify: Justify::Left,
                                         ..default()
                                     })
                                     .insert(MissionDescriptionText);
@@ -913,7 +913,7 @@ fn create_locked_mission_item(
 
 fn trigger_initial_scroll_if_needed(
     mut initial_scroll_target: ResMut<InitialScrollTarget>,
-    mut ev_keyboard_nav: EventWriter<KeyboardNavigate>,
+    mut ev_keyboard_nav: MessageWriter<KeyboardNavigate>,
     container_query: Query<&ComputedNode, With<ScrollableListContainer>>,
 ) {
     if let Some(target_idx) = initial_scroll_target.0 {

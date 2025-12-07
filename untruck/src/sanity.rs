@@ -34,7 +34,7 @@ pub fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
         height: Val::Px(0.0 * UI_SCALE),
         ..default()
     })
-    .insert(BorderColor(colors::TRUCKUI_ACCENT_COLOR));
+    .insert(BorderColor::all(colors::TRUCKUI_ACCENT_COLOR));
     let p1_sanity = (
         Text::new("Player 1: 90% Sanity"),
         TextFont {

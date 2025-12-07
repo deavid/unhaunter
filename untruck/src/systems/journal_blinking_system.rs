@@ -131,13 +131,14 @@ fn update_journal_button_blinking_system(
                 let pulse_factor =
                     (time.elapsed_secs_f64() * std::f64::consts::PI * 2.0).sin() * 0.5 + 0.5; // Varies 0.0 to 1.0
                 let normal_color = truck_button.border_color(bevy::ui::Interaction::None);
-                border_color.0 = normal_color.mix(
+                *border_color = BorderColor::all(normal_color.mix(
                     &colors::JOURNAL_BUTTON_BLINK_BORDER_COLOR,
                     pulse_factor as f32,
-                );
+                ));
             } else if truck_button.blinking_hint_active {
                 truck_button.blinking_hint_active = false;
-                border_color.0 = truck_button.border_color(bevy::ui::Interaction::None);
+                *border_color =
+                    BorderColor::all(truck_button.border_color(bevy::ui::Interaction::None));
             }
         }
     }
@@ -238,11 +239,12 @@ fn update_journal_ghost_blinking_system(
                     &colors::JOURNAL_BUTTON_BLINK_BORDER_COLOR,
                     pulse_factor as f32,
                 );
-                border_color.0 = new_border_color;
+                *border_color = BorderColor::all(new_border_color);
             } else if truck_button.blinking_hint_active {
                 truck_button.blinking_hint_active = false;
                 // Reset to normal if not the target, disabled, or button is pressed
-                border_color.0 = truck_button.border_color(bevy::ui::Interaction::None);
+                *border_color =
+                    BorderColor::all(truck_button.border_color(bevy::ui::Interaction::None));
             }
         }
     }
@@ -251,7 +253,7 @@ fn update_journal_ghost_blinking_system(
 fn clear_seen_evidence_hints_on_mission_change(
     mut seen_evidence_hints: ResMut<SeenEvidenceHints>,
     mut ghost_guess: ResMut<GhostGuess>,
-    mut level_loaded_events: EventReader<LevelLoadedEvent>,
+    mut level_loaded_events: MessageReader<LevelLoadedEvent>,
 ) {
     // If any LevelLoadedEvent has occurred, it signifies a new level/mission has started.
     // We iterate through them to consume them for this reader and then clear the hints.

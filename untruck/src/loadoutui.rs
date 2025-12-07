@@ -28,7 +28,7 @@ pub enum LoadoutButton {
     Van(Gear),
 }
 
-#[derive(Debug, Event, Clone)]
+#[derive(Debug, Message, Clone)]
 pub struct EventButtonClicked(LoadoutButton);
 
 #[derive(Debug, Component, Clone)]
@@ -47,7 +47,7 @@ pub fn setup_loadout_ui(
         (
             Button,
             BackgroundColor(colors::TRUCKUI_ACCENT2_COLOR),
-            BorderColor(colors::TRUCKUI_ACCENT_COLOR),
+            BorderColor::all(colors::TRUCKUI_ACCENT_COLOR),
             Node {
                 justify_content: JustifyContent::Center,
                 justify_items: JustifyItems::Center,
@@ -263,7 +263,7 @@ fn update_loadout_buttons(
     mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     interaction_query_journal_buttons: Query<&TruckUIButton, With<Button>>,
-    mut ev_clk: EventWriter<EventButtonClicked>,
+    mut ev_clk: MessageWriter<EventButtonClicked>,
     gc: Res<GameConfig>,
 ) {
     let mut changed = false;
@@ -280,8 +280,8 @@ fn update_loadout_buttons(
             Interaction::Hovered => 0.5,
             Interaction::None => 0.01,
         };
-        border.0 = colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha);
-        bg.0 = colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha);
+        *border = BorderColor::all(colors::TRUCKUI_ACCENT_COLOR.with_alpha(bdalpha));
+        *bg = BackgroundColor(colors::TRUCKUI_ACCENT2_COLOR.with_alpha(bgalpha));
         if *int == Interaction::Pressed {
             ev_clk.write(EventButtonClicked(lbut.clone()));
         }
@@ -391,7 +391,7 @@ fn update_loadout_buttons(
 }
 
 fn button_clicked(
-    mut ev_clk: EventReader<EventButtonClicked>,
+    mut ev_clk: MessageReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,

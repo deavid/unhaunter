@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{prelude::*, camera::ScalingMode};
 use bevy_persistent::Persistent;
 use uncore::{
     components::{

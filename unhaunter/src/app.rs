@@ -1,6 +1,6 @@
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
-use bevy::sprite::Material2dPlugin;
+use bevy::sprite_render::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
@@ -109,42 +109,42 @@ pub fn app_run(cli_options: CliOptions) {
 fn default_resolution() -> WindowResolution {
     let height = 800.0 * plt::UI_SCALE;
     let width = height * plt::ASPECT_RATIO;
-    WindowResolution::new(width, height)
+    WindowResolution::new(width as u32, height as u32)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-use bevy::winit::WinitWindows;
+use bevy::ecs::system::NonSendMarker;
 
 #[cfg(not(target_arch = "wasm32"))]
-fn set_window_icon(
-    // we have to use `NonSend` here
-    windows: NonSend<WinitWindows>,
+fn set_window_icon(_marker: NonSendMarker, // Forces system to run on main thread
 ) {
+    use bevy::winit::WINIT_WINDOWS;
     // This only works on native. WASM uses the HTML icon.
-    {
-        use winit::window::Icon;
-        let Some(assets_path) = crate::utils::find_assets_directory() else {
-            warn!("Assets directory not found.");
-            return;
-        };
-        // here we use the `image` crate to load our icon data from a png file
-        // this is not a very bevy-native solution, but it will do
-        let Ok(img) = image::open(assets_path.join("favicon-512x512.png")) else {
-            warn!("Failed to load icon image.");
-            return;
-        };
+    use winit::window::Icon;
+    let Some(assets_path) = crate::utils::find_assets_directory() else {
+        warn!("Assets directory not found.");
+        return;
+    };
+    // here we use the `image` crate to load our icon data from a png file
+    // this is not a very bevy-native solution, but it will do
+    let Ok(img) = image::open(assets_path.join("favicon-512x512.png")) else {
+        warn!("Failed to load icon image.");
+        return;
+    };
 
-        let (icon_rgba, icon_width, icon_height) = {
-            let image = img.into_rgba8();
-            let (width, height) = image.dimensions();
-            let rgba = image.into_raw();
-            (rgba, width, height)
-        };
-        let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = img.into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
 
+    // Access the thread-local static for window management
+    WINIT_WINDOWS.with_borrow(|windows| {
         // do it for all windows
         for window in windows.windows.values() {
             window.set_window_icon(Some(icon.clone()));
         }
-    }
+    });
 }

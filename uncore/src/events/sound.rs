@@ -7,7 +7,7 @@ use crate::components::board::position::Position;
 ///
 /// This event is used to trigger the playback of a sound with volume adjusted
 /// based on the distance to the player's position.
-#[derive(Debug, Event, Clone)]
+#[derive(Debug, Message, Clone)]
 pub struct SoundEvent {
     /// The path to the sound file to be played.
     pub sound_file: String,

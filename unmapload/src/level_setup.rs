@@ -78,12 +78,12 @@ pub struct GhostSetupSimulationMarker {
 /// * `p` - Level system parameters containing all needed resources
 /// * `ev_level_ready` - Event writer to signal when level is ready
 fn load_level_handler(
-    mut ev: EventReader<LevelLoadedEvent>,
+    mut ev: MessageReader<LevelLoadedEvent>,
     mut commands: Commands,
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
     mut p: LoadLevelSystemParam,
-    mut ev_level_ready: EventWriter<LevelReadyEvent>,
+    mut ev_level_ready: MessageWriter<LevelReadyEvent>,
     time: Res<Time>,
 ) {
     // Get the loaded event or return early if none

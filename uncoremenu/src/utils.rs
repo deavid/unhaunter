@@ -16,9 +16,9 @@ pub fn is_position_inside_node(position: Vec2, node_size: Vec2, node_position: V
 /// Helper function to create a standard menu selection event
 pub fn create_menu_selection_system<
     T: Component + Copy + Send + Sync + 'static,
-    E: Event + From<T>,
->() -> impl FnMut(Query<&T, With<Interaction>>, EventWriter<E>) + Send + Sync + 'static {
-    move |query: Query<&T, With<Interaction>>, mut event_writer: EventWriter<E>| {
+    E: Message + From<T>,
+>() -> impl FnMut(Query<&T, With<Interaction>>, MessageWriter<E>) + Send + Sync + 'static {
+    move |query: Query<&T, With<Interaction>>, mut event_writer: MessageWriter<E>| {
         for menu_identifier in query.iter() {
             event_writer.write(E::from(*menu_identifier));
         }

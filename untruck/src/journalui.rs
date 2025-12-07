@@ -61,7 +61,7 @@ pub fn setup_journal_ui(
                     ..default()
                 })
                 .insert(BackgroundColor(Color::NONE))
-                .insert(BorderColor(Color::NONE))
+                .insert(BorderColor::all(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::Evidence(evidence).into_component())
                 .with_children(|btn| {
@@ -144,7 +144,7 @@ pub fn setup_journal_ui(
                     ..default()
                 })
                 .insert(BackgroundColor(Color::NONE))
-                .insert(BorderColor(Color::NONE))
+                .insert(BorderColor::all(Color::NONE))
                 .insert(Interaction::None)
                 .insert(TruckButtonType::Ghost(ghost_type).into_component())
                 .with_children(|btn| {
@@ -228,7 +228,7 @@ pub fn setup_journal_ui(
         })
         .insert(ZIndex(20))
         .insert(BackgroundColor(Color::NONE))
-        .insert(BorderColor(Color::NONE))
+        .insert(BorderColor::all(Color::NONE))
         .insert(Interaction::None)
         .insert(TruckButtonType::CraftRepellent.into_component())
         .with_children(|btn| {
