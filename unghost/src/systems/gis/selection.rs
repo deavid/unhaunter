@@ -15,7 +15,7 @@ use uncore::resources::visibility_data::VisibilityData;
 use crate::components::interaction::Locked;
 
 // Simple debug toggle to make GIS interactions more frequent and verbose during development
-const GIS_DEBUG: bool = true;
+const GIS_DEBUG: bool = false;
 
 /// Registers selection systems with the Bevy app
 pub(crate) fn app_setup(app: &mut App) {
