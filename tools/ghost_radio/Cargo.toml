@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 rand = { version = "0.8.5", features = ["alloc"] }
-serde = { version = "1.0.202", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 serde_yaml = "0.9.34"
