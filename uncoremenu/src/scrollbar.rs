@@ -41,7 +41,7 @@ fn ensure_selected_item_visible(
         (Entity, &Node, &ComputedNode, &mut ScrollPosition),
         With<ScrollableListContainer>,
     >,
-    items_query: Query<(&Node, &ComputedNode, &GlobalTransform, &MenuItemInteractive)>,
+    items_query: Query<(&ComputedNode, &MenuItemInteractive)>,
 ) {
     if keyboard_nav_events.is_empty() {
         return;
@@ -57,12 +57,13 @@ fn ensure_selected_item_visible(
 
         let mut sorted_items_data: Vec<_> = items_query
             .iter()
-            .map(|(_, computed, _, item)| (item.identifier, computed.size().y))
+            .map(|(computed, item)| (item.identifier, computed.size().y))
             .collect();
         sorted_items_data.sort_by_key(|(id, _)| *id);
 
         for ev in keyboard_nav_events.read() {
             let selected_idx = ev.0;
+
             let mut current_y_offset = 0.0;
             let mut selected_item_top_y = 0.0;
             let mut selected_item_height = 0.0;
@@ -79,6 +80,7 @@ fn ensure_selected_item_visible(
             }
 
             if !found {
+                warn!("Selected item {} not found!", selected_idx);
                 continue;
             }
 

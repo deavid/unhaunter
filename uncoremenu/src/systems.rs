@@ -89,22 +89,29 @@ fn menu_keyboard_system(
         return;
     };
 
-    // Get the total number of menu items
-    let item_count = menu_items.iter().count();
-    if item_count == 0 {
-        warn!("No menu items found!");
-        return;
-    };
-
     // Handle up/down navigation
     let mut new_selection = None;
     if keyboard_input.just_pressed(KeyCode::ArrowUp) {
+        // Get the total number of menu items
+        let item_count = menu_items.iter().count();
+        if item_count == 0 {
+            warn!("No menu items found!");
+            return;
+        }
+
         new_selection = Some(if menu.selected_item == 0 {
             item_count - 1
         } else {
             menu.selected_item - 1
         });
     } else if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+        // Get the total number of menu items
+        let item_count = menu_items.iter().count();
+        if item_count == 0 {
+            warn!("No menu items found!");
+            return;
+        }
+
         new_selection = Some((menu.selected_item + 1) % item_count);
     }
 

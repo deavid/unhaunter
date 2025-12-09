@@ -916,23 +916,12 @@ fn trigger_initial_scroll_if_needed(
     mut ev_keyboard_nav: MessageWriter<KeyboardNavigate>,
     container_query: Query<&ComputedNode, With<ScrollableListContainer>>,
 ) {
-    if let Some(target_idx) = initial_scroll_target.0 {
-        if let Ok(container_node) = container_query.single() {
-            if container_node.size().y > 0.0 {
-                // Check if container height is calculated
-                info!(
-                    "Initial scroll: UI ready. Triggering scroll to index: {}",
-                    target_idx
-                );
-                ev_keyboard_nav.write(KeyboardNavigate(target_idx));
-                initial_scroll_target.0 = None; // Clear the target so this doesn't run again
-            } else {
-                // Log that UI is not ready, will retry next frame.
-                // info!("Initial scroll: UI not ready yet (container height is 0). Will retry.");
-            }
-        } else {
-            // Log that container is not found, will retry next frame.
-            // info!("Initial scroll: ScrollableListContainer not found yet. Will retry.");
-        }
+    if let Some(target_idx) = initial_scroll_target.0
+        && let Ok(container_node) = container_query.single()
+        && container_node.size().y > 0.0
+    {
+        // Container is ready, trigger the scroll
+        ev_keyboard_nav.write(KeyboardNavigate(target_idx));
+        initial_scroll_target.0 = None;
     }
 }
