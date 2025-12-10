@@ -1,31 +1,30 @@
 [workspace]
 members = [
-    "ungame",
-    "tools/ghost_radio",
-    "tools/text_to_speech/walkie_voice_generator",
-    "tools/ghost_list",
-    "uncore",
-    "ungear",
-    "unstd",
-    "ungearitems",
-    "unmaphub",
-    "untruck",
-    "unplayer",
-    "unghost",
-    "unmenu",
-    "unlight",
-    "unnpc",
-    "untmxmap",
-    "unsettings",
-    "unmenusettings",
-    "unfog",
-    "unwalkie",
-    "uncoremenu",
-    "unmapload",
-    "uncampaign",
-    "unprofile",
-    "unsummary",
-    "unwalkiecore",
+    "crates/uncampaign",
+    "crates/uncore",
+    "crates/uncoremenu",
+    "crates/unfog",
+    "crates/ungear",
+    "crates/ungearitems",
+    "crates/unghost",
+    "crates/unlight",
+    "crates/unmapload",
+    "crates/unmaphub",
+    "crates/unmenu",
+    "crates/unmenusettings",
+    "crates/unnpc",
+    "crates/unplayer",
+    "crates/unprofile",
+    "crates/unsettings",
+    "crates/unsummary",
+    "crates/untruck",
+    "crates/untmxmap",
+    "crates/unwalkie",
+    "crates/unwalkiecore",
+    "crates/ungame",
+    "crates/tools/ghost_list",
+    "crates/tools/ghost_radio",
+    "crates/tools/text_to_speech/walkie_voice_generator",
 ]
 resolver = "3"
 
@@ -90,29 +89,29 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore = { path = "uncore" }
-unstd = { path = "unstd" }
-unfog = { path = "unfog" }
-ungear = { path = "ungear" }
-ungearitems = { path = "ungearitems" }
-unmaphub = { path = "unmaphub" }
-untruck = { path = "untruck" }
-ungame = { path = "ungame" }
-unplayer = { path = "unplayer" }
-unghost = { path = "unghost" }
-unlight = { path = "unlight" }
-unmenu = { path = "unmenu" }
-unnpc = { path = "unnpc" }
-untmxmap = { path = "untmxmap" }
-unsettings = { path = "unsettings" }
-unmenusettings = { path = "unmenusettings" }
-unwalkie = { path = "unwalkie" }
-uncoremenu = { path = "uncoremenu" }
-unmapload = { path = "unmapload" }
-uncampaign = { path = "uncampaign" }
-unprofile = { path = "unprofile" }
-unsummary = { path = "unsummary" }
-unwalkie_types = { path = "unwalkie_types" }
+uncampaign = { path = "crates/uncampaign" }
+uncore = { path = "crates/uncore" }
+uncoremenu = { path = "crates/uncoremenu" }
+unfog = { path = "crates/unfog" }
+ungear = { path = "crates/ungear" }
+ungearitems = { path = "crates/ungearitems" }
+unghost = { path = "crates/unghost" }
+unlight = { path = "crates/unlight" }
+unmapload = { path = "crates/unmapload" }
+unmaphub = { path = "crates/unmaphub" }
+unmenu = { path = "crates/unmenu" }
+unmenusettings = { path = "crates/unmenusettings" }
+unnpc = { path = "crates/unnpc" }
+unplayer = { path = "crates/unplayer" }
+unprofile = { path = "crates/unprofile" }
+unsettings = { path = "crates/unsettings" }
+unsummary = { path = "crates/unsummary" }
+unstd = { path = "crates/unstd" }
+untruck = { path = "crates/untruck" }
+untmxmap = { path = "crates/untmxmap" }
+unwalkie = { path = "crates/unwalkie" }
+unwalkie_types = { path = "crates/unwalkie_types" }
+ungame = { path = "crates/ungame" }
 
 clap = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive"] }
