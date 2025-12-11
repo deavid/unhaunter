@@ -133,7 +133,7 @@ path = "unhaunter/src/bin/unhaunter.rs"
 
 [[bin]]
 name = "walkie_voice_generator"
-path = "tools/text_to_speech/walkie_voice_generator/src/main.rs"
+path = "crates/tools/text_to_speech/walkie_voice_generator/src/main.rs"
 required-features = []
 
 [lib]
