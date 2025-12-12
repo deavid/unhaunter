@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use uncore::difficulty::CurrentDifficulty;
-use uncore::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uncore::resources::ghost_guess::GhostGuess;
-use uncore::states::AppState;
-use uncore::types::evidence::Evidence;
-use uncore::types::gear_kind::GearKind;
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uncore_resources::resources::ghost_guess::GhostGuess;
+use uncore_resources::states::AppState;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 

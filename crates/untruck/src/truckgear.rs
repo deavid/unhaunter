@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore::difficulty::DifficultyStruct;
+use undifficulty::DifficultyStruct;
 use ungear::types::gear::Gear;
 use ungearitems::from_gearkind::FromGearKind;
 

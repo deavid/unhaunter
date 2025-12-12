@@ -2,8 +2,8 @@ use crate::events::WalkieEvent;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;
-use uncore::random_seed;
-use uncore::types::evidence::Evidence;
+use uncore_foundation::random_seed;
+use uncore_foundation::types::evidence::Evidence;
 use unwalkie_types::VoiceLineData;
 
 #[derive(Clone, Debug, Default)]

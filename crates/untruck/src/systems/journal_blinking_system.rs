@@ -1,20 +1,16 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
-use uncore::components::ghost_sprite::GhostSprite;
-use uncore::resources::ghost_guess::GhostGuess;
-use uncore::states::GameState;
-use uncore::types::ghost::types::GhostType;
-use uncore::{
-    colors,
-    components::truck_ui_button::TruckUIButton,
-    events::loadlevel::LevelLoadedEvent,
-    resources::current_evidence_readings::CurrentEvidenceReadings,
-    types::{
-        evidence::Evidence,
-        truck_button::{TruckButtonState, TruckButtonType},
-    },
-};
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_resources::resources::ghost_guess::GhostGuess;
+use uncore_resources::states::GameState;
+use uncore_foundation::types::ghost::types::GhostType;
+use uncore_foundation::colors;
+use uncore_components::components::truck_ui_button::TruckUIButton;
+use uncore_events::events::loadlevel::LevelLoadedEvent;
+use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::truck_button::{TruckButtonState, TruckButtonType};
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 

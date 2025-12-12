@@ -6,9 +6,9 @@
 //! manual's interface.  The functions utilize Bevy's UI system to create the
 //! visual elements of the manual efficiently.
 use bevy::prelude::*;
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::types::root::game_assets::GameAssets;
+use uncore_foundation::colors;
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_types::types::root::game_assets::GameAssets;
 
 pub fn grid_img_text2(
     parent: &mut ChildSpawnerCommands<'_>,

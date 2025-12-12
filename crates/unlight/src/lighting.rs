@@ -6,12 +6,10 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use ndarray::Array3;
-use uncore::{
-    behavior::{Behavior, Orientation},
-    components::board::position::Position,
-    resources::board_data::BoardData,
-    types::board::fielddata::LightFieldData,
-};
+use uncore_board::behavior::{Behavior, Orientation};
+use uncore_board::components::position::Position;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_board::types::fielddata::LightFieldData;
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors
 /// by switching between legacy and new implementations.

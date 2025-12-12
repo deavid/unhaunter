@@ -7,21 +7,21 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
-use uncore::components::animation::{AnimationTimer, CharacterAnimation};
-use uncore::components::board::direction::Direction;
-use uncore::components::board::position::Position;
-use uncore::components::focus_ring::FocusRing;
-use uncore::components::game::GameSound;
-use uncore::components::game::GameSprite;
-use uncore::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use uncore::components::ghost_breach::GhostBreach;
-use uncore::components::ghost_sprite::GhostSprite;
-use uncore::components::player::Stamina;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::components::sprite_type::SpriteType;
-use uncore::random_seed;
-use uncore::resources::summary_data::SummaryData;
-use uncore::types::game::SoundType;
+use uncore_components::components::animation::{AnimationTimer, CharacterAnimation};
+use uncore_board::components::direction::Direction;
+use uncore_board::components::position::Position;
+use uncore_components::components::focus_ring::FocusRing;
+use uncore_components::components::game::GameSound;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use uncore_components::components::ghost_breach::GhostBreach;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player::Stamina;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_foundation::random_seed;
+use uncore_resources::resources::summary_data::SummaryData;
+use uncore_types::types::game::SoundType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 
@@ -102,7 +102,7 @@ pub fn spawn_player(
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ))
         .insert(Stamina::default())
-        .insert(uncore::components::waypoint::WaypointQueue::default());
+        .insert(uncore_components::components::waypoint::WaypointQueue::default());
 
     // Determine if the van should be open based on distance to van and difficulty setting
     dist_to_van < 8.0 && p.difficulty.0.van_auto_open

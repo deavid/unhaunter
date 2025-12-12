@@ -1,4 +1,5 @@
-use uncore::types::{gear::equipmentposition::Hand, gear_kind::GearKind, ghost::types::GhostType};
+use uncore_types::types::{gear::equipmentposition::Hand, gear_kind::GearKind};
+use uncore_foundation::types::ghost::types::GhostType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::prelude::RepellentFlask;
 

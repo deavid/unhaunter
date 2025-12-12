@@ -1,13 +1,11 @@
 use bevy::{prelude::*, time::Stopwatch};
-use uncore::types::gear_kind::GearKind;
-use uncore::{
-    components::{
-        board::position::Position, ghost_sprite::GhostSprite, player::Hiding,
-        player_sprite::PlayerSprite,
-    },
-    resources::roomdb::RoomDB,
-    states::{AppState, GameState},
-};
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player::Hiding;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

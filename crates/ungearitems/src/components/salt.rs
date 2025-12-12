@@ -5,16 +5,14 @@ use crate::metrics;
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng as _;
-use uncore::components::board::mapcolor::MapColor;
-use uncore::metric_recorder::SendMetric;
-use uncore::random_seed;
-use uncore::{
-    components::{
-        board::position::Position, game::GameSprite, ghost_sprite::GhostSprite,
-        sprite_type::SpriteType,
-    },
-    types::gear::equipmentposition::EquipmentPosition,
-};
+use uncore_board::components::mapcolor::MapColor;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_foundation::random_seed;
+use uncore_board::components::position::Position;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 
 /// Data structure for the Salt consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

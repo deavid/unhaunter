@@ -1,13 +1,13 @@
 use bevy::prelude::*;
-use uncore::resources::maps::Maps;
-use uncore::states::{AppState, GameState};
-use uncore::types::root::anchors::Anchors;
-use uncore::types::root::font_assets::{
+use uncore_resources::resources::maps::Maps;
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::root::anchors::Anchors;
+use uncore_types::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
     SyneFontAssets, TitilliumWebAssets, VictorMonoAssets,
 };
-use uncore::types::root::game_assets::GameAssets;
-use uncore::types::root::image_assets::ImageAssets;
+use uncore_types::types::root::game_assets::GameAssets;
+use uncore_types::types::root::image_assets::ImageAssets;
 
 pub struct UnhaunterRootPlugin;
 

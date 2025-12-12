@@ -1,17 +1,14 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::{
-    difficulty::CurrentDifficulty,
-    resources::{
-        current_evidence_readings::CurrentEvidenceReadings, ghost_guess::GhostGuess,
-        potential_id_timer::PotentialIDTimer,
-    },
-    types::evidence::Evidence,
-};
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uncore_resources::resources::ghost_guess::GhostGuess;
+use uncore_resources::resources::potential_id_timer::PotentialIDTimer;
+use uncore_foundation::types::evidence::Evidence;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 
-use uncore::states::GameState;
+use uncore_resources::states::GameState;
 
 // PotentialIDTimer struct definition removed from here
 
@@ -135,7 +132,7 @@ fn potential_id_prompt_system(
                     //     identified_ghost.name(),
                     //     initial_ack_count
                     // );
-                    timer.data = Some(uncore::resources::potential_id_timer::PotentialIDData {
+                    timer.data = Some(uncore_resources::resources::potential_id_timer::PotentialIDData {
                         evidence: current_ev_candidate,
                         ghost_type: identified_ghost,
                         ack_count: initial_ack_count,

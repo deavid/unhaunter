@@ -1,14 +1,12 @@
 use bevy::{prelude::*, time::Stopwatch};
-use uncore::{
-    components::{
-        board::position::Position, game_config::GameConfig, ghost_sprite::GhostSprite,
-        player_sprite::PlayerSprite,
-    },
-    difficulty::CurrentDifficulty,
-    resources::roomdb::RoomDB,
-    states::{AppState, GameState},
-    types::gear_kind::GearKind, // Added import for GearKind
-};
+use uncore_board::components::position::Position;
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::gear_kind::GearKind;
+use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

@@ -1,0 +1,19 @@
+[package]
+name = "uncore-types"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+serde = { workspace = true }
+ordered-float = { workspace = true }
+ndarray = { workspace = true }
+enum-iterator = { workspace = true }

@@ -1,16 +1,16 @@
 use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
-use uncore::behavior::Behavior;
-use uncore::colors;
-use uncore::components::game_ui::{
+use uncore_board::behavior::Behavior;
+use uncore_foundation::colors;
+use uncore_components::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
 };
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::states::{AppState, GameState};
-use uncore::types::root::game_assets::GameAssets;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use unsettings::game::GameplaySettings;
 

@@ -1,0 +1,17 @@
+[package]
+name = "uncore-foundation"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+serde = { workspace = true }
+enum-iterator = { workspace = true }
+ordered-float = { workspace = true }
+rand = { workspace = true }
+thiserror = { workspace = true }

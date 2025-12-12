@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::components::board::mapcolor::MapColor;
-use uncore::components::board::position::Position;
-use uncore::components::game::GameSprite;
-use uncore::components::sprite_type::SpriteType;
-use uncore::random_seed;
+use uncore_board::components::mapcolor::MapColor;
+use uncore_board::components::position::Position;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_foundation::random_seed;
 
 use crate::components::interaction::{
     InteractionParticle, InteractionParticleType, LockIndicator, Locked, MotionBlur, Tween,

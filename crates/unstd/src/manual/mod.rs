@@ -10,11 +10,11 @@ pub mod chapter5;
 
 use bevy::prelude::*;
 
-use uncore::types::root::game_assets::GameAssets;
+use uncore_types::types::root::game_assets::GameAssets;
 
-pub use uncore::resources::manual::CurrentManualPage;
-pub use uncore::resources::manual::Manual;
-pub use uncore::types::manual::{ManualChapter, ManualPageData};
+pub use uncore_resources::resources::manual::CurrentManualPage;
+pub use uncore_resources::resources::manual::Manual;
+pub use uncore_types::types::manual::{ManualChapter, ManualPageData};
 
 pub fn create_manual() -> Manual {
     Manual {

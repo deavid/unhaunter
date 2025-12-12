@@ -1,17 +1,17 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
-use uncore::difficulty::CurrentDifficulty;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::resources::maps::Maps;
-use uncore::resources::summary_data::SummaryData;
-use uncore::states::AppState;
-use uncore::states::GameState;
-use uncore::types::grade::Grade;
-use uncore::types::root::game_assets::GameAssets;
-use uncore::utils::time::format_time;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_foundation::types::grade::Grade;
+use uncore_resources::resources::maps::Maps;
+use uncore_resources::resources::summary_data::SummaryData;
+use uncore_resources::states::AppState;
+use uncore_resources::states::GameState;
+use uncore_systems::utils::time::format_time;
+use uncore_types::types::root::game_assets::GameAssets;
+use undifficulty::CurrentDifficulty;
 use unprofile::data::PlayerProfileData;
 
 pub fn setup(mut commands: Commands) {
@@ -742,7 +742,7 @@ impl Plugin for UnhaunterSummaryPlugin {
 // Add a new system to ensure the mission ID is preserved and correctly set
 pub fn store_mission_id(
     mut sd: ResMut<SummaryData>,
-    board_data: Option<Res<uncore::resources::board_data::BoardData>>,
+    board_data: Option<Res<uncore_resources::resources::board_data::BoardData>>,
 ) {
     // Debug: Log initial state of SummaryData and BoardData
     info!(

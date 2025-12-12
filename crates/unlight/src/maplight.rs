@@ -19,29 +19,28 @@ use core::f32;
 use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
-use uncore::behavior::component::Interactive;
-use uncore::components::board::boardposition::BoardPosition;
-use uncore::components::board::direction::Direction;
-use uncore::components::board::position::Position;
-use uncore::components::game::MapTileSprite;
-use uncore::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore::components::ghost_sprite::GhostSprite;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::difficulty::CurrentDifficulty;
-use uncore::metric_recorder::SendMetric;
-use uncore::platform::plt::IS_WASM;
-use uncore::resources::board_data::BoardData;
-use uncore::resources::roomdb::RoomDB;
-use uncore::resources::visibility_data::VisibilityData;
-use uncore::types::board::fielddata::CollisionFieldData;
-use uncore::types::gear::equipmentposition::EquipmentPosition;
-use uncore::types::gear_kind::GearKind;
-use uncore::utils::light::{compute_color_exposure, lerp_color};
-use uncore::{
-    behavior::{Behavior, Orientation},
-    components::{game_config::GameConfig, sprite_type::SpriteType},
-    kelvin_to_celsius,
-};
+use uncore_board::behavior::component::Interactive;
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::direction::Direction;
+use uncore_board::components::position::Position;
+use uncore_components::components::game::MapTileSprite;
+use uncore_components::components::ghost_influence::{GhostInfluence, InfluenceType};
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use undifficulty::CurrentDifficulty;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_foundation::platform::plt::IS_WASM;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::resources::visibility_data::VisibilityData;
+use uncore_board::types::fielddata::CollisionFieldData;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use uncore_types::types::gear_kind::GearKind;
+use uncore_systems::utils::light::{compute_color_exposure, lerp_color};
+use uncore_board::behavior::{Behavior, Orientation};
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_foundation::kelvin_to_celsius;
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
@@ -49,13 +48,13 @@ use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
 use unstd::materials::CustomMaterial1;
 
-pub use uncore::components::board::mapcolor::MapColor;
-pub use uncore::types::board::light::{LightData, LightType};
+pub use uncore_board::components::mapcolor::MapColor;
+pub use uncore_board::types::light::{LightData, LightType};
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
-use uncore::components::ghost_orb_particle::GhostOrbParticle;
-use uncore::random_seed;
-use uncore::states::AppState;
+use uncore_components::components::ghost_orb_particle::GhostOrbParticle;
+use uncore_foundation::random_seed;
+use uncore_resources::states::AppState;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.

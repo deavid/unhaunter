@@ -4,6 +4,7 @@ pub mod optimization;
 pub mod validation;
 
 use crate::utils::parse_ghost_list;
+use uncore_foundation::types::evidence::Evidence;
 
 pub fn test_set(ghost_names: &str) {
     let ghosts = parse_ghost_list(ghost_names);
@@ -72,7 +73,7 @@ pub fn analyze_set(ghost_names: &str) {
 
     // Gap Analysis
     println!("\n--- Gap Analysis ---");
-    let mut evidence_counts: std::collections::HashMap<uncore::types::evidence::Evidence, usize> =
+    let mut evidence_counts: std::collections::HashMap<Evidence, usize> =
         std::collections::HashMap::new();
     for ghost in &ghosts {
         for evidence in ghost.evidences() {
@@ -81,7 +82,7 @@ pub fn analyze_set(ghost_names: &str) {
     }
 
     let mut under_represented_evidence = Vec::new();
-    for evidence_type in enum_iterator::all::<uncore::types::evidence::Evidence>() {
+    for evidence_type in enum_iterator::all::<Evidence>() {
         let count = evidence_counts.get(&evidence_type).copied().unwrap_or(0);
         // Define "under-represented": present in 0 ghosts, or 1 ghost if set is larger than 2.
         if count == 0 || (count == 1 && ghosts.len() > 2) {

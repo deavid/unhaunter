@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::states::AppState;
-use uncore::{
-    components::player_sprite::PlayerSprite, resources::looking_gear::LookingGear,
-    types::evidence::Evidence,
-};
+use uncore_resources::states::AppState;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::looking_gear::LookingGear;
+use uncore_foundation::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
 use unprofile::data::PlayerProfileData;
 
@@ -19,8 +18,8 @@ fn acknowledge_blinking_gear_hint_system(
 
         if keyboard_input.just_pressed(controls.change_evidence) {
             let active_gear = match looking_gear.hand() {
-                uncore::types::gear::equipmentposition::Hand::Left => &player_gear.left_hand,
-                uncore::types::gear::equipmentposition::Hand::Right => &player_gear.right_hand,
+                uncore_types::types::gear::equipmentposition::Hand::Left => &player_gear.left_hand,
+                uncore_types::types::gear::equipmentposition::Hand::Right => &player_gear.right_hand,
             };
 
             if let Some(gear_data) = &active_gear.data

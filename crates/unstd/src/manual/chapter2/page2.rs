@@ -1,7 +1,7 @@
 use super::super::ManualPageData;
 use super::super::utils::{grid_img_text2, header};
 use bevy::prelude::*;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_types::types::root::game_assets::GameAssets;
 
 pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Ghost Hunts and the Truck";

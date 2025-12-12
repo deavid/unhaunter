@@ -1,12 +1,10 @@
 use crate::gear_stuff::GearStuff;
 use crate::gear_usable::GearUsable;
 use bevy::prelude::*;
-use uncore::types::gear_kind::GearKind;
-use uncore::types::ghost::types::GhostType;
-use uncore::{
-    components::board::position::Position,
-    types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID},
-};
+use uncore_types::types::gear_kind::GearKind;
+use uncore_foundation::types::ghost::types::GhostType;
+use uncore_board::components::position::Position;
+use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
 
 /// A wrapper struct for holding a `GearKind`.
 #[derive(Debug, Default, Clone)]

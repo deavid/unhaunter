@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
+use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
 
 /// Plugin for map loading functionality
 ///

@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use uncore::components::board::boardposition::BoardPosition;
-use uncore::components::board::position::Position;
-use uncore::resources::ambient_mute::AmbientMuteController;
-use uncore::{
-    components::{game::GameSound, player_sprite::PlayerSprite},
-    events::ambient_sound_mute::AmbientSoundMuteEvent,
-    resources::{roomdb::RoomDB, visibility_data::VisibilityData},
-    states::AppState,
-    types::game::SoundType,
-};
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_resources::resources::ambient_mute::AmbientMuteController;
+use uncore_components::components::game::GameSound;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::resources::visibility_data::VisibilityData;
+use uncore_resources::states::AppState;
+use uncore_types::types::game::SoundType;
 use unsettings::audio::AudioSettings;
 
 /// Calculates the ambient sound volumes based on player visibility.
@@ -178,7 +178,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            uncore::systems::ambient_sound_mute::process_ambient_mute_events
+            uncore_systems::systems::ambient_sound_mute::process_ambient_mute_events
                 .run_if(in_state(AppState::InGame)),
             update_ambient_sound_volumes.run_if(in_state(AppState::InGame)),
         ),

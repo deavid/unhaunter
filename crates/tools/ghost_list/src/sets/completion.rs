@@ -1,8 +1,8 @@
 use crate::filtering::evidence_parser::parse_evidence_list;
 use enum_iterator::all;
 use std::collections::HashMap;
-use uncore::types::evidence::Evidence;
-use uncore::types::ghost::types::GhostType;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::ghost::types::GhostType;
 
 pub fn analyze_evidence_distribution(ghosts: &[GhostType]) {
     let mut evidence_count: HashMap<Evidence, usize> = HashMap::new();

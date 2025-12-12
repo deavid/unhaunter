@@ -1,6 +1,6 @@
 use super::{Gear, GearKind, on_off};
 use bevy::prelude::*;
-use uncore::types::gear::spriteid::GearSpriteID;
+use uncore_types::types::gear::spriteid::GearSpriteID;
 use ungear::gear_stuff::GearStuff;
 use ungear::gear_usable::GearUsable;
 

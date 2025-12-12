@@ -1,19 +1,16 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore::{
-    behavior::{Behavior, component::Interactive, component::Stairs},
-    components::{
-        board::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position},
-        game::{GCameraArena, GameSprite},
-        player_sprite::PlayerSprite,
-        waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType},
-    },
-    events::roomchanged::{InteractionExecutionType, RoomChangedEvent},
-    resources::{
-        board_data::BoardData, mouse_visibility::MouseVisibility, player_input::PlayerInput,
-        visibility_data::VisibilityData,
-    },
-};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uncore_board::components::position::Position;
+use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use uncore_board::behavior::{Behavior, component::{Interactive, Stairs}};
+use uncore_components::components::game::{GCameraArena, GameSprite};
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType};
+use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::mouse_visibility::MouseVisibility;
+use uncore_resources::resources::player_input::PlayerInput;
+use uncore_resources::resources::visibility_data::VisibilityData;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 
@@ -32,7 +29,7 @@ pub fn waypoint_creation_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&uncore::behavior::component::RoomState>,
+        Option<&uncore_board::behavior::component::RoomState>,
     )>,
     q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
@@ -195,7 +192,7 @@ pub fn waypoint_following_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&uncore::behavior::component::RoomState>,
+        Option<&uncore_board::behavior::component::RoomState>,
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,

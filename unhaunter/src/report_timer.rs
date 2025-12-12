@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::prelude::*;
-use uncore::states::AppState;
-use uncore::states::GameState;
+use uncore_resources::states::AppState;
+use uncore_resources::states::GameState;
 
 pub fn report_performance(
     time: Res<Time>,

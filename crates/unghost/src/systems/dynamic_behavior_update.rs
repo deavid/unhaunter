@@ -1,19 +1,17 @@
 use bevy::prelude::*;
-use uncore::{
-    components::{ghost_behavior_dynamics::GhostBehaviorDynamics, ghost_sprite::GhostSprite},
-    difficulty::CurrentDifficulty,
-    resources::board_data::BoardData,
-    types::evidence::Evidence,
-};
-
-use uncore::noise::{LONG_TERM_NOISE_FREQ, SHORT_TERM_NOISE_FREQ};
+use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_systems::noise::{LONG_TERM_NOISE_FREQ, SHORT_TERM_NOISE_FREQ};
 
 /// Helper function to calculate a noise-based multiplier value
 ///
 /// This function combines short-term and long-term noise values with given offsets,
 /// normalizes them, combines them, applies power scaling, and clamps the result.
 fn calculate_noise_multiplier(
-    noise_table: &uncore::noise::PerlinNoise,
+    noise_table: &uncore_systems::noise::PerlinNoise,
     elapsed_seconds: f32,
     offset_x: f32,
     offset_y: f32,
@@ -36,7 +34,7 @@ fn calculate_noise_multiplier(
 fn update_ghost_behavior_dynamics_system(
     time: Res<Time>,
     difficulty: Res<CurrentDifficulty>,
-    noise_table: Res<uncore::noise::PerlinNoise>,
+    noise_table: Res<uncore_systems::noise::PerlinNoise>,
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
     mut board_data: ResMut<BoardData>,
     mut report_time: Local<f32>,

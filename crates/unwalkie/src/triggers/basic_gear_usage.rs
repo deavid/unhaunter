@@ -1,17 +1,17 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use uncore::{
-    components::{
-        board::{boardposition::BoardPosition, position::Position},
-        ghost_sprite::GhostSprite,
-        player_sprite::PlayerSprite,
-    },
-    difficulty::CurrentDifficulty,
-    resources::{board_data::BoardData, roomdb::RoomDB},
-    states::{AppState, GameState},
-    types::{evidence::Evidence, gear_kind::GearKind, manual::ManualChapterIndex},
-};
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear_kind::GearKind;
+use uncore_types::types::manual::ManualChapterIndex;
 use ungear::components::playergear::PlayerGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay}; // Core walkie types
 

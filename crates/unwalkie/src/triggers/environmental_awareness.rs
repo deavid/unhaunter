@@ -2,16 +2,14 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use std::any::Any; // Added import
 
-use uncore::{
-    components::{
-        board::position::Position, ghost_breach::GhostBreach, player_sprite::PlayerSprite,
-    },
-    resources::board_data::BoardData,
-    states::{AppState, GameState},
-};
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_breach::GhostBreach;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::states::{AppState, GameState};
 
-use uncore::resources::roomdb::RoomDB;
-use uncore::types::gear_kind::GearKind;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_usable::GearUsable;
 use ungearitems::components::thermometer::Thermometer;
@@ -71,7 +69,7 @@ fn trigger_breach_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_breach: Query<&Position, With<GhostBreach>>,
-    truck_button_query: Query<&uncore::components::truck_ui_button::TruckUIButton>, // Added
+    truck_button_query: Query<&uncore_components::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -82,8 +80,8 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == uncore::types::truck_button::TruckButtonState::Pressed
+        if let uncore_types::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == uncore_types::types::truck_button::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -117,8 +115,8 @@ fn trigger_ghost_showcase(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    q_ghost: Query<&Position, With<uncore::components::ghost_sprite::GhostSprite>>,
-    truck_button_query: Query<&uncore::components::truck_ui_button::TruckUIButton>, // Added
+    q_ghost: Query<&Position, With<uncore_components::components::ghost_sprite::GhostSprite>>,
+    truck_button_query: Query<&uncore_components::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -129,8 +127,8 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == uncore::types::truck_button::TruckButtonState::Pressed
+        if let uncore_types::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == uncore_types::types::truck_button::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -231,7 +229,7 @@ fn trigger_thermometer_non_freezing_fixation(
             .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d.as_ref()))
         && thermo.enabled
     {
-        let temp_c = uncore::kelvin_to_celsius(thermo.temp);
+        let temp_c = uncore_foundation::kelvin_to_celsius(thermo.temp);
         if (1.0..=10.0).contains(&temp_c) {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed_secs() > REQUIRED_DURATION {

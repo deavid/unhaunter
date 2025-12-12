@@ -3,11 +3,10 @@ use bevy::{
     picking::events::{Out, Over, Pointer},
     prelude::*,
 };
-use uncore::{
-    behavior::{Behavior, component::Interactive},
-    components::{board::position::Position, game_config::GameConfig, player_sprite::PlayerSprite},
-    resources::{looking_gear::LookingGear, visibility_data::VisibilityData},
-};
+use uncore_board::behavior::{Behavior, component::Interactive};
+use uncore_board::components::position::Position;
+use uncore_components::components::{game_config::GameConfig, player_sprite::PlayerSprite};
+use uncore_resources::resources::{looking_gear::LookingGear, visibility_data::VisibilityData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
 use ungear::gear_usable::GearUsable;

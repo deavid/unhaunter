@@ -20,15 +20,15 @@ use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 
-use uncore::colors;
-use uncore::difficulty::CurrentDifficulty;
-use uncore::events::loadlevel::LoadLevelEvent;
-use uncore::platform::plt::FONT_SCALE;
-use uncore::resources::maps::Maps;
-use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
-use uncore::states::{AppState, MapHubState};
-use uncore::types::grade::Grade;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_foundation::colors;
+use undifficulty::{CurrentDifficulty, DifficultySettings};
+use uncore_events::events::loadlevel::LoadLevelEvent;
+use uncore_foundation::platform::plt::FONT_SCALE;
+use uncore_resources::resources::maps::Maps;
+use uncore_resources::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
+use uncore_resources::states::{AppState, MapHubState};
+use uncore_foundation::types::grade::Grade;
+use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuMouseTracker;
 use uncoremenu::events::KeyboardNavigate;
 use uncoremenu::scrollbar::ScrollableListContainer;
@@ -158,7 +158,7 @@ fn handle_selection_input(
 
                 match mission_select_mode.0 {
                     MissionSelectMode::Campaign => {
-                        difficulty_resource.0 = mission_data.difficulty.create_difficulty_struct();
+                        difficulty_resource.0 = mission_data.difficulty.as_struct();
                         info!(
                             "Setting difficulty for mission: {:?} (Mode: Campaign)",
                             mission_data.difficulty
@@ -264,7 +264,7 @@ pub fn update_mission_selection(
 
                 let difficulty_info = match mission_select_mode.0 {
                     MissionSelectMode::Campaign => {
-                        let dif = mission_data.difficulty.create_difficulty_struct();
+                        let dif = mission_data.difficulty.as_struct();
                         format!(
                             "Difficulty: <{}> ({}x score)",
                             dif.difficulty_name, dif.difficulty_score_multiplier
@@ -332,7 +332,7 @@ pub fn setup_ui(
 
     let player_level = player_profile_resource.progression.player_level;
 
-    let filtered_maps: Vec<(usize, &uncore::types::root::map::Map)> = maps_resource
+    let filtered_maps: Vec<(usize, &uncore_assets::types::root::map::Map)> = maps_resource
         .maps
         .iter()
         .enumerate()
@@ -413,8 +413,8 @@ pub fn setup_ui(
         return;
     }
 
-    let sort_maps = |a: &(usize, &uncore::types::root::map::Map),
-                     b: &(usize, &uncore::types::root::map::Map)| {
+    let sort_maps = |a: &(usize, &uncore_assets::types::root::map::Map),
+                     b: &(usize, &uncore_assets::types::root::map::Map)| {
         let a_order = a.1.mission_data.order.as_str();
         let b_order = b.1.mission_data.order.as_str();
 
@@ -496,7 +496,7 @@ pub fn setup_ui(
 
         let difficulty_info = match mission_select_mode.0 {
             MissionSelectMode::Campaign => {
-                let dif = initial_mission.difficulty.create_difficulty_struct();
+                let dif = initial_mission.difficulty.as_struct();
                 format!(
                     "Difficulty: <{}> ({}x score)",
                     dif.difficulty_name, dif.difficulty_score_multiplier
@@ -750,7 +750,7 @@ pub fn setup_ui(
 fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    map: &uncore::types::root::map::Map,
+    map: &uncore_assets::types::root::map::Map,
     player_profile: &unprofile::data::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,
@@ -849,7 +849,7 @@ fn create_mission_list_item(
 fn create_locked_mission_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    mission_data: &uncore::types::mission_data::MissionData,
+    mission_data: &uncore_types::types::mission_data::MissionData,
 ) {
     mission_list
         .spawn(Node {

@@ -10,7 +10,14 @@ homepage.workspace = true
 
 [dependencies]
 unwalkie_types = { path = "../unwalkie_types" }
-uncore = { path = "../uncore" }
+
+undifficulty = { path = "../undifficulty" }
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+uncore-assets = { path = "../uncore-assets" }
+uncore-events = { path = "../uncore-events" }
+uncore-types = { path = "../uncore-types" }
+uncore-components = { path = "../uncore-components" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

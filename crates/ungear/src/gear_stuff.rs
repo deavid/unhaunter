@@ -3,12 +3,11 @@ use bevy_persistent::Persistent;
 use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
-use uncore::difficulty::CurrentDifficulty;
-use uncore::resources::summary_data::SummaryData;
-use uncore::{
-    components::board::position::Position, events::sound::SoundEvent,
-    resources::board_data::BoardData,
-};
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::summary_data::SummaryData;
+use uncore_board::components::position::Position;
+use uncore_events::events::sound::SoundEvent;
+use uncore_resources::resources::board_data::BoardData;
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]

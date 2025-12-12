@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use uncore::behavior::Behavior;
-use uncore::components::board::position::Position;
-use uncore::events::board_data_rebuild::BoardDataToRebuild;
-use uncore::resources::board_data::BoardData;
+use uncore_board::behavior::Behavior;
+use uncore_board::components::position::Position;
+use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
+use uncore_resources::resources::board_data::BoardData;
 use unlight::lighting::rebuild_lighting_field;
 use unstd::plugins::board::rebuild_collision_data;
 

@@ -1,0 +1,25 @@
+[package]
+name = "uncore-resources"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+
+undifficulty = { path = "../undifficulty" }
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+uncore-types = { path = "../uncore-types" }
+uncore-events = { path = "../uncore-events" }
+uncore-components = { path = "../uncore-components" }
+uncore-assets = { path = "../uncore-assets" }
+unwalkiecore = { path = "../unwalkiecore" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+ndarray = { workspace = true }
+serde = { workspace = true }
+anyhow = { workspace = true }
+enum-iterator = { workspace = true }

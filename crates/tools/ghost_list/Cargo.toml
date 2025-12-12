@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-uncore = { path = "../../uncore" }
+
+uncore-foundation = { path = "../../uncore-foundation" }
 enum-iterator = { workspace = true }
 bevy = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 itertools = { workspace = true }
-serde = { workspace = true, features = ["derive"] } # Ensuring features are also inherited or matched
+serde = { workspace = true, features = [
+    "derive",
+] } # Ensuring features are also inherited or matched
 serde_json = { workspace = true }
 csv = { workspace = true }

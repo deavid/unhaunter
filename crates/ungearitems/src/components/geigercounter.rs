@@ -1,8 +1,7 @@
-use uncore::random_seed;
-use uncore::{
-    components::board::position::Position,
-    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
+use uncore_foundation::random_seed;
+use uncore_board::components::position::Position;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};

@@ -1,15 +1,14 @@
 use std::any::Any;
 
 use bevy::prelude::*;
-use uncore::{
-    components::{
-        board::position::Position, ghost_sprite::GhostSprite, player_sprite::PlayerSprite,
-    },
-    difficulty::CurrentDifficulty,
-    resources::roomdb::RoomDB,
-    states::{AppState, GameState},
-    types::{gear_kind::GearKind, manual::ManualChapterIndex},
-};
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use undifficulty::CurrentDifficulty;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::gear_kind::GearKind;
+use uncore_types::types::manual::ManualChapterIndex;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use untruck::truckgear::TruckGear;

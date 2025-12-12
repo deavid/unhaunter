@@ -5,12 +5,13 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
-use uncore::behavior::{Behavior, Orientation};
-use uncore::components::board::position::Position;
-use uncore::metric_recorder::SendMetric;
-use uncore::resources::roomdb::RoomDB;
-use uncore::resources::visibility_data::VisibilityData;
-use uncore::{resources::board_data::BoardData, types::board::fielddata::CollisionFieldData};
+use uncore_board::behavior::{Behavior, Orientation};
+use uncore_board::components::position::Position;
+use uncore_board::types::fielddata::CollisionFieldData;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::resources::visibility_data::VisibilityData;
+use uncore_systems::metric_recorder::SendMetric;
 
 use crate::board::spritedb::SpriteDB;
 

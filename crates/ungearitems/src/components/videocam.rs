@@ -1,9 +1,9 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::components::board::position::Position;
-use uncore::random_seed;
-use uncore::types::gear::equipmentposition::EquipmentPosition;
+use uncore_board::components::position::Position;
+use uncore_foundation::random_seed;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct Videocam {

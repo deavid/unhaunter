@@ -3,23 +3,23 @@ use bevy::sprite::Anchor;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
-use uncore::behavior::Behavior;
-use uncore::components::board::boardposition::BoardPosition;
-use uncore::components::board::chunk::{CellIterator, ChunkIterator};
-use uncore::components::board::position::Position;
-use uncore::components::game::GameSprite;
-use uncore::components::game_config::GameConfig;
-use uncore::components::ghost_sprite::GhostSprite;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::components::sprite_type::SpriteType;
-use uncore::events::loadlevel::LevelReadyEvent;
-use uncore::metric_recorder::SendMetric;
-use uncore::random_seed;
-use uncore::resources::board_data::BoardData;
-use uncore::resources::roomdb::RoomDB;
-use uncore::resources::visibility_data::VisibilityData;
-use uncore::states::AppState;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_board::behavior::Behavior;
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::chunk::{CellIterator, ChunkIterator};
+use uncore_board::components::position::Position;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_events::events::loadlevel::LevelReadyEvent;
+use uncore_foundation::random_seed;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::resources::visibility_data::VisibilityData;
+use uncore_resources::states::AppState;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_types::types::root::game_assets::GameAssets;
 use unstd::plugins::board::rebuild_collision_data;
 
 use crate::components::MiasmaSprite;
@@ -222,7 +222,7 @@ fn spawn_miasma(
 fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
-    noise_table: Res<uncore::noise::PerlinNoise>,
+    noise_table: Res<uncore_systems::noise::PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();

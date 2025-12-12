@@ -5,14 +5,14 @@ use crate::gear_usable::GearUsable;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::components::board::position::Position;
-use uncore::components::game_config::GameConfig;
-use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::events::sound::SoundEvent;
-use uncore::resources::looking_gear::LookingGear;
-use uncore::states::GameState;
-use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
+use uncore_board::components::position::Position;
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_events::events::sound::SoundEvent;
+use uncore_resources::resources::looking_gear::LookingGear;
+use uncore_resources::states::GameState;
+use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unsettings::audio::{AudioSettings, SoundOutput};
 
 /// System for updating the internal state of all gear carried by the player.

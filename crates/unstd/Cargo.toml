@@ -8,7 +8,16 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore = { path = "../uncore" }
+
+undifficulty = { path = "../undifficulty" }
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+uncore-assets = { path = "../uncore-assets" }
+uncore-events = { path = "../uncore-events" }
+uncore-types = { path = "../uncore-types" }
+uncore-resources = { path = "../uncore-resources" }
+uncore-components = { path = "../uncore-components" }
+uncore-systems = { path = "../uncore-systems" }
 
 bevy = { workspace = true }
 bevy_picking = { workspace = true }

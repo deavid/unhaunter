@@ -14,8 +14,8 @@ pub mod walk_target_indicator;
 pub mod waypoint;
 
 use bevy::prelude::*;
-use uncore::states::AppState;
-use uncore::states::GameState;
+use uncore_resources::states::AppState;
+use uncore_resources::states::GameState;
 
 pub(crate) fn app_setup(app: &mut App) {
     grabdrop::app_setup(app);

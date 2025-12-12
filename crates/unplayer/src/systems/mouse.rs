@@ -1,15 +1,11 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore::{
-    components::{
-        board::{
-            PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, direction::Direction, position::Position,
-        },
-        game::GCameraArena,
-        player_sprite::PlayerSprite,
-    },
-    resources::mouse_visibility::MouseVisibility,
-    states::GameState,
-};
+use uncore_board::components::direction::Direction;
+use uncore_board::components::position::Position;
+use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use uncore_components::components::game::GCameraArena;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::mouse_visibility::MouseVisibility;
+use uncore_resources::states::GameState;
 
 const AIM_MAX_DISTANCE: f32 = 8.0;
 

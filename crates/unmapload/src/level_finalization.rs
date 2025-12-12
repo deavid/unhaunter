@@ -9,15 +9,15 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;
-use uncore::behavior::Behavior;
-use uncore::components::board::boardposition::BoardPosition;
-use uncore::components::board::position::Position;
-use uncore::events::loadlevel::LevelReadyEvent;
-use uncore::events::roomchanged::RoomChangedEvent;
-use uncore::resources::board_data::BoardData;
-use uncore::resources::roomdb::RoomDB;
-use uncore::states::{AppState, GameState};
-use uncore::{celsius_to_kelvin, random_seed};
+use uncore_board::behavior::Behavior;
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_events::events::loadlevel::LevelReadyEvent;
+use uncore_events::events::roomchanged::RoomChangedEvent;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
+use uncore_foundation::{celsius_to_kelvin, random_seed};
 use unlight::prebake::prebake_lighting_field;
 use unstd::board::tiledata::PreMesh;
 use unstd::plugins::board::rebuild_collision_data;
@@ -228,7 +228,7 @@ fn process_pre_meshes(
                     );
 
                     // Create quad mesh with proper dimensions and anchor point
-                    let base_quad = Mesh::from(uncore::types::quadcc::QuadCC::new(
+                    let base_quad = Mesh::from(uncore_board::types::quadcc::QuadCC::new(
                         sprite_size,
                         sprite_anchor,
                     ));
@@ -274,7 +274,7 @@ fn load_map_add_prebaked_lighting(
 
 pub(crate) fn app_setup(app: &mut App) {
     use bevy::prelude::on_message;
-    use uncore::events::loadlevel::LevelReadyEvent;
+    use uncore_events::events::loadlevel::LevelReadyEvent;
     app.add_systems(Update, (process_pre_meshes, after_level_ready))
         .add_systems(
             Update,

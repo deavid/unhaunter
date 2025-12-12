@@ -1,0 +1,20 @@
+[package]
+name = "uncore-board"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore-foundation = { path = "../uncore-foundation" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+fastapprox = { workspace = true }
+ordered-float = { workspace = true }
+rand = { workspace = true }
+tiled = { workspace = true }
+anyhow = { workspace = true }

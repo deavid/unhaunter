@@ -1,21 +1,21 @@
-use uncore::DEBUG_PLAYER;
-use uncore::components::board::position::Position;
-use uncore::components::game_config::GameConfig;
-use uncore::components::game_ui::DamageBackground;
-use uncore::components::player::Stamina;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::difficulty::CurrentDifficulty;
-use uncore::resources::board_data::BoardData;
-use uncore::resources::roomdb::RoomDB;
-use uncore::types::grade::Grade;
-use uncore::utils::PrintingTimer;
-use uncore::utils::light::lerp_color;
-
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore::resources::summary_data::SummaryData;
-use uncore::states::AppState;
-use unprofile::data::PlayerProfileData; // Added import
+use uncore_board::components::position::Position;
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::game_ui::DamageBackground;
+use uncore_components::components::player::Stamina;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_foundation::types::grade::Grade;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::resources::summary_data::SummaryData;
+use uncore_resources::states::AppState;
+use uncore_systems::utils::PrintingTimer;
+use uncore_systems::utils::light::lerp_color;
+use undifficulty::CurrentDifficulty;
+use unprofile::data::PlayerProfileData;
+
+const DEBUG_PLAYER: bool = false;
 
 #[derive(Default)]
 struct MeanSound(f32);
@@ -231,10 +231,10 @@ pub(crate) fn app_setup(app: &mut App) {
             update_player_stamina,
             handle_player_death,
         )
-            .run_if(in_state(uncore::states::GameState::None)),
+            .run_if(in_state(uncore_resources::states::GameState::None)),
     );
     app.add_systems(
         Update,
-        recover_sanity.run_if(in_state(uncore::states::GameState::Truck)),
+        recover_sanity.run_if(in_state(uncore_resources::states::GameState::Truck)),
     );
 }

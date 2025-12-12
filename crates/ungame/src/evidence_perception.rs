@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use uncore::{
-    components::player_sprite::PlayerSprite,
-    resources::{current_evidence_readings::CurrentEvidenceReadings, looking_gear::LookingGear},
-    types::{evidence::Evidence, gear_kind::GearKind},
-};
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
+use uncore_resources::resources::looking_gear::LookingGear;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear_kind::GearKind;
 use ungear::{
     components::playergear::PlayerGear,
     types::gear::Gear, // The actual Gear struct

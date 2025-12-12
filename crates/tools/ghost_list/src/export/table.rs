@@ -1,4 +1,4 @@
-use uncore::types::ghost::types::GhostType;
+use uncore_foundation::types::ghost::types::GhostType;
 
 pub fn show_ghost_table(ghosts: &[GhostType]) {
     println!("| Ghost Type | Evidences |");

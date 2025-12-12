@@ -1,11 +1,10 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use uncore::{
-    components::board::position::Position,
-    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
-use uncore::{kelvin_to_celsius, random_seed};
+use uncore_board::components::position::Position;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use uncore_foundation::{kelvin_to_celsius, random_seed};
 
 /// A component representing the Spirit Box gear item.
 /// This device scans radio frequencies and can sometimes pick up paranormal vocal phenomena.

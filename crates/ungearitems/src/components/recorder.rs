@@ -4,13 +4,13 @@ use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
-use uncore::random_seed;
-use uncore::{
-    components::{board::position::Position, ghost_sprite::GhostSprite},
-    metric_recorder::SendMetric,
-    resources::{board_data::BoardData, roomdb::RoomDB},
-    types::{evidence::Evidence, gear::equipmentposition::EquipmentPosition},
-};
+use uncore_foundation::random_seed;
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_resources::resources::{board_data::BoardData, roomdb::RoomDB};
+use uncore_foundation::types::evidence::Evidence;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {

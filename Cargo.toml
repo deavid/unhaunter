@@ -1,7 +1,15 @@
 [workspace]
 members = [
     "crates/uncampaign",
-    "crates/uncore",
+    "crates/uncore-foundation",
+    "crates/uncore-board",
+    "crates/uncore-assets",
+    "crates/uncore-events",
+    "crates/uncore-types",
+    "crates/uncore-resources",
+    "crates/uncore-components",
+    "crates/uncore-systems",
+    "crates/undifficulty",
     "crates/uncoremenu",
     "crates/unfog",
     "crates/ungear",
@@ -90,7 +98,10 @@ authors.workspace = true
 
 [dependencies]
 uncampaign = { path = "crates/uncampaign" }
-uncore = { path = "crates/uncore" }
+undifficulty = { path = "crates/undifficulty" }
+uncore-foundation = { path = "crates/uncore-foundation" }
+uncore-resources = { path = "crates/uncore-resources" }
+uncore-systems = { path = "crates/uncore-systems" }
 uncoremenu = { path = "crates/uncoremenu" }
 unfog = { path = "crates/unfog" }
 ungear = { path = "crates/ungear" }

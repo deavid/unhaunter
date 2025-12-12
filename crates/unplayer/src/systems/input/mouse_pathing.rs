@@ -1,12 +1,10 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore::{
-    components::{
-        board::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position},
-        game::GCameraArena,
-        player_sprite::PlayerSprite,
-    },
-    resources::{board_data::BoardData, mouse_visibility::MouseVisibility},
-};
+use uncore_board::components::position::Position;
+use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use uncore_components::components::game::GCameraArena;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::mouse_visibility::MouseVisibility;
 
 /// Converts screen coordinates to world coordinates using the game's isometric projection.
 ///
@@ -94,7 +92,7 @@ fn find_walkable_target(
                 continue; // Skip the original target (already checked)
             }
 
-            let test_board_pos = uncore::components::board::boardposition::BoardPosition {
+            let test_board_pos = uncore_board::components::boardposition::BoardPosition {
                 x: target_board_pos.x + dx,
                 y: target_board_pos.y + dy,
                 z: target_board_pos.z,
@@ -193,7 +191,7 @@ pub fn click_to_move_pathing_system(
         (
             Entity,
             &Position,
-            &mut uncore::components::waypoint::WaypointQueue,
+            &mut uncore_components::components::waypoint::WaypointQueue,
         ),
         With<PlayerSprite>,
     >,
@@ -244,11 +242,11 @@ pub fn click_to_move_pathing_system(
                     ..default()
                 },
                 walkable_target,
-                uncore::components::waypoint::Waypoint {
-                    waypoint_type: uncore::components::waypoint::WaypointType::MoveTo,
+                uncore_components::components::waypoint::Waypoint {
+                    waypoint_type: uncore_components::components::waypoint::WaypointType::MoveTo,
                     order: 0,
                 },
-                uncore::components::waypoint::WaypointOwner(player_entity),
+                uncore_components::components::waypoint::WaypointOwner(player_entity),
             ))
             .id();
 

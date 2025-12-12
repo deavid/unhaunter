@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use uncore::colors;
-use uncore::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::types::gear::spriteid::GearSpriteID;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_foundation::colors;
+use uncore_components::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_types::types::gear::spriteid::GearSpriteID;
+use uncore_types::types::root::game_assets::GameAssets;
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Leftmost side panel - inventory

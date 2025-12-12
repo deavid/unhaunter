@@ -1,7 +1,8 @@
 use crate::utils::ghost_parser::parse_ghost_list;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use uncore::types::{evidence::Evidence, ghost::types::GhostType};
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::ghost::types::GhostType;
 
 // Helper to parse named ghost sets like "SetName:GhostA,GhostB,GhostC"
 fn parse_named_ghost_set(set_str: &str) -> Result<(String, HashSet<GhostType>), String> {

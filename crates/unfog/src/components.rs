@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore::components::board::position::Position;
+use uncore_board::components::position::Position;
 
 #[derive(Component, Debug, Clone)]
 pub struct MiasmaSprite {

@@ -1,0 +1,19 @@
+[package]
+name = "uncore-assets"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+uncore-types = { path = "../uncore-types" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+tiled = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }

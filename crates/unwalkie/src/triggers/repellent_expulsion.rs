@@ -1,17 +1,15 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use std::any::Any;
-use uncore::components::repellent_particle::RepellentParticle;
-use uncore::difficulty::CurrentDifficulty;
-use uncore::types::gear_kind::GearKind;
-use uncore::types::ghost::types::GhostType;
-use uncore::{
-    components::{
-        board::position::Position, ghost_sprite::GhostSprite, player_sprite::PlayerSprite,
-    },
-    resources::roomdb::RoomDB,
-    states::{AppState, GameState},
-};
+use uncore_components::components::repellent_particle::RepellentParticle;
+use undifficulty::CurrentDifficulty;
+use uncore_types::types::gear_kind::GearKind;
+use uncore_foundation::types::ghost::types::GhostType;
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
 use unwalkiecore::{WalkieEvent, WalkiePlay};

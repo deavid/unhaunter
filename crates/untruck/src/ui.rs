@@ -1,14 +1,15 @@
 // untruck/src/ui.rs
 use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
-use uncore::colors;
-use uncore::components::truck::TruckUI;
-use uncore::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
-use uncore::difficulty::CurrentDifficulty;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::states::{AppState, GameState};
-use uncore::types::root::game_assets::GameAssets;
-use uncore::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
+use uncore_foundation::colors;
+use uncore_components::components::truck::TruckUI;
+use uncore_components::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
+use uncore_components::components::truck_ui_button::TruckButtonTypeExt;
+use undifficulty::CurrentDifficulty;
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::root::game_assets::GameAssets;
+use uncore_types::types::truck_button::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use unstd::materials::UIPanelMaterial;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore

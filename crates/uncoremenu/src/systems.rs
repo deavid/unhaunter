@@ -1,8 +1,8 @@
 use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
 use crate::events::KeyboardNavigate;
 use bevy::{input::mouse::MouseMotion, prelude::*};
-use uncore::colors;
-use uncore::states::AppState;
+use uncore_foundation::colors;
+use uncore_resources::states::AppState;
 
 /// Event sent when a menu item is clicked
 #[derive(Message, Debug, Clone, Copy)]

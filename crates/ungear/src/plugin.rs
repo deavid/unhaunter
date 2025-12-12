@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore::components::game_config::GameConfig;
-use uncore::events::sound::SoundEvent;
+use uncore_components::components::game_config::GameConfig;
+use uncore_events::events::sound::SoundEvent;
 
 use super::systems;
 

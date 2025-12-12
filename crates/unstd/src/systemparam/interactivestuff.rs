@@ -1,13 +1,13 @@
 use crate::board::spritedb::SpriteDB;
 use crate::materials::CustomMaterial1;
-use uncore::behavior::Behavior;
-use uncore::behavior::component::{Interactive, RoomState};
-use uncore::components::board::boardposition::BoardPosition;
-use uncore::components::board::position::Position;
-use uncore::events::roomchanged::InteractionExecutionType;
-use uncore::events::sound::SoundEvent;
-use uncore::resources::roomdb::RoomDB;
-use uncore::states::GameState;
+use uncore_board::behavior::Behavior;
+use uncore_board::behavior::component::{Interactive, RoomState};
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_events::events::roomchanged::InteractionExecutionType;
+use uncore_events::events::sound::SoundEvent;
+use uncore_resources::resources::roomdb::RoomDB;
+use uncore_resources::states::GameState;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

@@ -1,19 +1,21 @@
 use bevy::prelude::*;
 use bevy_platform::time::Instant;
-use uncore::colors;
-use uncore::difficulty::{CurrentDifficulty, Difficulty};
-use uncore::events::map_selected::MapSelectedEvent;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore::resources::difficulty_state::DifficultySelectionState;
-use uncore::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
-use uncore::states::AppState;
-use uncore::states::MapHubState;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_events::events::map_selected::MapSelectedEvent;
+use uncore_foundation::colors;
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_resources::resources::difficulty_state::DifficultySelectionState;
+use uncore_resources::resources::mission_select_mode::{
+    CurrentMissionSelectMode, MissionSelectMode,
+};
+use uncore_resources::states::AppState;
+use uncore_resources::states::MapHubState;
+use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::{
     components::*,
     systems::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
+use undifficulty::{CurrentDifficulty, Difficulty, DifficultySettings};
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
@@ -127,7 +129,7 @@ pub fn handle_difficulty_click(
             // Ensure the clicked item is a non-tutorial difficulty
             if !item_data.difficulty.is_tutorial_difficulty() {
                 // Set the difficulty based on selection
-                difficulty_resource.0 = item_data.difficulty.create_difficulty_struct();
+                difficulty_resource.0 = item_data.difficulty.as_struct();
 
                 // Set the mission select mode to Custom
                 mission_select_mode.0 = MissionSelectMode::Custom;
@@ -197,7 +199,7 @@ pub fn update_difficulty_description(
                 // Ensure the selected item is a non-tutorial difficulty
                 if !item_data.difficulty.is_tutorial_difficulty() {
                     let selected_difficulty = item_data.difficulty;
-                    let dif_struct = selected_difficulty.create_difficulty_struct();
+                    let dif_struct = selected_difficulty.as_struct();
 
                     let new_text = format!(
                         "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
@@ -241,7 +243,7 @@ pub fn setup_ui(
         Difficulty::StandardChallenge // Fallback
     });
 
-    let initial_dif_struct = initial_difficulty.create_difficulty_struct();
+    let initial_dif_struct = initial_difficulty.as_struct();
     let initial_desc = format!(
         "Challenge: <{}>:\n{}\n\nScore Bonus: {:.2}x", // Changed "Difficulty" to "Challenge"
         initial_dif_struct.difficulty_name,

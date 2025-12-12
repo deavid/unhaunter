@@ -1,8 +1,8 @@
 use crate::components::*;
 use bevy::prelude::*;
-use uncore::colors;
-use uncore::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
-use uncore::types::root::game_assets::GameAssets;
+use uncore_foundation::colors;
+use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
+use uncore_types::types::root::game_assets::GameAssets;
 
 /// Creates a standard menu background with the background image
 pub fn create_background(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {

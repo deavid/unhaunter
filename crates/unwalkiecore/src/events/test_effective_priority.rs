@@ -1,11 +1,14 @@
 #[cfg(test)]
 mod tests {
+    use uncore_foundation::types::evidence::Evidence;
+    use uncore_types::types::gear_kind::GearKind;
+
     use crate::events::{WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior};
 
     #[test]
     fn test_effective_priority_downgrading() {
         // Test that a VeryLowRepeat event gets heavily downgraded after being played
-        let event = WalkieEvent::GearExplanation(uncore::types::gear_kind::GearKind::Flashlight);
+        let event = WalkieEvent::GearExplanation(GearKind::Flashlight);
 
         // Initial priority should be VeryHigh
         assert_eq!(event.priority(), WalkieEventPriority::VeryHigh);
@@ -28,8 +31,7 @@ mod tests {
     #[test]
     fn test_always_repeat_events_not_downgraded() {
         // Test that AlwaysRepeat events maintain their priority
-        let event =
-            WalkieEvent::IncorrectRepellentHint(uncore::types::evidence::Evidence::FreezingTemp);
+        let event = WalkieEvent::IncorrectRepellentHint(Evidence::FreezingTemp);
 
         // Should be VeryHigh priority with AlwaysRepeat behavior
         assert_eq!(event.priority(), WalkieEventPriority::VeryHigh);

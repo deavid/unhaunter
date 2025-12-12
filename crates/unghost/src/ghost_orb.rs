@@ -2,17 +2,14 @@ use std::{f32::consts::TAU, time::Duration};
 
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
-use uncore::{
-    components::{
-        board::{mapcolor::MapColor, position::Position},
-        game::GameSprite,
-        ghost_breach::GhostBreach,
-        ghost_orb_particle::GhostOrbParticle,
-        sprite_type::SpriteType,
-    },
-    random_seed,
-    resources::board_data::BoardData,
-};
+use uncore_board::components::mapcolor::MapColor;
+use uncore_board::components::position::Position;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::ghost_breach::GhostBreach;
+use uncore_components::components::ghost_orb_particle::GhostOrbParticle;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_foundation::random_seed;
+use uncore_resources::resources::board_data::BoardData;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
 #[derive(Resource)]

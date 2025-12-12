@@ -2878,7 +2878,7 @@ dependencies = [
  "itertools 0.14.0",
  "serde",
  "serde_json",
- "uncore",
+ "uncore-foundation",
 ]
 
 [[package]]
@@ -5593,20 +5593,117 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
  "uncoremenu",
+ "undifficulty",
  "unmaphub",
  "unprofile",
  "unsettings",
 ]
 
 [[package]]
-name = "uncore"
+name = "uncore-assets"
 version = "0.3.2-dev"
 dependencies = [
  "anyhow",
  "bevy",
- "bevy-persistent",
+ "bevy_platform",
+ "serde",
+ "thiserror 2.0.17",
+ "tiled",
+ "uncore-board",
+ "uncore-foundation",
+ "uncore-types",
+]
+
+[[package]]
+name = "uncore-board"
+version = "0.3.2-dev"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "bevy_platform",
+ "fastapprox",
+ "ordered-float 5.1.0",
+ "rand 0.9.2",
+ "serde",
+ "serde_json",
+ "tiled",
+ "uncore-foundation",
+]
+
+[[package]]
+name = "uncore-components"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_picking",
+ "fastapprox",
+ "rand 0.9.2",
+ "serde",
+ "uncore-board",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-types",
+ "unsettings",
+]
+
+[[package]]
+name = "uncore-events"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "uncore-board",
+ "uncore-foundation",
+]
+
+[[package]]
+name = "uncore-foundation"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "enum-iterator",
+ "ordered-float 5.1.0",
+ "rand 0.9.2",
+ "serde",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "uncore-resources"
+version = "0.3.2-dev"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "bevy_platform",
+ "enum-iterator",
+ "ndarray",
+ "serde",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-types",
+ "undifficulty",
+ "unwalkiecore",
+]
+
+[[package]]
+name = "uncore-systems"
+version = "0.3.2-dev"
+dependencies = [
+ "anyhow",
+ "bevy",
  "bevy_platform",
  "enum-iterator",
  "fastapprox",
@@ -5616,10 +5713,29 @@ dependencies = [
  "ordered-float 5.1.0",
  "rand 0.9.2",
  "serde",
- "serde_json",
- "thiserror 2.0.17",
  "tiled",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-types",
  "unsettings",
+]
+
+[[package]]
+name = "uncore-types"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "enum-iterator",
+ "ndarray",
+ "ordered-float 5.1.0",
+ "serde",
+ "uncore-board",
+ "uncore-foundation",
 ]
 
 [[package]]
@@ -5630,8 +5746,28 @@ dependencies = [
  "bevy",
  "bevy_picking",
  "serde",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unprofile",
+]
+
+[[package]]
+name = "undifficulty"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "serde",
+ "uncore-components",
+ "uncore-foundation",
+ "uncore-types",
 ]
 
 [[package]]
@@ -5642,7 +5778,15 @@ dependencies = [
  "bevy_platform",
  "ndarray",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unstd",
 ]
 
@@ -5657,7 +5801,15 @@ dependencies = [
  "ordered-float 5.1.0",
  "rand 0.9.2",
  "tiled",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "ungearitems",
  "unlight",
@@ -5678,7 +5830,15 @@ dependencies = [
  "rand 0.9.2",
  "serde",
  "thiserror 2.0.17",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unprofile",
  "unsettings",
 ]
@@ -5693,7 +5853,15 @@ dependencies = [
  "fastapprox",
  "ndarray",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
 ]
 
@@ -5705,7 +5873,15 @@ dependencies = [
  "enum-iterator",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "ungearitems",
  "unstd",
@@ -5728,8 +5904,11 @@ dependencies = [
  "serde",
  "sha2",
  "uncampaign",
- "uncore",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
  "uncoremenu",
+ "undifficulty",
  "unfog",
  "ungame",
  "ungear",
@@ -5826,7 +6005,15 @@ dependencies = [
  "ndarray",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unfog",
  "ungear",
  "ungearitems",
@@ -5852,8 +6039,16 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
  "uncoremenu",
+ "undifficulty",
  "unprofile",
 ]
 
@@ -5868,7 +6063,15 @@ dependencies = [
  "ordered-float 5.1.0",
  "rand 0.9.2",
  "tiled",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "ungearitems",
  "unlight",
@@ -5885,8 +6088,16 @@ dependencies = [
  "bevy-persistent",
  "enum-iterator",
  "serde",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
  "uncoremenu",
+ "undifficulty",
  "unprofile",
  "unsettings",
 ]
@@ -5900,8 +6111,16 @@ dependencies = [
  "bevy_platform",
  "serde",
  "strum",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
  "uncoremenu",
+ "undifficulty",
  "unsettings",
  "unstd",
 ]
@@ -5911,7 +6130,15 @@ name = "unnpc"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unstd",
 ]
 
@@ -5927,7 +6154,15 @@ dependencies = [
  "ndarray",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "unprofile",
  "unsettings",
@@ -5944,7 +6179,15 @@ dependencies = [
  "dirs",
  "ron 0.12.0",
  "serde",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
 ]
 
 [[package]]
@@ -5982,7 +6225,15 @@ dependencies = [
  "serde",
  "thiserror 2.0.17",
  "tiled",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
 ]
 
 [[package]]
@@ -5991,7 +6242,15 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unprofile",
 ]
 
@@ -6005,7 +6264,15 @@ dependencies = [
  "normalize-path",
  "thiserror 2.0.17",
  "tiled",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "unstd",
  "walkdir",
 ]
@@ -6021,7 +6288,15 @@ dependencies = [
  "fastapprox",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "ungearitems",
  "unprofile",
@@ -6039,7 +6314,15 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.9.2",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-systems",
+ "uncore-types",
+ "undifficulty",
  "ungear",
  "ungearitems",
  "unprofile",
@@ -6066,7 +6349,13 @@ dependencies = [
  "enum-iterator",
  "rand 0.9.2",
  "serde",
- "uncore",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-components",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-types",
+ "undifficulty",
  "unwalkie_types",
 ]
 

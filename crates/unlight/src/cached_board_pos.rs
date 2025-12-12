@@ -2,7 +2,7 @@ use ndarray::{Array2, ArrayView2, s};
 use std::f32::consts::PI;
 use std::ops::Range;
 
-use uncore::components::board::boardposition::BoardPosition;
+use uncore_board::components::boardposition::BoardPosition;
 
 /// A structure that pre-computes and caches geometric data for lighting and shadow calculations.
 ///

@@ -1,0 +1,16 @@
+[package]
+name = "undifficulty"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-types = { path = "../uncore-types" }
+uncore-components = { path = "../uncore-components" }
+bevy = { workspace = true }
+serde = { workspace = true }
+enum-iterator = { workspace = true }

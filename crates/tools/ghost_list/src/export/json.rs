@@ -1,5 +1,6 @@
 use serde::Serialize;
-use uncore::types::{evidence::Evidence, ghost::types::GhostType};
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::ghost::types::GhostType;
 
 #[derive(Serialize)]
 struct GhostJson<'a> {

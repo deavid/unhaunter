@@ -4,11 +4,10 @@
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::metrics;
 use bevy::prelude::*;
-use uncore::{
-    components::{board::position::Position, ghost_sprite::GhostSprite},
-    metric_recorder::SendMetric,
-    types::gear::equipmentposition::EquipmentPosition,
-};
+use uncore_board::components::position::Position;
+use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
 
 const MAX_CRACKS: u8 = 4;

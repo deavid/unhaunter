@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use uncore::types::evidence::Evidence;
-use uncore::types::ghost::types::GhostType;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::ghost::types::GhostType;
 
 pub fn validate_uniqueness(ghosts: &[GhostType], min_evidence: usize) {
     println!("\n## Uniqueness Validation");

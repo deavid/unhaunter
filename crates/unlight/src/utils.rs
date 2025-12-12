@@ -3,15 +3,12 @@ use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use uncore::{
-    behavior::{Behavior, TileState},
-    components::board::{boardposition::BoardPosition, position::Position},
-    resources::board_data::BoardData,
-    types::board::{
-        fielddata::LightFieldData,
-        prebaked_lighting_data::{WaveEdge, WaveEdgeData},
-    },
-};
+use uncore_board::behavior::{Behavior, TileState};
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_board::types::fielddata::LightFieldData;
+use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {

@@ -1,9 +1,9 @@
 use crate::types::gear::Gear;
 use bevy::prelude::*;
-use uncore::components::player::HeldObject;
-use uncore::types::gear::equipmentposition::{EquipmentPosition, Hand};
-use uncore::types::gear_kind::GearKind;
-use uncore::types::ghost::types::GhostType;
+use uncore_components::components::player::HeldObject;
+use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
+use uncore_types::types::gear_kind::GearKind;
+use uncore_foundation::types::ghost::types::GhostType;
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {

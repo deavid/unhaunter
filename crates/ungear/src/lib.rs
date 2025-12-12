@@ -19,4 +19,4 @@ pub mod plugin;
 pub mod systems;
 pub mod types;
 
-pub use uncore::types::gear::spriteid::GearSpriteID;
+pub use uncore_types::types::gear::spriteid::GearSpriteID;

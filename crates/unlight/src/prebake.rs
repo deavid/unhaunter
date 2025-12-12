@@ -6,12 +6,11 @@ use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
-use uncore::{
-    behavior::{Behavior, Class},
-    components::board::{boardposition::BoardPosition, position::Position},
-    resources::board_data::BoardData,
-    types::board::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge},
-};
+use uncore_board::behavior::{Behavior, Class};
+use uncore_board::components::boardposition::BoardPosition;
+use uncore_board::components::position::Position;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_board::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
 pub const WAVE_MAX_HISTORY: usize = 12;
 
 /// Pre-computes static light propagation data using a simplified BFS approach.

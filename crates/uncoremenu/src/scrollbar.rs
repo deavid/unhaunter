@@ -3,7 +3,8 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_foundation::colors;
+use uncore_types::types::root::game_assets::GameAssets;
 
 use crate::components::MenuItemInteractive;
 use crate::events::KeyboardNavigate;
@@ -192,8 +193,8 @@ fn update_scrollbar(
             } else {
                 // Normal coloring based on interaction state
                 match *interaction {
-                    Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
-                    Interaction::Hovered => uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
+                    Interaction::Pressed => colors::MENU_ITEM_COLOR_ON,
+                    Interaction::Hovered => colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
                     Interaction::None => Color::WHITE,
                 }
             };
@@ -214,8 +215,8 @@ fn update_scrollbar(
             } else {
                 // Normal coloring based on interaction state
                 match *interaction {
-                    Interaction::Pressed => uncore::colors::MENU_ITEM_COLOR_ON,
-                    Interaction::Hovered => uncore::colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
+                    Interaction::Pressed => colors::MENU_ITEM_COLOR_ON,
+                    Interaction::Hovered => colors::MENU_ITEM_COLOR_ON.with_alpha(0.8),
                     Interaction::None => Color::WHITE,
                 }
             };

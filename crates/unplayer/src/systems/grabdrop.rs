@@ -1,14 +1,14 @@
 use bevy::prelude::*;
-use uncore::behavior::Behavior;
-use uncore::behavior::component::FloorItemCollidable;
-use uncore::components::board::direction::Direction;
-use uncore::components::board::position::Position;
-use uncore::components::game::GameSprite;
-use uncore::components::player::HeldObject;
-use uncore::components::player_sprite::PlayerSprite;
-use uncore::components::sprite_type::SpriteType;
-use uncore::types::gear::equipmentposition::Hand;
-use uncore::types::root::game_assets::GameAssets;
+use uncore_board::behavior::Behavior;
+use uncore_board::behavior::component::FloorItemCollidable;
+use uncore_board::components::direction::Direction;
+use uncore_board::components::position::Position;
+use uncore_components::components::game::GameSprite;
+use uncore_components::components::player::HeldObject;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_types::types::gear::equipmentposition::Hand;
+use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
@@ -329,6 +329,6 @@ pub(crate) fn app_setup(app: &mut App) {
             grab_object,
             drop_object,
         )
-            .run_if(in_state(uncore::states::GameState::None)),
+            .run_if(in_state(uncore_resources::states::GameState::None)),
     );
 }

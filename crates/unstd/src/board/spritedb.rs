@@ -1,7 +1,7 @@
 use super::tiledata::MapTileComponents;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use uncore::behavior::SpriteCVOKey;
+use uncore_board::behavior::SpriteCVOKey;
 
 /// The `SpriteDB` resource stores a database of pre-built Bevy components and
 /// sprites for map tiles.

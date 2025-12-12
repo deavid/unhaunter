@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use uncore::{
-    components::{game_config::GameConfig, player_sprite::PlayerSprite},
-    resources::looking_gear::LookingGear,
-    states::AppState,
-};
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_resources::resources::looking_gear::LookingGear;
+use uncore_resources::states::AppState;
 
 fn system_update_looking_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
