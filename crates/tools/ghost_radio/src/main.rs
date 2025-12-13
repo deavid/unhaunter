@@ -1,7 +1,7 @@
 // tools/ghost_radio/src/main.rs
 use data::{GhostResponse, PlayerPhrase};
-use rand::distributions::WeightedIndex;
 use rand::prelude::*;
+use rand_distr::weighted::WeightedIndex;
 use serde_yaml::from_reader;
 use std::collections::HashMap;
 use std::fs::File;
@@ -52,7 +52,7 @@ fn main() {
 
         // for (resp, score) in sc.into_iter().take(25) { eprintln!("-> {score:.3} ::
         // {resp}"); if score < 0.1 { break; } } Weighted random selection
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let weights: Vec<f32> = sc
             .iter()
             .map(|(_, s)| s.clamp(0.00000001, 9999.9))
