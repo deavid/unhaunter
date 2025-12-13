@@ -1,7 +1,7 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_foundation::{kelvin_to_celsius, random_seed};

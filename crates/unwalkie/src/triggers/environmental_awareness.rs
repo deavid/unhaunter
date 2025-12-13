@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use std::any::Any; // Added import
 
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_breach::GhostBreach;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unspatial::Position;
+use unghost::components::ghost_breach::GhostBreach;
+use unplayer::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 
@@ -69,7 +69,7 @@ fn trigger_breach_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_breach: Query<&Position, With<GhostBreach>>,
-    truck_button_query: Query<&uncore_components::components::truck_ui_button::TruckUIButton>, // Added
+    truck_button_query: Query<&untruck::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -115,8 +115,8 @@ fn trigger_ghost_showcase(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    q_ghost: Query<&Position, With<uncore_components::components::ghost_sprite::GhostSprite>>,
-    truck_button_query: Query<&uncore_components::components::truck_ui_button::TruckUIButton>, // Added
+    q_ghost: Query<&Position, With<unghost::components::ghost_sprite::GhostSprite>>,
+    truck_button_query: Query<&untruck::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;

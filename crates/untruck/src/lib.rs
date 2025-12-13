@@ -15,6 +15,7 @@
 //! game's mechanics, track their progress, and make strategic decisions outside of
 //! the main exploration and investigation gameplay.
 pub mod activity;
+pub mod components;
 pub mod craft_repellent;
 pub mod evidence;
 pub mod journal;

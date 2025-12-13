@@ -4,8 +4,8 @@ use bevy::{
     prelude::*,
 };
 use uncore_board::behavior::{Behavior, component::Interactive};
-use uncore_board::components::position::Position;
-use uncore_components::components::{game_config::GameConfig, player_sprite::PlayerSprite};
+use unspatial::Position;
+use uncore_components::components::{game_config::GameConfig, player_shared::PlayerSprite};
 use uncore_resources::resources::{looking_gear::LookingGear, visibility_data::VisibilityData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;

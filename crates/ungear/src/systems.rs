@@ -5,15 +5,15 @@ use crate::gear_usable::GearUsable;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_board::components::position::Position;
-use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::{Inventory, InventoryNext, InventoryStats};
 use uncore_events::events::sound::SoundEvent;
 use uncore_resources::resources::looking_gear::LookingGear;
+use uncore_resources::resources::player_state::PlayerState;
 use uncore_resources::states::GameState;
 use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unsettings::audio::{AudioSettings, SoundOutput};
+use unspatial::Position;
+use untags::PlayerTag;
 
 /// System for updating the internal state of all gear carried by the player.
 ///
@@ -58,16 +58,13 @@ fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearDat
 fn sound_playback_system(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
-    gc: Res<GameConfig>,
-    qp: Query<(Entity, &Position, &PlayerSprite)>,
+    qp: Query<&Position, With<PlayerTag>>,
     mut commands: Commands,
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
         // Get player position
-        let Some((_player_entity, player_position, _)) =
-            qp.iter().find(|(_, _, p)| p.id == gc.player_id)
-        else {
+        let Some(player_position) = qp.iter().next() else {
             return;
         };
         if !player_position.is_finite() {
@@ -112,71 +109,69 @@ fn sound_playback_system(
 
 fn keyboard_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    mut q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
+    player_state: Res<PlayerState>,
     looking_gear: Res<LookingGear>,
     mut gs: GearStuff,
 ) {
-    for (ps, mut playergear) in q_gear.iter_mut() {
-        if keyboard_input.just_pressed(ps.controls.cycle) {
+    for mut playergear in q_gear.iter_mut() {
+        if keyboard_input.just_pressed(player_state.controls.cycle) {
             playergear.cycle(&looking_gear.hand());
         }
-        if keyboard_input.just_pressed(ps.controls.swap) {
+        if keyboard_input.just_pressed(player_state.controls.swap) {
             playergear.swap();
         }
-        if keyboard_input.just_released(ps.controls.trigger) {
+        if keyboard_input.just_released(player_state.controls.trigger) {
             playergear.right_hand.set_trigger(&mut gs);
         }
-        if keyboard_input.just_released(ps.controls.torch) {
+        if keyboard_input.just_released(player_state.controls.torch) {
             playergear.left_hand.set_trigger(&mut gs);
         }
     }
 }
 
 fn update_gear_ui(
-    gc: Res<GameConfig>,
-    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gear: Query<&PlayerGear, With<PlayerTag>>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
     mut qs: Query<(&mut Text, &mut Node, &InventoryStats)>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
     looking_gear: Res<LookingGear>,
 ) {
-    for (ps, playergear) in q_gear.iter() {
-        if gc.player_id == ps.id {
-            for (inv, mut imgnode) in qi.iter_mut() {
-                let gear = playergear.get_hand(&inv.hand);
-                let idx = gear.get_sprite_idx() as usize;
-                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
-                }
+    for playergear in q_gear.iter() {
+        for (inv, mut imgnode) in qi.iter_mut() {
+            let gear = playergear.get_hand(&inv.hand);
+            let idx = gear.get_sprite_idx() as usize;
+            if imgnode.texture_atlas.as_ref().unwrap().index != idx {
+                imgnode.texture_atlas.as_mut().unwrap().index = idx;
             }
-            let left_hand_status = playergear.left_hand.get_status();
-            let right_hand_status = playergear.right_hand.get_status();
-            for (mut txt, mut node, istats) in qs.iter_mut() {
-                let hand_status = match istats.hand {
-                    Hand::Left => left_hand_status.clone(),
-                    Hand::Right => right_hand_status.clone(),
-                };
-                let display = looking_gear.hand() == istats.hand;
-                node.display = match display {
-                    false => Display::None,
-                    true => Display::Block,
-                };
-                if txt.0 != hand_status {
-                    txt.0.clone_from(&hand_status);
-                }
+        }
+        let left_hand_status = playergear.left_hand.get_status();
+        let right_hand_status = playergear.right_hand.get_status();
+        for (mut txt, mut node, istats) in qs.iter_mut() {
+            let hand_status = match istats.hand {
+                Hand::Left => left_hand_status.clone(),
+                Hand::Right => right_hand_status.clone(),
+            };
+            let display = looking_gear.hand() == istats.hand;
+            node.display = match display {
+                false => Display::None,
+                true => Display::Block,
+            };
+            if txt.0 != hand_status {
+                txt.0.clone_from(&hand_status);
             }
-            for (inv, mut imgnode) in qin.iter_mut() {
-                // There are 2 possible "None" here, the outside Option::None for when the idx is
-                // out of bounds and the inner Gear::None when a slot is empty.
-                let next = if let Some(idx) = inv.idx {
-                    playergear.get_next(idx).unwrap_or_default()
-                } else {
-                    playergear.get_next_non_empty().unwrap_or_default()
-                };
-                let idx = next.get_sprite_idx() as usize;
-                if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                    imgnode.texture_atlas.as_mut().unwrap().index = idx;
-                }
+        }
+        for (inv, mut imgnode) in qin.iter_mut() {
+            // There are 2 possible "None" here, the outside Option::None for when the idx is
+            // out of bounds and the inner Gear::None when a slot is empty.
+            let next = if let Some(idx) = inv.idx {
+                playergear.get_next(idx).unwrap_or_default()
+            } else {
+                playergear.get_next_non_empty().unwrap_or_default()
+            };
+            let idx = next.get_sprite_idx() as usize;
+            if imgnode.texture_atlas.as_ref().unwrap().index != idx {
+                imgnode.texture_atlas.as_mut().unwrap().index = idx;
             }
         }
     }

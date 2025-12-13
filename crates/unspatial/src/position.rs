@@ -1,12 +1,12 @@
-use uncore_foundation::random_seed;
+use bevy::prelude::*;
+use bevy_math::Vec3;
 
 use super::{
     EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, boardposition::BoardPosition,
     direction::Direction,
 };
 
-use bevy::prelude::*;
-use rand::Rng;
+// use uncore_foundation::random_seed; // TODO: move or handle
 
 /// Represents the logical position of an object on the game board.
 ///
@@ -61,15 +61,15 @@ impl Position {
         }
     }
 
-    pub fn with_random(&self, range: f32) -> Self {
-        let mut rng = random_seed::rng();
-        Self {
-            x: self.x + rng.random_range(-range..range),
-            y: self.y + rng.random_range(-range..range),
-            z: self.z,
-            global_z: self.global_z,
-        }
-    }
+    // pub fn with_random(&self, range: f32) -> Self {
+    //     let mut rng = random_seed::rng();
+    //     Self {
+    //         x: self.x + rng.random_range(-range..range),
+    //         y: self.y + rng.random_range(-range..range),
+    //         z: self.z,
+    //         global_z: self.global_z,
+    //     }
+    // }
 
     pub fn into_global_z(mut self, global_z: f32) -> Self {
         self.global_z = global_z;

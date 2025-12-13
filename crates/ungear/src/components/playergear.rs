@@ -1,6 +1,6 @@
 use crate::types::gear::Gear;
 use bevy::prelude::*;
-use uncore_components::components::player::HeldObject;
+use uncore_components::components::player_shared::HeldObject;
 use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use uncore_types::types::gear_kind::GearKind;
 use uncore_foundation::types::ghost::types::GhostType;

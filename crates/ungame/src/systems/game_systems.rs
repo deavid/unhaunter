@@ -1,10 +1,9 @@
 use bevy::{prelude::*, camera::ScalingMode};
 use bevy_persistent::Persistent;
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
+use unspatial::{Direction, Position};
 use uncore_components::components::game::{GCameraArena, GameSound, GameSprite};
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 use unsettings::controls::ControlKeys;

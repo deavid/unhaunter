@@ -1,11 +1,10 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use uncore_board::components::boardposition::BoardPosition;
-use uncore_board::components::position::Position;
+use unspatial::{BoardPosition, Position};
 use uncore_resources::resources::ambient_mute::AmbientMuteController;
 use uncore_components::components::game::GameSound;
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::PlayerSprite;
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;

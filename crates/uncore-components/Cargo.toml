@@ -9,9 +9,8 @@ authors.workspace = true
 
 [dependencies]
 uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
 uncore-types = { path = "../uncore-types" }
-uncore-events = { path = "../uncore-events" }
+unspatial = { path = "../unspatial" }
 bevy = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true }

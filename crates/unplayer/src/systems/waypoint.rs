@@ -1,12 +1,10 @@
+use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
 use uncore_board::behavior::{
     Behavior,
     component::{Interactive, Stairs},
 };
-use uncore_board::components::position::Position;
-use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
 use uncore_components::components::game::{GCameraArena, GameSprite};
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_components::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -15,6 +13,7 @@ use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::resources::player_input::PlayerInput;
 use uncore_resources::resources::visibility_data::VisibilityData;
+use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};

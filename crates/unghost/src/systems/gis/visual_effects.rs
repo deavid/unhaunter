@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::components::mapcolor::MapColor;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_components::components::game::GameSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;

@@ -1,6 +1,7 @@
-use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position};
-
 use bevy::prelude::*;
+use bevy_math::Vec3;
+
+use super::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, position::Position};
 
 #[derive(Component, Debug, Clone, Copy, PartialEq)]
 pub struct Direction {

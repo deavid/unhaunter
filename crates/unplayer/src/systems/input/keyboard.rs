@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_components::components::{
     move_to::MoveToTarget,
-    player_sprite::PlayerSprite,
+    player_shared::PlayerSprite,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
 use uncore_resources::resources::player_input::PlayerInput;

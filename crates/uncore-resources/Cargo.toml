@@ -17,6 +17,8 @@ uncore-events = { path = "../uncore-events" }
 uncore-components = { path = "../uncore-components" }
 uncore-assets = { path = "../uncore-assets" }
 unwalkiecore = { path = "../unwalkiecore" }
+unspatial = { path = "../unspatial" }
+unsettings = { path = "../unsettings" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }

@@ -22,6 +22,7 @@ unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
+unspatial = { path = "../unspatial" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

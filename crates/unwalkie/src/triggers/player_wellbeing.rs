@@ -2,13 +2,13 @@ use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use uncore_components::components::light::LightLevel;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player::Hiding;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player::Hiding;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay}; // Corrected import for LightLevel
 
 // Constants for SanityDroppedBelowThresholdDarkness

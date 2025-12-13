@@ -1,8 +1,8 @@
 use bevy::{prelude::*, time::Stopwatch};
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;

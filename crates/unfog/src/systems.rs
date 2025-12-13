@@ -4,13 +4,13 @@ use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
 use uncore_board::behavior::Behavior;
-use uncore_board::components::boardposition::BoardPosition;
+use unspatial::BoardPosition;
 use uncore_board::components::chunk::{CellIterator, ChunkIterator};
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_components::components::game::GameSprite;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unghost::components::ghost_sprite::GhostSprite;
+use uncore_components::components::player_shared::PlayerSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;
@@ -181,10 +181,11 @@ fn spawn_miasma(
         if pos9_count < target_count * 9 {
             // Spawn miasma if too low
             let scale = rng.random_range(0.15..1.0_f32).sqrt() * 1.8;
-            let pos = bpos
+            let mut pos = bpos
                 .to_position_center()
-                .with_global_z(0.00037 * rng.random_range(0.99..1.01))
-                .with_random(0.5);
+                .with_global_z(0.00037 * rng.random_range(0.99..1.01));
+            pos.x += rng.random_range(-0.5..0.5);
+            pos.y += rng.random_range(-0.5..0.5);
 
             commands
                 .spawn(Sprite {

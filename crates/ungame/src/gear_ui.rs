@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use uncore_foundation::colors;
-use uncore_components::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+use unplayer::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_types::types::gear::spriteid::GearSpriteID;
 use uncore_types::types::root::game_assets::GameAssets;

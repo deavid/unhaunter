@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use uncore_components::components::ghost_sprite::GhostSprite;
+use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use crate::components::ghost_sprite::GhostSprite;
 use undifficulty::CurrentDifficulty;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_foundation::types::evidence::Evidence;

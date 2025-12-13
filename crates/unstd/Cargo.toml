@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 
+unspatial = { path = "../unspatial" }
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }

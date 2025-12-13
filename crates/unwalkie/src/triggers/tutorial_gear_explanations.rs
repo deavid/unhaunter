@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use uncore_components::components::player_sprite::PlayerSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use undifficulty::CurrentDifficulty;
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;

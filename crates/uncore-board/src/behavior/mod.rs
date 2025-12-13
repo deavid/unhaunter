@@ -772,20 +772,6 @@ impl SpriteConfig {
             p.object.haunt_movable = true;
         }
     }
-
-    /// A class requires a set of states. Not only these are the only valid ones for
-    /// the given class, also they need all to be included.
-    fn _required_states(&self) -> Vec<TileState> {
-        use TileState::*;
-
-        match self.class {
-            Class::Wall => vec![Full, Partial, Minimum],
-            Class::Door => vec![Open, Closed],
-            Class::Switch => vec![On, Off],
-            Class::Breaker => vec![On, Off],
-            _ => vec![None],
-        }
-    }
 }
 
 /// Stores a collection of properties loaded from Tiled map data.

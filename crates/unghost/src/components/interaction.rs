@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 
 /// Component for objects that are temporarily locked by ghost interactions
 #[derive(Component)]

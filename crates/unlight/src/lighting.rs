@@ -7,7 +7,7 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use ndarray::Array3;
 use uncore_board::behavior::{Behavior, Orientation};
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
 

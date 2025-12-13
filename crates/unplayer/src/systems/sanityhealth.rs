@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_board::components::position::Position;
 use uncore_components::components::game_config::GameConfig;
 use uncore_components::components::game_ui::DamageBackground;
-use uncore_components::components::player::Stamina;
-use uncore_components::components::player_sprite::PlayerSprite;
+use crate::components::player::Stamina;
+use crate::components::player_sprite::PlayerSprite;
 use uncore_foundation::types::grade::Grade;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
@@ -14,6 +13,7 @@ use uncore_systems::utils::PrintingTimer;
 use uncore_systems::utils::light::lerp_color;
 use undifficulty::CurrentDifficulty;
 use unprofile::data::PlayerProfileData;
+use unspatial::Position;
 
 const DEBUG_PLAYER: bool = false;
 

@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use uncore_board::behavior::component::Stairs;
 use uncore_board::behavior::{Behavior, Orientation};
-use uncore_board::components::position::Position;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::player_sprite::PlayerSprite;
+use crate::components::player_sprite::PlayerSprite;
+use unspatial::Position;
 
 pub fn stairs_player(
     mut players: Query<(&mut Position, &PlayerSprite)>,

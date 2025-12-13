@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 
 /// Represents the type of interaction a ghost can perform with the environment
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

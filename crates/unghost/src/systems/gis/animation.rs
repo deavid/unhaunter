@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 
 use crate::components::interaction::{Locked, MotionBlur, Tween, TweenEase};
 

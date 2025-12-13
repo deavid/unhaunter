@@ -20,41 +20,39 @@ use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
 use uncore_board::behavior::component::Interactive;
-use uncore_board::components::boardposition::BoardPosition;
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
+use uncore_board::behavior::{Behavior, Orientation};
+use uncore_board::types::fielddata::CollisionFieldData;
 use uncore_components::components::game::MapTileSprite;
-use uncore_components::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
-use undifficulty::CurrentDifficulty;
-use uncore_systems::metric_recorder::SendMetric;
+use uncore_components::components::game_config::GameConfig;
+use uncore_components::components::player_shared::PlayerSprite;
+use uncore_components::components::sprite_type::SpriteType;
+use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
-use uncore_board::types::fielddata::CollisionFieldData;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_systems::utils::light::{compute_color_exposure, lerp_color};
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_types::types::gear_kind::GearKind;
-use uncore_systems::utils::light::{compute_color_exposure, lerp_color};
-use uncore_board::behavior::{Behavior, Orientation};
-use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::sprite_type::SpriteType;
-use uncore_foundation::kelvin_to_celsius;
+use undifficulty::CurrentDifficulty;
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
+use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
+use unghost::components::ghost_sprite::GhostSprite;
+use unspatial::{BoardPosition, Direction, Position};
 use unstd::materials::CustomMaterial1;
 
 pub use uncore_board::components::mapcolor::MapColor;
 pub use uncore_board::types::light::{LightData, LightType};
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
-use uncore_components::components::ghost_orb_particle::GhostOrbParticle;
 use uncore_foundation::random_seed;
 use uncore_resources::states::AppState;
+use unghost::components::ghost_orb_particle::GhostOrbParticle;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.
@@ -286,6 +284,11 @@ fn apply_lighting(
         // If we don't have a valid map, skip this
         return;
     }
+    // Check if visibility field is properly initialized
+    if vf.visibility_field.is_empty() {
+        return;
+    }
+
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
         let p = EquipmentPosition::Deployed;
@@ -342,11 +345,6 @@ fn apply_lighting(
             }
         }
         if player.id != gc.player_id {
-            continue;
-        }
-
-        // Check if visibility field is properly initialized
-        if vf.visibility_field.is_empty() {
             continue;
         }
 

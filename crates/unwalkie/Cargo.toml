@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 
+unspatial = { path = "../unspatial" }
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
@@ -23,6 +24,8 @@ unwalkie_types = { path = "../unwalkie_types" }
 unwalkiecore = { path = "../unwalkiecore" }
 unprofile = { path = "../unprofile" }
 untruck = { path = "../untruck" }
+unghost = { path = "../unghost" }
+unplayer = { path = "../unplayer" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

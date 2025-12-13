@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use ndarray::{Array2, Array3};
-use uncore_board::components::{boardposition::BoardPosition, position::Position};
+use unspatial::{BoardPosition, Position};
 use uncore_board::types::{
     fielddata::{CollisionFieldData, LightFieldData},
     prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
 };
-use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use uncore_components::components::ghost_shared::GhostBehaviorDynamics;
 use uncore_foundation::celsius_to_kelvin;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::miasma::MiasmaGrid;

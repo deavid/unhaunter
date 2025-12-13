@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{InteractableByGhost, Interactive, RoomState};
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};

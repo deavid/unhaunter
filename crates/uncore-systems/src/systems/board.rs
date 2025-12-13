@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use uncore_board::components::boardposition::MapEntityFieldBPos;
-use uncore_board::components::position::Position;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
+use unspatial::{MapEntityFieldBPos, Position};
+use untags::PlayerTag;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///
@@ -16,11 +15,11 @@ use uncore_resources::resources::board_data::BoardData;
 fn sync_map_entity_field(
     mut board_data: ResMut<BoardData>,
     game_config: Res<GameConfig>,
-    player_query: Query<(&PlayerSprite, &Position)>,
+    player_query: Query<(&PlayerTag, &Position)>,
     position_query: Query<&Position>,
     mut map_entity_bpos_query: Query<&mut MapEntityFieldBPos>,
 ) {
-    let Some((_, player_pos)) = player_query
+    let Some((_player_tag, player_pos)) = player_query
         .iter()
         .find(|(player, _)| player.id == game_config.player_id)
     else {

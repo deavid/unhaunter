@@ -5,7 +5,7 @@ use unsettings::audio::AudioSettings;
 
 use undifficulty::CurrentDifficulty;
 use uncore_resources::resources::summary_data::SummaryData;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_events::events::sound::SoundEvent;
 use uncore_resources::resources::board_data::BoardData;
 

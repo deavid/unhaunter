@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::PlayerSprite;
 use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
 use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_foundation::types::evidence::Evidence;

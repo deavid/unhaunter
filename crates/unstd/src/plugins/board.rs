@@ -6,7 +6,7 @@ use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
 use uncore_board::behavior::{Behavior, Orientation};
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_board::types::fielddata::CollisionFieldData;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_board::components::direction::Direction;
+use unspatial::Direction;
 use uncore_foundation::types::ghost::types::GhostType;
 
 #[derive(Component, Debug, Clone, PartialEq)]

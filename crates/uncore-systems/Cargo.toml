@@ -9,10 +9,11 @@ authors.workspace = true
 
 [dependencies]
 uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
+unspatial = { path = "../unspatial" }
+untags = { path = "../untags" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 enum-iterator = { workspace = true }

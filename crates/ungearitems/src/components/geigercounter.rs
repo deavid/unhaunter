@@ -1,5 +1,5 @@
 use uncore_foundation::random_seed;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;

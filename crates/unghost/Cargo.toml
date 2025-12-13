@@ -19,7 +19,9 @@ uncore-systems = { path = "../uncore-systems" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
+untags = { path = "../untags" }
+unspatial = { path = "../unspatial" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
-ordered-float = { workspace = true }
+serde = { workspace = true }

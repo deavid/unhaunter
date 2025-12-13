@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use uncore_foundation::colors;
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unspatial::{Direction, Position};
+use unplayer::components::player_sprite::PlayerSprite;
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::GameState;

@@ -1,10 +1,9 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use uncore_board::components::boardposition::BoardPosition;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unspatial::{BoardPosition, Position};
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use undifficulty::CurrentDifficulty;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;

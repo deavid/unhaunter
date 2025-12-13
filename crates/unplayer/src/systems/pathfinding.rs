@@ -2,8 +2,7 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
-use uncore_board::components::boardposition::BoardPosition;
-use uncore_board::components::position::Position;
+use unspatial::{BoardPosition, Position};
 use uncore_board::behavior::{Behavior, Orientation, component::Stairs};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::visibility_data::VisibilityData;

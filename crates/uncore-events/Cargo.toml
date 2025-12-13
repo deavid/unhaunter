@@ -9,5 +9,6 @@ authors.workspace = true
 
 [dependencies]
 uncore-board = { path = "../uncore-board" }
+unspatial = { path = "../unspatial" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -1,11 +1,10 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{Interactive, RoomState};
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
+use unspatial::{Direction, Position};
 use uncore_components::components::animation::{AnimationTimer, CharacterAnimation};
-use uncore_components::components::player::{Hiding, Stamina};
-use uncore_components::components::player_sprite::PlayerSprite;
+use crate::components::player::{Hiding, Stamina};
+use crate::components::player_sprite::PlayerSprite;
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;

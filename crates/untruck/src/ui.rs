@@ -2,9 +2,9 @@
 use super::{activity, journalui, loadoutui, sanity, sensors};
 use bevy::prelude::*;
 use uncore_foundation::colors;
-use uncore_components::components::truck::TruckUI;
+use crate::components::truck::TruckUI;
 use uncore_components::components::truck_ui::{TabContents, TabState, TruckTab}; // TruckTab is now imported from uncore
-use uncore_components::components::truck_ui_button::TruckButtonTypeExt;
+use crate::components::truck_ui_button::TruckButtonTypeExt;
 use undifficulty::CurrentDifficulty;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};

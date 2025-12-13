@@ -2,16 +2,16 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use std::any::Any;
 use uncore_components::components::repellent_particle::RepellentParticle;
-use undifficulty::CurrentDifficulty;
-use uncore_types::types::gear_kind::GearKind;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
+use uncore_types::types::gear_kind::GearKind;
+use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone

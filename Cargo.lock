@@ -5610,11 +5610,10 @@ dependencies = [
  "bevy_platform",
  "fastapprox",
  "ordered-float 5.1.0",
- "rand 0.9.2",
  "serde",
  "serde_json",
  "tiled",
- "uncore-foundation",
+ "unspatial",
 ]
 
 [[package]]
@@ -5624,11 +5623,10 @@ dependencies = [
  "bevy",
  "rand 0.9.2",
  "serde",
- "uncore-board",
- "uncore-events",
  "uncore-foundation",
  "uncore-types",
  "unsettings",
+ "unspatial",
 ]
 
 [[package]]
@@ -5638,6 +5636,7 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "uncore-board",
+ "unspatial",
 ]
 
 [[package]]
@@ -5667,6 +5666,8 @@ dependencies = [
  "uncore-foundation",
  "uncore-types",
  "undifficulty",
+ "unsettings",
+ "unspatial",
  "unwalkiecore",
 ]
 
@@ -5679,11 +5680,12 @@ dependencies = [
  "enum-iterator",
  "itertools 0.14.0",
  "noise",
- "uncore-board",
  "uncore-components",
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
+ "unspatial",
+ "untags",
 ]
 
 [[package]]
@@ -5735,6 +5737,8 @@ dependencies = [
  "uncore-resources",
  "uncore-systems",
  "uncore-types",
+ "unghost",
+ "unspatial",
  "unstd",
 ]
 
@@ -5753,9 +5757,12 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "ungear",
+ "unghost",
  "unlight",
+ "unplayer",
  "unprofile",
  "unsettings",
+ "unspatial",
  "unstd",
 ]
 
@@ -5765,7 +5772,6 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "uncore-board",
  "uncore-components",
  "uncore-events",
  "uncore-foundation",
@@ -5774,6 +5780,8 @@ dependencies = [
  "undifficulty",
  "unprofile",
  "unsettings",
+ "unspatial",
+ "untags",
 ]
 
 [[package]]
@@ -5794,6 +5802,8 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "ungear",
+ "unspatial",
+ "untags",
 ]
 
 [[package]]
@@ -5801,8 +5811,8 @@ name = "unghost"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "ordered-float 5.1.0",
  "rand 0.9.2",
+ "serde",
  "uncore-board",
  "uncore-components",
  "uncore-events",
@@ -5812,7 +5822,9 @@ dependencies = [
  "undifficulty",
  "ungear",
  "ungearitems",
+ "unspatial",
  "unstd",
+ "untags",
 ]
 
 [[package]]
@@ -5921,6 +5933,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
+name = "uninteraction"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unspatial",
+]
+
+[[package]]
 name = "unlight"
 version = "0.3.2-dev"
 dependencies = [
@@ -5941,7 +5961,9 @@ dependencies = [
  "unfog",
  "ungear",
  "ungearitems",
+ "unghost",
  "unsettings",
+ "unspatial",
  "unstd",
 ]
 
@@ -5978,9 +6000,13 @@ dependencies = [
  "undifficulty",
  "ungear",
  "ungearitems",
+ "unghost",
  "unlight",
+ "unplayer",
  "unsettings",
+ "unspatial",
  "unstd",
+ "untags",
 ]
 
 [[package]]
@@ -6023,6 +6049,8 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
+ "unplayer",
+ "unspatial",
  "unstd",
 ]
 
@@ -6044,6 +6072,7 @@ dependencies = [
  "ungear",
  "unprofile",
  "unsettings",
+ "unspatial",
  "unstd",
 ]
 
@@ -6080,6 +6109,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "unspatial"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_math",
+ "fastapprox",
+ "serde",
+]
+
+[[package]]
 name = "unstd"
 version = "0.3.2-dev"
 dependencies = [
@@ -6095,6 +6134,7 @@ dependencies = [
  "uncore-systems",
  "uncore-types",
  "undifficulty",
+ "unspatial",
 ]
 
 [[package]]
@@ -6109,7 +6149,15 @@ dependencies = [
  "uncore-systems",
  "uncore-types",
  "undifficulty",
+ "unplayer",
  "unprofile",
+]
+
+[[package]]
+name = "untags"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -6143,6 +6191,8 @@ dependencies = [
  "undifficulty",
  "ungear",
  "ungearitems",
+ "unghost",
+ "unplayer",
  "unprofile",
  "unsettings",
  "unstd",
@@ -6167,8 +6217,11 @@ dependencies = [
  "undifficulty",
  "ungear",
  "ungearitems",
+ "unghost",
+ "unplayer",
  "unprofile",
  "unsettings",
+ "unspatial",
  "untruck",
  "unwalkie_types",
  "unwalkiecore",

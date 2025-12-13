@@ -3,10 +3,10 @@ use std::{f32::consts::TAU, time::Duration};
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use uncore_board::components::mapcolor::MapColor;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_components::components::game::GameSprite;
-use uncore_components::components::ghost_breach::GhostBreach;
-use uncore_components::components::ghost_orb_particle::GhostOrbParticle;
+use crate::components::ghost_breach::GhostBreach;
+use crate::components::ghost_orb_particle::GhostOrbParticle;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;

@@ -1,9 +1,9 @@
 use std::any::Any;
 
 use bevy::prelude::*;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unspatial::Position;
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use undifficulty::CurrentDifficulty;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};

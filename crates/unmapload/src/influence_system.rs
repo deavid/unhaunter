@@ -6,8 +6,8 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_influence::GhostInfluence;
+use unspatial::Position;
+use unghost::components::ghost_influence::GhostInfluence;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 
@@ -28,8 +28,8 @@ use crate::level_setup::AssignGhostInfluenceMarker;
 fn assign_ghost_influence_system(
     mut commands: Commands,
     marker_query: Query<(Entity, &AssignGhostInfluenceMarker)>,
-    ghost_spawn_query: Query<&Position, With<uncore_components::components::ghost_breach::GhostBreach>>,
-    player_spawn_query: Query<&Position, With<uncore_components::components::player_sprite::PlayerSprite>>,
+    ghost_spawn_query: Query<&Position, With<unghost::components::ghost_breach::GhostBreach>>,
+    player_spawn_query: Query<&Position, With<unplayer::components::player_sprite::PlayerSprite>>,
     position_query: Query<&Position>,
     roomdb: Res<RoomDB>,
     board_data: Res<BoardData>,

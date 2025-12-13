@@ -4,14 +4,14 @@ use bevy_persistent::Persistent;
 
 use uncore_board::behavior::component::Door;
 use uncore_board::behavior::{Behavior, TileState};
-use uncore_board::components::position::Position;
-use uncore_components::components::player::Hiding;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
+use unplayer::components::player::Hiding;
+use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::PlayerProfileData;
+use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
@@ -362,7 +362,7 @@ fn trigger_player_stays_hidden_too_long(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     hiding_query: Query<Entity, With<Hiding>>,
-    ghost_query: Query<&uncore_components::components::ghost_sprite::GhostSprite>,
+    ghost_query: Query<&unghost::components::ghost_sprite::GhostSprite>,
     mut post_hunt_hidden_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -417,7 +417,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&Position, Entity), Without<Hiding>>,
     hiding_spots: Query<(&Position, &Behavior)>,
-    ghost_query: Query<&uncore_components::components::ghost_sprite::GhostSprite>,
+    ghost_query: Query<&unghost::components::ghost_sprite::GhostSprite>,
     mut near_hiding_timer: Local<Option<f32>>,
 ) {
     if app_state.get() != &AppState::InGame {

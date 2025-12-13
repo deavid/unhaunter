@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_resources::states::AppState;
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::PlayerSprite;
 use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_foundation::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;

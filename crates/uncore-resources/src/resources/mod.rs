@@ -8,6 +8,7 @@ pub mod hint_ui_state;
 pub mod looking_gear;
 pub mod manual;
 pub mod maps;
+pub mod player_state;
 pub mod mission_select_mode;
 pub mod mouse_visibility;
 pub mod object_interaction;

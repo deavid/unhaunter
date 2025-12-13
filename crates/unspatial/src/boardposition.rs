@@ -136,44 +136,6 @@ impl BoardPosition {
         }
     }
 
-    pub fn _xy_neighbors_buf(&self, dist: u32, out: &mut Vec<BoardPosition>) {
-        out.clear();
-        let dist = dist as i64;
-        for x in -dist..=dist {
-            for y in -dist..=dist {
-                let pos = BoardPosition {
-                    x: self.x + x,
-                    y: self.y + y,
-                    z: self.z,
-                };
-                out.push(pos);
-            }
-        }
-    }
-
-    pub fn _xy_neighbors_buf_clamped(
-        &self,
-        dist: u32,
-        out: &mut Vec<BoardPosition>,
-        min_x: i64,
-        max_x: i64,
-        min_y: i64,
-        max_y: i64,
-    ) {
-        out.clear();
-        let dist = dist as i64;
-        let x1 = (self.x - dist).clamp(min_x, max_x);
-        let x2 = (self.x + dist).clamp(min_x, max_x);
-        let y1 = (self.y - dist).clamp(min_y, max_y);
-        let y2 = (self.y + dist).clamp(min_y, max_y);
-        for x in x1..=x2 {
-            for y in y1..=y2 {
-                let pos = BoardPosition { x, y, z: self.z };
-                out.push(pos);
-            }
-        }
-    }
-
     pub fn is_valid(&self, map_size: (usize, usize, usize)) -> bool {
         self.x >= 0
             && self.x < map_size.0 as i64
@@ -209,12 +171,6 @@ impl BoardPosition {
         to: (i64, i64),
     ) -> NeighborsIterator {
         NeighborsIterator::new(self, dist, from, to)
-    }
-
-    pub fn _xy_neighbors_vec(&self, dist: u32) -> Vec<BoardPosition> {
-        let mut ret: Vec<BoardPosition> = Vec::with_capacity((dist * dist * 4 + dist * 8) as usize);
-        self._xy_neighbors_buf(dist, &mut ret);
-        ret
     }
 
     pub fn distance(&self, other: &Self) -> f32 {

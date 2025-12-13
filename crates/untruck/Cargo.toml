@@ -18,9 +18,11 @@ uncore-components = { path = "../uncore-components" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
+unghost = { path = "../unghost" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
 unwalkiecore = { path = "../unwalkiecore" }
+unplayer = { path = "../unplayer" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -3,14 +3,14 @@ use rand::Rng;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::TileState;
 use uncore_board::behavior::component::{Door, InteractableByGhost};
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player_sprite::PlayerSprite;
-use undifficulty::CurrentDifficulty;
+use crate::components::ghost_sprite::GhostSprite;
 use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::visibility_data::VisibilityData;
+use undifficulty::CurrentDifficulty;
+use unspatial::Position;
+use untags::PlayerTag;
 
 use crate::components::interaction::Locked;
 
@@ -31,7 +31,7 @@ fn ghost_interaction_selection_system(
     difficulty: Res<CurrentDifficulty>,
     board_data: Res<BoardData>,
     visibility_data: Res<VisibilityData>,
-    q_player: Query<&Position, With<PlayerSprite>>,
+    q_player: Query<&Position, With<PlayerTag>>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     q_interactables: Query<(
         Entity,
@@ -148,7 +148,7 @@ fn find_interaction_target(
         Option<&Locked>,
         Option<&InteractableByGhost>,
     )>,
-    q_player: &Query<&Position, With<PlayerSprite>>,
+    q_player: &Query<&Position, With<PlayerTag>>,
     board_data: &BoardData,
     visibility_data: &VisibilityData,
     rng: &mut impl Rng,
@@ -198,7 +198,8 @@ fn find_interaction_target(
                         let class = behavior.class();
                         let is_switch = matches!(
                             class,
-                            uncore_board::behavior::Class::Switch | uncore_board::behavior::Class::RoomSwitch
+                            uncore_board::behavior::Class::Switch
+                                | uncore_board::behavior::Class::RoomSwitch
                         );
                         let is_lamp = matches!(
                             class,
@@ -450,7 +451,7 @@ fn find_interaction_target(
 fn find_throw_destination(
     _entity: Entity,
     object_pos: &Position,
-    q_player: &Query<&Position, With<PlayerSprite>>,
+    q_player: &Query<&Position, With<PlayerTag>>,
     board_data: &BoardData,
     rng: &mut impl Rng,
 ) -> Option<Position> {

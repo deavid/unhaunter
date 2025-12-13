@@ -8,22 +8,22 @@ use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
 use uncore_components::components::animation::{AnimationTimer, CharacterAnimation};
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
 use uncore_components::components::focus_ring::FocusRing;
 use uncore_components::components::game::GameSound;
 use uncore_components::components::game::GameSprite;
-use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use uncore_components::components::ghost_breach::GhostBreach;
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player::Stamina;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::summary_data::SummaryData;
 use uncore_types::types::game::SoundType;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
+use unghost::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use unghost::components::ghost_breach::GhostBreach;
+use unghost::components::ghost_sprite::GhostSprite;
+use unplayer::components::player::Stamina;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::{Direction, Position};
+use untags::PlayerTag;
 
 use crate::level_setup::LoadLevelSystemParam;
 
@@ -90,6 +90,7 @@ pub fn spawn_player(
             p.difficulty.0.player_gear.clone(),
         ))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
+        .insert(PlayerTag { id: 1 })
         // Update the SpatialListener to use the ear offset from audio settings
         .insert(SpatialListener::new(
             -p.audio_settings.sound_output.to_ear_offset(),

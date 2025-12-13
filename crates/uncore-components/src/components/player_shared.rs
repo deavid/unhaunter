@@ -1,7 +1,58 @@
 use bevy::prelude::*;
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
-use unsettings::controls::ControlKeys; // Added import
+use uncore_types::types::gear::equipmentposition::Hand;
+
+/// Represents an object that is currently being held by the player.
+#[derive(Component, Debug, Clone)]
+pub struct HeldObject {
+    pub entity: Entity,
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct InventoryNext {
+    pub idx: Option<usize>,
+}
+
+impl InventoryNext {
+    pub fn new(idx: usize) -> Self {
+        Self { idx: Some(idx) }
+    }
+
+    pub fn non_empty() -> Self {
+        Self { idx: None }
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct Inventory {
+    pub hand: Hand,
+}
+
+impl Inventory {
+    pub fn new_left() -> Self {
+        Inventory { hand: Hand::Left }
+    }
+
+    pub fn new_right() -> Self {
+        Inventory { hand: Hand::Right }
+    }
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct InventoryStats {
+    pub hand: Hand,
+}
+
+impl InventoryStats {
+    pub fn left() -> Self {
+        InventoryStats { hand: Hand::Left }
+    }
+    pub fn right() -> Self {
+        InventoryStats { hand: Hand::Right }
+    }
+}
+
+use unspatial::{Direction, Position};
+use unsettings::controls::ControlKeys;
 
 /// Represents a player character in the game world.
 ///

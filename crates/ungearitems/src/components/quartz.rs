@@ -4,11 +4,12 @@
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::metrics;
 use bevy::prelude::*;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
+use uncore_components::components::ghost_shared::GhostSprite;
 use uncore_systems::metric_recorder::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
+use unspatial::Position;
+use untags::GhostTag;
 
 const MAX_CRACKS: u8 = 4;
 
@@ -84,7 +85,7 @@ impl GearUsable for QuartzStoneData {
         &mut self,
         gear_pos: &Position,
         ghost_pos: &Position,
-        ghost_sprite: &mut GhostSprite,
+        ghost: &mut GhostSprite,
         dt: f32,
     ) {
         const MIN_DIST: f32 = 5.0;
@@ -93,21 +94,21 @@ impl GearUsable for QuartzStoneData {
         let dist_adj = (distance2 + MIN_DIST2) / MIN_DIST2;
         let dist_adj_recip = dist_adj.recip() - 0.2;
         let stone_health = (MAX_CRACKS - self.cracks) as f32 / MAX_CRACKS as f32;
-        let strength = ghost_sprite.hunting
+        let strength = ghost.hunting
             * dt
             * dist_adj_recip.clamp(0.0, 1.0)
             * stone_health.clamp(0.0, 1.0).sqrt();
         if self.cracked_time > 0.0 {
             self.cracked_time -= dt;
-            let strength = (strength * 1.0).min(ghost_sprite.hunting);
-            ghost_sprite.hunting -= strength;
-        } else if ghost_sprite.hunt_target {
-            let strength = (strength * 8.0).min(ghost_sprite.hunting);
-            ghost_sprite.hunting -= strength;
+            let strength = (strength * 1.0).min(ghost.hunting);
+            ghost.hunting -= strength;
+        } else if ghost.hunt_target {
+            let strength = (strength * 8.0).min(ghost.hunting);
+            ghost.hunting -= strength;
             self.energy_absorbed += strength;
         } else {
-            let strength = (strength * 0.1).min(ghost_sprite.hunting);
-            ghost_sprite.hunting -= strength;
+            let strength = (strength * 0.1).min(ghost.hunting);
+            ghost.hunting -= strength;
             self.energy_absorbed += strength;
         }
 
@@ -127,7 +128,7 @@ impl From<QuartzStoneData> for Gear {
 fn update_quartz_and_ghost(
     mut q_gear1: Query<(&Position, &mut PlayerGear)>,
     mut q_gear2: Query<(&Position, &mut DeployedGearData)>,
-    mut q_ghost: Query<(&Position, &mut GhostSprite)>,
+    mut q_ghost: Query<(&Position, &mut GhostSprite), With<GhostTag>>,
     time: Res<Time>,
 ) {
     let measure = metrics::UPDATE_QUARTZ_AND_GHOST.time_measure();
@@ -135,26 +136,24 @@ fn update_quartz_and_ghost(
     for (gear_pos, mut playergear) in q_gear1.iter_mut() {
         for (gear, _) in playergear.as_vec_mut().into_iter() {
             if let GearKind::QuartzStone = gear.kind {
-                for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
-                    gear.data.as_mut().unwrap().aux_quartz_update(
-                        gear_pos,
-                        ghost_pos,
-                        &mut ghost_sprite,
-                        dt,
-                    );
+                for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
+                    gear.data
+                        .as_mut()
+                        .unwrap()
+                        .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
                 }
             }
         }
     }
     for (gear_pos, mut gear_data) in q_gear2.iter_mut() {
         if let GearKind::QuartzStone = gear_data.gear.kind {
-            for (ghost_pos, mut ghost_sprite) in q_ghost.iter_mut() {
-                gear_data.gear.data.as_mut().unwrap().aux_quartz_update(
-                    gear_pos,
-                    ghost_pos,
-                    &mut ghost_sprite,
-                    dt,
-                );
+            for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
+                gear_data
+                    .gear
+                    .data
+                    .as_mut()
+                    .unwrap()
+                    .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
             }
         }
     }

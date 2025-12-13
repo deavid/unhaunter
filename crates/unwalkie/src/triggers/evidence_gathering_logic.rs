@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
-use uncore_components::components::player_sprite::PlayerSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use undifficulty::{CurrentDifficulty, DifficultySettings};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;

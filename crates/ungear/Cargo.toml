@@ -9,15 +9,16 @@ authors.workspace = true
 
 [dependencies]
 
+unspatial = { path = "../unspatial" }
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
+untags = { path = "../untags" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

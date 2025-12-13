@@ -7,7 +7,7 @@
 use bevy::ecs::entity::Entity;
 use bevy_platform::collections::HashMap;
 
-use crate::components::boardposition::BoardPosition;
+use unspatial::BoardPosition;
 
 /// Holds precomputed lighting propagation data for a single tile.
 ///

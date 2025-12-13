@@ -1,7 +1,7 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use uncore_components::components::player_sprite::PlayerSprite;
+use unplayer::components::player_sprite::PlayerSprite;
 use uncore_components::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::grade::Grade;

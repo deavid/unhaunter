@@ -1,9 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore_board::components::direction::Direction;
-use uncore_board::components::position::Position;
-use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use unspatial::{Direction, Position, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
 use uncore_components::components::game::GCameraArena;
-use uncore_components::components::player_sprite::PlayerSprite;
+use crate::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::states::GameState;
 

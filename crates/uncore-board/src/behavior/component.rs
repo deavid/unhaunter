@@ -1,5 +1,5 @@
 use super::{Behavior, Orientation};
-use crate::components::boardposition::BoardPosition;
+use unspatial::BoardPosition;
 use crate::types::tiledmap::map::MapLayer;
 use bevy::{ecs::component::Component, log::warn, math::Vec3};
 

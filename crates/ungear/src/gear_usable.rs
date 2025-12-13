@@ -1,10 +1,10 @@
 use crate::gear_stuff::GearStuff;
 use bevy::color::Color;
 use std::any::Any;
-use uncore_board::components::position::Position;
-use uncore_components::components::ghost_sprite::GhostSprite;
 use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
-use uncore_foundation::types::ghost::types::GhostType; // Added
+use uncore_foundation::types::ghost::types::GhostType;
+use unspatial::Position;
+use uncore_components::components::ghost_shared::GhostSprite;
 
 /// Provides a common interface for all gear types, enabling consistent
 /// interactions.
@@ -58,7 +58,7 @@ pub trait GearUsable: std::fmt::Debug + Sync + Send + Any {
         &mut self,
         _gear_pos: &Position,
         _ghost_pos: &Position,
-        _ghost_sprite: &mut GhostSprite,
+        _ghost: &mut GhostSprite,
         _dt: f32,
     ) {
     }

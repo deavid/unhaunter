@@ -3,7 +3,7 @@ use crate::gear_usable::GearUsable;
 use bevy::prelude::*;
 use uncore_types::types::gear_kind::GearKind;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_board::components::position::Position;
+use unspatial::Position;
 use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
 
 /// A wrapper struct for holding a `GearKind`.

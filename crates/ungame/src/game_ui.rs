@@ -2,12 +2,12 @@ use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 use uncore_board::behavior::Behavior;
-use uncore_foundation::colors;
 use uncore_components::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
 };
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::player_shared::PlayerSprite;
+use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::root::game_assets::GameAssets;
@@ -357,42 +357,6 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
                  })
                 .insert(TextColor(colors::INVENTORY_STATS_COLOR));
         });
-}
-
-/// Sets up the UI elements for displaying information about the map item being
-/// held by the player.
-fn _setup_ui_held_object(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
-    parent
-        .spawn(Text::new("Object Name"))
-        .insert(TextFont {
-            font: handles.fonts.victormono.w600_semibold.clone(),
-            font_size: 20.0 * FONT_SCALE,
-            ..default()
-        })
-        .insert(TextColor(colors::INVENTORY_STATS_COLOR))
-        .insert(ElementObjectUI::Name);
-
-    // --- Object Description ---
-    parent
-        .spawn(Text::new("Object Description"))
-        .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * FONT_SCALE,
-            ..default()
-        })
-        .insert(TextColor(colors::INVENTORY_STATS_COLOR))
-        .insert(ElementObjectUI::Description);
-
-    // --- Control Actions ---
-    parent
-        .spawn(Text::new("[Drop]: Drop Object\n[Grab]: Move Object"))
-        .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
-            font_size: 16.0 * FONT_SCALE,
-            ..default()
-        })
-        .insert(TextColor(colors::INVENTORY_STATS_COLOR))
-        .insert(ElementObjectUI::Grab);
 }
 
 /// Manages the UI for the "Visual Holding" system.

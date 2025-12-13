@@ -5,6 +5,7 @@ pub mod keyboard;
 pub mod mouse;
 pub mod movement;
 pub mod pathfinding;
+pub mod player_state;
 pub mod sanityhealth;
 pub mod walk_target_indicator;
 pub mod waypoint;
@@ -37,6 +38,8 @@ pub(crate) fn app_setup(app: &mut App) {
             waypoint::waypoint_queue_cleanup_system,
             // Movement system runs after input and waypoints
             movement::player_movement_system,
+            // Update player state for cross-domain access
+            player_state::update_player_state,
             // Stairs system runs last
             keyboard::stairs_player,
         )

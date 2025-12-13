@@ -1,30 +1,27 @@
+use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
+use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
+use crate::components::ghost_sprite::GhostSprite;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
-use ordered_float::OrderedFloat;
 use rand::Rng;
 use std::f64::consts::PI;
-use uncore_board::components::boardposition::BoardPosition;
-use uncore_board::components::direction::Direction;
 use uncore_board::components::mapcolor::MapColor;
-use uncore_board::components::position::Position;
 use uncore_components::components::game::GameSprite;
-use uncore_components::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use uncore_components::components::ghost_influence::{GhostInfluence, InfluenceType};
-use uncore_components::components::ghost_sprite::GhostSprite;
-use uncore_components::components::player::Hiding;
-use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_components::components::sprite_type::SpriteType;
-use undifficulty::CurrentDifficulty;
-use uncore_systems::metric_recorder::SendMetric;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::object_interaction::ObjectInteractionConfig;
+use uncore_resources::resources::player_state::PlayerState;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::summary_data::SummaryData;
+use uncore_systems::metric_recorder::SendMetric;
 use uncore_systems::utils::{MeanValue, PrintingTimer};
+use undifficulty::CurrentDifficulty;
 use ungear::gear_stuff::GearStuff;
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+use unspatial::{BoardPosition, Direction, Position};
+use untags::PlayerTag;
 
 use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
@@ -88,12 +85,13 @@ fn ghost_movement(
     mut q: Query<
         (&mut GhostSprite, &mut Position, Entity),
         (
-            Without<PlayerSprite>,
+            Without<PlayerTag>,
             Without<GhostInfluence>,
             Without<FadeOut>,
         ),
     >,
-    qp: Query<(&Position, &PlayerSprite, Option<&Hiding>)>,
+    qp: Query<&Position, With<PlayerTag>>,
+    player_state: Res<PlayerState>,
     roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardData>,
@@ -197,20 +195,22 @@ fn ghost_movement(
                     .random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt().max(0.000001) * 10.0)
                     > 10.0
             {
-                let player_pos_l: Vec<(&Position, Option<&Hiding>)> = qp
-                    .iter()
-                    .filter(|(_, p, _)| p.health > 0.0)
-                    .map(|(pos, _, h)| (pos, h))
-                    .collect();
+                let player_pos_l: Vec<(&Position, bool)> = if player_state.health > 0.0 {
+                    qp.iter()
+                        .map(|pos| (pos, player_state.hiding_spot.is_some()))
+                        .collect()
+                } else {
+                    Vec::new()
+                };
                 if !player_pos_l.is_empty() {
                     let idx = rng.random_range(0..player_pos_l.len());
-                    let (ppos, h) = player_pos_l[idx];
-                    let search_radius = if h.is_some() { 2.0 } else { 1.0 };
+                    let (ppos, hiding) = player_pos_l[idx];
+                    let search_radius = if hiding { 2.0 } else { 1.0 };
                     let mut old_target = ghost.target_point.unwrap_or(*pos);
                     old_target.x += rng.random_range(-search_radius..search_radius);
                     old_target.y += rng.random_range(-search_radius..search_radius);
                     old_target.z += rng.random_range(-search_radius / 2.0..search_radius / 2.0); // Add small Z randomization
-                    let ppos = if h.is_some() || ghost.calm_time_secs > 5.0 {
+                    let ppos = if hiding || ghost.calm_time_secs > 5.0 {
                         old_target
                     } else {
                         *ppos
@@ -397,7 +397,7 @@ fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
-    mut qp: Query<(&mut PlayerSprite, &Position)>,
+    mut player_state: ResMut<PlayerState>,
     mut gs: GearStuff,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
@@ -424,15 +424,21 @@ fn ghost_enrage(
         );
 
         // 3. Calculate minimum player distance for this ghost
-        let min_player_dist = calculate_min_player_distance(ghost_position, &qp);
+        let min_player_dist = calculate_min_player_distance(ghost_position, &player_state);
 
         // 4. Apply distance-based effects
         apply_distance_based_effects(&mut ghost, min_player_dist, dt);
 
         // 5. Handle hunting phase
         if ghost.hunt_target {
-            let hunt_result =
-                handle_hunting_phase(&mut ghost, ghost_position, &mut qp, &time, &difficulty, dt);
+            let hunt_result = handle_hunting_phase(
+                &mut ghost,
+                ghost_position,
+                &mut player_state,
+                &time,
+                &difficulty,
+                dt,
+            );
 
             if hunt_result.should_roar {
                 let roar_decision = RoarDecision {
@@ -454,7 +460,7 @@ fn ghost_enrage(
         let rage_result = calculate_rage_update(
             &mut ghost,
             ghost_position,
-            &qp,
+            &player_state,
             dynamics,
             &mut avg_angry,
             &difficulty,
@@ -840,17 +846,8 @@ fn handle_salty_trace_spawning_simple(
 }
 
 /// Calculate minimum player distance to ghost
-fn calculate_min_player_distance(
-    ghost_position: &Position,
-    players: &Query<(&mut PlayerSprite, &Position)>,
-) -> f32 {
-    players
-        .iter()
-        .map(|(_, ppos)| OrderedFloat(calculate_weighted_distance(ghost_position, ppos)))
-        .min()
-        .unwrap_or(OrderedFloat(1000.0))
-        .into_inner()
-        .clamp(1.0, 1000.0)
+fn calculate_min_player_distance(ghost_position: &Position, player_state: &PlayerState) -> f32 {
+    calculate_weighted_distance(ghost_position, &player_state.position).clamp(1.0, 1000.0)
 }
 
 /// Apply distance-based effects on ghost behavior
@@ -874,7 +871,7 @@ struct HuntingResult {
 fn handle_hunting_phase(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    players: &mut Query<(&mut PlayerSprite, &Position)>,
+    player_state: &mut PlayerState,
     time: &Res<Time>,
     difficulty: &Res<CurrentDifficulty>,
     dt: f32,
@@ -887,11 +884,10 @@ fn handle_hunting_phase(
     let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
 
     // Apply player damage during hunt
-    for (mut player, ppos) in players.iter_mut() {
-        let dist2 = calculate_weighted_distance_squared(ghost_position, ppos) + 2.0;
-        let dmg = dist2.recip() * difficulty.0.health_drain_rate;
-        player.health -= dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
-    }
+    // For now, assume single player, damage based on distance to ghost
+    let dist2 = calculate_weighted_distance_squared(ghost_position, &player_state.position) + 2.0;
+    let dmg = dist2.recip() * difficulty.0.health_drain_rate;
+    player_state.health -= dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
 
     // Determine roar during hunting
     let roar_type = if ghost.hunting > 4.0 {
@@ -979,7 +975,7 @@ fn handle_warning_phases(
 fn calculate_rage_update(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    players: &Query<(&mut PlayerSprite, &Position)>,
+    player_state: &PlayerState,
     dynamics: &GhostBehaviorDynamics,
     avg_angry: &mut MeanValue,
     difficulty: &Res<CurrentDifficulty>,
@@ -991,27 +987,25 @@ fn calculate_rage_update(
     let mut player_in_room = false;
     let mut total_inv_sanity = 0.0;
 
-    for (player, ppos) in players.iter() {
-        let sanity = player.sanity();
-        let inv_sanity = (120.0 - sanity) / 100.0;
+    let sanity = player_state.sanity;
+    let inv_sanity = (120.0 - sanity) / 100.0;
 
-        let dist2 = calculate_weighted_distance_squared(ghost_position, ppos)
-            / difficulty.0.hunt_provocation_radius
-            * (0.01 + sanity)
-            + 0.1
-            + sanity / 100.0;
+    let dist2 = calculate_weighted_distance_squared(ghost_position, &player_state.position)
+        / difficulty.0.hunt_provocation_radius
+        * (0.01 + sanity)
+        + 0.1
+        + sanity / 100.0;
 
-        let angry2 = dist2.recip() * 1000000.0 / sanity
-            * player.mean_sound
-            * (player.health / 100.0).clamp(0.0, 1.0);
+    let angry2 = dist2.recip() * 1000000.0 / sanity
+        * player_state.mean_sound
+        * (player_state.health / 100.0).clamp(0.0, 1.0);
 
-        total_angry2 += angry2 * inv_sanity + player.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+    total_angry2 += angry2 * inv_sanity + player_state.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
 
-        let player_board_position = ppos.to_board_position();
-        if roomdb.room_tiles.contains_key(&player_board_position) {
-            player_in_room = true;
-            total_inv_sanity += inv_sanity;
-        }
+    let player_board_position = player_state.position.to_board_position();
+    if roomdb.room_tiles.contains_key(&player_board_position) {
+        player_in_room = true;
+        total_inv_sanity += inv_sanity;
     }
 
     let angry = total_angry2.sqrt();

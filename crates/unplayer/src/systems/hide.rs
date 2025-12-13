@@ -2,13 +2,13 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use uncore_board::behavior::Behavior;
-use uncore_components::components::animation::AnimationTimer;
 use uncore_board::components::mapcolor::MapColor;
-use uncore_board::components::position::Position;
-use uncore_components::components::player::Hiding;
-use uncore_components::components::player_sprite::PlayerSprite;
+use uncore_components::components::animation::AnimationTimer;
+use crate::components::player::Hiding;
+use uncore_components::components::player_shared::PlayerSprite;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
+use unspatial::Position;
 
 /// Allows the player to hide in a designated hiding spot.
 ///
