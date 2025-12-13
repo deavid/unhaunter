@@ -15,5 +15,4 @@ uncore-events = { path = "../uncore-events" }
 bevy = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true }
-fastapprox = { workspace = true }
 unsettings = { path = "../unsettings" }

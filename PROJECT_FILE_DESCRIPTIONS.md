@@ -41,57 +41,89 @@ The project is modularized into many crates to separate concerns and improve com
 Low-level foundation shared across the project.
 
 - **`uncore-foundation`**: Base types, colors, platform utils. Zero game logic.
+  - `GhostType` (Enum of ghost types), `GhostPersonality`, `Evidence`, `Difficulty`.
 - **`uncore-types`**: Common data structures (enums, structs) used globally.
+  - `GameAssets` (Resource holding handles to all loaded assets), `GearKind`, `EvidenceStatus`.
 - **`uncore-components`**: Shared ECS components.
+  - `BoardPosition` (Grid position), `Direction`, `GhostSprite`, `PlayerSprite`.
 - **`uncore-events`**: Shared ECS events.
+  - `GhostInteractionEvent`, `LevelLoadedEvent`, `RoomChangedEvent`.
 - **`uncore-resources`**: Shared ECS resources.
+  - `GameState` (Tracks current state: Menu, Game, etc), `BoardData` (Grid/collision data), `RoomDB`.
 - **`uncore-assets`**: Asset loading infrastructure and handles.
+  - `AssetIdx` (Asset lookup), `TmxMap` (Tiled map asset).
 - **`uncore-board`**: Spatial system, grid/board logic, collision, `Behavior` component.
+  - `Behavior` (Entity behavior on board), `Light`, `Door`, `Stairs`.
 - **`uncore-systems`**: Common ECS systems.
+  - `UnhaunterCorePlugin`.
 
 ### Game Logic & Progression
 
 High-level game flow and state management.
 
 - **`ungame`**: Main game loop, scene management, high-level coordination.
+  - `UnhaunterGamePlugin`.
 - **`uncampaign`**: Campaign progression, mission unlocking, persistent state.
+  - `UnhaunterCampaignPlugin`.
 - **`undifficulty`**: Difficulty levels and configuration.
+  - `DifficultyStruct` (Configuration for a difficulty level).
 - **`unprofile`**: User profile management, save/load logic.
+  - `PlayerProfileData` (Persistent player data), `StatisticsData`.
 - **`unsummary`**: End-of-mission summary screen and logic.
+  - `UnhaunterSummaryPlugin`.
 - **`unmapload`**: Map loading orchestration and setup.
+  - `UnhaunterMapLoadPlugin`.
 
 ### Entities & Gameplay Systems
 
 Specific gameplay mechanics and entity behaviors.
 
 - **`unplayer`**: Player controller, movement, interaction, stats (sanity/health).
+  - `UnhaunterPlayerPlugin`.
 - **`unghost`**: Ghost AI, behavior, hunting logic, evidence generation.
+  - `UnhaunterGhostPlugin`.
 - **`unnpc`**: NPC interaction, dialog systems.
+  - `UnhaunterNPCPlugin`.
 - **`ungear`**: Inventory system, equipment slots, deployment logic.
+  - `Gear` (Component for gear items), `PlayerGear` (Inventory), `DeployedGear`.
 - **`ungearitems`**: **[GEAR LOGIC]** Implementation of specific items (EMF, Flashlight, etc.).
+  - `Flashlight`, `EMFMeter`, `Thermometer`, `SpiritBox`, `UVTorch`.
 - **`unfog`**: Miasma (fog) rendering and simulation.
+  - `MiasmaConfig`.
 - **`unlight`**: Lighting engine, visibility calculation, field of view.
+  - `UnhaunterLightPlugin`.
 - **`unwalkie`**: Walkie-talkie gameplay integration (hints, audio).
+  - `UnhaunterWalkiePlugin`.
 - **`unwalkiecore`**: Core logic for walkie-talkie state and responses.
+  - `WalkieEvent`.
 - **`unwalkie_types`**: Data types for the walkie-talkie system.
+  - `VoiceLineData`.
 
 ### UI & Interface
 
 User interface screens and menus.
 
 - **`unmenu`**: Main menu screen.
+  - `UnhaunterMenuPlugin`.
 - **`unmenusettings`**: Settings menu implementation.
+  - `SettingsState`.
 - **`unmaphub`**: Map selection hub.
+  - `UnhaunterMapHubPlugin`.
 - **`untruck`**: In-game mission hub (Truck UI), CCTV, journal, loadout.
+  - `TruckUI`, `TruckGear`.
 - **`uncoremenu`**: Shared UI components, templates, and styles.
+  - `MenuRoot`, `MenuItem`, `MenuBackground`.
 
 ### Infrastructure & Tools
 
 Utilities and external tools.
 
 - **`unstd`**: Shared utilities (rendering helpers, manual UI, materials).
+  - `UnhaunterRootPlugin`, `UnhaunterBoardPlugin`.
 - **`untmxmap`**: Tiled map (`.tmx`) parsing and loading into Bevy.
+  - `UnhaunterTmxMapPlugin`.
 - **`unsettings`**: Persistent settings schema and serialization.
+  - `AudioSettings`, `VideoSettings`, `GameplaySettings`, `ControlKeys`.
 - **`crates/tools/`**:
   - `ghost_radio`: CLI tool for testing ghost communication/phrasebooks.
   - `ghost_list`: Tool for managing/listing ghost definitions.

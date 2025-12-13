@@ -5622,7 +5622,6 @@ name = "uncore-components"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "fastapprox",
  "rand 0.9.2",
  "serde",
  "uncore-board",
