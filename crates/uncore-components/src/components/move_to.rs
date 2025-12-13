@@ -1,5 +1,5 @@
-use super::board::position::Position;
 use bevy::prelude::*;
+use uncore_board::components::position::Position;
 
 /// Component that marks an entity as wanting to move to a target position.
 /// When this component is present on the player entity, the click-to-move pathing system

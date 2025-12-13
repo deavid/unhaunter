@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use super::boardposition::BoardPosition;
+use uncore_board::components::boardposition::BoardPosition;
 
 pub const CHUNK_SIZE_X: usize = 8;
 pub const CHUNK_SIZE_Y: usize = 8;

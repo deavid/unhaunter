@@ -1,15 +1,8 @@
-pub mod boardposition;
 pub mod chunk;
-pub mod direction;
 pub mod mapcolor;
-pub mod position;
 
-pub const EPSILON: f32 = 0.0001;
-
-// old perspective (9x20cm) const SUBTL: f32 = 9.0; new perspective (3x20cm)
-pub const SUBTL: f32 = 3.0;
-
-// new perspective (3x20cm) - reduced const SUBTL: f32 = 2.5;
-pub const PERSPECTIVE_X: [f32; 3] = [4.0 * SUBTL, -2.0 * SUBTL, 0.0001];
-pub const PERSPECTIVE_Y: [f32; 3] = [4.0 * SUBTL, 2.0 * SUBTL, -0.0001];
-pub const PERSPECTIVE_Z: [f32; 3] = [0.0, 4.0 * 11.0, 0.01];
+// Re-export spatial types from uncore-board (single source of truth)
+pub use uncore_board::components::boardposition::BoardPosition;
+pub use uncore_board::components::direction::Direction;
+pub use uncore_board::components::position::Position;
+pub use uncore_board::components::{EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, SUBTL};

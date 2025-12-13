@@ -1,9 +1,9 @@
-use uncore_components::components::board::boardposition::MapEntityFieldBPos;
-use uncore_components::components::board::position::Position;
+use bevy::prelude::*;
+use uncore_board::components::boardposition::MapEntityFieldBPos;
+use uncore_board::components::position::Position;
 use uncore_components::components::game_config::GameConfig;
 use uncore_components::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
-use bevy::prelude::*;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///
