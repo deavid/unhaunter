@@ -1,16 +1,21 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uncore_board::behavior::{
+    Behavior,
+    component::{Interactive, Stairs},
+};
 use uncore_board::components::position::Position;
 use uncore_board::components::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
-use uncore_board::behavior::{Behavior, component::{Interactive, Stairs}};
 use uncore_components::components::game::{GCameraArena, GameSprite};
 use uncore_components::components::player_sprite::PlayerSprite;
-use uncore_components::components::waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType};
+use uncore_components::components::waypoint::{
+    Waypoint, WaypointOwner, WaypointQueue, WaypointType,
+};
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::resources::player_input::PlayerInput;
 use uncore_resources::resources::visibility_data::VisibilityData;
+use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 
@@ -294,31 +299,6 @@ fn create_interaction_waypoint(
         .insert(GameSprite)
         .insert(Waypoint {
             waypoint_type: WaypointType::Interact(interaction_target),
-            order: 0,
-        })
-        .insert(WaypointOwner(player_entity))
-        .id();
-
-    waypoint_queue.push(waypoint_entity);
-}
-
-/// Helper function to create a move-to waypoint
-pub fn create_move_waypoint(
-    commands: &mut Commands,
-    player_entity: Entity,
-    position: Position,
-    waypoint_queue: &mut WaypointQueue,
-) {
-    let waypoint_entity = commands
-        .spawn(Sprite {
-            color: Color::srgba(1.0, 0.0, 0.6, 0.8), // Red for move waypoints
-            custom_size: Some(Vec2::new(1.0, 1.0)),
-            ..default()
-        })
-        .insert(position)
-        .insert(GameSprite)
-        .insert(Waypoint {
-            waypoint_type: WaypointType::MoveTo,
             order: 0,
         })
         .insert(WaypointOwner(player_entity))

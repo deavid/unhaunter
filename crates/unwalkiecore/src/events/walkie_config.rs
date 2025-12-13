@@ -21,9 +21,6 @@ impl WalkieEventPriority {
             WalkieEventPriority::Urgent => 0.7,
         }
     }
-    pub fn is_urgent(&self) -> bool {
-        matches!(self, WalkieEventPriority::Urgent)
-    }
 }
 
 impl WalkieRepeatBehavior {

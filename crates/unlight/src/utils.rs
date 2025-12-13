@@ -1,14 +1,13 @@
 use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use uncore_board::behavior::{Behavior, TileState};
+use uncore_board::behavior::Behavior;
 use uncore_board::components::boardposition::BoardPosition;
 use uncore_board::components::position::Position;
-use uncore_resources::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
 use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
+use uncore_resources::resources::board_data::BoardData;
 
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {
@@ -18,51 +17,6 @@ pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bo
         && pos.0 < map_size.0 as i64
         && pos.1 < map_size.1 as i64
         && pos.2 < map_size.2 as i64
-}
-
-/// Helper function to check if there are active light sources nearby
-pub fn has_active_light_nearby(
-    bf: &BoardData,
-    active_source_ids: &HashSet<u32>,
-    i: usize,
-    j: usize,
-    k: usize,
-) -> bool {
-    // Check immediate neighbors plus the current position
-    for dx in -1..=1 {
-        for dy in -1..=1 {
-            for dz in -1..=1 {
-                let nx = i as i64 + dx;
-                let ny = j as i64 + dy;
-                let nz = k as i64 + dz;
-
-                // Skip if out of bounds
-                if !is_in_bounds((nx, ny, nz), bf.map_size) {
-                    continue;
-                }
-
-                let pos = (nx as usize, ny as usize, nz as usize);
-                let prebaked_data = &bf.prebaked_lighting[pos];
-
-                if let Some(source_id) = prebaked_data.light_info.source_id
-                    && active_source_ids.contains(&source_id)
-                {
-                    return true;
-                }
-            }
-        }
-    }
-
-    false
-}
-
-/// Determines if a light is currently active based on its position and behavior
-pub fn is_light_active(pos: &BoardPosition, behaviors: &HashMap<BoardPosition, &Behavior>) -> bool {
-    if let Some(behavior) = behaviors.get(pos) {
-        behavior.p.light.light_emission_enabled
-    } else {
-        false
-    }
 }
 
 /// Blend two colors based on their intensity
@@ -170,27 +124,6 @@ pub fn update_exposure_and_stats(bf: &mut BoardData, lfs: &Array3<LightFieldData
     bf.light_field = lfs.clone();
 
     // info!("Final exposure_lux set to: {}", bf.exposure_lux);
-}
-
-/// Collects information about door states from entity behaviors
-pub fn collect_door_states(
-    bf: &BoardData,
-    qt: &Query<(&Position, &Behavior)>,
-) -> HashMap<(usize, usize, usize), bool> {
-    let mut door_states = HashMap::new();
-    for entity in &bf.prebaked_metadata.doors {
-        if let Ok((pos, behavior)) = qt.get(*entity) {
-            let board_pos = pos.to_board_position();
-            let idx = board_pos.ndidx();
-            let is_open = behavior.state() == TileState::Open;
-
-            // Store the door's open state (true if open, false if closed)
-            door_states.insert(idx, is_open);
-        }
-    }
-
-    // info!("Collected {} door states", door_states.len());
-    door_states
 }
 
 /// Finds wave edge tiles for continuing light propagation
@@ -527,61 +460,6 @@ pub fn propagate_from_wave_edges(
     // info!(
     //     "Light propagation: {} total steps, {} from stairs",
     //     propagation_count, stair_propagation_count
-    // );
-    propagation_count
-}
-
-/// Propagates light through stairs between floors
-pub fn propagate_through_stairs(bf: &BoardData, lfs: &mut Array3<LightFieldData>) -> usize {
-    let mut propagation_count = 0;
-    const STAIR_PROPAGATION: f32 = 0.99;
-
-    // Process all stair tiles
-    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
-        // Only process stairs
-        if collision.stair_offset == 0 {
-            continue;
-        }
-
-        let pos = (i, j, k);
-        let stair_lux = lfs[pos].lux;
-        let stair_color = lfs[pos].color;
-
-        // Determine target position (up or down based on stair_offset)
-        let target_z = k as i64 + collision.stair_offset as i64;
-        if target_z < 0 || target_z >= bf.map_size.2 as i64 {
-            continue; // Out of bounds
-        }
-
-        let target_pos = (i, j, target_z as usize);
-
-        // Only update if we're bringing more light to the target
-        if lfs[target_pos].lux < stair_lux * STAIR_PROPAGATION {
-            // Update the target's light
-            let old_lux = lfs[target_pos].lux;
-
-            if old_lux > 0.0 {
-                // Blend with existing light
-                lfs[target_pos].color = blend_colors(
-                    lfs[target_pos].color,
-                    old_lux,
-                    stair_color,
-                    stair_lux * STAIR_PROPAGATION,
-                );
-            } else {
-                // No existing light
-                lfs[target_pos].color = stair_color;
-            }
-
-            // Set new light value
-            lfs[target_pos].lux = stair_lux * STAIR_PROPAGATION;
-            propagation_count += 1;
-        }
-    }
-
-    // info!(
-    //     "Stair light propagation: {} propagations",
-    //     propagation_count
     // );
     propagation_count
 }

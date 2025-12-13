@@ -1,6 +1,6 @@
+use bevy::prelude::*;
 use uncore_board::components::direction::Direction;
 use uncore_board::components::position::Position;
-use bevy::prelude::*;
 use unsettings::controls::ControlKeys; // Added import
 
 /// Represents a player character in the game world.
@@ -37,14 +37,6 @@ impl PlayerSprite {
             health: 100.0,
             spawn_position,
             movement: Direction::zero(),
-        }
-    }
-
-    /// Returns a modified version with the requested sanity
-    pub fn with_sanity(self, sanity: f32) -> Self {
-        Self {
-            crazyness: Self::required_crazyness(sanity),
-            ..self
         }
     }
 

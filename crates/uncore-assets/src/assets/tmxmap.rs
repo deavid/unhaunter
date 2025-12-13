@@ -193,31 +193,6 @@ impl TmxMap {
         )
     }
 
-    /// Parse an i64 value from a string property.
-    /// Returns the default value if the string is empty or cannot be parsed.
-    pub fn parse_i64_property(
-        &self,
-        val_str: Option<&str>,
-        property_name: &str,
-        default_value: i64,
-    ) -> i64 {
-        let Some(val_str) = val_str else {
-            return default_value;
-        };
-
-        if val_str.is_empty() {
-            return default_value;
-        }
-
-        val_str.parse::<i64>().unwrap_or_else(|e| {
-            warn!(
-                "TMX property '{}' ('{}') parse error: {:?}. Defaulting to {}.",
-                property_name, val_str, e, default_value
-            );
-            default_value
-        })
-    }
-
     /// Get the mission reward base value, parsed to i64
     pub fn mission_reward_base(&self) -> i64 {
         self.props.mission_reward_base

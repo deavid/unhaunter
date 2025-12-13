@@ -21,6 +21,7 @@
 //! `Interactive`, `Light`, etc., based on its configuration.
 pub mod component;
 
+use crate::types::tiledmap::map::MapLayer;
 use anyhow::Context;
 use bevy::picking::Pickable;
 use bevy::{
@@ -31,9 +32,6 @@ use bevy_platform::collections::HashMap;
 use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
-
-use crate::types::light::LightData;
-use crate::types::tiledmap::map::MapLayer;
 
 /// The `Behavior` component defines the behavior of an object in the game world.
 ///
@@ -115,29 +113,6 @@ impl Behavior {
         // FIXME: Precompute this value and store it. This is slow and it's computed every frame by the temperature system.
         let heat_coeff = faster::exp(self.p.light.heat_coef as f32);
         self.p.light.emmisivity_lumens() / 10000.0 * heat_coeff
-    }
-
-    /// Resistance to change temperature (how many Joules per Kelvin)
-    pub fn _temp_heat_capacity(&self) -> f32 {
-        let f1 = match self.p.light.opaque {
-            true => 10000.0,
-            false => 10.0,
-        };
-        let f2 = match self.p.movement.walkable {
-            true => 100.0,
-            false => 0.0,
-        };
-        f1 + f2
-    }
-
-    /// Heat Conductivity, Watts per Meter*Kelvin (how many watts are transferred at a
-    /// meter on a 1ºC difference) (f32, f32): (W/mK, weight), weight is used for
-    /// averaging purposes.
-    pub fn _temp_heat_conductivity(&self) -> (f32, f32) {
-        match self.p.light.opaque {
-            true => (0.001, 1000.0),
-            false => (10.0, 0.1),
-        }
     }
 
     pub fn is_van_entry(&self) -> bool {
@@ -255,20 +230,8 @@ impl Light {
         }
     }
 
-    pub fn transmissivity_factor(&self) -> f32 {
-        match self.opaque {
-            true => 0.00,
-            false => 1.01,
-        }
-    }
-
     pub fn color(&self) -> (f32, f32, f32) {
         (1.0, 1.0, 1.0)
-    }
-
-    /// This represents if a light on the map is emitting visible light or other types.
-    pub fn additional_data(&self) -> LightData {
-        LightData::UNIT_VISIBLE
     }
 }
 
@@ -914,7 +877,7 @@ impl BehaviorProperties {
     /// Returns the integer value of a property with the given key.
     ///
     /// Returns `0` if the property is not found or is not an integer value.
-    pub fn get_int(&self, key: &str) -> i32 {
+    pub(crate) fn _get_int(&self, key: &str) -> i32 {
         self.properties
             .get(key)
             .map(|x| match x {

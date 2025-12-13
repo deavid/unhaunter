@@ -7,7 +7,7 @@ use uncore_resources::resources::cli_options::CliOptions;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]
-pub fn wasm_load() {
+pub(crate) fn wasm_load() {
     app_run(CliOptions::default()); // Use default for WASM
 }
 

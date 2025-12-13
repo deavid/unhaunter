@@ -1,4 +1,4 @@
-use ndarray::{Array2, ArrayView2, s};
+use ndarray::Array2;
 use std::f32::consts::PI;
 use std::ops::Range;
 
@@ -157,24 +157,6 @@ impl CachedBoardPos {
         }
     }
 
-    /// Retrieves the cached distance between two board positions
-    ///
-    /// # Arguments
-    ///
-    /// * `s` - The source position
-    /// * `d` - The destination position
-    ///
-    /// # Returns
-    ///
-    /// The pre-computed Euclidean distance between the positions
-    pub fn bpos_dist(&self, s: &BoardPosition, d: &BoardPosition) -> f32 {
-        let x = (d.x - s.x + Self::CENTER) as usize;
-        let y = (d.y - s.y + Self::CENTER) as usize;
-
-        // self.dist[x][y]
-        unsafe { *self.dist.get_unchecked(x).get_unchecked(y) }
-    }
-
     /// Retrieves the cached angle index between two board positions
     ///
     /// # Arguments
@@ -191,28 +173,6 @@ impl CachedBoardPos {
 
         // self.angle[x][y]
         unsafe { *self.angle.get_unchecked(x).get_unchecked(y) }
-    }
-
-    /// Retrieves the cached angle range between two board positions
-    ///
-    /// The angle range represents the minimum and maximum angular deviations
-    /// when considering the cell as a square rather than a point. This is used
-    /// for accurate shadow casting.
-    ///
-    /// # Arguments
-    ///
-    /// * `s` - The source position
-    /// * `d` - The destination position
-    ///
-    /// # Returns
-    ///
-    /// A tuple of (min_angle_offset, max_angle_offset) representing the angle range
-    pub fn bpos_angle_range(&self, s: &BoardPosition, d: &BoardPosition) -> (i64, i64) {
-        let x = (d.x - s.x + Self::CENTER) as usize;
-        let y = (d.y - s.y + Self::CENTER) as usize;
-
-        // self.angle_range[x][y]
-        unsafe { *self.angle_range.get_unchecked(x).get_unchecked(y) }
     }
 
     /// Given a root board position and a board region (in board coordinates),
@@ -233,39 +193,6 @@ impl CachedBoardPos {
             start_x as usize..end_x as usize,
             start_y as usize..end_y as usize,
         )
-    }
-
-    /// Returns a view into the distance cache for a given relative region.
-    pub fn dist_slice<'a>(
-        &'a self,
-        root: &BoardPosition,
-        board_x: Range<usize>,
-        board_y: Range<usize>,
-    ) -> ArrayView2<'a, f32> {
-        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
-        self.dist_array.slice(s![rx, ry])
-    }
-
-    /// Returns a view into the angle cache for a given relative region.
-    pub fn angle_slice<'a>(
-        &'a self,
-        root: &BoardPosition,
-        board_x: Range<usize>,
-        board_y: Range<usize>,
-    ) -> ArrayView2<'a, usize> {
-        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
-        self.angle_array.slice(s![rx, ry])
-    }
-
-    /// Returns a view into the angle_range cache for a given relative region.
-    pub fn angle_range_slice<'a>(
-        &'a self,
-        root: &BoardPosition,
-        board_x: Range<usize>,
-        board_y: Range<usize>,
-    ) -> ArrayView2<'a, (i64, i64)> {
-        let (rx, ry) = self.relative_ranges(root, board_x, board_y);
-        self.angle_range_array.slice(s![rx, ry])
     }
 }
 impl Default for CachedBoardPos {

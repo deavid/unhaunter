@@ -146,11 +146,6 @@ impl TruckUIButton {
         color.with_alpha(color.alpha() * alpha_disabled)
     }
 
-    /// Update the frame counter for blinking animation
-    pub fn update_frame_counter(&mut self) {
-        self.frame_counter = self.frame_counter.wrapping_add(1);
-    }
-
     /// Set blinking hint state for evidence buttons
     pub fn set_blinking_hint(&mut self, active: bool) {
         self.blinking_hint_active = active;

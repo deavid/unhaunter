@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use uncore_assets::assets::index::AssetIdx;
 use uncore_assets::assets::tmxmap::TmxMap;
 use uncore_assets::assets::tsxsheet::TsxSheet;
-use uncore_types::types::difficulty::Difficulty;
-use uncore_resources::resources::cli_options::CliOptions;
-use uncore_types::types::mission_data::MissionData;
-use uncore_assets::types::root::map::Sheet;
-use uncore_resources::resources::maps::Maps;
 use uncore_assets::types::root::map::Map;
+use uncore_assets::types::root::map::Sheet;
+use uncore_resources::resources::cli_options::CliOptions;
+use uncore_resources::resources::maps::Maps;
+use uncore_types::types::difficulty::Difficulty;
+use uncore_types::types::mission_data::MissionData;
 
 pub struct PreLoad<A: Asset> {
     path: String,
@@ -22,34 +22,6 @@ pub struct MapAssetIndexHandle {
     idxprocessed: bool,
     maps: Vec<PreLoad<TmxMap>>,
     sheets: Vec<PreLoad<TsxSheet>>,
-}
-
-impl MapAssetIndexHandle {
-    /// Returns true if all maps and sheets have been processed
-    pub fn all_processed(&self) -> bool {
-        if !self.idxprocessed {
-            warn!(
-                "Index not processed: maps:{:?} processed:{}",
-                self.maps.len(),
-                self.idxprocessed
-            );
-            return false;
-        }
-
-        // If there are any unprocessed maps, return false
-        if let Some(map) = self.maps.iter().find(|map| !map.processed) {
-            warn!("Map {} is not processed", map.path);
-            return false;
-        }
-
-        // Check if all sheets are processed
-        if let Some(sheet) = self.sheets.iter().find(|sheet| !sheet.processed) {
-            warn!("Sheet {} is not processed", sheet.path);
-            return false;
-        }
-
-        true
-    }
 }
 
 pub(crate) fn app_setup(app: &mut App) {
