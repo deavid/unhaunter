@@ -20,6 +20,4 @@ unwalkiecore = { path = "../unwalkiecore" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }
-serde = { workspace = true }
-anyhow = { workspace = true }
 enum-iterator = { workspace = true }

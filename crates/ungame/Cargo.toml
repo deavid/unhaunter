@@ -14,25 +14,17 @@ authors.workspace = true
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
-uncore-assets = { path = "../uncore-assets" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
-uncore-systems = { path = "../uncore-systems" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
-ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unlight = { path = "../unlight" }
-unmapload = { path = "../unmapload" }
 unprofile = { path = "../unprofile" }
 
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-rand = { workspace = true }
-tiled = { workspace = true }
-ordered-float = { workspace = true }
 bevy-persistent = { workspace = true }
-ndarray = { workspace = true }

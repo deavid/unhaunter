@@ -1,120 +1,98 @@
-**Project Index for AI Assistants**
+# Project Index for AI Assistants
 
 - **Purpose:** Outline file/directory roles in the `unhaunter` project. Aids code navigation and modification
   understanding.
 - **"Feature X Relevance":** Indicates files likely touched when adding features related to their described purpose.
 
-**General Project Files**
+## General Project Files
 
-- `.cargo/config.toml`: Cargo target-specific build flags (CPU features, linker, WASM runner). Modify for target/build
-  opt.
-- `CHANGELOG.md`: Version history (features, fixes). Update after _any_ change.
-- `Cargo.toml`: Main Rust manifest (metadata, dependencies, workspace, build profiles). Modify for deps, version, build
-  cfg, crates.
-- `NOTES.md`: Dev scratchpad (ideas, TODOs). Check for context/plans.
-- `README.md`: Project overview, gameplay, build instructions, links. Update for major features/build changes.
-- `build.rs`: Build script generating `*.assetidx` files (asset lists for WASM). Modify for asset structure/indexing
-  changes.
-- `clippy.toml`: Rust linter (Clippy) config. Modify for lint rules.
-- `index.html`: WASM entry HTML (loads WASM module). Modify for WASM load process, HTML structure, JS libs.
-- `pkg/.gitignore`: Git ignore rules for WASM build output (`pkg/`). Rarely modified.
-- `catall.sh`: Helper script to list all project files. (Dev utility).
-- `unhaunter/src/bin/unhaunter.rs`: Native build entry point. Calls `app_run()`. Rarely modified.
-- `unhaunter/src/lib.rs`: Main lib (`app_run()`), WASM entry (`wasm_load`). Modify for WASM init changes.
-- `unhaunter/src/app.rs`: **[CORE SETUP]** Main Bevy App setup (window, resources, plugins, systems). Modify for adding
-  plugins, global resources, core app config.
-- `unhaunter/src/report_timer.rs`: Simple performance metric console reporter. Modify reporting logic/format.
+- `.cargo/config.toml`: Cargo target-specific build flags.
+- `Cargo.toml`: Main Rust workspace manifest.
+- `Justfile`: Command runner recipes (build, run, test).
+- `CHANGELOG.md`: Version history. Update after changes.
+- `NOTES.md`: Dev scratchpad.
+- `README.md`: Project overview and instructions.
+- `build.rs`: Generates `*.assetidx` files for WASM.
+- `clippy.toml`: Rust linter config.
+- `index.html`: WASM entry point.
+- `catall.sh`: Helper to list project files.
+- `unhaunter/src/bin/unhaunter.rs`: Native executable entry point.
+- `unhaunter/src/lib.rs`: Main library entry point (WASM & Native).
+- `unhaunter/src/app.rs`: **[CORE SETUP]** Main Bevy App assembly (plugins, resources).
 
-**Data and Assets (`assets/`)**
+## Data and Assets (`assets/`)
 
-- **Purpose:** Contains all game assets (images, fonts, maps, audio, shaders, data files). Add/modify assets for
-  features.
-- **Sub-dirs:**
-  - `fonts/`: `.ttf` font files, organized by family.
-  - `img/`: `.png`, `.aseprite`, `.xcf` images (sprites, UI, tiles). Inc. `base-tiles/` (structure, decor, furniture),
-    `src/` (source files).
-  - `maps/`: `.tmx`, `.tsx` map/tileset files, `.ron` metadata, Tiled project.
-  - `music/`: `.ogg` music files.
-  - `sounds/`: `.ogg` sound effect files.
-  - `manual/`: Images/markdown for in-game manual, by chapter.
-  - `phrasebooks/`: `.ron` files for player/ghost communication system (tagged phrases).
-  - `sample_ghosts/`: `.ron` ghost type definitions.
-  - `shaders/`: `.wgsl` custom shader files.
-  - `index/`: **(Generated)** `.assetidx` asset list files (used by `build.rs`).
-- `assets/phrasebooks/*.ron`: Player/ghost phrase definitions (RON - tagged). Modify for communication content/logic.
-- `assets/sample_ghosts/*.ron`: Ghost type definitions (RON - name, type, mood). Modify for new/changed ghost types.
-- `tools/ghost_radio/`: **[DEV TOOL]** Console tool for testing ghost communication system offline (uses phrasebooks).
-  `console_ui.rs`, `data.rs`, `ghost_ai.rs`, `main.rs`.
+- `fonts/`: TTF fonts.
+- `img/`: Sprites, UI, tiles (PNG, Aseprite).
+- `maps/`: Tiled maps (`.tmx`, `.tsx`) and metadata.
+- `music/` & `sounds/`: Audio files (`.ogg`).
+- `manual/`: In-game manual content.
+- `phrasebooks/`: Ghost communication data (`.ron`).
+- `sample_ghosts/`: Ghost definitions (`.ron`).
+- `shaders/`: Custom WGSL shaders.
+- `index/`: Generated asset indices.
 
-**Crate Structure (Workspace)**
+## Crate Structure (Workspace)
 
-Modular design for code reuse and compilation speed. Crates listed below.
+The project is modularized into many crates to separate concerns and improve compile times.
 
-- **`uncore/`:** **[CORE ENGINE]** Shared core logic (components, resources, events, types, base systems, asset
-  loading). Low-level dependency.
-- **`unfog/`:** Miasma (fog) effect system.
-- **`ungame/`:** Higher-level game logic (in-game UI, level loading, object charge, pause).
-- **`ungear/`:** Player gear & inventory system (equip, deploy).
-- **`ungearitems/`:** Specific logic for _each_ gear item (implements `GearUsable` trait).
-- **`unghost/`:** Ghost entity logic (AI, behavior, movement, events, hunting).
-- **`unlight/`:** Lighting & visibility system.
-- **`unmaphub/`:** Map & difficulty selection UI screens.
-- **`unmenu/`:** Main menu UI & logic.
-- **`unmenusettings/`:** In-game settings menu UI & logic.
-- **`unnpc/`:** NPC dialog & interaction system.
-- **`unplayer/`:** Player-specific logic (movement, interaction, hiding, stats).
-- **`unsettings/`:** Persistent settings definitions & loading/saving structure.
-- **`unstd/`:** **[SHARED UTILS]** Shared utilities beyond `uncore` (board helpers, manual UI, materials, tiled utils).
-  Requires more deps than `uncore`.
-- **`untmxmap/`:** Tiled TMX/TSX map loading into Bevy.
-- **`untruck/`:** Truck UI implementation (loadout, journal, sensors, crafting).
-- **`unwalkie/`:** Walkie-talkie NPC hint system.
-- **`uncoremenu/`:** Reusable core UI components/systems for menus.
+### Core Architecture (`uncore-*`)
 
-**Key Crate Files (Highly Condensed)**
+Low-level foundation shared across the project.
 
-- **`uncore/`**:
-  - `assets/`: Custom Bevy asset loaders (TMX, TSX, assetidx). Modify for asset formats.
-  - `behavior/`: `Behavior` component (from Tiled props) defining object logic/state. Modify for new object behaviors.
-  - `components/`: Core Bevy components (board position, player, ghost, UI markers, etc.). Add/modify core data attached
-    to entities.
-  - `events/`: Custom Bevy events for system communication. Add/modify events for new interactions.
-  - `resources/`: Global Bevy resources (BoardData, RoomDB, Difficulty, Maps, etc.). Add/modify global game state.
-  - `systemparam/`: Custom `SystemParam`s for cleaner system function signatures.
-  - `traits/`: Shared traits like `GearUsable`. Define/modify shared interfaces.
-  - `types/`: Core data structures (Evidence, GearKind, GhostType, Position, LightData etc.). Add/modify game data
-    models.
-  - `utils/`: General utility functions (math, time, etc.).
-- **`unfog/`**: Miasma effect. `components.rs` (particle data), `resources.rs` (config, noise), `systems.rs` (spawning,
-  animation, simulation). Modify for miasma appearance/behavior.
-- **`ungame/`**: Higher-level gameplay. `level.rs` (level loading/spawning), `ui.rs`/`gear_ui.rs` (in-game UI setup),
-  `object_charge.rs` (ghost interaction system), `pause_ui.rs`. Modify for game flow, scene setup, core UI.
-- **`ungear/`**: Inventory/Gear core. `components/playergear.rs` (player inventory struct), `components/deployedgear.rs`
-  (deployed gear). `systems.rs` (equip/deploy/UI update logic). Modify for inventory mechanics.
-- **`ungearitems/`**: **[CORE GEAR LOGIC]** `components/*.rs`: _Individual logic for each gear item_ (Flashlight, EMF,
-  Salt, etc.). Implements `GearUsable`. Modify files here for specific gear behavior changes. `from_gearkind.rs`: Maps
-  `GearKind` enum to concrete types.
-- **`unghost/`**: Ghost logic. `ghost.rs` (movement, hunting, rage AI), `ghost_events.rs` (door slams, light flickers).
-  Modify for ghost behavior/abilities.
-- **`unlight/`**: Lighting/Visibility. `maplight.rs` (visibility calc, light application), `lighting.rs` (light field
-  rebuilding), `prebake.rs` (static light optimization). Modify for visual appearance, lighting effects, performance.
-- **`unmaphub/`**: Map/Difficulty selection UI. `map_selection.rs`, `difficulty_selection.rs`. Modify for menu
-  flow/appearance.
-- **`unmenu/`**: Main menu UI. `mainmenu.rs`. Modify for main menu options/layout.
-- **`unmenusettings/`**: Settings menu. `components.rs` (state/events), `menu_ui.rs` (generic UI setup), `menus.rs`
-  (setting definitions), `systems.rs` (input handling, saving). Modify for adding/changing settings options.
-- **`unnpc/`**: NPC Help/Dialog. `npchelp.rs`. Modify for NPC interactions/dialog content.
-- **`unplayer/`**: Player logic. `systems/keyboard.rs` (movement, camera), `systems/grabdrop.rs` (item interaction),
-  `systems/hide.rs` (hiding), `systems/sanityhealth.rs` (stats). Modify for player actions/controls.
-- **`unsettings/`**: Settings data structures (`audio.rs`, `game.rs`, etc.). Defines persistent settings schema. Modify
-  to add/change savable settings fields. `plugin.rs` handles loading/saving setup.
-- **`unstd/`**: Shared utilities. `board/` (SpriteDB caching, tile data), `manual/` (in-game manual UI/content),
-  `materials.rs` (custom shaders/materials), `systemparam/` (custom system params). Modify for shared tools, manual
-  content, rendering effects.
-- **`untmxmap/`**: Tiled map loading. `bevy.rs` (Bevy integration), `load.rs` (core Tiled parsing), `map_loader.rs`
-  (custom loader using Bevy assets). Modify for Tiled data handling changes.
-- **`untruck/`**: Truck UI. `ui.rs` (main layout, tabs), `journalui.rs` / `journal.rs` (evidence/ghost guess),
-  `loadoutui.rs` (gear selection), `sanity.rs` etc. (specific panels). Modify for truck screen features/layout.
-- **`unwalkie/`**: Walkie-talkie hint system. `walkie_play.rs`. Modify for hint logic/timing/content.
-- **`uncoremenu/`**: Reusable menu UI building blocks/systems (`templates.rs`, `systems.rs`). Modify for shared menu
-  component behavior.
+- **`uncore-foundation`**: Base types, colors, platform utils. Zero game logic.
+- **`uncore-types`**: Common data structures (enums, structs) used globally.
+- **`uncore-components`**: Shared ECS components.
+- **`uncore-events`**: Shared ECS events.
+- **`uncore-resources`**: Shared ECS resources.
+- **`uncore-assets`**: Asset loading infrastructure and handles.
+- **`uncore-board`**: Spatial system, grid/board logic, collision, `Behavior` component.
+- **`uncore-systems`**: Common ECS systems.
+
+### Game Logic & Progression
+
+High-level game flow and state management.
+
+- **`ungame`**: Main game loop, scene management, high-level coordination.
+- **`uncampaign`**: Campaign progression, mission unlocking, persistent state.
+- **`undifficulty`**: Difficulty levels and configuration.
+- **`unprofile`**: User profile management, save/load logic.
+- **`unsummary`**: End-of-mission summary screen and logic.
+- **`unmapload`**: Map loading orchestration and setup.
+
+### Entities & Gameplay Systems
+
+Specific gameplay mechanics and entity behaviors.
+
+- **`unplayer`**: Player controller, movement, interaction, stats (sanity/health).
+- **`unghost`**: Ghost AI, behavior, hunting logic, evidence generation.
+- **`unnpc`**: NPC interaction, dialog systems.
+- **`ungear`**: Inventory system, equipment slots, deployment logic.
+- **`ungearitems`**: **[GEAR LOGIC]** Implementation of specific items (EMF, Flashlight, etc.).
+- **`unfog`**: Miasma (fog) rendering and simulation.
+- **`unlight`**: Lighting engine, visibility calculation, field of view.
+- **`unwalkie`**: Walkie-talkie gameplay integration (hints, audio).
+- **`unwalkiecore`**: Core logic for walkie-talkie state and responses.
+- **`unwalkie_types`**: Data types for the walkie-talkie system.
+
+### UI & Interface
+
+User interface screens and menus.
+
+- **`unmenu`**: Main menu screen.
+- **`unmenusettings`**: Settings menu implementation.
+- **`unmaphub`**: Map selection hub.
+- **`untruck`**: In-game mission hub (Truck UI), CCTV, journal, loadout.
+- **`uncoremenu`**: Shared UI components, templates, and styles.
+
+### Infrastructure & Tools
+
+Utilities and external tools.
+
+- **`unstd`**: Shared utilities (rendering helpers, manual UI, materials).
+- **`untmxmap`**: Tiled map (`.tmx`) parsing and loading into Bevy.
+- **`unsettings`**: Persistent settings schema and serialization.
+- **`crates/tools/`**:
+  - `ghost_radio`: CLI tool for testing ghost communication/phrasebooks.
+  - `ghost_list`: Tool for managing/listing ghost definitions.
+  - `text_to_speech`: Tool for generating TTS audio assets.

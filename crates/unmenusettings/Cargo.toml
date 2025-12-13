@@ -8,22 +8,14 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-serde = { workspace = true }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }
 strum = { workspace = true }
 
 
-undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-uncore-components = { path = "../uncore-components" }
-uncore-systems = { path = "../uncore-systems" }
-unstd = { path = "../unstd" }
 unsettings = { path = "../unsettings" }
 uncoremenu = { path = "../uncoremenu" }

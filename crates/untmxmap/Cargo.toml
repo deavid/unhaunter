@@ -9,21 +9,14 @@ authors.workspace = true
 
 [dependencies]
 
-undifficulty = { path = "../undifficulty" }
-uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-uncore-components = { path = "../uncore-components" }
-uncore-systems = { path = "../uncore-systems" }
 unstd = { path = "../unstd" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 normalize-path = { workspace = true }
 tiled = { workspace = true }
-glob = { workspace = true }
-walkdir = { workspace = true }
-thiserror = { workspace = true }

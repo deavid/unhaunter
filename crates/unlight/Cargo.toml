@@ -12,7 +12,6 @@ authors.workspace = true
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
-uncore-assets = { path = "../uncore-assets" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
@@ -30,4 +29,3 @@ rand = { workspace = true }
 ndarray = { workspace = true }
 fastapprox = { workspace = true }
 bevy-persistent = { workspace = true }
-ordered-float = { workspace = true }

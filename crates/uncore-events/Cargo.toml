@@ -8,7 +8,6 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

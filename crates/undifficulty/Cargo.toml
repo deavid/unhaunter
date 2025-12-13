@@ -13,4 +13,3 @@ uncore-types = { path = "../uncore-types" }
 uncore-components = { path = "../uncore-components" }
 bevy = { workspace = true }
 serde = { workspace = true }
-enum-iterator = { workspace = true }

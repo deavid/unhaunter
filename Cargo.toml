@@ -133,8 +133,6 @@ rayon = { workspace = true }
 
 wasm-bindgen = { workspace = true }
 bevy = { workspace = true }
-bevy_picking = { workspace = true }
-bevy_platform = { workspace = true }
 ordered-float = { workspace = true }
 walkdir = { workspace = true }
 anyhow = { workspace = true }

@@ -10,7 +10,6 @@ authors.workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }
-ron = { workspace = true }
 serde = { workspace = true }
 enum-iterator = { workspace = true }
 dirs = { workspace = true }

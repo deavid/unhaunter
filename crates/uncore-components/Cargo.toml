@@ -14,7 +14,6 @@ uncore-types = { path = "../uncore-types" }
 uncore-events = { path = "../uncore-events" }
 bevy = { workspace = true }
 rand = { workspace = true }
-bevy_picking = { workspace = true }
 serde = { workspace = true }
 fastapprox = { workspace = true }
 unsettings = { path = "../unsettings" }

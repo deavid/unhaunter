@@ -7,7 +7,6 @@ edition = "2024"
 
 uncore-foundation = { path = "../../uncore-foundation" }
 enum-iterator = { workspace = true }
-bevy = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 itertools = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

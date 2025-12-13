@@ -11,4 +11,3 @@ homepage.workspace = true
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
-ron = { workspace = true }
