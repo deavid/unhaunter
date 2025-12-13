@@ -38,11 +38,11 @@ This is a console-based demo tool for experimenting with a simplified ghost comm
 
 ## Data Files
 
-- **`assets/phrasebooks/player.yaml`:** Contains a list of player phrases with their corresponding semantic tags and
+- **`assets/phrasebooks/player.ron`:** Contains a list of player phrases with their corresponding semantic tags and
   emotional signatures.
-- **`assets/phrasebooks/ghost.yaml`:** Contains a list of ghost responses with their corresponding metadata (speech act,
+- **`assets/phrasebooks/ghost.ron`:** Contains a list of ghost responses with their corresponding metadata (speech act,
   emotional signature, response type, etc.).
-- **`assets/ghost_metadata.yaml`:** Defines the ghost's name, type, and initial emotional state.
+- **`assets/sample_ghosts/*.ron`:** Defines the ghost's name, type, and initial emotional state.
 
 ## Notes
 

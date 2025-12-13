@@ -1,0 +1,44 @@
+[
+(
+    phrase: "Can you show yourself on camera?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We're watching you on the cameras.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Smile for the camera!",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We have cameras set up throughout the house.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Can you give us a sign on camera?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Can you wave at the camera?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Can you move something in front of the camera?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+)
+]

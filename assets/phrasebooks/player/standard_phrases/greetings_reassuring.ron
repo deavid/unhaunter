@@ -1,0 +1,50 @@
+[
+(
+    phrase: "It's okay to talk to us.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We're here to listen.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We understand you might be scared.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We won't judge you.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We're here to help, if you need it.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We're not here to hurt you.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "It's safe to communicate with us.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We respect your presence.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+)
+]

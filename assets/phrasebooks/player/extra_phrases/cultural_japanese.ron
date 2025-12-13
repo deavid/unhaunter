@@ -1,0 +1,122 @@
+[
+(
+    phrase: "Do you remember Obon?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Did you celebrate New Year's in your life?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Was there a Buddhist altar in your home?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Are you bound to this world by unfinished business?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Do you seek vengeance for a past wrong?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Are you a protective spirit, watching over this place?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Do you remember the stories of the oni?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Have you encountered any mischievous kitsune?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Do the tengu still watch over the mountains?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Show us a sign, spirit, as a flickering lantern guides a lost traveler.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Speak to us, as the wind whispers through the bamboo grove.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "We offer you peace, like the tranquility of a Zen garden.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "May your spirit find rest, as a koi fish finds solace in a still pond.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Sayonara, [Ghost Name].",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Does this [object name] remind you of your past life?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Did you spend time in this [location name]?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Show yourself on our camera, as a fleeting shadow in the moonlight.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Speak through the Spirit Box, as a voice carried on the wind.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "I'm fascinated by the stories of Japanese folklore.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Your presence feels ancient, like a spirit from a forgotten tale.",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+)
+]

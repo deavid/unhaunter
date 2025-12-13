@@ -1,0 +1,56 @@
+[
+(
+    phrase: "Do you believe in an afterlife?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Where do you think you are now?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "What do you think happens after death?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Are you at peace?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "What can we do to help you move on?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Do you have any advice for us?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Have you seen the other side?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "What's it like where you are now?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+),
+(
+    phrase: "Do you have any messages for those who are still living?",
+    speech_act: "Assertive",
+    semantic_tags: [],
+    emotional_signature: (curiosity: 0.0, fear: 0.0, anger: 0.0, sadness: 0.0, joy: 0.0),
+)
+]

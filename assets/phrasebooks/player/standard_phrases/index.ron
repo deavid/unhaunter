@@ -1,0 +1,38 @@
+{
+    "Greetings": (
+            description: "Initial phrases to acknowledge the ghost's presence.",
+            subcategories: [(filename: "greetings_friendly.ron", name: "Friendly"), (filename: "greetings_formal.ron", name: "Formal"), (filename: "greetings_curious.ron", name: "Curious"), (filename: "greetings_reassuring.ron", name: "Reassuring")],
+        ),
+    "Questions": (
+            description: "Inquiries to gather information about the ghost's identity, motivations, and past.",
+            subcategories: [(filename: "questions_identity.ron", name: "Identity"), (filename: "questions_motivation.ron", name: "Motivation"), (filename: "questions_past_life.ron", name: "Past Life"), (filename: "questions_unsolved_matters.ron", name: "Unsolved Matters"), (filename: "questions_loved_ones.ron", name: "Loved Ones"), (filename: "questions_emotional_state.ron", name: "Emotional State"), (filename: "questions_spiritual.ron", name: "Spiritual")],
+        ),
+    "Requests": (
+            description: "Phrases to ask the ghost to perform actions or provide evidence.",
+            subcategories: [(filename: "requests_general.ron", name: "General"), (filename: "requests_specific.ron", name: "Specific"), (filename: "requests_gear.ron", name: "Gear Interaction")],
+        ),
+    "Statements": (
+            description: "Declarations or observations to convey the player's intentions or perceptions.",
+            subcategories: [(filename: "statements_reassurance.ron", name: "Reassurance"), (filename: "statements_observation.ron", name: "Observation"), (filename: "statements_challenge.ron", name: "Challenge")],
+        ),
+    "Farewells": (
+            description: "Phrases to end the communication session.",
+            subcategories: [(filename: "farewells_polite.ron", name: "Polite"), (filename: "farewells_hopeful.ron", name: "Hopeful"), (filename: "farewells_urgent.ron", name: "Urgent")],
+        ),
+    "Provocations": (
+            description: "Phrases to intentionally provoke or antagonize the ghost (use with caution!).",
+            subcategories: [(filename: "provocations_mild.ron", name: "Mild"), (filename: "provocations_strong.ron", name: "Strong")],
+        ),
+    "Rituals": (
+            description: "Phrases associated with performing rituals or offerings to appease the ghost.",
+            subcategories: [(filename: "rituals_cleansing.ron", name: "Cleansing"), (filename: "rituals_offering.ron", name: "Offerings"), (filename: "rituals_protection.ron", name: "Protection")],
+        ),
+    "Investigations": (
+            description: "Phrases related to specific investigative techniques or gear usage.",
+            subcategories: [(filename: "investigations_emf.ron", name: "EMF"), (filename: "investigations_spirit_box.ron", name: "Spirit Box"), (filename: "investigations_temperature.ron", name: "Temperature"), (filename: "investigations_cameras.ron", name: "Cameras")],
+        ),
+    "Personal": (
+            description: "Phrases for the player to express their own emotions or beliefs to the ghost.",
+            subcategories: [(filename: "personal_fear.ron", name: "Fear"), (filename: "personal_curiosity.ron", name: "Curiosity"), (filename: "personal_beliefs.ron", name: "Beliefs")],
+        )
+}

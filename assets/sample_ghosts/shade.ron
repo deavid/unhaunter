@@ -1,0 +1,5 @@
+(
+    name: "The Timid Shade",
+    ghost_type: "Shade",
+    mood: (curiosity: 0.1, fear: 0.8, anger: 0.3, sadness: 0.4, joy: 0.05),
+)

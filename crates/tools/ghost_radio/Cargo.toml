@@ -9,4 +9,4 @@ edition = "2021"
 rand = { workspace = true, features = ["thread_rng"] }
 rand_distr = { workspace = true }
 serde = { workspace = true }
-serde_yaml = { workspace = true }
+ron = { workspace = true }

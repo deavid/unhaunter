@@ -2,7 +2,7 @@
 use data::{GhostResponse, PlayerPhrase};
 use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
-use serde_yaml::from_reader;
+use ron::de::from_reader;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -12,14 +12,13 @@ mod data;
 mod ghost_ai;
 
 fn main() {
-    let player_phrases = load_player_phrases("assets/phrasebooks/player.yaml");
-    let mut ghost_responses = load_ghost_responses("assets/phrasebooks/ghost.yaml");
+    let player_phrases = load_player_phrases("assets/phrasebooks/player.ron");
+    let mut ghost_responses = load_ghost_responses("assets/phrasebooks/ghost.ron");
     let ghosts = ["poltergeist", "shade"];
     console_ui::display_ghost_options(&ghosts);
     let ghost_choice = get_user_choice();
     let selected_ghost = ghosts[ghost_choice - 1].to_owned();
-    let ghost_metadata =
-        load_ghost_metadata(&format!("assets/sample_ghosts/{selected_ghost}.yaml"));
+    let ghost_metadata = load_ghost_metadata(&format!("assets/sample_ghosts/{selected_ghost}.ron"));
     let mut ghost_mood = ghost_metadata.mood.clone();
     let original_ghost_mood = ghost_mood.clone();
     let phrases = player_phrases.keys().cloned().collect::<Vec<_>>();
