@@ -11,7 +11,6 @@ use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
 
 /// Allows the player to pick up a pickable object from the environment.
 ///
@@ -223,7 +222,7 @@ fn deploy_gear(
                     image: handles.images.gear.clone(),
                     texture_atlas: Some(TextureAtlas {
                         layout: handles.images.gear_atlas.clone(),
-                        index: player_gear.right_hand.get_sprite_idx() as usize,
+                        index: 0,
                     }),
                     ..Default::default()
                 };

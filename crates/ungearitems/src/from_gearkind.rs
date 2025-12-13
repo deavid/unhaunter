@@ -22,13 +22,12 @@ impl FromGearKind for Gear {
             GearKind::Photocam => Photocam::default().into(),
             GearKind::Compass => Compass::default().into(),
             GearKind::EStaticMeter => EStaticMeter::default().into(),
-            GearKind::Videocam => Videocam::default().into(),
             GearKind::MotionSensor => MotionSensor::default().into(),
             GearKind::RepellentFlask => RepellentFlask::default().into(),
             GearKind::QuartzStone => QuartzStoneData::default().into(),
             GearKind::Salt => SaltData::default().into(),
             GearKind::SageBundle => SageBundleData::default().into(),
-            GearKind::None => Gear::none(),
+            _ => Gear::none(),
         }
     }
 }
