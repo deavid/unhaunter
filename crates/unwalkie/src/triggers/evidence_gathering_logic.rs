@@ -7,7 +7,7 @@ use undifficulty::{CurrentDifficulty, DifficultySettings};
 use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use untruck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

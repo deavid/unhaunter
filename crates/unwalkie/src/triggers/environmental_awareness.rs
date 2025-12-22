@@ -5,7 +5,7 @@ use std::any::Any; // Added import
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 use unghost::components::ghost_breach::GhostBreach;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 
 use uncore_resources::resources::roomdb::RoomDB;

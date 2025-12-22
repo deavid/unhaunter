@@ -7,7 +7,7 @@ use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::GhostSprite;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;

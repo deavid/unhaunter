@@ -1,7 +1,7 @@
 //! System to update the shared PlayerState resource.
 
 use bevy::prelude::*;
-use uncore_resources::resources::player_state::PlayerState;
+use unplayer_core::resources::PlayerState;
 use unspatial::Position;
 
 use crate::components::player::Hiding;

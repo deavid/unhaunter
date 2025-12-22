@@ -2,13 +2,13 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
 use uncore_components::components::game::GameSound;
-use uncore_components::components::player_shared::PlayerSprite;
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use uncore_resources::resources::ambient_mute::AmbientMuteController;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
 use uncore_resources::states::AppState;
 use uncore_types::types::game::SoundType;
+use unplayer_core::components::PlayerSprite;
 use unsettings::audio::AudioSettings;
 use unspatial::{BoardPosition, Position};
 

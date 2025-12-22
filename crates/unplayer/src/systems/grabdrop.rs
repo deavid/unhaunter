@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::FloorItemCollidable;
 use uncore_components::components::game::GameSprite;
-use uncore_components::components::player_shared::HeldObject;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_types::types::gear::equipmentposition::Hand;
 use uncore_types::types::root::game_assets::GameAssets;
@@ -11,6 +10,7 @@ use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
 use ungear::gear_usable::GearUsable;
+use unplayer_core::components::HeldObject;
 use unspatial::{Direction, Position};
 
 /// Allows the player to pick up a pickable object from the environment.

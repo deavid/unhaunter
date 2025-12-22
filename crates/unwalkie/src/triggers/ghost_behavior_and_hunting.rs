@@ -4,8 +4,8 @@ use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
-use unplayer::components::player::Hiding;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::Hiding;
+use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

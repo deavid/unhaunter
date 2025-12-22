@@ -6,12 +6,12 @@ use uncore_components::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
 };
-use uncore_components::components::player_shared::PlayerSprite;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
+use unplayer_core::components::PlayerSprite;
 use unsettings::game::GameplaySettings;
 
 fn cleanup(

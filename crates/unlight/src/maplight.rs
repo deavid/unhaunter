@@ -24,7 +24,6 @@ use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::types::fielddata::CollisionFieldData;
 use uncore_components::components::game::MapTileSprite;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::player_shared::PlayerSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
@@ -44,6 +43,7 @@ use ungearitems::components::salt::UVReactive;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use unplayer_core::components::PlayerSprite;
 use unspatial::{BoardPosition, Direction, Position};
 use unstd::materials::CustomMaterial1;
 

@@ -1,6 +1,6 @@
 use super::systems;
 use bevy::prelude::*;
-use uncore_resources::resources::player_state::PlayerState;
+use unplayer_core::resources::PlayerState;
 
 pub struct UnhaunterPlayerPlugin;
 

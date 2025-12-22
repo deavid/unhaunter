@@ -9,7 +9,7 @@ use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 use untruck::truckgear::TruckGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};

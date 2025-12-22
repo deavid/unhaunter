@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use uncore_events::hint::OnScreenHintEvent;
 use uncore_resources::resources::hint_ui_state::HintUiState;
 use uncore_resources::resources::mission_select_mode::CurrentMissionSelectMode;
-use uncore_resources::resources::player_input::PlayerInput;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use unplayer_core::resources::PlayerInput;
 
 /// The core plugin for the Unhaunter game.
 pub struct UnhaunterCorePlugin;

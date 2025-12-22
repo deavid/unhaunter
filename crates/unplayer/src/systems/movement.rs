@@ -8,10 +8,10 @@ use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
-use uncore_resources::resources::player_input::PlayerInput;
 use uncore_systems::systemparam::collision_handler::CollisionHandler;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
+use unplayer_core::resources::PlayerInput;
 use unspatial::{Direction, Position};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 

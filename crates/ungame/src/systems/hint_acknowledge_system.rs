@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_components::components::player_shared::PlayerSprite;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::AppState;
 use ungear::components::playergear::PlayerGear;
+use unplayer_core::components::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 
 fn acknowledge_blinking_gear_hint_system(

@@ -1,0 +1,15 @@
+[package]
+name = "unplayer-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+uncore-types = { path = "../uncore-types" }
+unsettings = { path = "../unsettings" }
+unspatial = { path = "../unspatial" }
+bevy = { workspace = true }
+serde = { workspace = true }

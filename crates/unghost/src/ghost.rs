@@ -9,7 +9,6 @@ use uncore_components::components::game::GameSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::player_state::PlayerState;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::summary_data::SummaryData;
 use uncore_systems::metric_recorder::SendMetric;
@@ -21,6 +20,7 @@ use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
+use unplayer_core::resources::PlayerState;
 use unspatial::{BoardPosition, Direction, Position};
 use untags::PlayerTag;
 

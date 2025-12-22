@@ -5685,6 +5685,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "unghost-core",
+ "unplayer-core",
  "unspatial",
  "untags",
 ]
@@ -5740,6 +5741,7 @@ dependencies = [
  "uncore-types",
  "unghost",
  "unghost-core",
+ "unplayer-core",
  "unspatial",
  "unstd",
 ]
@@ -5763,6 +5765,7 @@ dependencies = [
  "unghost-core",
  "unlight",
  "unplayer",
+ "unplayer-core",
  "unprofile",
  "unsettings",
  "unspatial",
@@ -5782,6 +5785,7 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "unghost-core",
+ "unplayer-core",
  "unprofile",
  "unsettings",
  "unspatial",
@@ -5828,6 +5832,7 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unghost-core",
+ "unplayer-core",
  "unspatial",
  "unstd",
  "untags",
@@ -5983,6 +5988,7 @@ dependencies = [
  "ungearitems",
  "unghost",
  "unghost-core",
+ "unplayer-core",
  "unsettings",
  "unspatial",
  "unstd",
@@ -6092,10 +6098,22 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "ungear",
+ "unplayer-core",
  "unprofile",
  "unsettings",
  "unspatial",
  "unstd",
+]
+
+[[package]]
+name = "unplayer-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
+ "uncore-types",
+ "unsettings",
+ "unspatial",
 ]
 
 [[package]]
@@ -6216,6 +6234,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unplayer",
+ "unplayer-core",
  "unprofile",
  "unsettings",
  "unstd",
@@ -6242,7 +6261,7 @@ dependencies = [
  "ungearitems",
  "unghost",
  "unghost-core",
- "unplayer",
+ "unplayer-core",
  "unprofile",
  "unsettings",
  "unspatial",

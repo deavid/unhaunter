@@ -5,7 +5,7 @@ use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_usable::GearUsable;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 pub struct TutorialGearExplanationsTriggerPlugin;

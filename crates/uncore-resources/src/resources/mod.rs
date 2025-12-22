@@ -8,8 +8,6 @@ pub mod manual;
 pub mod maps;
 pub mod mission_select_mode;
 pub mod mouse_visibility;
-pub mod player_input;
-pub mod player_state;
 pub mod roomdb;
 pub mod summary_data;
 pub mod visibility_data;

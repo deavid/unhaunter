@@ -15,6 +15,7 @@ uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
+unplayer-core = { path = "../unplayer-core" }
 unstd = { path = "../unstd" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }

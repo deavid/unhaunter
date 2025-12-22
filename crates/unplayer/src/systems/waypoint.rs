@@ -11,8 +11,8 @@ use uncore_components::components::waypoint::{
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
-use uncore_resources::resources::player_input::PlayerInput;
 use uncore_resources::resources::visibility_data::VisibilityData;
+use unplayer_core::resources::PlayerInput;
 use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 

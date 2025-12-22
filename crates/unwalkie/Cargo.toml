@@ -25,7 +25,7 @@ unwalkiecore = { path = "../unwalkiecore" }
 unprofile = { path = "../unprofile" }
 untruck = { path = "../untruck" }
 unghost = { path = "../unghost" }
-unplayer = { path = "../unplayer" }
+unplayer-core = { path = "../unplayer-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

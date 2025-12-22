@@ -1,2 +1,2 @@
-// Re-export shared player components from uncore-components
-pub use uncore_components::components::player_shared::PlayerSprite;
+// Re-export shared player components from unplayer-core
+pub use unplayer_core::components::PlayerSprite;

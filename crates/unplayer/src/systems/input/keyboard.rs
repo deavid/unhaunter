@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_components::components::{
     move_to::MoveToTarget,
-    player_shared::PlayerSprite,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
-use uncore_resources::resources::player_input::PlayerInput;
+use unplayer_core::components::PlayerSprite;
+use unplayer_core::resources::PlayerInput;
 use unsettings::game::{GameplaySettings, MovementStyle};
 
 /// System that handles keyboard input for player movement.

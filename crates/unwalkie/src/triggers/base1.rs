@@ -6,7 +6,7 @@ use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

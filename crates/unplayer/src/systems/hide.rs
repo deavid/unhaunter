@@ -5,9 +5,9 @@ use bevy_platform::collections::HashMap;
 use uncore_board::behavior::Behavior;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_components::components::animation::AnimationTimer;
-use uncore_components::components::player_shared::PlayerSprite;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
+use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 
 /// Allows the player to hide in a designated hiding spot.
