@@ -3,12 +3,12 @@
 //! This module provides all the gameplay settings for each difficulty level.
 
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
-use uncore_components::components::truck_ui::TabContents;
 use uncore_foundation::celsius_to_kelvin;
 use uncore_foundation::types::ghost::definitions::GhostSet;
 use uncore_types::types::difficulty::Difficulty;
 use uncore_types::types::gear_kind::{GearKind, PlayerGearKind};
 use uncore_types::types::manual::ManualChapterIndex;
+use uncore_types::types::truck::TabContents;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---

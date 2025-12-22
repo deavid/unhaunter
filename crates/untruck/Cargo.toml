@@ -29,3 +29,4 @@ unghost-core = { path = "../unghost-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }
+serde = { workspace = true }

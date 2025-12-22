@@ -10,5 +10,4 @@ pub mod move_to;
 pub mod repellent_particle;
 pub mod sprite_type;
 pub mod summary_ui;
-pub mod truck_ui;
 pub mod waypoint;

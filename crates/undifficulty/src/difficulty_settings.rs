@@ -5,11 +5,11 @@
 
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
-use uncore_components::components::truck_ui::TabContents;
 use uncore_foundation::types::ghost::definitions::GhostSet;
 use uncore_types::types::difficulty::Difficulty;
 use uncore_types::types::gear_kind::{GearKind, PlayerGearKind};
 use uncore_types::types::manual::ManualChapterIndex;
+use uncore_types::types::truck::TabContents;
 
 /// Trait for querying difficulty-specific game settings
 pub trait DifficultySettings {
