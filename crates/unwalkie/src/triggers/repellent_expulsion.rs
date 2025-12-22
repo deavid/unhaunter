@@ -9,7 +9,7 @@ use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
-use unghost::components::ghost_sprite::GhostSprite;
+use unghost_core::components::GhostSprite;
 use unplayer::components::player_sprite::PlayerSprite;
 use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};

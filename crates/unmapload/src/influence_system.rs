@@ -6,10 +6,11 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unspatial::Position;
-use unghost::components::ghost_influence::GhostInfluence;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
+use unghost::components::ghost_influence::GhostInfluence;
+use unghost_core::resources::haunt_state::HauntState;
+use unspatial::Position;
 
 use crate::level_setup::AssignGhostInfluenceMarker;
 
@@ -33,6 +34,7 @@ fn assign_ghost_influence_system(
     position_query: Query<&Position>,
     roomdb: Res<RoomDB>,
     board_data: Res<BoardData>,
+    haunt_state: Res<HauntState>,
 ) {
     for (marker_entity, marker) in marker_query.iter() {
         // Get all objects that are in valid rooms, organized by floor with positions
@@ -48,7 +50,7 @@ fn assign_ghost_influence_system(
             ghost_spawn_points.push(*ghost_pos);
         } else {
             // Fallback to breach position if no ghost is spawned yet
-            ghost_spawn_points.push(board_data.breach_pos);
+            ghost_spawn_points.push(haunt_state.breach_pos);
         }
 
         // Organize movable objects by floor, including positions

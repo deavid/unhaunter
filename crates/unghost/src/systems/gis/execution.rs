@@ -2,13 +2,13 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{InteractableByGhost, Interactive, RoomState};
-use unspatial::Position;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
+use unspatial::Position;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 /// Enhanced destination validation with collision avoidance and path checking

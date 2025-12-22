@@ -1,18 +1,18 @@
 use bevy_platform::collections::HashSet;
 use fastapprox::faster;
 use ndarray::Array3;
-use unspatial::{BoardPosition, Direction, Position};
 use uncore_board::components::mapcolor::MapColor;
+use uncore_components::components::game::GameSprite;
 use uncore_components::components::repellent_particle::RepellentParticle;
 use uncore_components::components::sprite_type::SpriteType;
-use uncore_systems::metric_recorder::SendMetric;
 use uncore_foundation::random_seed;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_components::components::game::GameSprite;
-use uncore_components::components::ghost_shared::GhostSprite;
-use undifficulty::CurrentDifficulty;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_foundation::types::ghost::types::GhostType;
+use uncore_resources::resources::board_data::BoardData;
+use uncore_systems::metric_recorder::SendMetric;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use undifficulty::CurrentDifficulty;
+use unghost_core::components::GhostSprite;
+use unspatial::{BoardPosition, Direction, Position};
 
 use crate::metrics;
 

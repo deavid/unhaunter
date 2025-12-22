@@ -4,7 +4,6 @@ pub mod focus_ring;
 pub mod game;
 pub mod game_config;
 pub mod game_ui;
-pub mod ghost_shared;
 pub mod hint_ui;
 pub mod light;
 pub mod move_to;

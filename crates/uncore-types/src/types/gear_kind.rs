@@ -1,6 +1,6 @@
-use uncore_foundation::types::evidence::{Evidence, EvidenceError};
 use enum_iterator::Sequence;
-use serde::{Deserialize, Serialize}; // Add this
+use serde::{Deserialize, Serialize};
+use uncore_foundation::types::evidence::{Evidence, EvidenceError}; // Add this
 
 /// Represents the different types of gear available in the game.
 ///

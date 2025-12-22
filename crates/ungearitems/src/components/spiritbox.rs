@@ -1,10 +1,10 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use unspatial::Position;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_foundation::{kelvin_to_celsius, random_seed};
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use unspatial::Position;
 
 /// A component representing the Spirit Box gear item.
 /// This device scans radio frequencies and can sometimes pick up paranormal vocal phenomena.
@@ -163,9 +163,12 @@ impl GearUsable for SpiritBox {
         }
 
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
 
         if !self.enabled {
@@ -200,11 +203,11 @@ impl GearUsable for SpiritBox {
             .lux;
 
         // Only charge up for a response if the ghost has the Spirit Box evidence.
-        if gs.bf.evidences.contains(&Evidence::SpiritBox) {
+        if gs.haunt_state.evidences.contains(&Evidence::SpiritBox) {
             let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
             let temp_clamped = (temp_celsius - 3.0).clamp(0.5, 10.0);
             self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
-                * gs.bf.ghost_dynamics.spirit_box_clarity.max(0.0);
+                * gs.haunt_state.ghost_dynamics.spirit_box_clarity.max(0.0);
         }
         if self.ghost_answer {
             if delta > 3.0 {

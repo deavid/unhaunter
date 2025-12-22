@@ -5,12 +5,12 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
 use uncore_foundation::random_seed;
-use unspatial::Position;
-use uncore_components::components::ghost_shared::GhostSprite;
-use uncore_systems::metric_recorder::SendMetric;
-use uncore_resources::resources::{board_data::BoardData, roomdb::RoomDB};
 use uncore_foundation::types::evidence::Evidence;
+use uncore_resources::resources::{board_data::BoardData, roomdb::RoomDB};
+use uncore_systems::metric_recorder::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use unghost_core::components::GhostSprite;
+use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default)]
 pub struct Recorder {
@@ -152,9 +152,12 @@ impl GearUsable for Recorder {
         }
 
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
 
         // Regular recorder functionality
@@ -184,10 +187,13 @@ impl GearUsable for Recorder {
             self.sound_l[n] = 0.0;
             self.evp_recorded_count = 0;
         }
-        if self.sound > 1.0 && self.enabled && gs.bf.ghost_dynamics.evp_recording_clarity > 0.0 {
+        if self.sound > 1.0
+            && self.enabled
+            && gs.haunt_state.ghost_dynamics.evp_recording_clarity > 0.0
+        {
             self.amt_recorded += self.sound
                 * gs.time.delta_secs()
-                * gs.bf.ghost_dynamics.evp_recording_clarity.cbrt();
+                * gs.haunt_state.ghost_dynamics.evp_recording_clarity.cbrt();
             if self.amt_recorded > 200.0 {
                 self.evp_recorded_time_secs = gs.time.elapsed_secs();
                 self.evp_recorded_count += 1;
@@ -200,7 +206,14 @@ impl GearUsable for Recorder {
             let avg_snd: f32 = sum_snd / self.sound_l.len() as f32 + 1.0;
             self.sound = (avg_snd.ln() * 10.0).clamp(0.0, 60.0);
             self.sound_l.iter_mut().for_each(|x| {
-                *x /= 1.5 - (gs.bf.ghost_dynamics.evp_recording_clarity.max(0.0).cbrt()) / 2.0
+                *x /= 1.5
+                    - (gs
+                        .haunt_state
+                        .ghost_dynamics
+                        .evp_recording_clarity
+                        .max(0.0)
+                        .cbrt())
+                        / 2.0
             });
             self.evp_recorded_display =
                 (gs.time.elapsed_secs() - self.evp_recorded_time_secs) < 2.0;

@@ -1,10 +1,10 @@
-use bevy::prelude::*;
 use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use crate::components::ghost_sprite::GhostSprite;
-use undifficulty::CurrentDifficulty;
-use uncore_resources::resources::board_data::BoardData;
+use bevy::prelude::*;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_systems::noise::{LONG_TERM_NOISE_FREQ, SHORT_TERM_NOISE_FREQ};
+use undifficulty::CurrentDifficulty;
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::haunt_state::HauntState;
 
 /// Helper function to calculate a noise-based multiplier value
 ///
@@ -36,7 +36,7 @@ fn update_ghost_behavior_dynamics_system(
     difficulty: Res<CurrentDifficulty>,
     noise_table: Res<uncore_systems::noise::PerlinNoise>,
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
-    mut board_data: ResMut<BoardData>,
+    mut haunt_state: ResMut<HauntState>,
     mut report_time: Local<f32>,
 ) {
     let elapsed_seconds = time.elapsed_secs();
@@ -94,7 +94,7 @@ fn update_ghost_behavior_dynamics_system(
             dynamics.noise_offsets.rage_tendency_multiplier_y,
             evidence_visibility_recip,
         );
-        board_data.ghost_dynamics = *dynamics;
+        haunt_state.ghost_dynamics = *dynamics;
         if *report_time > 10.0 {
             info!(
                 "Dynamics: Frz:{:.2}, Orbs:{:.2}, UV:{:.2}, EMF:{:.2}, EVP:{:.2}, SprtBx:{:.2}, RL:{:.2}, CPM500:{:.2}, Alpha:{:.2}, Rage:{:.2}",

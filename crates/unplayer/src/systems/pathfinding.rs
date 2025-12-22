@@ -2,10 +2,10 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
-use unspatial::{BoardPosition, Position};
 use uncore_board::behavior::{Behavior, Orientation, component::Stairs};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::visibility_data::VisibilityData;
+use unspatial::{BoardPosition, Position};
 
 /// A* pathfinding node for the priority queue
 #[derive(Debug, Clone, PartialEq, Eq)]

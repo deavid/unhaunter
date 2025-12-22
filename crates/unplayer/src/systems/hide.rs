@@ -1,10 +1,10 @@
+use crate::components::player::Hiding;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use uncore_board::behavior::Behavior;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_components::components::animation::AnimationTimer;
-use crate::components::player::Hiding;
 use uncore_components::components::player_shared::PlayerSprite;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;

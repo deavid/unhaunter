@@ -1,17 +1,17 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use unspatial::{BoardPosition, Position};
-use unghost::components::ghost_sprite::GhostSprite;
-use unplayer::components::player_sprite::PlayerSprite;
-use undifficulty::CurrentDifficulty;
-use uncore_resources::resources::board_data::BoardData;
+use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::gear_kind::GearKind;
 use uncore_types::types::manual::ManualChapterIndex;
+use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::haunt_state::HauntState;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::{BoardPosition, Position};
 use unwalkiecore::{WalkieEvent, WalkiePlay}; // Core walkie types
 
 // Local struct to track the state for this specific trigger
@@ -163,7 +163,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
     ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
-    board_data: Res<BoardData>, // For actual ghost evidences & fallback breach_pos
+    haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
     roomdb: Res<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
     mut tracker: Local<Option<IneffectiveToolInHotspotTracker>>,
@@ -199,7 +199,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     let (ghost_spawn_bpos, current_ghost_live_pos_opt): (BoardPosition, Option<Position>) =
         match ghost_query.single() {
             Ok((gs, g_pos)) => (gs.spawn_point.clone(), Some(*g_pos)),
-            Err(_) => (board_data.breach_pos.to_board_position(), None), // Fallback if no GhostSprite
+            Err(_) => (haunt_state.breach_pos.to_board_position(), None), // Fallback if no GhostSprite
         };
 
     // 3. Hotspot Check
@@ -264,7 +264,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     // 5. Check Tool Effectiveness
     let evidence_from_current_tool = Evidence::try_from(&current_tool_kind).ok();
     let tool_is_ineffective =
-        evidence_from_current_tool.is_none_or(|ev| !board_data.evidences.contains(&ev));
+        evidence_from_current_tool.is_none_or(|ev| !haunt_state.evidences.contains(&ev));
 
     if !tool_is_ineffective {
         // Tool *could* be useful for this ghost

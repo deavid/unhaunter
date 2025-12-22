@@ -3,11 +3,12 @@ use bevy_persistent::Persistent;
 use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
-use undifficulty::CurrentDifficulty;
-use uncore_resources::resources::summary_data::SummaryData;
-use unspatial::Position;
 use uncore_events::events::sound::SoundEvent;
 use uncore_resources::resources::board_data::BoardData;
+use uncore_resources::resources::summary_data::SummaryData;
+use undifficulty::CurrentDifficulty;
+use unghost_core::resources::haunt_state::HauntState;
+use unspatial::Position;
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]
@@ -15,6 +16,8 @@ pub struct GearStuff<'w, 's> {
     /// Access to the game's board data, including collision, lighting, and temperature
     /// fields.
     pub bf: ResMut<'w, BoardData>,
+    /// Access to the ghost's haunt state, including evidences and dynamics.
+    pub haunt_state: ResMut<'w, HauntState>,
     /// Access to summary data, which tracks game progress and statistics.
     pub summary: ResMut<'w, SummaryData>,
     /// Allows gear systems to spawn new entities (e.g., for sound effects).

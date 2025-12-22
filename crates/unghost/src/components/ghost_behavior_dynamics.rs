@@ -1,2 +1,2 @@
-// Re-export shared ghost components from uncore-components
-pub use uncore_components::components::ghost_shared::{GhostBehaviorDynamics, NoiseOffsets};
+// Re-export shared ghost components from unghost-core
+pub use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, NoiseOffsets};

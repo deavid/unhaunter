@@ -6,11 +6,11 @@ use uncore_events::events::loadlevel::LevelLoadedEvent;
 use uncore_foundation::colors;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uncore_resources::resources::ghost_guess::GhostGuess;
 use uncore_resources::states::GameState;
 use uncore_types::types::truck_button::{TruckButtonState, TruckButtonType};
-use unghost::components::ghost_sprite::GhostSprite;
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use unghost_core::resources::ghost_guess::GhostGuess;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 

@@ -19,6 +19,7 @@ uncore-components = { path = "../uncore-components" }
 uncore-systems = { path = "../uncore-systems" }
 unstd = { path = "../unstd" }
 unghost = { path = "../unghost" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -14,6 +14,7 @@ uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 unspatial = { path = "../unspatial" }
 untags = { path = "../untags" }
+unghost-core = { path = "../unghost-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 enum-iterator = { workspace = true }

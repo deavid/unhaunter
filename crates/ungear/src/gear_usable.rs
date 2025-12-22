@@ -1,10 +1,10 @@
 use crate::gear_stuff::GearStuff;
 use bevy::color::Color;
 use std::any::Any;
-use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
 use uncore_foundation::types::ghost::types::GhostType;
+use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
+use unghost_core::components::GhostSprite;
 use unspatial::Position;
-use uncore_components::components::ghost_shared::GhostSprite;
 
 /// Provides a common interface for all gear types, enabling consistent
 /// interactions.

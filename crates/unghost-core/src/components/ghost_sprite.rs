@@ -1,8 +1,11 @@
-use uncore_foundation::random_seed;
-use uncore_foundation::types::evidence::Evidence;
 use bevy::prelude::*;
 use rand::Rng;
 use std::fmt::Debug;
+use std::time::Duration;
+use uncore_foundation::random_seed;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::ghost::types::GhostType;
+use unspatial::{BoardPosition, Position};
 
 /// Per-ghost randomized noise offsets for unique behavior patterns
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -135,12 +138,6 @@ impl GhostBehaviorDynamics {
         }
     }
 }
-
-use std::time::Duration;
-
-use uncore_foundation::types::ghost::types::GhostType;
-
-use unspatial::{BoardPosition, Position};
 
 /// Represents a ghost entity in the game world.
 ///

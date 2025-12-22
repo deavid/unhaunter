@@ -4,10 +4,10 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use rand::Rng;
 use rand::seq::SliceRandom;
-use unspatial::Position;
-use unghost::components::ghost_influence::InfluenceType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
+use unghost::components::ghost_influence::InfluenceType;
+use unspatial::Position;
 
 /// Represents one complete ghost setup configuration (spawn + influences)
 #[derive(Clone, Debug)]

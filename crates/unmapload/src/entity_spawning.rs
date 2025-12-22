@@ -19,7 +19,7 @@ use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unghost::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use unghost::components::ghost_breach::GhostBreach;
-use unghost::components::ghost_sprite::GhostSprite;
+use unghost_core::components::GhostSprite;
 use unplayer::components::player::Stamina;
 use unplayer::components::player_sprite::PlayerSprite;
 use unspatial::{Direction, Position};
@@ -128,7 +128,7 @@ pub fn spawn_ghosts(
     ghost_spawn_points: &mut [Position],
 ) {
     // Clear existing evidence records and get RNG
-    p.bf.evidences.clear();
+    p.haunt_state.evidences.clear();
     let mut rng = random_seed::rng();
 
     // Select a ghost spawn point using the selection function
@@ -148,11 +148,11 @@ pub fn spawn_ghosts(
 
     // Collect ghost evidences in board data
     for evidence in ghost_sprite.class.evidences() {
-        p.bf.evidences.insert(evidence);
+        p.haunt_state.evidences.insert(evidence);
     }
 
     // Store breach position in board data
-    p.bf.breach_pos = ghost_spawn;
+    p.haunt_state.breach_pos = ghost_spawn;
 
     // Update summary data resource with ghost information
     commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));

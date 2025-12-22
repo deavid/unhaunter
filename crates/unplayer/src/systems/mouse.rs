@@ -1,9 +1,9 @@
-use bevy::{prelude::*, window::PrimaryWindow};
-use unspatial::{Direction, Position, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
-use uncore_components::components::game::GCameraArena;
 use crate::components::player_sprite::PlayerSprite;
+use bevy::{prelude::*, window::PrimaryWindow};
+use uncore_components::components::game::GCameraArena;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::states::GameState;
+use unspatial::{Direction, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 
 const AIM_MAX_DISTANCE: f32 = 8.0;
 

@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
-use unplayer::components::player_sprite::PlayerSprite;
-use undifficulty::{CurrentDifficulty, DifficultySettings};
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uncore_resources::states::{AppState, GameState};
 use uncore_foundation::types::evidence::Evidence;
+use uncore_resources::states::{AppState, GameState};
+use undifficulty::{CurrentDifficulty, DifficultySettings};
 use ungear::components::playergear::PlayerGear;
+use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use unghost_core::resources::haunt_state::HauntState;
+use unplayer::components::player_sprite::PlayerSprite;
 use untruck::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
@@ -26,7 +26,7 @@ fn trigger_emf_non_emf5_fixation_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     truck_button_query: Query<&TruckUIButton>,
-    board_data: Res<BoardData>,
+    haunt_state: Res<HauntState>,
     current_difficulty_res: Res<CurrentDifficulty>,
     mut incorrect_marker_state: Local<IncorrectEvidenceMarkedState>,
 ) {
@@ -54,7 +54,7 @@ fn trigger_emf_non_emf5_fixation_system(
     }
 
     // 3. Check Actual Ghost Evidences
-    let ghost_actually_has_emf5 = board_data.evidences.contains(&Evidence::EMFLevel5);
+    let ghost_actually_has_emf5 = haunt_state.evidences.contains(&Evidence::EMFLevel5);
 
     // 4. Detect Conflict
     let conflict_exists = emf5_button_is_pressed_in_journal && !ghost_actually_has_emf5;
@@ -98,7 +98,7 @@ fn trigger_journal_conflicting_evidence_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     truck_button_query: Query<&TruckUIButton>,
-    board_data: Res<BoardData>,
+    haunt_state: Res<HauntState>,
     mut tracker: Local<ConflictingEvidenceTracker>,
     current_difficulty_res: Res<CurrentDifficulty>,
 ) {
@@ -122,7 +122,7 @@ fn trigger_journal_conflicting_evidence_system(
     for button_data in truck_button_query.iter() {
         if let TruckButtonType::Evidence(marked_evidence_type) = button_data.class {
             let actual_ghost_has_this_evidence =
-                board_data.evidences.contains(&marked_evidence_type);
+                haunt_state.evidences.contains(&marked_evidence_type);
 
             // Check if evidence is marked as found but is incorrect for the real ghost
             if button_data.status == TruckButtonState::Pressed && !actual_ghost_has_this_evidence {

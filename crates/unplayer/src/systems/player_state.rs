@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use uncore_resources::resources::player_state::PlayerState;
 use unspatial::Position;
 
-use crate::components::player_sprite::PlayerSprite;
 use crate::components::player::Hiding;
+use crate::components::player_sprite::PlayerSprite;
 
 /// Updates the shared PlayerState resource with current player data.
 pub fn update_player_state(

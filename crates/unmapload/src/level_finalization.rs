@@ -10,14 +10,15 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
-use unspatial::{BoardPosition, Position};
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_events::events::roomchanged::RoomChangedEvent;
+use uncore_foundation::{celsius_to_kelvin, random_seed};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_foundation::{celsius_to_kelvin, random_seed};
+use unghost_core::resources::haunt_state::HauntState;
 use unlight::prebake::prebake_lighting_field;
+use unspatial::{BoardPosition, Position};
 use unstd::board::tiledata::PreMesh;
 use unstd::plugins::board::rebuild_collision_data;
 
@@ -38,6 +39,7 @@ use unstd::plugins::board::rebuild_collision_data;
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
     mut bf: ResMut<BoardData>,
+    haunt_state: Res<HauntState>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
@@ -60,7 +62,9 @@ fn after_level_ready(
     let ambient_temp = bf.ambient_temp;
 
     // Identify the room containing the ghost breach
-    let breach_room = roomdb.room_tiles.get(&bf.breach_pos.to_board_position());
+    let breach_room = roomdb
+        .room_tiles
+        .get(&haunt_state.breach_pos.to_board_position());
 
     // Randomize initial temperatures to create a more realistic distribution
     for (idxpos, temperature) in bf.temperature_field.indexed_iter_mut() {

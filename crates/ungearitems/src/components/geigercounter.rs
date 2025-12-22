@@ -1,8 +1,8 @@
 use uncore_foundation::random_seed;
-use unspatial::Position;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;
+use unspatial::Position;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
@@ -28,7 +28,12 @@ impl GeigerCounter {
     pub fn calculate_output_sound(&self, gs: &GearStuff) -> f32 {
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        let evidence = gs.bf.ghost_dynamics.cpm500_clarity.cbrt().max(-0.05);
+        let evidence = gs
+            .haunt_state
+            .ghost_dynamics
+            .cpm500_clarity
+            .cbrt()
+            .max(-0.05);
 
         f32::tanh(avg_snd.sqrt() / (10.0 + evidence * 2.0)) * (480.0 + evidence * 500.0)
     }
@@ -133,7 +138,7 @@ impl GearUsable for GeigerCounter {
             z: pos.z,
             global_z: pos.global_z,
         };
-        let dist2breach = gs.bf.breach_pos.distance2(&posk) + 10.0;
+        let dist2breach = gs.haunt_state.breach_pos.distance2(&posk) + 10.0;
         let breach_energy = dist2breach.recip() * 20000.0;
         let bpos = posk.to_board_position();
         for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
@@ -219,9 +224,12 @@ impl GearUsable for GeigerCounter {
             self.display_glitch_timer -= gs.time.delta_secs();
         }
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
     }
 

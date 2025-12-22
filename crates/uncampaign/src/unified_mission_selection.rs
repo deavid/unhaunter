@@ -20,14 +20,15 @@ use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 
-use uncore_foundation::colors;
-use undifficulty::{CurrentDifficulty, DifficultySettings};
 use uncore_events::events::loadlevel::LoadLevelEvent;
+use uncore_foundation::colors;
 use uncore_foundation::platform::plt::FONT_SCALE;
-use uncore_resources::resources::maps::Maps;
-use uncore_resources::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
-use uncore_resources::states::{AppState, MapHubState};
 use uncore_foundation::types::grade::Grade;
+use uncore_resources::resources::maps::Maps;
+use uncore_resources::resources::mission_select_mode::{
+    CurrentMissionSelectMode, MissionSelectMode,
+};
+use uncore_resources::states::{AppState, MapHubState};
 use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuMouseTracker;
 use uncoremenu::events::KeyboardNavigate;
@@ -39,6 +40,7 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked},
     templates,
 };
+use undifficulty::{CurrentDifficulty, DifficultySettings};
 use unmaphub::badge_utils::BadgeUtils;
 
 /// Marker component for the unified Mission Select UI root node

@@ -4,17 +4,18 @@ use bevy::sprite_render::Material2dPlugin;
 use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
-use undifficulty::CurrentDifficulty;
-use uncore_systems::plugin::UnhaunterCorePlugin;
-use uncore_resources::resources::cli_options::CliOptions;
 use uncore_foundation::platform::plt;
-use uncore_resources::resources::object_interaction::ObjectInteractionConfig;
+use uncore_resources::resources::cli_options::CliOptions;
+use uncore_systems::plugin::UnhaunterCorePlugin;
 use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
+use undifficulty::CurrentDifficulty;
 use unfog::plugin::UnhaunterFogPlugin;
 use ungame::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
+use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unlight::plugin::UnhaunterLightPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
 use unmapload::plugin::UnhaunterMapLoadPlugin;
@@ -60,7 +61,8 @@ pub fn app_run(cli_options: CliOptions) {
     )));
 
     app.init_resource::<CurrentDifficulty>()
-        .init_resource::<ObjectInteractionConfig>();
+        .init_resource::<ObjectInteractionConfig>()
+        .init_resource::<HauntState>();
 
     app.add_plugins(FrameTimeDiagnosticsPlugin::new(1024));
     // app.add_plugins(LogDiagnosticsPlugin::default());

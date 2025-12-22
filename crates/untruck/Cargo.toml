@@ -23,6 +23,7 @@ unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
 unwalkiecore = { path = "../unwalkiecore" }
 unplayer = { path = "../unplayer" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -1,9 +1,9 @@
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
-use unspatial::Position;
 use uncore_foundation::random_seed;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct Videocam {
@@ -115,9 +115,12 @@ impl GearUsable for Videocam {
         }
 
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
     }
 

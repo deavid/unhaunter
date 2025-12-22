@@ -1,9 +1,9 @@
+use crate::components::player::Stamina;
+use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_components::components::game_config::GameConfig;
 use uncore_components::components::game_ui::DamageBackground;
-use crate::components::player::Stamina;
-use crate::components::player_sprite::PlayerSprite;
 use uncore_foundation::types::grade::Grade;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;

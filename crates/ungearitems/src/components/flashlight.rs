@@ -1,7 +1,7 @@
 use uncore_foundation::random_seed;
-use unspatial::Position;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;
+use unspatial::Position;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
@@ -95,9 +95,12 @@ impl GearUsable for Flashlight {
 
         // --- EMI Effects ---
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
         // --- End EMI Effects ---
 

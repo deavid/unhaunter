@@ -1,0 +1,17 @@
+[package]
+name = "unghost-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+serde = { workspace = true }
+unspatial = { path = "../unspatial" }
+uncore-foundation = { path = "../uncore-foundation" }
+rand = { workspace = true }
+enum-iterator = { workspace = true }
+bevy_platform = { workspace = true }

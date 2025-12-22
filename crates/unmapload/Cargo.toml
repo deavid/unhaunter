@@ -26,6 +26,7 @@ unsettings = { path = "../unsettings" }
 untags = { path = "../untags" }
 unplayer = { path = "../unplayer" }
 unghost = { path = "../unghost" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

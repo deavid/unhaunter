@@ -1,12 +1,12 @@
 use super::uibutton::TruckButtonType; // Assuming TruckUIGhostGuess and uibutton are still relevant here
-use bevy::prelude::*;
-use uncore_foundation::colors;
 use crate::components::truck::TruckUIGhostGuess;
 use crate::components::truck_ui_button::TruckButtonTypeExt;
-use undifficulty::CurrentDifficulty; // Use CurrentDifficulty
+use bevy::prelude::*;
+use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::root::game_assets::GameAssets;
+use undifficulty::CurrentDifficulty; // Use CurrentDifficulty
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 

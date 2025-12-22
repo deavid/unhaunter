@@ -2,23 +2,23 @@ use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
-use uncore_foundation::colors;
 use uncore_components::components::game_config::GameConfig;
-use unplayer::components::player_inventory::{Inventory, InventoryNext};
-use unplayer::components::player_sprite::PlayerSprite;
-use undifficulty::CurrentDifficulty;
+use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::states::GameState;
 use uncore_foundation::types::evidence::Evidence;
+use uncore_resources::states::GameState;
 use uncore_types::types::evidence_status::EvidenceStatus;
 use uncore_types::types::gear::equipmentposition::Hand;
 use uncore_types::types::gear::spriteid::GearSpriteID;
 use uncore_types::types::gear_kind::GearKind;
 use uncore_types::types::root::game_assets::GameAssets;
+use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
 use ungearitems::components::repellentflask::RepellentFlask;
+use unplayer::components::player_inventory::{Inventory, InventoryNext};
+use unplayer::components::player_sprite::PlayerSprite;
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]

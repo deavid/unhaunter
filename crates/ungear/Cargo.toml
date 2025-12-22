@@ -19,6 +19,7 @@ uncore-components = { path = "../uncore-components" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
 untags = { path = "../untags" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy-persistent = { workspace = true }

@@ -1,7 +1,7 @@
 use super::{Behavior, Orientation};
-use unspatial::BoardPosition;
 use crate::types::tiledmap::map::MapLayer;
 use bevy::{ecs::component::Component, log::warn, math::Vec3};
+use unspatial::BoardPosition;
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Ground;

@@ -1,6 +1,6 @@
 use crate::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
-use uncore_types::types::mission_data::MissionData;
 use bevy::prelude::*;
+use uncore_types::types::mission_data::MissionData;
 
 #[derive(Clone, Debug)]
 pub struct Map {

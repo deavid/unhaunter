@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unspatial::Direction;
 use uncore_foundation::types::ghost::types::GhostType;
+use unspatial::Direction;
 
 #[derive(Component, Debug, Clone, PartialEq)]
 pub struct RepellentParticle {

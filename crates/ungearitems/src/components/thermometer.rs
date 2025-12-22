@@ -4,16 +4,17 @@ use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
-use unspatial::{BoardPosition, Position};
-use uncore_components::components::ghost_shared::GhostSprite;
-use undifficulty::CurrentDifficulty;
-use uncore_systems::metric_recorder::SendMetric;
 use uncore_foundation::random_seed;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::{celsius_to_kelvin, kelvin_to_celsius};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
-use uncore_foundation::types::evidence::Evidence;
+use uncore_systems::metric_recorder::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
-use uncore_foundation::{celsius_to_kelvin, kelvin_to_celsius};
+use undifficulty::CurrentDifficulty;
+use unghost_core::HauntState;
+use unghost_core::components::GhostSprite;
+use unspatial::{BoardPosition, Position};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
@@ -151,9 +152,12 @@ impl GearUsable for Thermometer {
         }
 
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
     }
 
@@ -226,6 +230,7 @@ impl From<Thermometer> for Gear {
 
 fn temperature_update(
     mut bf: ResMut<BoardData>,
+    haunt_state: Res<HauntState>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,
     qg: Query<(&GhostSprite, &Position)>,
@@ -233,7 +238,7 @@ fn temperature_update(
     difficulty: Res<CurrentDifficulty>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
-    let freezing = bf.ghost_dynamics.freezing_temp_clarity;
+    let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
 
     for (pos, bh) in qt.iter() {
         let h_out = bh.temp_heat_output();

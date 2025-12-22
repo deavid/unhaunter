@@ -21,7 +21,12 @@ impl Default for PlayerState {
             id: 0,
             health: 100.0,
             sanity: 100.0,
-            position: unspatial::Position { x: 0.0, y: 0.0, z: 0.0, global_z: 0.0 },
+            position: unspatial::Position {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                global_z: 0.0,
+            },
             mean_sound: 0.0,
             controls: ControlKeys::default(),
             hiding_spot: None,

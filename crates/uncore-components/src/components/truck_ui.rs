@@ -1,7 +1,7 @@
-use uncore_foundation::colors;
-use uncore_foundation::platform::plt::FONT_SCALE;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use uncore_foundation::colors;
+use uncore_foundation::platform::plt::FONT_SCALE;
 
 /// Represents the visual state of a tab in the truck UI.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

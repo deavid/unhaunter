@@ -1,6 +1,5 @@
 use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
-use crate::components::ghost_sprite::GhostSprite;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::Rng;
@@ -10,7 +9,6 @@ use uncore_components::components::game::GameSprite;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::object_interaction::ObjectInteractionConfig;
 use uncore_resources::resources::player_state::PlayerState;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::summary_data::SummaryData;
@@ -20,6 +18,9 @@ use undifficulty::CurrentDifficulty;
 use ungear::gear_stuff::GearStuff;
 use ungearitems::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unspatial::{BoardPosition, Direction, Position};
 use untags::PlayerTag;
 
@@ -669,13 +670,13 @@ fn ghost_fade_out_system(
 /// warning from any ghost. The warning field is used to display a visual warning
 /// to the player when a ghost is nearby.
 fn update_ghost_warning_field(
-    mut board_data: ResMut<BoardData>,
+    mut haunt_state: ResMut<HauntState>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     time: Res<Time>,
 ) {
     // Reset warning field
-    board_data.ghost_warning_intensity = 0.0;
-    board_data.ghost_warning_position = None;
+    haunt_state.ghost_warning_intensity = 0.0;
+    haunt_state.ghost_warning_position = None;
 
     let mut max_intensity = 0.0;
 
@@ -683,13 +684,13 @@ fn update_ghost_warning_field(
     for (ghost, position) in q_ghost.iter() {
         if ghost.hunt_warning_intensity > max_intensity {
             max_intensity = ghost.hunt_warning_intensity;
-            board_data.ghost_warning_position = Some(*position);
+            haunt_state.ghost_warning_position = Some(*position);
         }
     }
 
     let cur_t = time.elapsed_secs_f64();
     let wave = f64::sin(PI * cur_t * 2.0).powi(2);
-    board_data.ghost_warning_intensity = max_intensity * wave as f32;
+    haunt_state.ghost_warning_intensity = max_intensity * wave as f32;
 }
 
 /// Calculate distance with Z component multiplied by 10 if on different floors

@@ -1,15 +1,16 @@
 use std::{f32::consts::TAU, time::Duration};
 
+use crate::components::ghost_breach::GhostBreach;
+use crate::components::ghost_orb_particle::GhostOrbParticle;
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use uncore_board::components::mapcolor::MapColor;
-use unspatial::Position;
 use uncore_components::components::game::GameSprite;
-use crate::components::ghost_breach::GhostBreach;
-use crate::components::ghost_orb_particle::GhostOrbParticle;
 use uncore_components::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
+use unghost_core::resources::haunt_state::HauntState;
+use unspatial::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
 #[derive(Resource)]
@@ -30,7 +31,7 @@ pub fn spawn_ghost_orb_particles(
     time: Res<Time>,
     mut spawn_timer: ResMut<OrbSpawnTimer>,
     breach_query: Query<(Entity, &Position), With<GhostBreach>>,
-    board_data: Res<BoardData>,
+    haunt_state: Res<HauntState>,
 ) {
     let mut rng = random_seed::rng();
     spawn_timer.0.tick(time.delta());
@@ -38,7 +39,7 @@ pub fn spawn_ghost_orb_particles(
     // Only spawn orbs if the timer finished and FloatingOrbs is an active evidence type
     if !spawn_timer.0.just_finished()
         || !rng.random_bool(
-            board_data
+            haunt_state
                 .ghost_dynamics
                 .floating_orbs_clarity
                 .clamp(0.0, 1.0)

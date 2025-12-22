@@ -5,9 +5,9 @@
 
 use bevy::prelude::*;
 use uncore_board::behavior::{TileState, Util};
-use unspatial::{MapEntityFieldBPos, Position};
-use uncore_components::components::game::{GameSprite, MapTileSprite};
 use uncore_board::types::tiledmap::map::{MapLayer, MapTile};
+use uncore_components::components::game::{GameSprite, MapTileSprite};
+use unspatial::{MapEntityFieldBPos, Position};
 
 use crate::level_setup::LoadLevelSystemParam;
 

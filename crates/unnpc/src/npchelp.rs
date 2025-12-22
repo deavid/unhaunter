@@ -1,14 +1,14 @@
 use bevy::prelude::*;
-use uncore_foundation::colors;
-use unspatial::{Direction, Position};
-use unplayer::components::player_sprite::PlayerSprite;
+use uncore_board::behavior::Behavior;
+use uncore_board::behavior::component::{Interactive, NpcHelpDialog};
+use uncore_components::components::game_config::GameConfig;
 use uncore_events::events::npc_help::NpcHelpEvent;
+use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::GameState;
 use uncore_types::types::root::game_assets::GameAssets;
-use uncore_board::behavior::component::{Interactive, NpcHelpDialog};
-use uncore_board::behavior::Behavior;
-use uncore_components::components::game_config::GameConfig;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::{Direction, Position};
 use unstd::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]

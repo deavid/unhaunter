@@ -3,10 +3,10 @@ use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use uncore_board::behavior::Behavior;
-use unspatial::{BoardPosition, Position};
 use uncore_board::types::fielddata::LightFieldData;
 use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use uncore_resources::resources::board_data::BoardData;
+use unspatial::{BoardPosition, Position};
 
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {

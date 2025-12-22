@@ -8,16 +8,17 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
-use unspatial::Position;
+use uncore_board::types::fielddata::{CollisionFieldData, LightFieldData};
+use uncore_board::types::tiledmap::map::MapLayerType;
 use uncore_components::components::game::{GameSound, GameSprite};
-use unghost::components::ghost_influence::InfluenceType;
-use undifficulty::CurrentDifficulty;
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
-use uncore_board::types::fielddata::{CollisionFieldData, LightFieldData};
 use uncore_types::types::root::game_assets::GameAssets;
-use uncore_board::types::tiledmap::map::MapLayerType;
+use undifficulty::CurrentDifficulty;
+use unghost::components::ghost_influence::InfluenceType;
+use unghost_core::resources::haunt_state::HauntState;
+use unspatial::Position;
 use unstd::board::spritedb::SpriteDB;
 use unstd::materials::CustomMaterial1;
 use unstd::tiledmap::MapTileSetDb;
@@ -38,6 +39,7 @@ use crate::tile_spawning;
 pub struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardData>,
+    pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
     pub meshes: ResMut<'w, Assets<Mesh>>,

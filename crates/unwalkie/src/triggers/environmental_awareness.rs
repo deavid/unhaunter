@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use std::any::Any; // Added import
 
-use unspatial::Position;
-use unghost::components::ghost_breach::GhostBreach;
-use unplayer::components::player_sprite::PlayerSprite;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
+use unghost::components::ghost_breach::GhostBreach;
+use unplayer::components::player_sprite::PlayerSprite;
+use unspatial::Position;
 
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_types::types::gear_kind::GearKind;
@@ -115,7 +115,7 @@ fn trigger_ghost_showcase(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
-    q_ghost: Query<&Position, With<unghost::components::ghost_sprite::GhostSprite>>,
+    q_ghost: Query<&Position, With<unghost_core::components::GhostSprite>>,
     truck_button_query: Query<&untruck::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {

@@ -1,15 +1,13 @@
 use bevy::prelude::*;
-use bevy_platform::collections::{HashMap, HashSet};
+use bevy_platform::collections::HashMap;
 use ndarray::{Array2, Array3};
-use unspatial::{BoardPosition, Position};
 use uncore_board::types::{
     fielddata::{CollisionFieldData, LightFieldData},
     prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
 };
-use uncore_components::components::ghost_shared::GhostBehaviorDynamics;
 use uncore_foundation::celsius_to_kelvin;
-use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::miasma::MiasmaGrid;
+use unspatial::BoardPosition;
 
 /// Configuration for the temperature diffusion system
 #[derive(Debug, Clone)]
@@ -58,15 +56,10 @@ pub struct BoardData {
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
     pub map_entity_field: Array3<Vec<Entity>>,
     pub miasma: MiasmaGrid,
-    pub breach_pos: Position,
     pub ambient_temp: f32,
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
-
-    /// Evidences of the current ghost
-    pub evidences: HashSet<Evidence>,
-    pub ghost_dynamics: GhostBehaviorDynamics,
 
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
@@ -80,12 +73,6 @@ pub struct BoardData {
 
     // Complete floor mapping information
     pub floor_mapping: uncore_events::events::loadlevel::FloorLevelMapping,
-
-    // Ghost warning state
-    /// Current warning intensity (0.0-1.0)
-    pub ghost_warning_intensity: f32,
-    /// Source position of warning
-    pub ghost_warning_position: Option<Position>,
 
     pub map_path: String,      // Path to the current map file
     pub level_ready_time: f32, // Time when the level became ready
@@ -242,16 +229,12 @@ impl FromWorld for BoardData {
             current_exposure: 1.0,
             current_exposure_accel: 1.0,
             ambient_temp: celsius_to_kelvin(15.0),
-            evidences: HashSet::new(),
-            breach_pos: Position::new_i64(0, 0, 0),
             miasma: MiasmaGrid::default(),
             map_entity_field: Array3::default(map_size),
             prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
             prebaked_metadata: PrebakedMetadata::default(),
             prebaked_wave_edges: Vec::new(),
             prebaked_propagation: Vec::new(),
-            ghost_warning_intensity: 0.0,
-            ghost_warning_position: None,
             floor_z_map: HashMap::new(),
             z_floor_map: HashMap::new(),
             floor_mapping: uncore_events::events::loadlevel::FloorLevelMapping {
@@ -263,7 +246,6 @@ impl FromWorld for BoardData {
             },
             map_path: String::new(), // Initialize map_path with an empty string
             level_ready_time: 0.0,   // Initialize level_ready_time
-            ghost_dynamics: GhostBehaviorDynamics::default(),
         }
     }
 }

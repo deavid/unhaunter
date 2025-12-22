@@ -1,7 +1,7 @@
-use unwalkiecore::WalkieEvent;
-use uncore_foundation::types::evidence::Evidence;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
+use uncore_foundation::types::evidence::Evidence;
+use unwalkiecore::WalkieEvent;
 
 #[derive(Clone, Debug, Default)]
 pub struct WalkieEventStats {

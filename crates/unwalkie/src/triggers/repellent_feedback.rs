@@ -3,9 +3,9 @@ use bevy_platform::collections::{HashMap, HashSet};
 use uncore_components::components::repellent_particle::RepellentParticle;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::resources::ghost_guess::GhostGuess;
 use uncore_resources::states::AppState;
-use unghost::components::ghost_sprite::GhostSprite;
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::ghost_guess::GhostGuess;
 use untruck::journal::ForceDiscardEvidenceEvent;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 

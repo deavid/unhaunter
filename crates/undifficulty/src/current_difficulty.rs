@@ -2,9 +2,9 @@
 //!
 //! Holds the currently active difficulty settings.
 
+use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
-use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
 use uncore_types::types::difficulty::Difficulty;
 
 /// Resource that holds the current difficulty settings

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use enum_iterator::all;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
+use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 
 const DECAY_START_THRESHOLD_SECONDS: f64 = 0.1; // 100ms
 const FULL_DECAY_DURATION_SECONDS: f64 = 10.0; // Time for clarity to go from 1.0 to 0.0 if not updated

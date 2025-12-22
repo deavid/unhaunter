@@ -15,6 +15,7 @@ members = [
     "crates/ungear",
     "crates/ungearitems",
     "crates/unghost",
+    "crates/unghost-core",
     "crates/unlight",
     "crates/unmapload",
     "crates/unmaphub",
@@ -125,6 +126,7 @@ unstd = { path = "crates/unstd" }
 untruck = { path = "crates/untruck" }
 untmxmap = { path = "crates/untmxmap" }
 unwalkie = { path = "crates/unwalkie" }
+unghost-core = { path = "crates/unghost-core" }
 unwalkie_types = { path = "crates/unwalkie_types" }
 ungame = { path = "crates/ungame" }
 

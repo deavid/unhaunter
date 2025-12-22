@@ -42,7 +42,8 @@ use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::salt::UVReactive;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
-use unghost::components::ghost_sprite::GhostSprite;
+use unghost_core::components::GhostSprite;
+use unghost_core::resources::haunt_state::HauntState;
 use unspatial::{BoardPosition, Direction, Position};
 use unstd::materials::CustomMaterial1;
 
@@ -230,6 +231,7 @@ fn apply_lighting(
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
     mut bf: ResMut<BoardData>,
+    haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
     gc: Res<GameConfig>,
     time: Res<Time>,
@@ -891,14 +893,17 @@ fn apply_lighting(
                 dst_color = dst_color.with_luminance(l);
                 let r = dst_color.to_srgba().red;
                 let g = dst_color.to_srgba().green;
-                let e_uv = ld.ultraviolet * 13.0 * bf.ghost_dynamics.uv_ectoplasm_clarity.max(0.0);
-                let e_rl = (ld.red * 52.0 * bf.ghost_dynamics.rl_presence_clarity.max(0.0))
-                    .clamp(0.0, 1.5);
+                let e_uv = ld.ultraviolet
+                    * 13.0
+                    * haunt_state.ghost_dynamics.uv_ectoplasm_clarity.max(0.0);
+                let e_rl =
+                    (ld.red * 52.0 * haunt_state.ghost_dynamics.rl_presence_clarity.max(0.0))
+                        .clamp(0.0, 1.5);
                 let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
                 let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
                     .clamp(0.001, 0.999);
                 opacity = opacity * f + orig_opacity * (1.0 - f);
-                opacity *= (bf.ghost_dynamics.visual_alpha_multiplier * 0.5
+                opacity *= (haunt_state.ghost_dynamics.visual_alpha_multiplier * 0.5
                     + 0.5
                     + e_uv
                     + e_rl

@@ -1,7 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use unplayer::components::player_sprite::PlayerSprite;
 use uncore_components::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::grade::Grade;
@@ -12,6 +11,7 @@ use uncore_resources::states::GameState;
 use uncore_systems::utils::time::format_time;
 use uncore_types::types::root::game_assets::GameAssets;
 use undifficulty::CurrentDifficulty;
+use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 
 pub fn setup(mut commands: Commands) {

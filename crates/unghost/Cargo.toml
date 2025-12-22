@@ -21,6 +21,7 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 untags = { path = "../untags" }
 unspatial = { path = "../unspatial" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 rand = { workspace = true }

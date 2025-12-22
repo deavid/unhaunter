@@ -1,9 +1,9 @@
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
 
-use unspatial::Position;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use unspatial::Position;
 
 use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
@@ -221,7 +221,7 @@ impl GearUsable for EMFMeter {
             let mut new_emf = (avg_temp - self.temp_l1).abs() * 3.0;
             self.emf -= 0.2 * gs.difficulty.0.equipment_sensitivity;
             self.emf /= 1.4_f32.powf(gs.difficulty.0.equipment_sensitivity);
-            let emf5_evidence = gs.bf.ghost_dynamics.emf_level5_clarity.max(-0.2);
+            let emf5_evidence = gs.haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);
             new_emf =
                 f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0)) * (15.0 + emf5_evidence * 30.0);
             self.emf = self.emf.max(new_emf);
@@ -268,9 +268,12 @@ impl GearUsable for EMFMeter {
         }
 
         // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.bf.ghost_warning_position {
+        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(gs.bf.ghost_warning_intensity, distance2);
+            self.apply_electromagnetic_interference(
+                gs.haunt_state.ghost_warning_intensity,
+                distance2,
+            );
         }
     }
 

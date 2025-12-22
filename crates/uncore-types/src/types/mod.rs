@@ -1,10 +1,10 @@
 pub mod difficulty;
 pub mod evidence_status;
 pub mod game;
+pub mod gear;
 pub mod gear_kind;
 pub mod manual;
 pub mod miasma;
 pub mod mission_data;
-pub mod truck_button;
-pub mod gear;
 pub mod root;
+pub mod truck_button;

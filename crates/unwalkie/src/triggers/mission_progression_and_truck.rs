@@ -1,12 +1,12 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
 use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::ghost_shared::GhostSprite;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost::components::ghost_breach::GhostBreach;
+use unghost_core::components::GhostSprite;
 use unplayer::components::player_sprite::PlayerSprite;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

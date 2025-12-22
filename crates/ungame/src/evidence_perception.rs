@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use uncore_components::components::player_shared::PlayerSprite;
-use uncore_resources::resources::current_evidence_readings::CurrentEvidenceReadings;
-use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_foundation::types::evidence::Evidence;
+use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_types::types::gear_kind::GearKind;
 use ungear::{
     components::playergear::PlayerGear,
     types::gear::Gear, // The actual Gear struct
 };
+use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 
 // This system is responsible for determining what evidence the player *perceives*
 // from their handheld gear's UI and sound, and reporting that to CurrentEvidenceReadings.

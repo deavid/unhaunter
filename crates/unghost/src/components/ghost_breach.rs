@@ -1,5 +1,2 @@
-use bevy::prelude::*;
-
-/// Marker component for the ghost's visual breach effect.
-#[derive(Component, Debug)]
-pub struct GhostBreach;
+// Re-export shared ghost components from unghost-core
+pub use unghost_core::components::ghost_breach::GhostBreach;

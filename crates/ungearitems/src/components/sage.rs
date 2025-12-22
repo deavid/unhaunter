@@ -6,14 +6,14 @@ use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::components::mapcolor::MapColor;
-use uncore_systems::metric_recorder::SendMetric;
-use uncore_foundation::random_seed;
-use unspatial::{Direction, Position};
 use uncore_components::components::game::GameSprite;
-use uncore_components::components::ghost_shared::GhostSprite;
 use uncore_components::components::sprite_type::SpriteType;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use uncore_foundation::random_seed;
+use uncore_systems::metric_recorder::SendMetric;
 use uncore_systems::utils::format_time;
+use uncore_types::types::gear::equipmentposition::EquipmentPosition;
+use unghost_core::components::GhostSprite;
+use unspatial::{Direction, Position};
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use unspatial::{BoardPosition, Position};
-use uncore_resources::resources::ambient_mute::AmbientMuteController;
 use uncore_components::components::game::GameSound;
 use uncore_components::components::player_shared::PlayerSprite;
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
+use uncore_resources::resources::ambient_mute::AmbientMuteController;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
 use uncore_resources::states::AppState;
 use uncore_types::types::game::SoundType;
 use unsettings::audio::AudioSettings;
+use unspatial::{BoardPosition, Position};
 
 /// Calculates the ambient sound volumes based on player visibility.
 ///

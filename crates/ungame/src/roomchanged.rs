@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::RoomState;
-use unspatial::Position;
 use uncore_components::components::game::GCameraArena;
 use uncore_components::components::game_config::GameConfig;
 use uncore_components::components::player_shared::PlayerSprite;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::states::GameState;
+use unspatial::Position;
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 
 /// Handles `RoomChangedEvent` events, updating interactive object states and room

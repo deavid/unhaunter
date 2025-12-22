@@ -51,8 +51,8 @@ impl InventoryStats {
     }
 }
 
-use unspatial::{Direction, Position};
 use unsettings::controls::ControlKeys;
+use unspatial::{Direction, Position};
 
 /// Represents a player character in the game world.
 ///

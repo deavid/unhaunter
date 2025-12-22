@@ -24,6 +24,7 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unghost = { path = "../unghost" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

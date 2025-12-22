@@ -2,7 +2,9 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_foundation::platform::plt::VERSION;
-use uncore_resources::resources::mission_select_mode::{CurrentMissionSelectMode, MissionSelectMode};
+use uncore_resources::resources::mission_select_mode::{
+    CurrentMissionSelectMode, MissionSelectMode,
+};
 use uncore_resources::states::{AppState, MapHubState};
 use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuItemInteractive;

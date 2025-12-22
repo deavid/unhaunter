@@ -1,10 +1,10 @@
 //! This module defines systems related to managing the charge levels of objects
 //! that influence ghost behavior.
-use uncore_components::components::ghost_shared::GhostSprite;
-use uncore_resources::resources::object_interaction::ObjectInteractionConfig;
 use uncore_resources::resources::roomdb::RoomDB;
 use undifficulty::CurrentDifficulty;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
+use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unspatial::Position;
 
 use bevy::prelude::*;
