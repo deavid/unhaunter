@@ -5686,6 +5686,7 @@ dependencies = [
  "uncore-resources",
  "unghost-core",
  "unplayer-core",
+ "unrender",
  "unspatial",
  "untags",
 ]
@@ -6031,6 +6032,7 @@ dependencies = [
  "unghost-core",
  "unlight",
  "unplayer",
+ "unrender",
  "unsettings",
  "unspatial",
  "unstd",
@@ -6100,6 +6102,7 @@ dependencies = [
  "ungear",
  "unplayer-core",
  "unprofile",
+ "unrender",
  "unsettings",
  "unspatial",
  "unstd",
@@ -6128,6 +6131,14 @@ dependencies = [
  "serde",
  "uncore-foundation",
  "uncore-types",
+]
+
+[[package]]
+name = "unrender"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "serde",
 ]
 
 [[package]]
@@ -6264,6 +6275,7 @@ dependencies = [
  "unghost-core",
  "unplayer-core",
  "unprofile",
+ "unrender",
  "unsettings",
  "unspatial",
  "untruck",

@@ -1,11 +1,8 @@
-pub mod animation;
 pub mod board;
-pub mod focus_ring;
 pub mod game;
 pub mod game_config;
 pub mod game_ui;
 pub mod hint_ui;
-pub mod light;
 pub mod move_to;
 pub mod repellent_particle;
 pub mod sprite_type;

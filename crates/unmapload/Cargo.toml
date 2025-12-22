@@ -25,6 +25,7 @@ ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 untags = { path = "../untags" }
 unplayer = { path = "../unplayer" }
+unrender = { path = "../unrender" }
 unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
 

@@ -13,6 +13,7 @@ uncore-events = { path = "../uncore-events" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 unplayer-core = { path = "../unplayer-core" }
+unrender = { path = "../unrender" }
 unspatial = { path = "../unspatial" }
 untags = { path = "../untags" }
 unghost-core = { path = "../unghost-core" }

@@ -3,7 +3,6 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{Interactive, RoomState};
-use uncore_components::components::animation::{AnimationTimer, CharacterAnimation};
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
@@ -12,6 +11,7 @@ use uncore_systems::systemparam::collision_handler::CollisionHandler;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::resources::PlayerInput;
+use unrender::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial::{Direction, Position};
 use unstd::systemparam::interactivestuff::InteractiveStuff;
 

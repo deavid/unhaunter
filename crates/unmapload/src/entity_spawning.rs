@@ -7,8 +7,6 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
-use uncore_components::components::animation::{AnimationTimer, CharacterAnimation};
-use uncore_components::components::focus_ring::FocusRing;
 use uncore_components::components::game::GameSound;
 use uncore_components::components::game::GameSprite;
 use uncore_components::components::sprite_type::SpriteType;
@@ -22,6 +20,8 @@ use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::GhostSprite;
 use unplayer::components::player::Stamina;
 use unplayer::components::player_sprite::PlayerSprite;
+use unrender::components::animation::{AnimationTimer, CharacterAnimation};
+use unrender::components::focus_ring::FocusRing;
 use unspatial::{Direction, Position};
 use untags::PlayerTag;
 

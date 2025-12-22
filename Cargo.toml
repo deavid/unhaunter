@@ -24,6 +24,7 @@ members = [
     "crates/unnpc",
     "crates/unplayer",
     "crates/unplayer-core",
+    "crates/unrender",
     "crates/unprofile",
     "crates/unsettings",
     "crates/unsummary",

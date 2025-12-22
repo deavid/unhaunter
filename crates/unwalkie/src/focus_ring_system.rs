@@ -1,9 +1,9 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use uncore_components::components::focus_ring::FocusRing;
 use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::GhostSprite;
+use unrender::components::focus_ring::FocusRing;
 use unwalkiecore::WalkieTalkingEvent;
 use unwalkiecore::events::WalkieEvent;
 
