@@ -5,11 +5,11 @@ use crate::components::ghost_orb_particle::GhostOrbParticle;
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use uncore_board::components::mapcolor::MapColor;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use unghost_core::resources::haunt_state::HauntState;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use unspatial::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)

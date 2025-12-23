@@ -2,10 +2,6 @@ use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 use uncore_board::behavior::Behavior;
-use unui::components::game_ui::{
-    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
-    WalkieTextUIRoot,
-};
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
@@ -13,6 +9,10 @@ use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unsettings::game::GameplaySettings;
+use unui::components::game_ui::{
+    DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
+    WalkieTextUIRoot,
+};
 
 fn cleanup(
     mut commands: Commands,

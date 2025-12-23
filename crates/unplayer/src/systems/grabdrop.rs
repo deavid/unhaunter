@@ -2,8 +2,6 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::FloorItemCollidable;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
 use uncore_types::types::gear::equipmentposition::Hand;
 use uncore_types::types::root::game_assets::GameAssets;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
@@ -11,6 +9,8 @@ use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
 use ungear::gear_usable::GearUsable;
 use unplayer_core::components::HeldObject;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use unspatial::{Direction, Position};
 
 /// Allows the player to pick up a pickable object from the environment.

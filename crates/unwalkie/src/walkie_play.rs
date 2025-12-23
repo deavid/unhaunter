@@ -1,12 +1,12 @@
 use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
-use unui::components::game_ui::WalkieText;
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;
 use uncore_resources::states::{AppState, GameState};
 use unsettings::audio::AudioSettings;
+use unui::components::game_ui::WalkieText;
 use unwalkie_types::VoiceLineData;
 use unwalkiecore::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 

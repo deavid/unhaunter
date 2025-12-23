@@ -1,15 +1,15 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{Interactive, NpcHelpDialog};
-use uncore_resources::resources::game_config::GameConfig;
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::states::GameState;
 use uncore_types::types::root::game_assets::GameAssets;
 use unplayer::components::player_sprite::PlayerSprite;
-use unspatial::{Direction, Position};
 use unrender::materials::UIPanelMaterial;
+use unspatial::{Direction, Position};
 
 #[derive(Debug, Component)]
 pub struct NpcUI;

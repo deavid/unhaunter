@@ -10,10 +10,10 @@ use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_systems::systemparam::collision_handler::CollisionHandler;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
+use uninteraction::interactivestuff::InteractiveStuff;
 use unplayer_core::resources::PlayerInput;
 use unrender::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial::{Direction, Position};
-use uninteraction::interactivestuff::InteractiveStuff;
 
 const PLAYER_SPEED: f32 = 0.04;
 const RUN_ADD_MULTIPLIER: f32 = 1.3;

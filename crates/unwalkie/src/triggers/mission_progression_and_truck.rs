@@ -1,7 +1,7 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
-use uncore_resources::resources::game_config::GameConfig;
 use uncore_foundation::types::evidence::Evidence;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::gear_kind::GearKind;
 use ungear::components::playergear::PlayerGear;

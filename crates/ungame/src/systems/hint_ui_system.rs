@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use unui::components::hint_ui::{HintBoxText, HintBoxUIRoot};
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_foundation::platform::plt;
 use uncore_resources::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
 use uncore_resources::states::AppState;
+use unui::components::hint_ui::{HintBoxText, HintBoxUIRoot};
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;
 const HINT_BOX_MARGIN_LEFT_PX: f32 = 20.0;

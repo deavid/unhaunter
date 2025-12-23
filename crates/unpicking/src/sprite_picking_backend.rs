@@ -19,11 +19,11 @@
 //! For pixel-perfect picking, the `CustomSpritePickingMode::AlphaThreshold` variant
 //! is provided but not yet implemented.
 
-use unrender::materials::CustomMaterial1;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_picking::PickingSystems;
 use bevy_picking::backend::prelude::*;
+use unrender::materials::CustomMaterial1;
 
 /// Alpha threshold for pixel-perfect picking (80%)
 const ALPHA_THRESHOLD: f32 = 0.8;

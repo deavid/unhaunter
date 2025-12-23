@@ -18,9 +18,9 @@ use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
 use unlight::prebake::prebake_lighting_field;
-use unspatial::{BoardPosition, Position};
 use unrender::board::tiledata::PreMesh;
 use unrender::plugin::rebuild_collision_data;
+use unspatial::{BoardPosition, Position};
 
 /// Processes level completion after the level is fully loaded.
 ///

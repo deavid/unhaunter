@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use std::any::Any;
-use unghost_core::components::repellent_particle::RepellentParticle;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
@@ -10,6 +9,7 @@ use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::repellent_particle::RepellentParticle;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};

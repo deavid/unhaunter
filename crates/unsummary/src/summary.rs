@@ -1,7 +1,6 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
-use unui::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::grade::Grade;
 use uncore_resources::resources::maps::Maps;
@@ -13,6 +12,7 @@ use uncore_types::types::root::game_assets::GameAssets;
 use undifficulty::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::data::PlayerProfileData;
+use unui::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
 pub fn setup(mut commands: Commands) {
     // ui camera

@@ -8,8 +8,8 @@ use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
-use unspatial::Position;
 use uninteraction::interactivestuff::InteractiveStuff;
+use unspatial::Position;
 
 /// Enhanced destination validation with collision avoidance and path checking
 fn validate_destination_enhanced(

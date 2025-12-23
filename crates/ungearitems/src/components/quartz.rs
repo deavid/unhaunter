@@ -4,10 +4,10 @@
 use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::metrics;
 use bevy::prelude::*;
-use unmetrics::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
 use unghost_core::components::GhostSprite;
+use unmetrics::SendMetric;
 use unspatial::Position;
 use untags::GhostTag;
 

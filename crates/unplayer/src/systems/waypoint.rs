@@ -4,18 +4,16 @@ use uncore_board::behavior::{
     Behavior,
     component::{Interactive, Stairs},
 };
-use unnavigation::components::waypoint::{
-    Waypoint, WaypointOwner, WaypointQueue, WaypointType,
-};
-use untags::game::GCameraArena;
-use unrender::components::game::GameSprite;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::resources::visibility_data::VisibilityData;
-use unplayer_core::resources::PlayerInput;
-use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use uninteraction::interactivestuff::InteractiveStuff;
+use unnavigation::components::waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType};
+use unplayer_core::resources::PlayerInput;
+use unrender::components::game::GameSprite;
+use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
+use untags::game::GCameraArena;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 
