@@ -177,7 +177,7 @@ pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
         (
-            uncore_systems::systems::ambient_sound_mute::process_ambient_mute_events
+            crate::systems::ambient_sound_mute::process_ambient_mute_events
                 .run_if(in_state(AppState::InGame)),
             update_ambient_sound_volumes.run_if(in_state(AppState::InGame)),
         ),

@@ -28,7 +28,6 @@ use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
-use uncore_systems::utils::light::{compute_color_exposure, lerp_color};
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
@@ -45,6 +44,7 @@ use unplayer_core::components::PlayerSprite;
 use unrender::components::game::MapTileSprite;
 use unrender::components::sprite_type::SpriteType;
 use unrender::materials::CustomMaterial1;
+use unrender::utils::light::{compute_color_exposure, lerp_color};
 use unspatial::{BoardPosition, Direction, Position};
 
 pub use uncore_board::components::mapcolor::MapColor;

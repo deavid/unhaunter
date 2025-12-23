@@ -8,7 +8,6 @@ members = [
     "crates/uncore-types",
     "crates/uncore-resources",
     "crates/unmetrics",
-    "crates/uncore-systems",
     "crates/undifficulty",
     "crates/uncoremenu",
     "crates/unfog",
@@ -24,6 +23,7 @@ members = [
     "crates/unnpc",
     "crates/unnavigation",
     "crates/unui",
+    "crates/unnoise",
     "crates/untiled",
     "crates/unmanual",
     "crates/unpicking",
@@ -114,7 +114,6 @@ uncampaign = { path = "crates/uncampaign" }
 undifficulty = { path = "crates/undifficulty" }
 uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-resources = { path = "crates/uncore-resources" }
-uncore-systems = { path = "crates/uncore-systems" }
 uncoremenu = { path = "crates/uncoremenu" }
 unfog = { path = "crates/unfog" }
 ungear = { path = "crates/ungear" }

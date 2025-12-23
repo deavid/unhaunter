@@ -44,6 +44,8 @@ impl Plugin for UnhaunterBoardPlugin {
     ///
     /// * `app` - A mutable reference to the Bevy app.
     fn build(&self, app: &mut App) {
+        crate::systems::animation::app_setup(app);
+        crate::systems::board_sync::app_setup(app);
         app.init_resource::<BoardData>()
             .init_resource::<VisibilityData>()
             .init_resource::<SpriteDB>()

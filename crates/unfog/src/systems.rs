@@ -15,6 +15,7 @@ use uncore_resources::states::AppState;
 use uncore_types::types::root::game_assets::GameAssets;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
+use unnoise::PerlinNoise;
 use unplayer_core::components::PlayerSprite;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
@@ -223,7 +224,7 @@ fn spawn_miasma(
 fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardData>,
-    noise_table: Res<uncore_systems::noise::PerlinNoise>,
+    noise_table: Res<PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
     let measure = metrics::ANIMATE_MIASMA.time_measure();

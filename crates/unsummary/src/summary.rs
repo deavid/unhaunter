@@ -3,11 +3,11 @@ use bevy_persistent::Persistent;
 
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::grade::Grade;
+use uncore_foundation::utils::time::format_time;
 use uncore_resources::resources::maps::Maps;
 use uncore_resources::resources::summary_data::SummaryData;
 use uncore_resources::states::AppState;
 use uncore_resources::states::GameState;
-use uncore_systems::utils::time::format_time;
 use uncore_types::types::root::game_assets::GameAssets;
 use undifficulty::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;

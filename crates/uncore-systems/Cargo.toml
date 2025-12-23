@@ -17,6 +17,7 @@ unspatial = { path = "../unspatial" }
 untags = { path = "../untags" }
 unghost-core = { path = "../unghost-core" }
 unmetrics = { path = "../unmetrics" }
+unnoise = { path = "../unnoise" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 enum-iterator = { workspace = true }

@@ -2,11 +2,8 @@
 //!
 //! This crate contains all game logic, system implementations, and the core plugin.
 
-pub mod noise;
 pub mod platform;
 pub mod plugin;
-pub mod systemparam;
-pub mod systems;
 pub mod traits;
 pub mod utils;
 

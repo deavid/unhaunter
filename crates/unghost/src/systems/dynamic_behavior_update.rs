@@ -1,17 +1,17 @@
 use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use bevy::prelude::*;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_systems::noise::{LONG_TERM_NOISE_FREQ, SHORT_TERM_NOISE_FREQ};
 use undifficulty::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use unnoise::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 
 /// Helper function to calculate a noise-based multiplier value
 ///
 /// This function combines short-term and long-term noise values with given offsets,
 /// normalizes them, combines them, applies power scaling, and clamps the result.
 fn calculate_noise_multiplier(
-    noise_table: &uncore_systems::noise::PerlinNoise,
+    noise_table: &PerlinNoise,
     elapsed_seconds: f32,
     offset_x: f32,
     offset_y: f32,
@@ -34,7 +34,7 @@ fn calculate_noise_multiplier(
 fn update_ghost_behavior_dynamics_system(
     time: Res<Time>,
     difficulty: Res<CurrentDifficulty>,
-    noise_table: Res<uncore_systems::noise::PerlinNoise>,
+    noise_table: Res<PerlinNoise>,
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
     mut haunt_state: ResMut<HauntState>,
     mut report_time: Local<f32>,

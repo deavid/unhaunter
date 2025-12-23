@@ -5658,26 +5658,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "uncore-systems"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "enum-iterator",
- "itertools 0.14.0",
- "noise",
- "uncore-events",
- "uncore-foundation",
- "uncore-resources",
- "unghost-core",
- "unmetrics",
- "unplayer-core",
- "unrender",
- "unspatial",
- "untags",
-]
-
-[[package]]
 name = "uncore-types"
 version = "0.3.2-dev"
 dependencies = [
@@ -5722,11 +5702,11 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncore-types",
  "unghost",
  "unghost-core",
  "unmetrics",
+ "unnoise",
  "unplayer-core",
  "unrender",
  "unspatial",
@@ -5793,7 +5773,6 @@ dependencies = [
  "uncore-board",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncore-types",
  "undifficulty",
  "ungear",
@@ -5815,13 +5794,13 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "undifficulty",
  "ungear",
  "ungearitems",
  "unghost-core",
  "uninteraction",
  "unmetrics",
+ "unnoise",
  "unplayer-core",
  "unrender",
  "unspatial",
@@ -5858,7 +5837,6 @@ dependencies = [
  "uncampaign",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncoremenu",
  "undifficulty",
  "unfog",
@@ -5977,7 +5955,6 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncore-types",
  "undifficulty",
  "unfog",
@@ -6091,7 +6068,16 @@ name = "unnavigation"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "uncore-resources",
  "unspatial",
+]
+
+[[package]]
+name = "unnoise"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "noise",
 ]
 
 [[package]]
@@ -6130,7 +6116,6 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncore-types",
  "undifficulty",
  "ungear",
@@ -6182,6 +6167,7 @@ dependencies = [
  "uncore-types",
  "unmetrics",
  "unspatial",
+ "untags",
 ]
 
 [[package]]
@@ -6190,8 +6176,13 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
+ "uncore-events",
  "uncore-resources",
  "uncore-types",
+ "unghost-core",
+ "unmetrics",
+ "unnoise",
+ "unplayer-core",
 ]
 
 [[package]]
@@ -6230,7 +6221,6 @@ dependencies = [
  "bevy-persistent",
  "uncore-foundation",
  "uncore-resources",
- "uncore-systems",
  "uncore-types",
  "undifficulty",
  "unplayer",

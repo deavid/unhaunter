@@ -15,4 +15,5 @@ unspatial = { path = "../unspatial" }
 uncore-board = { path = "../uncore-board" }
 uncore-resources = { path = "../uncore-resources" }
 unmetrics = { path = "../unmetrics" }
+untags = { path = "../untags" }
 bevy_platform = { workspace = true }

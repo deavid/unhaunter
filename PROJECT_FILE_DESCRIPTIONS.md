@@ -54,7 +54,8 @@ Low-level foundation shared across the project.
   - `AssetIdx` (Asset lookup), `TmxMap` (Tiled map asset).
 - **`uncore-board`**: Spatial system, grid/board logic, collision, `Behavior` component.
   - `Behavior` (Entity behavior on board), `Light`, `Door`, `Stairs`.
-- **`uncore-systems`**: Common ECS systems.
+- **`unnoise`**: Perlin noise generation.
+- **`unmetrics`**: Performance metrics and diagnostics.
   - `UnhaunterCorePlugin`.
 
 ### Game Logic & Progression

@@ -1,5 +1,5 @@
 [package]
-name = "unnavigation"
+name = "unnoise"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -9,5 +9,4 @@ authors.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unspatial = { path = "../unspatial" }
-uncore-resources = { path = "../uncore-resources" }
+noise = { workspace = true }

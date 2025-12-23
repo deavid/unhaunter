@@ -5,4 +5,5 @@ pub mod maplight;
 pub mod metrics;
 pub mod plugin;
 pub mod prebake;
+pub mod systems;
 pub mod utils;

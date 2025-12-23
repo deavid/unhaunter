@@ -7,6 +7,7 @@ pub mod colors;
 pub mod platform;
 pub mod random_seed;
 pub mod types;
+pub mod utils;
 
 pub use colors::*;
 

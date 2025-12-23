@@ -6,7 +6,6 @@ use std::time::Duration;
 use uncampaign::plugin::UnhaunterCampaignPlugin;
 use uncore_foundation::platform::plt;
 use uncore_resources::resources::cli_options::CliOptions;
-use uncore_systems::plugin::UnhaunterCorePlugin;
 use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use undifficulty::CurrentDifficulty;
 use unfog::plugin::UnhaunterFogPlugin;
@@ -74,7 +73,6 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins(CustomSpritePickingPlugin);
 
     app.add_plugins((
-        UnhaunterCorePlugin,
         UnhaunterRootPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,

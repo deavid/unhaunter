@@ -21,7 +21,6 @@ unui = { path = "../unui" }
 untags = { path = "../untags" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
-uncore-systems = { path = "../uncore-systems" }
 uninteraction = { path = "../uninteraction" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }

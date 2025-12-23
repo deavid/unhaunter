@@ -18,7 +18,6 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
-uncore-systems = { path = "../uncore-systems" }
 unmetrics = { path = "../unmetrics" }
 unfog = { path = "../unfog" }
 ungear = { path = "../ungear" }

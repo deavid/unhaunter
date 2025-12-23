@@ -16,7 +16,6 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui = { path = "../unui" }
-uncore-systems = { path = "../uncore-systems" }
 bevy-persistent = { workspace = true }
 unprofile = { path = "../unprofile" }
 unplayer = { path = "../unplayer" }
