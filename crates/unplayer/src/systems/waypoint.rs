@@ -4,10 +4,11 @@ use uncore_board::behavior::{
     Behavior,
     component::{Interactive, Stairs},
 };
-use uncore_components::components::game::{GCameraArena, GameSprite};
-use uncore_components::components::waypoint::{
+use unnavigation::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
+use untags::game::GCameraArena;
+use unrender::components::game::GameSprite;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::mouse_visibility::MouseVisibility;

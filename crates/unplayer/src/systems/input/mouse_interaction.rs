@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use uncore_board::behavior::{Behavior, component::Interactive};
-use uncore_components::components::game_config::GameConfig;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::resources::{looking_gear::LookingGear, visibility_data::VisibilityData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;

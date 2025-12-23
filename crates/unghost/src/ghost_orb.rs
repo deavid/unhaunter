@@ -5,8 +5,8 @@ use crate::components::ghost_orb_particle::GhostOrbParticle;
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use uncore_board::components::mapcolor::MapColor;
-use uncore_components::components::game::GameSprite;
-use uncore_components::components::sprite_type::SpriteType;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use unghost_core::resources::haunt_state::HauntState;

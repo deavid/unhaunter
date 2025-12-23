@@ -1,5 +1,5 @@
 [package]
-name = "undifficulty"
+name = "unnavigation"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,7 +8,5 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-types = { path = "../uncore-types" }
 bevy = { workspace = true }
-serde = { workspace = true }
+unspatial = { path = "../unspatial" }

@@ -2,6 +2,7 @@ pub mod ambient_mute;
 pub mod board_data;
 pub mod cli_options;
 pub mod difficulty_state;
+pub mod game_config;
 pub mod hint_ui_state;
 pub mod looking_gear;
 pub mod manual;

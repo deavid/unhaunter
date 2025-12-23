@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::RoomState;
-use uncore_components::components::game::GCameraArena;
-use uncore_components::components::game_config::GameConfig;
+use untags::game::GCameraArena;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::states::GameState;

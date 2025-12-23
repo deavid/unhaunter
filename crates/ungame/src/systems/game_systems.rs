@@ -1,7 +1,8 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
-use uncore_components::components::game::{GCameraArena, GameSound, GameSprite};
-use uncore_components::components::game_config::GameConfig;
+use untags::game::GCameraArena;
+use unrender::components::game::{GameSound, GameSprite};
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 use unplayer_core::components::PlayerSprite;

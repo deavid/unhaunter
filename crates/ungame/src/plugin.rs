@@ -3,7 +3,7 @@ use crate::{boardfield_update, hide_mouse, looking_gear, systems};
 
 use super::{game_ui, object_charge, pause_ui, roomchanged};
 use bevy::prelude::*;
-use uncore_components::components::game_config::GameConfig;
+use uncore_resources::resources::game_config::GameConfig;
 
 pub struct UnhaunterGamePlugin;
 

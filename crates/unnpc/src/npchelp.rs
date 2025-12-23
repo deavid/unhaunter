@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{Interactive, NpcHelpDialog};
-use uncore_components::components::game_config::GameConfig;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};

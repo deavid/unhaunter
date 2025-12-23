@@ -1,9 +1,6 @@
 use bevy::prelude::*;
-
 use uncore_types::types::game::SoundType;
 
-#[derive(Component)]
-pub struct GCameraArena;
 #[derive(Component, Debug)]
 pub struct GameSprite;
 

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use uncore_components::components::hint_ui::{HintBoxText, HintBoxUIRoot};
+use unui::components::hint_ui::{HintBoxText, HintBoxUIRoot};
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_foundation::platform::plt;
 use uncore_resources::resources::hint_ui_state::{HintAnimationPhase, HintUiState};

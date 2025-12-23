@@ -3,7 +3,7 @@ use crate::components::truck::TruckUIGhostGuess;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashSet;
-use uncore_components::components::game_config::GameConfig;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_events::events::truck::TruckUIEvent;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;

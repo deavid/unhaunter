@@ -10,7 +10,7 @@ use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use uncore_board::types::fielddata::{CollisionFieldData, LightFieldData};
 use uncore_board::types::tiledmap::map::MapLayerType;
-use uncore_components::components::game::{GameSound, GameSprite};
+use unrender::components::game::{GameSound, GameSprite};
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;

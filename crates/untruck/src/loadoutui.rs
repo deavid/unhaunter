@@ -2,7 +2,7 @@ use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
-use uncore_components::components::game_config::GameConfig;
+use uncore_resources::resources::game_config::GameConfig;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;

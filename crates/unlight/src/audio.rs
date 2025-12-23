@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use ndarray::s;
-use uncore_components::components::game::GameSound;
+use unrender::components::game::GameSound;
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use uncore_resources::resources::ambient_mute::AmbientMuteController;
 use uncore_resources::resources::roomdb::RoomDB;

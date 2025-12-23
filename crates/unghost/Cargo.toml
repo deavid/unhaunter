@@ -14,7 +14,7 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-resources = { path = "../uncore-resources" }
-uncore-components = { path = "../uncore-components" }
+unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 uncore-systems = { path = "../uncore-systems" }
 unstd = { path = "../unstd" }

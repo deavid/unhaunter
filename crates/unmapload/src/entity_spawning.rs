@@ -7,9 +7,9 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
-use uncore_components::components::game::GameSound;
-use uncore_components::components::game::GameSprite;
-use uncore_components::components::sprite_type::SpriteType;
+use unrender::components::game::GameSound;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::summary_data::SummaryData;
 use uncore_types::types::game::SoundType;
@@ -17,7 +17,7 @@ use ungear::components::playergear::PlayerGear;
 use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unghost::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use unghost::components::ghost_breach::GhostBreach;
-use unghost_core::components::GhostSprite;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer::components::player::Stamina;
 use unplayer::components::player_sprite::PlayerSprite;
 use unrender::components::animation::{AnimationTimer, CharacterAnimation};
@@ -103,7 +103,7 @@ pub fn spawn_player(
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ))
         .insert(Stamina::default())
-        .insert(uncore_components::components::waypoint::WaypointQueue::default());
+        .insert(unnavigation::components::waypoint::WaypointQueue::default());
 
     // Determine if the van should be open based on distance to van and difficulty setting
     dist_to_van < 8.0 && p.difficulty.0.van_auto_open

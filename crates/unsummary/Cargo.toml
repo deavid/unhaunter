@@ -15,7 +15,7 @@ undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-uncore-components = { path = "../uncore-components" }
+unui = { path = "../unui" }
 uncore-systems = { path = "../uncore-systems" }
 bevy-persistent = { workspace = true }
 unprofile = { path = "../unprofile" }

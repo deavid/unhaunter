@@ -1,7 +1,7 @@
 use bevy::{audio::Volume, prelude::*, time::Stopwatch};
 use bevy_persistent::Persistent;
 use rand::seq::IndexedRandom;
-use uncore_components::components::game_ui::WalkieText;
+use unui::components::game_ui::WalkieText;
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;

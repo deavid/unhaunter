@@ -14,7 +14,6 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-types = { path = "../uncore-types" }
 uncore-events = { path = "../uncore-events" }
-uncore-components = { path = "../uncore-components" }
 uncore-assets = { path = "../uncore-assets" }
 unwalkiecore = { path = "../unwalkiecore" }
 unspatial = { path = "../unspatial" }

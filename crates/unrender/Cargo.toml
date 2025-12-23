@@ -10,3 +10,4 @@ authors.workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
+uncore-types = { path = "../uncore-types" }

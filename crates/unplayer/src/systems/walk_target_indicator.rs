@@ -1,6 +1,6 @@
 use crate::components::walk_target_indicator::WalkTargetIndicator;
 use bevy::prelude::*;
-use uncore_components::components::move_to::MoveToTarget;
+use unnavigation::components::move_to::MoveToTarget;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 

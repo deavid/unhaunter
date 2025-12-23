@@ -1,5 +1,7 @@
 //! Marker components and shared data enums for decoupling game logic.
 
+pub mod game;
+
 use bevy::prelude::*;
 
 /// Marker component for player entities.

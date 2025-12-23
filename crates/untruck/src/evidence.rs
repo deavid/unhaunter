@@ -1,8 +1,8 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_components::components::game_config::GameConfig;
-use uncore_components::components::game_ui::EvidenceUI;
+use uncore_resources::resources::game_config::GameConfig;
+use unui::components::game_ui::EvidenceUI;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::{AppState, GameState};
