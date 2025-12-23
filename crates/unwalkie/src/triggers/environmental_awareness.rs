@@ -2,16 +2,15 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use std::any::Any; // Added import
 
-use uncore_resources::resources::board_data::BoardData;
+use uncore_board::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 use unghost::components::ghost_breach::GhostBreach;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 
-use uncore_resources::resources::roomdb::RoomDB;
-use uncore_types::types::gear_kind::GearKind;
+use uncore_board::resources::roomdb::RoomDB;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
-use ungear::gear_usable::GearUsable;
 use ungearitems::components::thermometer::Thermometer;
 use unwalkiecore::{WalkiePlay, events::WalkieEvent};
 
@@ -80,8 +79,8 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore_types::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == uncore_types::types::truck_button::TruckButtonState::Pressed
+        if let untruck::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -127,8 +126,8 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let uncore_types::types::truck_button::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == uncore_types::types::truck_button::TruckButtonState::Pressed
+        if let untruck::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -222,12 +221,9 @@ fn trigger_thermometer_non_freezing_fixation(
     };
     // Check if right hand is a Thermometer and enabled
     if let GearKind::Thermometer = player_gear.right_hand.kind
-        && let Some(thermo) = player_gear
-            .right_hand
-            .data
-            .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<Thermometer>(d.as_ref()))
-        && thermo.enabled
+        && let Some(thermo) =
+            (&*player_gear.right_hand.gear as &dyn Any).downcast_ref::<Thermometer>()
+        && player_gear.right_hand.is_enabled()
     {
         let temp_c = uncore_foundation::kelvin_to_celsius(thermo.temp);
         if (1.0..=10.0).contains(&temp_c) {

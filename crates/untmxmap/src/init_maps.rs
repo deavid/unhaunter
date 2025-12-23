@@ -1,13 +1,13 @@
 use bevy::prelude::*;
+use uncore_assets::CliOptions;
+use uncore_assets::Maps;
 use uncore_assets::assets::index::AssetIdx;
 use uncore_assets::assets::tmxmap::TmxMap;
 use uncore_assets::assets::tsxsheet::TsxSheet;
+use uncore_assets::types::mission_data::MissionData;
 use uncore_assets::types::root::map::Map;
 use uncore_assets::types::root::map::Sheet;
-use uncore_resources::resources::cli_options::CliOptions;
-use uncore_resources::resources::maps::Maps;
-use uncore_types::types::difficulty::Difficulty;
-use uncore_types::types::mission_data::MissionData;
+use undifficulty::Difficulty;
 
 pub struct PreLoad<A: Asset> {
     path: String,

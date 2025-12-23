@@ -2,8 +2,8 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
+use uncore_board::types::floor::FloorLevelMapping;
 use uncore_board::types::tiledmap::map::{MapLayer, MapLayerGroup};
-use uncore_events::events::loadlevel::FloorLevelMapping;
 use unrender::materials::CustomMaterial1;
 use untiled::{AtlasData, MapTileSet, MapTileSetDb};
 

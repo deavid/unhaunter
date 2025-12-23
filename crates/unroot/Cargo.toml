@@ -8,6 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+uncore-assets = { path = "../uncore-assets" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-types = { path = "../uncore-types" }
 uncore-events = { path = "../uncore-events" }

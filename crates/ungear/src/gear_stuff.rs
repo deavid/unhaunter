@@ -3,9 +3,9 @@ use bevy_persistent::Persistent;
 use unprofile::data::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
+use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::sound::SoundEvent;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::summary_data::SummaryData;
+use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unghost_core::resources::haunt_state::HauntState;
 use unspatial::Position;

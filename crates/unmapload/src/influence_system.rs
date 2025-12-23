@@ -6,8 +6,8 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::roomdb::RoomDB;
+use uncore_board::resources::board_data::BoardData;
+use uncore_board::resources::roomdb::RoomDB;
 use unghost::components::ghost_influence::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
 use unspatial::Position;

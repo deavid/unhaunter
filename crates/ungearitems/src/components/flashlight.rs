@@ -1,9 +1,8 @@
 use uncore_foundation::random_seed;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;
 use unspatial::Position;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;

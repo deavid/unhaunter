@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::looking_gear::LookingGear;
-use uncore_types::types::gear_kind::GearKind;
+use ungear::GearKind;
+use ungear::resources::looking_gear::LookingGear;
 use ungear::{
     components::playergear::PlayerGear,
     types::gear::Gear, // The actual Gear struct
@@ -31,26 +31,23 @@ fn update_current_evidence_readings_from_player_perception_system(
         if gear.kind == GearKind::None {
             return;
         }
-        let Some(gear_data) = gear.data.as_ref() else {
-            return;
-        };
 
         if let Ok(evidence_type) = Evidence::try_from(&gear.kind) {
             let mut clarity = 0.0f32;
 
             if is_status_text_prominently_visible {
-                clarity = clarity.max(gear_data.is_status_text_showing_evidence());
+                clarity = clarity.max(gear.is_status_text_showing_evidence());
             }
             // Important: Use else if for icon if status text already gives max clarity for the same visual aspect
             // However, icon might show different aspect of evidence or be a fallback.
             // For now, max() handles if both contribute independently or redundantly.
             if is_icon_prominently_visible {
-                clarity = clarity.max(gear_data.is_icon_showing_evidence());
+                clarity = clarity.max(gear.is_icon_showing_evidence());
             }
 
             // For handheld gear, if its sound indicates evidence, it's perceived.
             // The GearUsable trait method should return 0.0 if not making evidential sound.
-            clarity = clarity.max(gear_data.is_sound_showing_evidence());
+            clarity = clarity.max(gear.is_sound_showing_evidence());
 
             evidence_readings.report_clarity(
                 evidence_type,

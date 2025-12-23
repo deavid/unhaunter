@@ -11,6 +11,7 @@ homepage.workspace = true
 [dependencies]
 
 unspatial = { path = "../unspatial" }
+uncore-assets = { path = "../uncore-assets" }
 undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }

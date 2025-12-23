@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     window::{CursorOptions, PrimaryWindow},
 };
-use uncore_resources::resources::mouse_visibility::MouseVisibility;
+use uncore_resources::mouse::MouseVisibility;
 use uncore_resources::states::{AppState, GameState};
 
 fn system_hide_mouse(

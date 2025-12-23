@@ -2,13 +2,13 @@
 //!
 //! This module provides all the gameplay settings for each difficulty level.
 
+use crate::Difficulty;
+use crate::ManualChapterIndex;
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
 use uncore_foundation::celsius_to_kelvin;
+use uncore_foundation::types::gear::{GearKind, PlayerGearKind};
 use uncore_foundation::types::ghost::definitions::GhostSet;
-use uncore_types::types::difficulty::Difficulty;
-use uncore_types::types::gear_kind::{GearKind, PlayerGearKind};
-use uncore_types::types::manual::ManualChapterIndex;
-use uncore_types::types::truck::TabContents;
+use uncore_foundation::types::truck::TabContents;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---
@@ -431,7 +431,7 @@ impl DifficultySettings for Difficulty {
     }
 
     fn truck_gear(&self) -> Vec<GearKind> {
-        use uncore_types::types::gear_kind::GearKind::*;
+        use uncore_foundation::types::gear::GearKind::*;
         let mut gear = Vec::new();
 
         match self {

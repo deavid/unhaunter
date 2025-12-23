@@ -8,5 +8,6 @@ pub mod looking_gear;
 pub mod object_charge;
 pub mod pause_ui;
 pub mod plugin;
+pub mod resources;
 pub mod roomchanged;
 pub mod systems;

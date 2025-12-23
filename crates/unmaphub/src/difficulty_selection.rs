@@ -1,20 +1,18 @@
 use bevy::prelude::*;
 use bevy_platform::time::Instant;
+use uncore_assets::GameAssets;
 use uncore_events::events::map_selected::MapSelectedEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::resources::difficulty_state::DifficultySelectionState;
-use uncore_resources::resources::mission_select_mode::{
-    CurrentMissionSelectMode, MissionSelectMode,
-};
+use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore_resources::states::AppState;
 use uncore_resources::states::MapHubState;
-use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::{
     components::*,
     systems::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
+use undifficulty::DifficultySelectionState;
 use undifficulty::{CurrentDifficulty, Difficulty, DifficultySettings};
 
 /// UI component marker for the difficulty selection screen

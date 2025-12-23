@@ -9,6 +9,7 @@ authors.workspace = true
 
 [dependencies]
 unspatial = { path = "../unspatial" }
+uncore-foundation = { path = "../uncore-foundation" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true }
@@ -17,3 +18,4 @@ fastapprox = { workspace = true }
 ordered-float = { workspace = true }
 tiled = { workspace = true }
 anyhow = { workspace = true }
+ndarray = { workspace = true }

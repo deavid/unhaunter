@@ -1,12 +1,13 @@
-use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
-use ndarray::{Array2, Array3};
-use uncore_board::types::{
+use crate::types::floor::FloorLevelMapping;
+use crate::types::miasma::MiasmaGrid;
+use crate::types::{
     fielddata::{CollisionFieldData, LightFieldData},
     prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
 };
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
+use ndarray::{Array2, Array3};
 use uncore_foundation::celsius_to_kelvin;
-use uncore_types::types::miasma::MiasmaGrid;
 use unspatial::BoardPosition;
 
 /// Configuration for the temperature diffusion system
@@ -72,7 +73,7 @@ pub struct BoardData {
     pub z_floor_map: HashMap<usize, i32>, // Maps z indices back to Tiled floor numbers
 
     // Complete floor mapping information
-    pub floor_mapping: uncore_events::events::loadlevel::FloorLevelMapping,
+    pub floor_mapping: FloorLevelMapping,
 
     pub map_path: String,      // Path to the current map file
     pub level_ready_time: f32, // Time when the level became ready
@@ -237,7 +238,7 @@ impl FromWorld for BoardData {
             prebaked_propagation: Vec::new(),
             floor_z_map: HashMap::new(),
             z_floor_map: HashMap::new(),
-            floor_mapping: uncore_events::events::loadlevel::FloorLevelMapping {
+            floor_mapping: FloorLevelMapping {
                 floor_to_z: HashMap::new(),
                 z_to_floor: HashMap::new(),
                 floor_display_names: HashMap::new(),

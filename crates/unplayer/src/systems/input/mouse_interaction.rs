@@ -4,12 +4,12 @@ use bevy::{
     prelude::*,
 };
 use uncore_board::behavior::{Behavior, component::Interactive};
-use uncore_resources::resources::game_config::GameConfig;
-use uncore_resources::resources::{looking_gear::LookingGear, visibility_data::VisibilityData};
 use ungear::components::playergear::PlayerGear;
 use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
+use ungear::resources::looking_gear::LookingGear;
+use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
+use unrender::VisibilityData;
 use unspatial::Position;
 
 /// System that handles right-click to activate right-hand gear.

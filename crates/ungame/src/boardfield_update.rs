@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
+use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
-use uncore_resources::resources::board_data::BoardData;
 use unlight::lighting::rebuild_lighting_field;
 use unrender::plugin::rebuild_collision_data;
 use unspatial::Position;

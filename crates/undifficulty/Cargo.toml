@@ -11,4 +11,6 @@ authors.workspace = true
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 serde = { workspace = true }
+enum-iterator = { workspace = true }

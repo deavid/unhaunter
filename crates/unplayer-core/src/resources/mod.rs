@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use unsettings::controls::ControlKeys;
 use unspatial::Position;
 
+pub mod game_config;
+pub use game_config::GameConfig;
+
 /// Shared resource containing player state for cross-domain access.
 #[derive(Resource, Debug, Clone)]
 pub struct PlayerState {

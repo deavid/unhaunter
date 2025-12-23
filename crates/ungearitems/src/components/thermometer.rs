@@ -1,15 +1,14 @@
 use crate::metrics;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
+use uncore_board::resources::board_data::BoardData;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::{celsius_to_kelvin, kelvin_to_celsius};
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::roomdb::RoomDB;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use undifficulty::CurrentDifficulty;
 use unghost_core::HauntState;
 use unghost_core::components::GhostSprite;

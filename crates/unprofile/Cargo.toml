@@ -17,4 +17,5 @@ dirs = { workspace = true }
 
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
+undifficulty = { path = "../undifficulty" }
 ron = { workspace = true }

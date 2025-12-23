@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use std::any::Any;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -98,10 +98,8 @@ fn trigger_has_repellent_enters_location_system(
 
     // 3. Check Repellent Status
     let has_valid_repellent = player_gear.as_vec().iter().any(|(gear, _epos)| {
-        if gear.kind == GearKind::RepellentFlask
-            && let Some(rep_data_dyn) = gear.data.as_ref()
-        {
-            return rep_data_dyn.can_enable();
+        if gear.kind == GearKind::RepellentFlask {
+            return gear.can_enable();
         }
         false
     });
@@ -158,14 +156,13 @@ fn trigger_repellent_used_too_far_system(
 
     // 2. Check current repellent state
     let mut current_repellent_is_active = false;
-    if let Some(rep_flask_gear) = player_gear.as_vec().iter().find_map(|(g, _)| {
+    if let Some(rep_data) = player_gear.as_vec().iter().find_map(|(g, _)| {
         if g.kind == GearKind::RepellentFlask {
-            g.data.as_ref()
+            (&*g.gear as &dyn Any).downcast_ref::<RepellentFlask>()
         } else {
             None
         }
-    }) && let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref())
-    {
+    }) {
         current_repellent_is_active = rep_data.active && rep_data.qty > 0;
     }
 
@@ -254,14 +251,13 @@ fn trigger_repellent_provokes_strong_reaction_system(
 
     // 2. Detect Player Repellent Activation
     let mut current_repellent_is_active_and_has_qty = false;
-    if let Some(rep_flask_gear) = player_gear.as_vec().iter().find_map(|(g, _)| {
+    if let Some(rep_data) = player_gear.as_vec().iter().find_map(|(g, _)| {
         if g.kind == GearKind::RepellentFlask {
-            g.data.as_ref()
+            (&*g.gear as &dyn Any).downcast_ref::<RepellentFlask>()
         } else {
             None
         }
-    }) && let Some(rep_data) = <dyn Any>::downcast_ref::<RepellentFlask>(rep_flask_gear.as_ref())
-    {
+    }) {
         current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
     }
 
@@ -360,9 +356,7 @@ fn trigger_repellent_exhausted_correct_type_system(
         // Only check for new exhaustion events
         for (gear, _epos) in player_gear.as_vec() {
             if gear.kind == GearKind::RepellentFlask
-                && let Some(rep_data_dyn) = gear.data.as_ref()
-                && let Some(rep_data) =
-                    <dyn Any>::downcast_ref::<RepellentFlask>(rep_data_dyn.as_ref())
+                && let Some(rep_data) = (&*gear.gear as &dyn Any).downcast_ref::<RepellentFlask>()
             {
                 // Condition 1: Flask is now empty
                 if rep_data.qty == 0 {

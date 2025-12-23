@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use uncore_types::types::manual::ManualChapter;
+use crate::types::ManualChapter;
 
 #[derive(Resource, Debug, Clone)]
 pub struct Manual {

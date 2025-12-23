@@ -1,16 +1,15 @@
 use bevy::prelude::*;
-use uncore_events::hint::OnScreenHintEvent;
-use uncore_resources::resources::hint_ui_state::HintUiState;
-use uncore_resources::resources::maps::Maps;
-use uncore_resources::resources::mission_select_mode::CurrentMissionSelectMode;
-use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::root::anchors::Anchors;
-use uncore_types::types::root::font_assets::{
+use uncore_assets::GameAssets;
+use uncore_assets::Maps;
+use uncore_assets::types::root::anchors::Anchors;
+use uncore_assets::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
     SyneFontAssets, TitilliumWebAssets, VictorMonoAssets,
 };
-use uncore_types::types::root::game_assets::GameAssets;
-use uncore_types::types::root::image_assets::ImageAssets;
+use uncore_assets::types::root::image_assets::ImageAssets;
+use uncore_events::hint::OnScreenHintEvent;
+use uncore_resources::mission_select::CurrentMissionSelectMode;
+use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unplayer_core::resources::PlayerInput;
 
@@ -26,7 +25,6 @@ impl Plugin for UnhaunterRootPlugin {
         unmetrics::app_setup(app);
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
-        app.init_resource::<HintUiState>();
         app.init_resource::<unnoise::PerlinNoise>();
         app.init_resource::<PlayerInput>();
         app.add_message::<OnScreenHintEvent>();

@@ -1,8 +1,8 @@
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::{Interactive, RoomState};
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::roomchanged::InteractionExecutionType;
 use uncore_events::events::sound::SoundEvent;
-use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::GameState;
 use unrender::board::spritedb::SpriteDB;
 use unrender::materials::CustomMaterial1;

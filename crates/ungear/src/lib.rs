@@ -16,7 +16,11 @@ pub mod components;
 pub mod gear_stuff;
 pub mod gear_usable;
 pub mod plugin;
+pub mod resources;
 pub mod systems;
 pub mod types;
 
-pub use uncore_types::types::gear::spriteid::GearSpriteID;
+pub use types::gear::SpriteID;
+pub use uncore_foundation::types::gear::{
+    EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,
+};

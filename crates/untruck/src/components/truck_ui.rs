@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::FONT_SCALE;
-pub use uncore_types::types::truck::{TabContents, TabState};
+pub use uncore_foundation::types::truck::{TabContents, TabState};
 
 /// Represents a tab in the truck UI.
 #[derive(Debug, Clone, Component)]

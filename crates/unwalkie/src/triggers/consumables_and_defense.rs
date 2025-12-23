@@ -1,11 +1,11 @@
 use std::any::Any;
 
 use bevy::prelude::*;
-use uncore_resources::resources::roomdb::RoomDB;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::gear_kind::GearKind;
-use uncore_types::types::manual::ManualChapterIndex;
 use undifficulty::CurrentDifficulty;
+use undifficulty::ManualChapterIndex;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
@@ -37,11 +37,7 @@ fn quartz_cracked_feedback(
         return;
     }
     for (g, _) in gear.as_vec() {
-        if let Some(quartz) = g
-            .data
-            .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d.as_ref()))
-        {
+        if let Some(quartz) = (&*g.gear as &dyn Any).downcast_ref::<QuartzStoneData>() {
             if let Some(prev) = *last_cracks
                 && quartz.cracks > prev
                 && quartz.cracks < 4
@@ -77,10 +73,7 @@ fn quartz_shattered_feedback(
         return;
     }
     for (g, _) in gear.as_vec() {
-        if let Some(quartz) = g
-            .data
-            .as_ref()
-            .and_then(|d| <dyn Any>::downcast_ref::<QuartzStoneData>(d.as_ref()))
+        if let Some(quartz) = (&*g.gear as &dyn Any).downcast_ref::<QuartzStoneData>()
             && quartz.cracks >= 4
             && !*shattered
         {
@@ -232,9 +225,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     // 6. Check Player Inventory for Unconsumed Sage
     let player_has_unconsumed_sage = player_gear.as_vec().iter().any(|(gear, _epos)| {
         if gear.kind == GearKind::SageBundle
-            && let Some(sage_data_dyn) = gear.data.as_ref()
-            && let Some(sage_data) =
-                <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref())
+            && let Some(sage_data) = (&*gear.gear as &dyn Any).downcast_ref::<SageBundleData>()
         {
             return !sage_data.consumed; // Player has sage and it's not consumed
         }
@@ -320,10 +311,8 @@ fn trigger_sage_activated_ineffectively_system(
     // 3. Find Sage in Player's Gear
     let mut current_sage_data: Option<&SageBundleData> = None;
     for (gear_item, _epos) in player_gear.as_vec() {
-        if gear_item.kind == GearKind::SageBundle
-            && let Some(sage_data_dyn) = gear_item.data.as_ref()
-        {
-            current_sage_data = <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref());
+        if gear_item.kind == GearKind::SageBundle {
+            current_sage_data = (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>();
             break;
         }
     }
@@ -480,9 +469,8 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                 let mut player_has_unconsumed_sage_now = false;
                 for (gear_item, _epos) in player_gear.as_vec() {
                     if gear_item.kind == GearKind::SageBundle
-                        && let Some(sage_data_dyn) = gear_item.data.as_ref()
                         && let Some(sage_data) =
-                            <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref())
+                            (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>()
                         && !sage_data.consumed
                     {
                         player_has_unconsumed_sage_now = true;
@@ -505,9 +493,8 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                     // Only check if not already flagged
                     for (gear_item, _epos) in player_gear.as_vec() {
                         if gear_item.kind == GearKind::SageBundle
-                            && let Some(sage_data_dyn) = gear_item.data.as_ref()
                             && let Some(sage_data) =
-                                <dyn Any>::downcast_ref::<SageBundleData>(sage_data_dyn.as_ref())
+                                (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>()
                             && sage_data.is_active
                         {
                             *sage_was_activated_during_this_hunt = true;

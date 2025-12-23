@@ -1,10 +1,9 @@
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::gear_stuff::GearStuff;
 use unspatial::Position;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 // Added

@@ -3,9 +3,9 @@ use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use uncore_board::behavior::Behavior;
+use uncore_board::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
 use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
-use uncore_resources::resources::board_data::BoardData;
 use unspatial::{BoardPosition, Position};
 
 /// Checks if a position is within the board boundaries

@@ -1,4 +1,5 @@
 use crate::components::truck_ui_button::TruckUIButton;
+use crate::types::truck_button::{TruckButtonState, TruckButtonType};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
@@ -7,7 +8,6 @@ use uncore_foundation::colors;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::states::GameState;
-use uncore_types::types::truck_button::{TruckButtonState, TruckButtonType};
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;

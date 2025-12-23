@@ -1,8 +1,7 @@
-use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_foundation::random_seed;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use unspatial::Position;
 
 #[derive(Component, Debug, Clone, PartialEq)]

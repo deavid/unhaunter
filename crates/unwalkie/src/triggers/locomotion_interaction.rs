@@ -4,9 +4,9 @@ use bevy_persistent::Persistent;
 
 use uncore_board::behavior::component::Door;
 use uncore_board::behavior::{Behavior, TileState};
-use uncore_resources::resources::roomdb::RoomDB;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::gear_kind::GearKind;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;

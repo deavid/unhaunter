@@ -1,6 +1,6 @@
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_types::types::{gear::equipmentposition::Hand, gear_kind::GearKind};
 use ungear::components::playergear::PlayerGear;
+use ungear::{GearKind, Hand};
 use ungearitems::prelude::RepellentFlask;
 
 /// Crafts a repellent for the specified ghost type.
@@ -24,8 +24,6 @@ pub fn craft_repellent(playergear: &mut PlayerGear, ghost_type: GhostType) -> bo
         .find(|x| matches!(x.0.kind, GearKind::RepellentFlask))
         .unwrap()
         .0
-        .data
-        .as_mut()
-        .unwrap()
+        .gear
         .do_fill_liquid(ghost_type)
 }

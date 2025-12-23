@@ -1,12 +1,12 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::game_config::GameConfig;
-use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::evidence_status::EvidenceStatus;
 use ungear::components::playergear::PlayerGear;
+use ungear::resources::looking_gear::LookingGear;
+use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 use unui::components::game_ui::EvidenceUI;

@@ -1,10 +1,9 @@
 //! This module defines the `QuartzStoneData` struct and its associated logic,
 //! representing the Quartz Stone consumable item in the game.
 
-use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use crate::metrics;
 use bevy::prelude::*;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
 use unghost_core::components::GhostSprite;
 use unmetrics::SendMetric;
@@ -137,9 +136,7 @@ fn update_quartz_and_ghost(
         for (gear, _) in playergear.as_vec_mut().into_iter() {
             if let GearKind::QuartzStone = gear.kind {
                 for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
-                    gear.data
-                        .as_mut()
-                        .unwrap()
+                    gear.gear
                         .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
                 }
             }
@@ -150,9 +147,7 @@ fn update_quartz_and_ghost(
             for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
                 gear_data
                     .gear
-                    .data
-                    .as_mut()
-                    .unwrap()
+                    .gear
                     .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
             }
         }

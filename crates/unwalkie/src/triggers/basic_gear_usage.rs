@@ -1,12 +1,12 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::gear_kind::GearKind;
-use uncore_types::types::manual::ManualChapterIndex;
 use undifficulty::CurrentDifficulty;
+use undifficulty::ManualChapterIndex;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
@@ -77,19 +77,11 @@ fn trigger_gear_selected_not_activated_system(
         return;
     }
 
-    let Some(gear_data) = right_hand_gear.data.as_ref() else {
-        // Gear has no usable data (should not happen for non-None evidence gear)
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-
     // 3. Check Gear State Conditions (Can be enabled AND is not currently enabled)
     // TODO (David): Ensure all activatable evidence-gathering gear (e.g., UVTorch, RedTorch, Videocam)
     // correctly implements `GearUsable::can_enable()`. For most, this will likely just be `fn can_enable(&self) -> bool { true }`
     // unless specific conditions like battery prevent activation.
-    if !gear_data.can_enable() || gear_data.is_enabled() {
+    if !right_hand_gear.can_enable() || right_hand_gear.is_enabled() {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -248,13 +240,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
         }
         return;
     }
-    let Some(gear_data) = player_gear.right_hand.data.as_ref() else {
-        if tracker.is_some() {
-            *tracker = None;
-        }
-        return;
-    };
-    if !gear_data.is_enabled() {
+    if !player_gear.right_hand.is_enabled() {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -398,8 +384,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
 
     if current_right_tool_kind != GearKind::None
         && Evidence::try_from(&current_right_tool_kind).is_ok()
-        && let Some(gear_data) = player_gear.right_hand.data.as_ref()
-        && gear_data.is_enabled()
+        && player_gear.right_hand.is_enabled()
     {
         is_current_tool_an_active_evidence_tool = true;
     }
@@ -429,8 +414,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     if player_gear.left_hand.kind != GearKind::None &&
        player_gear.left_hand.kind != current_right_tool_kind && // Different tool
        Evidence::try_from(&player_gear.left_hand.kind).is_ok()
-        && let Some(lh_data) = player_gear.left_hand.data.as_ref()
-            && lh_data.can_enable()
+            && player_gear.left_hand.can_enable()
     {
         // Check if it *can* be enabled
         has_other_usable_evidence_tools = true;
@@ -441,8 +425,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
             if gear_in_inv.kind != GearKind::None &&
                gear_in_inv.kind != current_right_tool_kind && // Different tool
                Evidence::try_from(&gear_in_inv.kind).is_ok()
-                && let Some(inv_data) = gear_in_inv.data.as_ref()
-                    && inv_data.can_enable()
+                    && gear_in_inv.can_enable()
             {
                 has_other_usable_evidence_tools = true;
                 break;

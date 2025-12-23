@@ -3,8 +3,8 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
+use uncore_assets::GameAssets;
 use uncore_foundation::colors;
-use uncore_types::types::root::game_assets::GameAssets;
 
 use crate::components::MenuItemInteractive;
 use crate::events::KeyboardNavigate;

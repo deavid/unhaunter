@@ -6,13 +6,13 @@ use bevy_platform::collections::HashSet;
 use uncore_events::events::truck::TruckUIEvent;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::GameConfig;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
 

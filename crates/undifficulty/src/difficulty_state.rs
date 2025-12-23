@@ -1,6 +1,6 @@
+use crate::Difficulty;
 use bevy::prelude::Resource;
 use bevy_platform::time::Instant;
-use uncore_types::types::difficulty::Difficulty;
 
 #[derive(Debug, Clone, Resource)]
 pub struct DifficultySelectionState {

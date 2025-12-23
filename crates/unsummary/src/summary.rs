@@ -1,14 +1,15 @@
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
+use uncore_assets::GameAssets;
+use uncore_assets::Maps;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use uncore_foundation::types::ghost::types::GhostType;
 use uncore_foundation::types::grade::Grade;
 use uncore_foundation::utils::time::format_time;
-use uncore_resources::resources::maps::Maps;
-use uncore_resources::resources::summary_data::SummaryData;
 use uncore_resources::states::AppState;
 use uncore_resources::states::GameState;
-use uncore_types::types::root::game_assets::GameAssets;
+use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::data::PlayerProfileData;
@@ -467,7 +468,7 @@ pub fn update_ui(
                     "Ghost: {}",
                     rsd.ghost_types
                         .iter()
-                        .map(|x| x.to_string())
+                        .map(|x: &GhostType| x.to_string())
                         .collect::<Vec<_>>()
                         .join(", ")
                 )
@@ -742,7 +743,7 @@ impl Plugin for UnhaunterSummaryPlugin {
 // Add a new system to ensure the mission ID is preserved and correctly set
 pub fn store_mission_id(
     mut sd: ResMut<SummaryData>,
-    board_data: Option<Res<uncore_resources::resources::board_data::BoardData>>,
+    board_data: Option<Res<uncore_board::resources::board_data::BoardData>>,
 ) {
     // Debug: Log initial state of SummaryData and BoardData
     info!(

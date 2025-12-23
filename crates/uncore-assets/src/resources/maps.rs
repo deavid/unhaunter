@@ -1,5 +1,5 @@
+use crate::types::root::map::{Map, Sheet};
 use bevy::prelude::*;
-use uncore_assets::types::root::map::{Map, Sheet};
 
 #[derive(Resource, Clone, Debug, Default)]
 pub struct Maps {

@@ -2,12 +2,11 @@
 //! representing the Salt consumable item in the game.
 use crate::metrics;
 
-use super::{Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_foundation::random_seed;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
 use unrender::components::game::GameSprite;

@@ -2,7 +2,7 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use uncore_board::behavior::component::Stairs;
 use uncore_board::behavior::{Behavior, Orientation};
-use uncore_resources::resources::game_config::GameConfig;
+use unplayer_core::GameConfig;
 use unspatial::Position;
 
 pub fn stairs_player(

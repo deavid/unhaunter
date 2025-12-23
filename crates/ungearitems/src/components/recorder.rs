@@ -1,13 +1,13 @@
 use crate::metrics;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
+use uncore_board::resources::board_data::BoardData;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::{board_data::BoardData, roomdb::RoomDB};
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use unghost_core::components::GhostSprite;
 use unmetrics::SendMetric;
 use unspatial::Position;

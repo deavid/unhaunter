@@ -1,7 +1,7 @@
 use bevy::{prelude::*, time::Stopwatch};
-use uncore_resources::resources::roomdb::RoomDB;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use uncore_types::types::gear_kind::GearKind;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;

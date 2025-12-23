@@ -10,10 +10,13 @@ authors.workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
+uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 unspatial = { path = "../unspatial" }
 uncore-board = { path = "../uncore-board" }
 uncore-resources = { path = "../uncore-resources" }
+unplayer-core = { path = "../unplayer-core" }
 unmetrics = { path = "../unmetrics" }
 untags = { path = "../untags" }
 bevy_platform = { workspace = true }
+ndarray = { workspace = true }

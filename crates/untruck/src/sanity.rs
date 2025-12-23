@@ -1,10 +1,10 @@
 use bevy::prelude::*;
+use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::states::GameState;
-use uncore_types::types::root::game_assets::GameAssets;
 use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::GameConfig;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);

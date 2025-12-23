@@ -7,8 +7,8 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use ndarray::Array3;
 use uncore_board::behavior::{Behavior, Orientation};
+use uncore_board::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
-use uncore_resources::resources::board_data::BoardData;
 use unspatial::Position;
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors

@@ -1,8 +1,7 @@
 use crate::types::gear::Gear;
+use crate::{EquipmentPosition, GearKind, Hand};
 use bevy::prelude::*;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
-use uncore_types::types::gear_kind::GearKind;
 use unplayer_core::components::HeldObject;
 
 #[derive(Clone, Debug, Component, Default)]
@@ -160,6 +159,6 @@ impl PlayerGear {
             error!("Flask not found??");
             return false;
         };
-        flask.0.data.as_ref().unwrap().can_fill_liquid(ghost_type)
+        flask.0.gear.can_fill_liquid(ghost_type)
     }
 }

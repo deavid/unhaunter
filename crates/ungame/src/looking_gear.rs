@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncore_resources::resources::game_config::GameConfig;
-use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::AppState;
+use ungear::resources::looking_gear::LookingGear;
+use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 
 fn system_update_looking_gear(

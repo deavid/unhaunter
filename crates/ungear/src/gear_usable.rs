@@ -1,8 +1,8 @@
 use crate::gear_stuff::GearStuff;
+use crate::{EquipmentPosition, GearSpriteID};
 use bevy::color::Color;
 use std::any::Any;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_types::types::gear::{equipmentposition::EquipmentPosition, spriteid::GearSpriteID};
 use unghost_core::components::GhostSprite;
 use unspatial::Position;
 

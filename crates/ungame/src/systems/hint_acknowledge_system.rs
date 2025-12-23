@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::AppState;
 use ungear::components::playergear::PlayerGear;
+use ungear::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 
@@ -18,14 +18,11 @@ fn acknowledge_blinking_gear_hint_system(
 
         if keyboard_input.just_pressed(controls.change_evidence) {
             let active_gear = match looking_gear.hand() {
-                uncore_types::types::gear::equipmentposition::Hand::Left => &player_gear.left_hand,
-                uncore_types::types::gear::equipmentposition::Hand::Right => {
-                    &player_gear.right_hand
-                }
+                ungear::Hand::Left => &player_gear.left_hand,
+                ungear::Hand::Right => &player_gear.right_hand,
             };
 
-            if let Some(gear_data) = &active_gear.data
-                && gear_data.is_blinking_hint_active()
+            if active_gear.is_blinking_hint_active()
                 && let Ok(evidence_type) = Evidence::try_from(&active_gear.kind)
             {
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;

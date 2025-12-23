@@ -21,26 +21,25 @@ use rand::Rng;
 use std::collections::VecDeque;
 use uncore_board::behavior::component::Interactive;
 use uncore_board::behavior::{Behavior, Orientation};
+use uncore_board::resources::board_data::BoardData;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::CollisionFieldData;
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::game_config::GameConfig;
-use uncore_resources::resources::roomdb::RoomDB;
-use uncore_resources::resources::visibility_data::VisibilityData;
-use uncore_types::types::gear::equipmentposition::EquipmentPosition;
-use uncore_types::types::gear_kind::GearKind;
 use undifficulty::CurrentDifficulty;
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
 use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
 use ungear::components::playergear::PlayerGear;
+use ungear::{EquipmentPosition, GearKind};
 use ungearitems::components::salt::UVReactive;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unmetrics::SendMetric;
+use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
+use unrender::VisibilityData;
 use unrender::components::game::MapTileSprite;
 use unrender::components::sprite_type::SpriteType;
 use unrender::materials::CustomMaterial1;
@@ -294,9 +293,7 @@ fn apply_lighting(
     // Deployed gear
     for (pos, deployed_gear, gear_data) in q_deployed.iter() {
         let p = EquipmentPosition::Deployed;
-        let Some(t) = gear_data.gear.data.as_ref() else {
-            continue;
-        };
+        let t = &gear_data.gear.gear;
         let Some((power, color, _p, light_type)) = (match &gear_data.gear.kind {
             GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),
             GearKind::UVTorch => Some((t.power(), t.color(), p, LightType::UltraViolet)),
@@ -320,7 +317,7 @@ fn apply_lighting(
     }
     for (pos, player, direction, gear) in qp.iter() {
         let player_flashlight = gear.as_vec().into_iter().filter_map(|(g, p)| {
-            let t = g.data.as_ref()?;
+            let t = &g.gear;
 
             match &g.kind {
                 GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),

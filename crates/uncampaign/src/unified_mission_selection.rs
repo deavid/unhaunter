@@ -20,16 +20,14 @@ use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 
+use uncore_assets::GameAssets;
+use uncore_assets::Maps;
 use uncore_events::events::loadlevel::LoadLevelEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::FONT_SCALE;
 use uncore_foundation::types::grade::Grade;
-use uncore_resources::resources::maps::Maps;
-use uncore_resources::resources::mission_select_mode::{
-    CurrentMissionSelectMode, MissionSelectMode,
-};
+use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore_resources::states::{AppState, MapHubState};
-use uncore_types::types::root::game_assets::GameAssets;
 use uncoremenu::components::MenuMouseTracker;
 use uncoremenu::events::KeyboardNavigate;
 use uncoremenu::scrollbar::ScrollableListContainer;
@@ -851,7 +849,7 @@ fn create_mission_list_item(
 fn create_locked_mission_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    mission_data: &uncore_types::types::mission_data::MissionData,
+    mission_data: &uncore_assets::types::mission_data::MissionData,
 ) {
     mission_list
         .spawn(Node {

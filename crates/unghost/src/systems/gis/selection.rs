@@ -3,12 +3,12 @@ use rand::Rng;
 use uncore_board::behavior::Behavior;
 use uncore_board::behavior::TileState;
 use uncore_board::behavior::component::{Door, InteractableByGhost};
+use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use uncore_foundation::random_seed;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::visibility_data::VisibilityData;
 use undifficulty::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
+use unrender::VisibilityData;
 use unspatial::Position;
 use untags::PlayerTag;
 

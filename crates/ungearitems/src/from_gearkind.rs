@@ -1,4 +1,4 @@
-use uncore_types::types::gear_kind::{GearKind, PlayerGearKind};
+use ungear::{GearKind, PlayerGearKind};
 use ungear::{components::playergear::PlayerGear, types::gear::Gear};
 
 pub trait FromGearKind {

@@ -1,14 +1,13 @@
 use super::components::deployedgear::{DeployedGear, DeployedGearData};
 use super::components::playergear::PlayerGear;
 use crate::gear_stuff::GearStuff;
-use crate::gear_usable::GearUsable;
+use crate::resources::looking_gear::LookingGear;
+use crate::{EquipmentPosition, Hand};
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_events::events::sound::SoundEvent;
-use uncore_resources::resources::looking_gear::LookingGear;
 use uncore_resources::states::GameState;
-use uncore_types::types::gear::equipmentposition::{EquipmentPosition, Hand};
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unsettings::audio::{AudioSettings, SoundOutput};

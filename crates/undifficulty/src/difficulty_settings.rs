@@ -3,13 +3,13 @@
 //! This trait defines the interface for querying gameplay settings based on difficulty level.
 //! The implementation is in the undifficulty crate to avoid circular dependencies.
 
+use crate::Difficulty;
+use crate::ManualChapterIndex;
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
+use uncore_foundation::types::gear::{GearKind, PlayerGearKind};
 use uncore_foundation::types::ghost::definitions::GhostSet;
-use uncore_types::types::difficulty::Difficulty;
-use uncore_types::types::gear_kind::{GearKind, PlayerGearKind};
-use uncore_types::types::manual::ManualChapterIndex;
-use uncore_types::types::truck::TabContents;
+use uncore_foundation::types::truck::TabContents;
 
 /// Trait for querying difficulty-specific game settings
 pub trait DifficultySettings {

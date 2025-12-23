@@ -4,13 +4,13 @@ use uncore_board::behavior::{
     Behavior,
     component::{Interactive, Stairs},
 };
+use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::mouse_visibility::MouseVisibility;
-use uncore_resources::resources::visibility_data::VisibilityData;
+use uncore_resources::mouse::MouseVisibility;
 use uninteraction::interactivestuff::InteractiveStuff;
 use unnavigation::components::waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType};
 use unplayer_core::resources::PlayerInput;
+use unrender::VisibilityData;
 use unrender::components::game::GameSprite;
 use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use untags::game::GCameraArena;

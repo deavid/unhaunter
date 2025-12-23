@@ -1,8 +1,8 @@
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use uncore_resources::resources::board_data::BoardData;
-use uncore_resources::resources::roomdb::RoomDB;
+use uncore_board::resources::board_data::BoardData;
+use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;

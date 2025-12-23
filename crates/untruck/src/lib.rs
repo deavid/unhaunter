@@ -26,5 +26,10 @@ pub mod sanity;
 pub mod sensors;
 pub mod systems;
 pub mod truckgear;
+pub mod types;
+
+pub use types::evidence_status::EvidenceStatus;
+pub use types::truck_button::{TruckButtonState, TruckButtonType};
+pub use uncore_foundation::types::truck::{TabContents, TabState};
 pub mod ui;
 pub mod uibutton;

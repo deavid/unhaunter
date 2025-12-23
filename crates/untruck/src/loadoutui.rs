@@ -1,24 +1,21 @@
 use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use crate::EvidenceStatus;
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
+use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::resources::game_config::GameConfig;
 use uncore_resources::states::GameState;
-use uncore_types::types::evidence_status::EvidenceStatus;
-use uncore_types::types::gear::equipmentposition::Hand;
-use uncore_types::types::gear::spriteid::GearSpriteID;
-use uncore_types::types::gear_kind::GearKind;
-use uncore_types::types::root::game_assets::GameAssets;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
-use ungear::gear_usable::GearUsable;
 use ungear::types::gear::Gear;
+use ungear::{GearKind, GearSpriteID, Hand};
 use ungearitems::components::repellentflask::RepellentFlask;
 use unplayer::components::player_inventory::{Inventory, InventoryNext};
 use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::GameConfig;
 use unrender::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
@@ -414,9 +411,8 @@ fn button_clicked(
             };
 
             if gear_to_remove.kind == GearKind::RepellentFlask
-                && let Some(rep_data) = gear_to_remove.data.as_ref()
                 && let Some(rep_flask) =
-                    <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+                    (&*gear_to_remove.gear as &dyn std::any::Any).downcast_ref::<RepellentFlask>()
             {
                 // Check if it's full and unopened (qty == MAX_QTY && !active)
                 if rep_flask.qty == 400 && !rep_flask.active {
@@ -433,9 +429,8 @@ fn button_clicked(
                 // Check if we're returning a full, unopened repellent flask for refund
                 if let Some(gear_to_remove) = p_gear.inventory.get(idx)
                     && gear_to_remove.kind == GearKind::RepellentFlask
-                    && let Some(rep_data) = gear_to_remove.data.as_ref()
-                    && let Some(rep_flask) =
-                        <dyn std::any::Any>::downcast_ref::<RepellentFlask>(rep_data.as_ref())
+                    && let Some(rep_flask) = (&*gear_to_remove.gear as &dyn std::any::Any)
+                        .downcast_ref::<RepellentFlask>()
                 {
                     // Check if it's full and unopened (qty == MAX_QTY && !active)
                     if rep_flask.qty == 400 && !rep_flask.active {
