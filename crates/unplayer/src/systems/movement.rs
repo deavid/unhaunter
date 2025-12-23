@@ -13,7 +13,7 @@ use ungear::components::playergear::PlayerGear;
 use unplayer_core::resources::PlayerInput;
 use unrender::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial::{Direction, Position};
-use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uninteraction::interactivestuff::InteractiveStuff;
 
 const PLAYER_SPEED: f32 = 0.04;
 const RUN_ADD_MULTIPLIER: f32 = 1.3;

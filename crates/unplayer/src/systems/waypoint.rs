@@ -15,7 +15,7 @@ use uncore_resources::resources::mouse_visibility::MouseVisibility;
 use uncore_resources::resources::visibility_data::VisibilityData;
 use unplayer_core::resources::PlayerInput;
 use unspatial::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
-use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uninteraction::interactivestuff::InteractiveStuff;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 

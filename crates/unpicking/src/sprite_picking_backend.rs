@@ -19,7 +19,7 @@
 //! For pixel-perfect picking, the `CustomSpritePickingMode::AlphaThreshold` variant
 //! is provided but not yet implemented.
 
-use crate::materials::CustomMaterial1;
+use unrender::materials::CustomMaterial1;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_picking::PickingSystems;

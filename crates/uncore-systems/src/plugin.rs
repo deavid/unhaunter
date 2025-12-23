@@ -11,7 +11,7 @@ pub struct UnhaunterCorePlugin;
 impl Plugin for UnhaunterCorePlugin {
     /// Builds the plugin by adding necessary systems to the app.
     fn build(&self, app: &mut App) {
-        crate::metric_recorder::app_setup(app);
+        unmetrics::app_setup(app);
         crate::systems::evidence_decay::app_setup(app);
         crate::systems::board::app_setup(app);
         crate::systems::animation::app_setup(app);

@@ -1,6 +1,7 @@
 pub mod preplay_manual_ui;
 pub mod user_manual_ui;
 pub mod utils;
+pub mod plugin;
 
 pub mod chapter1;
 pub mod chapter2;

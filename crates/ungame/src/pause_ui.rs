@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use uncore_types::types::root::game_assets::GameAssets;
-use unstd::materials::UIPanelMaterial;
+use unrender::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]
 pub struct PauseUI;

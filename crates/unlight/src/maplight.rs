@@ -30,7 +30,7 @@ use uncore_foundation::platform::plt::IS_WASM;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use uncore_systems::utils::light::{compute_color_exposure, lerp_color};
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use uncore_types::types::gear_kind::GearKind;
@@ -45,7 +45,7 @@ use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
 use unspatial::{BoardPosition, Direction, Position};
-use unstd::materials::CustomMaterial1;
+use unrender::materials::CustomMaterial1;
 
 pub use uncore_board::components::mapcolor::MapColor;
 pub use uncore_board::types::light::{LightData, LightType};

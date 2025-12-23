@@ -19,7 +19,7 @@ use ungear::types::gear::Gear;
 use ungearitems::components::repellentflask::RepellentFlask;
 use unplayer::components::player_inventory::{Inventory, InventoryNext};
 use unplayer::components::player_sprite::PlayerSprite;
-use unstd::materials::UIPanelMaterial;
+use unrender::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {

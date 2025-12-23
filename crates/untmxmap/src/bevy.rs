@@ -4,10 +4,8 @@ use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
 use uncore_board::types::tiledmap::map::{MapLayer, MapLayerGroup};
 use uncore_events::events::loadlevel::FloorLevelMapping;
-use unstd::{
-    materials::CustomMaterial1,
-    tiledmap::{AtlasData, MapTileSet, MapTileSetDb},
-};
+use unrender::materials::CustomMaterial1;
+use untiled::{AtlasData, MapTileSet, MapTileSetDb};
 
 use super::load::load_tile_layer_iter;
 

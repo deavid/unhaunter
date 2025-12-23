@@ -7,6 +7,7 @@ use uncore_foundation::platform::plt::FONT_SCALE;
 use uncore_resources::resources::difficulty_state::DifficultySelectionState;
 use uncore_resources::resources::maps::Maps;
 use uncore_resources::states::AppState;
+use uncore_types::types::manual::ManualChapterIndex;
 use uncore_types::types::root::game_assets::GameAssets;
 use undifficulty::CurrentDifficulty;
 
@@ -71,7 +72,7 @@ pub fn preplay_manual_system(
                 if let Some(Some(chapter)) = difficulty
                     .0
                     .tutorial_chapter
-                    .map(|c| manual.chapters.get(c.index()))
+                    .map(|c: ManualChapterIndex| manual.chapters.get(c.index()))
                 {
                     let current_chapter_size = chapter.pages.len();
 
@@ -261,7 +262,7 @@ pub fn setup_preplay_ui(
             .0
             .tutorial_chapter
             .as_ref()
-            .map(|x| x.index())
+            .map(|x: &ManualChapterIndex| x.index())
             .unwrap_or_default(),
         0,
     ));

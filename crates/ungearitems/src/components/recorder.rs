@@ -7,7 +7,7 @@ use std::mem::swap;
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::resources::{board_data::BoardData, roomdb::RoomDB};
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use unghost_core::components::GhostSprite;
 use unspatial::Position;

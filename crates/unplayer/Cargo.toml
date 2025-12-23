@@ -22,7 +22,7 @@ untags = { path = "../untags" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
 uncore-systems = { path = "../uncore-systems" }
-unstd = { path = "../unstd" }
+uninteraction = { path = "../uninteraction" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }

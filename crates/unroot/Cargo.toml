@@ -1,5 +1,5 @@
 [package]
-name = "uninteraction"
+name = "unroot"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,9 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-bevy = { workspace = true }
-unspatial = { path = "../unspatial" }
-unrender = { path = "../unrender" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
 uncore-resources = { path = "../uncore-resources" }
+uncore-types = { path = "../uncore-types" }
+bevy = { workspace = true }
+bevy_framepace = { workspace = true }

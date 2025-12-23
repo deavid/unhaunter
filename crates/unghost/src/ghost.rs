@@ -11,7 +11,7 @@ use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::summary_data::SummaryData;
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use uncore_systems::utils::{MeanValue, PrintingTimer};
 use undifficulty::CurrentDifficulty;
 use ungear::gear_stuff::GearStuff;

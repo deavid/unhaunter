@@ -16,7 +16,7 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui = { path = "../unui" }
 unplayer-core = { path = "../unplayer-core" }
-unstd = { path = "../unstd" }
+unrender = { path = "../unrender" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unghost = { path = "../unghost" }

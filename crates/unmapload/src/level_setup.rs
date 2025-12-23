@@ -19,9 +19,9 @@ use undifficulty::CurrentDifficulty;
 use unghost::components::ghost_influence::InfluenceType;
 use unghost_core::resources::haunt_state::HauntState;
 use unspatial::Position;
-use unstd::board::spritedb::SpriteDB;
-use unstd::materials::CustomMaterial1;
-use unstd::tiledmap::MapTileSetDb;
+use unrender::board::spritedb::SpriteDB;
+use unrender::materials::CustomMaterial1;
+use untiled::MapTileSetDb;
 
 use crate::entity_spawning;
 use crate::sprite_db;

@@ -9,7 +9,7 @@ use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::random_seed;
 use uncore_resources::resources::board_data::BoardData;
 use unspatial::Position;
-use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uninteraction::interactivestuff::InteractiveStuff;
 
 /// Enhanced destination validation with collision avoidance and path checking
 fn validate_destination_enhanced(

@@ -10,7 +10,7 @@ use uncore_board::types::fielddata::CollisionFieldData;
 use uncore_resources::resources::board_data::BoardData;
 use uncore_resources::resources::roomdb::RoomDB;
 use uncore_resources::resources::visibility_data::VisibilityData;
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use unspatial::Position;
 
 use crate::board::spritedb::SpriteDB;

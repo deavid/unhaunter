@@ -5,7 +5,7 @@ use uncore_board::components::mapcolor::MapColor;
 use uncore_foundation::random_seed;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::resources::board_data::BoardData;
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use undifficulty::CurrentDifficulty;
 use unghost_core::components::ghost_sprite::GhostSprite;

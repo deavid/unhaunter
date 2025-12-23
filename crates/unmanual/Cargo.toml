@@ -1,5 +1,5 @@
 [package]
-name = "unnpc"
+name = "unmanual"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,14 +8,10 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-
-unspatial = { path = "../unspatial" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-unrender = { path = "../unrender" }
-unplayer = { path = "../unplayer" }
-
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-events = { path = "../uncore-events" }
+undifficulty = { path = "../undifficulty" }
 bevy = { workspace = true }
+bevy_platform = { workspace = true }

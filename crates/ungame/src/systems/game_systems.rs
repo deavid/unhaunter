@@ -9,7 +9,7 @@ use unplayer_core::components::PlayerSprite;
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
 use unspatial::{Direction, Position};
-use unstd::picking::CustomSpritePickingCamera;
+use unpicking::CustomSpritePickingCamera;
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists

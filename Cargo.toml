@@ -7,6 +7,7 @@ members = [
     "crates/uncore-events",
     "crates/uncore-types",
     "crates/uncore-resources",
+    "crates/unmetrics",
     "crates/uncore-systems",
     "crates/undifficulty",
     "crates/uncoremenu",
@@ -23,6 +24,10 @@ members = [
     "crates/unnpc",
     "crates/unnavigation",
     "crates/unui",
+    "crates/untiled",
+    "crates/unmanual",
+    "crates/unpicking",
+    "crates/unroot",
     "crates/unplayer",
     "crates/unplayer-core",
     "crates/unrender",
@@ -125,7 +130,11 @@ unplayer = { path = "crates/unplayer" }
 unprofile = { path = "crates/unprofile" }
 unsettings = { path = "crates/unsettings" }
 unsummary = { path = "crates/unsummary" }
-unstd = { path = "crates/unstd" }
+unrender = { path = "crates/unrender" }
+unmanual = { path = "crates/unmanual" }
+unpicking = { path = "crates/unpicking" }
+unroot = { path = "crates/unroot" }
+untiled = { path = "crates/untiled" }
 untruck = { path = "crates/untruck" }
 untmxmap = { path = "crates/untmxmap" }
 unwalkie = { path = "crates/unwalkie" }

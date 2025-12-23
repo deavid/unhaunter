@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_foundation::random_seed;
-use uncore_systems::metric_recorder::SendMetric;
+use unmetrics::SendMetric;
 use uncore_types::types::gear::equipmentposition::EquipmentPosition;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unrender::components::game::GameSprite;

@@ -1,5 +1,7 @@
 //! Generic components for entity interactions.
 
+pub mod interactivestuff;
+
 use bevy::prelude::*;
 use unspatial::Position;
 

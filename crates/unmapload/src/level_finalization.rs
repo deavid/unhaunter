@@ -19,8 +19,8 @@ use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
 use unlight::prebake::prebake_lighting_field;
 use unspatial::{BoardPosition, Position};
-use unstd::board::tiledata::PreMesh;
-use unstd::plugins::board::rebuild_collision_data;
+use unrender::board::tiledata::PreMesh;
+use unrender::plugin::rebuild_collision_data;
 
 /// Processes level completion after the level is fully loaded.
 ///

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::manual::{create_manual, preplay_manual_ui, user_manual_ui};
+use crate::{create_manual, preplay_manual_ui, user_manual_ui};
 pub struct UnhaunterManualPlugin;
 
 impl Plugin for UnhaunterManualPlugin {

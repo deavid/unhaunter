@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use uncore_assets::assets::index::{AssetIdx, AssetIdxLoader};
 use uncore_assets::assets::tmxmap::{TmxMap, TmxMapLoader};
 use uncore_assets::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
-use unstd::tiledmap::MapTileSetDb;
+use untiled::MapTileSetDb;
 
 use crate::init_maps::MapAssetIndexHandle;
 

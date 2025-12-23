@@ -2,7 +2,6 @@
 //!
 //! This crate contains all game logic, system implementations, and the core plugin.
 
-pub mod metric_recorder;
 pub mod noise;
 pub mod platform;
 pub mod plugin;

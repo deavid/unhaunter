@@ -8,7 +8,7 @@ use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use uncore_resources::states::GameState;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
-use unstd::systemparam::interactivestuff::InteractiveStuff;
+use uninteraction::interactivestuff::InteractiveStuff;
 
 /// Handles `RoomChangedEvent` events, updating interactive object states and room
 /// data.

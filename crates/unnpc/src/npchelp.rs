@@ -9,7 +9,7 @@ use uncore_resources::states::GameState;
 use uncore_types::types::root::game_assets::GameAssets;
 use unplayer::components::player_sprite::PlayerSprite;
 use unspatial::{Direction, Position};
-use unstd::materials::UIPanelMaterial;
+use unrender::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]
 pub struct NpcUI;
