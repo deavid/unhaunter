@@ -1,3 +1,4 @@
+use bevy::prelude::Reflect;
 use bevy_platform::collections::HashSet;
 use enum_iterator::Sequence;
 use enum_iterator::all;
@@ -5,8 +6,11 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use thiserror::Error;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Reflect, Default,
+)]
 pub enum Evidence {
+    #[default]
     FreezingTemp,
     FloatingOrbs,
     UVEctoplasm,

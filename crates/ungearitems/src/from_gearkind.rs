@@ -1,5 +1,5 @@
-use ungear::{GearKind, PlayerGearKind};
-use ungear::{components::playergear::PlayerGear, types::gear::Gear};
+use ungear::GearKind;
+use ungear::types::gear::Gear;
 
 pub trait FromGearKind {
     fn from_gearkind(value: GearKind) -> Gear;
@@ -33,6 +33,7 @@ impl FromGearKind for Gear {
     }
 }
 
+/*
 pub trait FromPlayerGearKind {
     fn from_playergearkind(value: PlayerGearKind) -> PlayerGear;
 }
@@ -51,3 +52,4 @@ impl FromPlayerGearKind for PlayerGear {
         }
     }
 }
+*/

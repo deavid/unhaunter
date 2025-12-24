@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use std::any::Any;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::states::{AppState, GameState};
@@ -86,6 +85,8 @@ fn trigger_has_repellent_enters_location_system(
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     roomdb: Res<RoomDB>,
+    q_gear: Query<&GearKind>,
+    q_repellent: Query<&RepellentFlask>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -97,12 +98,19 @@ fn trigger_has_repellent_enters_location_system(
     };
 
     // 3. Check Repellent Status
-    let has_valid_repellent = player_gear.as_vec().iter().any(|(gear, _epos)| {
-        if gear.kind == GearKind::RepellentFlask {
-            return gear.can_enable();
+    let check_repellent = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity)
+            && *kind == GearKind::RepellentFlask
+            && let Ok(repellent) = q_repellent.get(entity)
+        {
+            return repellent.qty > 0;
         }
         false
-    });
+    };
+
+    let has_valid_repellent = player_gear.left_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.right_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_repellent(e));
 
     // 4. Determine Current Location Status
     let player_is_currently_inside = roomdb
@@ -136,6 +144,8 @@ fn trigger_repellent_used_too_far_system(
     player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
     mut prev_repellent_state: Local<PrevRepellentState>,
+    q_gear: Query<&GearKind>,
+    q_repellent: Query<&RepellentFlask>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -156,14 +166,21 @@ fn trigger_repellent_used_too_far_system(
 
     // 2. Check current repellent state
     let mut current_repellent_is_active = false;
-    if let Some(rep_data) = player_gear.as_vec().iter().find_map(|(g, _)| {
-        if g.kind == GearKind::RepellentFlask {
-            (&*g.gear as &dyn Any).downcast_ref::<RepellentFlask>()
-        } else {
-            None
+    let check_repellent = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity)
+            && *kind == GearKind::RepellentFlask
+            && let Ok(repellent) = q_repellent.get(entity)
+        {
+            return repellent.active && repellent.qty > 0;
         }
-    }) {
-        current_repellent_is_active = rep_data.active && rep_data.qty > 0;
+        false
+    };
+
+    if player_gear.left_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.right_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_repellent(e))
+    {
+        current_repellent_is_active = true;
     }
 
     // 3. Check if repellent is active and player is too far
@@ -224,6 +241,8 @@ fn trigger_repellent_provokes_strong_reaction_system(
     mut tracker: Local<Option<RepellentReactionTracker>>,
     mut prev_rep_active_state: Local<PrevRepellentActiveState>,
     current_difficulty_res: Res<CurrentDifficulty>,
+    q_gear: Query<&GearKind>,
+    q_repellent: Query<&RepellentFlask>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
     if !difficulty_info.difficulty.is_tutorial_difficulty() {
@@ -251,14 +270,21 @@ fn trigger_repellent_provokes_strong_reaction_system(
 
     // 2. Detect Player Repellent Activation
     let mut current_repellent_is_active_and_has_qty = false;
-    if let Some(rep_data) = player_gear.as_vec().iter().find_map(|(g, _)| {
-        if g.kind == GearKind::RepellentFlask {
-            (&*g.gear as &dyn Any).downcast_ref::<RepellentFlask>()
-        } else {
-            None
+    let check_repellent = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity)
+            && *kind == GearKind::RepellentFlask
+            && let Ok(repellent) = q_repellent.get(entity)
+        {
+            return repellent.active && repellent.qty > 0;
         }
-    }) {
-        current_repellent_is_active_and_has_qty = rep_data.active && rep_data.qty > 0;
+        false
+    };
+
+    if player_gear.left_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.right_hand.map(check_repellent).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_repellent(e))
+    {
+        current_repellent_is_active_and_has_qty = true;
     }
 
     if current_repellent_is_active_and_has_qty && !prev_rep_active_state.was_active {
@@ -326,6 +352,8 @@ fn trigger_repellent_exhausted_correct_type_system(
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
     mut check_state: Local<RepellentExhaustedCheckState>,
     current_difficulty_res: Res<CurrentDifficulty>,
+    q_gear: Query<&GearKind>,
+    q_repellent: Query<&RepellentFlask>,
 ) {
     let difficulty_info = &current_difficulty_res.0;
     if !difficulty_info.difficulty.is_tutorial_difficulty() {
@@ -354,9 +382,16 @@ fn trigger_repellent_exhausted_correct_type_system(
     // 2. Detect if a Repellent Flask was emptied and it was of the correct type for the current ghost
     if check_state.pending_check_for_ghost_type.is_none() {
         // Only check for new exhaustion events
-        for (gear, _epos) in player_gear.as_vec() {
-            if gear.kind == GearKind::RepellentFlask
-                && let Some(rep_data) = (&*gear.gear as &dyn Any).downcast_ref::<RepellentFlask>()
+        let gear_iter = player_gear
+            .left_hand
+            .iter()
+            .chain(player_gear.right_hand.iter())
+            .chain(player_gear.inventory.iter());
+
+        for entity in gear_iter {
+            if let Ok(kind) = q_gear.get(*entity)
+                && *kind == GearKind::RepellentFlask
+                && let Ok(rep_data) = q_repellent.get(*entity)
             {
                 // Condition 1: Flask is now empty
                 if rep_data.qty == 0 {

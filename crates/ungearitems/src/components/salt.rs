@@ -2,11 +2,13 @@
 //! representing the Salt consumable item in the game.
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_board::components::mapcolor::MapColor;
+use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
+use ungear::gear_stuff::GearStuff;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
 use unrender::components::game::GameSprite;
@@ -18,16 +20,61 @@ use unspatial::Position;
 pub struct SaltData {
     /// Number of salt charges remaining (0-4).
     pub charges: u8,
-    /// If salt should be spawned on the next frame.
-    pub spawn_salt: bool,
 }
 
 impl Default for SaltData {
     fn default() -> Self {
-        Self {
-            charges: 4,
-            spawn_salt: false,
+        Self { charges: 4 }
+    }
+}
+
+pub fn update_salt(
+    mut gs: GearStuff,
+    mut q_salt: Query<(
+        Entity,
+        &mut SaltData,
+        &mut StatusText,
+        &mut GearSprite,
+        &Position,
+        &EquipmentPosition,
+        Option<&Triggered>,
+    )>,
+) {
+    for (entity, mut salt, mut status, mut sprite, pos, _ep, triggered) in q_salt.iter_mut() {
+        if triggered.is_some() && salt.charges > 0 {
+            salt.charges -= 1;
+
+            // Spawn salt pile entity
+            gs.commands
+                .spawn(Sprite {
+                    image: gs.asset_server.load("img/salt_pile.png"),
+                    ..default()
+                })
+                .insert(
+                    Transform::from_translation(pos.to_screen_coord())
+                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+                )
+                .insert(SaltPile)
+                .insert(GameSprite)
+                .insert(*pos)
+                .insert(SpriteType::Other);
+            gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
+
+            gs.commands.entity(entity).remove::<Triggered>();
         }
+
+        // Update StatusText
+        status.0 = format!("Charges: {}", salt.charges);
+
+        // Update GearSprite
+        sprite.0 = match salt.charges {
+            4 => GearSpriteID::Salt4,
+            3 => GearSpriteID::Salt3,
+            2 => GearSpriteID::Salt2,
+            1 => GearSpriteID::Salt1,
+            // Empty
+            _ => GearSpriteID::Salt0,
+        };
     }
 }
 
@@ -44,36 +91,7 @@ impl GearUsable for SaltData {
         format!("Charges: {}", self.charges)
     }
 
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        if self.charges > 0 && !self.spawn_salt {
-            self.charges -= 1;
-            self.spawn_salt = true;
-        }
-    }
-
-    fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        if self.spawn_salt {
-            self.spawn_salt = false;
-
-            // Spawn salt pile entity
-            let _salt_pile_entity = gs
-                .commands
-                .spawn(Sprite {
-                    image: gs.asset_server.load("img/salt_pile.png"),
-                    ..default()
-                })
-                .insert(
-                    Transform::from_translation(pos.to_screen_coord())
-                        .with_scale(Vec3::new(0.5, 0.5, 0.5)),
-                )
-                .insert(SaltPile)
-                .insert(GameSprite)
-                .insert(*pos)
-                .insert(SpriteType::Other)
-                .id();
-            gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
-        }
-    }
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
 
     fn get_sprite_idx(&self) -> GearSpriteID {
         match self.charges {
@@ -81,10 +99,11 @@ impl GearUsable for SaltData {
             3 => GearSpriteID::Salt3,
             2 => GearSpriteID::Salt2,
             1 => GearSpriteID::Salt1,
-            // Empty
             _ => GearSpriteID::Salt0,
         }
     }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
@@ -250,6 +269,7 @@ fn salty_trace_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_salt);
     app.add_systems(Update, salt_particle_system);
     app.add_systems(Update, salt_pile_system);
     app.add_systems(Update, salty_trace_system);

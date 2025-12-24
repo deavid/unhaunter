@@ -10,6 +10,7 @@ use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use undifficulty::CurrentDifficulty;
+use ungear::resources::spawner::GearSpawnerRegistry;
 use unrender::materials::UIPanelMaterial;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
@@ -40,6 +41,7 @@ fn setup_ui(
     game_state: Res<State<GameState>>,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
+    gear_registry: Res<GearSpawnerRegistry>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
@@ -174,7 +176,13 @@ fn setup_ui(
         };
         p.spawn((base_node.clone(), TabContents::Loadout))
             .with_children(|p| {
-                loadoutui::setup_loadout_ui(p, &handles, &mut materials, &difficulty)
+                loadoutui::setup_loadout_ui(
+                    p,
+                    &handles,
+                    &mut materials,
+                    &difficulty,
+                    &gear_registry,
+                )
             });
         p.spawn((base_node.clone(), TabContents::Journal))
             .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));

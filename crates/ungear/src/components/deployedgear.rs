@@ -1,4 +1,3 @@
-use crate::types::gear::Gear;
 use bevy::prelude::*;
 use unspatial::Direction;
 
@@ -7,10 +6,4 @@ use unspatial::Direction;
 pub struct DeployedGear {
     /// The direction the gear is facing.
     pub direction: Direction,
-}
-
-/// Component to store the GearKind of a deployed gear entity.
-#[derive(Component, Debug, Clone)]
-pub struct DeployedGearData {
-    pub gear: Gear,
 }

@@ -6,10 +6,12 @@ use rand::Rng;
 use uncore_board::behavior::Behavior;
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
+use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::{celsius_to_kelvin, kelvin_to_celsius};
 use undifficulty::CurrentDifficulty;
+use ungear::gear_stuff::GearStuff;
 use unghost_core::HauntState;
 use unghost_core::components::GhostSprite;
 use unmetrics::SendMetric;
@@ -17,37 +19,26 @@ use unspatial::{BoardPosition, Position};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {
-    pub enabled: bool,
     pub temp: f32,
     pub temp_l2: [f32; 5],
     pub temp_l1: f32,
     pub frame_counter: u16,
-    pub display_glitch_timer: f32,
     pub blinking_hint_active: bool,
 }
 
 impl Default for Thermometer {
     fn default() -> Self {
         Self {
-            enabled: Default::default(),
             temp: celsius_to_kelvin(10.0),
             temp_l2: [celsius_to_kelvin(10.0); 5],
             temp_l1: celsius_to_kelvin(10.0),
             frame_counter: Default::default(),
-            display_glitch_timer: Default::default(),
             blinking_hint_active: false,
         }
     }
 }
 
 impl GearUsable for Thermometer {
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.enabled {
-            true => GearSpriteID::ThermometerOn,
-            false => GearSpriteID::ThermometerOff,
-        }
-    }
-
     fn get_display_name(&self) -> &'static str {
         "Thermometer"
     }
@@ -57,26 +48,124 @@ impl GearUsable for Thermometer {
     }
 
     fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
+        format!("{:.1}°C", kelvin_to_celsius(self.temp))
+    }
+
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::ThermometerOff
+    }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
+
+    fn box_clone(&self) -> Box<dyn GearUsable> {
+        Box::new(self.clone())
+    }
+}
+
+pub fn update_thermometer(
+    mut q_thermometer: Query<(
+        &mut Thermometer,
+        &mut StatusText,
+        &mut GearSprite,
+        &Toggleable,
+        &mut Battery,
+        &Electronic,
+        &Position,
+        &ItemName,
+    )>,
+    mut gs: GearStuff,
+) {
+    for (mut thermometer, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
+        q_thermometer.iter_mut()
+    {
+        let mut rng = random_seed::rng();
+        thermometer.frame_counter = thermometer.frame_counter.wrapping_add(1);
+
+        // Update Battery Drain Rate
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+
+        // Update Sprite
+        sprite.0 = match toggle.is_on {
+            true => GearSpriteID::ThermometerOn,
+            false => GearSpriteID::ThermometerOff,
+        };
+
+        // Update Logic
+        if toggle.is_on {
+            const K: f32 = 0.7;
+            let pos = Position {
+                x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
+                y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
+                z: pos.z,
+                global_z: pos.global_z,
+            };
+            let bpos = pos.to_board_position();
+            let temperature = gs.bf.temperature_field[bpos.ndidx()];
+            let temp_reading = temperature;
+            let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
+
+            // Double noise reduction to remove any noise from measurement.
+            let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();
+            thermometer.temp_l2[n] =
+                (thermometer.temp_l2[n] * air_mass + thermometer.temp_l1) / (air_mass + 1.0);
+            thermometer.temp_l1 =
+                (thermometer.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
+            if thermometer.frame_counter % 5 == 0 {
+                let sum_temp: f32 = thermometer.temp_l2.iter().sum();
+                let avg_temp: f32 = sum_temp / thermometer.temp_l2.len() as f32;
+                thermometer.temp = (avg_temp * 5.0).round() / 5.0;
+
+                // Update blinking_hint_active
+                const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+                if kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0 {
+                    let count = gs
+                        .player_profile
+                        .times_evidence_acknowledged_on_gear
+                        .get(&Evidence::FreezingTemp)
+                        .copied()
+                        .unwrap_or(0);
+                    thermometer.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+                } else {
+                    thermometer.blinking_hint_active = false;
+                }
+            } else {
+                // Ensure blinking_hint_active is false if not updating temp this frame,
+                // or if we want it to strictly follow the evidence condition.
+                // For now, let's ensure it's false if the condition isn't met.
+                if !(kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0) {
+                    thermometer.blinking_hint_active = false;
+                }
+            }
+
+            // Possibly play crackling/static sounds during glitches
+            if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
+                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
+            }
+        }
+
+        // Update Status Text
+        let on_s = on_off(toggle.is_on);
 
         // Show garbled text when glitching
-        if self.enabled && self.display_glitch_timer > 0.0 {
+        if toggle.is_on && electronic.glitch_timer > 0.0 {
             let garbled = match random_seed::rng().random_range(0..4) {
                 0 => "Temperature: ERR0R",
                 1 => "Temperature: ---.--°C",
                 2 => "Temperature: ?**.??°C",
                 _ => "SENSOR MALFUNCTION",
             };
-            return format!("{name}: {on_s}\n{garbled}");
+            status.0 = format!("{}: {}\n{}", name.0, on_s, garbled);
+            continue;
         }
 
         // Regular display
-        let msg = if self.enabled {
-            let temp_celsius = kelvin_to_celsius(self.temp);
-            if self.blinking_hint_active {
+        let msg = if toggle.is_on {
+            let temp_celsius = kelvin_to_celsius(thermometer.temp);
+            if thermometer.blinking_hint_active {
                 let temp_str = format!("{:>5.1}ºC", temp_celsius);
-                let blinking_temp_str = if self.frame_counter % 30 < 15 {
+                let blinking_temp_str = if thermometer.frame_counter % 30 < 15 {
                     format!(">[{}]<", temp_str.trim())
                 } else {
                     format!("  {}  ", temp_str.trim())
@@ -88,136 +177,7 @@ impl GearUsable for Thermometer {
         } else {
             "".to_string()
         };
-        format!("{name}: {on_s}\n{msg}")
-    }
-
-    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        // TODO: Add two thresholds: LO: -0.1 and HI: 5.1, with sound effects to notify +
-        // distintive icons.
-        let mut rng = random_seed::rng();
-        self.frame_counter += 1;
-        self.frame_counter %= 65413;
-        const K: f32 = 0.7;
-        let pos = Position {
-            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
-            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z,
-            global_z: pos.global_z,
-        };
-        let bpos = pos.to_board_position();
-        let temperature = gs.bf.temperature_field[bpos.ndidx()];
-        let temp_reading = temperature;
-        let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
-
-        // Double noise reduction to remove any noise from measurement.
-        let n = self.frame_counter as usize % self.temp_l2.len();
-        self.temp_l2[n] = (self.temp_l2[n] * air_mass + self.temp_l1) / (air_mass + 1.0);
-        self.temp_l1 = (self.temp_l1 * air_mass + temp_reading) / (air_mass + 1.0);
-        if self.frame_counter.is_multiple_of(5) {
-            let sum_temp: f32 = self.temp_l2.iter().sum();
-            let avg_temp: f32 = sum_temp / self.temp_l2.len() as f32;
-            self.temp = (avg_temp * 5.0).round() / 5.0;
-
-            // Update blinking_hint_active
-            const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-            if kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0 {
-                let count = gs
-                    .player_profile
-                    .times_evidence_acknowledged_on_gear
-                    .get(&Evidence::FreezingTemp)
-                    .copied()
-                    .unwrap_or(0);
-                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
-            } else {
-                self.blinking_hint_active = false;
-            }
-        } else {
-            // Ensure blinking_hint_active is false if not updating temp this frame,
-            // or if we want it to strictly follow the evidence condition.
-            // For now, let's ensure it's false if the condition isn't met.
-            if !(kelvin_to_celsius(self.temp) < 0.0 && self.display_glitch_timer <= 0.0) {
-                self.blinking_hint_active = false;
-            }
-        }
-
-        // Decrement glitch timer if active
-        if self.display_glitch_timer > 0.0 {
-            self.display_glitch_timer -= gs.time.delta_secs();
-
-            // Possibly play crackling/static sounds during glitches
-            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.3 {
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
-            }
-        }
-
-        // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
-            let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(
-                gs.haunt_state.ghost_warning_intensity,
-                distance2,
-            );
-        }
-    }
-
-    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        self.enabled = !self.enabled;
-    }
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-
-    fn is_electronic(&self) -> bool {
-        true
-    }
-
-    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
-        if warning_level < 0.0001 || !self.enabled {
-            return;
-        }
-        let mut rng = random_seed::rng();
-
-        // Scale effect by distance and warning level
-        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
-
-        // Random temperature spikes
-        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            // Random temperature spike - show extreme cold or hot temperatures
-            if rng.random_bool(0.7) {
-                // Show extremely cold temperatures
-                self.temp = celsius_to_kelvin(rng.random_range(-20.0..-5.0));
-            } else {
-                // Show extremely hot temperatures
-                self.temp = celsius_to_kelvin(rng.random_range(30.0..60.0));
-            }
-
-            // Add a display glitch timer field to Thermometer struct
-            self.display_glitch_timer = 0.3;
-        }
-    }
-
-    fn is_enabled(&self) -> bool {
-        self.enabled
-    }
-
-    fn can_enable(&self) -> bool {
-        true // Thermometer can always be toggled
-    }
-
-    fn is_status_text_showing_evidence(&self) -> f32 {
-        if self.is_enabled()
-            && self.display_glitch_timer <= 0.0
-            && kelvin_to_celsius(self.temp) < 0.0
-        {
-            1.0
-        } else {
-            0.0
-        }
-    }
-
-    fn is_blinking_hint_active(&self) -> bool {
-        self.blinking_hint_active
+        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
     }
 }
 
@@ -541,5 +501,5 @@ fn temperature_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, temperature_update);
+    app.add_systems(Update, (temperature_update, update_thermometer));
 }

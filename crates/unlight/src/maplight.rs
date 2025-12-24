@@ -24,14 +24,15 @@ use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::CollisionFieldData;
+use uncore_components::{Flashlight, Toggleable};
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
 use undifficulty::CurrentDifficulty;
 use unfog::components::MiasmaSprite;
 use unfog::resources::MiasmaConfig;
-use ungear::components::deployedgear::{DeployedGear, DeployedGearData};
+use ungear::components::deployedgear::DeployedGear;
 use ungear::components::playergear::PlayerGear;
-use ungear::{EquipmentPosition, GearKind};
+use ungear::{EquipmentPosition, Hand};
 use ungearitems::components::salt::UVReactive;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::GhostSprite;
@@ -47,7 +48,8 @@ use unrender::utils::light::{compute_color_exposure, lerp_color};
 use unspatial::{BoardPosition, Direction, Position};
 
 pub use uncore_board::components::mapcolor::MapColor;
-pub use uncore_board::types::light::{LightData, LightType};
+pub use uncore_board::types::light::LightData;
+pub use uncore_foundation::types::light::LightType;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use uncore_foundation::random_seed;
@@ -228,7 +230,8 @@ fn apply_lighting(
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
-    q_deployed: Query<(&Position, &DeployedGear, &DeployedGearData)>,
+    q_deployed: Query<(&Position, &DeployedGear, &Flashlight, &Toggleable)>,
+    q_flashlight: Query<(&Flashlight, &Toggleable)>,
     mut bf: ResMut<BoardData>,
     haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
@@ -276,7 +279,7 @@ fn apply_lighting(
     let eye_speed: f32 = 0.4 / difficulty.0.darkness_intensity.sqrt();
     let mut cursor_exp: f32 = 0.001 / difficulty.0.environment_gamma;
     let mut exp_count: f32 = 0.1;
-    let mut flashlights = vec![];
+    let mut flashlights: Vec<(&Position, Direction, f32, Color, LightType, Array3<f32>)> = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
@@ -291,18 +294,14 @@ fn apply_lighting(
     }
 
     // Deployed gear
-    for (pos, deployed_gear, gear_data) in q_deployed.iter() {
-        let p = EquipmentPosition::Deployed;
-        let t = &gear_data.gear.gear;
-        let Some((power, color, _p, light_type)) = (match &gear_data.gear.kind {
-            GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),
-            GearKind::UVTorch => Some((t.power(), t.color(), p, LightType::UltraViolet)),
-            GearKind::RedTorch => Some((t.power(), t.color(), p, LightType::Red)),
-            GearKind::Videocam => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
-            _ => None,
-        }) else {
+    for (pos, deployed_gear, fl, toggle) in q_deployed.iter() {
+        if !toggle.is_on {
             continue;
-        };
+        }
+        let power = fl.power;
+        let color = fl.color;
+        let light_type = fl.light_type;
+
         if power > 0.0 {
             let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
             flashlights.push((
@@ -316,17 +315,26 @@ fn apply_lighting(
         }
     }
     for (pos, player, direction, gear) in qp.iter() {
-        let player_flashlight = gear.as_vec().into_iter().filter_map(|(g, p)| {
-            let t = &g.gear;
+        let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
 
-            match &g.kind {
-                GearKind::Flashlight => Some((t.power(), t.color(), p, LightType::Visible)),
-                GearKind::UVTorch => Some((t.power(), t.color(), p, LightType::UltraViolet)),
-                GearKind::RedTorch => Some((t.power(), t.color(), p, LightType::Red)),
-                GearKind::Videocam => Some((t.power(), t.color(), p, LightType::InfraRedNV)),
-                _ => None,
+        let mut check_gear = |entity: Entity, p: EquipmentPosition| {
+            if let Ok((fl, toggle)) = q_flashlight.get(entity)
+                && toggle.is_on
+            {
+                player_flashlight.push((fl.power, fl.color, p, fl.light_type));
             }
-        });
+        };
+
+        if let Some(e) = gear.left_hand {
+            check_gear(e, EquipmentPosition::Hand(Hand::Left));
+        }
+        if let Some(e) = gear.right_hand {
+            check_gear(e, EquipmentPosition::Hand(Hand::Right));
+        }
+        for e in &gear.inventory {
+            check_gear(*e, EquipmentPosition::Stowed);
+        }
+
         for (power, color, p, light_type) in player_flashlight {
             if power > 0.0 {
                 use EquipmentPosition::*;

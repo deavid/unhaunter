@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
+use uncore_components::EvidenceSensor;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty::{CurrentDifficulty, DifficultySettings};
@@ -192,6 +193,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
     evidence_readings: Res<CurrentEvidenceReadings>,
     player_query: Query<(&PlayerSprite, &PlayerGear)>,
     mut tracked_state: ResMut<ClearEvidenceTrackedState>,
+    q_evidence_sensor: Query<&EvidenceSensor>,
 ) {
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         tracked_state.tracked_clear_evidence.clear();
@@ -208,10 +210,15 @@ fn trigger_clear_evidence_no_action_ckey_system(
 
     for evidence_type in all::<Evidence>() {
         let mut is_evidence_clear_on_active_gear = false;
-        if player_gear
-            .right_hand
-            .kind
-            .is_evidence_tool_for(evidence_type)
+
+        let is_sensor_for_evidence = |entity: Option<Entity>| {
+            entity
+                .and_then(|e| q_evidence_sensor.get(e).ok())
+                .map(|s| s.evidence == evidence_type)
+                .unwrap_or(false)
+        };
+
+        if is_sensor_for_evidence(player_gear.right_hand)
             && let Some(reading) = evidence_readings.get_reading(evidence_type)
             && reading.clarity >= CLEAR_EVIDENCE_THRESHOLD_FOR_HINT
         {

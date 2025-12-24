@@ -3,10 +3,12 @@ use fastapprox::faster;
 use ndarray::Array3;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_board::resources::board_data::BoardData;
+use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
 use uncore_foundation::types::ghost::types::GhostType;
 use undifficulty::CurrentDifficulty;
 use ungear::EquipmentPosition;
+use ungear::gear_stuff::GearStuff;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unmetrics::SendMetric;
@@ -33,27 +35,108 @@ pub struct RepellentFlask {
     pub qty: i32,
 }
 
-impl GearUsable for RepellentFlask {
-    fn can_enable(&self) -> bool {
-        // Can be activated if it's not already active, has quantity, and has a liquid type.
-        !self.active && self.qty > 0 && self.liquid_content.is_some()
-    }
+impl RepellentFlask {
+    const MAX_QTY: i32 = 400;
+}
 
-    fn is_enabled(&self) -> bool {
-        // Is "enabled" (i.e., actively spraying) if active and has quantity.
-        // liquid_content check is implicitly covered: if active and qty > 0,
-        // update() ensures liquid_content was Some.
-        self.active && self.qty > 0
-    }
+pub fn update_repellentflask(
+    mut gs: GearStuff,
+    mut q_repellent: Query<(
+        Entity,
+        &mut RepellentFlask,
+        &mut StatusText,
+        &mut GearSprite,
+        &Position,
+        &EquipmentPosition,
+        Option<&Triggered>,
+    )>,
+) {
+    for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
+        q_repellent.iter_mut()
+    {
+        if triggered.is_some()
+            && !repellent.active
+            && repellent.qty > 0
+            && repellent.liquid_content.is_some()
+        {
+            repellent.active = true;
+            gs.commands.entity(entity).remove::<Triggered>();
+        }
 
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        if self.liquid_content.is_some() && self.qty > 0 {
-            GearSpriteID::RepelentFlaskFull
+        if repellent.active {
+            let mut rng = random_seed::rng();
+            if rng.random_range(0.0..1.0) <= 0.5 {
+                if repellent.qty == RepellentFlask::MAX_QTY {
+                    gs.summary.repellent_used_amt += 1;
+                }
+                repellent.qty -= 1;
+                if repellent.qty <= 0 {
+                    repellent.qty = 0;
+                    repellent.active = false;
+                } else if let Some(liquid_content) = repellent.liquid_content {
+                    let mut pos = *pos;
+                    pos.z += 0.2;
+                    let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
+                        0.1
+                    } else {
+                        0.4
+                    };
+                    pos.x += rng.random_range(-spread..spread);
+                    pos.y += rng.random_range(-spread..spread);
+                    gs.commands
+                        .spawn(Sprite {
+                            color: Color::NONE,
+                            ..default()
+                        })
+                        .insert(pos)
+                        .insert(GameSprite)
+                        .insert(MapColor {
+                            color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
+                        })
+                        .insert(RepellentParticle::new(liquid_content))
+                        .insert(SpriteType::Other);
+                } else {
+                    repellent.qty = 0;
+                    repellent.active = false;
+                }
+            }
+        }
+
+        // Update StatusText
+        let name = "Repellent";
+        let status_line = if repellent.qty > 0 {
+            match repellent.liquid_content {
+                Some(gt) => format!("Anti-{}", gt.name()),
+                None => "Empty (No Type)".to_string(),
+            }
         } else {
-            GearSpriteID::RepelentFlaskEmpty
+            match repellent.liquid_content {
+                Some(gt) => format!("Empty (was Anti-{})", gt.name()),
+                None => "Empty".to_string(),
+            }
+        };
+
+        let msg = if repellent.qty > 0 && repellent.liquid_content.is_some() {
+            if repellent.active {
+                "Emptying flask...\nGet close to the ghost!".to_string()
+            } else {
+                "Flask ready.\nActivate near the Ghost.".to_string()
+            }
+        } else {
+            "Flask empty.\nMust be filled on the van".to_string()
+        };
+        status.0 = format!("{name}: {status_line}\n{msg}");
+
+        // Update GearSprite
+        if repellent.liquid_content.is_some() && repellent.qty > 0 {
+            sprite.0 = GearSpriteID::RepelentFlaskFull;
+        } else {
+            sprite.0 = GearSpriteID::RepelentFlaskEmpty;
         }
     }
+}
 
+impl GearUsable for RepellentFlask {
     fn get_display_name(&self) -> &'static str {
         "Repellent"
     }
@@ -63,91 +146,19 @@ impl GearUsable for RepellentFlask {
     }
 
     fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let status_line = if self.qty > 0 {
-            match self.liquid_content {
-                Some(gt) => format!("Anti-{}", gt.name()),
-                None => "Empty (No Type)".to_string(), // Should ideally not be hit if qty > 0 and filled
-            }
-        } else {
-            // qty is 0
-            match self.liquid_content {
-                Some(gt) => format!("Empty (was Anti-{})", gt.name()), // Indicates what it *was*
-                None => "Empty".to_string(),
-            }
-        };
-
-        let msg = if self.qty > 0 && self.liquid_content.is_some() {
-            if self.active {
-                // or self.is_enabled()
-                "Emptying flask...\nGet close to the ghost!".to_string()
-            } else {
-                "Flask ready.\nActivate near the Ghost.".to_string()
-            }
-        } else {
-            "Flask empty.\nMust be filled on the van".to_string()
-        };
-        format!("{name}: {status_line}\n{msg}")
+        format!("{}%", (self.qty * 100) / Self::MAX_QTY)
     }
 
-    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        if self.can_enable() {
-            // Checks !active, qty > 0, liquid_content.is_some()
-            self.active = true;
-        }
-        // If already active, or qty is 0, or no liquid_content, it does nothing.
-        // This maintains the "activate once to deplete" behavior.
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::RepelentFlaskFull
     }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
-    }
-
-    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, ep: &EquipmentPosition) {
-        if !self.active {
-            return;
-        }
-        let mut rng = random_seed::rng();
-        if rng.random_range(0.0..1.0) > 0.5 {
-            // Reduce the amount of particles emitted. Also reduces the speed of depletion.
-            return;
-        }
-
-        if self.qty == Self::MAX_QTY {
-            gs.summary.repellent_used_amt += 1;
-        }
-        self.qty -= 1;
-        if self.qty <= 0 {
-            self.qty = 0;
-            self.active = false;
-            return;
-        }
-        let Some(liquid_content) = self.liquid_content else {
-            self.qty = 0;
-            self.active = false;
-            return;
-        };
-        let mut pos = *pos;
-        pos.z += 0.2;
-        let spread: f32 = if matches!(ep, EquipmentPosition::Deployed) {
-            0.1
-        } else {
-            0.4
-        };
-        pos.x += rng.random_range(-spread..spread);
-        pos.y += rng.random_range(-spread..spread);
-        gs.commands
-            .spawn(Sprite {
-                color: Color::NONE,
-                ..default()
-            })
-            .insert(pos)
-            .insert(GameSprite)
-            .insert(MapColor {
-                color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
-            })
-            .insert(RepellentParticle::new(liquid_content))
-            .insert(SpriteType::Other);
     }
 
     fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
@@ -160,10 +171,6 @@ impl GearUsable for RepellentFlask {
         self.qty = Self::MAX_QTY;
         was_not_new
     }
-}
-
-impl RepellentFlask {
-    const MAX_QTY: i32 = 400;
 }
 
 impl From<RepellentFlask> for Gear {
@@ -384,5 +391,6 @@ fn repellent_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_repellentflask);
     app.add_systems(Update, repellent_update);
 }

@@ -2,6 +2,7 @@
 
 use bevy::prelude::*;
 use uncore_board::resources::roomdb::RoomDB;
+use uncore_components::{Battery, Toggleable};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty::CurrentDifficulty;
@@ -29,6 +30,7 @@ fn trigger_gear_selected_not_activated_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
     player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
+    q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<Option<RightHandGearStateTracker>>,
     mut r_triggered: Local<i32>,
 ) {
@@ -61,15 +63,28 @@ fn trigger_gear_selected_not_activated_system(
     }
 
     // 2. Inspect Right-Hand Gear & Check if it's an Evidence Tool
-    let right_hand_gear = &player_gear.right_hand;
-    if right_hand_gear.kind == GearKind::None {
+    let Some(right_hand_entity) = player_gear.right_hand else {
+        if tracker.is_some() {
+            *tracker = None;
+        }
+        return;
+    };
+
+    let Ok((gear_kind, toggle, battery_opt)) = q_gear.get(right_hand_entity) else {
+        if tracker.is_some() {
+            *tracker = None;
+        }
+        return;
+    };
+
+    if *gear_kind == GearKind::None {
         if tracker.is_some() {
             *tracker = None;
         }
         return;
     }
 
-    if Evidence::try_from(&right_hand_gear.kind).is_err() {
+    if Evidence::try_from(gear_kind).is_err() {
         // Not an evidence-gathering tool (e.g., Flashlight, Quartz, Salt, Sage)
         if tracker.is_some() {
             *tracker = None;
@@ -78,10 +93,13 @@ fn trigger_gear_selected_not_activated_system(
     }
 
     // 3. Check Gear State Conditions (Can be enabled AND is not currently enabled)
-    // TODO (David): Ensure all activatable evidence-gathering gear (e.g., UVTorch, RedTorch, Videocam)
-    // correctly implements `GearUsable::can_enable()`. For most, this will likely just be `fn can_enable(&self) -> bool { true }`
-    // unless specific conditions like battery prevent activation.
-    if !right_hand_gear.can_enable() || right_hand_gear.is_enabled() {
+    let can_enable = if let Some(battery) = battery_opt {
+        battery.level > 0.0
+    } else {
+        true
+    };
+
+    if !can_enable || toggle.is_on {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -89,7 +107,7 @@ fn trigger_gear_selected_not_activated_system(
     }
 
     // 4. Manage Tracker State & Timer
-    let current_gear_kind = right_hand_gear.kind;
+    let current_gear_kind = *gear_kind;
     let mut reset_timer_this_frame = false;
 
     if keyboard_input.just_pressed(player_sprite.controls.trigger) {
@@ -158,6 +176,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
     roomdb: Res<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
+    q_gear: Query<(&GearKind, &Toggleable)>,
     mut tracker: Local<Option<IneffectiveToolInHotspotTracker>>,
 ) {
     // 1. System Run Condition & Chapter Check
@@ -233,14 +252,27 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     }
 
     // 4. Inspect Right-Hand Gear
-    let current_tool_kind = player_gear.right_hand.kind;
+    let Some(right_hand_entity) = player_gear.right_hand else {
+        if tracker.is_some() {
+            *tracker = None;
+        }
+        return;
+    };
+    let Ok((gear_kind, toggle)) = q_gear.get(right_hand_entity) else {
+        if tracker.is_some() {
+            *tracker = None;
+        }
+        return;
+    };
+    let current_tool_kind = *gear_kind;
+
     if current_tool_kind != GearKind::Thermometer && current_tool_kind != GearKind::EMFMeter {
         if tracker.is_some() {
             *tracker = None;
         }
         return;
     }
-    if !player_gear.right_hand.is_enabled() {
+    if !toggle.is_on {
         if tracker.is_some() {
             *tracker = None;
         }
@@ -266,10 +298,26 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     } else {
         GearKind::Thermometer
     };
-    let player_has_other_tool = player_gear
-        .as_vec()
-        .iter()
-        .any(|(gear, _epos)| gear.kind == other_tool_kind);
+
+    let mut player_has_other_tool = false;
+    // Check left hand
+    if let Some(e) = player_gear.left_hand
+        && let Ok((k, _)) = q_gear.get(e)
+        && *k == other_tool_kind
+    {
+        player_has_other_tool = true;
+    }
+    // Check inventory
+    if !player_has_other_tool {
+        for e in &player_gear.inventory {
+            if let Ok((k, _)) = q_gear.get(*e)
+                && *k == other_tool_kind
+            {
+                player_has_other_tool = true;
+                break;
+            }
+        }
+    }
 
     if !player_has_other_tool {
         if tracker.is_some() {
@@ -333,6 +381,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
     ghost_query: Query<&GhostSprite>, // Add ghost query to check hunting state
+    q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<GearCycleUsageTracker>, // No Option, always track
 ) {
     // 1. System Run Condition & Chapter Check
@@ -379,14 +428,16 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     // 4. Manage Tracker - time_with_current_tool_continuously_active
-    let current_right_tool_kind = player_gear.right_hand.kind;
+    let mut current_right_tool_kind = GearKind::None;
     let mut is_current_tool_an_active_evidence_tool = false;
 
-    if current_right_tool_kind != GearKind::None
-        && Evidence::try_from(&current_right_tool_kind).is_ok()
-        && player_gear.right_hand.is_enabled()
+    if let Some(right_hand_entity) = player_gear.right_hand
+        && let Ok((kind, toggle, _)) = q_gear.get(right_hand_entity)
     {
-        is_current_tool_an_active_evidence_tool = true;
+        current_right_tool_kind = *kind;
+        if *kind != GearKind::None && Evidence::try_from(kind).is_ok() && toggle.is_on {
+            is_current_tool_an_active_evidence_tool = true;
+        }
     }
 
     if is_current_tool_an_active_evidence_tool {
@@ -410,23 +461,32 @@ fn trigger_did_not_cycle_to_other_gear_system(
     }
 
     let mut has_other_usable_evidence_tools = false;
+
+    let check_gear = |entity: Entity| -> bool {
+        if let Ok((kind, _, battery_opt)) = q_gear.get(entity)
+            && *kind != GearKind::None &&
+               *kind != current_right_tool_kind && // Different tool
+               Evidence::try_from(kind).is_ok()
+        {
+            // Check if it *can* be enabled
+            if let Some(battery) = battery_opt {
+                return battery.level > 0.0;
+            }
+            return true;
+        }
+        false
+    };
+
     // Check left hand
-    if player_gear.left_hand.kind != GearKind::None &&
-       player_gear.left_hand.kind != current_right_tool_kind && // Different tool
-       Evidence::try_from(&player_gear.left_hand.kind).is_ok()
-            && player_gear.left_hand.can_enable()
+    if let Some(e) = player_gear.left_hand
+        && check_gear(e)
     {
-        // Check if it *can* be enabled
         has_other_usable_evidence_tools = true;
     }
     // Check inventory if still no other tool found
     if !has_other_usable_evidence_tools {
-        for gear_in_inv in &player_gear.inventory {
-            if gear_in_inv.kind != GearKind::None &&
-               gear_in_inv.kind != current_right_tool_kind && // Different tool
-               Evidence::try_from(&gear_in_inv.kind).is_ok()
-                    && gear_in_inv.can_enable()
-            {
+        for e in &player_gear.inventory {
+            if check_gear(*e) {
                 has_other_usable_evidence_tools = true;
                 break;
             }

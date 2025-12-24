@@ -1,15 +1,4 @@
-/// Represents different types of light in the game.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LightType {
-    /// Standard visible light.
-    Visible,
-    /// Red light, often used for night vision or specific ghost interactions.
-    Red,
-    /// Infrared light used for night vision cameras.
-    InfraRedNV,
-    /// Ultraviolet light, used to reveal evidence or trigger ghost reactions.
-    UltraViolet,
-}
+use uncore_foundation::types::light::LightType;
 
 /// Stores the intensity of different light types at a specific location.
 ///

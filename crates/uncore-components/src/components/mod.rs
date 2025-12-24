@@ -1,1 +1,92 @@
+use bevy::prelude::*;
+use uncore_foundation::types::evidence::Evidence;
+use uncore_foundation::types::gear::GearSpriteID;
 
+use uncore_foundation::types::light::LightType;
+
+/// The display name of an item.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct ItemName(pub String);
+
+impl ItemName {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self(name.into())
+    }
+}
+
+/// A brief description of the item's functionality.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct ItemDescription(pub String);
+
+impl ItemDescription {
+    pub fn new(desc: impl Into<String>) -> Self {
+        Self(desc.into())
+    }
+}
+
+/// The sprite index for the gear.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component)]
+pub struct GearSprite(pub GearSpriteID);
+
+/// Flashlight functionality (Public Interface).
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct Flashlight {
+    pub power: f32,
+    pub color: Color,
+    pub light_type: LightType,
+}
+
+/// Something that can be turned on or off.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component)]
+pub struct Toggleable {
+    pub is_on: bool,
+}
+
+/// Marker for a trigger event on an item.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[reflect(Component)]
+pub struct Triggered;
+
+/// Marker for items that are electronic and susceptible to EMI.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct Electronic {
+    /// 0.0 = immune, 1.0 = highly sensitive
+    pub sensitivity: f32,
+    /// Time remaining for glitch effect
+    pub glitch_timer: f32,
+    /// Current intensity (0.0 - 1.0)
+    pub glitch_intensity: f32,
+}
+
+/// Battery functionality for powered items.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct Battery {
+    /// 0.0 to 1.0
+    pub level: f32,
+    /// Drain rate per second when active
+    pub drain_rate: f32,
+}
+
+/// Evidence sensor functionality (EMF, Thermometer, etc.)
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct EvidenceSensor {
+    pub evidence: Evidence,
+}
+
+/// Marker for items that can be held in hands.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct Handheld;
+
+/// Current status text of the gear (e.g. "Reading: 5.0 mG")
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct StatusText(pub String);

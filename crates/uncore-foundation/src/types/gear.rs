@@ -1,8 +1,10 @@
 use crate::types::evidence::{Evidence, EvidenceError};
+use bevy::prelude::{Component, Reflect, ReflectComponent};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Component, Reflect)]
+#[reflect(Component)]
 pub enum EquipmentPosition {
     Hand(Hand),
     Stowed,
@@ -10,7 +12,10 @@ pub enum EquipmentPosition {
     Deployed,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Sequence, Serialize, Deserialize)]
+#[derive(
+    Debug, PartialEq, Eq, Clone, Copy, Sequence, Serialize, Deserialize, Component, Reflect,
+)]
+#[reflect(Component)]
 pub enum Hand {
     Left,
     Right,
@@ -19,7 +24,21 @@ pub enum Hand {
 /// Represents the different types of gear available in the game.
 ///
 /// Each variant holds a specific gear struct with its own attributes and behavior.
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, Sequence)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    Hash,
+    Sequence,
+    Component,
+    Reflect,
+)]
+#[reflect(Component)]
 pub enum GearKind {
     Thermometer,
     EMFMeter,
@@ -52,19 +71,6 @@ impl GearKind {
     pub fn is_some(&self) -> bool {
         !self.is_none()
     }
-
-    pub fn is_evidence_tool_for(&self, evidence_type: Evidence) -> bool {
-        match self {
-            GearKind::Thermometer => evidence_type == Evidence::FreezingTemp,
-            GearKind::EMFMeter => evidence_type == Evidence::EMFLevel5,
-            GearKind::Recorder => evidence_type == Evidence::EVPRecording,
-            GearKind::GeigerCounter => evidence_type == Evidence::CPM500,
-            GearKind::UVTorch => evidence_type == Evidence::UVEctoplasm,
-            GearKind::SpiritBox => evidence_type == Evidence::SpiritBox,
-            GearKind::RedTorch => evidence_type == Evidence::RLPresence,
-            _ => false,
-        }
-    }
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -78,7 +84,7 @@ pub struct PlayerGearKind {
 ///
 /// Each variant represents a specific sprite or animation frame for a piece of
 /// gear. The values are used to index into the gear spritesheet.
-#[derive(Debug, Default, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, Reflect)]
 pub enum GearSpriteID {
     ThermometerOff = 0,
     ThermometerOn,

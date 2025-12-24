@@ -19,6 +19,7 @@ fn trigger_almost_ready_to_craft_repellent_system(
     time: Res<Time>,
     mut clear_evidences: Local<HashSet<Evidence>>,
     mut repellent_crafted: Local<bool>,
+    q_gear: Query<&GearKind>,
 ) {
     if *app_state != AppState::InGame {
         clear_evidences.clear();
@@ -30,12 +31,21 @@ fn trigger_almost_ready_to_craft_repellent_system(
     }
     // Check if player already has a repellent flask
     if let Ok(player_gear) = player_query.single() {
-        for (gear, _epos) in player_gear.as_vec() {
-            if gear.kind == GearKind::RepellentFlask {
-                // If player already has a repellent flask, no need to prompt to craft.
-                *repellent_crafted = true;
-                return;
+        let check_gear = |entity: Entity| -> bool {
+            if let Ok(kind) = q_gear.get(entity) {
+                *kind == GearKind::RepellentFlask
+            } else {
+                false
             }
+        };
+
+        if player_gear.left_hand.map(check_gear).unwrap_or(false)
+            || player_gear.right_hand.map(check_gear).unwrap_or(false)
+            || player_gear.inventory.iter().any(|&e| check_gear(e))
+        {
+            // If player already has a repellent flask, no need to prompt to craft.
+            *repellent_crafted = true;
+            return;
         }
     }
 

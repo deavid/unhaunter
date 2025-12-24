@@ -2,12 +2,14 @@
 //! representing the Sage Bundle consumable item in the game.
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::components::mapcolor::MapColor;
+use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
 use uncore_foundation::utils::time::format_time;
+use ungear::gear_stuff::GearStuff;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
 use unrender::components::game::GameSprite;
@@ -38,44 +40,37 @@ impl Default for SageBundleData {
     }
 }
 
-impl GearUsable for SageBundleData {
-    fn get_display_name(&self) -> &'static str {
-        "Sage Bundle"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time."
-    }
-
-    fn get_status(&self) -> String {
-        if self.consumed {
-            return "Consumed".to_string();
-        }
-        if !self.is_active {
-            return "Ready".to_string();
-        }
-        format!("Burning: {}", format_time(self.burn_timer.remaining_secs()))
-    }
-
-    fn set_trigger(&mut self, gs: &mut GearStuff) {
-        if !self.is_active && !self.consumed {
-            self.is_active = true;
-            self.burn_timer.reset();
+pub fn update_sage(
+    mut gs: GearStuff,
+    mut q_sage: Query<(
+        Entity,
+        &mut SageBundleData,
+        &mut StatusText,
+        &mut GearSprite,
+        &Position,
+        &EquipmentPosition,
+        Option<&Triggered>,
+    )>,
+) {
+    for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
+        if triggered.is_some() && !sage.is_active && !sage.consumed {
+            sage.is_active = true;
+            sage.burn_timer.reset();
 
             // Play activation sound
             gs.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
-        }
-    }
 
-    fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        if self.is_active && !self.consumed {
-            self.burn_timer.tick(gs.time.delta());
+            gs.commands.entity(entity).remove::<Triggered>();
+        }
+
+        if sage.is_active && !sage.consumed {
+            sage.burn_timer.tick(gs.time.delta());
 
             // Spawn smoke particles
-            if self.burn_timer.just_finished() {
-                self.is_active = false;
-                self.consumed = true;
-            } else if (self.smoke_produced as f32) < self.burn_timer.elapsed_secs() * 3.0 {
+            if sage.burn_timer.just_finished() {
+                sage.is_active = false;
+                sage.consumed = true;
+            } else if (sage.smoke_produced as f32) < sage.burn_timer.elapsed_secs() * 3.0 {
                 let mut pos = *pos;
                 let mut rng = random_seed::rng();
                 pos.z += 0.2;
@@ -103,34 +98,73 @@ impl GearUsable for SageBundleData {
                         TimerMode::Once,
                     )))
                     .insert(SpriteType::Other);
-                self.smoke_produced += 1;
+                sage.smoke_produced += 1;
             }
         }
+
+        // Update StatusText
+        if sage.consumed {
+            status.0 = "Sage Bundle: Consumed".to_string();
+        } else if !sage.is_active {
+            status.0 = "Sage Bundle: Ready".to_string();
+        } else {
+            status.0 = format!(
+                "Sage Bundle: Burning: {}",
+                format_time(sage.burn_timer.remaining_secs())
+            );
+        }
+
+        // Update GearSprite
+        sprite.0 = if sage.consumed {
+            GearSpriteID::SageBundle4
+        } else if !sage.is_active {
+            GearSpriteID::SageBundle0
+        } else {
+            let remaining_time = sage.burn_timer.remaining_secs();
+            if remaining_time > 5.0 {
+                GearSpriteID::SageBundle1
+            } else if remaining_time > 3.0 {
+                GearSpriteID::SageBundle2
+            } else if remaining_time > 0.0 {
+                GearSpriteID::SageBundle3
+            } else {
+                GearSpriteID::SageBundle4
+            }
+        };
     }
+}
+
+impl GearUsable for SageBundleData {
+    fn get_display_name(&self) -> &'static str {
+        "Sage Bundle"
+    }
+
+    fn get_description(&self) -> &'static str {
+        "A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time."
+    }
+    fn get_status(&self) -> String {
+        if self.consumed {
+            "Consumed".to_string()
+        } else if self.is_active {
+            "Burning".to_string()
+        } else {
+            "Ready".to_string()
+        }
+    }
+
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
 
     fn get_sprite_idx(&self) -> GearSpriteID {
         if self.consumed {
-            // Burned out
-            return GearSpriteID::SageBundle4;
+            GearSpriteID::SageBundle4
+        } else if self.is_active {
+            GearSpriteID::SageBundle1
+        } else {
+            GearSpriteID::SageBundle0
         }
-        if !self.is_active {
-            return GearSpriteID::SageBundle0;
-        }
-        let remaining_time = self.burn_timer.remaining_secs();
-        if remaining_time > 5.0 {
-            return GearSpriteID::SageBundle1;
-        }
-        if remaining_time > 3.0 {
-            return GearSpriteID::SageBundle2;
-        }
-        if remaining_time > 0.0 {
-            return GearSpriteID::SageBundle3;
-        }
-
-        // Burned out
-        GearSpriteID::SageBundle4
     }
 
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
     }
@@ -218,5 +252,6 @@ fn sage_smoke_system(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_sage);
     app.add_systems(Update, sage_smoke_system);
 }

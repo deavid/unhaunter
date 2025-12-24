@@ -1,16 +1,18 @@
+use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
+use uncore_foundation::random_seed;
+use ungear::gear_stuff::GearStuff;
+
 use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
+use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::{kelvin_to_celsius, random_seed};
 use unspatial::Position;
 
 /// A component representing the Spirit Box gear item.
 /// This device scans radio frequencies and can sometimes pick up paranormal vocal phenomena.
 #[derive(Component, Debug, Clone, Default)]
 pub struct SpiritBox {
-    /// Whether the spirit box is currently turned on.
-    pub enabled: bool,
     /// A frame counter used for animating the display sprites.
     pub mode_frame: u32,
     /// True if the ghost is currently providing a direct response through the box.
@@ -22,82 +24,209 @@ pub struct SpiritBox {
     /// Accumulates when conditions are right (darkness, proximity to ghost, low temp).
     /// When this reaches a threshold, a ghost response can be triggered.
     pub charge: f32,
-    /// A timer for the visual glitching effect on the display, usually caused by
-    /// electromagnetic interference from the ghost.
-    pub display_glitch_timer: f32,
-    /// A timer for audio static/interference effects.
-    pub interference2_timer: f32,
     /// True if the UI hint for acknowledging the evidence should be blinking.
     /// This is used to draw the player's attention to new evidence.
     pub blinking_hint_active: bool,
 }
 
 impl GearUsable for SpiritBox {
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        // Glitch effect
-        if self.display_glitch_timer > 0.0 {
-            return match random_seed::rng().random_range(0..5) {
-                0 => GearSpriteID::SpiritBoxOff,   // Blank/off
-                1 => GearSpriteID::SpiritBoxScan1, // Flickering
-                2 => GearSpriteID::SpiritBoxScan2,
-                3 => GearSpriteID::SpiritBoxScan3,
-                _ => GearSpriteID::SpiritBoxAns1, // Maybe show as if it answered
-            };
-        }
-
-        // Normal operation
-        match self.enabled {
-            true => match self.ghost_answer {
-                true => match self.mode_frame % 2 {
-                    0 => GearSpriteID::SpiritBoxAns1,
-                    _ => GearSpriteID::SpiritBoxAns2,
-                },
-                false => match self.mode_frame % 3 {
-                    0 => GearSpriteID::SpiritBoxScan1,
-                    1 => GearSpriteID::SpiritBoxScan2,
-                    _ => GearSpriteID::SpiritBoxScan3,
-                },
-            },
-            false => GearSpriteID::SpiritBoxOff,
-        }
-    }
-
     fn get_display_name(&self) -> &'static str {
         "Spirit Box"
     }
 
     fn get_description(&self) -> &'static str {
-        "A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living if you're close to its breach, and with the lights off."
+        "Scans radio frequencies for paranormal vocal phenomena."
     }
 
     fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
+        if self.ghost_answer {
+            "RESPONSE".to_string()
+        } else {
+            "SCANNING".to_string()
+        }
+    }
+
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::SpiritBoxOff
+    }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
+
+    fn box_clone(&self) -> Box<dyn GearUsable> {
+        Box::new(self.clone())
+    }
+}
+
+impl From<SpiritBox> for Gear {
+    fn from(value: SpiritBox) -> Self {
+        Gear::new_from_kind(GearKind::SpiritBox, value.box_clone())
+    }
+}
+
+pub fn update_spiritbox(
+    mut q_spiritbox: Query<(
+        &mut SpiritBox,
+        &mut StatusText,
+        &mut GearSprite,
+        &Toggleable,
+        &mut Battery,
+        &Electronic,
+        &Position,
+        &ItemName,
+    )>,
+    mut gs: GearStuff,
+) {
+    for (mut spiritbox, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
+        q_spiritbox.iter_mut()
+    {
+        let mut rng = random_seed::rng();
+        let sec = gs.time.elapsed_secs();
+        spiritbox.mode_frame = (sec * 4.0).round() as u32;
+
+        // Update Battery Drain Rate
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+
+        // Update Sprite
+        sprite.0 = if electronic.glitch_timer > 0.0 {
+            match rng.random_range(0..5) {
+                0 => GearSpriteID::SpiritBoxOff,   // Blank/off
+                1 => GearSpriteID::SpiritBoxScan1, // Flickering
+                2 => GearSpriteID::SpiritBoxScan2,
+                3 => GearSpriteID::SpiritBoxScan3,
+                _ => GearSpriteID::SpiritBoxAns1, // Maybe show as if it answered
+            }
+        } else if toggle.is_on {
+            if spiritbox.ghost_answer {
+                match spiritbox.mode_frame % 2 {
+                    0 => GearSpriteID::SpiritBoxAns1,
+                    _ => GearSpriteID::SpiritBoxAns2,
+                }
+            } else {
+                match spiritbox.mode_frame % 3 {
+                    0 => GearSpriteID::SpiritBoxScan1,
+                    1 => GearSpriteID::SpiritBoxScan2,
+                    _ => GearSpriteID::SpiritBoxScan3,
+                }
+            }
+        } else {
+            GearSpriteID::SpiritBoxOff
+        };
+
+        // Update Logic
+        if toggle.is_on {
+            let bpos = pos.to_board_position();
+            let temperature = gs.bf.temperature_field[bpos.ndidx()];
+            let temp_c = kelvin_to_celsius(temperature);
+            let light_lux = gs
+                .bf
+                .light_field
+                .get(bpos.ndidx())
+                .cloned()
+                .unwrap_or_default()
+                .lux;
+
+            let mut ghost_near = false;
+            if let Some(ghost_pos) = gs.haunt_state.ghost_warning_position {
+                let dist2 = pos.distance2(&ghost_pos);
+                if dist2 < 3.0 * 3.0 {
+                    ghost_near = true;
+                }
+            }
+
+            let delta = sec - spiritbox.last_change_secs;
+
+            // Only charge up for a response if the ghost has the Spirit Box evidence.
+            if gs.haunt_state.evidences.contains(&Evidence::SpiritBox) && ghost_near {
+                let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
+                let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
+                let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
+                let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
+                spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
+                    * gs.haunt_state.ghost_dynamics.spirit_box_clarity.max(0.0);
+            }
+
+            if spiritbox.ghost_answer {
+                if delta > 3.0 {
+                    spiritbox.ghost_answer = false;
+                    spiritbox.blinking_hint_active = false;
+                }
+            } else if delta > 0.3 && electronic.glitch_timer <= 0.0 {
+                spiritbox.last_change_secs = sec;
+                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+
+                let r = if spiritbox.charge > 30.0 {
+                    spiritbox.charge = 0.0;
+                    rng.random_range(0..10)
+                } else {
+                    99 // Not enough charge, no answer
+                };
+
+                spiritbox.ghost_answer = matches!(r, 0..=3);
+
+                if spiritbox.ghost_answer {
+                    match r {
+                        0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, pos),
+                        1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, pos),
+                        2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, pos),
+                        3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
+                        _ => spiritbox.ghost_answer = false, // Should not happen, but safeguard.
+                    }
+
+                    // Update blinking_hint_active
+                    const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
+                    let count = gs
+                        .player_profile
+                        .times_evidence_acknowledged_on_gear
+                        .get(&Evidence::SpiritBox)
+                        .copied()
+                        .unwrap_or(0);
+                    spiritbox.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+                }
+            } else if delta > 0.3 && electronic.glitch_timer > 0.0 {
+                spiritbox.last_change_secs = sec;
+                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+            }
+
+            // Play more static sounds when glitching
+            if electronic.glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.6 {
+                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
+            }
+
+            // Play scanning sound
+            if !spiritbox.ghost_answer && spiritbox.mode_frame % 10 == 0 {
+                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.1, pos);
+            }
+            if spiritbox.ghost_answer && spiritbox.mode_frame % 20 == 0 {
+                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+            }
+        } else {
+            // Ensure hint is off when disabled
+            spiritbox.blinking_hint_active = false;
+        }
+
+        // Update Status Text
+        let on_s = on_off(toggle.is_on);
 
         // Glitch text
-        if self.enabled && self.display_glitch_timer > 0.0 {
-            let garbled = match random_seed::rng().random_range(0..5) {
+        if toggle.is_on && electronic.glitch_timer > 0.0 {
+            let garbled = match rng.random_range(0..5) {
                 0 => "Signal: --LOST--",
                 1 => "Static....",
                 2 => "....?--?---",
                 3 => "MESSAG? IMPOSSI-",
                 _ => "CHAOTIC SIGNALS",
             };
-            return format!("{name}: {on_s}\n{garbled}");
-        }
-
-        if self.interference2_timer > 0.0 {
-            return format!("{name}: {on_s}\nEVP? (Static.)");
+            status.0 = format!("{}: {}\n{}", name.0, on_s, garbled);
+            continue;
         }
 
         // Normal status
-        let msg = if self.enabled {
-            if self.ghost_answer {
-                if self.blinking_hint_active
-                    && self.display_glitch_timer <= 0.0
-                    && self.interference2_timer <= 0.0
-                {
-                    if self.mode_frame % 20 < 10 {
+        let msg = if toggle.is_on {
+            if spiritbox.ghost_answer {
+                if spiritbox.blinking_hint_active {
+                    if spiritbox.mode_frame % 20 < 10 {
                         // Blinking effect
                         "> EVP Detected! <".to_string()
                     } else {
@@ -112,193 +241,10 @@ impl GearUsable for SpiritBox {
         } else {
             "".to_string()
         };
-        format!("{name}: {on_s}\n{msg}")
-    }
-
-    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        // Don't allow toggling if currently glitching severely
-        if self.display_glitch_timer <= 0.2 {
-            self.enabled = !self.enabled;
-        }
-    }
-
-    fn is_sound_showing_evidence(&self) -> f32 {
-        // SpiritBox is playing a sound/answering when it's enabled, not glitching,
-        // and ghost_answer is true.
-        if self.enabled && self.display_glitch_timer <= 0.0 && self.ghost_answer {
-            1.0
-        } else {
-            0.0
-        }
-    }
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-
-    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        let sec = gs.time.elapsed_secs();
-        let delta = sec - self.last_change_secs;
-        self.mode_frame = (sec * 4.0).round() as u32;
-
-        // Decrement glitch timer if active
-        if self.display_glitch_timer > 0.0 {
-            self.display_glitch_timer -= gs.time.delta_secs();
-
-            // Play more static sounds when glitching
-            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.6 {
-                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
-            }
-        }
-
-        // Decrement interference2 timer if active
-        if self.interference2_timer > 0.0 {
-            self.interference2_timer -= gs.time.delta_secs();
-
-            // Play static/interference sounds during interference2s
-            if self.enabled && random_seed::rng().random_range(0.0..1.0) < 0.5 {
-                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
-            }
-        }
-
-        // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
-            let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(
-                gs.haunt_state.ghost_warning_intensity,
-                distance2,
-            );
-        }
-
-        if !self.enabled {
-            // Ensure hint is off when disabled
-            self.blinking_hint_active = false;
-            return;
-        }
-        let mut rng = random_seed::rng();
-        const K: f32 = 0.5;
-        let posk = Position {
-            x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
-            y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
-            z: pos.z,
-            global_z: pos.global_z,
-        };
-        let bpos = posk.to_board_position();
-        let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
-        let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
-        let temp_celsius = kelvin_to_celsius(
-            gs.bf
-                .temperature_field
-                .get(bpos.ndidx())
-                .cloned()
-                .unwrap_or_default(),
-        );
-        let light_lux = gs
-            .bf
-            .light_field
-            .get(bpos.ndidx())
-            .cloned()
-            .unwrap_or_default()
-            .lux;
-
-        // Only charge up for a response if the ghost has the Spirit Box evidence.
-        if gs.haunt_state.evidences.contains(&Evidence::SpiritBox) {
-            let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
-            let temp_clamped = (temp_celsius - 3.0).clamp(0.5, 10.0);
-            self.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
-                * gs.haunt_state.ghost_dynamics.spirit_box_clarity.max(0.0);
-        }
-        if self.ghost_answer {
-            if delta > 3.0 {
-                self.ghost_answer = false;
-            }
-        } else if delta > 0.3 && self.interference2_timer <= 0.0 && self.display_glitch_timer <= 0.0
-        {
-            self.last_change_secs = sec;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
-
-            let r = if self.charge > 30.0 {
-                self.charge = 0.0;
-                rng.random_range(0..10)
-            } else {
-                99 // Not enough charge, no answer
-            };
-
-            self.ghost_answer = matches!(r, 0..=3);
-
-            if self.ghost_answer {
-                match r {
-                    0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, pos),
-                    1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, pos),
-                    2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, pos),
-                    3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
-                    _ => self.ghost_answer = false, // Should not happen, but safeguard.
-                }
-            }
-        } else if delta > 0.3 && self.interference2_timer > 0.0 && self.display_glitch_timer <= 0.0
-        {
-            self.last_change_secs = sec;
-            gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
-        }
-
-        // Update blinking_hint_active
-        const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-        // Spirit Box shows evidence when ghost_answer is true and it's not glitching/interfered.
-        if self.ghost_answer && self.display_glitch_timer <= 0.0 && self.interference2_timer <= 0.0
-        {
-            let count = gs
-                .player_profile
-                .times_evidence_acknowledged_on_gear
-                .get(&Evidence::SpiritBox)
-                .copied()
-                .unwrap_or(0);
-            self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
-        } else {
-            self.blinking_hint_active = false;
-        }
-    }
-    fn is_electronic(&self) -> bool {
-        true
-    }
-
-    fn needs_darkness(&self) -> bool {
-        true
-    }
-    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
-        if warning_level < 0.0001 || !self.enabled {
-            return;
-        }
-        let mut rng = random_seed::rng();
-
-        // Scale effect by distance and warning level
-        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
-
-        // Effect 1: Display glitches
-        if rng.random_range(0.0..1.0) < effect_strength.powi(2) * 0.8 {
-            self.display_glitch_timer = rng.random_range(0.2..0.5);
-        }
-
-        // Effect 2: interference2
-        if rng.random_range(0.0..1.0) < effect_strength.powi(2) * 0.6 {
-            self.interference2_timer = rng.random_range(0.3..0.8);
-        }
-    }
-
-    fn is_enabled(&self) -> bool {
-        self.enabled
-    }
-
-    fn can_enable(&self) -> bool {
-        true
-    }
-
-    fn is_blinking_hint_active(&self) -> bool {
-        self.blinking_hint_active
+        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
     }
 }
 
-impl From<SpiritBox> for Gear {
-    fn from(value: SpiritBox) -> Self {
-        Gear::new_from_kind(GearKind::SpiritBox, value.box_clone())
-    }
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_spiritbox);
 }

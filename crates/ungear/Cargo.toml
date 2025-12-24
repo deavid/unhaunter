@@ -15,6 +15,7 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
+uncore-components = { path = "../uncore-components" }
 uncore-board = { path = "../uncore-board" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings = { path = "../unsettings" }
@@ -23,4 +24,5 @@ untags = { path = "../untags" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

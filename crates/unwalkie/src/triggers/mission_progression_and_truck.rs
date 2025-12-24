@@ -71,6 +71,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     mut discoverable_evidences_with_current_gear: Local<HashSet<Evidence>>,
     mut has_repellent_flask: Local<bool>,
     mut last_gear_evidences_change_time: Local<Option<f64>>,
+    q_gear: Query<&GearKind>,
 ) {
     if *app_state.get() != AppState::InGame {
         *exited_truck_time = None;
@@ -98,28 +99,38 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
                 let mut new_has_repellent_flask = false;
 
                 // Check left hand gear
-                if let Ok(evidence) = Evidence::try_from(&player_gear.left_hand.kind) {
-                    new_discoverable_evidences.insert(evidence);
-                }
-                if player_gear.left_hand.kind == GearKind::RepellentFlask {
-                    new_has_repellent_flask = true;
+                if let Some(entity) = player_gear.left_hand
+                    && let Ok(kind) = q_gear.get(entity)
+                {
+                    if let Ok(evidence) = Evidence::try_from(kind) {
+                        new_discoverable_evidences.insert(evidence);
+                    }
+                    if *kind == GearKind::RepellentFlask {
+                        new_has_repellent_flask = true;
+                    }
                 }
 
                 // Check right hand gear
-                if let Ok(evidence) = Evidence::try_from(&player_gear.right_hand.kind) {
-                    new_discoverable_evidences.insert(evidence);
-                }
-                if player_gear.right_hand.kind == GearKind::RepellentFlask {
-                    new_has_repellent_flask = true;
+                if let Some(entity) = player_gear.right_hand
+                    && let Ok(kind) = q_gear.get(entity)
+                {
+                    if let Ok(evidence) = Evidence::try_from(kind) {
+                        new_discoverable_evidences.insert(evidence);
+                    }
+                    if *kind == GearKind::RepellentFlask {
+                        new_has_repellent_flask = true;
+                    }
                 }
 
                 // Check inventory gear
-                for gear_item in &player_gear.inventory {
-                    if let Ok(evidence) = Evidence::try_from(&gear_item.kind) {
-                        new_discoverable_evidences.insert(evidence);
-                    }
-                    if gear_item.kind == GearKind::RepellentFlask {
-                        new_has_repellent_flask = true;
+                for &entity in &player_gear.inventory {
+                    if let Ok(kind) = q_gear.get(entity) {
+                        if let Ok(evidence) = Evidence::try_from(kind) {
+                            new_discoverable_evidences.insert(evidence);
+                        }
+                        if *kind == GearKind::RepellentFlask {
+                            new_has_repellent_flask = true;
+                        }
                     }
                 }
 
@@ -131,7 +142,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
                     *has_repellent_flask = new_has_repellent_flask;
                     *last_gear_evidences_change_time = Some(time.elapsed_secs_f64());
                 }
-                *empty_right_handed = player_gear.empty_right_handed();
+                *empty_right_handed = player_gear.right_hand.is_none();
 
                 break;
             }

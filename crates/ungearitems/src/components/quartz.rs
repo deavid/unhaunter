@@ -1,12 +1,11 @@
 //! This module defines the `QuartzStoneData` struct and its associated logic,
 //! representing the Quartz Stone consumable item in the game.
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, GearUsable};
-use crate::metrics;
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
 use bevy::prelude::*;
-use ungear::components::{deployedgear::DeployedGearData, playergear::PlayerGear};
+use uncore_components::{GearSprite, StatusText};
+use ungear::gear_stuff::GearStuff;
 use unghost_core::components::GhostSprite;
-use unmetrics::SendMetric;
 use unspatial::Position;
 use untags::GhostTag;
 
@@ -23,64 +22,8 @@ pub struct QuartzStoneData {
     pub energy_absorbed: f32,
 }
 
-impl GearUsable for QuartzStoneData {
-    fn get_display_name(&self) -> &'static str {
-        "Quartz Stone"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses."
-    }
-
-    fn get_status(&self) -> String {
-        let state = match self.cracks {
-            0 => "Pure",
-            1 => "Used once",
-            2 => "Used twice",
-            3 => "Cracked, one use remaining",
-            4 => "Shattered - Unusable",
-            _ => "unknown",
-        };
-        format!(
-            "State: {state}\nEnergy absorbed: {energy:.1}",
-            energy = self.energy_absorbed - self.cracked_time
-        )
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        // Quartz Stone is always active, no trigger action needed.
-    }
-
-    fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        if self.energy_absorbed > 10.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
-            && self.cracks <= MAX_CRACKS
-        {
-            self.energy_absorbed = 0.0;
-            self.cracked_time = 5.0;
-            // Increment cracks
-            self.cracks += 1;
-
-            // Play cracking sound
-            gs.play_audio("sounds/quartz_crack.ogg".into(), 1.0, pos);
-        }
-    }
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.cracks {
-            0 => GearSpriteID::QuartzStone0,
-            1 => GearSpriteID::QuartzStone1,
-            2 => GearSpriteID::QuartzStone2,
-            3 => GearSpriteID::QuartzStone3,
-            // Shattered
-            _ => GearSpriteID::QuartzStone4,
-        }
-    }
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-
-    fn aux_quartz_update(
+impl QuartzStoneData {
+    pub fn aux_quartz_update(
         &mut self,
         gear_pos: &Position,
         ghost_pos: &Position,
@@ -118,43 +61,106 @@ impl GearUsable for QuartzStoneData {
     }
 }
 
+pub fn update_quartz(
+    mut gs: GearStuff,
+    mut q_quartz: Query<(
+        &mut QuartzStoneData,
+        &mut StatusText,
+        &mut GearSprite,
+        &Position,
+        &EquipmentPosition,
+    )>,
+    mut q_ghost: Query<(&Position, &mut GhostSprite), With<GhostTag>>,
+) {
+    let dt = gs.time.delta_secs();
+    for (mut quartz, mut status, mut sprite, pos, _ep) in q_quartz.iter_mut() {
+        // Update logic
+        if quartz.energy_absorbed > 10.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
+            && quartz.cracks <= MAX_CRACKS
+        {
+            quartz.energy_absorbed = 0.0;
+            quartz.cracked_time = 5.0;
+            // Increment cracks
+            quartz.cracks += 1;
+
+            // Play cracking sound
+            gs.play_audio("sounds/quartz_crack.ogg".into(), 1.0, pos);
+        }
+
+        for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
+            quartz.aux_quartz_update(pos, ghost_pos, &mut ghost, dt);
+        }
+
+        // Update StatusText
+        let state = match quartz.cracks {
+            0 => "Pure",
+            1 => "Used once",
+            2 => "Used twice",
+            3 => "Cracked, one use remaining",
+            4 => "Shattered - Unusable",
+            _ => "unknown",
+        };
+        status.0 = format!(
+            "State: {state}\nEnergy absorbed: {energy:.1}",
+            energy = quartz.energy_absorbed - quartz.cracked_time
+        );
+
+        // Update GearSprite
+        sprite.0 = match quartz.cracks {
+            0 => GearSpriteID::QuartzStone0,
+            1 => GearSpriteID::QuartzStone1,
+            2 => GearSpriteID::QuartzStone2,
+            3 => GearSpriteID::QuartzStone3,
+            // Shattered
+            _ => GearSpriteID::QuartzStone4,
+        };
+    }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_quartz);
+}
+
+impl GearUsable for QuartzStoneData {
+    fn get_display_name(&self) -> &'static str {
+        "Quartz Stone"
+    }
+
+    fn get_description(&self) -> &'static str {
+        "A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses."
+    }
+
+    fn get_status(&self) -> String {
+        match self.cracks {
+            0 => "Pure".to_string(),
+            1 => "Used once".to_string(),
+            2 => "Used twice".to_string(),
+            3 => "Used thrice".to_string(),
+            _ => "Shattered".to_string(),
+        }
+    }
+
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        match self.cracks {
+            0 => GearSpriteID::QuartzStone0,
+            1 => GearSpriteID::QuartzStone1,
+            2 => GearSpriteID::QuartzStone2,
+            3 => GearSpriteID::QuartzStone3,
+            _ => GearSpriteID::QuartzStone4,
+        }
+    }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
+
+    fn box_clone(&self) -> Box<dyn GearUsable> {
+        Box::new(self.clone())
+    }
+}
+
 impl From<QuartzStoneData> for Gear {
     fn from(value: QuartzStoneData) -> Self {
         Gear::new_from_kind(GearKind::QuartzStone, value.box_clone())
     }
-}
-
-fn update_quartz_and_ghost(
-    mut q_gear1: Query<(&Position, &mut PlayerGear)>,
-    mut q_gear2: Query<(&Position, &mut DeployedGearData)>,
-    mut q_ghost: Query<(&Position, &mut GhostSprite), With<GhostTag>>,
-    time: Res<Time>,
-) {
-    let measure = metrics::UPDATE_QUARTZ_AND_GHOST.time_measure();
-    let dt = time.delta_secs();
-    for (gear_pos, mut playergear) in q_gear1.iter_mut() {
-        for (gear, _) in playergear.as_vec_mut().into_iter() {
-            if let GearKind::QuartzStone = gear.kind {
-                for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
-                    gear.gear
-                        .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
-                }
-            }
-        }
-    }
-    for (gear_pos, mut gear_data) in q_gear2.iter_mut() {
-        if let GearKind::QuartzStone = gear_data.gear.kind {
-            for (ghost_pos, mut ghost) in q_ghost.iter_mut() {
-                gear_data
-                    .gear
-                    .gear
-                    .aux_quartz_update(gear_pos, ghost_pos, &mut ghost, dt);
-            }
-        }
-    }
-    measure.end_ms();
-}
-
-pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, update_quartz_and_ghost);
 }

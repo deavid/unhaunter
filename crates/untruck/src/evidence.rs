@@ -2,7 +2,7 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_foundation::types::evidence::Evidence;
+use uncore_components::EvidenceSensor;
 use uncore_resources::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::looking_gear::LookingGear;
@@ -14,6 +14,7 @@ use unui::components::game_ui::EvidenceUI;
 pub fn update_evidence_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_sensor: Query<&EvidenceSensor>,
     mut qs: Query<Entity, With<EvidenceUI>>,
     interaction_query: Query<&TruckUIButton, With<Button>>,
     mut writer: TextUiWriter,
@@ -22,8 +23,14 @@ pub fn update_evidence_ui(
     for (ps, playergear) in q_gear.iter() {
         if gc.player_id == ps.id {
             for txt_entity in qs.iter_mut() {
-                let o_evidence =
-                    Evidence::try_from(&playergear.get_hand(&looking_gear.hand()).kind).ok();
+                let hand_entity = match looking_gear.hand() {
+                    ungear::Hand::Left => playergear.left_hand,
+                    ungear::Hand::Right => playergear.right_hand,
+                };
+                let o_evidence = hand_entity
+                    .and_then(|e| q_sensor.get(e).ok())
+                    .map(|s| s.evidence);
+
                 let ev_state = match o_evidence {
                     Some(ev) => interaction_query
                         .iter()
@@ -59,6 +66,7 @@ pub fn keyboard_evidence(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     gc: Res<GameConfig>,
     players: Query<(&PlayerSprite, &PlayerGear)>,
+    q_sensor: Query<&EvidenceSensor>,
     mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
     looking_gear: Res<LookingGear>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
@@ -67,10 +75,17 @@ pub fn keyboard_evidence(
         if gc.player_id != player.id {
             continue;
         }
-        let Ok(evidence) = Evidence::try_from(&playergear.get_hand(&looking_gear.hand()).kind)
+        let hand_entity = match looking_gear.hand() {
+            ungear::Hand::Left => playergear.left_hand,
+            ungear::Hand::Right => playergear.right_hand,
+        };
+        let Some(evidence) = hand_entity
+            .and_then(|e| q_sensor.get(e).ok())
+            .map(|s| s.evidence)
         else {
             continue;
         };
+
         if keyboard_input.just_pressed(player.controls.change_evidence) {
             for mut t in &mut interaction_query {
                 if t.class == TruckButtonType::Evidence(evidence) {

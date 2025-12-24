@@ -1,23 +1,67 @@
 use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng;
+use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
 use uncore_foundation::random_seed;
+use ungear::gear_stuff::GearStuff;
 use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
-pub struct Videocam {
-    pub enabled: bool,
-    pub display_glitch_timer: f32,
+pub struct Videocam {}
+
+pub fn update_videocam(
+    _gs: GearStuff,
+    mut q_videocam: Query<(
+        &mut Videocam,
+        &mut StatusText,
+        &mut GearSprite,
+        &mut Toggleable,
+        &mut Battery,
+        &Electronic,
+        &Position,
+        &EquipmentPosition,
+    )>,
+) {
+    for (_videocam, mut status, mut sprite, toggle, mut battery, electronic, _pos, _ep) in
+        q_videocam.iter_mut()
+    {
+        let mut rng = random_seed::rng();
+
+        // Update Battery Drain Rate
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+
+        // Update StatusText
+        let name = "Video Camera NV";
+        let on_s = on_off(toggle.is_on);
+
+        // Show garbled text when glitching
+        if toggle.is_on && electronic.glitch_timer > 0.0 {
+            let garbled = match rng.random_range(0..4) {
+                0 => "Signal: --LOST--",
+                1 => "Transmitting...FA--",
+                2 => "NIGHT V---N F---",
+                _ => "CAMERA OFFL---",
+            };
+            status.0 = format!("{name}: {on_s}\n{garbled}");
+        } else {
+            let msg = if toggle.is_on {
+                "NIGHT VISION ON".to_string()
+            } else {
+                "".to_string()
+            };
+            status.0 = format!("{name}: {on_s}\n{msg}");
+        }
+
+        // Update GearSprite
+        sprite.0 = GearSpriteID::Videocam;
+    }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_videocam);
 }
 
 impl GearUsable for Videocam {
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.enabled {
-            true => GearSpriteID::Videocam,
-            false => GearSpriteID::Videocam,
-        }
-    }
-
     fn get_display_name(&self) -> &'static str {
         "Video Camera NV"
     }
@@ -27,104 +71,19 @@ impl GearUsable for Videocam {
     }
 
     fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let on_s = on_off(self.enabled);
-
-        // Show garbled text when glitching
-        if self.display_glitch_timer > 0.0 {
-            let garbled = match random_seed::rng().random_range(0..4) {
-                0 => "Signal: --LOST--",
-                1 => "Transmitting...FA--",
-                2 => "NIGHT V---N F---",
-                _ => "CAMERA OFFL---",
-            };
-            return format!("{name}: {on_s}\n{garbled}");
-        }
-
-        let msg = if self.enabled {
-            "NIGHT VISION ON".to_string()
-        } else {
-            "".to_string()
-        };
-        format!("{name}: {on_s}\n{msg}")
+        "".to_string()
     }
 
-    fn set_trigger(&mut self, _gs: &mut super::GearStuff) {
-        if self.can_enable() {
-            self.enabled = !self.enabled;
-        } else if self.is_enabled() {
-            self.enabled = false;
-        }
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::Videocam
     }
 
-    fn is_enabled(&self) -> bool {
-        self.enabled && self.display_glitch_timer <= 0.01
-    }
-
-    fn can_enable(&self) -> bool {
-        // Videocam does not have a battery, so it can always be enabled
-        // as long as it's not glitching.
-        self.display_glitch_timer <= 0.01
-    }
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
-    }
-
-    fn power(&self) -> f32 {
-        match self.enabled {
-            false => 0.0,
-            true => 35.0,
-        }
-    }
-
-    fn color(&self) -> Color {
-        if self.display_glitch_timer > 0.0 {
-            // Shift color towards red during glitch
-            return Color::srgb(0.4, 0.5, 0.01);
-        }
-        // Green-Cyan (for NightVision)
-        Color::srgb(0.01, 1.00, 0.70)
-    }
-
-    fn is_electronic(&self) -> bool {
-        true
-    }
-
-    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
-        if warning_level < 0.0001 || !self.enabled {
-            return;
-        }
-        let mut rng = random_seed::rng();
-
-        // Scale effect by distance and warning level
-        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
-
-        // Random glitches
-        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            // Jumble numbers temporarily
-            self.display_glitch_timer = rng.random_range(0.2..0.6);
-        }
-    }
-
-    fn update(&mut self, gs: &mut super::GearStuff, pos: &Position, _ep: &EquipmentPosition) {
-        // Decrement glitch timer if active
-        if self.display_glitch_timer > 0.0 {
-            self.display_glitch_timer -= gs.time.delta_secs();
-        }
-
-        // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
-            let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(
-                gs.haunt_state.ghost_warning_intensity,
-                distance2,
-            );
-        }
-    }
-
-    fn needs_darkness(&self) -> bool {
-        true
     }
 }
 

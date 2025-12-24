@@ -55,7 +55,7 @@ fn player_forgot_equipment(
         stopwatch.reset();
         return;
     }
-    if !player_gear.empty_right_handed() {
+    if player_gear.right_hand.is_some() {
         // Player has an item, no need to remind them.
         walkie_play.mark(WalkieEvent::GearInVan, time.elapsed_secs_f64());
         return;
@@ -81,6 +81,7 @@ fn ghost_near_hunt(
     difficulty: Res<CurrentDifficulty>,
     gc: Res<GameConfig>,
     q_ghost: Query<&GhostSprite>,
+    q_gear: Query<&GearKind>,
     time: Res<Time>,
 ) {
     if difficulty.0.tutorial_chapter.is_none() {
@@ -99,12 +100,17 @@ fn ghost_near_hunt(
     };
 
     // If player has RepellentFlask, disable this system
-    let has_repellent = player_gear.left_hand.kind == GearKind::RepellentFlask
-        || player_gear.right_hand.kind == GearKind::RepellentFlask
-        || player_gear
-            .inventory
-            .iter()
-            .any(|item| item.kind == GearKind::RepellentFlask);
+    let check_gear = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity) {
+            *kind == GearKind::RepellentFlask
+        } else {
+            false
+        }
+    };
+
+    let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
+        || player_gear.right_hand.map(check_gear).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_gear(e));
 
     if has_repellent {
         return;

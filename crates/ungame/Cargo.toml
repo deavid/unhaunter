@@ -32,6 +32,7 @@ unprofile = { path = "../unprofile" }
 unplayer = { path = "../unplayer" }
 unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
+uncore-components = { path = "../uncore-components" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

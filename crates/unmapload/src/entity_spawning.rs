@@ -8,10 +8,10 @@ use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
 use uncore_foundation::random_seed;
+use uncore_foundation::types::gear::GearKind;
 use uncore_foundation::types::sound::SoundType;
 use uncore_resources::summary::SummaryData;
 use ungear::components::playergear::PlayerGear;
-use ungearitems::from_gearkind::FromPlayerGearKind as _;
 use unghost::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -62,6 +62,16 @@ pub fn spawn_player(
     let player_position = player_spawn_points.pop().unwrap();
     let player_scoord = player_position.to_screen_coord();
 
+    // Spawn default gear
+    let flashlight = p.gear_registry.spawn(commands, GearKind::Flashlight);
+    let emf_meter = p.gear_registry.spawn(commands, GearKind::EMFMeter);
+
+    let player_gear = PlayerGear {
+        right_hand: Some(flashlight),
+        inventory: vec![emf_meter],
+        ..default()
+    };
+
     // Calculate distance to nearest van entry point
     let dist_to_van = van_entry_points
         .iter()
@@ -86,9 +96,7 @@ pub fn spawn_player(
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(GameSprite)
-        .insert(PlayerGear::from_playergearkind(
-            p.difficulty.0.player_gear.clone(),
-        ))
+        .insert(player_gear)
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
         // Update the SpatialListener to use the ear offset from audio settings

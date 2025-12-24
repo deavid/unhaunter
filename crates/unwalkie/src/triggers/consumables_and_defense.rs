@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use bevy::prelude::*;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
@@ -18,6 +16,7 @@ use unwalkiecore::{WalkieEvent, WalkiePlay};
 fn quartz_cracked_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
+    q_quartz: Query<&QuartzStoneData>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
@@ -36,8 +35,14 @@ fn quartz_cracked_feedback(
         *last_cracks = None;
         return;
     }
-    for (g, _) in gear.as_vec() {
-        if let Some(quartz) = (&*g.gear as &dyn Any).downcast_ref::<QuartzStoneData>() {
+    let gear_iter = gear
+        .left_hand
+        .iter()
+        .chain(gear.right_hand.iter())
+        .chain(gear.inventory.iter());
+
+    for entity in gear_iter {
+        if let Ok(quartz) = q_quartz.get(*entity) {
             if let Some(prev) = *last_cracks
                 && quartz.cracks > prev
                 && quartz.cracks < 4
@@ -54,6 +59,7 @@ fn quartz_cracked_feedback(
 fn quartz_shattered_feedback(
     mut walkie_play: ResMut<WalkiePlay>,
     qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
+    q_quartz: Query<&QuartzStoneData>,
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
@@ -72,8 +78,14 @@ fn quartz_shattered_feedback(
         *shattered = false;
         return;
     }
-    for (g, _) in gear.as_vec() {
-        if let Some(quartz) = (&*g.gear as &dyn Any).downcast_ref::<QuartzStoneData>()
+    let gear_iter = gear
+        .left_hand
+        .iter()
+        .chain(gear.right_hand.iter())
+        .chain(gear.inventory.iter());
+
+    for entity in gear_iter {
+        if let Ok(quartz) = q_quartz.get(*entity)
             && quartz.cracks >= 4
             && !*shattered
         {
@@ -100,6 +112,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
+    q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -139,18 +152,18 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     }
 
     // 6. Check Player Inventory for Quartz
-    let player_has_quartz = player_gear.as_vec().iter().any(|(gear, _epos)| {
-        if gear.kind == GearKind::QuartzStone {
-            // Further check if it's not shattered (assuming QuartzStoneData is accessible)
-            // For now, just checking the kind. If it's shattered, it's effectively not "had".
-            // This check can be refined if QuartzStoneData stores a `shattered` bool.
-            // For simplicity now, if they have the *item kind*, we assume they *have* quartz.
-            // The `QuartzShatteredFeedback` event handles telling them it's broken.
-            true
+    let check_gear = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity) {
+            *kind == GearKind::QuartzStone
         } else {
             false
         }
-    });
+    };
+
+    let player_has_quartz = player_gear.left_hand.map(check_gear).unwrap_or(false)
+        || player_gear.right_hand.map(check_gear).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_gear(e));
+
     if player_has_quartz {
         return; // Player already has quartz, no need for this hint
     }
@@ -159,10 +172,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
         None => return, // No truck gear available, exit early
     };
     // 7. Check Truck Inventory for Quartz
-    let truck_has_quartz = truck_gear
-        .inventory
-        .iter()
-        .any(|gear| gear.kind == GearKind::QuartzStone);
+    let truck_has_quartz = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
     if !truck_has_quartz {
         return; // Quartz isn't even available in the truck
     }
@@ -183,6 +193,8 @@ fn trigger_sage_unused_in_relevant_situation_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
+    q_gear: Query<&GearKind>,
+    q_sage: Query<&SageBundleData>,
 ) {
     let truck_gear = match truck_gear {
         Some(gear) => gear,
@@ -223,24 +235,33 @@ fn trigger_sage_unused_in_relevant_situation_system(
     }
 
     // 6. Check Player Inventory for Unconsumed Sage
-    let player_has_unconsumed_sage = player_gear.as_vec().iter().any(|(gear, _epos)| {
-        if gear.kind == GearKind::SageBundle
-            && let Some(sage_data) = (&*gear.gear as &dyn Any).downcast_ref::<SageBundleData>()
+    let check_sage = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity)
+            && *kind == GearKind::SageBundle
+            && let Ok(sage_data) = q_sage.get(entity)
         {
-            return !sage_data.consumed; // Player has sage and it's not consumed
+            return !sage_data.consumed;
         }
         false
-    });
+    };
+
+    let player_has_unconsumed_sage = player_gear.left_hand.map(check_sage).unwrap_or(false)
+        || player_gear.right_hand.map(check_sage).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_sage(e));
 
     if player_has_unconsumed_sage {
         return; // Player already has usable sage
     }
 
     // 7. Check Truck Inventory for Sage
-    let truck_has_sage = truck_gear
-        .inventory
-        .iter()
-        .any(|gear| gear.kind == GearKind::SageBundle);
+    let check_gear = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity) {
+            *kind == GearKind::SageBundle
+        } else {
+            false
+        }
+    };
+    let truck_has_sage = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
     if !truck_has_sage {
         return; // Sage isn't even available in the truck
     }
@@ -272,6 +293,8 @@ fn trigger_sage_activated_ineffectively_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     mut tracker: Local<SageEffectivenessTracker>,
+    q_gear: Query<&GearKind>,
+    q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check & Reset conditions
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -310,9 +333,18 @@ fn trigger_sage_activated_ineffectively_system(
 
     // 3. Find Sage in Player's Gear
     let mut current_sage_data: Option<&SageBundleData> = None;
-    for (gear_item, _epos) in player_gear.as_vec() {
-        if gear_item.kind == GearKind::SageBundle {
-            current_sage_data = (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>();
+    let gear_iter = player_gear
+        .left_hand
+        .iter()
+        .chain(player_gear.right_hand.iter())
+        .chain(player_gear.inventory.iter());
+
+    for entity in gear_iter {
+        if let Ok(kind) = q_gear.get(*entity)
+            && *kind == GearKind::SageBundle
+            && let Ok(sage_data) = q_sage.get(*entity)
+        {
+            current_sage_data = Some(sage_data);
             break;
         }
     }
@@ -419,6 +451,8 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     mut tracker: ResMut<HuntSageUsageTracker>, // Use ResMut for the tracker
+    q_gear: Query<&GearKind>,
+    q_sage: Query<&SageBundleData>,
 ) {
     // 1. System Run Condition & Chapter Check
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -467,10 +501,16 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                 // Hunt just ended
                 // info!("Hunt ended. Sage activated during this hunt: {}", *sage_was_activated_during_this_hunt);
                 let mut player_has_unconsumed_sage_now = false;
-                for (gear_item, _epos) in player_gear.as_vec() {
-                    if gear_item.kind == GearKind::SageBundle
-                        && let Some(sage_data) =
-                            (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>()
+                let gear_iter = player_gear
+                    .left_hand
+                    .iter()
+                    .chain(player_gear.right_hand.iter())
+                    .chain(player_gear.inventory.iter());
+
+                for entity in gear_iter {
+                    if let Ok(kind) = q_gear.get(*entity)
+                        && *kind == GearKind::SageBundle
+                        && let Ok(sage_data) = q_sage.get(*entity)
                         && !sage_data.consumed
                     {
                         player_has_unconsumed_sage_now = true;
@@ -491,10 +531,16 @@ fn trigger_sage_unused_defensively_during_hunt_system(
                 // Still hunting, check if player activates sage
                 if !*sage_was_activated_during_this_hunt {
                     // Only check if not already flagged
-                    for (gear_item, _epos) in player_gear.as_vec() {
-                        if gear_item.kind == GearKind::SageBundle
-                            && let Some(sage_data) =
-                                (&*gear_item.gear as &dyn Any).downcast_ref::<SageBundleData>()
+                    let gear_iter = player_gear
+                        .left_hand
+                        .iter()
+                        .chain(player_gear.right_hand.iter())
+                        .chain(player_gear.inventory.iter());
+
+                    for entity in gear_iter {
+                        if let Ok(kind) = q_gear.get(*entity)
+                            && *kind == GearKind::SageBundle
+                            && let Ok(sage_data) = q_sage.get(*entity)
                             && sage_data.is_active
                         {
                             *sage_was_activated_during_this_hunt = true;

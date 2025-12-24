@@ -1,26 +1,15 @@
-use crate::types::gear::Gear;
-use crate::{EquipmentPosition, GearKind, Hand};
 use bevy::prelude::*;
-use uncore_foundation::types::ghost::types::GhostType;
 use unplayer_core::components::HeldObject;
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {
-    pub left_hand: Gear,
-    pub right_hand: Gear,
-    pub inventory: Vec<Gear>,
+    pub left_hand: Option<Entity>,
+    pub right_hand: Option<Entity>,
+    pub inventory: Vec<Entity>,
     pub held_item: Option<HeldObject>,
 }
 
-impl PlayerGear {
-    pub fn as_vec(&self) -> Vec<(&Gear, EquipmentPosition)> {
-        let mut ret = vec![
-            (&self.left_hand, EquipmentPosition::Hand(Hand::Left)),
-            (&self.right_hand, EquipmentPosition::Hand(Hand::Right)),
-        ];
-        for g in self.inventory.iter() {
-            ret.push((g, EquipmentPosition::Stowed));
-        }
+/*
         ret
     }
 
@@ -162,3 +151,4 @@ impl PlayerGear {
         flask.0.gear.can_fill_liquid(ghost_type)
     }
 }
+*/

@@ -9,7 +9,10 @@ use uncore_events::events::truck::TruckUIEvent;
 use uncore_resources::states::{AppState, GameState};
 use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
+use ungear::resources::spawner::GearSpawnerRegistry;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
@@ -334,6 +337,9 @@ fn truckui_event_handle(
     board_data: Res<BoardData>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
+    gear_registry: Res<GearSpawnerRegistry>,
+    mut q_repellent: Query<&mut RepellentFlask>,
+    q_gearkind: Query<&GearKind>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
@@ -384,7 +390,14 @@ fn truckui_event_handle(
                     if player.id == gc.player_id
                         && let Some(ghost_type) = gg.ghost_type
                     {
-                        let consumed_new_bottle = craft_repellent(&mut gear, ghost_type);
+                        let consumed_new_bottle = craft_repellent(
+                            &mut commands,
+                            &gear_registry,
+                            &mut gear,
+                            ghost_type,
+                            &mut q_repellent,
+                            &q_gearkind,
+                        );
 
                         // Only count as a craft if we actually consumed a new bottle
                         if consumed_new_bottle {

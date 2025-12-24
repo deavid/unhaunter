@@ -15,6 +15,10 @@ impl Plugin for TutorialIntroductionsTriggerPlugin {
     }
 }
 
+pub fn app_setup(app: &mut App) {
+    app.add_plugins(TutorialIntroductionsTriggerPlugin);
+}
+
 fn trigger_chapter_intros(
     mut walkie_play: ResMut<WalkiePlay>,
     app_state: Res<State<AppState>>,

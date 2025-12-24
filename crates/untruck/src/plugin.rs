@@ -18,5 +18,6 @@ impl Plugin for UnhaunterTruckPlugin {
         super::journal::app_setup(app);
         super::sanity::app_setup(app);
         super::loadoutui::app_setup(app);
+        super::truckgear::app_setup(app);
     }
 }

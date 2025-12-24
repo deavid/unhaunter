@@ -29,9 +29,8 @@ pub(crate) fn app_setup(app: &mut App) {
             // Mouse interaction systems (gear only, clicks handled by waypoint system)
             input::mouse_interaction::mouse_right_click_gear_system,
             input::mouse_interaction::mouse_scroll_gear_system,
-            input::mouse_interaction::mouse_hover_interactive_system,
-            // Visibility-based hover cleanup system
-            input::mouse_interaction::visibility_hover_cleanup_system,
+            input::mouse_interaction::mouse_over_interactive_system,
+            input::mouse_interaction::mouse_out_interactive_system,
             // Waypoint systems handle all click-to-move and click-to-interact
             waypoint::waypoint_creation_system,
             waypoint::waypoint_following_system,

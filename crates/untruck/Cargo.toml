@@ -10,6 +10,7 @@ authors.workspace = true
 [dependencies]
 
 undifficulty = { path = "../undifficulty" }
+uncore-components = { path = "../uncore-components" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }

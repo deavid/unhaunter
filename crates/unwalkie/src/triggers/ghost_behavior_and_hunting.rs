@@ -22,6 +22,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     roomdb: Res<RoomDB>,
     mut warning_timer: Local<Option<Stopwatch>>,
     mut player_pos_at_warning: Local<Option<Position>>,
+    q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
@@ -52,12 +53,17 @@ fn trigger_hunt_warning_no_player_evasion_system(
     }
 
     // Check if player has RepellentFlask in inventory (hands or general inventory)
-    let has_repellent = player_gear.left_hand.kind == GearKind::RepellentFlask
-        || player_gear.right_hand.kind == GearKind::RepellentFlask
-        || player_gear
-            .inventory
-            .iter()
-            .any(|item| item.kind == GearKind::RepellentFlask);
+    let check_gear = |entity: Entity| -> bool {
+        if let Ok(kind) = q_gear.get(entity) {
+            *kind == GearKind::RepellentFlask
+        } else {
+            false
+        }
+    };
+
+    let has_repellent = player_gear.left_hand.map(check_gear).unwrap_or(false)
+        || player_gear.right_hand.map(check_gear).unwrap_or(false)
+        || player_gear.inventory.iter().any(|&e| check_gear(e));
 
     if has_repellent {
         if warning_timer.is_some() {

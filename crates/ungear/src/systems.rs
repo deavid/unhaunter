@@ -1,12 +1,15 @@
-use super::components::deployedgear::{DeployedGear, DeployedGearData};
+use super::components::deployedgear::DeployedGear;
 use super::components::playergear::PlayerGear;
+use crate::Hand;
 use crate::gear_stuff::GearStuff;
 use crate::resources::looking_gear::LookingGear;
-use crate::{EquipmentPosition, Hand};
+use crate::resources::spawner::GearSpawnerRegistry;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncore_components::{GearSprite, StatusText, Toggleable, Triggered};
 use uncore_events::events::sound::SoundEvent;
+use uncore_foundation::types::gear::{GearKind, GearSpriteID};
 use uncore_resources::states::GameState;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
@@ -14,46 +17,21 @@ use unsettings::audio::{AudioSettings, SoundOutput};
 use unspatial::Position;
 use untags::PlayerTag;
 
-/// System for updating the internal state of all gear carried by the player.
-///
-/// This system iterates through the player's gear and calls the `update` method
-/// for each piece of gear, allowing gear to update their state based on time,
-/// player actions, or environmental conditions.
-fn update_playerheld_gear_data(mut q_gear: Query<(&Position, &mut PlayerGear)>, mut gs: GearStuff) {
-    for (position, mut playergear) in q_gear.iter_mut() {
-        for (gear, epos) in playergear.as_vec_mut().into_iter() {
-            gear.update(&mut gs, position, &epos);
-        }
-    }
-}
-
-/// System for updating the internal state of all gear deployed in the environment.
-fn update_deployed_gear_data(
-    mut q_gear: Query<(&Position, &DeployedGear, &mut DeployedGearData)>,
-    mut gs: GearStuff,
+fn update_playerheld_gear_data(
+    mut _q_gear: Query<(&Position, &mut PlayerGear)>,
+    mut _gs: GearStuff,
 ) {
-    for (position, _deployed_gear, mut gear_data) in q_gear.iter_mut() {
-        gear_data
-            .gear
-            .update(&mut gs, position, &EquipmentPosition::Deployed);
-    }
+    // TODO: Implement using Entity-based gear
 }
 
-/// System for updating the sprites of deployed gear to reflect their internal
-/// state.
-fn update_deployed_gear_sprites(mut q_gear: Query<(&mut Sprite, &DeployedGearData)>) {
-    for (mut sprite, gear_data) in q_gear.iter_mut() {
-        let new_index = gear_data.gear.get_sprite_idx() as usize;
-        if let Some(texture_atlas) = &mut sprite.texture_atlas
-            && texture_atlas.index != new_index
-        {
-            texture_atlas.index = new_index;
-        }
-    }
+fn update_deployed_gear_data(mut _q_gear: Query<(&Position, &DeployedGear)>, mut _gs: GearStuff) {
+    // TODO: Implement using Entity-based gear
 }
 
-/// System to handle the SoundEvent, playing the sound with volume adjusted by
-/// distance.
+fn update_deployed_gear_sprites(mut _q_gear: Query<&mut Sprite, With<DeployedGear>>) {
+    // TODO: Implement using Entity-based gear
+}
+
 fn sound_playback_system(
     mut sound_events: MessageReader<SoundEvent>,
     asset_server: Res<AssetServer>,
@@ -62,7 +40,6 @@ fn sound_playback_system(
     audio_settings: Res<Persistent<AudioSettings>>,
 ) {
     for sound_event in sound_events.read() {
-        // Get player position
         let Some(player_position) = qp.iter().next() else {
             return;
         };
@@ -77,8 +54,6 @@ fn sound_playback_system(
         if audio_settings.sound_output == SoundOutput::Mono {
             adjusted_volume /= 1.0 + dist * 0.4;
         }
-
-        // Spawn an AudioBundle with the adjusted volume
 
         let mut sound = commands.spawn(AudioPlayer::<AudioSource>(
             asset_server.load(sound_event.sound_file.clone()),
@@ -97,7 +72,6 @@ fn sound_playback_system(
             spatial_scale: Some(SpatialScale::new(0.005)),
             ..default()
         });
-
         if let Some(position) = sound_event.position {
             let mut spos_vec = position.to_screen_coord();
             spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
@@ -107,72 +81,98 @@ fn sound_playback_system(
 }
 
 fn keyboard_gear(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
-    player_state: Res<PlayerState>,
-    looking_gear: Res<LookingGear>,
-    mut gs: GearStuff,
+    _keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut _q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
+    _player_state: Res<PlayerState>,
+    _looking_gear: Res<LookingGear>,
+    mut _gs: GearStuff,
 ) {
-    for mut playergear in q_gear.iter_mut() {
-        if keyboard_input.just_pressed(player_state.controls.cycle) {
-            playergear.cycle(&looking_gear.hand());
-        }
-        if keyboard_input.just_pressed(player_state.controls.swap) {
-            playergear.swap();
-        }
-        if keyboard_input.just_released(player_state.controls.trigger) {
-            playergear.right_hand.set_trigger(&mut gs);
-        }
-        if keyboard_input.just_released(player_state.controls.torch) {
-            playergear.left_hand.set_trigger(&mut gs);
-        }
-    }
+    // TODO: Implement using Entity-based gear
 }
 
 fn update_gear_ui(
     q_gear: Query<&PlayerGear, With<PlayerTag>>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
-    mut qs: Query<(&mut Text, &mut Node, &InventoryStats)>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
-    looking_gear: Res<LookingGear>,
+    mut qs: Query<(&InventoryStats, &mut Text)>,
+    q_gearkind: Query<&GearKind>,
+    q_status: Query<&StatusText>,
+    q_sprite: Query<&GearSprite>,
+    gear_registry: Res<GearSpawnerRegistry>,
 ) {
-    for playergear in q_gear.iter() {
-        for (inv, mut imgnode) in qi.iter_mut() {
-            let gear = playergear.get_hand(&inv.hand);
-            let idx = gear.get_sprite_idx() as usize;
-            if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                imgnode.texture_atlas.as_mut().unwrap().index = idx;
-            }
+    let Some(player_gear) = q_gear.iter().next() else {
+        return;
+    };
+
+    for (inv, mut image) in qi.iter_mut() {
+        let entity = match inv.hand {
+            Hand::Left => player_gear.left_hand,
+            Hand::Right => player_gear.right_hand,
+        };
+        let kind = entity
+            .and_then(|e| q_gearkind.get(e).ok())
+            .unwrap_or(&GearKind::None);
+
+        let sprite_idx = entity
+            .and_then(|e| q_sprite.get(e).ok())
+            .map(|s| s.0 as usize)
+            .or_else(|| {
+                gear_registry
+                    .metadata
+                    .get(kind)
+                    .map(|m| m.sprite_idx as usize)
+            })
+            .unwrap_or(GearSpriteID::None as usize);
+
+        if let Some(atlas) = &mut image.texture_atlas {
+            atlas.index = sprite_idx;
         }
-        let left_hand_status = playergear.left_hand.get_status();
-        let right_hand_status = playergear.right_hand.get_status();
-        for (mut txt, mut node, istats) in qs.iter_mut() {
-            let hand_status = match istats.hand {
-                Hand::Left => left_hand_status.clone(),
-                Hand::Right => right_hand_status.clone(),
-            };
-            let display = looking_gear.hand() == istats.hand;
-            node.display = match display {
-                false => Display::None,
-                true => Display::Block,
-            };
-            if txt.0 != hand_status {
-                txt.0.clone_from(&hand_status);
-            }
+    }
+
+    for (inv_next, mut image) in qin.iter_mut() {
+        let entity = inv_next.idx.and_then(|idx| player_gear.inventory.get(idx));
+        let kind = entity
+            .and_then(|e| q_gearkind.get(*e).ok())
+            .unwrap_or(&GearKind::None);
+
+        let sprite_idx = entity
+            .and_then(|e| q_sprite.get(*e).ok())
+            .map(|s| s.0 as usize)
+            .or_else(|| {
+                gear_registry
+                    .metadata
+                    .get(kind)
+                    .map(|m| m.sprite_idx as usize)
+            })
+            .unwrap_or(GearSpriteID::None as usize);
+
+        if let Some(atlas) = &mut image.texture_atlas {
+            atlas.index = sprite_idx;
         }
-        for (inv, mut imgnode) in qin.iter_mut() {
-            // There are 2 possible "None" here, the outside Option::None for when the idx is
-            // out of bounds and the inner Gear::None when a slot is empty.
-            let next = if let Some(idx) = inv.idx {
-                playergear.get_next(idx).unwrap_or_default()
-            } else {
-                playergear.get_next_non_empty().unwrap_or_default()
-            };
-            let idx = next.get_sprite_idx() as usize;
-            if imgnode.texture_atlas.as_ref().unwrap().index != idx {
-                imgnode.texture_atlas.as_mut().unwrap().index = idx;
-            }
-        }
+    }
+
+    for (stats, mut text) in qs.iter_mut() {
+        let entity = match stats.hand {
+            Hand::Left => player_gear.left_hand,
+            Hand::Right => player_gear.right_hand,
+        };
+        let status = entity
+            .and_then(|e| q_status.get(e).ok())
+            .map(|s| s.0.clone())
+            .unwrap_or_default();
+        text.0 = status;
+    }
+}
+
+fn gear_trigger_handler(mut q_toggleable: Query<&mut Toggleable, With<Triggered>>) {
+    for mut toggle in q_toggleable.iter_mut() {
+        toggle.is_on = !toggle.is_on;
+    }
+}
+
+fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With<Triggered>>) {
+    for entity in q_triggered.iter() {
+        commands.entity(entity).remove::<Triggered>();
     }
 }
 
@@ -182,5 +182,7 @@ pub(crate) fn app_setup(app: &mut App) {
         .add_systems(FixedUpdate, update_deployed_gear_sprites)
         .add_systems(FixedUpdate, update_gear_ui)
         .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
-        .add_systems(Update, sound_playback_system);
+        .add_systems(Update, sound_playback_system)
+        .add_systems(Update, gear_trigger_handler)
+        .add_systems(PostUpdate, clear_trigger_handler);
 }

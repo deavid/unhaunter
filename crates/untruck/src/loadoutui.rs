@@ -1,4 +1,3 @@
-use super::truckgear::TruckGear;
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::EvidenceStatus;
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
@@ -9,10 +8,10 @@ use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::GameState;
 use undifficulty::CurrentDifficulty;
+use ungear::Hand;
 use ungear::components::playergear::PlayerGear;
-use ungear::types::gear::Gear;
-use ungear::{GearKind, GearSpriteID, Hand};
-use ungearitems::components::repellentflask::RepellentFlask;
+use ungear::resources::spawner::GearSpawnerRegistry;
+use ungear::{GearKind, GearSpriteID};
 use unplayer::components::player_inventory::{Inventory, InventoryNext};
 use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
@@ -22,7 +21,7 @@ use unrender::materials::UIPanelMaterial;
 pub enum LoadoutButton {
     Inventory(Inventory),
     InventoryNext(InventoryNext),
-    Van(Gear),
+    Van(GearKind),
 }
 
 #[derive(Debug, Message, Clone)]
@@ -39,6 +38,7 @@ pub fn setup_loadout_ui(
     handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
+    gear_registry: &GearSpawnerRegistry,
 ) {
     let button = || {
         (
@@ -175,12 +175,16 @@ pub fn setup_loadout_ui(
                 },
             ))
             .with_children(|p| {
-                let tg = TruckGear::from_difficulty(&difficulty.0);
-                for gear in &tg.inventory {
+                for gear_kind in &difficulty.0.truck_gear {
+                    let sprite_idx = gear_registry
+                        .metadata
+                        .get(gear_kind)
+                        .map(|m| m.sprite_idx)
+                        .unwrap_or(GearSpriteID::None);
                     p.spawn(button())
-                        .insert(LoadoutButton::Van(gear.clone()))
+                        .insert(LoadoutButton::Van(*gear_kind))
                         .with_children(|p| {
-                            p.spawn(equipment(gear.get_sprite_idx()));
+                            p.spawn(equipment(sprite_idx));
                         });
                 }
             });
@@ -259,9 +263,11 @@ fn update_loadout_buttons(
     >,
     mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gearkind: Query<&GearKind>,
     interaction_query_journal_buttons: Query<&TruckUIButton, With<Button>>,
     mut ev_clk: MessageWriter<EventButtonClicked>,
     gc: Res<GameConfig>,
+    gear_registry: Res<GearSpawnerRegistry>,
 ) {
     let mut changed = false;
     let mut elem = None;
@@ -292,33 +298,42 @@ fn update_loadout_buttons(
         return;
     }
 
-    let Some(p_gear) = q_gear
+    let Some(_p_gear) = q_gear
         .iter()
         .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
     else {
         return;
     };
 
-    let gear_for_help = if let Some(lbut) = &elem {
+    let gear_kind_for_help = if let Some(lbut) = &elem {
         match lbut {
-            LoadoutButton::Inventory(inv) => p_gear.get_hand(&inv.hand),
-            LoadoutButton::InventoryNext(invnext) => {
-                let idx = invnext.idx.unwrap_or(0); // Default to 0 if None
-                p_gear.get_next(idx).unwrap_or_default()
+            LoadoutButton::Inventory(inv) => {
+                let entity = match inv.hand {
+                    ungear::Hand::Left => _p_gear.left_hand,
+                    ungear::Hand::Right => _p_gear.right_hand,
+                };
+                entity
+                    .and_then(|e| q_gearkind.get(e).ok())
+                    .cloned()
+                    .unwrap_or(GearKind::None)
             }
-            LoadoutButton::Van(gear) => gear.clone(),
+            LoadoutButton::InventoryNext(invnext) => invnext
+                .idx
+                .and_then(|idx| _p_gear.inventory.get(idx))
+                .and_then(|e| q_gearkind.get(*e).ok())
+                .cloned()
+                .unwrap_or(GearKind::None),
+            LoadoutButton::Van(kind) => *kind,
         }
     } else {
-        // If nothing is hovered, potentially show help for the currently equipped right-hand item
-        // or a generic message. For now, let's use a generic message.
-        Gear::none()
+        GearKind::None
     };
 
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                Hand::Left => "(Click to unequip Left Hand item)",
-                Hand::Right => "(Click to unequip Right Hand item)",
+                ungear::Hand::Left => "(Click to unequip Left Hand item)",
+                ungear::Hand::Right => "(Click to unequip Right Hand item)",
             },
             LoadoutButton::InventoryNext(_) => "(Click to unequip Backpack item)",
             LoadoutButton::Van(_) => "(Click to equip item)",
@@ -327,17 +342,16 @@ fn update_loadout_buttons(
         ""
     };
 
-    let (help_title, help_text) = if matches!(gear_for_help.kind, GearKind::None) && elem.is_none()
+    let (help_title, help_text) = if matches!(gear_kind_for_help, GearKind::None) && elem.is_none()
     {
-        // If nothing is hovered AND the "default" gear is None
         (
             "Loadout Management:".to_string(),
             "Select gear from the Van Inventory to add to your Player Inventory. \nClick on items in your Player Inventory to return them to the van. \nHover over any item to see its description and associated evidence here.".to_string(),
         )
     } else {
-        let o_evidence = Evidence::try_from(&gear_for_help.kind).ok();
+        let o_evidence = Evidence::try_from(&gear_kind_for_help).ok();
         let ev_state = match o_evidence {
-            Some(ev) => interaction_query_journal_buttons // Use the renamed query
+            Some(ev) => interaction_query_journal_buttons
                 .iter()
                 .find(|t| t.class == TruckButtonType::Evidence(ev))
                 .map(|t| t.status)
@@ -354,8 +368,12 @@ fn update_loadout_buttons(
                 status.status_desc,
             )
         };
-        let gear_name = gear_for_help.get_display_name();
-        let gear_desc = gear_for_help.get_description();
+        let (gear_name, gear_desc) = gear_registry
+            .metadata
+            .get(&gear_kind_for_help)
+            .map(|m| (m.name.as_str(), m.description.as_str()))
+            .unwrap_or(("None", ""));
+
         (
             format!("{}:", gear_name),
             format!(
@@ -387,11 +405,64 @@ fn update_loadout_buttons(
     }
 }
 
+fn update_loadout_icons(
+    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gearkind: Query<&GearKind>,
+    q_but: Query<(&LoadoutButton, &Children)>,
+    mut q_image: Query<&mut ImageNode>,
+    gc: Res<GameConfig>,
+    gear_registry: Res<GearSpawnerRegistry>,
+) {
+    let Some(p_gear) = q_gear
+        .iter()
+        .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
+    else {
+        return;
+    };
+
+    for (lbut, children) in q_but.iter() {
+        let kind = match lbut {
+            LoadoutButton::Inventory(inv) => {
+                let entity = match inv.hand {
+                    Hand::Left => p_gear.left_hand,
+                    Hand::Right => p_gear.right_hand,
+                };
+                entity
+                    .and_then(|e| q_gearkind.get(e).ok())
+                    .cloned()
+                    .unwrap_or(GearKind::None)
+            }
+            LoadoutButton::InventoryNext(invnext) => invnext
+                .idx
+                .and_then(|idx| p_gear.inventory.get(idx))
+                .and_then(|e| q_gearkind.get(*e).ok())
+                .cloned()
+                .unwrap_or(GearKind::None),
+            LoadoutButton::Van(kind) => *kind,
+        };
+
+        for &child in children {
+            if let Ok(mut image) = q_image.get_mut(child)
+                && let Some(atlas) = &mut image.texture_atlas
+            {
+                let sprite_idx = gear_registry
+                    .metadata
+                    .get(&kind)
+                    .map(|m| m.sprite_idx as usize)
+                    .unwrap_or(GearSpriteID::None as usize);
+                atlas.index = sprite_idx;
+            }
+        }
+    }
+}
+
 fn button_clicked(
     mut ev_clk: MessageReader<EventButtonClicked>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     gc: Res<GameConfig>,
-    mut craft_tracker: ResMut<RepellentCraftTracker>,
+    _craft_tracker: ResMut<RepellentCraftTracker>,
+    gear_registry: Res<GearSpawnerRegistry>,
+    mut commands: Commands,
 ) {
     let Some(ev) = ev_clk.read().next() else {
         return;
@@ -404,47 +475,38 @@ fn button_clicked(
     };
     match &ev.0 {
         LoadoutButton::Inventory(inv) => {
-            // Check if we're returning a full, unopened repellent flask for refund
-            let gear_to_remove = match inv.hand {
-                Hand::Left => &p_gear.left_hand,
-                Hand::Right => &p_gear.right_hand,
+            let entity = match inv.hand {
+                Hand::Left => p_gear.left_hand.take(),
+                Hand::Right => p_gear.right_hand.take(),
             };
-
-            if gear_to_remove.kind == GearKind::RepellentFlask
-                && let Some(rep_flask) =
-                    (&*gear_to_remove.gear as &dyn std::any::Any).downcast_ref::<RepellentFlask>()
-            {
-                // Check if it's full and unopened (qty == MAX_QTY && !active)
-                if rep_flask.qty == 400 && !rep_flask.active {
-                    // MAX_QTY constant is 400
-                    craft_tracker.refund();
-                    info!("Refunded repellent craft: returned full, unopened bottle");
-                }
+            if let Some(e) = entity {
+                commands.entity(e).despawn();
             }
-
-            p_gear.take_hand(&inv.hand);
         }
         LoadoutButton::InventoryNext(invnext) => {
-            if let Some(idx) = invnext.idx {
-                // Check if we're returning a full, unopened repellent flask for refund
-                if let Some(gear_to_remove) = p_gear.inventory.get(idx)
-                    && gear_to_remove.kind == GearKind::RepellentFlask
-                    && let Some(rep_flask) = (&*gear_to_remove.gear as &dyn std::any::Any)
-                        .downcast_ref::<RepellentFlask>()
-                {
-                    // Check if it's full and unopened (qty == MAX_QTY && !active)
-                    if rep_flask.qty == 400 && !rep_flask.active {
-                        // MAX_QTY constant is 400
-                        craft_tracker.refund();
-                        info!("Refunded repellent craft: returned full, unopened bottle");
-                    }
-                }
-
-                p_gear.take_next(idx);
+            if let Some(idx) = invnext.idx
+                && idx < p_gear.inventory.len()
+            {
+                let e = p_gear.inventory.remove(idx);
+                commands.entity(e).despawn();
             }
         }
-        LoadoutButton::Van(gear) => {
-            p_gear.append(gear.clone());
+        LoadoutButton::Van(kind) => {
+            if *kind == GearKind::None {
+                return;
+            }
+            // Spawn item and put in hand or inventory
+            let entity = gear_registry.spawn(&mut commands, *kind);
+            if p_gear.right_hand.is_none() {
+                p_gear.right_hand = Some(entity);
+            } else if p_gear.left_hand.is_none() {
+                p_gear.left_hand = Some(entity);
+            } else if p_gear.inventory.len() < 4 {
+                p_gear.inventory.push(entity);
+            } else {
+                // No space, despawn
+                commands.entity(entity).despawn();
+            }
         }
     }
 }
@@ -452,6 +514,7 @@ fn button_clicked(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (update_loadout_buttons, button_clicked).run_if(in_state(GameState::Truck)),
+        (update_loadout_buttons, update_loadout_icons, button_clicked)
+            .run_if(in_state(GameState::Truck)),
     );
 }

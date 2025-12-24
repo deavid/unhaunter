@@ -14,6 +14,7 @@ undifficulty = { path = "../undifficulty" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-types = { path = "../uncore-types" }
+uncore-components = { path = "../uncore-components" }
 uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
 unmetrics = { path = "../unmetrics" }

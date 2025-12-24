@@ -6,7 +6,6 @@ use uncore_board::behavior::component::Door;
 use uncore_board::behavior::{Behavior, TileState};
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
@@ -246,11 +245,8 @@ fn trigger_struggling_with_grab_drop(
         return;
     }
     // 2.b. Check Player Full State
-    let right_hand_full = !player_gear.empty_right_handed();
-    let inventory_full = player_gear
-        .as_vec()
-        .iter()
-        .all(|(g, _)| !matches!(g.kind, GearKind::None)); // Corrected to use GearKind::None
+    let right_hand_full = player_gear.right_hand.is_some();
+    let inventory_full = player_gear.inventory.len() >= 2;
     let player_is_completely_full = right_hand_full && inventory_full;
 
     // 3.c. Detecting a Failed Grab Attempt to Start/Check Timer
@@ -272,11 +268,8 @@ fn trigger_struggling_with_grab_drop(
         // Re-check player_is_completely_full because they might have dropped/used an item
         // through a means other than the grab key (e.g., using a consumable from inventory directly)
         // which would not have reset the timer in the block above.
-        let updated_right_hand_full = !player_gear.empty_right_handed();
-        let updated_inventory_full = player_gear
-            .inventory // Assuming inventory is the correct field name
-            .iter()
-            .all(|g| !matches!(g.kind, GearKind::None));
+        let updated_right_hand_full = player_gear.right_hand.is_some();
+        let updated_inventory_full = player_gear.inventory.len() >= 2;
         let updated_player_is_completely_full = updated_right_hand_full && updated_inventory_full;
 
         if updated_player_is_completely_full {

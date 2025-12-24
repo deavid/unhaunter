@@ -6,11 +6,10 @@ use unspatial::Position;
 use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
-// Added
+use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
 
 #[derive(Component, Debug, Clone, Default, PartialEq)]
 pub struct GeigerCounter {
-    pub enabled: bool,
     pub display_secs_since_last_update: f32,
     pub frame_counter: u16,
     pub sound_a1: f32,
@@ -18,7 +17,6 @@ pub struct GeigerCounter {
     pub sound_display: f32, // Used for the display value
     pub sound_l: Vec<f32>,
     pub last_sound_time_secs: f32,
-    pub display_glitch_timer: f32,
     pub output_sound: f32,
     pub blinking_hint_active: bool,
 }
@@ -38,98 +36,30 @@ impl GeigerCounter {
     }
 }
 
-impl GearUsable for GeigerCounter {
-    fn can_enable(&self) -> bool {
-        // Can be enabled if not glitching
-        self.display_glitch_timer <= 0.0
-    }
-
-    fn is_enabled(&self) -> bool {
-        // Is truly enabled if it's on and not glitching
-        self.enabled && self.display_glitch_timer <= 0.0
-    }
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        // Show visual state based on self.enabled, but consider glitch for flickering
-        if self.enabled {
-            if self.display_glitch_timer > 0.0 {
-                // Glitching: flicker between Off and Tick
-                if random_seed::rng().random_bool(0.7) {
-                    // 70% chance to show Off during glitch flicker
-                    GearSpriteID::GeigerOff
-                } else {
-                    GearSpriteID::GeigerTick // 30% chance to show Tick (or a dedicated glitch sprite if available)
-                }
-            } else if self.sound_a1 > 10.0 {
-                // Not glitching, check sound level for Tick sprite
-                GearSpriteID::GeigerTick
-            } else {
-                // Not glitching, low sound, show On sprite
-                GearSpriteID::GeigerOn
-            }
-        } else {
-            // Not enabled
-            GearSpriteID::GeigerOff
-        }
-    }
-
-    fn get_display_name(&self) -> &'static str {
-        "Geiger Counter"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."
-    }
-
-    fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let on_s = on_off(self.enabled); // Reflects the user's intent (on/off switch state)
-
-        // Show garbled text when enabled (intent) but glitching (actual state)
-        if self.enabled && self.display_glitch_timer > 0.0 {
-            let garbled = match random_seed::rng().random_range(0..4) {
-                0 => "Reading: ERR0R\nEnergy: ###.###",
-                1 => "Reading: ---.--\nEnergy: FAULT",
-                2 => "INTERFERENCE DET---\nCALIBRATING...",
-                _ => "Signal Lost\nReacquiring...",
-            };
-            return format!("{name}:  {on_s}\n{garbled}");
-        }
-        // Regular display: use self.is_enabled() to check if it's truly operational
-        let msg = if self.is_enabled() {
-            let cpm_text = format!("{:.1}", self.sound_display);
-            if self.blinking_hint_active {
-                let blinking_cpm_text = if self.frame_counter % 30 < 15 {
-                    format!(">[{}]<", cpm_text)
-                } else {
-                    format!("  {}  ", cpm_text)
-                };
-                format!("Reading: {}cpm", blinking_cpm_text)
-            } else {
-                format!("Reading: {}cpm", cpm_text)
-            }
-        } else {
-            "".to_string()
-        };
-        format!("{name}: {on_s}\n{msg}")
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        if self.enabled {
-            // If it's on, turn it off
-            self.enabled = false;
-        } else if self.can_enable() {
-            // If it's off but can be enabled (not glitching), turn it on
-            self.enabled = true;
-        }
-        // If it's off and cannot be enabled (e.g. glitching), do nothing.
-    }
-
-    fn update(&mut self, gs: &mut GearStuff, pos: &Position, _ep: &EquipmentPosition) {
+pub fn update_geigercounter(
+    mut gs: GearStuff,
+    mut q_geiger: Query<(
+        &mut GeigerCounter,
+        &mut StatusText,
+        &mut GearSprite,
+        &mut Toggleable,
+        &mut Battery,
+        &Electronic,
+        &Position,
+        &EquipmentPosition,
+    )>,
+) {
+    for (mut geiger, mut status, mut sprite, toggle, mut battery, electronic, pos, _ep) in
+        q_geiger.iter_mut()
+    {
         let mut rng = random_seed::rng();
-        self.display_secs_since_last_update += gs.time.delta_secs(); // Increment the timer
-        self.frame_counter += 1;
-        self.frame_counter %= 65413;
+        geiger.display_secs_since_last_update += gs.time.delta_secs(); // Increment the timer
+        geiger.frame_counter += 1;
+        geiger.frame_counter %= 65413;
+
+        // Update Battery Drain Rate
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+
         const K: f32 = 0.5;
         let posk = Position {
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
@@ -143,128 +73,161 @@ impl GearUsable for GeigerCounter {
         for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
             let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
-            if self.sound_l.len() < 1200 {
-                self.sound_l.push(sound_reading);
+            if geiger.sound_l.len() < 1200 {
+                geiger.sound_l.push(sound_reading);
             }
-            let n = (self.frame_counter as usize + i) % self.sound_l.len();
-            self.sound_l[n] /= 4.0 * gs.difficulty.0.equipment_sensitivity;
-            if self.enabled {
-                self.sound_l[n] +=
+            let n = (geiger.frame_counter as usize + i) % geiger.sound_l.len();
+            geiger.sound_l[n] /= 4.0 * gs.difficulty.0.equipment_sensitivity;
+            if toggle.is_on {
+                geiger.sound_l[n] +=
                     sound_reading * 40.0 + breach_energy * gs.difficulty.0.equipment_sensitivity;
             }
         }
 
-        self.sound_l.iter_mut().for_each(|x| *x /= 1.06);
+        geiger.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
         let mass: f32 = 8.0 * gs.difficulty.0.equipment_sensitivity;
-        if self.enabled {
+        if toggle.is_on {
             // Calculate the *current* output sound.
-            let current_output_sound = self.calculate_output_sound(gs);
+            let current_output_sound = geiger.calculate_output_sound(&gs);
             // Smooth the *current* output to get sound_a1 (first IIR filter).
-            self.sound_a1 = (self.sound_a1 * mass + current_output_sound * mass.recip())
+            geiger.sound_a1 = (geiger.sound_a1 * mass + current_output_sound * mass.recip())
                 / (mass + mass.recip());
 
             let mass = mass
-                * if current_output_sound > self.sound_a2 {
+                * if current_output_sound > geiger.sound_a2 {
                     1.0
                 } else {
                     2.0
                 };
             // Smooth sound_a1 to get output_sound (second IIR filter).
-            self.output_sound =
-                (self.output_sound * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
+            geiger.output_sound = (geiger.output_sound * mass + geiger.sound_a1 * mass.recip())
+                / (mass + mass.recip());
 
-            self.sound_a2 =
-                (self.sound_a2 * mass + self.sound_a1 * mass.recip()) / (mass + mass.recip());
+            geiger.sound_a2 =
+                (geiger.sound_a2 * mass + geiger.sound_a1 * mass.recip()) / (mass + mass.recip());
         } else {
-            self.sound_a1 /= 1.01;
-            self.sound_a2 /= 1.01;
+            geiger.sound_a1 /= 1.01;
+            geiger.sound_a2 /= 1.01;
         }
 
-        if gs.time.elapsed_secs() - self.last_sound_time_secs > 60.0 / self.sound_a1 && self.enabled
+        if gs.time.elapsed_secs() - geiger.last_sound_time_secs > 60.0 / geiger.sound_a1
+            && toggle.is_on
         {
-            if self.display_glitch_timer <= 0.0001 {
-                self.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
+            if electronic.glitch_timer <= 0.0001 {
+                geiger.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
                 gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, pos);
             } else {
-                self.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
+                geiger.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
                 gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.25, pos);
             }
         }
         // Update sound_display *only* if enough time has passed.
-        if self.display_secs_since_last_update > 0.5 {
-            self.display_secs_since_last_update = 0.0; // Reset the timer
-            self.sound_display = self.output_sound; // Update the display value
+        if geiger.display_secs_since_last_update > 0.5 {
+            geiger.display_secs_since_last_update = 0.0; // Reset the timer
+            geiger.sound_display = geiger.output_sound; // Update the display value
 
             // Update blinking_hint_active
             const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
             // Consider evidence showing if cpm is >= 500 and not glitching
-            if self.sound_display >= 499.9 && self.display_glitch_timer <= 0.0 {
+            if geiger.sound_display >= 499.9 && electronic.glitch_timer <= 0.0 {
                 let count = gs
                     .player_profile
                     .times_evidence_acknowledged_on_gear
                     .get(&Evidence::CPM500)
                     .copied()
                     .unwrap_or(0);
-                self.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
+                geiger.blinking_hint_active = count < HINT_ACKNOWLEDGE_THRESHOLD;
             } else {
-                self.blinking_hint_active = false;
+                geiger.blinking_hint_active = false;
             }
         } else {
             // Ensure blinking_hint_active is false if not updating display this frame,
             // or if we want it to strictly follow the evidence condition.
-            if !(self.sound_display >= 499.9 && self.display_glitch_timer <= 0.0) {
-                self.blinking_hint_active = false;
+            if !(geiger.sound_display >= 499.9 && electronic.glitch_timer <= 0.0) {
+                geiger.blinking_hint_active = false;
             }
         }
 
-        // Decrement glitch timer if active
-        if self.display_glitch_timer > 0.0 {
-            self.display_glitch_timer -= gs.time.delta_secs();
+        // Update StatusText
+        let name = "Geiger Counter";
+        let on_s = on_off(toggle.is_on);
+
+        // Show garbled text when enabled (intent) but glitching (actual state)
+        if toggle.is_on && electronic.glitch_timer > 0.0 {
+            let garbled = match rng.random_range(0..4) {
+                0 => "Reading: ERR0R\nEnergy: ###.###",
+                1 => "Reading: ---.--\nEnergy: FAULT",
+                2 => "INTERFERENCE DET---\nCALIBRATING...",
+                _ => "Signal Lost\nReacquiring...",
+            };
+            status.0 = format!("{name}:  {on_s}\n{garbled}");
+        } else {
+            let msg = if toggle.is_on && electronic.glitch_timer <= 0.0 {
+                let cpm_text = format!("{:.1}", geiger.sound_display);
+                if geiger.blinking_hint_active {
+                    let blinking_cpm_text = if geiger.frame_counter % 30 < 15 {
+                        format!(">[{}]<", cpm_text)
+                    } else {
+                        format!("  {}  ", cpm_text)
+                    };
+                    format!("Reading: {}cpm", blinking_cpm_text)
+                } else {
+                    format!("Reading: {}cpm", cpm_text)
+                }
+            } else {
+                "".to_string()
+            };
+            status.0 = format!("{name}: {on_s}\n{msg}");
         }
-        // Apply EMI if warning is active and we're electronic
-        if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
-            let distance2 = pos.distance2(ghost_pos);
-            self.apply_electromagnetic_interference(
-                gs.haunt_state.ghost_warning_intensity,
-                distance2,
-            );
+
+        // Update GearSprite
+        if toggle.is_on {
+            if electronic.glitch_timer > 0.0 {
+                // Glitching: flicker between Off and Tick
+                if rng.random_bool(0.7) {
+                    sprite.0 = GearSpriteID::GeigerOff;
+                } else {
+                    sprite.0 = GearSpriteID::GeigerTick;
+                }
+            } else if geiger.sound_a1 > 10.0 {
+                sprite.0 = GearSpriteID::GeigerTick;
+            } else {
+                sprite.0 = GearSpriteID::GeigerOn;
+            }
+        } else {
+            sprite.0 = GearSpriteID::GeigerOff;
         }
     }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_geigercounter);
+}
+
+impl GearUsable for GeigerCounter {
+    fn get_display_name(&self) -> &'static str {
+        "Geiger Counter"
+    }
+
+    fn get_description(&self) -> &'static str {
+        "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."
+    }
+
+    fn get_status(&self) -> String {
+        format!("{:.1} CPM", self.output_sound)
+    }
+
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::GeigerOn
+    }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
-    }
-
-    fn is_electronic(&self) -> bool {
-        true
-    }
-
-    fn apply_electromagnetic_interference(&mut self, warning_level: f32, distance2: f32) {
-        if warning_level < 0.0001 || !self.enabled {
-            return;
-        }
-        let mut rng = random_seed::rng();
-
-        // Scale effect by distance and warning level
-        let effect_strength = warning_level * (100.0 / distance2).min(1.0);
-
-        // Random EMF spikes
-        if rng.random_range(0.0..1.0) < effect_strength.powi(2) {
-            self.display_glitch_timer = 0.3;
-        }
-    }
-
-    fn is_status_text_showing_evidence(&self) -> f32 {
-        if self.is_enabled() && self.sound_display > 500.0 {
-            1.0
-        } else {
-            0.0
-        }
-    }
-
-    fn is_blinking_hint_active(&self) -> bool {
-        self.blinking_hint_active
     }
 }
 

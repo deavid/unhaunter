@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use std::any::Any; // Added import
 
 use uncore_board::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
@@ -9,6 +8,7 @@ use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
 
 use uncore_board::resources::roomdb::RoomDB;
+use uncore_components::Toggleable;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::thermometer::Thermometer;
@@ -156,11 +156,8 @@ fn trigger_room_lights_on_gear_needs_dark(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(
-        &Position,
-        &PlayerSprite,
-        &ungear::components::playergear::PlayerGear,
-    )>,
+    qp: Query<(&Position, &PlayerSprite, &PlayerGear)>,
+    q_gear: Query<(&Toggleable, &GearKind)>,
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -179,15 +176,20 @@ fn trigger_room_lights_on_gear_needs_dark(
     }
 
     // Use GearUsable::needs_darkness for the right hand gear
-    if player_gear.right_hand.needs_darkness()
-        && player_gear.right_hand.is_enabled()
-        && board_data.light_field[player_bpos.ndidx()].lux > 0.5
+    if let Some(hand_entity) = player_gear.right_hand
+        && let Ok((toggleable, kind)) = q_gear.get(hand_entity)
     {
-        // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-        walkie_play.set(
-            WalkieEvent::RoomLightsOnGearNeedsDark,
-            time.elapsed_secs_f64(),
-        );
+        let needs_darkness = matches!(kind, GearKind::UVTorch | GearKind::Flashlight);
+        if needs_darkness
+            && toggleable.is_on
+            && board_data.light_field[player_bpos.ndidx()].lux > 0.5
+        {
+            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+            walkie_play.set(
+                WalkieEvent::RoomLightsOnGearNeedsDark,
+                time.elapsed_secs_f64(),
+            );
+        }
     }
 }
 
@@ -200,6 +202,7 @@ fn trigger_thermometer_non_freezing_fixation(
     mut stopwatch: Local<Stopwatch>,
     mut trigger_count: Local<u32>,
     qp: Query<(&PlayerGear, &PlayerSprite)>,
+    q_thermometer: Query<(&Thermometer, &Toggleable)>,
 ) {
     // Only allow 2 triggers per mission
     const MAX_TRIGGERS: u32 = 2;
@@ -220,13 +223,11 @@ fn trigger_thermometer_non_freezing_fixation(
         return;
     };
     // Check if right hand is a Thermometer and enabled
-    if let GearKind::Thermometer = player_gear.right_hand.kind
-        && let Some(thermo) =
-            (&*player_gear.right_hand.gear as &dyn Any).downcast_ref::<Thermometer>()
-        && player_gear.right_hand.is_enabled()
+    if let Some(hand_entity) = player_gear.right_hand
+        && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
     {
         let temp_c = uncore_foundation::kelvin_to_celsius(thermo.temp);
-        if (1.0..=10.0).contains(&temp_c) {
+        if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed_secs() > REQUIRED_DURATION {
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.

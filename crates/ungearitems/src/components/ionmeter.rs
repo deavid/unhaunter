@@ -1,63 +1,32 @@
-use super::{Gear, GearKind, GearSpriteID, on_off};
+use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, on_off};
 use bevy::prelude::*;
-use ungear::gear_stuff::GearStuff;
+use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use ungear::gear_usable::GearUsable;
+use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
-pub struct IonMeter {
-    pub enabled: bool,
-}
+pub struct IonMeter {}
 
 impl GearUsable for IonMeter {
-    fn can_enable(&self) -> bool {
-        // IonMeter has no battery or glitch mechanics, so it can always be enabled if it's off.
-        true
-    }
-
-    fn is_enabled(&self) -> bool {
-        // Is truly enabled if the switch is on. No other conditions apply.
-        self.enabled
-    }
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.is_enabled() {
-            // Use is_enabled for consistency
-            true => GearSpriteID::IonMeter0,
-            false => GearSpriteID::IonMeterOff,
-        }
-    }
-
     fn get_display_name(&self) -> &'static str {
         "Ion Meter"
     }
 
     fn get_description(&self) -> &'static str {
-        "Detects charged particles in the air. Ghost leave a trace as they move and this tool may help following the ghost."
+        "Measures ion concentration in the air."
     }
 
     fn get_status(&self) -> String {
-        let name = self.get_display_name();
-        let on_s = on_off(self.enabled); // Show ON/OFF based on the switch state
-        let msg = if self.is_enabled() {
-            // Use is_enabled for actual operational status
-            "Reading: 32eV".to_string() // Example status when on
-        } else {
-            "".to_string()
-        };
-        format!("{name}: {on_s}\n{msg}")
+        "".to_string()
     }
 
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {
-        if self.is_enabled() {
-            // If currently on
-            self.enabled = false; // Turn it off
-        } else if self.can_enable() {
-            // If currently off and can be turned on
-            self.enabled = true; // Turn it on
-        }
-        // If off and cannot be enabled (though can_enable is always true here), it remains off.
-        // This logic simplifies to self.enabled = !self.enabled for IonMeter.
+    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
+
+    fn get_sprite_idx(&self) -> GearSpriteID {
+        GearSpriteID::IonMeterOff
     }
+
+    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
 
     fn box_clone(&self) -> Box<dyn GearUsable> {
         Box::new(self.clone())
@@ -68,4 +37,45 @@ impl From<IonMeter> for Gear {
     fn from(value: IonMeter) -> Self {
         Gear::new_from_kind(GearKind::IonMeter, value.box_clone())
     }
+}
+
+pub fn update_ionmeter(
+    mut q_ionmeter: Query<
+        (
+            &mut StatusText,
+            &mut GearSprite,
+            &Toggleable,
+            &mut Battery,
+            &Electronic,
+            &ItemName,
+        ),
+        With<IonMeter>,
+    >,
+) {
+    for (mut status, mut sprite, toggle, mut battery, electronic, name) in q_ionmeter.iter_mut() {
+        // Update Battery Drain Rate
+        battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
+
+        sprite.0 = if toggle.is_on {
+            GearSpriteID::IonMeter0
+        } else {
+            GearSpriteID::IonMeterOff
+        };
+
+        let on_s = on_off(toggle.is_on);
+        let msg = if toggle.is_on {
+            if electronic.glitch_timer > 0.0 {
+                "Reading: ERR".to_string()
+            } else {
+                "Reading: 32eV".to_string()
+            }
+        } else {
+            "".to_string()
+        };
+        status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+    }
+}
+
+pub fn app_setup(app: &mut App) {
+    app.add_systems(Update, update_ionmeter);
 }

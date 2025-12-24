@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::AppState;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::looking_gear::LookingGear;
@@ -8,40 +7,12 @@ use unplayer_core::components::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 
 fn acknowledge_blinking_gear_hint_system(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&PlayerSprite, &PlayerGear)>,
-    mut profile_data: ResMut<Persistent<PlayerProfileData>>,
-    looking_gear: Res<LookingGear>,
+    _keyboard_input: Res<ButtonInput<KeyCode>>,
+    _player_query: Query<(&PlayerSprite, &PlayerGear)>,
+    _profile_data: ResMut<Persistent<PlayerProfileData>>,
+    _looking_gear: Res<LookingGear>,
 ) {
-    for (player_sprite, player_gear) in player_query.iter() {
-        let controls = &player_sprite.controls;
-
-        if keyboard_input.just_pressed(controls.change_evidence) {
-            let active_gear = match looking_gear.hand() {
-                ungear::Hand::Left => &player_gear.left_hand,
-                ungear::Hand::Right => &player_gear.right_hand,
-            };
-
-            if active_gear.is_blinking_hint_active()
-                && let Ok(evidence_type) = Evidence::try_from(&active_gear.kind)
-            {
-                const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-                let count = profile_data
-                    .times_evidence_acknowledged_on_gear
-                    .entry(evidence_type)
-                    .or_insert(0);
-
-                if *count < HINT_ACKNOWLEDGE_THRESHOLD {
-                    *count += 1;
-                    info!(
-                        "Acknowledged gear hint for {:?}. New count: {}",
-                        evidence_type, *count
-                    );
-                    profile_data.set_changed();
-                }
-            }
-        }
-    }
+    // STUB: Needs to be re-implemented with ECS entities
 }
 
 pub(crate) fn app_setup(app: &mut App) {

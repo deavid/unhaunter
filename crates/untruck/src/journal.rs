@@ -8,7 +8,10 @@ use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty::CurrentDifficulty;
+use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
+use ungear::resources::spawner::GearSpawnerRegistry;
+use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unplayer::components::player_sprite::PlayerSprite;
@@ -72,16 +75,20 @@ fn button_system(
         ),
         With<Button>,
     >,
-    q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     mut q_textcolor: Query<&mut TextColor>,
     mut gg: ResMut<GhostGuess>,
     mut ev_truckui: MessageWriter<TruckUIEvent>,
-    gc: Res<GameConfig>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
     mut potential_id_timer: ResMut<PotentialIDTimer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    gc: Res<GameConfig>,
+    mut commands: Commands,
+    gear_registry: Res<GearSpawnerRegistry>,
+    mut q_repellent: Query<&mut RepellentFlask>,
+    q_gearkind: Query<&GearKind>,
 ) {
     let mut selected_evidences_found = HashSet::<Evidence>::new();
     let mut selected_evidences_missing = HashSet::<Evidence>::new();
@@ -116,6 +123,25 @@ fn button_system(
                     } else {
                         tui_button.pressed();
                         clicked_ghost_type = Some(ghost_type);
+                    }
+                }
+                TruckButtonType::CraftRepellent => {
+                    if let Some(ghost_type) = gg.ghost_type {
+                        for (player, mut gear) in q_gear.iter_mut() {
+                            if player.id == gc.player_id {
+                                crate::craft_repellent::craft_repellent(
+                                    &mut commands,
+                                    &gear_registry,
+                                    &mut gear,
+                                    ghost_type,
+                                    &mut q_repellent,
+                                    &q_gearkind,
+                                );
+                            }
+                        }
+                    }
+                    if let Some(truckui_event) = tui_button.pressed() {
+                        ev_truckui.write(truckui_event);
                     }
                 }
                 _ => {
@@ -266,17 +292,7 @@ fn button_system(
 
         // Update Craft Repellent button
         if let TruckButtonType::CraftRepellent = tui_button.class {
-            let mut disabled = gg.ghost_type.is_none();
-            if !disabled {
-                for (player, gear) in q_gear.iter() {
-                    if player.id == gc.player_id
-                        && let Some(ghost_type) = gg.ghost_type
-                        && !gear.can_craft_repellent(ghost_type)
-                    {
-                        disabled = true;
-                    }
-                }
-            }
+            let disabled = gg.ghost_type.is_none();
             tui_button.disabled = disabled;
         }
 
@@ -301,6 +317,7 @@ fn button_system(
     }
 
     // Update GhostGuess resource with the latest evidence sets (only if changed)
+
     let final_found_changed = gg.evidences_found != selected_evidences_found;
     let final_missing_changed = gg.evidences_missing != selected_evidences_missing;
 

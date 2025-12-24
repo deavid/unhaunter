@@ -1,91 +1,73 @@
 use bevy::prelude::*;
+use uncore_board::resources::board_data::BoardData;
+use uncore_components::{EvidenceSensor, Toggleable};
 use uncore_foundation::types::evidence::Evidence;
-use ungear::GearKind;
-use ungear::resources::looking_gear::LookingGear;
-use ungear::{
-    components::playergear::PlayerGear,
-    types::gear::Gear, // The actual Gear struct
-};
+use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use unplayer_core::components::PlayerSprite;
+use unghost_core::resources::haunt_state::HauntState;
+use unspatial::Position;
+use untags::PlayerTag;
 
-// This system is responsible for determining what evidence the player *perceives*
-// from their handheld gear's UI and sound, and reporting that to CurrentEvidenceReadings.
-// Environmental evidences (Orbs, UV Ecto, RL Pres) are handled by maplight.rs.
 fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,
-    player_query: Query<(Entity, &PlayerGear, &PlayerSprite)>, // PlayerSprite for controls for LookingGear
-    looking_gear: Res<LookingGear>,
+    player_query: Query<(&PlayerGear, &Position), With<PlayerTag>>,
+    q_evidence_sensor: Query<(&EvidenceSensor, &Toggleable)>,
+    board_data: Res<BoardData>,
+    haunt_state: Res<HauntState>,
     time: Res<Time>,
 ) {
-    let Ok((_player_entity, player_gear, _player_sprite)) = player_query.single() else {
+    let Ok((player_gear, player_pos)) = player_query.single() else {
         return;
     };
-    let current_game_time_secs = time.elapsed_secs_f64();
-    let delta_time_secs = time.delta_secs();
 
-    // Helper closure to process a single piece of gear
-    let mut process_gear = |gear: &Gear,
-                            is_status_text_prominently_visible: bool,
-                            is_icon_prominently_visible: bool| {
-        if gear.kind == GearKind::None {
-            return;
-        }
+    let delta_time = time.delta_secs();
+    let current_time = time.elapsed_secs_f64();
 
-        if let Ok(evidence_type) = Evidence::try_from(&gear.kind) {
-            let mut clarity = 0.0f32;
+    // We check both hands
+    let hands = [player_gear.left_hand, player_gear.right_hand];
 
-            if is_status_text_prominently_visible {
-                clarity = clarity.max(gear.is_status_text_showing_evidence());
-            }
-            // Important: Use else if for icon if status text already gives max clarity for the same visual aspect
-            // However, icon might show different aspect of evidence or be a fallback.
-            // For now, max() handles if both contribute independently or redundantly.
-            if is_icon_prominently_visible {
-                clarity = clarity.max(gear.is_icon_showing_evidence());
+    for hand_entity in hands.into_iter().flatten() {
+        if let Ok((sensor, toggle)) = q_evidence_sensor.get(hand_entity) {
+            if !toggle.is_on {
+                continue;
             }
 
-            // For handheld gear, if its sound indicates evidence, it's perceived.
-            // The GearUsable trait method should return 0.0 if not making evidential sound.
-            clarity = clarity.max(gear.is_sound_showing_evidence());
+            let evidence = sensor.evidence;
+            let mut clarity = 0.0;
 
-            evidence_readings.report_clarity(
-                evidence_type,
-                clarity,
-                current_game_time_secs,
-                delta_time_secs,
-            );
+            match evidence {
+                Evidence::FreezingTemp => {
+                    // Check temperature at player position
+                    let bpos = player_pos.to_board_position();
+                    if let Some(&temp) = board_data.temperature_field.get(bpos.ndidx()) {
+                        // If temp < 0.0, clarity is 1.0. If temp > 5.0, clarity is 0.0.
+                        clarity = ((5.0 - temp) / 5.0).clamp(0.0, 1.0);
+                    }
+                }
+                Evidence::FloatingOrbs => {
+                    // Floating orbs are visible if lights are off and we are near the breach
+                    let dist = player_pos.distance(&haunt_state.breach_pos);
+                    let lux = board_data
+                        .light_field
+                        .get(player_pos.to_board_position().ndidx())
+                        .map(|l| l.lux)
+                        .unwrap_or(0.0);
+
+                    if lux < 0.1 && dist < 5.0 && haunt_state.evidences.contains(&evidence) {
+                        clarity = (5.0 - dist) / 5.0;
+                    }
+                }
+                _ => {
+                    // For other evidences, we use ghost_warning_intensity as a proxy for now
+                    // but only if the ghost actually has that evidence.
+                    if haunt_state.evidences.contains(&evidence) {
+                        clarity = haunt_state.ghost_warning_intensity;
+                    }
+                }
+            }
+
+            evidence_readings.report_clarity(evidence, clarity, current_time, delta_time);
         }
-    };
-
-    // --- Right Hand ---
-    // Status text and icon are considered prominently visible for the right hand.
-    process_gear(
-        &player_gear.right_hand,
-        true, // Status text visible
-        true, // Icon visible
-    );
-
-    // --- Left Hand ---
-    let left_hand_status_text_visible =
-        player_gear.left_hand.kind != GearKind::None && (looking_gear.held); // || keyboard_input.pressed(player_sprite.controls.left_hand_look));
-    // LookingGear.held should be sufficient if updated correctly.
-    let left_hand_icon_visible = player_gear.left_hand.kind != GearKind::None;
-    process_gear(
-        &player_gear.left_hand,
-        left_hand_status_text_visible,
-        left_hand_icon_visible,
-    );
-
-    // --- "Next" Inventory Slot (Icon for [Q] cycle) ---
-    if let Some(next_gear_in_q_slot) = player_gear.get_next_non_empty()
-        && next_gear_in_q_slot.kind != GearKind::None
-    {
-        process_gear(
-            &next_gear_in_q_slot,
-            false, // "Next" item preview generally doesn't show full status text
-            true,  // Icon is visible
-        );
     }
 }
 
