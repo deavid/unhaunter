@@ -9,7 +9,6 @@ authors.workspace = true
 
 [dependencies]
 uncore-types = { path = "../uncore-types" }
-undifficulty = { path = "../undifficulty" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 thiserror = { workspace = true }

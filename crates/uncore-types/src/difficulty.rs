@@ -1,7 +1,6 @@
 //! Basic Difficulty enum definition
 //!
 //! This module contains just the enum and basic utility methods.
-//! Complex difficulty settings are provided via traits implemented elsewhere.
 
 use enum_iterator::{Sequence, all};
 use serde::{Deserialize, Serialize};

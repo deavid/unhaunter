@@ -12,8 +12,8 @@ homepage.workspace = true
 unwalkie_types = { path = "../unwalkie_types" }
 
 uncore-foundation = { path = "../uncore-foundation" }
+uncore-types = { path = "../uncore-types" }
 ungear = { path = "../ungear" }
-undifficulty = { path = "../undifficulty" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

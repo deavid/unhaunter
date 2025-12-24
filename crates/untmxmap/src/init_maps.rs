@@ -7,7 +7,7 @@ use uncore_assets::assets::tsxsheet::TsxSheet;
 use uncore_assets::types::mission_data::MissionData;
 use uncore_assets::types::root::map::Map;
 use uncore_assets::types::root::map::Sheet;
-use undifficulty::Difficulty;
+use uncore_types::Difficulty;
 
 pub struct PreLoad<A: Asset> {
     path: String,
