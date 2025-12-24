@@ -2,7 +2,7 @@
 //! representing the Sage Bundle consumable item in the game.
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{EquipmentPosition, GearSpriteID};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::components::mapcolor::MapColor;
@@ -131,48 +131,6 @@ pub fn update_sage(
                 GearSpriteID::SageBundle4
             }
         };
-    }
-}
-
-impl GearUsable for SageBundleData {
-    fn get_display_name(&self) -> &'static str {
-        "Sage Bundle"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time."
-    }
-    fn get_status(&self) -> String {
-        if self.consumed {
-            "Consumed".to_string()
-        } else if self.is_active {
-            "Burning".to_string()
-        } else {
-            "Ready".to_string()
-        }
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        if self.consumed {
-            GearSpriteID::SageBundle4
-        } else if self.is_active {
-            GearSpriteID::SageBundle1
-        } else {
-            GearSpriteID::SageBundle0
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<SageBundleData> for Gear {
-    fn from(value: SageBundleData) -> Self {
-        Gear::new_from_kind(GearKind::SageBundle, value.box_clone())
     }
 }
 

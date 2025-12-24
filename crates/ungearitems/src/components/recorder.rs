@@ -4,7 +4,7 @@ use ungear::gear_stuff::GearStuff;
 
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
@@ -28,38 +28,6 @@ pub struct Recorder {
     pub display_glitch_timer: f32, // Added for EMI effects
     pub false_reading_timer: f32,  // For creating false audio spikes
     pub blinking_hint_active: bool,
-}
-
-impl GearUsable for Recorder {
-    fn get_display_name(&self) -> &'static str {
-        "Recorder"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Records audio. Can capture EVP (Electronic Voice Phenomena)."
-    }
-
-    fn get_status(&self) -> String {
-        format!("{:.1} dB", self.sound)
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::RecorderOff
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<Recorder> for Gear {
-    fn from(value: Recorder) -> Self {
-        Gear::new_from_kind(GearKind::Recorder, value.box_clone())
-    }
 }
 
 pub fn update_recorder(

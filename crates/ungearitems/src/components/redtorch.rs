@@ -1,51 +1,14 @@
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
 use unspatial::Position;
 
 #[derive(Component, Debug, Clone, PartialEq, Default)]
 pub struct RedTorch {
     pub enabled: bool,
-}
-
-impl GearUsable for RedTorch {
-    fn get_display_name(&self) -> &'static str {
-        "Red Torch"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A red flashlight. Some ghosts are less aggressive under red light."
-    }
-
-    fn get_status(&self) -> String {
-        on_off(self.enabled).to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        if self.enabled {
-            GearSpriteID::RedTorchOn
-        } else {
-            GearSpriteID::RedTorchOff
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<RedTorch> for Gear {
-    fn from(value: RedTorch) -> Self {
-        Gear::new_from_kind(GearKind::RedTorch, value.box_clone())
-    }
 }
 
 pub fn update_redtorch(

@@ -2,7 +2,7 @@ use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, T
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_foundation::kelvin_to_celsius;
@@ -27,42 +27,6 @@ pub struct SpiritBox {
     /// True if the UI hint for acknowledging the evidence should be blinking.
     /// This is used to draw the player's attention to new evidence.
     pub blinking_hint_active: bool,
-}
-
-impl GearUsable for SpiritBox {
-    fn get_display_name(&self) -> &'static str {
-        "Spirit Box"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Scans radio frequencies for paranormal vocal phenomena."
-    }
-
-    fn get_status(&self) -> String {
-        if self.ghost_answer {
-            "RESPONSE".to_string()
-        } else {
-            "SCANNING".to_string()
-        }
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::SpiritBoxOff
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<SpiritBox> for Gear {
-    fn from(value: SpiritBox) -> Self {
-        Gear::new_from_kind(GearKind::SpiritBox, value.box_clone())
-    }
 }
 
 pub fn update_spiritbox(

@@ -1,6 +1,6 @@
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::behavior::Behavior;
@@ -35,32 +35,6 @@ impl Default for Thermometer {
             frame_counter: Default::default(),
             blinking_hint_active: false,
         }
-    }
-}
-
-impl GearUsable for Thermometer {
-    fn get_display_name(&self) -> &'static str {
-        "Thermometer"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Reads the temperature of the room. Most paranormal interactions have been correlated with unusual cold temperatures."
-    }
-
-    fn get_status(&self) -> String {
-        format!("{:.1}°C", kelvin_to_celsius(self.temp))
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::ThermometerOff
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
     }
 }
 
@@ -178,12 +152,6 @@ pub fn update_thermometer(
             "".to_string()
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
-    }
-}
-
-impl From<Thermometer> for Gear {
-    fn from(value: Thermometer) -> Self {
-        Gear::new_from_kind(GearKind::Thermometer, value.box_clone())
     }
 }
 

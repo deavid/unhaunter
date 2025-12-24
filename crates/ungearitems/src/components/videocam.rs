@@ -1,4 +1,4 @@
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
@@ -59,36 +59,4 @@ pub fn update_videocam(
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(Update, update_videocam);
-}
-
-impl GearUsable for Videocam {
-    fn get_display_name(&self) -> &'static str {
-        "Video Camera NV"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Mainly used for its infrared night vision, it can also transmit images to the van in real time."
-    }
-
-    fn get_status(&self) -> String {
-        "".to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::Videocam
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<Videocam> for Gear {
-    fn from(value: Videocam) -> Self {
-        Gear::new_from_kind(GearKind::Videocam, value.box_clone())
-    }
 }

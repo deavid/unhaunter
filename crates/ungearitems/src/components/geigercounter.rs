@@ -3,7 +3,7 @@ use uncore_foundation::types::evidence::Evidence;
 use ungear::gear_stuff::GearStuff;
 use unspatial::Position;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
@@ -203,36 +203,4 @@ pub fn update_geigercounter(
 
 pub fn app_setup(app: &mut App) {
     app.add_systems(Update, update_geigercounter);
-}
-
-impl GearUsable for GeigerCounter {
-    fn get_display_name(&self) -> &'static str {
-        "Geiger Counter"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."
-    }
-
-    fn get_status(&self) -> String {
-        format!("{:.1} CPM", self.output_sound)
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::GeigerOn
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<GeigerCounter> for Gear {
-    fn from(value: GeigerCounter) -> Self {
-        Gear::new_from_kind(GearKind::GeigerCounter, value.box_clone())
-    }
 }

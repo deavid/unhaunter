@@ -3,10 +3,9 @@ use uncore_components::{
 };
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
 use unspatial::Position;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID};
+use super::GearSpriteID;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
@@ -79,43 +78,6 @@ impl Flashlight {
             return true; // Can always turn off
         }
         battery_level > 0.0 && self.inner_temp <= 1.0
-    }
-}
-
-impl GearUsable for Flashlight {
-    fn get_display_name(&self) -> &'static str {
-        "Flashlight"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A powerful flashlight to illuminate the darkness."
-    }
-
-    fn get_status(&self) -> String {
-        self.status.string().to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.status {
-            FlashlightStatus::Off => GearSpriteID::FlashlightOff,
-            FlashlightStatus::Low => GearSpriteID::Flashlight1,
-            FlashlightStatus::Mid => GearSpriteID::Flashlight2,
-            FlashlightStatus::High => GearSpriteID::Flashlight3,
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<Flashlight> for Gear {
-    fn from(value: Flashlight) -> Self {
-        Gear::new_from_kind(GearKind::Flashlight, value.box_clone())
     }
 }
 

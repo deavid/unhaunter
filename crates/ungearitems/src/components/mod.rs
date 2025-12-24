@@ -18,8 +18,5 @@ pub mod thermometer;
 pub mod uvtorch;
 pub mod videocam;
 
-use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
-use ungear::types::gear::Gear;
 use ungear::types::gear::utils::on_off;
-use ungear::{EquipmentPosition, GearKind, GearSpriteID};
+use ungear::{EquipmentPosition, GearSpriteID};

@@ -1,43 +1,9 @@
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
-use ungear::gear_usable::GearUsable;
-use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct EStaticMeter {}
-
-impl GearUsable for EStaticMeter {
-    fn get_display_name(&self) -> &'static str {
-        "E-Static Meter"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Measures static electricity in the air."
-    }
-
-    fn get_status(&self) -> String {
-        "".to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::EStaticMeter
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<EStaticMeter> for Gear {
-    fn from(value: EStaticMeter) -> Self {
-        Gear::new_from_kind(GearKind::EStaticMeter, value.box_clone())
-    }
-}
 
 pub fn update_estaticmeter(
     mut q_estaticmeter: Query<

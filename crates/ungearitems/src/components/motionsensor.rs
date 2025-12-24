@@ -1,43 +1,9 @@
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearStuff, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
-use ungear::gear_usable::GearUsable;
-use unspatial::Position;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct MotionSensor {}
-
-impl GearUsable for MotionSensor {
-    fn get_display_name(&self) -> &'static str {
-        "Motion Sensor"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Detects movement in its vicinity."
-    }
-
-    fn get_status(&self) -> String {
-        "".to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::MotionSensor
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<MotionSensor> for Gear {
-    fn from(value: MotionSensor) -> Self {
-        Gear::new_from_kind(GearKind::MotionSensor, value.box_clone())
-    }
-}
 
 pub fn update_motionsensor(
     mut q_motionsensor: Query<

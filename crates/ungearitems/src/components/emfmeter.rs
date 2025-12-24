@@ -5,7 +5,7 @@ use ungear::gear_stuff::GearStuff;
 use uncore_foundation::types::evidence::Evidence;
 use unspatial::Position;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable, on_off};
+use super::{EquipmentPosition, GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng as _;
 
@@ -69,38 +69,6 @@ pub struct EMFMeter {
     pub last_sound_secs: f32,
     pub last_meter_update_secs: f32,
     pub blinking_hint_active: bool,
-}
-
-impl GearUsable for EMFMeter {
-    fn get_display_name(&self) -> &'static str {
-        "EMF Meter"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Measures electromagnetic fields. High readings can indicate ghost activity."
-    }
-
-    fn get_status(&self) -> String {
-        self.emf_level.to_status().to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        self.emf_level.to_spriteid()
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<EMFMeter> for Gear {
-    fn from(value: EMFMeter) -> Self {
-        Gear::new_from_kind(GearKind::EMFMeter, value.box_clone())
-    }
 }
 
 pub fn update_emfmeter(

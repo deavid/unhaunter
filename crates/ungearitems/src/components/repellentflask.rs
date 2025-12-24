@@ -18,7 +18,7 @@ use unspatial::{BoardPosition, Direction, Position};
 
 use crate::metrics;
 
-use super::{Gear, GearKind, GearSpriteID, GearUsable};
+use super::GearSpriteID;
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
 
@@ -133,49 +133,6 @@ pub fn update_repellentflask(
         } else {
             sprite.0 = GearSpriteID::RepelentFlaskEmpty;
         }
-    }
-}
-
-impl GearUsable for RepellentFlask {
-    fn get_display_name(&self) -> &'static str {
-        "Repellent"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "Crafted in the van, specifically targeting a single ghost type to be effective enough to expel a ghost."
-    }
-
-    fn get_status(&self) -> String {
-        format!("{}%", (self.qty * 100) / Self::MAX_QTY)
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        GearSpriteID::RepelentFlaskFull
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-
-    fn can_fill_liquid(&self, ghost_type: GhostType) -> bool {
-        !(self.liquid_content == Some(ghost_type) && !self.active && self.qty == Self::MAX_QTY)
-    }
-    fn do_fill_liquid(&mut self, ghost_type: GhostType) -> bool {
-        let was_not_new = self.active || self.qty != Self::MAX_QTY;
-        self.liquid_content = Some(ghost_type);
-        self.active = false;
-        self.qty = Self::MAX_QTY;
-        was_not_new
-    }
-}
-
-impl From<RepellentFlask> for Gear {
-    fn from(value: RepellentFlask) -> Self {
-        Gear::new_from_kind(GearKind::RepellentFlask, value.box_clone())
     }
 }
 

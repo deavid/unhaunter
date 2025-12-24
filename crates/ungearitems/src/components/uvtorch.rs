@@ -1,10 +1,9 @@
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, on_off};
+use super::{GearSpriteID, on_off};
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
-use ungear::gear_usable::GearUsable;
 use unspatial::Position;
 
 #[derive(Component, Debug, Clone)]
@@ -45,42 +44,6 @@ impl UVTorch {
 
     pub fn can_enable(&self, battery_level: f32, glitch_timer: f32) -> bool {
         battery_level > 0.0 && glitch_timer <= 0.01
-    }
-}
-
-impl GearUsable for UVTorch {
-    fn get_display_name(&self) -> &'static str {
-        "UV Torch"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A ultraviolet flashlight. Can reveal fingerprints and other UV-reactive evidence."
-    }
-
-    fn get_status(&self) -> String {
-        on_off(self.enabled).to_string()
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        if self.enabled {
-            GearSpriteID::UVTorchOn
-        } else {
-            GearSpriteID::UVTorchOff
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<UVTorch> for Gear {
-    fn from(value: UVTorch) -> Self {
-        Gear::new_from_kind(GearKind::UVTorch, value.box_clone())
     }
 }
 

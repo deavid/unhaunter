@@ -2,7 +2,7 @@
 //! representing the Salt consumable item in the game.
 use crate::metrics;
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{EquipmentPosition, GearSpriteID};
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_board::components::mapcolor::MapColor;
@@ -75,44 +75,6 @@ pub fn update_salt(
             // Empty
             _ => GearSpriteID::Salt0,
         };
-    }
-}
-
-impl GearUsable for SaltData {
-    fn get_display_name(&self) -> &'static str {
-        "Salt"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A bottle containing four charges of salt. Players can drop salt piles to repel the ghost and create temporary trails of UV-reactive salt particles."
-    }
-
-    fn get_status(&self) -> String {
-        format!("Charges: {}", self.charges)
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.charges {
-            4 => GearSpriteID::Salt4,
-            3 => GearSpriteID::Salt3,
-            2 => GearSpriteID::Salt2,
-            1 => GearSpriteID::Salt1,
-            _ => GearSpriteID::Salt0,
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<SaltData> for Gear {
-    fn from(value: SaltData) -> Self {
-        Gear::new_from_kind(GearKind::Salt, value.box_clone())
     }
 }
 

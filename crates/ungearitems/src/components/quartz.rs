@@ -1,7 +1,7 @@
 //! This module defines the `QuartzStoneData` struct and its associated logic,
 //! representing the Quartz Stone consumable item in the game.
 
-use super::{EquipmentPosition, Gear, GearKind, GearSpriteID, GearUsable};
+use super::{EquipmentPosition, GearSpriteID};
 use bevy::prelude::*;
 use uncore_components::{GearSprite, StatusText};
 use ungear::gear_stuff::GearStuff;
@@ -119,48 +119,4 @@ pub fn update_quartz(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_quartz);
-}
-
-impl GearUsable for QuartzStoneData {
-    fn get_display_name(&self) -> &'static str {
-        "Quartz Stone"
-    }
-
-    fn get_description(&self) -> &'static str {
-        "A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses."
-    }
-
-    fn get_status(&self) -> String {
-        match self.cracks {
-            0 => "Pure".to_string(),
-            1 => "Used once".to_string(),
-            2 => "Used twice".to_string(),
-            3 => "Used thrice".to_string(),
-            _ => "Shattered".to_string(),
-        }
-    }
-
-    fn set_trigger(&mut self, _gs: &mut GearStuff) {}
-
-    fn get_sprite_idx(&self) -> GearSpriteID {
-        match self.cracks {
-            0 => GearSpriteID::QuartzStone0,
-            1 => GearSpriteID::QuartzStone1,
-            2 => GearSpriteID::QuartzStone2,
-            3 => GearSpriteID::QuartzStone3,
-            _ => GearSpriteID::QuartzStone4,
-        }
-    }
-
-    fn update(&mut self, _gs: &mut GearStuff, _pos: &Position, _ep: &EquipmentPosition) {}
-
-    fn box_clone(&self) -> Box<dyn GearUsable> {
-        Box::new(self.clone())
-    }
-}
-
-impl From<QuartzStoneData> for Gear {
-    fn from(value: QuartzStoneData) -> Self {
-        Gear::new_from_kind(GearKind::QuartzStone, value.box_clone())
-    }
 }
