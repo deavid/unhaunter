@@ -31,10 +31,10 @@ impl ItemDescription {
 #[reflect(Component)]
 pub struct GearSprite(pub GearSpriteID);
 
-/// Flashlight functionality (Public Interface).
+/// Light emitter functionality (Public Interface).
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct Flashlight {
+pub struct LightEmitter {
     pub power: f32,
     pub color: Color,
     pub light_type: LightType,

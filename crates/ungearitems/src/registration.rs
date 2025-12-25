@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use uncore_board::behavior::component::{Collision, InteractableByGhost};
 use uncore_components::*;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::gear::GearKind;
 use uncore_foundation::types::gear::GearSpriteID;
+use uncore_foundation::types::gear::{EquipmentPosition, GearKind};
 use ungear::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 
 use crate::components::compass::Compass;
@@ -43,7 +44,8 @@ pub fn register_all(app: &mut App) {
                 "Iluminates the way. Imprescindible tool to work in the dark.",
             ));
             cmd.insert(GearSprite(GearSpriteID::FlashlightOff));
-            cmd.insert(Flashlight {
+            cmd.insert(StatusText::default());
+            cmd.insert(LightEmitter {
                 power: 10.0,
                 color: Color::WHITE,
                 light_type: LightType::Visible,
@@ -58,6 +60,9 @@ pub fn register_all(app: &mut App) {
                 drain_rate: 0.0001,
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(FlashlightInternal::default());
         },
     );
@@ -73,6 +78,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Thermometer"));
             cmd.insert(ItemDescription::new("Reads the temperature of the room. Most paranormal interactions have been correlated with unusual cold temperatures."));
             cmd.insert(GearSprite(GearSpriteID::ThermometerOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::FreezingTemp,
             });
@@ -84,7 +90,11 @@ pub fn register_all(app: &mut App) {
                 level: 1.0,
                 drain_rate: 0.00005,
             });
+            cmd.insert(Toggleable { is_on: false });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(ThermometerInternal::default());
         },
     );
@@ -100,6 +110,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("EMF Meter"));
             cmd.insert(ItemDescription::new("Used to find electric wires behind walls. Ghosts might disturb the electromagnetic field."));
             cmd.insert(GearSprite(GearSpriteID::EMFMeterOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EMFLevel5,
             });
@@ -111,7 +122,11 @@ pub fn register_all(app: &mut App) {
                 level: 1.0,
                 drain_rate: 0.0001,
             });
+            cmd.insert(Toggleable { is_on: false });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(EMFMeterInternal::default());
         },
     );
@@ -131,6 +146,7 @@ pub fn register_all(app: &mut App) {
                 "Records ambient sounds and conversations. Sometimes it can capture EVP phenomena.",
             ));
             cmd.insert(GearSprite(GearSpriteID::RecorderOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EVPRecording,
             });
@@ -142,6 +158,9 @@ pub fn register_all(app: &mut App) {
             });
             cmd.insert(Battery::default());
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(Recorder::default());
         },
     );
@@ -157,6 +176,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Geiger Counter"));
             cmd.insert(ItemDescription::new("Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."));
             cmd.insert(GearSprite(GearSpriteID::GeigerOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::CPM500,
             });
@@ -164,11 +184,15 @@ pub fn register_all(app: &mut App) {
                 level: 1.0,
                 drain_rate: 0.0002,
             });
+            cmd.insert(Toggleable { is_on: false });
             cmd.insert(Electronic {
                 sensitivity: 1.0,
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(GeigerCounter::default());
         },
     );
@@ -184,10 +208,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("UV Torch"));
             cmd.insert(ItemDescription::new("Ultraviolet light that can be used to expose evidence invisible to the naked eye since some substances react to it and glow."));
             cmd.insert(GearSprite(GearSpriteID::UVTorchOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::UVEctoplasm,
             });
-            cmd.insert(Flashlight {
+            cmd.insert(LightEmitter {
                 power: 5.0,
                 color: Color::srgb(0.60, 0.25, 1.00),
                 light_type: LightType::UltraViolet,
@@ -202,6 +227,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(UVTorch::default());
         },
     );
@@ -217,6 +245,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Ion Meter"));
             cmd.insert(ItemDescription::new("Detects charged particles in the air. Ghost leave a trace as they move and this tool may help following the ghost."));
             cmd.insert(GearSprite(GearSpriteID::IonMeterOff));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -227,6 +256,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(IonMeter::default());
         },
     );
@@ -242,6 +274,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Spirit Box"));
             cmd.insert(ItemDescription::new("A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living if you're close to its breach, and with the lights off."));
             cmd.insert(GearSprite(GearSpriteID::SpiritBoxOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::SpiritBox,
             });
@@ -255,6 +288,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(SpiritBox::default());
         },
     );
@@ -270,6 +306,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Thermal Imager"));
             cmd.insert(ItemDescription::new("Heat vision to see easily what's hot and what's cold. Might improve visibility of the paranormal and haunted objects."));
             cmd.insert(GearSprite(GearSpriteID::ThermalImagerOff));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -280,6 +317,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(ThermalImager::default());
         },
     );
@@ -295,10 +335,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Red Torch"));
             cmd.insert(ItemDescription::new("A simple red light used by astronomers to see on the dark without losing night vision eye's adaptation. But the ghost might also react to this too."));
             cmd.insert(GearSprite(GearSpriteID::RedTorchOff));
+            cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::RLPresence,
             });
-            cmd.insert(Flashlight {
+            cmd.insert(LightEmitter {
                 power: 2.5,
                 color: Color::srgb(1.0, 0.20, 0.07),
                 light_type: LightType::Red,
@@ -313,6 +354,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(RedTorch::default());
         },
     );
@@ -330,6 +374,7 @@ pub fn register_all(app: &mut App) {
                 "Takes photos, hopefully of something paranormal.",
             ));
             cmd.insert(GearSprite(GearSpriteID::Photocam));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -340,6 +385,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(Photocam::default());
         },
     );
@@ -357,8 +405,12 @@ pub fn register_all(app: &mut App) {
                 "Measures the Earth's magnetic field, and sometimes the ghost.",
             ));
             cmd.insert(GearSprite(GearSpriteID::Compass));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(Compass::default());
         },
     );
@@ -378,6 +430,7 @@ pub fn register_all(app: &mut App) {
                 "Measures static electricity in the air. Might warn if the ghost is angering.",
             ));
             cmd.insert(GearSprite(GearSpriteID::EStaticMeter));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -388,6 +441,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(EStaticMeter::default());
         },
     );
@@ -403,7 +459,8 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Video Camera NV"));
             cmd.insert(ItemDescription::new("Mainly used for its infrared night vision, it can also transmit images to the van in real time."));
             cmd.insert(GearSprite(GearSpriteID::Videocam));
-            cmd.insert(Flashlight {
+            cmd.insert(StatusText::default());
+            cmd.insert(LightEmitter {
                 power: 35.0,
                 color: Color::srgb(0.01, 1.00, 0.70),
                 light_type: LightType::InfraRedNV,
@@ -421,6 +478,9 @@ pub fn register_all(app: &mut App) {
                 drain_rate: 0.0002,
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(Videocam::default());
         },
     );
@@ -436,6 +496,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Motion Sensor"));
             cmd.insert(ItemDescription::new("Shoots an infrared beam that if cut will make the device beep. Can alert if a presence passes through."));
             cmd.insert(GearSprite(GearSpriteID::MotionSensor));
+            cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -446,6 +507,9 @@ pub fn register_all(app: &mut App) {
                 ..default()
             });
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(MotionSensor::default());
         },
     );
@@ -461,7 +525,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Repellent"));
             cmd.insert(ItemDescription::new("Crafted in the van, specifically targeting a single ghost type to be effective enough to expel a ghost."));
             cmd.insert(GearSprite(GearSpriteID::RepelentFlaskEmpty));
+            cmd.insert(StatusText::default());
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(RepellentFlask::default());
         },
     );
@@ -477,7 +545,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Quartz Stone"));
             cmd.insert(ItemDescription::new("A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses."));
             cmd.insert(GearSprite(GearSpriteID::QuartzStone0));
+            cmd.insert(StatusText::default());
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(QuartzStoneData::default());
         },
     );
@@ -493,7 +565,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Salt"));
             cmd.insert(ItemDescription::new("A bottle containing four charges of salt. Players can drop salt piles to repel the ghost and create temporary trails of UV-reactive salt particles."));
             cmd.insert(GearSprite(GearSpriteID::Salt4));
+            cmd.insert(StatusText::default());
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(SaltData::default());
         },
     );
@@ -509,7 +585,11 @@ pub fn register_all(app: &mut App) {
             cmd.insert(ItemName::new("Sage Bundle"));
             cmd.insert(ItemDescription::new("A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time."));
             cmd.insert(GearSprite(GearSpriteID::SageBundle0));
+            cmd.insert(StatusText::default());
             cmd.insert(Handheld);
+            cmd.insert(EquipmentPosition::Stowed);
+            cmd.insert(InteractableByGhost);
+            cmd.insert(Collision);
             cmd.insert(SageBundleData::default());
         },
     );

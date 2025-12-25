@@ -24,7 +24,7 @@ use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::CollisionFieldData;
-use uncore_components::{Flashlight, Toggleable};
+use uncore_components::{LightEmitter, Toggleable};
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
 use undifficulty::CurrentDifficulty;
@@ -230,8 +230,8 @@ fn apply_lighting(
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
-    q_deployed: Query<(&Position, &DeployedGear, &Flashlight, &Toggleable)>,
-    q_flashlight: Query<(&Flashlight, &Toggleable)>,
+    q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
+    q_flashlight: Query<(&LightEmitter, &Toggleable)>,
     mut bf: ResMut<BoardData>,
     haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,

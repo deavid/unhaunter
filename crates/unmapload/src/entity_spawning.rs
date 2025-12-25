@@ -8,7 +8,6 @@ use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
 use uncore_foundation::random_seed;
-use uncore_foundation::types::gear::GearKind;
 use uncore_foundation::types::sound::SoundType;
 use uncore_resources::summary::SummaryData;
 use ungear::components::playergear::PlayerGear;
@@ -62,15 +61,28 @@ pub fn spawn_player(
     let player_position = player_spawn_points.pop().unwrap();
     let player_scoord = player_position.to_screen_coord();
 
-    // Spawn default gear
-    let flashlight = p.gear_registry.spawn(commands, GearKind::Flashlight);
-    let emf_meter = p.gear_registry.spawn(commands, GearKind::EMFMeter);
+    // Spawn gear from difficulty settings
+    let mut player_gear = PlayerGear::default();
 
-    let player_gear = PlayerGear {
-        right_hand: Some(flashlight),
-        inventory: vec![emf_meter],
-        ..default()
-    };
+    if p.difficulty.0.player_gear.left_hand.is_some() {
+        player_gear.left_hand = Some(
+            p.gear_registry
+                .spawn(commands, p.difficulty.0.player_gear.left_hand),
+        );
+    }
+    if p.difficulty.0.player_gear.right_hand.is_some() {
+        player_gear.right_hand = Some(
+            p.gear_registry
+                .spawn(commands, p.difficulty.0.player_gear.right_hand),
+        );
+    }
+    for kind in &p.difficulty.0.player_gear.inventory {
+        if kind.is_some() {
+            player_gear
+                .inventory
+                .push(p.gear_registry.spawn(commands, *kind));
+        }
+    }
 
     // Calculate distance to nearest van entry point
     let dist_to_van = van_entry_points

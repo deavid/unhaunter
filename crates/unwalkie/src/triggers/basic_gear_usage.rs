@@ -110,7 +110,7 @@ fn trigger_gear_selected_not_activated_system(
     let current_gear_kind = *gear_kind;
     let mut reset_timer_this_frame = false;
 
-    if keyboard_input.just_pressed(player_sprite.controls.trigger) {
+    if keyboard_input.just_pressed(player_sprite.controls.right_hand_trigger) {
         // [R] key
         reset_timer_this_frame = true;
         *r_triggered += 1;

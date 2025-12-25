@@ -1,5 +1,5 @@
 use uncore_components::{
-    Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable, Triggered,
+    Battery, Electronic, GearSprite, ItemName, LightEmitter, StatusText, Toggleable, Triggered,
 };
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
@@ -84,6 +84,7 @@ impl Flashlight {
 pub fn update_flashlight(
     mut q_flashlight: Query<(
         &mut Flashlight,
+        &mut LightEmitter,
         &mut StatusText,
         &mut GearSprite,
         &mut Toggleable,
@@ -97,6 +98,7 @@ pub fn update_flashlight(
 ) {
     for (
         mut flashlight,
+        mut flashlight_render,
         mut status,
         mut sprite,
         mut toggle,
@@ -152,6 +154,9 @@ pub fn update_flashlight(
         }
 
         flashlight.update_output_power(battery.level, electronic.glitch_timer);
+
+        // Sync with Render Component
+        flashlight_render.power = flashlight.output_power;
 
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
