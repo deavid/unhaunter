@@ -304,7 +304,7 @@ fn repellent_update(
             if dist2 < 4.5 {
                 let dist2b = (dist2 + 1.0) * 2.0;
                 if ghost.class == rep.class {
-                    ghost.repellent_hits_frame += dt * 120.2 / dist2b;
+                    ghost.repellent_hits_frame += dt * 180.2 / dist2b;
                     // Correct repellent - turn electric blue
                     rep.hit_correct = true;
                 } else {
@@ -318,11 +318,13 @@ fn repellent_update(
         }
     }
     for (_pos, mut ghost) in &mut qgs {
-        if ghost.repellent_hits_frame > 1.0 {
-            ghost.repellent_hits += 1;
+        if ghost.repellent_hits_frame >= 1.0 {
+            while ghost.repellent_hits_frame >= 1.0 {
+                ghost.repellent_hits += 1;
+                ghost.repellent_hits_frame -= 1.0;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+            }
             ghost.repellent_hits_delta = 1.0;
-            ghost.repellent_hits_frame = 0.0;
-            ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
         } else {
             ghost.repellent_hits_delta -= dt;
             ghost.repellent_hits_delta = ghost
@@ -330,11 +332,13 @@ fn repellent_update(
                 .clamp(0.0, 1.0)
                 .max(ghost.repellent_hits_frame);
         }
-        if ghost.repellent_misses_frame > 1.0 {
-            ghost.repellent_misses += 1;
+        if ghost.repellent_misses_frame >= 1.0 {
+            while ghost.repellent_misses_frame >= 1.0 {
+                ghost.repellent_misses += 1;
+                ghost.repellent_misses_frame -= 1.0;
+                ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
+            }
             ghost.repellent_misses_delta = 1.0;
-            ghost.repellent_misses_frame = 0.0;
-            ghost.rage += 0.6 * difficulty.0.ghost_rage_likelihood;
         } else {
             ghost.repellent_misses_delta -= dt;
             ghost.repellent_misses_delta = ghost
