@@ -2,6 +2,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use uncore_foundation::types::gear::{GearKind, GearSpriteID};
+use unspatial::Position;
 
 /// A marker component for all gear entities.
 #[derive(Component, Debug, Clone, Copy, Reflect, Default)]
@@ -42,7 +43,7 @@ impl GearSpawnerRegistry {
 
     /// Spawns a new gear entity for the given GearKind.
     pub fn spawn(&self, commands: &mut Commands, kind: GearKind) -> Entity {
-        let mut entity_cmd = commands.spawn((GearMarker, kind));
+        let mut entity_cmd = commands.spawn((GearMarker, kind, Position::new_i64(0, 0, 0)));
         if let Some(builder) = self.builders.get(&kind) {
             (builder)(&mut entity_cmd);
         } else {
