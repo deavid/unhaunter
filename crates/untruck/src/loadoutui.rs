@@ -497,10 +497,10 @@ fn button_clicked(
             }
             // Spawn item and put in hand or inventory
             let entity = gear_registry.spawn(&mut commands, *kind);
-            if p_gear.right_hand.is_none() {
-                p_gear.right_hand = Some(entity);
-            } else if p_gear.left_hand.is_none() {
+            if p_gear.left_hand.is_none() {
                 p_gear.left_hand = Some(entity);
+            } else if p_gear.right_hand.is_none() {
+                p_gear.right_hand = Some(entity);
             } else if p_gear.inventory.len() < 4 {
                 p_gear.inventory.push(entity);
             } else {

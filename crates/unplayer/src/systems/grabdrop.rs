@@ -54,20 +54,20 @@ fn grab_object(
             }
 
             if let Some(entity) = closest {
-                if player_gear.right_hand.is_none() {
-                    player_gear.right_hand = Some(entity);
-                    commands.entity(entity).remove::<FloorItemCollidable>();
-                    commands.entity(entity).remove::<DeployedGear>();
-                    commands
-                        .entity(entity)
-                        .insert(EquipmentPosition::Hand(Hand::Right));
-                } else if player_gear.left_hand.is_none() {
+                if player_gear.left_hand.is_none() {
                     player_gear.left_hand = Some(entity);
                     commands.entity(entity).remove::<FloorItemCollidable>();
                     commands.entity(entity).remove::<DeployedGear>();
                     commands
                         .entity(entity)
                         .insert(EquipmentPosition::Hand(Hand::Left));
+                } else if player_gear.right_hand.is_none() {
+                    player_gear.right_hand = Some(entity);
+                    commands.entity(entity).remove::<FloorItemCollidable>();
+                    commands.entity(entity).remove::<DeployedGear>();
+                    commands
+                        .entity(entity)
+                        .insert(EquipmentPosition::Hand(Hand::Right));
                 }
             }
         }
