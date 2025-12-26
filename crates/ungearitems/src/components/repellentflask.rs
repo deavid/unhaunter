@@ -326,6 +326,7 @@ fn repellent_update(
             }
             ghost.repellent_hits_delta = 1.0;
         } else {
+            ghost.repellent_hits_frame = (ghost.repellent_hits_frame - dt).max(0.0);
             ghost.repellent_hits_delta -= dt;
             ghost.repellent_hits_delta = ghost
                 .repellent_hits_delta
@@ -340,6 +341,7 @@ fn repellent_update(
             }
             ghost.repellent_misses_delta = 1.0;
         } else {
+            ghost.repellent_misses_frame = (ghost.repellent_misses_frame - dt).max(0.0);
             ghost.repellent_misses_delta -= dt;
             ghost.repellent_misses_delta = ghost
                 .repellent_misses_delta

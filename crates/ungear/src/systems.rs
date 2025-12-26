@@ -7,12 +7,16 @@ use crate::resources::spawner::GearSpawnerRegistry;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use uncore_assets::GameAssets;
+use uncore_board::components::mapcolor::MapColor;
 use uncore_components::{GearSprite, StatusText, Toggleable, Triggered};
 use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::types::gear::{GearKind, GearSpriteID};
 use uncore_resources::states::GameState;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use unsettings::audio::{AudioSettings, SoundOutput};
 use unspatial::Position;
 use untags::PlayerTag;
@@ -28,8 +32,34 @@ fn update_deployed_gear_data(mut _q_gear: Query<(&Position, &DeployedGear)>, mut
     // TODO: Implement using Entity-based gear
 }
 
-fn update_deployed_gear_sprites(mut _q_gear: Query<&mut Sprite, With<DeployedGear>>) {
-    // TODO: Implement using Entity-based gear
+fn update_deployed_gear_sprites(
+    mut commands: Commands,
+    mut q_gear: Query<(Entity, &Position, &GearSprite, Option<&mut Sprite>), With<DeployedGear>>,
+    handles: Res<GameAssets>,
+) {
+    for (entity, pos, gear_sprite, sprite) in q_gear.iter_mut() {
+        if let Some(mut sprite) = sprite {
+            if let Some(atlas) = &mut sprite.texture_atlas {
+                atlas.index = gear_sprite.0 as usize;
+            }
+        } else {
+            commands.entity(entity).insert((
+                Sprite {
+                    image: handles.images.gear.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        layout: handles.images.gear_atlas.clone(),
+                        index: gear_sprite.0 as usize,
+                    }),
+                    ..default()
+                },
+                Transform::from_translation(pos.to_screen_coord()).with_scale(Vec3::splat(0.25)),
+                Visibility::Inherited,
+                GameSprite,
+                SpriteType::default(),
+                MapColor::default(),
+            ));
+        }
+    }
 }
 
 fn sound_playback_system(
@@ -179,8 +209,8 @@ fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(FixedUpdate, update_playerheld_gear_data)
         .add_systems(FixedUpdate, update_deployed_gear_data)
-        .add_systems(FixedUpdate, update_deployed_gear_sprites)
         .add_systems(FixedUpdate, update_gear_ui)
+        .add_systems(Update, update_deployed_gear_sprites)
         .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
         .add_systems(Update, sound_playback_system)
         .add_systems(Update, gear_trigger_handler)

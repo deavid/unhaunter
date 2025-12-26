@@ -1,11 +1,14 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use uncore_board::behavior::component::FloorItemCollidable;
+use uncore_board::components::mapcolor::MapColor;
 use uncore_components::Triggered;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear::components::deployedgear::DeployedGear;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearMarker;
+use unrender::components::game::GameSprite;
+use unrender::components::sprite_type::SpriteType;
 use unspatial::Position;
 
 fn sync_held_gear_position(
@@ -58,6 +61,12 @@ fn grab_object(
                     player_gear.left_hand = Some(entity);
                     commands.entity(entity).remove::<FloorItemCollidable>();
                     commands.entity(entity).remove::<DeployedGear>();
+                    commands.entity(entity).remove::<Sprite>();
+                    commands.entity(entity).remove::<Transform>();
+                    commands.entity(entity).remove::<Visibility>();
+                    commands.entity(entity).remove::<GameSprite>();
+                    commands.entity(entity).remove::<SpriteType>();
+                    commands.entity(entity).remove::<MapColor>();
                     commands
                         .entity(entity)
                         .insert(EquipmentPosition::Hand(Hand::Left));
@@ -65,6 +74,12 @@ fn grab_object(
                     player_gear.right_hand = Some(entity);
                     commands.entity(entity).remove::<FloorItemCollidable>();
                     commands.entity(entity).remove::<DeployedGear>();
+                    commands.entity(entity).remove::<Sprite>();
+                    commands.entity(entity).remove::<Transform>();
+                    commands.entity(entity).remove::<Visibility>();
+                    commands.entity(entity).remove::<GameSprite>();
+                    commands.entity(entity).remove::<SpriteType>();
+                    commands.entity(entity).remove::<MapColor>();
                     commands
                         .entity(entity)
                         .insert(EquipmentPosition::Hand(Hand::Right));
@@ -85,10 +100,16 @@ fn drop_object(
                 commands.entity(entity).insert(*player_pos);
                 commands.entity(entity).insert(FloorItemCollidable);
                 commands.entity(entity).insert(EquipmentPosition::Deployed);
+                commands.entity(entity).insert(DeployedGear {
+                    direction: player_sprite.movement,
+                });
             } else if let Some(entity) = player_gear.left_hand.take() {
                 commands.entity(entity).insert(*player_pos);
                 commands.entity(entity).insert(FloorItemCollidable);
                 commands.entity(entity).insert(EquipmentPosition::Deployed);
+                commands.entity(entity).insert(DeployedGear {
+                    direction: player_sprite.movement,
+                });
             }
         }
     }
