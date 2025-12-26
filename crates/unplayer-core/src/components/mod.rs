@@ -20,7 +20,7 @@ impl InventoryNext {
     }
 
     pub fn non_empty() -> Self {
-        Self { idx: None }
+        Self { idx: Some(0) }
     }
 }
 
