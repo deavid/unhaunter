@@ -2,6 +2,7 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use uncore_board::behavior::component::FloorItemCollidable;
 use uncore_board::components::mapcolor::MapColor;
+use uncore_board::resources::board_data::BoardData;
 use uncore_components::Triggered;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear::components::deployedgear::DeployedGear;
@@ -93,9 +94,29 @@ fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
     mut commands: Commands,
+    board_data: Res<BoardData>,
+    pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
 ) {
     for (mut player_gear, player_pos, player_sprite) in players.iter_mut() {
         if keyboard_input.just_pressed(player_sprite.controls.drop) {
+            // Check if the tile is free
+            let bpos = player_pos.to_board_position();
+            let is_free = board_data
+                .collision_field
+                .get(bpos.ndidx())
+                .map(|c| c.player_free)
+                .unwrap_or(false);
+
+            if !is_free {
+                continue;
+            }
+
+            // Check for pile-ups
+            let is_obstructed = pickables.iter().any(|pos| pos.distance(player_pos) < 0.5);
+            if is_obstructed {
+                continue;
+            }
+
             if let Some(entity) = player_gear.right_hand.take() {
                 commands.entity(entity).insert(*player_pos);
                 commands.entity(entity).insert(FloorItemCollidable);
