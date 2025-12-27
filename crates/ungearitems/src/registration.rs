@@ -156,7 +156,10 @@ pub fn register_all(app: &mut App) {
                 glitch_intensity: 0.0,
                 glitch_timer: 0.0,
             });
-            cmd.insert(Battery::default());
+            cmd.insert(Battery {
+                level: 1.0,
+                drain_rate: 0.0001,
+            });
             cmd.insert(Handheld);
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
