@@ -58,32 +58,32 @@ fn grab_object(
             }
 
             if let Some(entity) = closest {
-                if player_gear.left_hand.is_none() {
-                    player_gear.left_hand = Some(entity);
-                    commands.entity(entity).remove::<FloorItemCollidable>();
-                    commands.entity(entity).remove::<DeployedGear>();
-                    commands.entity(entity).remove::<Sprite>();
-                    commands.entity(entity).remove::<Transform>();
-                    commands.entity(entity).remove::<Visibility>();
-                    commands.entity(entity).remove::<GameSprite>();
-                    commands.entity(entity).remove::<SpriteType>();
-                    commands.entity(entity).remove::<MapColor>();
-                    commands
-                        .entity(entity)
-                        .insert(EquipmentPosition::Hand(Hand::Left));
-                } else if player_gear.right_hand.is_none() {
+                let mut grabbed = false;
+                if player_gear.right_hand.is_none() {
                     player_gear.right_hand = Some(entity);
-                    commands.entity(entity).remove::<FloorItemCollidable>();
-                    commands.entity(entity).remove::<DeployedGear>();
-                    commands.entity(entity).remove::<Sprite>();
-                    commands.entity(entity).remove::<Transform>();
-                    commands.entity(entity).remove::<Visibility>();
-                    commands.entity(entity).remove::<GameSprite>();
-                    commands.entity(entity).remove::<SpriteType>();
-                    commands.entity(entity).remove::<MapColor>();
                     commands
                         .entity(entity)
                         .insert(EquipmentPosition::Hand(Hand::Right));
+                    grabbed = true;
+                } else if player_gear.inventory.len() < 2 {
+                    let old_item = player_gear.right_hand.replace(entity).unwrap();
+                    player_gear.inventory.insert(0, old_item);
+                    commands.entity(old_item).insert(EquipmentPosition::Stowed);
+                    commands
+                        .entity(entity)
+                        .insert(EquipmentPosition::Hand(Hand::Right));
+                    grabbed = true;
+                }
+
+                if grabbed {
+                    commands.entity(entity).remove::<FloorItemCollidable>();
+                    commands.entity(entity).remove::<DeployedGear>();
+                    commands.entity(entity).remove::<Sprite>();
+                    commands.entity(entity).remove::<Transform>();
+                    commands.entity(entity).remove::<Visibility>();
+                    commands.entity(entity).remove::<GameSprite>();
+                    commands.entity(entity).remove::<SpriteType>();
+                    commands.entity(entity).remove::<MapColor>();
                 }
             }
         }
@@ -124,13 +124,13 @@ fn drop_object(
                 commands.entity(entity).insert(DeployedGear {
                     direction: player_sprite.movement,
                 });
-            } else if let Some(entity) = player_gear.left_hand.take() {
-                commands.entity(entity).insert(*player_pos);
-                commands.entity(entity).insert(FloorItemCollidable);
-                commands.entity(entity).insert(EquipmentPosition::Deployed);
-                commands.entity(entity).insert(DeployedGear {
-                    direction: player_sprite.movement,
-                });
+                if !player_gear.inventory.is_empty() {
+                    let next_item = player_gear.inventory.remove(0);
+                    player_gear.right_hand = Some(next_item);
+                    commands
+                        .entity(next_item)
+                        .insert(EquipmentPosition::Hand(Hand::Right));
+                }
             }
         }
     }
