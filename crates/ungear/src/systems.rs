@@ -21,17 +21,6 @@ use unsettings::audio::{AudioSettings, SoundOutput};
 use unspatial::Position;
 use untags::PlayerTag;
 
-fn update_playerheld_gear_data(
-    mut _q_gear: Query<(&Position, &mut PlayerGear)>,
-    mut _gs: GearStuff,
-) {
-    // TODO: Implement using Entity-based gear
-}
-
-fn update_deployed_gear_data(mut _q_gear: Query<(&Position, &DeployedGear)>, mut _gs: GearStuff) {
-    // TODO: Implement using Entity-based gear
-}
-
 fn update_deployed_gear_sprites(
     mut commands: Commands,
     mut q_gear: Query<(Entity, &Position, &GearSprite, Option<&mut Sprite>), With<DeployedGear>>,
@@ -215,9 +204,7 @@ fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(FixedUpdate, update_playerheld_gear_data)
-        .add_systems(FixedUpdate, update_deployed_gear_data)
-        .add_systems(FixedUpdate, update_gear_ui)
+    app.add_systems(FixedUpdate, update_gear_ui)
         .add_systems(Update, update_deployed_gear_sprites)
         .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
         .add_systems(Update, sound_playback_system)
