@@ -124,11 +124,12 @@ fn update_gear_ui(
     q_gear: Query<&PlayerGear, With<PlayerTag>>,
     mut qi: Query<(&Inventory, &mut ImageNode), Without<InventoryNext>>,
     mut qin: Query<(&InventoryNext, &mut ImageNode), Without<Inventory>>,
-    mut qs: Query<(&InventoryStats, &mut Text)>,
+    mut qs: Query<(&InventoryStats, &mut Text, &mut Node)>,
     q_gearkind: Query<&GearKind>,
     q_status: Query<&StatusText>,
     q_sprite: Query<&GearSprite>,
     gear_registry: Res<GearSpawnerRegistry>,
+    looking_gear: Res<LookingGear>,
 ) {
     let Some(player_gear) = q_gear.iter().next() else {
         return;
@@ -181,7 +182,7 @@ fn update_gear_ui(
         }
     }
 
-    for (stats, mut text) in qs.iter_mut() {
+    for (stats, mut text, mut node) in qs.iter_mut() {
         let entity = match stats.hand {
             Hand::Left => player_gear.left_hand,
             Hand::Right => player_gear.right_hand,
@@ -191,6 +192,13 @@ fn update_gear_ui(
             .map(|s| s.0.clone())
             .unwrap_or_default();
         text.0 = status;
+
+        let is_visible = stats.hand == looking_gear.hand() && !text.0.is_empty();
+        node.display = if is_visible {
+            Display::Flex
+        } else {
+            Display::None
+        };
     }
 }
 
