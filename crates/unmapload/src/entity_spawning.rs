@@ -22,7 +22,7 @@ use unrender::components::game::GameSound;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unspatial::{Direction, Position};
-use untags::PlayerTag;
+use untags::{GhostTag, PlayerTag};
 
 use crate::level_setup::LoadLevelSystemParam;
 
@@ -218,6 +218,7 @@ pub fn spawn_ghosts(
         .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(GhostBehaviorDynamics::default())
+        .insert(GhostTag)
         .insert(ghost_spawn)
         .with_children(|parent| {
             parent
