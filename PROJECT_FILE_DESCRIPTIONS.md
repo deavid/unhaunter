@@ -12,7 +12,9 @@
 - `CHANGELOG.md`: Version history. Update after changes.
 - `NOTES.md`: Dev scratchpad.
 - `README.md`: Project overview and instructions.
-- `build.rs`: Generates `*.assetidx` files for WASM.
+- `INSTALLING_DEPS.md`: Dependency installation guide.
+- `RELEASING.md`: Release process documentation.
+- `unhaunter/src/assetidx_updater.rs`: Generates `*.assetidx` files for WASM.
 - `clippy.toml`: Rust linter config.
 - `index.html`: WASM entry point.
 - `catall.sh`: Helper to list project files.
@@ -45,7 +47,7 @@ Low-level foundation shared across the project.
 - **`uncore-types`**: Common data structures (enums, structs) used globally.
   - `GameAssets` (Resource holding handles to all loaded assets), `GearKind`, `EvidenceStatus`.
 - **`uncore-components`**: Shared ECS components.
-  - `BoardPosition` (Grid position), `Direction`, `GhostSprite`, `PlayerSprite`.
+  - `GhostSprite`, `PlayerSprite`.
 - **`uncore-events`**: Shared ECS events.
   - `GhostInteractionEvent`, `LevelLoadedEvent`, `RoomChangedEvent`.
 - **`uncore-resources`**: Shared ECS resources.
@@ -54,9 +56,14 @@ Low-level foundation shared across the project.
   - `AssetIdx` (Asset lookup), `TmxMap` (Tiled map asset).
 - **`uncore-board`**: Spatial system, grid/board logic, collision, `Behavior` component.
   - `Behavior` (Entity behavior on board), `Light`, `Door`, `Stairs`.
+- **`uncore-systems`**: Core game systems and logic.
+  - `UnhaunterCorePlugin`.
+- **`unspatial`**: Spatial types and coordinate systems.
+  - `BoardPosition` (Grid position), `Direction`, `Position`.
+- **`untags`**: Marker components for entity identification.
+  - `PlayerTag`, `GhostTag`, `InteractableTag`.
 - **`unnoise`**: Perlin noise generation.
 - **`unmetrics`**: Performance metrics and diagnostics.
-  - `UnhaunterCorePlugin`.
 
 ### Game Logic & Progression
 
@@ -81,10 +88,18 @@ Specific gameplay mechanics and entity behaviors.
 
 - **`unplayer`**: Player controller, movement, interaction, stats (sanity/health).
   - `UnhaunterPlayerPlugin`.
+- **`unplayer-core`**: Core player components and resources.
+  - `PlayerInput`.
 - **`unghost`**: Ghost AI, behavior, hunting logic, evidence generation.
   - `UnhaunterGhostPlugin`.
+- **`unghost-core`**: Core ghost components and resources.
+  - `HauntState`, `CurrentEvidenceReadings`.
 - **`unnpc`**: NPC interaction, dialog systems.
   - `UnhaunterNPCPlugin`.
+- **`uninteraction`**: Generic entity interaction system.
+  - `Target`, `PositionTarget`.
+- **`unnavigation`**: Pathfinding and collision handling.
+  - `CollisionHandler`.
 - **`ungear`**: Inventory system, equipment slots, deployment logic.
   - `Gear` (Component for gear items), `PlayerGear` (Inventory), `DeployedGear`.
 - **`ungearitems`**: **[GEAR LOGIC]** Implementation of specific items (EMF, Flashlight, etc.).
@@ -112,6 +127,9 @@ User interface screens and menus.
   - `UnhaunterMapHubPlugin`.
 - **`untruck`**: In-game mission hub (Truck UI), CCTV, journal, loadout.
   - `TruckUI`, `TruckGear`.
+- **`unmanual`**: In-game manual logic and UI.
+  - `Manual`, `UnhaunterManualPlugin`.
+- **`unui`**: Shared UI components and utilities.
 - **`uncoremenu`**: Shared UI components, templates, and styles.
   - `MenuRoot`, `MenuItem`, `MenuBackground`.
 
@@ -119,10 +137,16 @@ User interface screens and menus.
 
 Utilities and external tools.
 
-- **`unstd`**: Shared utilities (rendering helpers, manual UI, materials).
-  - `UnhaunterRootPlugin`, `UnhaunterBoardPlugin`.
+- **`unroot`**: Main entry point for app setup and asset loading.
+  - `UnhaunterRootPlugin`.
+- **`unrender`**: Rendering engine, materials, and visibility logic.
+  - `UnhaunterBoardPlugin`, `VisibilityData`.
+- **`unpicking`**: Custom picking backend for map sprites.
+  - `CustomSpritePickingPlugin`.
 - **`untmxmap`**: Tiled map (`.tmx`) parsing and loading into Bevy.
   - `UnhaunterTmxMapPlugin`.
+- **`untiled`**: Tiled map data structures and tileset management.
+  - `MapTileSetDb`.
 - **`unsettings`**: Persistent settings schema and serialization.
   - `AudioSettings`, `VideoSettings`, `GameplaySettings`, `ControlKeys`.
 - **`crates/tools/`**:
