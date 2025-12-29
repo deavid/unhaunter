@@ -1,5 +1,4 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use untruck_core::journal::ForceDiscardEvidenceEvent;
 use crate::components::truck::TruckUIGhostGuess;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -18,6 +17,7 @@ use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
 use unprofile::data::PlayerProfileData;
+use untruck_core::journal::ForceDiscardEvidenceEvent;
 use unwalkiecore::resources::WalkiePlay;
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck

@@ -1,5 +1,4 @@
 use crate::components::truck_ui_button::TruckUIButton;
-use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};
@@ -12,6 +11,7 @@ use unghost_core::components::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unprofile::data::PlayerProfileData;
+use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use unwalkiecore::resources::WalkiePlay;
 
 pub const JOURNAL_HINT_THRESHOLD: u32 = 3;

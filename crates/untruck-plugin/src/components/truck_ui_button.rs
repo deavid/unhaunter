@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use uncore_foundation::colors;
+use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 
 /// Represents a button in the truck UI, handling its state, type, and visual
 /// appearance.
@@ -24,7 +24,6 @@ pub struct TruckUIButton {
 }
 
 impl TruckUIButton {
-
     pub fn border_color(&self, interaction: Interaction) -> Color {
         let color = match self.class {
             TruckButtonType::Evidence(_) => {
