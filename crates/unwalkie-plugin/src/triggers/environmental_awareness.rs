@@ -68,7 +68,7 @@ fn trigger_breach_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_breach: Query<&Position, With<GhostBreach>>,
-    truck_button_query: Query<&untruck::components::truck_ui_button::TruckUIButton>, // Added
+    truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -79,8 +79,8 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck::TruckButtonState::Pressed
+        if let untruck_core::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -115,7 +115,7 @@ fn trigger_ghost_showcase(
     app_state: Res<State<AppState>>,
     qp: Query<(&Position, &PlayerSprite)>,
     q_ghost: Query<&Position, With<unghost_core::components::GhostSprite>>,
-    truck_button_query: Query<&untruck::components::truck_ui_button::TruckUIButton>, // Added
+    truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
     if app_state.get() != &AppState::InGame {
         return;
@@ -126,8 +126,8 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck::TruckButtonState::Pressed
+        if let untruck_core::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }

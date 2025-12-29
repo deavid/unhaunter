@@ -1,11 +1,8 @@
 use bevy::prelude::*;
+use untruck_core::truckgear::TruckGear;
 use uncore_events::events::loadlevel::LevelLoadedEvent;
 use ungear::resources::spawner::GearSpawnerRegistry;
 
-#[derive(Debug, Resource, Clone, Default)]
-pub struct TruckGear {
-    pub inventory: Vec<Entity>,
-}
 
 pub fn app_setup(app: &mut App) {
     app.init_resource::<TruckGear>();

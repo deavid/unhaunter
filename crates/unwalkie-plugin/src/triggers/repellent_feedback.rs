@@ -6,7 +6,7 @@ use uncore_resources::states::AppState;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use untruck::journal::ForceDiscardEvidenceEvent;
+use untruck_core::journal::ForceDiscardEvidenceEvent;
 use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
 
 // Track which repellent types have already given hints this mission

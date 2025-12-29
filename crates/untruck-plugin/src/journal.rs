@@ -1,4 +1,5 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
+use untruck_core::journal::ForceDiscardEvidenceEvent;
 use crate::components::truck::TruckUIGhostGuess;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -18,10 +19,6 @@ use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
 use unprofile::data::PlayerProfileData;
 use unwalkiecore::resources::WalkiePlay;
-
-/// Event to force discard an evidence type in the journal UI.
-#[derive(Message, Debug, Clone, Copy)]
-pub struct ForceDiscardEvidenceEvent(pub Evidence);
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck
 fn force_discard_evidence_system(

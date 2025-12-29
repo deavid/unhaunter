@@ -14,22 +14,21 @@
 //! The truck UI provides a centralized interface for players to interact with the
 //! game's mechanics, track their progress, and make strategic decisions outside of
 //! the main exploration and investigation gameplay.
-pub mod activity;
-pub mod components;
-pub mod craft_repellent;
-pub mod evidence;
-pub mod journal;
-pub mod journalui;
-pub mod loadoutui;
+pub(crate) mod activity;
+pub(crate) mod components;
+pub(crate) mod craft_repellent;
+pub(crate) mod evidence;
+pub(crate) mod journal;
+pub(crate) mod journalui;
+pub(crate) mod loadoutui;
 pub mod plugin;
-pub mod sanity;
-pub mod sensors;
-pub mod systems;
-pub mod truckgear;
-pub mod types;
+pub(crate) mod sanity;
+pub(crate) mod sensors;
+pub(crate) mod systems;
+pub(crate) mod truckgear;
+pub(crate) mod types;
 
-pub use types::evidence_status::EvidenceStatus;
-pub use types::truck_button::{TruckButtonState, TruckButtonType};
-pub use uncore_foundation::types::truck::{TabContents, TabState};
-pub mod ui;
-pub mod uibutton;
+pub(crate) use types::evidence_status::EvidenceStatus;
+pub(crate) use untruck_core::uibutton::TruckButtonType;
+pub(crate) mod ui;
+pub(crate) mod uibutton;

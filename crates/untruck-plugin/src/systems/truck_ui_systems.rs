@@ -23,10 +23,6 @@ use unsettings::audio::AudioSettings;
 #[derive(Component)]
 pub struct ProgressIndicator;
 
-// Entity resource to track the audio player for the hold sound
-#[derive(Resource, Default)]
-pub struct HoldSoundEntity(pub Option<Entity>);
-
 /// Tracks the number of repellent bottles crafted and returned during the current mission.
 /// This resource is used to enforce the per-mission craft limit based on difficulty.
 #[derive(Resource, Default)]
@@ -47,12 +43,6 @@ impl RepellentCraftTracker {
     pub fn craft(&mut self) {
         if self.can_craft() {
             self.crafted_count += 1;
-        }
-    }
-
-    pub fn refund(&mut self) {
-        if self.crafted_count > 0 {
-            self.crafted_count -= 1;
         }
     }
 

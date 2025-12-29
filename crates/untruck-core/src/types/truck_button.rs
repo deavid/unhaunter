@@ -15,9 +15,6 @@ pub enum TruckButtonType {
     EndMission,
 }
 
-// Note: The `into_component()` method is provided by an extension trait in uncore-components
-// to avoid circular dependency between uncore-types and uncore-components
-
 /// Represents the state of a button in the truck UI.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TruckButtonState {

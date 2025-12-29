@@ -9,7 +9,7 @@ use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
-use untruck::truckgear::TruckGear;
+use untruck_core::truckgear::TruckGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// Triggers a feedback event when the player's quartz stone cracks, after the hunt is over or player leaves the location.

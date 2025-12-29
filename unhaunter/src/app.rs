@@ -31,7 +31,7 @@ use unroot_plugin::UnhaunterRootPlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
 use unsummary::summary::UnhaunterSummaryPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
-use untruck::plugin::UnhaunterTruckPlugin;
+use untruck_plugin::plugin::UnhaunterTruckPlugin;
 use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
 
 pub fn app_run(cli_options: CliOptions) {

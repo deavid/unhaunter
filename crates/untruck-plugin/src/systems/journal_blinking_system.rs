@@ -1,5 +1,5 @@
 use crate::components::truck_ui_button::TruckUIButton;
-use crate::types::truck_button::{TruckButtonState, TruckButtonType};
+use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::{HashMap, HashSet};

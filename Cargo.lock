@@ -5911,7 +5911,8 @@ dependencies = [
  "unsummary",
  "untiled",
  "untmxmap-plugin",
- "untruck",
+ "untruck-core",
+ "untruck-plugin",
  "unwalkie-plugin",
  "unwalkie_types",
  "walkdir",
@@ -6332,7 +6333,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "untruck"
+name = "untruck-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "uncore-events",
+ "uncore-foundation",
+]
+
+[[package]]
+name = "untruck-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6356,6 +6366,7 @@ dependencies = [
  "unprofile",
  "unrender",
  "unsettings",
+ "untruck-core",
  "unui",
  "unwalkiecore",
 ]
@@ -6392,7 +6403,7 @@ dependencies = [
  "unrender",
  "unsettings",
  "unspatial",
- "untruck",
+ "untruck-core",
  "unui",
  "unwalkie_types",
  "unwalkiecore",

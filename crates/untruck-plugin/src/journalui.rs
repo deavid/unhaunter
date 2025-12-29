@@ -1,6 +1,6 @@
 use super::uibutton::TruckButtonType; // Assuming TruckUIGhostGuess and uibutton are still relevant here
 use crate::components::truck::TruckUIGhostGuess;
-use crate::components::truck_ui_button::TruckButtonTypeExt;
+use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
 use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_foundation::colors;

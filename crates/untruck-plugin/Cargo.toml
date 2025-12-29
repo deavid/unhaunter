@@ -1,5 +1,5 @@
 [package]
-name = "untruck"
+name = "untruck-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-
+untruck-core = { path = "../untruck-core" }
 undifficulty = { path = "../undifficulty" }
 uncore-components = { path = "../uncore-components" }
 uncore-assets = { path = "../uncore-assets" }

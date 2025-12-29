@@ -2,7 +2,7 @@ use bevy::{color::palettes::css, prelude::*};
 use uncore_foundation::colors;
 use uncore_foundation::types::evidence::Evidence;
 
-use super::truck_button::TruckButtonState;
+use untruck_core::types::truck_button::TruckButtonState;
 
 #[derive(Debug, Clone)]
 pub struct EvidenceStatus {

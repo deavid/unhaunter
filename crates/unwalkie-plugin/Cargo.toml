@@ -24,7 +24,7 @@ unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkiecore = { path = "../unwalkiecore" }
 unprofile = { path = "../unprofile" }
-untruck = { path = "../untruck" }
+untruck-core = { path = "../untruck-core" }
 unghost = { path = "../unghost" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }

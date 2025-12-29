@@ -34,7 +34,7 @@ members = [
     "crates/unprofile",
     "crates/unsettings",
     "crates/unsummary",
-    "crates/untruck",
+    "crates/untruck-plugin",
     "crates/untmxmap-plugin",
     "crates/unwalkie-plugin",
     "crates/unwalkiecore",
@@ -44,7 +44,9 @@ members = [
     "crates/ungame-plugin",
     "crates/tools/ghost_list",
     "crates/tools/ghost_radio",
-    "crates/tools/text_to_speech/walkie_voice_generator", "crates/unfog-core",
+    "crates/tools/text_to_speech/walkie_voice_generator", 
+    "crates/unfog-core", 
+    "crates/untruck-core",
 ]
 resolver = "3"
 
@@ -136,7 +138,8 @@ unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking = { path = "crates/unpicking" }
 unroot-plugin = { path = "crates/unroot-plugin" }
 untiled = { path = "crates/untiled" }
-untruck = { path = "crates/untruck" }
+untruck-plugin = { path = "crates/untruck-plugin" }
+untruck-core = { path = "crates/untruck-core" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 unghost-core = { path = "crates/unghost-core" }
