@@ -5575,7 +5575,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
-name = "uncampaign"
+name = "uncampaign-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -5728,7 +5728,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ungame"
+name = "ungame-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -5858,37 +5858,37 @@ dependencies = [
  "ron 0.12.0",
  "serde",
  "sha2",
- "uncampaign",
+ "uncampaign-plugin",
  "uncore-assets",
  "uncore-foundation",
  "uncore-resources",
  "uncoremenu",
  "undifficulty",
  "unfog",
- "ungame",
+ "ungame-plugin",
  "ungear",
  "ungearitems",
  "unghost",
  "unghost-core",
  "unlight",
- "unmanual",
+ "unmanual-plugin",
  "unmaphub",
- "unmapload",
- "unmenu",
- "unmenusettings",
- "unnpc",
+ "unmapload-plugin",
+ "unmenu-plugin",
+ "unmenusettings-plugin",
+ "unnpc-plugin",
  "unpicking",
  "unplayer",
  "unplayer-core",
  "unprofile",
  "unrender",
- "unroot",
+ "unroot-plugin",
  "unsettings",
  "unsummary",
  "untiled",
- "untmxmap",
+ "untmxmap-plugin",
  "untruck",
- "unwalkie",
+ "unwalkie-plugin",
  "unwalkie_types",
  "walkdir",
  "wasm-bindgen",
@@ -5997,7 +5997,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmanual"
+name = "unmanual-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6027,7 +6027,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmapload"
+name = "unmapload-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6058,7 +6058,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmenu"
+name = "unmenu-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6073,7 +6073,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmenusettings"
+name = "unmenusettings-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6115,7 +6115,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unnpc"
+name = "unnpc-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6213,7 +6213,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unroot"
+name = "unroot-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6291,7 +6291,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "untmxmap"
+name = "untmxmap-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6344,7 +6344,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unwalkie"
+name = "unwalkie-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",

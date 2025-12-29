@@ -31,7 +31,7 @@ We are moving to a strict three-layer separation of concerns:
 
 | Crate | Plugin? | Shared? | Action | Proposed Name | Notes |
 | :--- | :---: | :---: | :--- | :--- | :--- |
-| `uncampaign` | Yes | No | **RENAME** | `uncampaign-plugin` | Leaf node. |
+| `uncampaign` | Yes | No | **DONE** | `uncampaign-plugin` | Leaf node. |
 | `uncore-assets` | No | Yes | **RENAME** | `unassets-core` | Shared data. |
 | `uncore-board` | No | Yes | **RENAME** | `unboard-core` | Shared data. |
 | `uncore-components` | No | Yes | **DISSOLVE** | - | God crate. |
@@ -42,36 +42,36 @@ We are moving to a strict three-layer separation of concerns:
 | `uncoremenu` | Yes | No | **RENAME** | `uncoremenu-plugin` | Leaf node. |
 | `undifficulty` | No | Yes | **RENAME** | `undifficulty-core` | Shared data. |
 | `unfog` | Yes | No | **RENAME** | `unfog-plugin` | Leaf node. |
-| `ungame` | Yes | No | **RENAME** | `ungame-plugin` | Leaf node. |
+| `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
 | `ungear` | Yes | Yes | **SPLIT** | `ungear-core`, `ungear-plugin` | Shared data + logic. |
 | `ungearitems` | Yes | No | **RENAME** | `ungearitems-plugin` | Leaf node. |
 | `unghost` | Yes | Yes | **SPLIT** | `unghost-core`, `unghost-plugin` | Shared data + logic. |
 | `unghost-core` | No | Yes | **KEEP** | `unghost-core` | Shared data. |
 | `uninteraction` | No | Yes | **RENAME** | `uninteraction-core` | Shared data. |
 | `unlight` | Yes | No | **RENAME** | `unlight-plugin` | Leaf node. |
-| `unmanual` | Yes | No | **RENAME** | `unmanual-plugin` | Leaf node. |
+| `unmanual` | Yes | No | **DONE** | `unmanual-plugin` | Leaf node. |
 | `unmaphub` | Yes | No | **SPLIT** | `unmaphub-core`, `unmaphub-plugin` | Shared state + logic. |
-| `unmapload` | Yes | No | **RENAME** | `unmapload-plugin` | Leaf node. |
-| `unmenu` | Yes | No | **RENAME** | `unmenu-plugin` | Leaf node. |
-| `unmenusettings` | Yes | No | **RENAME** | `unmenusettings-plugin` | Leaf node. |
+| `unmapload` | Yes | No | **DONE** | `unmapload-plugin` | Leaf node. |
+| `unmenu` | Yes | No | **DONE** | `unmenu-plugin` | Leaf node. |
+| `unmenusettings` | Yes | No | **DONE** | `unmenusettings-plugin` | Leaf node. |
 | `unmetrics` | No | Yes | **SPLIT** | `unmetrics-core`, `unmetrics-plugin` | Shared trait + system. |
 | `unnavigation` | No | Yes | **RENAME** | `unnavigation-core` | Shared data. |
 | `unnoise` | No | Yes | **RENAME** | `unnoise-core` | Shared data. |
-| `unnpc` | Yes | No | **RENAME** | `unnpc-plugin` | Leaf node. |
+| `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
 | `unpicking` | Yes | No | **SPLIT** | `unpicking-core`, `unpicking-plugin` | Shared state + logic. |
 | `unplayer` | Yes | Yes | **SPLIT** | `unplayer-std`, `unplayer-plugin` | Depends on `unsettings`, `unspatial`. |
 | `unplayer-core` | No | Yes | **RENAME** | `unplayer-core` | Base player data. |
 | `unprofile` | Yes | No | **RENAME** | `unprofile-plugin` | Leaf node. |
 | `unrender` | Yes | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
-| `unroot` | Yes | No | **RENAME** | `unroot-plugin` | Main app plugin. |
+| `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
 | `unsummary` | Yes | No | **SPLIT** | `unsummary-std`, `unsummary-plugin` | Depends on `undifficulty`, `unghost`. |
 | `untags` | No | Yes | **RENAME** | `untags-core` | Shared data. |
 | `untiled` | No | Yes | **RENAME** | `untiled-core` | Shared data. |
-| `untmxmap` | Yes | No | **RENAME** | `untmxmap-plugin` | Leaf node. |
+| `untmxmap` | Yes | No | **DONE** | `untmxmap-plugin` | Leaf node. |
 | `untruck` | Yes | No | **RENAME** | `untruck-plugin` | Leaf node. |
 | `unui` | No | Yes | **RENAME** | `unui-core` | Shared data. |
-| `unwalkie` | Yes | No | **RENAME** | `unwalkie-plugin` | Leaf node. |
+| `unwalkie` | Yes | No | **DONE** | `unwalkie-plugin` | Leaf node. |
 | `unwalkie_types` | No | Yes | **KEEP** | `unwalkie_types` | Shared data. |
 | `unwalkiecore` | No | Yes | **RENAME** | `unwalkie-core` | Shared data. |
 

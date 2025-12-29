@@ -1,5 +1,5 @@
 [package]
-name = "unmenu"
+name = "unnpc-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -9,13 +9,15 @@ authors.workspace = true
 
 [dependencies]
 
+unspatial = { path = "../unspatial" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
+uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-unsettings = { path = "../unsettings" }
-uncoremenu = { path = "../uncoremenu" }
-unprofile = { path = "../unprofile" }
+unrender = { path = "../unrender" }
+unplayer = { path = "../unplayer" }
+unplayer-core = { path = "../unplayer-core" }
 
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }

@@ -1,24 +1,23 @@
 [package]
-name = "uncampaign"
+name = "untmxmap-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
-homepage.workspace = true
 
 [dependencies]
 
-undifficulty = { path = "../undifficulty" }
-uncore-foundation = { path = "../uncore-foundation" }
+uncore-board = { path = "../uncore-board" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-uncoremenu = { path = "../uncoremenu" }
-unprofile = { path = "../unprofile" }
-unmaphub = { path = "../unmaphub" }
+untiled = { path = "../untiled" }
+unrender = { path = "../unrender" }
 
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }
+bevy_platform = { workspace = true }
+normalize-path = { workspace = true }
+tiled = { workspace = true }
