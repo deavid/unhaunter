@@ -2,7 +2,7 @@ use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use uncore_board::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
-use unpicking::CustomSpritePickingCamera;
+use unpicking_core::CustomSpritePickingCamera;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unrender::components::game::{GameSound, GameSprite};

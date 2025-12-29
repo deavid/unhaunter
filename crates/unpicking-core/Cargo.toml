@@ -1,5 +1,5 @@
 [package]
-name = "unpicking"
+name = "unpicking-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,7 +8,4 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unrender = { path = "../unrender" }
 bevy = { workspace = true }
-bevy_picking = { workspace = true }
-bevy_platform = { workspace = true }

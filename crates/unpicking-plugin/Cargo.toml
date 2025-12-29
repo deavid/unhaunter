@@ -1,0 +1,15 @@
+[package]
+name = "unpicking-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+unpicking-core = { path = "../unpicking-core" }
+unrender = { path = "../unrender" }
+bevy = { workspace = true }
+bevy_picking = { workspace = true }
+bevy_platform = { workspace = true }

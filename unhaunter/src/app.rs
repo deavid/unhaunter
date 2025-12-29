@@ -22,7 +22,7 @@ use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;
 use unmenu_plugin::plugin::UnhaunterMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc_plugin::plugin::UnhaunterNPCPlugin;
-use unpicking::CustomSpritePickingPlugin;
+use unpicking_plugin::CustomSpritePickingPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
 use unprofile::plugin::UnhaunterProfilePlugin;
 use unrender::materials::{CustomMaterial1, UIPanelMaterial};

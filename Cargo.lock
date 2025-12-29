@@ -5771,7 +5771,7 @@ dependencies = [
  "unghost-core",
  "uninteraction",
  "unlight-plugin",
- "unpicking",
+ "unpicking-core",
  "unplayer",
  "unplayer-core",
  "unprofile",
@@ -5901,7 +5901,8 @@ dependencies = [
  "unmenu-plugin",
  "unmenusettings-plugin",
  "unnpc-plugin",
- "unpicking",
+ "unpicking-core",
+ "unpicking-plugin",
  "unplayer",
  "unplayer-core",
  "unprofile",
@@ -6157,12 +6158,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "unpicking"
+name = "unpicking-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "unpicking-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_picking",
  "bevy_platform",
+ "unpicking-core",
  "unrender",
 ]
 

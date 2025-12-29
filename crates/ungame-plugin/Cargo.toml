@@ -23,7 +23,7 @@ unui = { path = "../unui" }
 untags = { path = "../untags" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
-unpicking = { path = "../unpicking" }
+unpicking-core = { path = "../unpicking-core" }
 uninteraction = { path = "../uninteraction" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
