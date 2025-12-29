@@ -29,7 +29,7 @@ use unrender::materials::{CustomMaterial1, UIPanelMaterial};
 use unrender::plugin::UnhaunterBoardPlugin;
 use unroot_plugin::UnhaunterRootPlugin;
 use unsettings::plugin::UnhaunterSettingsPlugin;
-use unsummary::summary::UnhaunterSummaryPlugin;
+use unsummary::plugin::UnhaunterSummaryPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 use untruck_plugin::plugin::UnhaunterTruckPlugin;
 use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;

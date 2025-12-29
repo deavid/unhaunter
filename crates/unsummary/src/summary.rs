@@ -15,13 +15,13 @@ use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::data::PlayerProfileData;
 use unui::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
-pub fn setup(mut commands: Commands) {
+pub(crate) fn setup(mut commands: Commands) {
     // ui camera
     commands.spawn(Camera2d).insert(SCamera);
     info!("Summary camera setup");
 }
 
-pub fn cleanup(
+pub(crate) fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<SCamera>>,
     qu: Query<Entity, With<SummaryUI>>,
@@ -37,7 +37,7 @@ pub fn cleanup(
     }
 }
 
-pub fn update_time(
+pub(crate) fn update_time(
     time: Res<Time>,
     mut sd: ResMut<SummaryData>,
     game_state: Res<State<GameState>>,
@@ -65,7 +65,7 @@ pub fn update_time(
     }
 }
 
-pub fn keyboard(
+pub(crate) fn keyboard(
     app_state: Res<State<AppState>>,
     mut app_next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
@@ -82,7 +82,7 @@ pub fn keyboard(
         game_next_state.set(GameState::None);
     }
 }
-pub fn setup_ui(
+pub(crate) fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     rsd: Res<SummaryData>,
@@ -455,7 +455,7 @@ pub fn setup_ui(
     info!("Main menu loaded");
 }
 
-pub fn update_ui(
+pub(crate) fn update_ui(
     mut qui: Query<(&SummaryUIType, &mut Text)>,
     rsd: Res<SummaryData>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -553,7 +553,7 @@ pub fn update_ui(
     }
 }
 
-pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>) {
+pub(crate) fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>) {
     if *app_state != AppState::Summary {
         return;
     }
@@ -563,7 +563,7 @@ pub fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>
     sd.animated_final_score += delta;
 }
 
-pub fn calculate_rewards_and_grades(
+pub(crate) fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
     maps: Res<Maps>,
     app_state: Res<State<AppState>>,
@@ -647,7 +647,7 @@ pub fn calculate_rewards_and_grades(
     );
 }
 
-pub fn finalize_profile_update(
+pub(crate) fn finalize_profile_update(
     sd: Res<SummaryData>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     app_state: Res<State<AppState>>,
@@ -715,33 +715,8 @@ pub fn finalize_profile_update(
     }
 }
 
-pub struct UnhaunterSummaryPlugin;
-
-impl Plugin for UnhaunterSummaryPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<SummaryData>()
-            .add_systems(
-                OnEnter(AppState::Summary),
-                (
-                    setup,
-                    store_mission_id,
-                    calculate_rewards_and_grades,
-                    setup_ui,
-                    finalize_profile_update,
-                )
-                    .chain(),
-            )
-            .add_systems(OnExit(AppState::Summary), cleanup)
-            .add_systems(FixedUpdate, update_time.run_if(in_state(AppState::InGame)))
-            .add_systems(
-                Update,
-                (keyboard, update_ui, update_score).run_if(in_state(AppState::Summary)),
-            );
-    }
-}
-
 // Add a new system to ensure the mission ID is preserved and correctly set
-pub fn store_mission_id(
+pub(crate) fn store_mission_id(
     mut sd: ResMut<SummaryData>,
     board_data: Option<Res<uncore_board::resources::board_data::BoardData>>,
 ) {
