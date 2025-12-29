@@ -17,7 +17,7 @@ use uncore_events::events::roomchanged::RoomChangedEvent;
 use uncore_foundation::{celsius_to_kelvin, random_seed};
 use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
-use unlight::prebake::prebake_lighting_field;
+use unlight_plugin::prebake_lighting_field;
 use unrender::board::tiledata::PreMesh;
 use unrender::plugin::rebuild_collision_data;
 use unspatial::{BoardPosition, Position};

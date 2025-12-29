@@ -15,7 +15,7 @@ use ungearitems::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
-use unlight::plugin::UnhaunterLightPlugin;
+use unlight_plugin::plugin::UnhaunterLightPlugin;
 use unmanual_plugin::plugin::UnhaunterManualPlugin;
 use unmaphub::plugin::UnhaunterMapHubPlugin;
 use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;

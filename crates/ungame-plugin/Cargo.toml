@@ -27,7 +27,7 @@ unpicking = { path = "../unpicking" }
 uninteraction = { path = "../uninteraction" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
-unlight = { path = "../unlight" }
+unlight-plugin = { path = "../unlight-plugin" }
 unprofile = { path = "../unprofile" }
 unplayer = { path = "../unplayer" }
 unghost = { path = "../unghost" }

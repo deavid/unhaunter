@@ -1,5 +1,5 @@
 [package]
-name = "unlight"
+name = "unlight-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
