@@ -5705,30 +5705,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unfog"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "ndarray",
- "rand 0.9.2",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-resources",
- "uncore-types",
- "unfog-core",
- "unghost",
- "unghost-core",
- "unmetrics",
- "unnoise",
- "unplayer-core",
- "unrender",
- "unspatial",
-]
-
-[[package]]
 name = "unfog-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -5742,6 +5718,30 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
+ "unghost",
+ "unghost-core",
+ "unmetrics",
+ "unnoise",
+ "unplayer-core",
+ "unrender",
+ "unspatial",
+]
+
+[[package]]
+name = "unfog-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "ndarray",
+ "rand 0.9.2",
+ "uncore-assets",
+ "uncore-board",
+ "uncore-events",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-types",
+ "unfog-core",
  "unghost",
  "unghost-core",
  "unmetrics",
@@ -5888,7 +5888,7 @@ dependencies = [
  "uncore-resources",
  "uncoremenu",
  "undifficulty",
- "unfog",
+ "unfog-plugin",
  "ungame-plugin",
  "ungear",
  "ungearitems",

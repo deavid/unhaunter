@@ -12,7 +12,7 @@ members = [
     "crates/uncore-types",
     "crates/uncoremenu",
     "crates/undifficulty",
-    "crates/unfog",
+    "crates/unfog-plugin",
     "crates/unfog-core",
     "crates/ungear",
     "crates/ungearitems",
@@ -118,7 +118,7 @@ uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-assets = { path = "crates/uncore-assets" }
 uncore-resources = { path = "crates/uncore-resources" }
 uncoremenu = { path = "crates/uncoremenu" }
-unfog = { path = "crates/unfog" }
+unfog-plugin = { path = "crates/unfog-plugin" }
 ungear = { path = "crates/ungear" }
 ungearitems = { path = "crates/ungearitems" }
 unghost = { path = "crates/unghost" }

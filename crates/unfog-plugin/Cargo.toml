@@ -1,5 +1,5 @@
 [package]
-name = "unfog"
+name = "unfog-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

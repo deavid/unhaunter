@@ -8,7 +8,7 @@ use uncore_assets::CliOptions;
 use uncore_foundation::platform::plt;
 use uncoremenu::plugin::UnhaunterCoreMenuPlugin;
 use undifficulty::CurrentDifficulty;
-use unfog::plugin::UnhaunterFogPlugin;
+use unfog_plugin::plugin::UnhaunterFogPlugin;
 use ungame_plugin::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
 use ungearitems::plugin::UnhaunterGearItemsPlugin;
