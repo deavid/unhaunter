@@ -34,19 +34,19 @@ We are moving to a strict three-layer separation of concerns:
 | `uncampaign` | Yes | No | **DONE** | `uncampaign-plugin` | Leaf node. |
 | `uncore-assets` | No | Yes | **RENAME** | `unassets-core` | Shared data. |
 | `uncore-board` | No | Yes | **RENAME** | `unboard-core` | Shared data. |
-| `uncore-components` | No | Yes | **DISSOLVE** | - | God crate. |
+| `uncore-components` | No | Yes | **DISSOLVE** | - | God crate. Still exists. |
 | `uncore-events` | No | Yes | **RENAME** | `unevents-core` | Shared data. |
 | `uncore-foundation` | No | Yes | **RENAME** | `unfoundation-core` | Base types. |
-| `uncore-resources` | No | Yes | **DISSOLVE** | - | God crate. |
+| `uncore-resources` | No | Yes | **DISSOLVE** | - | God crate. Still exists. |
 | `uncore-types` | No | Yes | **RENAME** | `untypes-core` | Shared data. |
 | `uncoremenu` | Yes | No | **RENAME** | `uncoremenu-plugin` | Leaf node. |
 | `undifficulty` | No | Yes | **RENAME** | `undifficulty-core` | Shared data. |
-| `unfog` | Yes | No | **RENAME** | `unfog-plugin` | Leaf node. |
+| `unfog` | Yes | No | **SPLIT** | `unfog-core`, `unfog-plugin` | `unfog-core` created. |
 | `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
 | `ungear` | Yes | Yes | **SPLIT** | `ungear-core`, `ungear-plugin` | Shared data + logic. |
 | `ungearitems` | Yes | No | **RENAME** | `ungearitems-plugin` | Leaf node. |
-| `unghost` | Yes | Yes | **SPLIT** | `unghost-core`, `unghost-plugin` | Shared data + logic. |
-| `unghost-core` | No | Yes | **KEEP** | `unghost-core` | Shared data. |
+| `unghost` | Yes | Yes | **SPLIT** | `unghost-core`, `unghost-plugin` | `unghost-core` created. |
+| `unghost-core` | No | Yes | **DONE** | `unghost-core` | Shared data. |
 | `uninteraction` | No | Yes | **RENAME** | `uninteraction-core` | Shared data. |
 | `unlight` | Yes | No | **RENAME** | `unlight-plugin` | Leaf node. |
 | `unmanual` | Yes | No | **DONE** | `unmanual-plugin` | Leaf node. |
@@ -59,17 +59,19 @@ We are moving to a strict three-layer separation of concerns:
 | `unnoise` | No | Yes | **RENAME** | `unnoise-core` | Shared data. |
 | `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
 | `unpicking` | Yes | No | **SPLIT** | `unpicking-core`, `unpicking-plugin` | Shared state + logic. |
-| `unplayer` | Yes | Yes | **SPLIT** | `unplayer-std`, `unplayer-plugin` | Depends on `unsettings`, `unspatial`. |
-| `unplayer-core` | No | Yes | **RENAME** | `unplayer-core` | Base player data. |
+| `unplayer` | Yes | Yes | **SPLIT** | `unplayer-std`, `unplayer-plugin` | `unplayer-core` exists. |
+| `unplayer-core` | No | Yes | **DONE** | `unplayer-core` | Base player data. |
 | `unprofile` | Yes | No | **RENAME** | `unprofile-plugin` | Leaf node. |
 | `unrender` | Yes | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
 | `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
+| `unspatial` | No | Yes | **RENAME** | `unspatial-core` | Shared data. |
 | `unsummary` | Yes | No | **SPLIT** | `unsummary-std`, `unsummary-plugin` | Depends on `undifficulty`, `unghost`. |
 | `untags` | No | Yes | **RENAME** | `untags-core` | Shared data. |
 | `untiled` | No | Yes | **RENAME** | `untiled-core` | Shared data. |
 | `untmxmap` | Yes | No | **DONE** | `untmxmap-plugin` | Leaf node. |
-| `untruck` | Yes | No | **RENAME** | `untruck-plugin` | Leaf node. |
+| `untruck` | Yes | No | **DONE** | `untruck-plugin` | Leaf node. |
+| `untruck-core` | No | Yes | **DONE** | `untruck-core` | Shared data. |
 | `unui` | No | Yes | **RENAME** | `unui-core` | Shared data. |
 | `unwalkie` | Yes | No | **DONE** | `unwalkie-plugin` | Leaf node. |
 | `unwalkie_types` | No | Yes | **KEEP** | `unwalkie_types` | Shared data. |
@@ -95,21 +97,48 @@ We are moving to a strict three-layer separation of concerns:
 
 ## 5. The "Split" Manifest (Major Crates)
 
-### `unplayer` -> `unplayer-std` & `unplayer-plugin`
-- **`unplayer-std`**:
-    - `src/components/` (Higher level bundles)
-    - Depends on `unplayer-core`, `unsettings-core`, `unspatial-core`.
-- **`unplayer-plugin`**:
+### `unplayer` -> `unplayer-core` & `unplayer-plugin`
+- **`unplayer-core`**:
+    - `src/components/` (Base components)
+    - `src/resources/`
+- **`unplayer-plugin`** (Currently `unplayer`):
     - `src/systems/`
     - `src/plugin.rs`
+    - `src/components/` (Higher level bundles)
 
 ### `unghost` -> `unghost-core` & `unghost-plugin`
 - **`unghost-core`**:
     - `src/components/`
-    - `src/ghost_events.rs`
-- **`unghost-plugin`**:
+    - `src/resources/`
+- **`unghost-plugin`** (Currently `unghost`):
     - `src/systems/`
     - `src/ghost.rs`
+    - `src/ghost_events.rs`
+
+### `unfog` -> `unfog-core` & `unfog-plugin`
+- **`unfog-core`**:
+    - `src/components.rs`
+    - `src/resources.rs`
+- **`unfog-plugin`** (Currently `unfog`):
+    - `src/systems.rs`
+    - `src/plugin.rs`
+
+### `untruck` -> `untruck-core` & `untruck-plugin`
+- **`untruck-core`**:
+    - `src/components/`
+    - `src/types/`
+- **`untruck-plugin`**:
+    - `src/systems/`
+    - `src/plugin.rs`
+    - `src/ui.rs`
+
+### `unwalkie` -> `unwalkie-core` & `unwalkie-plugin`
+- **`unwalkie-core`** (Currently `unwalkiecore`):
+    - `src/events.rs`
+    - `src/resources.rs`
+- **`unwalkie-plugin`**:
+    - `src/plugin.rs`
+    - `src/walkie_play.rs`
 
 ### `unrender` -> `unrender-std` & `unrender-plugin`
 - **`unrender-std`**:
