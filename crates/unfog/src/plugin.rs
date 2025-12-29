@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::{metrics, resources::MiasmaConfig};
+use crate::metrics;
+use unfog_core::resources::MiasmaConfig;
 
 pub struct UnhaunterFogPlugin;
 

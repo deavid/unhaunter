@@ -1,11 +1,12 @@
 [package]
-name = "unfog"
+name = "unfog-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
+homepage.workspace = true
 
 [dependencies]
 
@@ -22,7 +23,6 @@ unmetrics = { path = "../unmetrics" }
 unnoise = { path = "../unnoise" }
 unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
-unfog-core = { path = "../unfog-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

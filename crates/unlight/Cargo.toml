@@ -20,7 +20,7 @@ uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics = { path = "../unmetrics" }
-unfog = { path = "../unfog" }
+unfog-core = { path = "../unfog-core" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }

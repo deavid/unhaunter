@@ -11,6 +11,8 @@ use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;
 use uncore_resources::states::AppState;
+use unfog_core::components::MiasmaSprite;
+use unfog_core::resources::MiasmaConfig;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
 use unnoise::PerlinNoise;
@@ -23,9 +25,7 @@ use unrender::plugin::rebuild_collision_data;
 use unspatial::BoardPosition;
 use unspatial::Position;
 
-use crate::components::MiasmaSprite;
 use crate::metrics;
-use crate::resources::MiasmaConfig;
 
 fn initialize_miasma(
     mut board_data: ResMut<BoardData>,

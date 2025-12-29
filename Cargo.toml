@@ -44,7 +44,7 @@ members = [
     "crates/ungame-plugin",
     "crates/tools/ghost_list",
     "crates/tools/ghost_radio",
-    "crates/tools/text_to_speech/walkie_voice_generator",
+    "crates/tools/text_to_speech/walkie_voice_generator", "crates/unfog-core",
 ]
 resolver = "3"
 
