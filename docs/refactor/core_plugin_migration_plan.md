@@ -44,7 +44,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unfog` | Yes | No | **DONE** | `unfog-core`, `unfog-plugin` | Leaf node. |
 | `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
 | `ungear` | Yes | Yes | **DONE** | `ungear-core`, `ungear` | Shared data + logic. |
-| `ungearitems` | Yes | No | **RENAME** | `ungearitems-plugin` | Leaf node. |
+| `ungearitems` | Yes | No | **DONE** | `ungearitems-plugin` | Splitted. |
 | `unghost` | Yes | Yes | **DONE** | `unghost-core`, `unghost` | `unghost-core` created. |
 | `unghost-core` | No | Yes | **DONE** | `unghost-core` | Shared data. |
 | `uninteraction` | No | Yes | **DONE** | `uninteraction-core` | Shared data. |

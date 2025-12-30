@@ -11,7 +11,7 @@ impl Plugin for UnhaunterMapHubPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<MapHubState>()
             .add_message::<MapSelectedEvent>();
-        app_setup_local(app); // Call local app_setup
+        app_setup_local(app);
         difficulty_selection::app_setup(app);
     }
 }
@@ -19,7 +19,6 @@ impl Plugin for UnhaunterMapHubPlugin {
 #[derive(Component, Debug)]
 struct MapHubCamera;
 
-// Renamed to app_setup_local and made pub(crate)
 pub(crate) fn app_setup_local(app: &mut App) {
     app.add_systems(OnEnter(AppState::MapHub), setup_systems)
         .add_systems(OnExit(AppState::MapHub), cleanup_systems);

@@ -14,12 +14,12 @@
 //!   * Custom: Main Menu -> Difficulty Selection -> Mission Selection -> Game
 //! - Proper UI mapping between list items and the original maps collection
 
+use crate::badge_utils::BadgeUtils;
 use bevy::picking::Pickable;
 use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
-
 use uncore_assets::GameAssets;
 use uncore_assets::Maps;
 use uncore_events::events::loadlevel::LoadLevelEvent;
@@ -39,7 +39,6 @@ use uncoremenu::{
     templates,
 };
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
-use unmaphub::badge_utils::BadgeUtils;
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]

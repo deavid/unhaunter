@@ -1,3 +1,3 @@
+pub(crate) mod badge_utils;
 pub mod plugin;
-pub mod resources;
-pub mod unified_mission_selection;
+pub(crate) mod unified_mission_selection;

@@ -1,5 +1,5 @@
 [package]
-name = "unmaphub"
+name = "unmaphub-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

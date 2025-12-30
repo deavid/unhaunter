@@ -5587,7 +5587,6 @@ dependencies = [
  "uncore-types",
  "uncoremenu",
  "undifficulty-core",
- "unmaphub",
  "unprofile-core",
 ]
 
@@ -5910,7 +5909,7 @@ dependencies = [
  "unghost-core",
  "unlight-plugin",
  "unmanual-plugin",
- "unmaphub",
+ "unmaphub-plugin",
  "unmapload-plugin",
  "unmenu-plugin",
  "unmenusettings-plugin",
@@ -6053,7 +6052,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmaphub"
+name = "unmaphub-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
