@@ -1,5 +1,5 @@
 [package]
-name = "unmenu-plugin"
+name = "unmainmenu-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

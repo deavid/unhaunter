@@ -5908,10 +5908,10 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unlight-plugin",
+ "unmainmenu-plugin",
  "unmanual-plugin",
  "unmaphub-plugin",
  "unmapload-plugin",
- "unmenu-plugin",
  "unmenusettings-plugin",
  "unnpc-plugin",
  "unpicking-core",
@@ -6037,6 +6037,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "unmainmenu-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "uncore-assets",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-types",
+ "uncoremenu",
+ "unprofile-core",
+ "unsettings-core",
+]
+
+[[package]]
 name = "unmanual-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -6094,21 +6109,6 @@ dependencies = [
  "unspatial-core",
  "untags-core",
  "untiled-core",
-]
-
-[[package]]
-name = "unmenu-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy-persistent",
- "uncore-assets",
- "uncore-foundation",
- "uncore-resources",
- "uncore-types",
- "uncoremenu",
- "unprofile-core",
- "unsettings-core",
 ]
 
 [[package]]

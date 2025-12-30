@@ -25,7 +25,7 @@ members = [
     "crates/unmanual-plugin",
     "crates/unmapload-plugin",
     "crates/unmaphub-plugin",
-    "crates/unmenu-plugin",
+    "crates/unmainmenu-plugin",
     "crates/unmenusettings-plugin",
     "crates/unmetrics-core",
     "crates/unmetrics-plugin",
@@ -131,7 +131,7 @@ unghost = { path = "crates/unghost" }
 unlight-plugin = { path = "crates/unlight-plugin" }
 unmapload-plugin = { path = "crates/unmapload-plugin" }
 unmaphub-plugin = { path = "crates/unmaphub-plugin" }
-unmenu-plugin = { path = "crates/unmenu-plugin" }
+unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unplayer = { path = "crates/unplayer" }
