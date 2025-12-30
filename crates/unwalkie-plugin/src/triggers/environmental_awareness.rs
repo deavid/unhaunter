@@ -11,7 +11,7 @@ use uncore_board::resources::roomdb::RoomDB;
 use uncore_components::Toggleable;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
-use ungearitems::components::thermometer::Thermometer;
+use ungearitems_core::components::thermometer::Thermometer;
 use unwalkie_core::{WalkiePlay, events::WalkieEvent};
 
 /// System that monitors the player's exposure to darkness.

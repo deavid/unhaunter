@@ -1,0 +1,16 @@
+[package]
+name = "ungearitems-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+enum-iterator = { workspace = true }
+rand = { workspace = true }
+uncore-components = { path = "../uncore-components" }
+uncore-foundation = { path = "../uncore-foundation" }
+unspatial-core = { path = "../unspatial-core" }

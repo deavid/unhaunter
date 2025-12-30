@@ -3,7 +3,7 @@ use uncore_foundation::types::ghost::types::GhostType;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;
-use ungearitems::components::repellentflask::RepellentFlask;
+use ungearitems_core::components::repellentflask::RepellentFlask;
 
 /// Crafts a repellent for the specified ghost type.
 /// Returns true if a new bottle was consumed (should count as a craft).

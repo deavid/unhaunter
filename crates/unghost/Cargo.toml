@@ -20,7 +20,7 @@ unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
-ungearitems = { path = "../ungearitems" }
+ungearitems-core = { path = "../ungearitems-core" }
 untags-core = { path = "../untags-core" }
 unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }

@@ -5807,7 +5807,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "ungearitems"
+name = "ungearitems-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "rand 0.9.2",
+ "uncore-components",
+ "uncore-foundation",
+ "unspatial-core",
+]
+
+[[package]]
+name = "ungearitems-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -5823,6 +5835,7 @@ dependencies = [
  "uncore-types",
  "undifficulty-core",
  "ungear",
+ "ungearitems-core",
  "unghost-core",
  "unmetrics-core",
  "unplayer-core",
@@ -5844,7 +5857,7 @@ dependencies = [
  "uncore-resources",
  "undifficulty-core",
  "ungear",
- "ungearitems",
+ "ungearitems-core",
  "unghost-core",
  "uninteraction-core",
  "unmetrics-core",
@@ -5891,7 +5904,8 @@ dependencies = [
  "unfog-plugin",
  "ungame-plugin",
  "ungear",
- "ungearitems",
+ "ungearitems-core",
+ "ungearitems-plugin",
  "unghost",
  "unghost-core",
  "unlight-plugin",
@@ -6013,7 +6027,7 @@ dependencies = [
  "undifficulty-core",
  "unfog-core",
  "ungear",
- "ungearitems",
+ "ungearitems-core",
  "unghost",
  "unghost-core",
  "unmetrics-core",
@@ -6071,7 +6085,6 @@ dependencies = [
  "uncore-types",
  "undifficulty-core",
  "ungear",
- "ungearitems",
  "unghost",
  "unghost-core",
  "unlight-plugin",
@@ -6384,7 +6397,7 @@ dependencies = [
  "uncore-types",
  "undifficulty-core",
  "ungear",
- "ungearitems",
+ "ungearitems-core",
  "unghost",
  "unghost-core",
  "unplayer",
@@ -6435,7 +6448,7 @@ dependencies = [
  "uncore-types",
  "undifficulty-core",
  "ungear",
- "ungearitems",
+ "ungearitems-core",
  "unghost",
  "unghost-core",
  "unplayer-core",

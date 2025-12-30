@@ -100,8 +100,10 @@ Specific gameplay mechanics and entity behaviors.
   - `CollisionHandler`.
 - **`ungear`**: Inventory system, equipment slots, deployment logic.
   - `Gear` (Component for gear items), `PlayerGear` (Inventory), `DeployedGear`.
-- **`ungearitems`**: **[GEAR LOGIC]** Implementation of specific items (EMF, Flashlight, etc.).
+- **`ungearitems-core`**: Data definitions for all gear items (Flashlight, EMF, etc.).
   - `Flashlight`, `EMFMeter`, `Thermometer`, `SpiritBox`, `UVTorch`.
+- **`ungearitems-plugin`**: **[GEAR LOGIC]** Implementation of specific items (EMF, Flashlight, etc.).
+  - `UnhaunterGearItemsPlugin`.
 - **`unfog`**: Miasma (fog) rendering and simulation.
   - `MiasmaConfig`.
 - **`unlight`**: Lighting engine, visibility calculation, field of view.

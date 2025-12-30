@@ -33,7 +33,7 @@ use unfog_core::resources::MiasmaConfig;
 use ungear::components::deployedgear::DeployedGear;
 use ungear::components::playergear::PlayerGear;
 use ungear::{EquipmentPosition, Hand};
-use ungearitems::components::salt::UVReactive;
+use ungearitems_core::components::salt::UVReactive;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;

@@ -6,7 +6,7 @@ use uncore_resources::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
-use ungearitems::components::repellentflask::RepellentFlask;
+use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unplayer_core::components::PlayerSprite;

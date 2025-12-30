@@ -21,7 +21,7 @@ unui-core = { path = "../unui-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
 ungear = { path = "../ungear" }
-ungearitems = { path = "../ungearitems" }
+ungearitems-core = { path = "../ungearitems-core" }
 unghost = { path = "../unghost" }
 unsettings = { path = "../unsettings" }
 unprofile-core = { path = "../unprofile-core" }

@@ -1,5 +1,5 @@
 [package]
-name = "unlight-plugin"
+name = "ungearitems-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -12,24 +12,21 @@ authors.workspace = true
 unspatial-core = { path = "../unspatial-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
-uncore-components = { path = "../uncore-components" }
 uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
+uncore-components = { path = "../uncore-components" }
 uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
-unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
-unfog-core = { path = "../unfog-core" }
 ungear = { path = "../ungear" }
-ungearitems-core = { path = "../ungearitems-core" }
-unsettings = { path = "../unsettings" }
-unghost = { path = "../unghost" }
+untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
+unplayer-core = { path = "../unplayer-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
+enum-iterator = { workspace = true }
 fastapprox = { workspace = true }
-bevy-persistent = { workspace = true }
+ungearitems-core = { path = "../ungearitems-core" }

@@ -15,7 +15,8 @@ members = [
     "crates/unfog-plugin",
     "crates/unfog-core",
     "crates/ungear",
-    "crates/ungearitems",
+    "crates/ungearitems-core",
+    "crates/ungearitems-plugin",
     "crates/ungame-plugin",
     "crates/unghost",
     "crates/unghost-core",
@@ -123,7 +124,8 @@ uncore-resources = { path = "crates/uncore-resources" }
 uncoremenu = { path = "crates/uncoremenu" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear = { path = "crates/ungear" }
-ungearitems = { path = "crates/ungearitems" }
+ungearitems-core = { path = "crates/ungearitems-core" }
+ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 unghost = { path = "crates/unghost" }
 unlight-plugin = { path = "crates/unlight-plugin" }
 unmapload-plugin = { path = "crates/unmapload-plugin" }

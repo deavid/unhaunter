@@ -5,7 +5,7 @@ use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::ManualChapterIndex;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
-use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
+use ungearitems_core::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;

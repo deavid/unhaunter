@@ -11,7 +11,7 @@ use undifficulty_core::CurrentDifficulty;
 use unfog_plugin::plugin::UnhaunterFogPlugin;
 use ungame_plugin::plugin::UnhaunterGamePlugin;
 use ungear::plugin::UnhaunterGearPlugin;
-use ungearitems::plugin::UnhaunterGearItemsPlugin;
+use ungearitems_plugin::plugin::UnhaunterGearItemsPlugin;
 use unghost::plugin::UnhaunterGhostPlugin;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;

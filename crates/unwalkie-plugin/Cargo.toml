@@ -19,7 +19,7 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 ungear = { path = "../ungear" }
-ungearitems = { path = "../ungearitems" }
+ungearitems-core = { path = "../ungearitems-core" }
 unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkie-core = { path = "../unwalkie-core" }

@@ -11,7 +11,7 @@ use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;
-use ungearitems::components::repellentflask::RepellentFlask;
+use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unplayer::components::player_sprite::PlayerSprite;
