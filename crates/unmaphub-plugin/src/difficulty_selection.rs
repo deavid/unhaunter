@@ -7,13 +7,13 @@ use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore_resources::states::AppState;
 use uncore_resources::states::MapHubState;
-use uncoremenu::{
+use undifficulty_core::DifficultySelectionState;
+use undifficulty_core::{CurrentDifficulty, Difficulty, DifficultySettings};
+use unmenu_core::{
     components::*,
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
-use undifficulty_core::DifficultySelectionState;
-use undifficulty_core::{CurrentDifficulty, Difficulty, DifficultySettings};
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]

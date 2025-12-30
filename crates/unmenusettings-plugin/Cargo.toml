@@ -19,4 +19,4 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unsettings-core = { path = "../unsettings-core" }
-uncoremenu = { path = "../uncoremenu" }
+unmenu-core = { path = "../unmenu-core" }

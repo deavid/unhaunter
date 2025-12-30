@@ -10,9 +10,9 @@ use bevy_persistent::Persistent;
 use uncore_assets::GameAssets;
 use uncore_foundation::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use uncore_resources::states::AppState;
-use uncoremenu::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
-use uncoremenu::events::MenuItemClicked;
-use uncoremenu::templates;
+use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
+use unmenu_core::events::MenuItemClicked;
+use unmenu_core::templates;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
 
@@ -191,7 +191,7 @@ fn menu_audio_setting_selected(
             commands.entity(e).despawn();
         }
 
-        // Create new UI with uncoremenu templates
+        // Create new UI with unmenu_core templates
         commands
             .spawn(Node {
                 width: Val::Percent(100.0),
@@ -349,7 +349,7 @@ fn menu_gameplay_setting_selected(
             commands.entity(e).despawn();
         }
 
-        // Create new UI with uncoremenu templates
+        // Create new UI with unmenu_core templates
         commands
             .spawn(Node {
                 width: Val::Percent(100.0),
@@ -520,7 +520,7 @@ fn menu_integration_system(
 
 /// Handles the ESC key events from the core menu system
 fn handle_escape(
-    mut escape_events: MessageReader<uncoremenu::events::MenuEscapeEvent>,
+    mut escape_events: MessageReader<unmenu_core::events::MenuEscapeEvent>,
     mut menu_events: MessageWriter<MenuEvent>,
 ) {
     if !escape_events.is_empty() {

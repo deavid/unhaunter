@@ -28,16 +28,16 @@ use uncore_foundation::platform::plt::FONT_SCALE;
 use uncore_foundation::types::grade::Grade;
 use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore_resources::states::{AppState, MapHubState};
-use uncoremenu::components::MenuMouseTracker;
-use uncoremenu::events::KeyboardNavigate;
-use uncoremenu::scrollbar::ScrollableListContainer;
-use uncoremenu::{
+use undifficulty_core::{CurrentDifficulty, DifficultySettings};
+use unmenu_core::components::MenuMouseTracker;
+use unmenu_core::events::KeyboardNavigate;
+use unmenu_core::scrollbar::ScrollableListContainer;
+use unmenu_core::{
     components::{MenuItemInteractive, MenuRoot},
     events::MenuItemSelected,
     events::{MenuEscapeEvent, MenuItemClicked},
     scrollbar, templates,
 };
-use undifficulty_core::{CurrentDifficulty, DifficultySettings};
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
@@ -807,7 +807,7 @@ fn create_mission_list_item(
                             colors::MENU_ITEM_COLOR_ON
                         }),
                         // Add the PrincipalMenuText marker for visual state updates
-                        uncoremenu::components::PrincipalMenuText,
+                        unmenu_core::components::PrincipalMenuText,
                     ))
                     .insert(Pickable {
                         should_block_lower: false,
@@ -887,7 +887,7 @@ fn create_locked_mission_item(
                         },
                         TextColor(Color::srgba(0.5, 0.5, 0.5, 0.5)),
                         // Add the PrincipalMenuText marker for visual state updates
-                        uncoremenu::components::PrincipalMenuText,
+                        unmenu_core::components::PrincipalMenuText,
                     ))
                     .insert(Pickable {
                         should_block_lower: false,

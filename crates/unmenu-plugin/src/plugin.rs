@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::events;
+use unmenu_core::events;
 
 /// Plugin that adds all menu component systems to the app
 pub struct UnhaunterCoreMenuPlugin;

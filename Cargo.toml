@@ -10,7 +10,6 @@ members = [
     "crates/uncore-foundation",
     "crates/uncore-resources",
     "crates/uncore-types",
-    "crates/uncoremenu",
     "crates/undifficulty-core",
     "crates/unfog-plugin",
     "crates/unfog-core",
@@ -26,6 +25,8 @@ members = [
     "crates/unmapload-plugin",
     "crates/unmaphub-plugin",
     "crates/unmainmenu-plugin",
+    "crates/unmenu-core",
+    "crates/unmenu-plugin",
     "crates/unmenusettings-plugin",
     "crates/unmetrics-core",
     "crates/unmetrics-plugin",
@@ -122,7 +123,6 @@ undifficulty-core = { path = "crates/undifficulty-core" }
 uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-assets = { path = "crates/uncore-assets" }
 uncore-resources = { path = "crates/uncore-resources" }
-uncoremenu = { path = "crates/uncoremenu" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear = { path = "crates/ungear" }
 ungearitems-core = { path = "crates/ungearitems-core" }
@@ -132,6 +132,7 @@ unlight-plugin = { path = "crates/unlight-plugin" }
 unmapload-plugin = { path = "crates/unmapload-plugin" }
 unmaphub-plugin = { path = "crates/unmaphub-plugin" }
 unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
+unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unplayer = { path = "crates/unplayer" }

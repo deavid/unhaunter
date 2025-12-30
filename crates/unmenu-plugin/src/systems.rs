@@ -1,11 +1,11 @@
-use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
-use crate::events::KeyboardNavigate;
-use crate::events::MenuEscapeEvent;
-use crate::events::MenuItemClicked;
-use crate::events::MenuItemSelected;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore_foundation::colors;
 use uncore_resources::states::AppState;
+use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
+use unmenu_core::events::KeyboardNavigate;
+use unmenu_core::events::MenuEscapeEvent;
+use unmenu_core::events::MenuItemClicked;
+use unmenu_core::events::MenuItemSelected;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.

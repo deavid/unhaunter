@@ -3,8 +3,8 @@ use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_resources::states::AppState;
-use uncoremenu::components::{MenuMouseTracker, MenuRoot};
-use uncoremenu::templates;
+use unmenu_core::components::{MenuMouseTracker, MenuRoot};
+use unmenu_core::templates;
 
 fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
@@ -31,7 +31,7 @@ pub(crate) fn setup_ui_main_cat(
         commands.entity(e).despawn();
     }
 
-    // Create new UI with uncoremenu templates
+    // Create new UI with unmenu_core templates
     let root_entity = commands
         .spawn(Node {
             width: Val::Percent(100.0),

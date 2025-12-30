@@ -5585,8 +5585,8 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "uncoremenu",
  "undifficulty-core",
+ "unmenu-core",
  "unprofile-core",
 ]
 
@@ -5677,18 +5677,6 @@ dependencies = [
  "ndarray",
  "serde",
  "uncore-foundation",
-]
-
-[[package]]
-name = "uncoremenu"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "uncore-assets",
- "uncore-foundation",
- "uncore-resources",
- "uncore-types",
- "unprofile-core",
 ]
 
 [[package]]
@@ -5898,7 +5886,6 @@ dependencies = [
  "uncore-assets",
  "uncore-foundation",
  "uncore-resources",
- "uncoremenu",
  "undifficulty-core",
  "unfog-plugin",
  "ungame-plugin",
@@ -5912,6 +5899,7 @@ dependencies = [
  "unmanual-plugin",
  "unmaphub-plugin",
  "unmapload-plugin",
+ "unmenu-plugin",
  "unmenusettings-plugin",
  "unnpc-plugin",
  "unpicking-core",
@@ -6046,7 +6034,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "uncoremenu",
+ "unmenu-core",
  "unprofile-core",
  "unsettings-core",
 ]
@@ -6077,8 +6065,8 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "uncoremenu",
  "undifficulty-core",
+ "unmenu-core",
 ]
 
 [[package]]
@@ -6112,6 +6100,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "unmenu-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "uncore-assets",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-types",
+ "unprofile-core",
+]
+
+[[package]]
+name = "unmenu-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "uncore-assets",
+ "uncore-foundation",
+ "uncore-resources",
+ "uncore-types",
+ "unmenu-core",
+ "unprofile-core",
+]
+
+[[package]]
 name = "unmenusettings-plugin"
 version = "0.3.2-dev"
 dependencies = [
@@ -6123,7 +6136,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "uncoremenu",
+ "unmenu-core",
  "unsettings-core",
 ]
 
