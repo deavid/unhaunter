@@ -5,7 +5,7 @@ use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use untruck_core::components::truck_ui_button::TruckButtonTypeExt; // Use CurrentDifficulty
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;

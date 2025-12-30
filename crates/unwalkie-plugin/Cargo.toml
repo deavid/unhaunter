@@ -11,7 +11,7 @@ authors.workspace = true
 
 unspatial-core = { path = "../unspatial-core" }
 uncore-components = { path = "../uncore-components" }
-undifficulty = { path = "../undifficulty" }
+undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }

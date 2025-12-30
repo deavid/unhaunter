@@ -11,7 +11,7 @@ homepage.workspace = true
 [dependencies]
 bevy = { workspace = true }
 
-undifficulty = { path = "../undifficulty" }
+undifficulty-core = { path = "../undifficulty-core" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }

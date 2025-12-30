@@ -14,7 +14,7 @@ use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::{CollisionFieldData, LightFieldData};
 use uncore_board::types::tiledmap::map::MapLayerType;
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::resources::spawner::GearSpawnerRegistry;
 use unghost::components::ghost_influence::InfluenceType;
 use unghost_core::resources::haunt_state::HauntState;

@@ -14,7 +14,7 @@ use uncore_resources::states::AppState;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unmetrics::SendMetric;
+use unmetrics_core::SendMetric;
 use unnoise_core::PerlinNoise;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;

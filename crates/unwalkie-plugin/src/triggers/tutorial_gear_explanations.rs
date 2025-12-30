@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use uncore_components::Toggleable;
 use uncore_resources::states::{AppState, GameState};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;

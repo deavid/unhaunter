@@ -5,7 +5,7 @@ use std::sync::{LazyLock, Mutex, mpsc};
 
 const CHANNEL_CAPACITY: usize = 2048;
 
-static DIAGNOSTIC_CHANNEL: LazyLock<StaticChannel> = LazyLock::new(StaticChannel::default);
+pub static DIAGNOSTIC_CHANNEL: LazyLock<StaticChannel> = LazyLock::new(StaticChannel::default);
 
 #[derive(Debug, Clone)]
 pub struct Data {
@@ -14,9 +14,9 @@ pub struct Data {
     pub value: f64,
 }
 
-struct StaticChannel {
-    tx: mpsc::SyncSender<Data>,
-    rx: Mutex<mpsc::Receiver<Data>>,
+pub struct StaticChannel {
+    pub tx: mpsc::SyncSender<Data>,
+    pub rx: Mutex<mpsc::Receiver<Data>>,
 }
 
 impl Default for StaticChannel {
@@ -29,11 +29,11 @@ impl Default for StaticChannel {
     }
 }
 
-fn receive_data(mut diag_store: ResMut<DiagnosticsStore>) {
+pub fn receive_data(mut diag_store: ResMut<DiagnosticsStore>) {
     let rx_guard = DIAGNOSTIC_CHANNEL
         .rx
         .try_lock()
-        .expect("uncore::metrics::receive_data was unable to lock for reading messages");
+        .expect("unmetrics-core::receive_data was unable to lock for reading messages");
 
     for data in rx_guard.try_iter() {
         if let Some(diag) = diag_store.get_mut(&data.path) {
@@ -86,8 +86,4 @@ impl SendMetric for DiagnosticPath {
     fn time_measure(self) -> TimeMeasure {
         TimeMeasure::start(self)
     }
-}
-
-pub fn app_setup(app: &mut App) {
-    app.add_systems(PostUpdate, receive_data);
 }

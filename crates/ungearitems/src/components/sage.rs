@@ -11,7 +11,7 @@ use uncore_foundation::random_seed;
 use uncore_foundation::utils::time::format_time;
 use ungear::gear_stuff::GearStuff;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unmetrics::SendMetric;
+use unmetrics_core::SendMetric;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unspatial_core::{Direction, Position};

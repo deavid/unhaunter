@@ -10,7 +10,7 @@ homepage.workspace = true
 
 [dependencies]
 
-undifficulty = { path = "../undifficulty" }
+undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-events = { path = "../uncore-events" }

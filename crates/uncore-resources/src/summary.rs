@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_foundation::types::grade::Grade;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 
 #[derive(Debug, Clone, Resource, Default)]
 pub struct SummaryData {

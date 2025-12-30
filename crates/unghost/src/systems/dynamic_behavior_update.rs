@@ -1,7 +1,7 @@
 use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
 use bevy::prelude::*;
 use uncore_foundation::types::evidence::Evidence;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unnoise_core::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};

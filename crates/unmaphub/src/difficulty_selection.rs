@@ -12,8 +12,8 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
-use undifficulty::DifficultySelectionState;
-use undifficulty::{CurrentDifficulty, Difficulty, DifficultySettings};
+use undifficulty_core::DifficultySelectionState;
+use undifficulty_core::{CurrentDifficulty, Difficulty, DifficultySettings};
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]

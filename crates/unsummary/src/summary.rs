@@ -10,7 +10,7 @@ use uncore_foundation::utils::time::format_time;
 use uncore_resources::states::AppState;
 use uncore_resources::states::GameState;
 use uncore_resources::summary::SummaryData;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};

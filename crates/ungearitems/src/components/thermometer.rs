@@ -10,11 +10,11 @@ use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, T
 use uncore_foundation::random_seed;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::{celsius_to_kelvin, kelvin_to_celsius};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::gear_stuff::GearStuff;
 use unghost_core::HauntState;
 use unghost_core::components::GhostSprite;
-use unmetrics::SendMetric;
+use unmetrics_core::SendMetric;
 use unspatial_core::{BoardPosition, Position};
 
 #[derive(Component, Debug, Clone)]

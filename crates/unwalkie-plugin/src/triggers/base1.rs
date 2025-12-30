@@ -1,7 +1,7 @@
 use bevy::{prelude::*, time::Stopwatch};
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::components::ghost_sprite::GhostSprite;

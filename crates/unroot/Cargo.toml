@@ -15,6 +15,6 @@ uncore-events = { path = "../uncore-events" }
 unghost-core = { path = "../unghost-core" }
 unnoise-core = { path = "../unnoise-core" }
 unplayer-core = { path = "../unplayer-core" }
-unmetrics = { path = "../unmetrics" }
+unmetrics-core = { path = "../unmetrics-core" }
 bevy = { workspace = true }
 bevy_framepace = { workspace = true }

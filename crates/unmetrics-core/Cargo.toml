@@ -1,0 +1,13 @@
+[package]
+name = "unmetrics-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+serde = { workspace = true }

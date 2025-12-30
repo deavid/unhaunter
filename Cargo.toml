@@ -11,7 +11,7 @@ members = [
     "crates/uncore-resources",
     "crates/uncore-types",
     "crates/uncoremenu",
-    "crates/undifficulty",
+    "crates/undifficulty-core",
     "crates/unfog-plugin",
     "crates/unfog-core",
     "crates/ungear",
@@ -26,7 +26,8 @@ members = [
     "crates/unmaphub",
     "crates/unmenu-plugin",
     "crates/unmenusettings-plugin",
-    "crates/unmetrics",
+    "crates/unmetrics-core",
+    "crates/unmetrics-plugin",
     "crates/unnavigation-core",
     "crates/unnpc-plugin",
     "crates/unnoise-core",
@@ -115,7 +116,7 @@ authors.workspace = true
 
 [dependencies]
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
-undifficulty = { path = "crates/undifficulty" }
+undifficulty-core = { path = "crates/undifficulty-core" }
 uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-assets = { path = "crates/uncore-assets" }
 uncore-resources = { path = "crates/uncore-resources" }

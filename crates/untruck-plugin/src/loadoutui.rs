@@ -7,7 +7,7 @@ use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::GameState;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::Hand;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;

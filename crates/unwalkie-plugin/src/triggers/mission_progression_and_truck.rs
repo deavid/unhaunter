@@ -63,7 +63,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     game_state: Res<State<GameState>>,
     mut prev_game_state: Local<GameState>,
     mut walkie_play: ResMut<WalkiePlay>,
-    difficulty: Res<undifficulty::CurrentDifficulty>,
+    difficulty: Res<undifficulty_core::CurrentDifficulty>,
     player_gear_q: Query<(&PlayerSprite, &PlayerGear)>,
     game_config: Res<GameConfig>,
     mut exited_truck_time: Local<Option<f64>>,

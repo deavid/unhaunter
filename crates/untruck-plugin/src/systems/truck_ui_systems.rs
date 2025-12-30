@@ -8,7 +8,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::truck::TruckUIEvent;
 use uncore_resources::states::{AppState, GameState};
 use uncore_resources::summary::SummaryData;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;

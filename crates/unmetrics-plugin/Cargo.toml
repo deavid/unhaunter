@@ -1,5 +1,5 @@
 [package]
-name = "unmetrics"
+name = "unmetrics-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,5 +8,5 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+unmetrics-core = { path = "../unmetrics-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }

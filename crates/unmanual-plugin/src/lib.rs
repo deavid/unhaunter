@@ -18,7 +18,7 @@ use uncore_assets::types::root::game_assets::GameAssets;
 pub use resources::manual::CurrentManualPage;
 pub use resources::manual::Manual;
 pub use types::{ManualChapter, ManualPageData};
-pub use undifficulty::ManualChapterIndex;
+pub use undifficulty_core::ManualChapterIndex;
 
 pub fn create_manual() -> Manual {
     Manual {

@@ -54,7 +54,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unmapload` | Yes | No | **DONE** | `unmapload-plugin` | Leaf node. |
 | `unmenu` | Yes | No | **DONE** | `unmenu-plugin` | Leaf node. |
 | `unmenusettings` | Yes | No | **DONE** | `unmenusettings-plugin` | Leaf node. |
-| `unmetrics` | No | Yes | **SPLIT** | `unmetrics-core`, `unmetrics-plugin` | Shared trait + system. |
+| `unmetrics` | Yes | Yes | **DONE** | `unmetrics-core`, `unmetrics-plugin` | Shared trait + system. |
 | `unnavigation` | No | Yes | **DONE** | `unnavigation-core` | Shared data. |
 | `unnoise` | No | Yes | **DONE** | `unnoise-core` | Shared data. |
 | `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
@@ -62,7 +62,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer` | `unplayer-core` exists. |
 | `unplayer-core` | No | Yes | **DONE** | `unplayer-core` | Base player data. |
 | `unprofile` | Yes | No | **DONE** | `unprofile-core`, `unprofile-plugin` | Split data and logic. |
-| `unrender` | Yes | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
+| `unrender` | No | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
 | `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
 | `unspatial` | No | Yes | **DONE** | `unspatial-core` | Shared data. |

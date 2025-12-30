@@ -5586,7 +5586,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "uncoremenu",
- "undifficulty",
+ "undifficulty-core",
  "unmaphub",
  "unprofile-core",
 ]
@@ -5663,7 +5663,7 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "unsettings",
  "unspatial-core",
 ]
@@ -5693,7 +5693,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "undifficulty"
+name = "undifficulty-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -5720,7 +5720,7 @@ dependencies = [
  "uncore-types",
  "unghost",
  "unghost-core",
- "unmetrics",
+ "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
  "unrender",
@@ -5744,7 +5744,7 @@ dependencies = [
  "unfog-core",
  "unghost",
  "unghost-core",
- "unmetrics",
+ "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
  "unrender",
@@ -5765,7 +5765,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "unghost",
  "unghost-core",
@@ -5796,7 +5796,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "unghost-core",
  "unplayer-core",
  "unprofile-core",
@@ -5821,10 +5821,10 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "unghost-core",
- "unmetrics",
+ "unmetrics-core",
  "unplayer-core",
  "unrender",
  "unspatial-core",
@@ -5842,12 +5842,12 @@ dependencies = [
  "uncore-events",
  "uncore-foundation",
  "uncore-resources",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "ungearitems",
  "unghost-core",
  "uninteraction-core",
- "unmetrics",
+ "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
  "unrender",
@@ -5887,7 +5887,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncoremenu",
- "undifficulty",
+ "undifficulty-core",
  "unfog-plugin",
  "ungame-plugin",
  "ungear",
@@ -6010,13 +6010,13 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "unfog-core",
  "ungear",
  "ungearitems",
  "unghost",
  "unghost-core",
- "unmetrics",
+ "unmetrics-core",
  "unplayer-core",
  "unrender",
  "unsettings",
@@ -6035,7 +6035,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
 ]
 
 [[package]]
@@ -6050,7 +6050,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "uncoremenu",
- "undifficulty",
+ "undifficulty-core",
 ]
 
 [[package]]
@@ -6069,7 +6069,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "ungearitems",
  "unghost",
@@ -6116,11 +6116,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "unmetrics"
+name = "unmetrics-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
+ "serde",
+]
+
+[[package]]
+name = "unmetrics-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unmetrics-core",
 ]
 
 [[package]]
@@ -6190,7 +6199,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "uninteraction-core",
  "unnavigation-core",
@@ -6222,7 +6231,7 @@ dependencies = [
  "bevy_platform",
  "serde",
  "uncore-foundation",
- "undifficulty",
+ "undifficulty-core",
 ]
 
 [[package]]
@@ -6248,7 +6257,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "unmetrics",
+ "unmetrics-core",
  "unplayer-core",
  "unspatial-core",
  "untags-core",
@@ -6265,7 +6274,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "unghost-core",
- "unmetrics",
+ "unmetrics-plugin",
  "unnoise-core",
  "unplayer-core",
 ]
@@ -6309,7 +6318,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "unplayer",
  "unprofile-core",
  "unui-core",
@@ -6373,7 +6382,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "ungearitems",
  "unghost",
@@ -6424,7 +6433,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "undifficulty",
+ "undifficulty-core",
  "ungear",
  "ungearitems",
  "unghost",

@@ -12,7 +12,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::evidence::Evidence;
 use unghost_core::components::GhostSprite;
-use unmetrics::SendMetric;
+use unmetrics_core::SendMetric;
 use unspatial_core::Position;
 
 #[derive(Component, Debug, Clone, Default)]

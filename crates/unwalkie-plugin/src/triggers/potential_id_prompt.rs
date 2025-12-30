@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_foundation::types::evidence::Evidence;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::{PotentialIDData, PotentialIDTimer};

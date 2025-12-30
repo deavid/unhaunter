@@ -6,7 +6,7 @@ use uncore_board::behavior::component::{Door, InteractableByGhost};
 use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use uncore_foundation::random_seed;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unrender::VisibilityData;
 use unspatial_core::Position;

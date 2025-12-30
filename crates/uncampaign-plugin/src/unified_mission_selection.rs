@@ -38,7 +38,7 @@ use uncoremenu::{
     systems::{MenuEscapeEvent, MenuItemClicked},
     templates,
 };
-use undifficulty::{CurrentDifficulty, DifficultySettings};
+use undifficulty_core::{CurrentDifficulty, DifficultySettings};
 use unmaphub::badge_utils::BadgeUtils;
 
 /// Marker component for the unified Mission Select UI root node

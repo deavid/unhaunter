@@ -7,9 +7,9 @@ use uncore_assets::Maps;
 use uncore_events::events::loadlevel::LoadLevelEvent;
 use uncore_foundation::platform::plt::FONT_SCALE;
 use uncore_resources::states::AppState;
-use undifficulty::CurrentDifficulty;
-use undifficulty::DifficultySelectionState;
-use undifficulty::ManualChapterIndex;
+use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::DifficultySelectionState;
+use undifficulty_core::ManualChapterIndex;
 
 use super::draw_manual_page;
 

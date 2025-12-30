@@ -1,5 +1,5 @@
 [package]
-name = "undifficulty"
+name = "undifficulty-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

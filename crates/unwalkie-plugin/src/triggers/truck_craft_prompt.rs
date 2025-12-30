@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::AppState;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;

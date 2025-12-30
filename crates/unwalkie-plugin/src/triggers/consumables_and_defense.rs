@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use undifficulty::CurrentDifficulty;
-use undifficulty::ManualChapterIndex;
+use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::ManualChapterIndex;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};

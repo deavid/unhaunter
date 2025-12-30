@@ -10,7 +10,7 @@ authors.workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-undifficulty = { path = "../undifficulty" }
+undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-components = { path = "../uncore-components" }
 uncore-board = { path = "../uncore-board" }
@@ -19,7 +19,7 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
-unmetrics = { path = "../unmetrics" }
+unmetrics-core = { path = "../unmetrics-core" }
 unfog-core = { path = "../unfog-core" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }

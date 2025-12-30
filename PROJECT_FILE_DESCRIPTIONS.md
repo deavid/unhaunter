@@ -71,7 +71,7 @@ High-level game flow and state management.
   - `UnhaunterGamePlugin`.
 - **`uncampaign`**: Campaign progression, mission unlocking, persistent state.
   - `UnhaunterCampaignPlugin`.
-- **`undifficulty`**: Difficulty levels and configuration.
+- **`undifficulty-core`**: Difficulty levels and configuration.
   - `DifficultyStruct` (Configuration for a difficulty level).
 - **`unprofile`**: User profile management, save/load logic.
   - `PlayerProfileData` (Persistent player data), `StatisticsData`.

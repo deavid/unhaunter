@@ -10,7 +10,7 @@ use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::CollisionFieldData;
-use unmetrics::SendMetric;
+use unmetrics_core::SendMetric;
 use unspatial_core::Position;
 
 use crate::board::spritedb::SpriteDB;

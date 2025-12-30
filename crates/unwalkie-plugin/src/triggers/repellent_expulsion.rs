@@ -3,7 +3,7 @@ use bevy_platform::collections::HashSet;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::states::{AppState, GameState};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::repellentflask::RepellentFlask;

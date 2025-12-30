@@ -3,7 +3,7 @@ use bevy_platform::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::grade::Grade;
-use undifficulty::Difficulty;
+use undifficulty_core::Difficulty;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(deny_unknown_fields)]

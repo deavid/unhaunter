@@ -7,7 +7,7 @@ use uncore_events::events::truck::TruckUIEvent;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
 use uncore_resources::states::{AppState, GameState};
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;

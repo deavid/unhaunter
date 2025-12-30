@@ -1,7 +1,7 @@
 //! Difficulty Settings Trait
 //!
 //! This trait defines the interface for querying gameplay settings based on difficulty level.
-//! The implementation is in the undifficulty crate to avoid circular dependencies.
+//! The implementation is in the undifficulty-core crate to avoid circular dependencies.
 
 use crate::Difficulty;
 use crate::ManualChapterIndex;

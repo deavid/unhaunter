@@ -8,7 +8,7 @@ use uncore_foundation::types::grade::Grade;
 use uncore_foundation::utils::time::PrintingTimer;
 use uncore_resources::states::AppState;
 use uncore_resources::summary::SummaryData;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use unplayer_core::GameConfig;
 use unprofile_core::PlayerProfileData;
 use unrender::utils::light::lerp_color;

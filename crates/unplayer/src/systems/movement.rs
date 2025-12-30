@@ -7,7 +7,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::mouse::MouseVisibility;
-use undifficulty::CurrentDifficulty;
+use undifficulty_core::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
