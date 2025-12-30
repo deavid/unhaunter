@@ -26,7 +26,6 @@ unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
 unplayer = { path = "../unplayer" }
 unrender = { path = "../unrender" }
-unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

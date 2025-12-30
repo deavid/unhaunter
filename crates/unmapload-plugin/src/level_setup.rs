@@ -16,7 +16,7 @@ use uncore_board::types::tiledmap::map::MapLayerType;
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use undifficulty_core::CurrentDifficulty;
 use ungear::resources::spawner::GearSpawnerRegistry;
-use unghost::components::ghost_influence::InfluenceType;
+use unghost_core::components::InfluenceType;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender::board::spritedb::SpriteDB;
 use unrender::components::game::{GameSound, GameSprite};

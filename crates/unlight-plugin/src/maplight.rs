@@ -34,8 +34,8 @@ use ungear::components::deployedgear::DeployedGear;
 use ungear::components::playergear::PlayerGear;
 use ungear::{EquipmentPosition, Hand};
 use ungearitems_core::components::salt::UVReactive;
-use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::GhostSprite;
+use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::haunt_state::HauntState;
 use unmetrics_core::SendMetric;
 use unplayer_core::GameConfig;
@@ -54,7 +54,7 @@ pub use uncore_foundation::types::light::LightType;
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use uncore_foundation::random_seed;
 use uncore_resources::states::AppState;
-use unghost::components::ghost_orb_particle::GhostOrbParticle;
+use unghost_core::components::GhostOrbParticle;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.

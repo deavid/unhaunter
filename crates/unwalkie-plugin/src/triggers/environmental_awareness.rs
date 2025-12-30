@@ -3,7 +3,7 @@ use bevy::time::Stopwatch;
 
 use uncore_board::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
-use unghost::components::ghost_breach::GhostBreach;
+use unghost_core::components::GhostBreach;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
 

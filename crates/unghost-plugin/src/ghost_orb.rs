@@ -1,12 +1,12 @@
 use std::{f32::consts::TAU, time::Duration};
 
-use crate::components::ghost_breach::GhostBreach;
-use crate::components::ghost_orb_particle::GhostOrbParticle;
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use uncore_board::components::mapcolor::MapColor;
 use uncore_board::resources::board_data::BoardData;
 use uncore_foundation::random_seed;
+use unghost_core::components::GhostBreach;
+use unghost_core::components::GhostOrbParticle;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;

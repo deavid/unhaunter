@@ -20,7 +20,6 @@ unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }
-unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
 unfog-core = { path = "../unfog-core" }
 

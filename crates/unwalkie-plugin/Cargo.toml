@@ -25,7 +25,6 @@ unwalkie-types = { path = "../unwalkie-types" }
 unwalkie-core = { path = "../unwalkie-core" }
 unprofile-core = { path = "../unprofile-core" }
 untruck-core = { path = "../untruck-core" }
-unghost = { path = "../unghost" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
 unghost-core = { path = "../unghost-core" }

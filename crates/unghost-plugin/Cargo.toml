@@ -1,5 +1,5 @@
 [package]
-name = "unghost"
+name = "unghost-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

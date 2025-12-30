@@ -1,5 +1,3 @@
-use crate::components::ghost_behavior_dynamics::GhostBehaviorDynamics;
-use crate::components::ghost_influence::{GhostInfluence, InfluenceType};
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::Rng;
@@ -14,7 +12,9 @@ use undifficulty_core::CurrentDifficulty;
 use ungear::gear_stuff::GearStuff;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
+use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::SendMetric;

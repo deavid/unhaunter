@@ -1,9 +1,7 @@
 use bevy::prelude::*;
-use rand::Rng;
 use uncore_board::behavior;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::ghost_interaction::GhostInteractionEvent;
-use uncore_foundation::random_seed;
 
 // NOTE: Old GhostEvent enum removed - replaced by GhostInteractionEvent system
 // The new system provides more sophisticated ghost AI with personality-driven behavior
@@ -13,17 +11,12 @@ use uncore_foundation::random_seed;
 #[derive(Component)]
 pub struct FlickerTimer {
     pub timer: Timer,
-    pub flash_count: usize,
-    pub max_flashes: usize,
 }
 
 impl Default for FlickerTimer {
     fn default() -> Self {
-        let mut rng = random_seed::rng();
         Self {
             timer: Timer::from_seconds(0.1, TimerMode::Repeating),
-            flash_count: 0,
-            max_flashes: rng.random_range(3..=12), // 3-12 flashes
         }
     }
 }

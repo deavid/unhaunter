@@ -30,7 +30,6 @@ unsettings-core = { path = "../unsettings-core" }
 unlight = { path = "../unlight" }
 unprofile-core = { path = "../unprofile-core" }
 unplayer = { path = "../unplayer" }
-unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
 uncore-components = { path = "../uncore-components" }
 

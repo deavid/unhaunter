@@ -4,7 +4,7 @@ use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::{AppState, GameState};
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
-use unghost::components::ghost_breach::GhostBreach;
+use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
