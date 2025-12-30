@@ -24,7 +24,7 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unghost = { path = "../unghost" }
 unsettings = { path = "../unsettings" }
-unprofile-plugin = { path = "../unprofile-plugin" }
+unprofile-core = { path = "../unprofile-core" }
 unwalkie-core = { path = "../unwalkie-core" }
 unplayer = { path = "../unplayer" }
 unghost-core = { path = "../unghost-core" }

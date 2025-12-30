@@ -8,7 +8,7 @@ use uncore_resources::states::{AppState, MapHubState};
 use uncoremenu::components::MenuItemInteractive;
 use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
-use unprofile_plugin::data::PlayerProfileData;
+use unprofile_core::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]

@@ -10,7 +10,7 @@ use uncore_resources::states::AppState;
 use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unplayer_core::GameConfig;
-use unprofile_plugin::data::PlayerProfileData;
+use unprofile_core::PlayerProfileData;
 use unrender::utils::light::lerp_color;
 use unspatial_core::Position;
 use unui_core::components::game_ui::DamageBackground;

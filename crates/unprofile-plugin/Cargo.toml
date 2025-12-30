@@ -10,12 +10,7 @@ homepage.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
 bevy-persistent = { workspace = true }
 dirs = { workspace = true }
-
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-types = { path = "../uncore-types" }
-undifficulty = { path = "../undifficulty" }
+unprofile-core = { path = "../unprofile-core" }
 ron = { workspace = true }

@@ -20,7 +20,7 @@ uncore-components = { path = "../uncore-components" }
 uncore-board = { path = "../uncore-board" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings = { path = "../unsettings" }
-unprofile-plugin = { path = "../unprofile-plugin" }
+unprofile-core = { path = "../unprofile-core" }
 untags-core = { path = "../untags-core" }
 unrender = { path = "../unrender" }
 unghost-core = { path = "../unghost-core" }

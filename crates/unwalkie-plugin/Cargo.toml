@@ -23,7 +23,7 @@ ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkie-core = { path = "../unwalkie-core" }
-unprofile-plugin = { path = "../unprofile-plugin" }
+unprofile-core = { path = "../unprofile-core" }
 untruck-core = { path = "../untruck-core" }
 unghost = { path = "../unghost" }
 unplayer-core = { path = "../unplayer-core" }

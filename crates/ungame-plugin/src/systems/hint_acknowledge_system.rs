@@ -4,7 +4,7 @@ use uncore_resources::states::AppState;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
-use unprofile_plugin::data::PlayerProfileData;
+use unprofile_core::PlayerProfileData;
 
 fn acknowledge_blinking_gear_hint_system(
     _keyboard_input: Res<ButtonInput<KeyCode>>,

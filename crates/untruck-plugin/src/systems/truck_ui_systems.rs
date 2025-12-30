@@ -16,7 +16,7 @@ use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
-use unprofile_plugin::data::PlayerProfileData;
+use unprofile_core::PlayerProfileData;
 use unsettings::audio::AudioSettings;
 
 // Component to mark the progress bar for hold buttons

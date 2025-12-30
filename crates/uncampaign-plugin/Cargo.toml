@@ -17,7 +17,7 @@ uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 uncoremenu = { path = "../uncoremenu" }
-unprofile-plugin = { path = "../unprofile-plugin" }
+unprofile-core = { path = "../unprofile-core" }
 unmaphub = { path = "../unmaphub" }
 
 bevy = { workspace = true }

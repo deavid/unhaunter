@@ -5588,7 +5588,7 @@ dependencies = [
  "uncoremenu",
  "undifficulty",
  "unmaphub",
- "unprofile-plugin",
+ "unprofile-core",
 ]
 
 [[package]]
@@ -5689,7 +5689,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "unprofile-plugin",
+ "unprofile-core",
 ]
 
 [[package]]
@@ -5774,7 +5774,7 @@ dependencies = [
  "unpicking-core",
  "unplayer",
  "unplayer-core",
- "unprofile-plugin",
+ "unprofile-core",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -5799,7 +5799,7 @@ dependencies = [
  "undifficulty",
  "unghost-core",
  "unplayer-core",
- "unprofile-plugin",
+ "unprofile-core",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -5905,6 +5905,7 @@ dependencies = [
  "unpicking-plugin",
  "unplayer",
  "unplayer-core",
+ "unprofile-core",
  "unprofile-plugin",
  "unrender",
  "unroot-plugin",
@@ -6094,7 +6095,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "uncoremenu",
- "unprofile-plugin",
+ "unprofile-core",
  "unsettings",
 ]
 
@@ -6194,7 +6195,7 @@ dependencies = [
  "uninteraction-core",
  "unnavigation-core",
  "unplayer-core",
- "unprofile-plugin",
+ "unprofile-core",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -6214,18 +6215,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "unprofile-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "serde",
+ "uncore-foundation",
+ "undifficulty",
+]
+
+[[package]]
 name = "unprofile-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "bevy_platform",
  "dirs",
  "ron 0.12.0",
- "serde",
- "uncore-foundation",
- "uncore-types",
- "undifficulty",
+ "unprofile-core",
 ]
 
 [[package]]
@@ -6303,7 +6311,7 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "unplayer",
- "unprofile-plugin",
+ "unprofile-core",
  "unui-core",
 ]
 
@@ -6372,7 +6380,7 @@ dependencies = [
  "unghost-core",
  "unplayer",
  "unplayer-core",
- "unprofile-plugin",
+ "unprofile-core",
  "unrender",
  "unsettings",
  "untruck-core",
@@ -6422,7 +6430,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unplayer-core",
- "unprofile-plugin",
+ "unprofile-core",
  "unrender",
  "unsettings",
  "unspatial-core",
