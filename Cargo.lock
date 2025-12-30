@@ -5779,7 +5779,7 @@ dependencies = [
  "unsettings",
  "unspatial-core",
  "untags",
- "unui",
+ "unui-core",
 ]
 
 [[package]]
@@ -6199,7 +6199,7 @@ dependencies = [
  "unsettings",
  "unspatial-core",
  "untags",
- "unui",
+ "unui-core",
 ]
 
 [[package]]
@@ -6304,7 +6304,7 @@ dependencies = [
  "undifficulty",
  "unplayer",
  "unprofile",
- "unui",
+ "unui-core",
 ]
 
 [[package]]
@@ -6376,12 +6376,12 @@ dependencies = [
  "unrender",
  "unsettings",
  "untruck-core",
- "unui",
+ "unui-core",
  "unwalkiecore",
 ]
 
 [[package]]
-name = "unui"
+name = "unui-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6413,7 +6413,7 @@ dependencies = [
  "unsettings",
  "unspatial-core",
  "untruck-core",
- "unui",
+ "unui-core",
  "unwalkie_types",
  "unwalkiecore",
 ]

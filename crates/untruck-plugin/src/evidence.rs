@@ -9,7 +9,7 @@ use ungear::resources::looking_gear::LookingGear;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unprofile::data::PlayerProfileData;
-use unui::components::game_ui::EvidenceUI;
+use unui_core::components::game_ui::EvidenceUI;
 
 pub fn update_evidence_ui(
     gc: Res<GameConfig>,

@@ -17,7 +17,7 @@ uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-unui = { path = "../unui" }
+unui-core = { path = "../unui-core" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }

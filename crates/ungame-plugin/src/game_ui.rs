@@ -9,7 +9,7 @@ use uncore_resources::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unsettings::game::GameplaySettings;
-use unui::components::game_ui::{
+use unui_core::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
 };

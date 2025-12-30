@@ -1,5 +1,5 @@
 [package]
-name = "unui"
+name = "unui-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

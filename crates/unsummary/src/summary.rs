@@ -13,7 +13,7 @@ use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;
 use unprofile::data::PlayerProfileData;
-use unui::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
+use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
 pub(crate) fn setup(mut commands: Commands) {
     // ui camera

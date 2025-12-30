@@ -19,7 +19,7 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 unnavigation-core = { path = "../unnavigation-core" }
-unui = { path = "../unui" }
+unui-core = { path = "../unui-core" }
 untags = { path = "../untags" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }

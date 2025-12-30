@@ -45,7 +45,7 @@ members = [
     "crates/untruck-core",
     "crates/untruck-plugin",
     "crates/untmxmap-plugin",
-    "crates/unui",
+    "crates/unui-core",
     "crates/unwalkie-plugin",
     "crates/unwalkiecore",
 ]

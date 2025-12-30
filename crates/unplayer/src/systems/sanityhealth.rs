@@ -13,7 +13,7 @@ use unplayer_core::GameConfig;
 use unprofile::data::PlayerProfileData;
 use unrender::utils::light::lerp_color;
 use unspatial_core::Position;
-use unui::components::game_ui::DamageBackground;
+use unui_core::components::game_ui::DamageBackground;
 
 const DEBUG_PLAYER: bool = false;
 
