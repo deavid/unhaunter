@@ -22,7 +22,7 @@ use unrender::board::spritedb::SpriteDB;
 use unrender::components::game::{GameSound, GameSprite};
 use unrender::materials::CustomMaterial1;
 use unspatial_core::Position;
-use untiled::MapTileSetDb;
+use untiled_core::MapTileSetDb;
 
 use crate::entity_spawning;
 use crate::sprite_db;

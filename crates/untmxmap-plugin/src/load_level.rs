@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use uncore_assets::Maps;
 use uncore_assets::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
-use untiled::MapTileSetDb;
+use untiled_core::MapTileSetDb;
 
 fn load_level_handler(
     mut ev: MessageReader<LoadLevelEvent>,

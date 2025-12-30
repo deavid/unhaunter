@@ -41,7 +41,7 @@ members = [
     "crates/unspatial-core",
     "crates/unsummary",
     "crates/untags-core",
-    "crates/untiled",
+    "crates/untiled-core",
     "crates/untruck-core",
     "crates/untruck-plugin",
     "crates/untmxmap-plugin",
@@ -139,7 +139,7 @@ unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
 unpicking-core = { path = "crates/unpicking-core" }
 unroot-plugin = { path = "crates/unroot-plugin" }
-untiled = { path = "crates/untiled" }
+untiled-core = { path = "crates/untiled-core" }
 untruck-plugin = { path = "crates/untruck-plugin" }
 untruck-core = { path = "crates/untruck-core" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
