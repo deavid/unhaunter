@@ -12,9 +12,9 @@ use ungear::Hand;
 use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;
 use ungear::{GearKind, GearSpriteID};
-use unplayer::components::player_inventory::{Inventory, InventoryNext};
-use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
+use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{Inventory, InventoryNext};
 use unrender::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]

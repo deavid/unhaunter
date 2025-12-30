@@ -6,8 +6,8 @@ use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::GameState;
-use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
+use unplayer_core::components::PlayerSprite;
 use unrender::materials::UIPanelMaterial;
 use unspatial_core::{Direction, Position};
 

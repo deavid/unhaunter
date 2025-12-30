@@ -11,7 +11,7 @@ use uncore_resources::states::AppState;
 use uncore_resources::states::GameState;
 use uncore_resources::summary::SummaryData;
 use undifficulty_core::CurrentDifficulty;
-use unplayer::components::player_sprite::PlayerSprite;
+use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 

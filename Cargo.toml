@@ -35,7 +35,7 @@ members = [
     "crates/unnoise-core",
     "crates/unpicking-plugin",
     "crates/unpicking-core",
-    "crates/unplayer",
+    "crates/unplayer-plugin",
     "crates/unplayer-core",
     "crates/unprofile-core",
     "crates/unprofile-plugin",
@@ -135,7 +135,7 @@ unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
 unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
-unplayer = { path = "crates/unplayer" }
+unplayer-plugin = { path = "crates/unplayer-plugin" }
 unplayer-core = { path = "crates/unplayer-core" }
 unprofile-core = { path = "crates/unprofile-core" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }

@@ -20,4 +20,4 @@ uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 bevy-persistent = { workspace = true }
 unprofile-core = { path = "../unprofile-core" }
-unplayer = { path = "../unplayer" }
+unplayer-core = { path = "../unplayer-core" }

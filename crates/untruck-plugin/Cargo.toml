@@ -25,7 +25,6 @@ ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unwalkie-core = { path = "../unwalkie-core" }
-unplayer = { path = "../unplayer" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

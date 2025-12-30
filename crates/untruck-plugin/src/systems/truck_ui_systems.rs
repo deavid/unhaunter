@@ -14,8 +14,8 @@ use ungear::components::playergear::PlayerGear;
 use ungear::resources::spawner::GearSpawnerRegistry;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
+use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
 

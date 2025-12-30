@@ -29,7 +29,6 @@ ungear = { path = "../ungear" }
 unsettings-core = { path = "../unsettings-core" }
 unlight-plugin = { path = "../unlight-plugin" }
 unprofile-core = { path = "../unprofile-core" }
-unplayer = { path = "../unplayer" }
 unghost-core = { path = "../unghost-core" }
 uncore-components = { path = "../uncore-components" }
 

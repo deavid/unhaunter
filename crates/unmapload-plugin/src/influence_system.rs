@@ -30,7 +30,7 @@ fn assign_ghost_influence_system(
     mut commands: Commands,
     marker_query: Query<(Entity, &AssignGhostInfluenceMarker)>,
     ghost_spawn_query: Query<&Position, With<unghost_core::components::GhostBreach>>,
-    player_spawn_query: Query<&Position, With<unplayer::components::player_sprite::PlayerSprite>>,
+    player_spawn_query: Query<&Position, With<unplayer_core::components::PlayerSprite>>,
     position_query: Query<&Position>,
     roomdb: Res<RoomDB>,
     board_data: Res<BoardData>,

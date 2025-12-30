@@ -1,36 +1,34 @@
 [package]
-name = "unmapload-plugin"
+name = "unplayer-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
-homepage.workspace = true
+
 
 [dependencies]
 
-unspatial-core = { path = "../unspatial-core" }
-uncore-assets = { path = "../uncore-assets" }
 undifficulty-core = { path = "../undifficulty-core" }
+uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-untiled-core = { path = "../untiled-core" }
+uncore-components = { path = "../uncore-components" }
 unnavigation-core = { path = "../unnavigation-core" }
-unlight = { path = "../unlight" }
+unui-core = { path = "../unui-core" }
+untags-core = { path = "../untags-core" }
+unplayer-core = { path = "../unplayer-core" }
+unrender = { path = "../unrender" }
+uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
 unsettings-core = { path = "../unsettings-core" }
-untags-core = { path = "../untags-core" }
-unplayer = { path = "../unplayer" }
-unrender = { path = "../unrender" }
-unghost-core = { path = "../unghost-core" }
+unprofile-core = { path = "../unprofile-core" }
+unspatial-core = { path = "../unspatial-core" }
 
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
-rand = { workspace = true }
-ordered-float = { workspace = true }
-ndarray = { workspace = true }
+bevy-persistent = { workspace = true }

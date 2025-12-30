@@ -3,7 +3,7 @@ use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear::GearSpriteID;
-use unplayer::components::player_inventory::{Inventory, InventoryNext, InventoryStats};
+use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Leftmost side panel - inventory
