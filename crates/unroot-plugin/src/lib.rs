@@ -25,7 +25,7 @@ impl Plugin for UnhaunterRootPlugin {
         unmetrics::app_setup(app);
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
-        app.init_resource::<unnoise::PerlinNoise>();
+        app.init_resource::<unnoise_core::PerlinNoise>();
         app.init_resource::<PlayerInput>();
         app.add_message::<OnScreenHintEvent>();
 

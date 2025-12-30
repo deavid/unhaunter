@@ -4,7 +4,7 @@ use uncore_foundation::types::evidence::Evidence;
 use undifficulty::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
-use unnoise::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
+use unnoise_core::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 
 /// Helper function to calculate a noise-based multiplier value
 ///

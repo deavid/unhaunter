@@ -13,7 +13,7 @@ uncore-resources = { path = "../uncore-resources" }
 uncore-types = { path = "../uncore-types" }
 uncore-events = { path = "../uncore-events" }
 unghost-core = { path = "../unghost-core" }
-unnoise = { path = "../unnoise" }
+unnoise-core = { path = "../unnoise-core" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics = { path = "../unmetrics" }
 bevy = { workspace = true }

@@ -29,7 +29,7 @@ members = [
     "crates/unmetrics",
     "crates/unnavigation-core",
     "crates/unnpc-plugin",
-    "crates/unnoise",
+    "crates/unnoise-core",
     "crates/unpicking-plugin",
     "crates/unpicking-core",
     "crates/unplayer",

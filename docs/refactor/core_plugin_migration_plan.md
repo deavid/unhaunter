@@ -56,7 +56,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unmenusettings` | Yes | No | **DONE** | `unmenusettings-plugin` | Leaf node. |
 | `unmetrics` | No | Yes | **SPLIT** | `unmetrics-core`, `unmetrics-plugin` | Shared trait + system. |
 | `unnavigation` | No | Yes | **DONE** | `unnavigation-core` | Shared data. |
-| `unnoise` | No | Yes | **RENAME** | `unnoise-core` | Shared data. |
+| `unnoise` | No | Yes | **DONE** | `unnoise-core` | Shared data. |
 | `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
 | `unpicking` | Yes | No | **DONE** | `unpicking-core`, `unpicking-plugin` | Leaf node. |
 | `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer` | `unplayer-core` exists. |

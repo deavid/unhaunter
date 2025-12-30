@@ -5721,7 +5721,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unmetrics",
- "unnoise",
+ "unnoise-core",
  "unplayer-core",
  "unrender",
  "unspatial",
@@ -5745,7 +5745,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unmetrics",
- "unnoise",
+ "unnoise-core",
  "unplayer-core",
  "unrender",
  "unspatial",
@@ -5848,7 +5848,7 @@ dependencies = [
  "unghost-core",
  "uninteraction-core",
  "unmetrics",
- "unnoise",
+ "unnoise-core",
  "unplayer-core",
  "unrender",
  "unspatial",
@@ -6133,7 +6133,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unnoise"
+name = "unnoise-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6258,7 +6258,7 @@ dependencies = [
  "uncore-types",
  "unghost-core",
  "unmetrics",
- "unnoise",
+ "unnoise-core",
  "unplayer-core",
 ]
 
