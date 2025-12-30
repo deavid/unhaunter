@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unnavigation::components::{
+use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };

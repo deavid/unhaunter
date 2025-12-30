@@ -1,5 +1,5 @@
 [package]
-name = "unnavigation"
+name = "unnavigation-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

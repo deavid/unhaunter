@@ -8,7 +8,9 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::mouse::MouseVisibility;
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unnavigation::components::waypoint::{Waypoint, WaypointOwner, WaypointQueue, WaypointType};
+use unnavigation_core::components::waypoint::{
+    Waypoint, WaypointOwner, WaypointQueue, WaypointType,
+};
 use unplayer_core::resources::PlayerInput;
 use unrender::VisibilityData;
 use unrender::components::game::GameSprite;

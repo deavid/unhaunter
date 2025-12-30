@@ -10,7 +10,7 @@ use uncore_resources::mouse::MouseVisibility;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unnavigation::collision_handler::CollisionHandler;
+use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
 use unrender::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial::{Direction, Position};

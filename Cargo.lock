@@ -6074,7 +6074,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unlight-plugin",
- "unnavigation",
+ "unnavigation-core",
  "unplayer",
  "unrender",
  "unsettings",
@@ -6123,7 +6123,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unnavigation"
+name = "unnavigation-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6192,7 +6192,7 @@ dependencies = [
  "undifficulty",
  "ungear",
  "uninteraction-core",
- "unnavigation",
+ "unnavigation-core",
  "unplayer-core",
  "unprofile",
  "unrender",

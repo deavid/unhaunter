@@ -27,7 +27,7 @@ members = [
     "crates/unmenu-plugin",
     "crates/unmenusettings-plugin",
     "crates/unmetrics",
-    "crates/unnavigation",
+    "crates/unnavigation-core",
     "crates/unnpc-plugin",
     "crates/unnoise",
     "crates/unpicking-plugin",
