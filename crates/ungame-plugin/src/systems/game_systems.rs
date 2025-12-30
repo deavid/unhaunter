@@ -5,7 +5,7 @@ use uncore_resources::states::{AppState, GameState};
 use unpicking_core::CustomSpritePickingCamera;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unrender::components::game::{GameSound, GameSprite};
+use unrender_std::components::game::{GameSound, GameSprite};
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::{Direction, Position};

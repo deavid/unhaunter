@@ -4,7 +4,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use bevy::prelude::*;
 use uncore_board::behavior::{Behavior, Orientation, component::Stairs};
 use uncore_board::resources::board_data::BoardData;
-use unrender::VisibilityData;
+use unrender_std::VisibilityData;
 use unspatial_core::{BoardPosition, Position};
 
 /// A* pathfinding node for the priority queue

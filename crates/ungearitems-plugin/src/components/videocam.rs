@@ -3,8 +3,8 @@ use rand::Rng;
 use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
-use ungear::gear_stuff::GearStuff;
-use ungear::types::gear::utils::on_off;
+use ungear_core::gear_stuff::GearStuff;
+use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::videocam::Videocam;
 use unspatial_core::Position;
 

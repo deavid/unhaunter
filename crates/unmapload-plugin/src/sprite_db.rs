@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use uncore_board::behavior::{Behavior, SpriteConfig};
 use uncore_board::types::quadcc::QuadCC;
-use unrender::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
+use unrender_std::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
 use untiled_core::AtlasData;
 
 use crate::level_setup::LoadLevelSystemParam;

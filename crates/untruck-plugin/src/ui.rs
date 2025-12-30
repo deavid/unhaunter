@@ -10,8 +10,8 @@ use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
-use ungear::resources::spawner::GearSpawnerRegistry;
-use unrender::materials::UIPanelMaterial;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
+use unrender_std::materials::UIPanelMaterial;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
 pub trait FromTab {

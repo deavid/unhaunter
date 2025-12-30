@@ -2,7 +2,7 @@ use uncore_components::{
     Battery, Electronic, GearSprite, ItemName, LightEmitter, StatusText, Toggleable, Triggered,
 };
 use uncore_foundation::random_seed;
-use ungear::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearStuff;
 use unspatial_core::Position;
 
 use bevy::prelude::*;

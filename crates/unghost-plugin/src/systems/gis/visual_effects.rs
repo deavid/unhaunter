@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_foundation::random_seed;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::Position;
 
 use crate::components::interaction::{

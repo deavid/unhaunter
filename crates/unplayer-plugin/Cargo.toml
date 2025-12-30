@@ -22,9 +22,9 @@ unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }

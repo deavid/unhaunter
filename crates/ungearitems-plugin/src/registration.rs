@@ -4,7 +4,7 @@ use uncore_components::*;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::gear::GearSpriteID;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind};
-use ungear::resources::spawner::{GearMetadata, GearSpawnerRegistry};
+use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter as EMFMeterInternal;

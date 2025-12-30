@@ -15,12 +15,12 @@ use uncore_board::types::fielddata::{CollisionFieldData, LightFieldData};
 use uncore_board::types::tiledmap::map::MapLayerType;
 use uncore_events::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use undifficulty_core::CurrentDifficulty;
-use ungear::resources::spawner::GearSpawnerRegistry;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unghost_core::components::InfluenceType;
 use unghost_core::resources::haunt_state::HauntState;
-use unrender::board::spritedb::SpriteDB;
-use unrender::components::game::{GameSound, GameSprite};
-use unrender::materials::CustomMaterial1;
+use unrender_std::board::spritedb::SpriteDB;
+use unrender_std::components::game::{GameSound, GameSprite};
+use unrender_std::materials::CustomMaterial1;
 use unspatial_core::Position;
 use untiled_core::MapTileSetDb;
 

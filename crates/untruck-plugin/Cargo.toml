@@ -19,8 +19,8 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 unplayer-core = { path = "../unplayer-core" }
-unrender = { path = "../unrender" }
-ungear = { path = "../ungear" }
+unrender-std = { path = "../unrender-std" }
+ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }

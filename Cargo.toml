@@ -13,7 +13,8 @@ members = [
     "crates/undifficulty-core",
     "crates/unfog-plugin",
     "crates/unfog-core",
-    "crates/ungear",
+    "crates/ungear-core",
+    "crates/ungear-plugin",
     "crates/ungearitems-core",
     "crates/ungearitems-plugin",
     "crates/ungame-plugin",
@@ -39,7 +40,8 @@ members = [
     "crates/unplayer-core",
     "crates/unprofile-core",
     "crates/unprofile-plugin",
-    "crates/unrender",
+    "crates/unrender-std",
+    "crates/unrender-plugin",
     "crates/unroot-plugin",
     "crates/unsettings-core",
     "crates/unsettings-plugin",
@@ -124,7 +126,8 @@ uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-assets = { path = "crates/uncore-assets" }
 uncore-resources = { path = "crates/uncore-resources" }
 unfog-plugin = { path = "crates/unfog-plugin" }
-ungear = { path = "crates/ungear" }
+ungear-core = { path = "crates/ungear-core" }
+ungear-plugin = { path = "crates/ungear-plugin" }
 ungearitems-core = { path = "crates/ungearitems-core" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 unghost-plugin = { path = "crates/unghost-plugin" }
@@ -141,7 +144,8 @@ unprofile-core = { path = "crates/unprofile-core" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 unsettings-plugin = { path = "crates/unsettings-plugin" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
-unrender = { path = "crates/unrender" }
+unrender-std = { path = "crates/unrender-std" }
+unrender-plugin = { path = "crates/unrender-plugin" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
 unpicking-core = { path = "crates/unpicking-core" }

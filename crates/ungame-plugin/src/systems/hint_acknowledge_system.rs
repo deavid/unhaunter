@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_resources::states::AppState;
-use ungear::components::playergear::PlayerGear;
-use ungear::resources::looking_gear::LookingGear;
+use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 

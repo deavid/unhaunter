@@ -7,14 +7,14 @@ use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
 use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
 use uncore_foundation::utils::time::format_time;
-use ungear::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearStuff;
 pub use ungearitems_core::components::sage::{
     SageBundleData, SageSmokeParticle, SmokeParticleTimer,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics_core::SendMetric;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::{Direction, Position};
 
 pub fn update_sage(

@@ -16,9 +16,9 @@ uncore-board = { path = "../uncore-board" }
 uncore-types = { path = "../uncore-types" }
 uncore-components = { path = "../uncore-components" }
 uncore-resources = { path = "../uncore-resources" }
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
 unmetrics-core = { path = "../unmetrics-core" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 unplayer-core = { path = "../unplayer-core" }

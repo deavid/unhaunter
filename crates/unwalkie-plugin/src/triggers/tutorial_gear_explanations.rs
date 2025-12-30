@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use uncore_components::Toggleable;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
-use ungear::GearKind;
-use ungear::components::playergear::PlayerGear;
+use ungear_core::GearKind;
+use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 

@@ -6,7 +6,7 @@ use uncore_board::behavior::Behavior;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unsettings_core::game::GameplaySettings;
 use unui_core::components::game_ui::{

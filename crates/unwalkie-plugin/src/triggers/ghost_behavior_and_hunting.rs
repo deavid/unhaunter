@@ -1,8 +1,8 @@
 use bevy::{prelude::*, time::Stopwatch};
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use ungear::GearKind;
-use ungear::components::playergear::PlayerGear;
+use ungear_core::GearKind;
+use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;

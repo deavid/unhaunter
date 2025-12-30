@@ -1,13 +1,13 @@
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
-use ungear::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearStuff;
 
 use bevy::prelude::*;
 use rand::Rng;
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::gear::GearSpriteID;
-use ungear::types::gear::utils::on_off;
+use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::spiritbox::SpiritBox;
 use unspatial_core::Position;
 

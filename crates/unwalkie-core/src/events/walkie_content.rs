@@ -18,7 +18,7 @@ use crate::{
 use bevy::log::warn;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_types::Difficulty;
-use ungear::GearKind;
+use ungear_core::GearKind;
 use unwalkie_types::VoiceLineData;
 
 struct NullVoice;

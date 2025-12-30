@@ -21,11 +21,12 @@ uncore-resources = { path = "../uncore-resources" }
 untiled-core = { path = "../untiled-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unlight-plugin = { path = "../unlight-plugin" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
+unrender-plugin = { path = "../unrender-plugin" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

@@ -4,8 +4,8 @@ use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::roomchanged::InteractionExecutionType;
 use uncore_events::events::sound::SoundEvent;
 use uncore_resources::states::GameState;
-use unrender::board::spritedb::SpriteDB;
-use unrender::materials::CustomMaterial1;
+use unrender_std::board::spritedb::SpriteDB;
+use unrender_std::materials::CustomMaterial1;
 use unspatial_core::{BoardPosition, Position};
 
 use bevy::ecs::system::SystemParam;

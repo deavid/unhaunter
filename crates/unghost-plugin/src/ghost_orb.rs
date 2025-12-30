@@ -8,8 +8,8 @@ use uncore_foundation::random_seed;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::GhostOrbParticle;
 use unghost_core::resources::haunt_state::HauntState;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)

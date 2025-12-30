@@ -1,6 +1,6 @@
 use uncore_components::{GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
-use ungear::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearStuff;
 
 use crate::metrics;
 
@@ -11,7 +11,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::gear::GearSpriteID;
-use ungear::types::gear::utils::on_off;
+use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::recorder::Recorder;
 use unghost_core::components::GhostSprite;
 use unmetrics_core::SendMetric;

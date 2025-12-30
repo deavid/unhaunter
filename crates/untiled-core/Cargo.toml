@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 tiled = { workspace = true }

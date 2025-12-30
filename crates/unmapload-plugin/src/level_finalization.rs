@@ -18,8 +18,8 @@ use uncore_foundation::{celsius_to_kelvin, random_seed};
 use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
 use unlight_plugin::prebake_lighting_field;
-use unrender::board::tiledata::PreMesh;
-use unrender::plugin::rebuild_collision_data;
+use unrender_plugin::plugin::rebuild_collision_data;
+use unrender_std::board::tiledata::PreMesh;
 use unspatial_core::{BoardPosition, Position};
 
 /// Processes level completion after the level is fully loaded.

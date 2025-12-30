@@ -21,11 +21,12 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
+unrender-plugin = { path = "../unrender-plugin" }
 unplayer-core = { path = "../unplayer-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 unlight-plugin = { path = "../unlight-plugin" }
 unprofile-core = { path = "../unprofile-core" }

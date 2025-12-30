@@ -5,14 +5,14 @@ use uncore_board::components::mapcolor::MapColor;
 use uncore_board::resources::board_data::BoardData;
 use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
+use uncore_foundation::types::gear::EquipmentPosition;
 use undifficulty_core::CurrentDifficulty;
-use ungear::EquipmentPosition;
-use ungear::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearStuff;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unmetrics_core::SendMetric;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::{BoardPosition, Direction, Position};
 
 use crate::metrics;

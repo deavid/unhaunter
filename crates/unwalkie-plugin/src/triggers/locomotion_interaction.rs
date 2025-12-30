@@ -6,7 +6,7 @@ use uncore_board::behavior::component::Door;
 use uncore_board::behavior::{Behavior, TileState};
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_resources::states::{AppState, GameState};
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;

@@ -5,7 +5,7 @@ use bevy::{
 };
 use uncore_board::behavior::component::Interactive;
 use uncore_components::Toggleable;
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 
 pub(crate) fn mouse_right_click_gear_system(

@@ -11,7 +11,7 @@ use uncore_resources::summary::SummaryData;
 use undifficulty_core::CurrentDifficulty;
 use unplayer_core::GameConfig;
 use unprofile_core::PlayerProfileData;
-use unrender::utils::light::lerp_color;
+use unrender_std::utils::light::lerp_color;
 use unspatial_core::Position;
 use unui_core::components::game_ui::DamageBackground;
 

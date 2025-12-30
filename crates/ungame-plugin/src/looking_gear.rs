@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use uncore_resources::states::AppState;
-use ungear::resources::looking_gear::LookingGear;
+use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 

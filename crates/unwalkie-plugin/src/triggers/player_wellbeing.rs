@@ -7,7 +7,7 @@ use uncore_resources::states::{AppState, GameState};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
-use unrender::components::light::LightLevel;
+use unrender_std::components::light::LightLevel;
 use unspatial_core::Position;
 use unwalkie_core::{WalkieEvent, WalkiePlay}; // Corrected import for LightLevel
 

@@ -1,5 +1,5 @@
 [package]
-name = "ungear"
+name = "ungear-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,7 +8,8 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-
+ungear-core = { path = "../ungear-core" }
+unrender-std = { path = "../unrender-std" }
 unspatial-core = { path = "../unspatial-core" }
 uncore-assets = { path = "../uncore-assets" }
 undifficulty-core = { path = "../undifficulty-core" }
@@ -22,7 +23,6 @@ unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 untags-core = { path = "../untags-core" }
-unrender = { path = "../unrender" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

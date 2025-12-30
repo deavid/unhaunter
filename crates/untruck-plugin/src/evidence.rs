@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_components::EvidenceSensor;
 use uncore_resources::states::{AppState, GameState};
-use ungear::components::playergear::PlayerGear;
-use ungear::resources::looking_gear::LookingGear;
+use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
@@ -24,8 +24,8 @@ pub fn update_evidence_ui(
         if gc.player_id == ps.id {
             for txt_entity in qs.iter_mut() {
                 let hand_entity = match looking_gear.hand() {
-                    ungear::Hand::Left => playergear.left_hand,
-                    ungear::Hand::Right => playergear.right_hand,
+                    ungear_core::Hand::Left => playergear.left_hand,
+                    ungear_core::Hand::Right => playergear.right_hand,
                 };
                 let o_evidence = hand_entity
                     .and_then(|e| q_sensor.get(e).ok())
@@ -76,8 +76,8 @@ pub fn keyboard_evidence(
             continue;
         }
         let hand_entity = match looking_gear.hand() {
-            ungear::Hand::Left => playergear.left_hand,
-            ungear::Hand::Right => playergear.right_hand,
+            ungear_core::Hand::Left => playergear.left_hand,
+            ungear_core::Hand::Right => playergear.right_hand,
         };
         let Some(evidence) = hand_entity
             .and_then(|e| q_sensor.get(e).ok())

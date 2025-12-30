@@ -5,7 +5,7 @@ use uncore_components::EvidenceSensor;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::{AppState, GameState};
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;

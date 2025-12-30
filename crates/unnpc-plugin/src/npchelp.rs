@@ -8,7 +8,7 @@ use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::GameState;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unrender::materials::UIPanelMaterial;
+use unrender_std::materials::UIPanelMaterial;
 use unspatial_core::{Direction, Position};
 
 #[derive(Debug, Component)]

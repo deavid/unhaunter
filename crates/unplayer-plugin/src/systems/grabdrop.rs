@@ -6,12 +6,12 @@ use uncore_board::components::mapcolor::MapColor;
 use uncore_board::resources::board_data::BoardData;
 use uncore_components::Triggered;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind, Hand};
-use ungear::components::deployedgear::DeployedGear;
-use ungear::components::playergear::PlayerGear;
-use ungear::resources::spawner::GearMarker;
+use ungear_core::components::deployedgear::DeployedGear;
+use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::spawner::GearMarker;
 use unplayer_core::components::HeldObject;
-use unrender::components::game::GameSprite;
-use unrender::components::sprite_type::SpriteType;
+use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::Position;
 
 fn sync_held_gear_position(

@@ -13,7 +13,7 @@ unwalkie-types = { path = "../unwalkie-types" }
 
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

@@ -8,7 +8,7 @@ use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInter
 use uncore_foundation::random_seed;
 use undifficulty_core::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
-use unrender::VisibilityData;
+use unrender_std::VisibilityData;
 use unspatial_core::Position;
 use untags_core::PlayerTag;
 

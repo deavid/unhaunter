@@ -8,14 +8,14 @@ use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
 use uncore_resources::states::GameState;
 use undifficulty_core::CurrentDifficulty;
-use ungear::Hand;
-use ungear::components::playergear::PlayerGear;
-use ungear::resources::spawner::GearSpawnerRegistry;
-use ungear::{GearKind, GearSpriteID};
+use ungear_core::Hand;
+use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
+use ungear_core::{GearKind, GearSpriteID};
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
-use unrender::materials::UIPanelMaterial;
+use unrender_std::materials::UIPanelMaterial;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {
@@ -309,8 +309,8 @@ fn update_loadout_buttons(
         match lbut {
             LoadoutButton::Inventory(inv) => {
                 let entity = match inv.hand {
-                    ungear::Hand::Left => _p_gear.left_hand,
-                    ungear::Hand::Right => _p_gear.right_hand,
+                    ungear_core::Hand::Left => _p_gear.left_hand,
+                    ungear_core::Hand::Right => _p_gear.right_hand,
                 };
                 entity
                     .and_then(|e| q_gearkind.get(e).ok())
@@ -332,8 +332,8 @@ fn update_loadout_buttons(
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                ungear::Hand::Left => "(Click to unequip Left Hand item)",
-                ungear::Hand::Right => "(Click to unequip Right Hand item)",
+                ungear_core::Hand::Left => "(Click to unequip Left Hand item)",
+                ungear_core::Hand::Right => "(Click to unequip Right Hand item)",
             },
             LoadoutButton::InventoryNext(_) => "(Click to unequip Backpack item)",
             LoadoutButton::Van(_) => "(Click to equip item)",

@@ -12,8 +12,8 @@ use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unplayer_core::resources::PlayerInput;
-use unrender::VisibilityData;
-use unrender::components::game::GameSprite;
+use unrender_std::VisibilityData;
+use unrender_std::components::game::GameSprite;
 use unspatial_core::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use untags_core::game::GCameraArena;
 

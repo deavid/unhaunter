@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::types::gear::GearSpriteID;
-use ungear::types::gear::utils::on_off;
+use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::ionmeter::IonMeter;
 
 pub fn update_ionmeter(

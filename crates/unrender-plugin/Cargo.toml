@@ -1,0 +1,23 @@
+[package]
+name = "unrender-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+unrender-std = { path = "../unrender-std" }
+bevy = { workspace = true }
+serde = { workspace = true }
+uncore-foundation = { path = "../uncore-foundation" }
+uncore-types = { path = "../uncore-types" }
+unspatial-core = { path = "../unspatial-core" }
+uncore-board = { path = "../uncore-board" }
+uncore-resources = { path = "../uncore-resources" }
+unplayer-core = { path = "../unplayer-core" }
+unmetrics-core = { path = "../unmetrics-core" }
+untags-core = { path = "../untags-core" }
+bevy_platform = { workspace = true }
+ndarray = { workspace = true }

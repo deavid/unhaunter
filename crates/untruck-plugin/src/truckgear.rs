@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use uncore_events::events::loadlevel::LevelLoadedEvent;
-use ungear::resources::spawner::GearSpawnerRegistry;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
 use untruck_core::truckgear::TruckGear;
 
 pub fn app_setup(app: &mut App) {

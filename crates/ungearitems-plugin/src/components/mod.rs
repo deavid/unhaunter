@@ -19,4 +19,4 @@ pub mod uvtorch;
 pub mod videocam;
 
 pub use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
-pub use ungear::types::gear::utils::on_off;
+pub use ungear_core::types::gear::utils::on_off;

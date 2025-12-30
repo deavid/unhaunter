@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use uncore_board::resources::board_data::BoardData;
 use uncore_components::{EvidenceSensor, Toggleable};
 use uncore_foundation::types::evidence::Evidence;
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unspatial_core::Position;

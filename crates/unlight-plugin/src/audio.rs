@@ -7,8 +7,8 @@ use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use uncore_foundation::types::sound::SoundType;
 use uncore_resources::states::AppState;
 use unplayer_core::components::PlayerSprite;
-use unrender::VisibilityData;
-use unrender::components::game::GameSound;
+use unrender_std::VisibilityData;
+use unrender_std::components::game::GameSound;
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::{BoardPosition, Position};
 

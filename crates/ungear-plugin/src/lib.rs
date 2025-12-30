@@ -12,14 +12,11 @@
 //!
 //! The gear system allows players to equip and use various tools to investigate
 //! paranormal activity, gather evidence, and ultimately banish ghosts.
-pub mod components;
-pub mod gear_stuff;
 pub mod plugin;
-pub mod resources;
 pub mod systems;
-pub mod types;
 
-pub use types::gear::SpriteID;
 pub use uncore_foundation::types::gear::{
     EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,
 };
+pub use ungear_core::types::gear::SpriteID;
+pub use ungear_core::*;

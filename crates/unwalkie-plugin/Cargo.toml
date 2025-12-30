@@ -18,7 +18,7 @@ uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
-ungear = { path = "../ungear" }
+ungear-core = { path = "../ungear-core" }
 ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
 unwalkie-types = { path = "../unwalkie-types" }
@@ -26,7 +26,7 @@ unwalkie-core = { path = "../unwalkie-core" }
 unprofile-core = { path = "../unprofile-core" }
 untruck-core = { path = "../untruck-core" }
 unplayer-core = { path = "../unplayer-core" }
-unrender = { path = "../unrender" }
+unrender-std = { path = "../unrender-std" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

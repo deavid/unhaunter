@@ -8,11 +8,11 @@ use uncore_events::events::npc_help::NpcHelpEvent;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::mouse::MouseVisibility;
 use undifficulty_core::CurrentDifficulty;
-use ungear::components::playergear::PlayerGear;
+use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
-use unrender::components::animation::{AnimationTimer, CharacterAnimation};
+use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::{Direction, Position};
 
 const PLAYER_SPEED: f32 = 0.04;
