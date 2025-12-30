@@ -1,5 +1,5 @@
 [package]
-name = "unsummary"
+name = "unsummary-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

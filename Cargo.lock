@@ -5907,7 +5907,7 @@ dependencies = [
  "unrender",
  "unroot-plugin",
  "unsettings-plugin",
- "unsummary",
+ "unsummary-plugin",
  "untiled-core",
  "untmxmap-plugin",
  "untruck-core",
@@ -6335,7 +6335,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unsummary"
+name = "unsummary-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",

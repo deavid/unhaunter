@@ -44,7 +44,7 @@ members = [
     "crates/unsettings-core",
     "crates/unsettings-plugin",
     "crates/unspatial-core",
-    "crates/unsummary",
+    "crates/unsummary-plugin",
     "crates/untags-core",
     "crates/untiled-core",
     "crates/untruck-core",
@@ -140,7 +140,7 @@ unplayer-core = { path = "crates/unplayer-core" }
 unprofile-core = { path = "crates/unprofile-core" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 unsettings-plugin = { path = "crates/unsettings-plugin" }
-unsummary = { path = "crates/unsummary" }
+unsummary-plugin = { path = "crates/unsummary-plugin" }
 unrender = { path = "crates/unrender" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
