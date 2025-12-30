@@ -7,7 +7,7 @@ use uncore_components::{GearSprite, StatusText};
 use ungear::gear_stuff::GearStuff;
 use unghost_core::components::GhostSprite;
 use unspatial_core::Position;
-use untags::GhostTag;
+use untags_core::GhostTag;
 
 const MAX_CRACKS: u8 = 4;
 

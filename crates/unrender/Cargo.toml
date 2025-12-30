@@ -17,6 +17,6 @@ uncore-board = { path = "../uncore-board" }
 uncore-resources = { path = "../uncore-resources" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics = { path = "../unmetrics" }
-untags = { path = "../untags" }
+untags-core = { path = "../untags-core" }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }

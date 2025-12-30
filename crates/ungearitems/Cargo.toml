@@ -19,7 +19,7 @@ uncore-resources = { path = "../uncore-resources" }
 unrender = { path = "../unrender" }
 unmetrics = { path = "../unmetrics" }
 ungear = { path = "../ungear" }
-untags = { path = "../untags" }
+untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 unplayer-core = { path = "../unplayer-core" }
 

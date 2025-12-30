@@ -20,7 +20,7 @@ uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
-untags = { path = "../untags" }
+untags-core = { path = "../untags-core" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 unpicking-core = { path = "../unpicking-core" }

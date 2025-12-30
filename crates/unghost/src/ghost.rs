@@ -22,7 +22,7 @@ use unplayer_core::resources::PlayerState;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unspatial_core::{BoardPosition, Direction, Position};
-use untags::PlayerTag;
+use untags_core::PlayerTag;
 
 use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;

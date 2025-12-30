@@ -67,7 +67,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
 | `unspatial` | No | Yes | **DONE** | `unspatial-core` | Shared data. |
 | `unsummary` | Yes | No | **DONE** | `unsummary-plugin` | Leaf node. |
-| `untags` | No | Yes | **RENAME** | `untags-core` | Shared data. |
+| `untags` | No | Yes | **DONE** | `untags-core` | Shared data. |
 | `untiled` | No | Yes | **RENAME** | `untiled-core` | Shared data. |
 | `untmxmap` | Yes | No | **DONE** | `untmxmap-plugin` | Leaf node. |
 | `untruck` | Yes | No | **DONE** | `untruck-plugin` | Leaf node. |

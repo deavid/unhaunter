@@ -40,7 +40,7 @@ members = [
     "crates/unsettings",
     "crates/unspatial-core",
     "crates/unsummary",
-    "crates/untags",
+    "crates/untags-core",
     "crates/untiled",
     "crates/untruck-core",
     "crates/untruck-plugin",

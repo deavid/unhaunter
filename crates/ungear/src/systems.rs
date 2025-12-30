@@ -19,7 +19,7 @@ use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unsettings::audio::{AudioSettings, SoundOutput};
 use unspatial_core::Position;
-use untags::PlayerTag;
+use untags_core::PlayerTag;
 
 fn update_deployed_gear_sprites(
     mut commands: Commands,

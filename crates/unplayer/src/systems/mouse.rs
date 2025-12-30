@@ -3,7 +3,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use uncore_resources::mouse::MouseVisibility;
 use uncore_resources::states::GameState;
 use unspatial_core::{Direction, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
-use untags::game::GCameraArena;
+use untags_core::game::GCameraArena;
 
 const AIM_MAX_DISTANCE: f32 = 8.0;
 

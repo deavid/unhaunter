@@ -10,7 +10,7 @@ use undifficulty::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unrender::VisibilityData;
 use unspatial_core::Position;
-use untags::PlayerTag;
+use untags_core::PlayerTag;
 
 use crate::components::interaction::Locked;
 

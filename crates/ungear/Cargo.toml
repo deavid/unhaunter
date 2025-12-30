@@ -21,7 +21,7 @@ uncore-board = { path = "../uncore-board" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
-untags = { path = "../untags" }
+untags-core = { path = "../untags-core" }
 unrender = { path = "../unrender" }
 unghost-core = { path = "../unghost-core" }
 

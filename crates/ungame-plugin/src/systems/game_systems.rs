@@ -9,7 +9,7 @@ use unrender::components::game::{GameSound, GameSprite};
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
 use unspatial_core::{Direction, Position};
-use untags::game::GCameraArena;
+use untags_core::game::GCameraArena;
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists

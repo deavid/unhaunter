@@ -15,7 +15,7 @@ use unplayer_core::resources::PlayerInput;
 use unrender::VisibilityData;
 use unrender::components::game::GameSprite;
 use unspatial_core::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
-use untags::game::GCameraArena;
+use untags_core::game::GCameraArena;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 

@@ -1,5 +1,5 @@
 [package]
-name = "untags"
+name = "untags-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

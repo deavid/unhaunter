@@ -20,7 +20,7 @@ uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }
-untags = { path = "../untags" }
+untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
 uninteraction-core = { path = "../uninteraction-core" }

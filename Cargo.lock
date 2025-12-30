@@ -5778,7 +5778,7 @@ dependencies = [
  "unrender",
  "unsettings",
  "unspatial-core",
- "untags",
+ "untags-core",
  "unui-core",
 ]
 
@@ -5803,7 +5803,7 @@ dependencies = [
  "unrender",
  "unsettings",
  "unspatial-core",
- "untags",
+ "untags-core",
 ]
 
 [[package]]
@@ -5828,7 +5828,7 @@ dependencies = [
  "unplayer-core",
  "unrender",
  "unspatial-core",
- "untags",
+ "untags-core",
 ]
 
 [[package]]
@@ -5852,7 +5852,7 @@ dependencies = [
  "unplayer-core",
  "unrender",
  "unspatial-core",
- "untags",
+ "untags-core",
 ]
 
 [[package]]
@@ -6079,7 +6079,7 @@ dependencies = [
  "unrender",
  "unsettings",
  "unspatial-core",
- "untags",
+ "untags-core",
  "untiled",
 ]
 
@@ -6198,7 +6198,7 @@ dependencies = [
  "unrender",
  "unsettings",
  "unspatial-core",
- "untags",
+ "untags-core",
  "unui-core",
 ]
 
@@ -6243,7 +6243,7 @@ dependencies = [
  "unmetrics",
  "unplayer-core",
  "unspatial-core",
- "untags",
+ "untags-core",
 ]
 
 [[package]]
@@ -6308,7 +6308,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "untags"
+name = "untags-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
