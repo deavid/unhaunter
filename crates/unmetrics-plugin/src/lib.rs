@@ -8,7 +8,3 @@ impl Plugin for UnmetricsPlugin {
         app.add_systems(PostUpdate, receive_data);
     }
 }
-
-pub fn app_setup(app: &mut App) {
-    app.add_plugins(UnmetricsPlugin);
-}

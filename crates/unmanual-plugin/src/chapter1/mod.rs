@@ -6,7 +6,6 @@ pub mod page3;
 
 pub fn create_manual_chapter() -> ManualChapter {
     ManualChapter {
-        name: "Chapter 1: Getting Started".into(),
         pages: vec![
             page1::create_manual_page(),
             page2::create_manual_page(),

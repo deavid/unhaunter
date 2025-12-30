@@ -53,9 +53,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Expanding Your Arsenal".into(),
-        subtitle: "Learn about the Spirit Box, Red Torch, and object interactions.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

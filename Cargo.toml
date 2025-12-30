@@ -137,6 +137,7 @@ unmaphub-plugin = { path = "crates/unmaphub-plugin" }
 unmainmenu-plugin = { path = "crates/unmainmenu-plugin" }
 unmenu-plugin = { path = "crates/unmenu-plugin" }
 unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
+unmetrics-plugin = { path = "crates/unmetrics-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unplayer-plugin = { path = "crates/unplayer-plugin" }
 unplayer-core = { path = "crates/unplayer-core" }

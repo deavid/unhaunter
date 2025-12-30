@@ -51,10 +51,5 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Paranormal Investigator Needed!".into(),
-        subtitle: "Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.
-What will you find? How to do a good job as a P.I.? Here are the main clues!".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

@@ -51,9 +51,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Mastering Advanced Investigation".into(),
-        subtitle: "Delve deeper into the paranormal, utilizing advanced techniques and specialized gear to uncover the unseen.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

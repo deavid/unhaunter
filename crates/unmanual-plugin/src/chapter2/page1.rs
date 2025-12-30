@@ -45,9 +45,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Mastering Inventory and UV".into(),
-        subtitle: "Understanding gear and seeing the invisible.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

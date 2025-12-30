@@ -21,6 +21,7 @@ use unmaphub_plugin::plugin::UnhaunterMapHubPlugin;
 use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;
 use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
+use unmetrics_plugin::UnmetricsPlugin;
 use unnpc_plugin::plugin::UnhaunterNPCPlugin;
 use unpicking_plugin::CustomSpritePickingPlugin;
 use unplayer_plugin::plugin::UnhaunterPlayerPlugin;
@@ -74,6 +75,7 @@ pub fn app_run(cli_options: CliOptions) {
 
     app.add_plugins((
         UnhaunterRootPlugin,
+        UnmetricsPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
         UnhaunterSummaryPlugin,

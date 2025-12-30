@@ -40,9 +40,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Tools of the Adept".into(),
-        subtitle: "Learn to use Salt, Quartz, and Sage to handle paranormal threats.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

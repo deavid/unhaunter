@@ -22,7 +22,6 @@ impl Plugin for UnhaunterRootPlugin {
             .init_resource::<Maps>()
             .add_systems(Startup, (load_assets, finish_loading).chain());
 
-        unmetrics_plugin::app_setup(app);
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
         app.init_resource::<unnoise_core::PerlinNoise>();

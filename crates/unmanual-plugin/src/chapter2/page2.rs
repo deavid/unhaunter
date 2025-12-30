@@ -45,9 +45,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Ghost Hunts and the Truck".into(),
-        subtitle: "Surviving the paranormal and using your truck as your headquarters.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

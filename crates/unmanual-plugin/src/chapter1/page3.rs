@@ -51,9 +51,5 @@ Gather evidence, analyze your findings, and prepare for the unknown.
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "The Truck: Your Ghost Hunting HQ".into(),
-        subtitle: "Gather evidence, analyze your findings, and prepare for the unknown.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

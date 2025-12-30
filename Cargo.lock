@@ -5924,6 +5924,7 @@ dependencies = [
  "unmapload-plugin",
  "unmenu-plugin",
  "unmenusettings-plugin",
+ "unmetrics-plugin",
  "unnpc-plugin",
  "unpicking-core",
  "unpicking-plugin",
@@ -6340,7 +6341,6 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "unghost-core",
- "unmetrics-plugin",
  "unnoise-core",
  "unplayer-core",
 ]

@@ -52,9 +52,5 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 }
 
 pub fn create_manual_page() -> ManualPageData {
-    ManualPageData {
-        title: "Essential Controls".into(),
-        subtitle: "Mastering the basics: movement, interaction, and illumination.".into(),
-        draw_fn: draw,
-    }
+    ManualPageData { draw_fn: draw }
 }

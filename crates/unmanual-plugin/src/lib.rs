@@ -1,26 +1,25 @@
 pub mod plugin;
-pub mod preplay_manual_ui;
-pub mod resources;
-pub mod types;
-pub mod user_manual_ui;
-pub mod utils;
+pub(crate) mod preplay_manual_ui;
+pub(crate) mod resources;
+pub(crate) mod types;
+pub(crate) mod user_manual_ui;
+pub(crate) mod utils;
 
-pub mod chapter1;
-pub mod chapter2;
-pub mod chapter3;
-pub mod chapter4;
-pub mod chapter5;
+pub(crate) mod chapter1;
+pub(crate) mod chapter2;
+pub(crate) mod chapter3;
+pub(crate) mod chapter4;
+pub(crate) mod chapter5;
 
 use bevy::prelude::*;
 
 use uncore_assets::types::root::game_assets::GameAssets;
 
-pub use resources::manual::CurrentManualPage;
-pub use resources::manual::Manual;
-pub use types::{ManualChapter, ManualPageData};
-pub use undifficulty_core::ManualChapterIndex;
+pub(crate) use resources::manual::CurrentManualPage;
+pub(crate) use resources::manual::Manual;
+pub(crate) use types::{ManualChapter, ManualPageData};
 
-pub fn create_manual() -> Manual {
+pub(crate) fn create_manual() -> Manual {
     Manual {
         chapters: vec![
             chapter1::create_manual_chapter(),
@@ -32,7 +31,7 @@ pub fn create_manual() -> Manual {
     }
 }
 
-pub fn draw_manual_page(
+pub(crate) fn draw_manual_page(
     parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     manual: &Manual,
