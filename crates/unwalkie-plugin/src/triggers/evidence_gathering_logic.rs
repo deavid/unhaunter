@@ -10,7 +10,7 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
 use untruck_core::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const DELAY_AFTER_INCORRECT_MARKING_SECONDS: f32 = 10.0;
 

@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::GhostSprite;
 use unrender::components::focus_ring::FocusRing;
-use unwalkiecore::WalkieTalkingEvent;
-use unwalkiecore::events::WalkieEvent;
+use unwalkie_core::WalkieTalkingEvent;
+use unwalkie_core::events::WalkieEvent;
 
 /// System that listens for WalkieTalkingEvent and activates the focus ring for ghosts and breaches
 /// when the GhostShowcase or BreachShowcase events are triggered.

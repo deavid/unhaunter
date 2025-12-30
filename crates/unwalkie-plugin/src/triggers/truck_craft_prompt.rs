@@ -7,7 +7,7 @@ use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
+use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
 fn trigger_almost_ready_to_craft_repellent_system(
     player_query: Query<&PlayerGear>,

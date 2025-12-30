@@ -7,8 +7,8 @@ use uncore_foundation::random_seed;
 use uncore_resources::states::{AppState, GameState};
 use unsettings::audio::AudioSettings;
 use unui_core::components::game_ui::WalkieText;
+use unwalkie_core::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 use unwalkie_types::VoiceLineData;
-use unwalkiecore::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};
 
 fn on_game_load(
     mut ev_level_ready: MessageReader<LevelReadyEvent>,

@@ -11,7 +11,7 @@ use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unprofile::PlayerProfileData;
 use unspatial_core::Position;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
 const ERRATIC_MOVEMENT_EARLY_SECONDS: f32 = 5.0;

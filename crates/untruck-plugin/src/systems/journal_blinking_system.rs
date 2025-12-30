@@ -12,7 +12,7 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unprofile::data::PlayerProfileData;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
-use unwalkiecore::resources::WalkiePlay;
+use unwalkie_core::resources::WalkiePlay;
 
 pub const JOURNAL_HINT_THRESHOLD: u32 = 3;
 pub const HIGH_CLARITY_THRESHOLD: f32 = 0.75;

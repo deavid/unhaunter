@@ -11,7 +11,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone
 const LINGER_THRESHOLD_SECONDS: f64 = 10.0;

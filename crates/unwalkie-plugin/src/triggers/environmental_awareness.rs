@@ -12,7 +12,7 @@ use uncore_components::Toggleable;
 use ungear::GearKind;
 use ungear::components::playergear::PlayerGear;
 use ungearitems::components::thermometer::Thermometer;
-use unwalkiecore::{WalkiePlay, events::WalkieEvent};
+use unwalkie_core::{WalkiePlay, events::WalkieEvent};
 
 /// System that monitors the player's exposure to darkness.
 ///

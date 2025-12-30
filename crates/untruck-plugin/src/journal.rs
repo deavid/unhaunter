@@ -18,7 +18,7 @@ use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
 use unprofile::data::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
-use unwalkiecore::resources::WalkiePlay;
+use unwalkie_core::resources::WalkiePlay;
 
 /// System that handles ForceDiscardEvidenceEvents even when not in truck
 fn force_discard_evidence_system(

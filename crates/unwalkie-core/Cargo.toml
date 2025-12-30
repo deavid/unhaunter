@@ -1,5 +1,5 @@
 [package]
-name = "unwalkiecore"
+name = "unwalkie-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

@@ -47,7 +47,7 @@ members = [
     "crates/untmxmap-plugin",
     "crates/unui-core",
     "crates/unwalkie-plugin",
-    "crates/unwalkiecore",
+    "crates/unwalkie-core",
 ]
 resolver = "3"
 

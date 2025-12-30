@@ -6377,7 +6377,7 @@ dependencies = [
  "unsettings",
  "untruck-core",
  "unui-core",
- "unwalkiecore",
+ "unwalkie-core",
 ]
 
 [[package]]
@@ -6385,6 +6385,20 @@ name = "unui-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+]
+
+[[package]]
+name = "unwalkie-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "enum-iterator",
+ "rand 0.9.2",
+ "uncore-foundation",
+ "uncore-types",
+ "ungear",
+ "unwalkie_types",
 ]
 
 [[package]]
@@ -6414,8 +6428,8 @@ dependencies = [
  "unspatial-core",
  "untruck-core",
  "unui-core",
+ "unwalkie-core",
  "unwalkie_types",
- "unwalkiecore",
 ]
 
 [[package]]
@@ -6423,20 +6437,6 @@ name = "unwalkie_types"
 version = "0.3.2-dev"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "unwalkiecore"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "enum-iterator",
- "rand 0.9.2",
- "uncore-foundation",
- "uncore-types",
- "ungear",
- "unwalkie_types",
 ]
 
 [[package]]

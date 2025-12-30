@@ -8,7 +8,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.
 /// Only triggers if the player is in the game, not in the truck, and has accessed the truck at least once.

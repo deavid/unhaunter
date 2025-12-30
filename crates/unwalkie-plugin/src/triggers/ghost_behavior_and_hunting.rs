@@ -7,7 +7,7 @@ use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;
 const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to still be considered "not evaded"

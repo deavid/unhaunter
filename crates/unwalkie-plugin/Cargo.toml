@@ -22,7 +22,7 @@ ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 unsettings = { path = "../unsettings" }
 unwalkie_types = { path = "../unwalkie_types" }
-unwalkiecore = { path = "../unwalkiecore" }
+unwalkie-core = { path = "../unwalkie-core" }
 unprofile = { path = "../unprofile" }
 untruck-core = { path = "../untruck-core" }
 unghost = { path = "../unghost" }

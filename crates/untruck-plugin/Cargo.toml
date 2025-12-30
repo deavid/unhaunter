@@ -25,7 +25,7 @@ ungearitems = { path = "../ungearitems" }
 unghost = { path = "../unghost" }
 unsettings = { path = "../unsettings" }
 unprofile = { path = "../unprofile" }
-unwalkiecore = { path = "../unwalkiecore" }
+unwalkie-core = { path = "../unwalkie-core" }
 unplayer = { path = "../unplayer" }
 unghost-core = { path = "../unghost-core" }
 

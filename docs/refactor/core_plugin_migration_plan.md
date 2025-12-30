@@ -75,7 +75,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unui` | No | Yes | **DONE** | `unui-core` | Shared data. |
 | `unwalkie` | Yes | No | **DONE** | `unwalkie-plugin` | Leaf node. |
 | `unwalkie_types` | No | Yes | **KEEP** | `unwalkie_types` | Shared data. |
-| `unwalkiecore` | No | Yes | **RENAME** | `unwalkie-core` | Shared data. |
+| `unwalkiecore` | No | Yes | **DONE** | `unwalkie-core` | Shared data. |
 
 ## 4. The "Dissolution" Map
 

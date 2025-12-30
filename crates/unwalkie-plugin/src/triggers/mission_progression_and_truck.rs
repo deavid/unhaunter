@@ -8,7 +8,7 @@ use unghost::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
 

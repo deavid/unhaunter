@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use unprofile::PlayerProfileData;
-use unwalkiecore::{WalkieEvent, WalkiePlay};
+use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 /// Helper function to parse walkie event strings back to enum variants
 fn parse_walkie_event(event_str: &str) -> Option<WalkieEvent> {

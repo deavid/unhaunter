@@ -13,7 +13,7 @@ use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::{BoardPosition, Position};
-use unwalkiecore::{WalkieEvent, WalkiePlay}; // Core walkie types
+use unwalkie_core::{WalkieEvent, WalkiePlay}; // Core walkie types
 
 // Local struct to track the state for this specific trigger
 #[derive(Debug, PartialEq, Clone)] // Added Clone for easier assignment

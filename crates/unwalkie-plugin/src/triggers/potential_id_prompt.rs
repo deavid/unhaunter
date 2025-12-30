@@ -6,7 +6,7 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::{PotentialIDData, PotentialIDTimer};
 use unprofile::data::PlayerProfileData;
-use unwalkiecore::{events::WalkieEvent, resources::WalkiePlay};
+use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
 use uncore_resources::states::GameState;
 
