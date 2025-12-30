@@ -19,7 +19,7 @@ members = [
     "crates/ungame-plugin",
     "crates/unghost",
     "crates/unghost-core",
-    "crates/uninteraction",
+    "crates/uninteraction-core",
     "crates/unlight-plugin",
     "crates/unmanual-plugin",
     "crates/unmapload-plugin",

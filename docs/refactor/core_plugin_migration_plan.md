@@ -41,14 +41,14 @@ We are moving to a strict three-layer separation of concerns:
 | `uncore-types` | No | Yes | **RENAME** | `untypes-core` | Shared data. |
 | `uncoremenu` | Yes | No | **RENAME** | `uncoremenu-plugin` | Leaf node. |
 | `undifficulty` | No | Yes | **RENAME** | `undifficulty-core` | Shared data. |
-| `unfog` | Yes | No | **SPLIT** | `unfog-core`, `unfog-plugin` | `unfog-core` created. |
+| `unfog` | Yes | No | **DONE** | `unfog-core`, `unfog-plugin` | Leaf node. |
 | `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
-| `ungear` | Yes | Yes | **SPLIT** | `ungear-core`, `ungear-plugin` | Shared data + logic. |
+| `ungear` | Yes | Yes | **DONE** | `ungear-core`, `ungear` | Shared data + logic. |
 | `ungearitems` | Yes | No | **RENAME** | `ungearitems-plugin` | Leaf node. |
-| `unghost` | Yes | Yes | **SPLIT** | `unghost-core`, `unghost-plugin` | `unghost-core` created. |
+| `unghost` | Yes | Yes | **DONE** | `unghost-core`, `unghost` | `unghost-core` created. |
 | `unghost-core` | No | Yes | **DONE** | `unghost-core` | Shared data. |
-| `uninteraction` | No | Yes | **RENAME** | `uninteraction-core` | Shared data. |
-| `unlight` | Yes | No | **RENAME** | `unlight-plugin` | Leaf node. |
+| `uninteraction` | No | Yes | **DONE** | `uninteraction-core` | Shared data. |
+| `unlight` | Yes | No | **DONE** | `unlight-plugin` | Leaf node. |
 | `unmanual` | Yes | No | **DONE** | `unmanual-plugin` | Leaf node. |
 | `unmaphub` | Yes | No | **SPLIT** | `unmaphub-core`, `unmaphub-plugin` | Shared state + logic. |
 | `unmapload` | Yes | No | **DONE** | `unmapload-plugin` | Leaf node. |
@@ -58,15 +58,15 @@ We are moving to a strict three-layer separation of concerns:
 | `unnavigation` | No | Yes | **RENAME** | `unnavigation-core` | Shared data. |
 | `unnoise` | No | Yes | **RENAME** | `unnoise-core` | Shared data. |
 | `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
-| `unpicking` | Yes | No | **SPLIT** | `unpicking-core`, `unpicking-plugin` | Shared state + logic. |
-| `unplayer` | Yes | Yes | **SPLIT** | `unplayer-std`, `unplayer-plugin` | `unplayer-core` exists. |
+| `unpicking` | Yes | No | **DONE** | `unpicking-core`, `unpicking-plugin` | Leaf node. |
+| `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer` | `unplayer-core` exists. |
 | `unplayer-core` | No | Yes | **DONE** | `unplayer-core` | Base player data. |
 | `unprofile` | Yes | No | **RENAME** | `unprofile-plugin` | Leaf node. |
 | `unrender` | Yes | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
 | `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
 | `unspatial` | No | Yes | **RENAME** | `unspatial-core` | Shared data. |
-| `unsummary` | Yes | No | **SPLIT** | `unsummary-std`, `unsummary-plugin` | Depends on `undifficulty`, `unghost`. |
+| `unsummary` | Yes | No | **DONE** | `unsummary-plugin` | Leaf node. |
 | `untags` | No | Yes | **RENAME** | `untags-core` | Shared data. |
 | `untiled` | No | Yes | **RENAME** | `untiled-core` | Shared data. |
 | `untmxmap` | Yes | No | **DONE** | `untmxmap-plugin` | Leaf node. |
@@ -97,20 +97,20 @@ We are moving to a strict three-layer separation of concerns:
 
 ## 5. The "Split" Manifest (Major Crates)
 
-### `unplayer` -> `unplayer-core` & `unplayer-plugin`
+### `unplayer` -> `unplayer-core` & `unplayer`
 - **`unplayer-core`**:
     - `src/components/` (Base components)
     - `src/resources/`
-- **`unplayer-plugin`** (Currently `unplayer`):
+- **`unplayer`** (Plugin):
     - `src/systems/`
     - `src/plugin.rs`
     - `src/components/` (Higher level bundles)
 
-### `unghost` -> `unghost-core` & `unghost-plugin`
+### `unghost` -> `unghost-core` & `unghost`
 - **`unghost-core`**:
     - `src/components/`
     - `src/resources/`
-- **`unghost-plugin`** (Currently `unghost`):
+- **`unghost`** (Plugin):
     - `src/systems/`
     - `src/ghost.rs`
     - `src/ghost_events.rs`
@@ -119,7 +119,7 @@ We are moving to a strict three-layer separation of concerns:
 - **`unfog-core`**:
     - `src/components.rs`
     - `src/resources.rs`
-- **`unfog-plugin`** (Currently `unfog`):
+- **`unfog-plugin`**:
     - `src/systems.rs`
     - `src/plugin.rs`
 

@@ -18,7 +18,7 @@ unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics = { path = "../unmetrics" }
 unnoise = { path = "../unnoise" }
-uninteraction = { path = "../uninteraction" }
+uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 untags = { path = "../untags" }

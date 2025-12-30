@@ -1,7 +1,7 @@
+use crate::sprite_picking_backend::custom_sprite_picking;
 use bevy::prelude::*;
 use bevy_picking::PickingSystems;
 use unpicking_core::*;
-use crate::sprite_picking_backend::custom_sprite_picking;
 
 /// Plugin that enables custom sprite picking for map sprites
 #[derive(Clone)]

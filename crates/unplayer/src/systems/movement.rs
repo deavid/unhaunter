@@ -9,7 +9,7 @@ use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use uncore_resources::mouse::MouseVisibility;
 use undifficulty::CurrentDifficulty;
 use ungear::components::playergear::PlayerGear;
-use uninteraction::interactivestuff::InteractiveStuff;
+use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
 use unrender::components::animation::{AnimationTimer, CharacterAnimation};

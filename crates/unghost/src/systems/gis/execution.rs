@@ -8,7 +8,7 @@ use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInter
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::random_seed;
-use uninteraction::interactivestuff::InteractiveStuff;
+use uninteraction_core::interactivestuff::InteractiveStuff;
 use unspatial::Position;
 
 /// Enhanced destination validation with collision avoidance and path checking

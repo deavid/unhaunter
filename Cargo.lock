@@ -5769,7 +5769,7 @@ dependencies = [
  "ungear",
  "unghost",
  "unghost-core",
- "uninteraction",
+ "uninteraction-core",
  "unlight-plugin",
  "unpicking-core",
  "unplayer",
@@ -5846,7 +5846,7 @@ dependencies = [
  "ungear",
  "ungearitems",
  "unghost-core",
- "uninteraction",
+ "uninteraction-core",
  "unmetrics",
  "unnoise",
  "unplayer-core",
@@ -5982,7 +5982,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
-name = "uninteraction"
+name = "uninteraction-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6191,7 +6191,7 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "ungear",
- "uninteraction",
+ "uninteraction-core",
  "unnavigation",
  "unplayer-core",
  "unprofile",

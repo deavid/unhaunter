@@ -1,5 +1,5 @@
 [package]
-name = "uninteraction"
+name = "uninteraction-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

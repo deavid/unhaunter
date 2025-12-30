@@ -24,7 +24,7 @@ untags = { path = "../untags" }
 unrender = { path = "../unrender" }
 unplayer-core = { path = "../unplayer-core" }
 unpicking = { path = "../unpicking" }
-uninteraction = { path = "../uninteraction" }
+uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
 unlight = { path = "../unlight" }

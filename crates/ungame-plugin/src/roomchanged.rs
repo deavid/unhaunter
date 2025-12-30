@@ -4,7 +4,7 @@ use uncore_board::behavior::component::RoomState;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uncore_resources::states::GameState;
-use uninteraction::interactivestuff::InteractiveStuff;
+use uninteraction_core::interactivestuff::InteractiveStuff;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unspatial::Position;
