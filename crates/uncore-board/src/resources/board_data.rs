@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array2, Array3};
 use uncore_foundation::celsius_to_kelvin;
-use unspatial::BoardPosition;
+use unspatial_core::BoardPosition;
 
 /// Configuration for the temperature diffusion system
 #[derive(Debug, Clone)]

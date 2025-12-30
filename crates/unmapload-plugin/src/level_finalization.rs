@@ -20,7 +20,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use unlight_plugin::prebake_lighting_field;
 use unrender::board::tiledata::PreMesh;
 use unrender::plugin::rebuild_collision_data;
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 
 /// Processes level completion after the level is fully loaded.
 ///

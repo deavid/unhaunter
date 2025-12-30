@@ -8,7 +8,7 @@ use unplayer_core::components::PlayerSprite;
 use unrender::components::game::{GameSound, GameSprite};
 use unsettings::controls::ControlKeys;
 use unsettings::game::GameplaySettings;
-use unspatial::{Direction, Position};
+use unspatial_core::{Direction, Position};
 use untags::game::GCameraArena;
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {

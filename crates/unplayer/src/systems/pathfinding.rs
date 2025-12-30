@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use uncore_board::behavior::{Behavior, Orientation, component::Stairs};
 use uncore_board::resources::board_data::BoardData;
 use unrender::VisibilityData;
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 
 /// A* pathfinding node for the priority queue
 #[derive(Debug, Clone, PartialEq, Eq)]

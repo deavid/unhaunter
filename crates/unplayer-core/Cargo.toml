@@ -10,6 +10,6 @@ authors.workspace = true
 [dependencies]
 uncore-foundation = { path = "../uncore-foundation" }
 unsettings = { path = "../unsettings" }
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
 serde = { workspace = true }

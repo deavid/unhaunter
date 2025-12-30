@@ -3,7 +3,7 @@ use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
 
 use uncore_foundation::types::evidence::Evidence;
-use unspatial::Position;
+use unspatial_core::Position;
 
 use super::{EquipmentPosition, GearSpriteID, on_off};
 use bevy::prelude::*;

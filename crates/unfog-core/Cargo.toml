@@ -10,7 +10,7 @@ homepage.workspace = true
 
 [dependencies]
 
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }

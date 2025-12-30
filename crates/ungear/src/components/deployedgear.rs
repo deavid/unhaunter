@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unspatial::Direction;
+use unspatial_core::Direction;
 
 /// Represents a piece of gear deployed in the game world.
 #[derive(Component, Debug, Clone)]

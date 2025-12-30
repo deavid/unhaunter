@@ -7,7 +7,7 @@ use rand::seq::SliceRandom;
 use uncore_board::resources::board_data::BoardData;
 use uncore_foundation::random_seed;
 use unghost::components::ghost_influence::InfluenceType;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Represents one complete ghost setup configuration (spawn + influences)
 #[derive(Clone, Debug)]

@@ -8,7 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

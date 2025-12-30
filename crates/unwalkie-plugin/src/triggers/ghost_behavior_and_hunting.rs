@@ -6,7 +6,7 @@ use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;

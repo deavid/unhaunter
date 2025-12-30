@@ -8,7 +8,7 @@ use uncore_events::events::sound::SoundEvent;
 use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unghost_core::resources::haunt_state::HauntState;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]

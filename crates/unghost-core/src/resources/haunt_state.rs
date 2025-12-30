@@ -2,7 +2,7 @@ use crate::components::ghost_sprite::GhostBehaviorDynamics;
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use uncore_foundation::types::evidence::Evidence;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Represents the status of the current haunting (narrative/gameplay).
 #[derive(Clone, Debug, Resource)]

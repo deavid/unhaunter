@@ -3,7 +3,7 @@
 pub mod interactivestuff;
 
 use bevy::prelude::*;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// A generic wrapper for targeting entities without knowing their type.
 #[derive(Component)]

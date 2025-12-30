@@ -10,7 +10,7 @@ use uncore_foundation::random_seed;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unspatial::Position;
+use unspatial_core::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
 #[derive(Resource)]

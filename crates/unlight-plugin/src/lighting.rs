@@ -9,7 +9,7 @@ use ndarray::Array3;
 use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors
 /// by switching between legacy and new implementations.

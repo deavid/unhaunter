@@ -4,7 +4,7 @@ use rand::Rng;
 use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
-use unspatial::Position;
+use unspatial_core::Position;
 
 #[derive(Component, Debug, Clone)]
 pub struct UVTorch {

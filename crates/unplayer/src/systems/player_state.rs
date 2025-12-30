@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 use unplayer_core::resources::PlayerState;
-use unspatial::Position;
+use unspatial_core::Position;
 
 use crate::components::player::Hiding;
 use crate::components::player_sprite::PlayerSprite;

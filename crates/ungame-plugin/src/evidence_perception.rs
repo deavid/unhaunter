@@ -5,7 +5,7 @@ use uncore_foundation::types::evidence::Evidence;
 use ungear::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
-use unspatial::Position;
+use unspatial_core::Position;
 use untags::PlayerTag;
 
 fn update_current_evidence_readings_from_player_perception_system(

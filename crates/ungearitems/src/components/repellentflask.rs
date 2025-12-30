@@ -14,7 +14,7 @@ use unghost_core::components::repellent_particle::RepellentParticle;
 use unmetrics::SendMetric;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unspatial::{BoardPosition, Direction, Position};
+use unspatial_core::{BoardPosition, Direction, Position};
 
 use crate::metrics;
 

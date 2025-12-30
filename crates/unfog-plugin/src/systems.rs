@@ -22,8 +22,8 @@ use unrender::VisibilityData;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unrender::plugin::rebuild_collision_data;
-use unspatial::BoardPosition;
-use unspatial::Position;
+use unspatial_core::BoardPosition;
+use unspatial_core::Position;
 
 use crate::metrics;
 

@@ -14,7 +14,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics::SendMetric;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unspatial::{Direction, Position};
+use unspatial_core::{Direction, Position};
 
 /// Data structure for the Sage Bundle consumable.
 #[derive(Component, Debug, Clone, PartialEq, Eq)]

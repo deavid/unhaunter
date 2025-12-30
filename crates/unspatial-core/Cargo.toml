@@ -1,5 +1,5 @@
 [package]
-name = "unspatial"
+name = "unspatial-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

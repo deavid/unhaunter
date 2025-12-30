@@ -4,7 +4,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
 use unlight_plugin::rebuild_lighting_field;
 use unrender::plugin::rebuild_collision_data;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Updates the board field based on incoming events and rebuilds collision and lighting data if needed.
 ///

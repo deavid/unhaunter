@@ -21,7 +21,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use unrender::board::spritedb::SpriteDB;
 use unrender::components::game::{GameSound, GameSprite};
 use unrender::materials::CustomMaterial1;
-use unspatial::Position;
+use unspatial_core::Position;
 use untiled::MapTileSetDb;
 
 use crate::entity_spawning;

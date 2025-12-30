@@ -45,7 +45,7 @@ use unrender::components::game::MapTileSprite;
 use unrender::components::sprite_type::SpriteType;
 use unrender::materials::CustomMaterial1;
 use unrender::utils::light::{compute_color_exposure, lerp_color};
-use unspatial::{BoardPosition, Direction, Position};
+use unspatial_core::{BoardPosition, Direction, Position};
 
 pub use uncore_board::components::mapcolor::MapColor;
 pub use uncore_board::types::light::LightData;

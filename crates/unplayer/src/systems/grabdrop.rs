@@ -12,7 +12,7 @@ use ungear::resources::spawner::GearMarker;
 use unplayer_core::components::HeldObject;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unspatial::Position;
+use unspatial_core::Position;
 
 fn sync_held_gear_position(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,

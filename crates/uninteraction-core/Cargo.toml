@@ -9,7 +9,7 @@ authors.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 unrender = { path = "../unrender" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }

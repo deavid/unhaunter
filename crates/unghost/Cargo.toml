@@ -22,7 +22,7 @@ uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
 ungearitems = { path = "../ungearitems" }
 untags = { path = "../untags" }
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

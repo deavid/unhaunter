@@ -5,7 +5,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_resources::states::{AppState, GameState};
 use unghost::components::ghost_breach::GhostBreach;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_components::Toggleable;

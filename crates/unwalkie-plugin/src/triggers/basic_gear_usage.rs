@@ -12,7 +12,7 @@ use ungear::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 use unwalkiecore::{WalkieEvent, WalkiePlay}; // Core walkie types
 
 // Local struct to track the state for this specific trigger

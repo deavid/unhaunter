@@ -6,7 +6,7 @@ use uncore_board::behavior::Behavior;
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::types::fielddata::LightFieldData;
 use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {

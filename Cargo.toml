@@ -38,7 +38,7 @@ members = [
     "crates/unrender",
     "crates/unroot-plugin",
     "crates/unsettings",
-    "crates/unspatial",
+    "crates/unspatial-core",
     "crates/unsummary",
     "crates/untags",
     "crates/untiled",

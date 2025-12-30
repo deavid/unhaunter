@@ -10,7 +10,7 @@ use ungearitems::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// How long player must linger after ghost is gone

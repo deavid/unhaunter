@@ -9,7 +9,7 @@ use ndarray::{Array2, Array3};
 use uncore_board::behavior::{Behavior, Class};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 pub const WAVE_MAX_HISTORY: usize = 12;
 
 /// Pre-computes static light propagation data using a simplified BFS approach.

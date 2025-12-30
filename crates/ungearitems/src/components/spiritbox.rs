@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::types::evidence::Evidence;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// A component representing the Spirit Box gear item.
 /// This device scans radio frequencies and can sometimes pick up paranormal vocal phenomena.

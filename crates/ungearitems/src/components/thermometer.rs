@@ -15,7 +15,7 @@ use ungear::gear_stuff::GearStuff;
 use unghost_core::HauntState;
 use unghost_core::components::GhostSprite;
 use unmetrics::SendMetric;
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {

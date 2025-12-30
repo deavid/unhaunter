@@ -9,7 +9,7 @@ use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEv
 use uncore_events::events::sound::SoundEvent;
 use uncore_foundation::random_seed;
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Enhanced destination validation with collision avoidance and path checking
 fn validate_destination_enhanced(

@@ -18,7 +18,7 @@ use unplayer_core::resources::PlayerState;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
 use unsettings::audio::{AudioSettings, SoundOutput};
-use unspatial::Position;
+use unspatial_core::Position;
 use untags::PlayerTag;
 
 fn update_deployed_gear_sprites(

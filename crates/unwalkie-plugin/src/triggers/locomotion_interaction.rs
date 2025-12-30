@@ -10,7 +10,7 @@ use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unprofile::PlayerProfileData;
-use unspatial::Position;
+use unspatial_core::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;

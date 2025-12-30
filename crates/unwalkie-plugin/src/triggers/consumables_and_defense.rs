@@ -8,7 +8,7 @@ use ungear::components::playergear::PlayerGear;
 use ungearitems::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 use untruck_core::truckgear::TruckGear;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 

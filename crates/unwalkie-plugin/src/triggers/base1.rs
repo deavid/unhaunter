@@ -7,7 +7,7 @@ use ungear::components::playergear::PlayerGear;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay};
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.

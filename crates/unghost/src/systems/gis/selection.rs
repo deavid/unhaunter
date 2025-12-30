@@ -9,7 +9,7 @@ use uncore_foundation::random_seed;
 use undifficulty::CurrentDifficulty;
 use unghost_core::components::GhostSprite;
 use unrender::VisibilityData;
-use unspatial::Position;
+use unspatial_core::Position;
 use untags::PlayerTag;
 
 use crate::components::interaction::Locked;

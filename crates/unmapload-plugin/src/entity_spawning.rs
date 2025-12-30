@@ -21,7 +21,7 @@ use unrender::components::focus_ring::FocusRing;
 use unrender::components::game::GameSound;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unspatial::{Direction, Position};
+use unspatial_core::{Direction, Position};
 use untags::{GhostTag, PlayerTag};
 
 use crate::level_setup::LoadLevelSystemParam;

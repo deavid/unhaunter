@@ -7,7 +7,7 @@ use uncore_resources::states::GameState;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unspatial::Position;
+use unspatial_core::Position;
 use untags::game::GCameraArena;
 
 /// Handles `RoomChangedEvent` events, updating interactive object states and room

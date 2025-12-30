@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use unspatial::Position;
+use unspatial_core::Position;
 
 /// Represents an event to play a sound effect at a specific location in the game
 /// world.

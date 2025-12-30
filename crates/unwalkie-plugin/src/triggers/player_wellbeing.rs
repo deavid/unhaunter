@@ -8,7 +8,7 @@ use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unrender::components::light::LightLevel;
-use unspatial::Position;
+use unspatial_core::Position;
 use unwalkiecore::{WalkieEvent, WalkiePlay}; // Corrected import for LightLevel
 
 // Constants for SanityDroppedBelowThresholdDarkness

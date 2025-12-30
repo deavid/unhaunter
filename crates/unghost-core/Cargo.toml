@@ -10,7 +10,7 @@ authors.workspace = true
 [dependencies]
 bevy = { workspace = true }
 serde = { workspace = true }
-unspatial = { path = "../unspatial" }
+unspatial-core = { path = "../unspatial-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 rand = { workspace = true }
 enum-iterator = { workspace = true }

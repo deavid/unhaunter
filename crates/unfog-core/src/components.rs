@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unspatial::Position;
+use unspatial_core::Position;
 
 #[derive(Component, Debug, Clone)]
 pub struct MiasmaSprite {

@@ -3,7 +3,7 @@ use rand::Rng;
 use uncore_components::{Battery, Electronic, Toggleable};
 use uncore_foundation::random_seed;
 use ungear::gear_stuff::GearStuff;
-use unspatial::Position;
+use unspatial_core::Position;
 
 pub fn system_electronic_interference(
     gs: GearStuff,

@@ -6,7 +6,7 @@ use uncore_events::events::sound::SoundEvent;
 use uncore_resources::states::GameState;
 use unrender::board::spritedb::SpriteDB;
 use unrender::materials::CustomMaterial1;
-use unspatial::{BoardPosition, Position};
+use unspatial_core::{BoardPosition, Position};
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;

@@ -5,7 +5,7 @@ use undifficulty::CurrentDifficulty;
 use unghost::components::ghost_influence::{GhostInfluence, InfluenceType};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
-use unspatial::Position;
+use unspatial_core::Position;
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
