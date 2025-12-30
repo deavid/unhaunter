@@ -20,7 +20,7 @@ uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 ungear = { path = "../ungear" }
 ungearitems-core = { path = "../ungearitems-core" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unwalkie_types = { path = "../unwalkie_types" }
 unwalkie-core = { path = "../unwalkie-core" }
 unprofile-core = { path = "../unprofile-core" }

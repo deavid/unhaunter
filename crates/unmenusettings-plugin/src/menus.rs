@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use strum::IntoEnumIterator;
-use unsettings::{
+use unsettings_core::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
     game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
 };
@@ -139,7 +139,7 @@ impl AudioSettingsMenu {
                 })
                 .collect::<Vec<_>>(),
             AudioSettingsMenu::SoundOutput => {
-                use unsettings::audio::SoundOutput;
+                use unsettings_core::audio::SoundOutput;
                 let to_string = |s: SoundOutput, v: &SoundOutput| -> String {
                     if s == *v {
                         format!("[{s}]")

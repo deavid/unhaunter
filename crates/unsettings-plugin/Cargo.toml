@@ -1,5 +1,5 @@
 [package]
-name = "unplayer-core"
+name = "unsettings-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,8 +8,9 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore-foundation = { path = "../uncore-foundation" }
-unsettings-core = { path = "../unsettings-core" }
-unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
+dirs = { workspace = true }
 serde = { workspace = true }
+
+unsettings-core = { path = "../unsettings-core" }

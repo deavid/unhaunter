@@ -17,7 +17,7 @@ use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender::components::game::GameSprite;
 use unrender::components::sprite_type::SpriteType;
-use unsettings::audio::{AudioSettings, SoundOutput};
+use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::Position;
 use untags_core::PlayerTag;
 

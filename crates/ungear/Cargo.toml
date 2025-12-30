@@ -19,7 +19,7 @@ uncore-resources = { path = "../uncore-resources" }
 uncore-components = { path = "../uncore-components" }
 uncore-board = { path = "../uncore-board" }
 unplayer-core = { path = "../unplayer-core" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 untags-core = { path = "../untags-core" }
 unrender = { path = "../unrender" }

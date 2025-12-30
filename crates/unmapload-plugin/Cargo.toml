@@ -22,7 +22,7 @@ untiled-core = { path = "../untiled-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unlight-plugin = { path = "../unlight-plugin" }
 ungear = { path = "../ungear" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
 unplayer = { path = "../unplayer" }
 unrender = { path = "../unrender" }

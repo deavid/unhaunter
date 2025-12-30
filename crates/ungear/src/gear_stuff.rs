@@ -1,7 +1,7 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_persistent::Persistent;
 use unprofile_core::PlayerProfileData;
-use unsettings::audio::AudioSettings;
+use unsettings_core::audio::AudioSettings;
 
 use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::sound::SoundEvent;

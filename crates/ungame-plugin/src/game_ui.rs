@@ -8,7 +8,7 @@ use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_resources::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
-use unsettings::game::GameplaySettings;
+use unsettings_core::game::GameplaySettings;
 use unui_core::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,

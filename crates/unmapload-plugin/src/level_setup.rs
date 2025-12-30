@@ -49,8 +49,8 @@ pub struct LoadLevelSystemParam<'w> {
     pub handles: Res<'w, GameAssets>,
     pub roomdb: ResMut<'w, RoomDB>,
     pub difficulty: Res<'w, CurrentDifficulty>,
-    pub audio_settings: Res<'w, Persistent<unsettings::audio::AudioSettings>>,
-    pub control_settings: Res<'w, Persistent<unsettings::controls::ControlKeys>>,
+    pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
+    pub control_settings: Res<'w, Persistent<unsettings_core::controls::ControlKeys>>,
     pub gear_registry: Res<'w, GearSpawnerRegistry>,
 }
 

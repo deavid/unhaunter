@@ -6,7 +6,7 @@ use unnavigation_core::components::{
 };
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::PlayerInput;
-use unsettings::game::{GameplaySettings, MovementStyle};
+use unsettings_core::game::{GameplaySettings, MovementStyle};
 
 /// System that handles keyboard input for player movement.
 ///

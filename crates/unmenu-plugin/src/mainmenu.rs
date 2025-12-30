@@ -9,7 +9,7 @@ use uncoremenu::components::MenuItemInteractive;
 use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
 use unprofile_core::PlayerProfileData;
-use unsettings::audio::AudioSettings;
+use unsettings_core::audio::AudioSettings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub enum MenuID {

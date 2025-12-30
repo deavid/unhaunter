@@ -6,19 +6,19 @@ pub struct UnhaunterSettingsPlugin;
 
 impl Plugin for UnhaunterSettingsPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(create_persistent::<crate::game::GameplaySettings>(
-            "gameplay_settings.ron",
-        ))
-        .insert_resource(create_persistent::<crate::video::VideoSettings>(
+        app.insert_resource(
+            create_persistent::<unsettings_core::game::GameplaySettings>("gameplay_settings.ron"),
+        )
+        .insert_resource(create_persistent::<unsettings_core::video::VideoSettings>(
             "video_settings.ron",
         ))
-        .insert_resource(create_persistent::<crate::audio::AudioSettings>(
+        .insert_resource(create_persistent::<unsettings_core::audio::AudioSettings>(
             "audio_settings.ron",
         ))
-        .insert_resource(create_persistent::<crate::profile::ProfileSettings>(
-            "profile_settings.ron",
-        ))
-        .insert_resource(create_persistent::<crate::controls::ControlKeys>(
+        .insert_resource(
+            create_persistent::<unsettings_core::profile::ProfileSettings>("profile_settings.ron"),
+        )
+        .insert_resource(create_persistent::<unsettings_core::controls::ControlKeys>(
             "control_settings.ron",
         ));
     }

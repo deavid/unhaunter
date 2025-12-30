@@ -13,8 +13,8 @@ use uncore_resources::states::AppState;
 use uncoremenu::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use uncoremenu::systems::MenuItemClicked;
 use uncoremenu::templates;
-use unsettings::audio::AudioSettings;
-use unsettings::game::GameplaySettings;
+use unsettings_core::audio::AudioSettings;
+use unsettings_core::game::GameplaySettings;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
@@ -291,7 +291,7 @@ fn menu_save_audio_setting(
     mut ev_back: MessageWriter<MenuEvBack>,
     mut audio_settings: ResMut<Persistent<AudioSettings>>,
 ) {
-    use unsettings::audio::AudioSettingsValue as v;
+    use unsettings_core::audio::AudioSettingsValue as v;
 
     for ev in events.read() {
         warn!("Save Audio Setting: {:?}", ev.value);
@@ -450,7 +450,7 @@ fn menu_save_gameplay_setting(
     mut ev_back: MessageWriter<MenuEvBack>,
     mut gameplay_settings: ResMut<Persistent<GameplaySettings>>,
 ) {
-    use unsettings::game::GameplaySettingsValue as v;
+    use unsettings_core::game::GameplaySettingsValue as v;
 
     for ev in events.read() {
         warn!("Save Gameplay Setting: {:?}", ev.value);

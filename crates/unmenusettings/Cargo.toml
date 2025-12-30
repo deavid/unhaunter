@@ -18,5 +18,5 @@ uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 uncoremenu = { path = "../uncoremenu" }

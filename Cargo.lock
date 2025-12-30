@@ -5664,7 +5664,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-types",
  "undifficulty-core",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
 ]
 
@@ -5776,7 +5776,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
  "untags-core",
  "unui-core",
@@ -5801,7 +5801,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
  "untags-core",
 ]
@@ -5923,7 +5923,7 @@ dependencies = [
  "unprofile-plugin",
  "unrender",
  "unroot-plugin",
- "unsettings",
+ "unsettings-plugin",
  "unsummary",
  "untiled-core",
  "untmxmap-plugin",
@@ -6033,7 +6033,7 @@ dependencies = [
  "unmetrics-core",
  "unplayer-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
 ]
 
@@ -6091,7 +6091,7 @@ dependencies = [
  "unnavigation-core",
  "unplayer",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
  "untags-core",
  "untiled-core",
@@ -6109,7 +6109,7 @@ dependencies = [
  "uncore-types",
  "uncoremenu",
  "unprofile-core",
- "unsettings",
+ "unsettings-core",
 ]
 
 [[package]]
@@ -6125,7 +6125,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "uncoremenu",
- "unsettings",
+ "unsettings-core",
 ]
 
 [[package]]
@@ -6219,7 +6219,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
  "untags-core",
  "unui-core",
@@ -6232,7 +6232,7 @@ dependencies = [
  "bevy",
  "serde",
  "uncore-foundation",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
 ]
 
@@ -6299,15 +6299,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
-name = "unsettings"
+name = "unsettings-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "enum-iterator",
+ "serde",
+ "strum",
+]
+
+[[package]]
+name = "unsettings-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
  "dirs",
- "enum-iterator",
  "serde",
- "strum",
+ "unsettings-core",
 ]
 
 [[package]]
@@ -6404,7 +6413,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "untruck-core",
  "unui-core",
  "unwalkie-core",
@@ -6454,7 +6463,7 @@ dependencies = [
  "unplayer-core",
  "unprofile-core",
  "unrender",
- "unsettings",
+ "unsettings-core",
  "unspatial-core",
  "untruck-core",
  "unui-core",

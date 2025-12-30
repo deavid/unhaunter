@@ -9,7 +9,7 @@ use uncore_resources::states::AppState;
 use unplayer_core::components::PlayerSprite;
 use unrender::VisibilityData;
 use unrender::components::game::GameSound;
-use unsettings::audio::AudioSettings;
+use unsettings_core::audio::AudioSettings;
 use unspatial_core::{BoardPosition, Position};
 
 /// Calculates the ambient sound volumes based on player visibility.

@@ -26,7 +26,7 @@ unplayer-core = { path = "../unplayer-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unlight-plugin = { path = "../unlight-plugin" }
 unprofile-core = { path = "../unprofile-core" }
 unplayer = { path = "../unplayer" }

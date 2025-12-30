@@ -14,7 +14,7 @@ uncore-types = { path = "../uncore-types" }
 uncore-events = { path = "../uncore-events" }
 uncore-assets = { path = "../uncore-assets" }
 unspatial-core = { path = "../unspatial-core" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

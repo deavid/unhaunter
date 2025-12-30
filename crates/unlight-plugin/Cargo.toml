@@ -23,7 +23,7 @@ unmetrics-core = { path = "../unmetrics-core" }
 unfog-core = { path = "../unfog-core" }
 ungear = { path = "../ungear" }
 ungearitems-core = { path = "../ungearitems-core" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unghost = { path = "../unghost" }
 unghost-core = { path = "../unghost-core" }
 

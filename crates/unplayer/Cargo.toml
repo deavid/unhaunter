@@ -25,7 +25,7 @@ unplayer-core = { path = "../unplayer-core" }
 unrender = { path = "../unrender" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }
 

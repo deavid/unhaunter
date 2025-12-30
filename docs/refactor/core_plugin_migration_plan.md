@@ -64,7 +64,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unprofile` | Yes | No | **DONE** | `unprofile-core`, `unprofile-plugin` | Split data and logic. |
 | `unrender` | No | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
 | `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
-| `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
+| `unsettings` | Yes | Yes | **DONE** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
 | `unspatial` | No | Yes | **DONE** | `unspatial-core` | Shared data. |
 | `unsummary` | Yes | No | **DONE** | `unsummary-plugin` | Leaf node. |
 | `untags` | No | Yes | **DONE** | `untags-core` | Shared data. |

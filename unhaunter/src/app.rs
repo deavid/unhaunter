@@ -28,7 +28,7 @@ use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender::materials::{CustomMaterial1, UIPanelMaterial};
 use unrender::plugin::UnhaunterBoardPlugin;
 use unroot_plugin::UnhaunterRootPlugin;
-use unsettings::plugin::UnhaunterSettingsPlugin;
+use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
 use unsummary::plugin::UnhaunterSummaryPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 use untruck_plugin::plugin::UnhaunterTruckPlugin;

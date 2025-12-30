@@ -23,7 +23,7 @@ unrender = { path = "../unrender" }
 ungear = { path = "../ungear" }
 ungearitems-core = { path = "../ungearitems-core" }
 unghost = { path = "../unghost" }
-unsettings = { path = "../unsettings" }
+unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unwalkie-core = { path = "../unwalkie-core" }
 unplayer = { path = "../unplayer" }
