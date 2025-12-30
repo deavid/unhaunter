@@ -1,5 +1,5 @@
 [package]
-name = "unprofile"
+name = "unprofile-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true

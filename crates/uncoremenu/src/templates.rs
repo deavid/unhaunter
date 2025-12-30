@@ -427,7 +427,7 @@ pub fn create_content_item_enabled<'a>(
 pub fn create_player_status_bar(
     parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    player_profile: &unprofile::data::PlayerProfileData,
+    player_profile: &unprofile_plugin::data::PlayerProfileData,
 ) {
     parent
         .spawn(Node {

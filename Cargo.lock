@@ -5588,7 +5588,7 @@ dependencies = [
  "uncoremenu",
  "undifficulty",
  "unmaphub",
- "unprofile",
+ "unprofile-plugin",
 ]
 
 [[package]]
@@ -5689,7 +5689,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-resources",
  "uncore-types",
- "unprofile",
+ "unprofile-plugin",
 ]
 
 [[package]]
@@ -5774,7 +5774,7 @@ dependencies = [
  "unpicking-core",
  "unplayer",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -5799,7 +5799,7 @@ dependencies = [
  "undifficulty",
  "unghost-core",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -5905,7 +5905,7 @@ dependencies = [
  "unpicking-plugin",
  "unplayer",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unroot-plugin",
  "unsettings",
@@ -6094,7 +6094,7 @@ dependencies = [
  "uncore-resources",
  "uncore-types",
  "uncoremenu",
- "unprofile",
+ "unprofile-plugin",
  "unsettings",
 ]
 
@@ -6194,7 +6194,7 @@ dependencies = [
  "uninteraction-core",
  "unnavigation-core",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unsettings",
  "unspatial-core",
@@ -6214,7 +6214,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "unprofile"
+name = "unprofile-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -6303,7 +6303,7 @@ dependencies = [
  "uncore-types",
  "undifficulty",
  "unplayer",
- "unprofile",
+ "unprofile-plugin",
  "unui-core",
 ]
 
@@ -6372,7 +6372,7 @@ dependencies = [
  "unghost-core",
  "unplayer",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unsettings",
  "untruck-core",
@@ -6422,7 +6422,7 @@ dependencies = [
  "unghost",
  "unghost-core",
  "unplayer-core",
- "unprofile",
+ "unprofile-plugin",
  "unrender",
  "unsettings",
  "unspatial-core",

@@ -16,7 +16,7 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unplayer::components::player_sprite::PlayerSprite;
 use unplayer_core::GameConfig;
-use unprofile::data::PlayerProfileData;
+use unprofile_plugin::data::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use unwalkie_core::resources::WalkiePlay;
 

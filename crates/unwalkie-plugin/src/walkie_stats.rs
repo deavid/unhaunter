@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unprofile::PlayerProfileData;
+use unprofile_plugin::PlayerProfileData;
 use unwalkie_core::{WalkiePlay, WalkieSoundState};
 
 /// System that updates the WalkieEventStats in the player profile

@@ -10,7 +10,7 @@ use uncore_resources::states::GameState;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unprofile::data::PlayerProfileData;
+use unprofile_plugin::data::PlayerProfileData;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use unwalkie_core::resources::WalkiePlay;
 

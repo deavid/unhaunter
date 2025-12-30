@@ -12,7 +12,7 @@ use uncore_resources::states::GameState;
 use uncore_resources::summary::SummaryData;
 use undifficulty::CurrentDifficulty;
 use unplayer::components::player_sprite::PlayerSprite;
-use unprofile::data::PlayerProfileData;
+use unprofile_plugin::data::PlayerProfileData;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
 pub(crate) fn setup(mut commands: Commands) {

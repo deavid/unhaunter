@@ -9,7 +9,7 @@ use uncore_resources::states::{AppState, GameState};
 use ungear::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
-use unprofile::PlayerProfileData;
+use unprofile_plugin::PlayerProfileData;
 use unspatial_core::Position;
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 

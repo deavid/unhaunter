@@ -24,7 +24,7 @@ use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unnpc_plugin::plugin::UnhaunterNPCPlugin;
 use unpicking_plugin::CustomSpritePickingPlugin;
 use unplayer::plugin::UnhaunterPlayerPlugin;
-use unprofile::plugin::UnhaunterProfilePlugin;
+use unprofile_plugin::plugin::UnhaunterProfilePlugin;
 use unrender::materials::{CustomMaterial1, UIPanelMaterial};
 use unrender::plugin::UnhaunterBoardPlugin;
 use unroot_plugin::UnhaunterRootPlugin;

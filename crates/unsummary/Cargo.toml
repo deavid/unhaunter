@@ -19,5 +19,5 @@ uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 bevy-persistent = { workspace = true }
-unprofile = { path = "../unprofile" }
+unprofile-plugin = { path = "../unprofile-plugin" }
 unplayer = { path = "../unplayer" }

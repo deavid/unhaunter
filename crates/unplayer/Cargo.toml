@@ -26,7 +26,7 @@ unrender = { path = "../unrender" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear = { path = "../ungear" }
 unsettings = { path = "../unsettings" }
-unprofile = { path = "../unprofile" }
+unprofile-plugin = { path = "../unprofile-plugin" }
 unspatial-core = { path = "../unspatial-core" }
 
 bevy = { workspace = true }

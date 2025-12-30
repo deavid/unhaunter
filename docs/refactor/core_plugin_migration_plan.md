@@ -61,7 +61,7 @@ We are moving to a strict three-layer separation of concerns:
 | `unpicking` | Yes | No | **DONE** | `unpicking-core`, `unpicking-plugin` | Leaf node. |
 | `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer` | `unplayer-core` exists. |
 | `unplayer-core` | No | Yes | **DONE** | `unplayer-core` | Base player data. |
-| `unprofile` | Yes | No | **RENAME** | `unprofile-plugin` | Leaf node. |
+| `unprofile` | Yes | No | **DONE** | `unprofile-plugin` | Leaf node. |
 | `unrender` | Yes | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |
 | `unroot` | Yes | No | **DONE** | `unroot-plugin` | Main app plugin. |
 | `unsettings` | Yes | Yes | **SPLIT** | `unsettings-core`, `unsettings-plugin` | Shared data + logic. |
