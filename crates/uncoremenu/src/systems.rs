@@ -1,23 +1,11 @@
 use crate::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
 use crate::events::KeyboardNavigate;
+use crate::events::MenuEscapeEvent;
+use crate::events::MenuItemClicked;
+use crate::events::MenuItemSelected;
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore_foundation::colors;
 use uncore_resources::states::AppState;
-
-/// Event sent when a menu item is clicked
-#[derive(Message, Debug, Clone, Copy)]
-pub struct MenuItemClicked {
-    pub state: AppState,
-    pub pos: usize,
-}
-
-/// Event sent when keyboard navigation changes the selected item
-#[derive(Message, Debug, Clone, Copy)]
-pub struct MenuItemSelected(pub usize);
-
-/// Event sent when ESC is pressed in a menu
-#[derive(Message, Debug, Clone, Copy)]
-pub struct MenuEscapeEvent;
 
 /// Detects mouse movement to enable hover selection. Mouse movement is tracked to prevent
 /// unwanted initial hover states when opening menus.

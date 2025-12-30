@@ -6,7 +6,7 @@ use uncore_foundation::platform::plt::VERSION;
 use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use uncore_resources::states::{AppState, MapHubState};
 use uncoremenu::components::MenuItemInteractive;
-use uncoremenu::systems::MenuItemClicked;
+use uncoremenu::events::MenuItemClicked;
 use uncoremenu::templates;
 use unprofile_core::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;

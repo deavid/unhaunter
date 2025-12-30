@@ -40,7 +40,7 @@ We are moving to a strict three-layer separation of concerns:
 | `uncore-resources` | No | Yes | **DISSOLVE** | - | God crate. Still exists. |
 | `uncore-types` | No | Yes | **RENAME** | `untypes-core` | Shared data. |
 | `uncoremenu` | Yes | No | **RENAME** | `uncoremenu-plugin` | Leaf node. |
-| `undifficulty` | No | Yes | **RENAME** | `undifficulty-core` | Shared data. |
+| `undifficulty` | No | Yes | **DONE** | `undifficulty-core` | Shared data. |
 | `unfog` | Yes | No | **DONE** | `unfog-core`, `unfog-plugin` | Leaf node. |
 | `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
 | `ungear` | Yes | Yes | **DONE** | `ungear-core`, `ungear` | Shared data + logic. |

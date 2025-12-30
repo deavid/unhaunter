@@ -33,10 +33,9 @@ use uncoremenu::events::KeyboardNavigate;
 use uncoremenu::scrollbar::ScrollableListContainer;
 use uncoremenu::{
     components::{MenuItemInteractive, MenuRoot},
-    scrollbar,
-    systems::MenuItemSelected,
-    systems::{MenuEscapeEvent, MenuItemClicked},
-    templates,
+    events::MenuItemSelected,
+    events::{MenuEscapeEvent, MenuItemClicked},
+    scrollbar, templates,
 };
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
 

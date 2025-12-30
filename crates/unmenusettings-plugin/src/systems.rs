@@ -11,7 +11,7 @@ use uncore_assets::GameAssets;
 use uncore_foundation::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use uncore_resources::states::AppState;
 use uncoremenu::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
-use uncoremenu::systems::MenuItemClicked;
+use uncoremenu::events::MenuItemClicked;
 use uncoremenu::templates;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
@@ -520,7 +520,7 @@ fn menu_integration_system(
 
 /// Handles the ESC key events from the core menu system
 fn handle_escape(
-    mut escape_events: MessageReader<uncoremenu::systems::MenuEscapeEvent>,
+    mut escape_events: MessageReader<uncoremenu::events::MenuEscapeEvent>,
     mut menu_events: MessageWriter<MenuEvent>,
 ) {
     if !escape_events.is_empty() {

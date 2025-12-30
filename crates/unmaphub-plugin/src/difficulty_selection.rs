@@ -9,7 +9,7 @@ use uncore_resources::states::AppState;
 use uncore_resources::states::MapHubState;
 use uncoremenu::{
     components::*,
-    systems::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
+    events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
 use undifficulty_core::DifficultySelectionState;
