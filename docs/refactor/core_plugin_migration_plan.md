@@ -50,7 +50,7 @@ We are moving to a strict three-layer separation of concerns:
 | `uninteraction` | No | Yes | **DONE** | `uninteraction-core` | Shared data. |
 | `unlight` | Yes | No | **DONE** | `unlight-plugin` | Leaf node. |
 | `unmanual` | Yes | No | **DONE** | `unmanual-plugin` | Leaf node. |
-| `unmaphub` | Yes | No | **SPLIT** | `unmaphub-core`, `unmaphub-plugin` | Shared state + logic. |
+| `unmaphub` | Yes | No | **DONE** | `unmaphub-core`, `unmaphub-plugin` | Shared state + logic. |
 | `unmapload` | Yes | No | **DONE** | `unmapload-plugin` | Leaf node. |
 | `unmenu` | Yes | No | **DONE** | `unmenu-plugin` | Leaf node. |
 | `unmenusettings` | Yes | No | **DONE** | `unmenusettings-plugin` | Leaf node. |

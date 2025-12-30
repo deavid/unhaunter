@@ -151,7 +151,7 @@ untruck-core = { path = "crates/untruck-core" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 unghost-core = { path = "crates/unghost-core" }
-unwalkie_types = { path = "crates/unwalkie_types" }
+unwalkie-types = { path = "crates/unwalkie-types" }
 ungame-plugin = { path = "crates/ungame-plugin" }
 
 clap = { workspace = true, features = ["derive"] }

@@ -5929,7 +5929,7 @@ dependencies = [
  "untruck-core",
  "untruck-plugin",
  "unwalkie-plugin",
- "unwalkie_types",
+ "unwalkie-types",
  "walkdir",
  "wasm-bindgen",
  "winit",
@@ -6436,7 +6436,7 @@ dependencies = [
  "uncore-foundation",
  "uncore-types",
  "ungear",
- "unwalkie_types",
+ "unwalkie-types",
 ]
 
 [[package]]
@@ -6467,11 +6467,11 @@ dependencies = [
  "untruck-core",
  "unui-core",
  "unwalkie-core",
- "unwalkie_types",
+ "unwalkie-types",
 ]
 
 [[package]]
-name = "unwalkie_types"
+name = "unwalkie-types"
 version = "0.3.2-dev"
 dependencies = [
  "serde",
@@ -6561,7 +6561,7 @@ dependencies = [
  "ron 0.12.0",
  "serde",
  "sha2",
- "unwalkie_types",
+ "unwalkie-types",
  "walkdir",
 ]
 

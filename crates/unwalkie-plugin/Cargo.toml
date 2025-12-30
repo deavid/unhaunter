@@ -21,7 +21,7 @@ unui-core = { path = "../unui-core" }
 ungear = { path = "../ungear" }
 ungearitems-core = { path = "../ungearitems-core" }
 unsettings-core = { path = "../unsettings-core" }
-unwalkie_types = { path = "../unwalkie_types" }
+unwalkie-types = { path = "../unwalkie-types" }
 unwalkie-core = { path = "../unwalkie-core" }
 unprofile-core = { path = "../unprofile-core" }
 untruck-core = { path = "../untruck-core" }

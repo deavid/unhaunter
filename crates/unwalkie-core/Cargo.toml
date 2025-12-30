@@ -9,7 +9,7 @@ authors.workspace = true
 homepage.workspace = true
 
 [dependencies]
-unwalkie_types = { path = "../unwalkie_types" }
+unwalkie-types = { path = "../unwalkie-types" }
 
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }

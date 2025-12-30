@@ -1,5 +1,5 @@
 [package]
-name = "unwalkie_types"
+name = "unwalkie-types"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
