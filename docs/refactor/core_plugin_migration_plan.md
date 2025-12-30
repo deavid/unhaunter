@@ -39,27 +39,27 @@ We are moving to a strict three-layer separation of concerns:
 | `uncore-foundation` | No | Yes | **RENAME** | `unfoundation-core` | Base types. |
 | `uncore-resources` | No | Yes | **DISSOLVE** | - | God crate. Still exists. |
 | `uncore-types` | No | Yes | **RENAME** | `untypes-core` | Shared data. |
-| `uncoremenu` | Yes | No | **RENAME** | `uncoremenu-plugin` | Leaf node. |
+| `uncoremenu` | Yes | No | **DONE** | `unmenu-core`, `unmenu-plugin` | Split into core/plugin. |
 | `undifficulty` | No | Yes | **DONE** | `undifficulty-core` | Shared data. |
 | `unfog` | Yes | No | **DONE** | `unfog-core`, `unfog-plugin` | Leaf node. |
 | `ungame` | Yes | No | **DONE** | `ungame-plugin` | Leaf node. |
-| `ungear` | Yes | Yes | **DONE** | `ungear-core`, `ungear` | Shared data + logic. |
+| `ungear` | Yes | Yes | **SPLIT** | `ungear-core`, `ungear-plugin` | Shared data + logic. |
 | `ungearitems` | Yes | No | **DONE** | `ungearitems-plugin` | Splitted. |
-| `unghost` | Yes | Yes | **DONE** | `unghost-core`, `unghost` | `unghost-core` created. |
+| `unghost` | Yes | Yes | **DONE** | `unghost-core`, `unghost-plugin` | `unghost-core` created. |
 | `unghost-core` | No | Yes | **DONE** | `unghost-core` | Shared data. |
 | `uninteraction` | No | Yes | **DONE** | `uninteraction-core` | Shared data. |
 | `unlight` | Yes | No | **DONE** | `unlight-plugin` | Leaf node. |
 | `unmanual` | Yes | No | **DONE** | `unmanual-plugin` | Leaf node. |
 | `unmaphub` | Yes | No | **DONE** | `unmaphub-core`, `unmaphub-plugin` | Shared state + logic. |
 | `unmapload` | Yes | No | **DONE** | `unmapload-plugin` | Leaf node. |
-| `unmenu` | Yes | No | **DONE** | `unmenu-plugin` | Leaf node. |
+| `unmenu` | Yes | No | **DONE** | `unmainmenu-plugin` | Renamed from `unmenu`. |
 | `unmenusettings` | Yes | No | **DONE** | `unmenusettings-plugin` | Leaf node. |
 | `unmetrics` | Yes | Yes | **DONE** | `unmetrics-core`, `unmetrics-plugin` | Shared trait + system. |
 | `unnavigation` | No | Yes | **DONE** | `unnavigation-core` | Shared data. |
 | `unnoise` | No | Yes | **DONE** | `unnoise-core` | Shared data. |
 | `unnpc` | Yes | No | **DONE** | `unnpc-plugin` | Leaf node. |
 | `unpicking` | Yes | No | **DONE** | `unpicking-core`, `unpicking-plugin` | Leaf node. |
-| `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer` | `unplayer-core` exists. |
+| `unplayer` | Yes | Yes | **DONE** | `unplayer-core`, `unplayer-plugin` | `unplayer-core` exists. |
 | `unplayer-core` | No | Yes | **DONE** | `unplayer-core` | Base player data. |
 | `unprofile` | Yes | No | **DONE** | `unprofile-core`, `unprofile-plugin` | Split data and logic. |
 | `unrender` | No | Yes | **SPLIT** | `unrender-std`, `unrender-plugin` | High dependency chain. |

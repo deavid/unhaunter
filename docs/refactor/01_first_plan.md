@@ -7,16 +7,16 @@ This plan covers the "low-hanging fruit" of the architectural migration. These a
 These crates are already leaf nodes (or nearly so) and primarily contain logic. The action is a simple rename and enforcing internal visibility.
 
 **Tasks:**
-- Rename the following crates to `*-plugin`:
+- [x] Rename the following crates to `*-plugin`:
     - `uncampaign` -> `uncampaign-plugin`
-    - `uncoremenu` -> `uncoremenu-plugin`
+    - `uncoremenu` -> `unmenu-core`, `unmenu-plugin` (Split)
     - `unfog` -> `unfog-plugin`
     - `ungame` -> `ungame-plugin`
     - `ungearitems` -> `ungearitems-plugin`
     - `unlight` -> `unlight-plugin`
     - `unmanual` -> `unmanual-plugin`
     - `unmapload` -> `unmapload-plugin`
-    - `unmenu` -> `unmenu-plugin`
+    - `unmenu` -> `unmainmenu-plugin` (Renamed)
     - `unmenusettings` -> `unmenusettings-plugin`
     - `unnpc` -> `unnpc-plugin`
     - `unprofile` -> `unprofile-plugin`
@@ -24,36 +24,36 @@ These crates are already leaf nodes (or nearly so) and primarily contain logic. 
     - `untmxmap` -> `untmxmap-plugin`
     - `untruck` -> `untruck-plugin`
     - `unwalkie` -> `unwalkie-plugin`
-- **Visibility Enforcement:** In each of these, ensure all systems and internal logic are `pub(crate)` or private. Only the `Plugin` struct should be `pub`.
+- [ ] **Visibility Enforcement:** In each of these, ensure all systems and internal logic are `pub(crate)` or private. Only the `Plugin` struct should be `pub`.
 
 ## 3. Phase 2: Renaming Core Data Crates
 These crates contain shared data and no logic. Renaming them clarifies their role as low-level building blocks.
 
 **Tasks:**
 - Rename the following crates to `*-core`:
-    - `uncore-assets` -> `unassets-core`
-    - `uncore-board` -> `unboard-core`
-    - `uncore-events` -> `unevents-core`
-    - `uncore-foundation` -> `unfoundation-core`
-    - `uncore-types` -> `untypes-core`
-    - `undifficulty` -> `undifficulty-core`
-    - `uninteraction` -> `uninteraction-core`
-    - `unnavigation` -> `unnavigation-core`
-    - `unnoise` -> `unnoise-core`
-    - `untags` -> `untags-core`
-    - `untiled` -> `untiled-core`
-    - `unui` -> `unui-core`
-    - `unwalkiecore` -> `unwalkie-core`
+    - [ ] `uncore-assets` -> `unassets-core`
+    - [ ] `uncore-board` -> `unboard-core`
+    - [ ] `uncore-events` -> `unevents-core`
+    - [ ] `uncore-foundation` -> `unfoundation-core`
+    - [ ] `uncore-types` -> `untypes-core`
+    - [x] `undifficulty` -> `undifficulty-core`
+    - [x] `uninteraction` -> `uninteraction-core`
+    - [x] `unnavigation` -> `unnavigation-core`
+    - [x] `unnoise` -> `unnoise-core`
+    - [x] `untags` -> `untags-core`
+    - [x] `untiled` -> `untiled-core`
+    - [x] `unui` -> `unui-core`
+    - [x] `unwalkiecore` -> `unwalkie-core`
 
 ## 4. Phase 3: Dissolving God Crates
 Distribute components and resources from the monolith crates to their specific feature-core crates.
 
 **Tasks:**
-- **Dissolve `uncore-components`:**
+- [ ] **Dissolve `uncore-components`:**
     - Move `ItemName`, `ItemDescription` to `unfoundation-core`.
     - Move `GearSprite`, `Handheld`, `StatusText`, `Battery`, `Electronic`, `Toggleable`, `Triggered`, `EvidenceSensor` to `ungear-core`.
     - Move `LightEmitter` to `unlight-core` (or `unlight-std` if needed).
-- **Dissolve `uncore-resources`:**
+- [ ] **Dissolve `uncore-resources`:**
     - Move `AppState`, `GameState` to `unfoundation-core`.
     - Move `MapHubState`, `MissionSelectMode`, `CurrentMissionSelectMode` to `unmaphub-core`.
     - Move `MouseVisibility` to `unpicking-core`.
@@ -63,10 +63,10 @@ Distribute components and resources from the monolith crates to their specific f
 Crates with very clear separation and minimal dependencies.
 
 **Tasks:**
-- **Split `unmetrics`**:
+- [x] **Split `unmetrics`**:
     - `unmetrics-core`: `SendMetric` trait and channel logic.
     - `unmetrics-plugin`: `receive_data` system.
-- **Split `unsettings`**:
+- [x] **Split `unsettings`**:
     - `unsettings-core`: `ControlKeys` and settings data.
     - `unsettings-plugin`: Logic for loading/saving settings.
 
