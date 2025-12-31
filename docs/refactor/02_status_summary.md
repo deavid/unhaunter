@@ -1,6 +1,6 @@
 # Refactoring Status Summary
 
-**Date:** December 30, 2025
+**Date:** December 31, 2025
 
 ## Completed Work
 
@@ -33,6 +33,10 @@ Several core data crates have been renamed/created:
 - `unui-core`
 - `unwalkie-core`
 
+### Phase 3: Dissolving God Crates
+- `uncore-components`: **DISSOLVED**. Contents distributed to `ungear-core`, `unrender-std`, `uninteraction-core`.
+- `uncore-resources`: **DISSOLVED**. Contents distributed to `unsummary-core`, `untypes-core`, `unmenu-core`, `unui-core`, `unsettings-core`.
+
 ### Phase 4: Splits
 - `unmetrics` split into `unmetrics-core` and `unmetrics-plugin`.
 - `unsettings` split into `unsettings-core` and `unsettings-plugin`.
@@ -41,6 +45,9 @@ Several core data crates have been renamed/created:
 - `unpicking` split into `unpicking-core` and `unpicking-plugin`.
 - `unmaphub` split into `unmaphub-core` and `unmaphub-plugin`.
 - `uncoremenu` split into `unmenu-core` and `unmenu-plugin`.
+- `ungear` split into `ungear-core` and `ungear-plugin`.
+- `unrender` split into `unrender-std` and `unrender-plugin`.
+- `unsummary` split into `unsummary-core` and `unsummary-plugin`.
 
 ## Pending Work
 
@@ -52,14 +59,5 @@ The following `uncore-*` crates still need to be renamed/migrated:
 - `uncore-foundation` -> `unfoundation-core`
 - `uncore-types` -> `untypes-core`
 
-### Phase 3: Dissolving God Crates
-- `uncore-components`: Needs to be dissolved into feature-specific core crates.
-- `uncore-resources`: Needs to be dissolved into feature-specific core crates.
-
-### Phase 4: Remaining Splits
-- `ungear`: Needs to be split into `ungear-core` and `ungear-plugin`.
-- `unrender`: Needs to be split into `unrender-std` and `unrender-plugin`.
-
 ## Next Immediate Steps
 1.  Rename the remaining `uncore-*` crates to `un*-core`.
-2.  Begin dissolving `uncore-components` and `uncore-resources`.

@@ -1,6 +1,6 @@
 # Phase 4: Remaining Splits Plan
 
-**Date:** December 30, 2025
+**Date:** December 31, 2025
 
 ## 1. Objective
 This plan details the steps to split the remaining complex crates: `ungear` and `unrender`. These crates currently mix data (components, resources, types) with logic (systems, plugins), creating dependency bottlenecks.
@@ -79,17 +79,17 @@ This plan details the steps to split the remaining complex crates: `ungear` and 
 ## 5. Detailed Task List
 
 ### Unrender Split
-- [ ] Create `crates/unrender-std`.
-- [ ] Move `unrender/src/{components,resources,materials.rs,board,utils}` to `unrender-std`.
-- [ ] Fix imports in `unrender-std`.
-- [ ] Rename `unrender` to `unrender-plugin`.
-- [ ] Update `unrender-plugin` to depend on `unrender-std`.
-- [ ] Update workspace `Cargo.toml` (if applicable) and other crates to point to `unrender-std` or `unrender-plugin`.
+- [x] Create `crates/unrender-std`.
+- [x] Move `unrender/src/{components,resources,materials.rs,board,utils}` to `unrender-std`.
+- [x] Fix imports in `unrender-std`.
+- [x] Rename `unrender` to `unrender-plugin`.
+- [x] Update `unrender-plugin` to depend on `unrender-std`.
+- [x] Update workspace `Cargo.toml` (if applicable) and other crates to point to `unrender-std` or `unrender-plugin`.
 
 ### Ungear Split
-- [ ] Create `crates/ungear-core`.
-- [ ] Move `ungear/src/{components,resources,types}` to `ungear-core`.
-- [ ] Fix imports in `ungear-core`.
-- [ ] Rename `ungear` to `ungear-plugin`.
-- [ ] Update `ungear-plugin` to depend on `ungear-core` and `unrender-std`.
-- [ ] Update workspace `Cargo.toml` and other crates.
+- [x] Create `crates/ungear-core`.
+- [x] Move `ungear/src/{components,resources,types}` to `ungear-core`.
+- [x] Fix imports in `ungear-core`.
+- [x] Rename `ungear` to `ungear-plugin`.
+- [x] Update `ungear-plugin` to depend on `ungear-core` and `unrender-std`.
+- [x] Update workspace `Cargo.toml` and other crates.

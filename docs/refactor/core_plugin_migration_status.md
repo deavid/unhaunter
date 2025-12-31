@@ -1,6 +1,6 @@
 # Core vs. Plugin Architectural Compliance Report
 
-**Date:** December 30, 2025
+**Date:** December 31, 2025
 **Reference:** `core_plugin_migration_plan.md`
 
 ## 1. Executive Summary
@@ -37,12 +37,14 @@ These crates are marked for renaming or dissolution in the plan but still exist 
 
 *   `uncore-assets` (Target: `unassets-core`)
 *   `uncore-board` (Target: `unboard-core`)
-*   `uncore-components` (Target: **DISSOLVE**)
 *   `uncore-events` (Target: `unevents-core`)
 *   `uncore-foundation` (Target: `unfoundation-core`)
-*   `uncore-resources` (Target: **DISSOLVE**)
 *   `uncore-types` (Target: `untypes-core`)
 *   `unwalkie-types` (Target: `unwalkie-types` - Keep)
+
+**Dissolved:**
+*   `uncore-components` (Dissolved)
+*   `uncore-resources` (Dissolved)
 
 ---
 
@@ -65,6 +67,7 @@ The following crates appear to strictly follow the policy (Clean dependencies, c
 *   `unprofile-core`
 *   `unsettings-core`
 *   `unspatial-core`
+*   `unsummary-core`
 *   `untags-core`
 *   `untiled-core`
 *   `untruck-core`
