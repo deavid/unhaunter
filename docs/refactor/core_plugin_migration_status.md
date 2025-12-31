@@ -6,7 +6,7 @@
 ## 1. Executive Summary
 *   **Logic Separation:** Excellent. No logic (systems, observers) was found in `*-core` or `*-std` crates.
 *   **Plugin Encapsulation:** Mostly good, but some plugins export more than just the `Plugin` struct.
-*   **Leaf Node Rule:** **VIOLATED**. Several plugins depend on other plugins (`unrender-plugin`, `unlight-plugin`), creating tight coupling between logic layers.
+*   **Leaf Node Rule:** **IMPROVED**. Major violations involving `unrender-plugin` and `unlight-plugin` have been resolved by moving shared logic to `unrender-std`.
 *   **Legacy Crates:** A significant number of `uncore-*` crates still exist and need to be dissolved or renamed.
 
 ---
@@ -18,12 +18,10 @@ The policy states: *"No other crate (except the main App) may depend on a `*-plu
 
 | Crate | Depends On | Violation Details |
 | :--- | :--- | :--- |
-| **`unfog-plugin`** | `unrender-plugin` | Imports `rebuild_collision_data`. |
-| **`ungame-plugin`** | `unrender-plugin`, `unlight-plugin` | Direct dependency in `Cargo.toml`. |
-| **`unmapload-plugin`** | `unlight-plugin`, `unrender-plugin` | Direct dependency in `Cargo.toml`. |
+| **`unfog-plugin`** | `unrender-plugin` | **FIXED**. `rebuild_collision_data` moved to `unrender-std`. |
+| **`ungame-plugin`** | `unrender-plugin`, `unlight-plugin` | **FIXED**. Shared logic moved to `unrender-std`. Dependencies removed. |
+| **`unmapload-plugin`** | `unlight-plugin`, `unrender-plugin` | **FIXED**. Shared logic moved to `unrender-std`. Dependencies removed. |
 | **`unroot-plugin`** | `unmetrics-plugin` | **FIXED**. Dependency moved to `unhaunter/src/app.rs`. |
-
-> **Recommendation:** Move shared logic (like `rebuild_collision_data`) to a `*-std` crate or use Events/Resources to decouple these plugins.
 
 ### 🟡 Export Violations (Plugin Encapsulation)
 The policy states: *"The **ONLY** public export allowed is the `struct MyPlugin`."*
@@ -32,6 +30,7 @@ The policy states: *"The **ONLY** public export allowed is the `struct MyPlugin`
 | :--- | :--- | :--- |
 | **`unmanual-plugin`** | `create_manual`, `draw_manual_page`, `Manual`, `ManualChapter` | **FIXED**. Made private/internal. Unused fields removed. |
 | **`unmetrics-plugin`** | `app_setup` | **FIXED**. Removed. |
+| **`unlight-plugin`** | `rebuild_lighting_field`, `prebake_lighting_field` | **FIXED**. Moved to `unrender-std`. Exports removed. |
 
 ### 🟠 Legacy Crates (Pending Migration)
 These crates are marked for renaming or dissolution in the plan but still exist in their old form.
@@ -77,13 +76,16 @@ The following crates appear to strictly follow the policy (Clean dependencies, c
 
 ### Plugin Crates (Logic Only, Correctly Isolated)
 *   `uncampaign-plugin`
+*   `unfog-plugin`
+*   `ungame-plugin`
 *   `ungear-plugin`
 *   `ungearitems-plugin`
 *   `unghost-plugin`
-*   `unlight-plugin` (Leaf node, but depended upon by others)
+*   `unlight-plugin`
 *   `unmainmenu-plugin`
 *   `unmanual-plugin`
 *   `unmaphub-plugin`
+*   `unmapload-plugin`
 *   `unmenu-plugin`
 *   `unmenusettings-plugin`
 *   `unmetrics-plugin`
@@ -91,7 +93,7 @@ The following crates appear to strictly follow the policy (Clean dependencies, c
 *   `unpicking-plugin`
 *   `unplayer-plugin`
 *   `unprofile-plugin`
-*   `unrender-plugin` (Leaf node, but depended upon by others)
+*   `unrender-plugin`
 *   `unroot-plugin`
 *   `unsettings-plugin`
 *   `unsummary-plugin`

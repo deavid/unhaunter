@@ -17,7 +17,6 @@ uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
 uncore-resources = { path = "../uncore-resources" }
 unrender-std = { path = "../unrender-std" }
-unrender-plugin = { path = "../unrender-plugin" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }

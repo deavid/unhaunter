@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use uncore_board::behavior::Behavior;
 use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
-use unlight_plugin::rebuild_lighting_field;
-use unrender_plugin::plugin::rebuild_collision_data;
+use unrender_std::lighting::systems::rebuild_lighting_field;
+use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::Position;
 
 /// Updates the board field based on incoming events and rebuilds collision and lighting data if needed.

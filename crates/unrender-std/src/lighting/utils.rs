@@ -8,6 +8,8 @@ use uncore_board::types::fielddata::LightFieldData;
 use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use unspatial_core::{BoardPosition, Position};
 
+pub const WAVE_MAX_HISTORY: usize = 12;
+
 /// Checks if a position is within the board boundaries
 pub fn is_in_bounds(pos: (i64, i64, i64), map_size: (usize, usize, usize)) -> bool {
     pos.0 >= 0

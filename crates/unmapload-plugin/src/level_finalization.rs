@@ -17,9 +17,9 @@ use uncore_events::events::roomchanged::RoomChangedEvent;
 use uncore_foundation::{celsius_to_kelvin, random_seed};
 use uncore_resources::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
-use unlight_plugin::prebake_lighting_field;
-use unrender_plugin::plugin::rebuild_collision_data;
 use unrender_std::board::tiledata::PreMesh;
+use unrender_std::lighting::systems::prebake_lighting_field;
+use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::{BoardPosition, Position};
 
 /// Processes level completion after the level is fully loaded.

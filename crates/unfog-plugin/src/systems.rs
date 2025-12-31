@@ -18,10 +18,10 @@ use unmetrics_core::SendMetric;
 use unnoise_core::PerlinNoise;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unrender_plugin::plugin::rebuild_collision_data;
 use unrender_std::VisibilityData;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::BoardPosition;
 use unspatial_core::Position;
 
