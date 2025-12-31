@@ -1,10 +1,10 @@
-use unfoundation_core::types::gear::Hand;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unassets_core::GameAssets;
 use unboard_core::components::mapcolor::MapColor;
 use unevents_core::events::sound::SoundEvent;
+use unfoundation_core::types::gear::Hand;
 use unfoundation_core::types::gear::{GearKind, GearSpriteID};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;

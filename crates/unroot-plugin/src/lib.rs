@@ -1,38 +1,17 @@
 use bevy::prelude::*;
 use unassets_core::GameAssets;
-use unassets_core::Maps;
 use unassets_core::types::root::anchors::Anchors;
 use unassets_core::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
     SyneFontAssets, TitilliumWebAssets, VictorMonoAssets,
 };
 use unassets_core::types::root::image_assets::ImageAssets;
-use unevents_core::hint::OnScreenHintEvent;
-use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use unmenu_core::mission_select::CurrentMissionSelectMode;
-use unplayer_core::resources::PlayerInput;
-use untypes_core::states::{AppState, GameState};
+use untypes_core::states::AppState;
 
-pub struct UnhaunterRootPlugin;
+pub mod plugin;
+pub use plugin::UnhaunterRootPlugin;
 
-impl Plugin for UnhaunterRootPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_state::<AppState>()
-            .init_state::<GameState>()
-            .init_resource::<Maps>()
-            .add_systems(Startup, (load_assets, finish_loading).chain());
-
-        app.init_resource::<CurrentEvidenceReadings>();
-        app.init_resource::<CurrentMissionSelectMode>();
-        app.init_resource::<unnoise_core::PerlinNoise>();
-        app.init_resource::<PlayerInput>();
-        app.add_message::<OnScreenHintEvent>();
-
-        arch_setup::app_setup(app);
-    }
-}
-
-fn load_assets(
+pub(crate) fn load_assets(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
@@ -219,12 +198,12 @@ fn load_assets(
     });
 }
 
-fn finish_loading(mut next_state: ResMut<NextState<AppState>>) {
+pub(crate) fn finish_loading(mut next_state: ResMut<NextState<AppState>>) {
     next_state.set(AppState::MainMenu);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-mod arch_setup {
+pub(crate) mod arch_setup {
     use super::*;
 
     fn set_fps_limiter(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
@@ -238,7 +217,7 @@ mod arch_setup {
 }
 
 #[cfg(target_arch = "wasm32")]
-mod arch_setup {
+pub(crate) mod arch_setup {
     use super::*;
 
     pub fn app_setup(_app: &mut App) {}

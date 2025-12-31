@@ -5,10 +5,10 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
-use unrender_std::resources::visibility_data::VisibilityData;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
 use unmetrics_core::SendMetric;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::Position;
 
 use unrender_std::board::spritedb::SpriteDB;
