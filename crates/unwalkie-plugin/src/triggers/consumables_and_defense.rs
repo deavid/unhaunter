@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use uncore_board::resources::roomdb::RoomDB;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::ManualChapterIndex;
 use ungear_core::GearKind;

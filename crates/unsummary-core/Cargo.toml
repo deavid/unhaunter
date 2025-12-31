@@ -1,13 +1,14 @@
 [package]
-name = "unnavigation-core"
+name = "unsummary-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
+homepage.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-unspatial-core = { path = "../unspatial-core" }
-uncore-board = { path = "../uncore-board" }
+uncore-foundation = { path = "../uncore-foundation" }
+undifficulty-core = { path = "../undifficulty-core" }

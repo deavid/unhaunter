@@ -8,7 +8,7 @@ use unghost_core::resources::{PotentialIDData, PotentialIDTimer};
 use unprofile_core::PlayerProfileData;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
-use uncore_resources::states::GameState;
+use uncore_types::states::GameState;
 
 // PotentialIDTimer struct definition removed from here
 

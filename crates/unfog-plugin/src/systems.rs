@@ -10,7 +10,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
 use unghost_core::components::ghost_sprite::GhostSprite;

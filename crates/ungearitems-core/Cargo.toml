@@ -11,6 +11,6 @@ authors.workspace = true
 bevy = { workspace = true }
 enum-iterator = { workspace = true }
 rand = { workspace = true }
-uncore-components = { path = "../uncore-components" }
+ungear-core = { path = "../ungear-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 unspatial-core = { path = "../unspatial-core" }

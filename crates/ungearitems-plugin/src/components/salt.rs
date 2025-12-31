@@ -3,14 +3,15 @@ use crate::metrics;
 use bevy::prelude::*;
 use rand::Rng as _;
 use uncore_board::components::mapcolor::MapColor;
-use uncore_components::{GearSprite, StatusText, Triggered};
 use uncore_foundation::random_seed;
 use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::gear_stuff::GearStuff;
+use ungear_core::{GearSprite, StatusText};
 pub use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
+use uninteraction_core::Triggered;
 use unmetrics_core::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;

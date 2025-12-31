@@ -13,7 +13,7 @@ undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
-uncore-resources = { path = "../uncore-resources" }
+unsummary-core = { path = "../unsummary-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }

@@ -18,7 +18,6 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unrender-std = { path = "../unrender-std" }
@@ -29,7 +28,6 @@ ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unghost-core = { path = "../unghost-core" }
-uncore-components = { path = "../uncore-components" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

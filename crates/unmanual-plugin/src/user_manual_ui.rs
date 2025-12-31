@@ -2,7 +2,7 @@ use super::{CurrentManualPage, Manual, draw_manual_page};
 use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_foundation::platform::plt::FONT_SCALE;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 
 #[derive(Component)]
 pub struct ManualCamera;

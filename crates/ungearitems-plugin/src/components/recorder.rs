@@ -1,6 +1,7 @@
-use uncore_components::{GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::random_seed;
 use ungear_core::gear_stuff::GearStuff;
+use ungear_core::{GearSprite, ItemName, StatusText};
+use uninteraction_core::Toggleable;
 
 use crate::metrics;
 

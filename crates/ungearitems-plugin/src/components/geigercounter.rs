@@ -5,10 +5,11 @@ use unspatial_core::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;
-use uncore_components::{Battery, Electronic, GearSprite, StatusText, Toggleable};
 use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::types::gear::utils::on_off;
+use ungear_core::{Battery, Electronic, GearSprite, StatusText};
 pub use ungearitems_core::components::geigercounter::GeigerCounter;
+use uninteraction_core::Toggleable;
 
 pub trait GeigerCounterExt {
     fn calculate_output_sound(&self, gs: &GearStuff) -> f32;

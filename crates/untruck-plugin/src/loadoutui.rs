@@ -6,7 +6,7 @@ use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::states::GameState;
+use uncore_types::states::GameState;
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::Hand;
 use ungear_core::components::playergear::PlayerGear;

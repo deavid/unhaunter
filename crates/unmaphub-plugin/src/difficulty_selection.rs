@@ -4,9 +4,9 @@ use uncore_assets::GameAssets;
 use uncore_events::events::map_selected::MapSelectedEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
-use uncore_resources::states::AppState;
-use uncore_resources::states::MapHubState;
+use uncore_types::states::AppState;
+use uncore_types::states::MapHubState;
+use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use undifficulty_core::DifficultySelectionState;
 use undifficulty_core::{CurrentDifficulty, Difficulty, DifficultySettings};
 use unmenu_core::{

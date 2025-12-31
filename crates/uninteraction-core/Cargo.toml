@@ -13,4 +13,4 @@ unspatial-core = { path = "../unspatial-core" }
 unrender-std = { path = "../unrender-std" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
-uncore-resources = { path = "../uncore-resources" }
+uncore-types = { path = "../uncore-types" }

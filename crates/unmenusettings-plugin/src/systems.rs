@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_assets::GameAssets;
 use uncore_foundation::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::templates;

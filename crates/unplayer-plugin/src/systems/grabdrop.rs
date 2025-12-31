@@ -4,7 +4,7 @@ use uncore_board::behavior::Behavior;
 use uncore_board::behavior::component::FloorItemCollidable;
 use uncore_board::components::mapcolor::MapColor;
 use uncore_board::resources::board_data::BoardData;
-use uncore_components::Triggered;
+use uninteraction_core::Triggered;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;

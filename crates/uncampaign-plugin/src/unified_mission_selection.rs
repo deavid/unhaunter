@@ -26,11 +26,11 @@ use uncore_events::events::loadlevel::LoadLevelEvent;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::FONT_SCALE;
 use uncore_foundation::types::grade::Grade;
-use uncore_resources::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
-use uncore_resources::states::{AppState, MapHubState};
+use uncore_types::states::{AppState, MapHubState};
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::KeyboardNavigate;
+use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::scrollbar::ScrollableListContainer;
 use unmenu_core::{
     components::{MenuItemInteractive, MenuRoot},

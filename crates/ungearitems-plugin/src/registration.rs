@@ -1,10 +1,12 @@
 use bevy::prelude::*;
 use uncore_board::behavior::component::{Collision, InteractableByGhost};
-use uncore_components::*;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::gear::GearSpriteID;
 use uncore_foundation::types::gear::{EquipmentPosition, GearKind};
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
+use ungear_core::*;
+use uninteraction_core::*;
+use unrender_std::components::light::LightEmitter;
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter as EMFMeterInternal;

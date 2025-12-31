@@ -5,7 +5,7 @@ use uncore_assets::GameAssets;
 use uncore_board::behavior::Behavior;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unsettings_core::game::GameplaySettings;

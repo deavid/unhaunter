@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncore_components::{GearSprite, StatusText};
 use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::gear_stuff::GearStuff;
+use ungear_core::{GearSprite, StatusText};
 pub use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
 use unspatial_core::Position;

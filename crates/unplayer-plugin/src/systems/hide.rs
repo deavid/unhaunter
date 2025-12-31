@@ -131,6 +131,6 @@ fn unhide_player(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hide_player, unhide_player).run_if(in_state(uncore_resources::states::GameState::None)),
+        (hide_player, unhide_player).run_if(in_state(uncore_types::states::GameState::None)),
     );
 }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;

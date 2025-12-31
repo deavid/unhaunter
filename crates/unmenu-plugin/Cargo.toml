@@ -13,7 +13,6 @@ homepage.workspace = true
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
 unprofile-core = { path = "../unprofile-core" }
 unmenu-core = { path = "../unmenu-core" }
 

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_foundation::platform::plt;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unui_core::components::hint_ui::{HintBoxText, HintBoxUIRoot};
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;

@@ -15,7 +15,7 @@ use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_events::events::roomchanged::RoomChangedEvent;
 use uncore_foundation::{celsius_to_kelvin, random_seed};
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::lighting::systems::prebake_lighting_field;

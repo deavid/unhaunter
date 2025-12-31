@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;

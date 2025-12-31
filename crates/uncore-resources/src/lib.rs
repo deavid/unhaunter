@@ -5,6 +5,5 @@
 pub mod mission_select;
 pub mod mouse;
 pub mod states;
-pub mod summary;
 
 pub use states::*;

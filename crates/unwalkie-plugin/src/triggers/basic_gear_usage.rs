@@ -2,15 +2,16 @@
 
 use bevy::prelude::*;
 use uncore_board::resources::roomdb::RoomDB;
-use uncore_components::{Battery, Toggleable};
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::ManualChapterIndex;
+use ungear_core::Battery;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
+use uninteraction_core::Toggleable;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::{BoardPosition, Position};
 use unwalkie_core::{WalkieEvent, WalkiePlay}; // Core walkie types

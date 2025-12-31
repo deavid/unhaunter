@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;

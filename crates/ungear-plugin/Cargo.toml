@@ -16,8 +16,8 @@ undifficulty-core = { path = "../undifficulty-core" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
-uncore-components = { path = "../uncore-components" }
+unsummary-core = { path = "../unsummary-core" }
+uninteraction-core = { path = "../uninteraction-core" }
 uncore-board = { path = "../uncore-board" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }

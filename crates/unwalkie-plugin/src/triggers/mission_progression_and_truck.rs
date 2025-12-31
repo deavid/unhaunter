@@ -1,7 +1,7 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::GhostBreach;

@@ -8,7 +8,6 @@ members = [
     "crates/uncore-board",
     "crates/uncore-events",
     "crates/uncore-foundation",
-    "crates/uncore-resources",
     "crates/uncore-types",
     "crates/undifficulty-core",
     "crates/unfog-plugin",
@@ -46,6 +45,7 @@ members = [
     "crates/unsettings-core",
     "crates/unsettings-plugin",
     "crates/unspatial-core",
+    "crates/unsummary-core",
     "crates/unsummary-plugin",
     "crates/untags-core",
     "crates/untiled-core",
@@ -124,7 +124,7 @@ uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 undifficulty-core = { path = "crates/undifficulty-core" }
 uncore-foundation = { path = "crates/uncore-foundation" }
 uncore-assets = { path = "crates/uncore-assets" }
-uncore-resources = { path = "crates/uncore-resources" }
+uncore-types = { path = "crates/uncore-types" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear-core = { path = "crates/ungear-core" }
 ungear-plugin = { path = "crates/ungear-plugin" }

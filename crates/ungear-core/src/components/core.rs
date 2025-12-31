@@ -2,8 +2,6 @@ use bevy::prelude::*;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::gear::GearSpriteID;
 
-use uncore_foundation::types::light::LightType;
-
 /// The display name of an item.
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
@@ -30,27 +28,6 @@ impl ItemDescription {
 #[derive(Component, Debug, Clone, Copy, Reflect, Default)]
 #[reflect(Component)]
 pub struct GearSprite(pub GearSpriteID);
-
-/// Light emitter functionality (Public Interface).
-#[derive(Component, Debug, Clone, Reflect, Default)]
-#[reflect(Component)]
-pub struct LightEmitter {
-    pub power: f32,
-    pub color: Color,
-    pub light_type: LightType,
-}
-
-/// Something that can be turned on or off.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
-#[reflect(Component)]
-pub struct Toggleable {
-    pub is_on: bool,
-}
-
-/// Marker for a trigger event on an item.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
-#[reflect(Component)]
-pub struct Triggered;
 
 /// Marker for items that are electronic and susceptible to EMI.
 #[derive(Component, Debug, Clone, Reflect, Default)]

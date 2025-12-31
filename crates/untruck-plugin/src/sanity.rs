@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::states::GameState;
+use uncore_types::states::GameState;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 

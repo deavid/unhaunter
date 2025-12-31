@@ -10,13 +10,13 @@ authors.workspace = true
 [dependencies]
 untruck-core = { path = "../untruck-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-components = { path = "../uncore-components" }
+uninteraction-core = { path = "../uninteraction-core" }
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
+unsummary-core = { path = "../unsummary-core" }
 unui-core = { path = "../unui-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }

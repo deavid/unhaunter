@@ -6,8 +6,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::truck::TruckUIEvent;
-use uncore_resources::states::{AppState, GameState};
-use uncore_resources::summary::SummaryData;
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
@@ -18,6 +17,7 @@ use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
+use unsummary_core::SummaryData;
 
 // Component to mark the progress bar for hold buttons
 #[derive(Component)]

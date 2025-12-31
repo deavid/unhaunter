@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use uncore_board::behavior::component::Interactive;
-use uncore_components::Toggleable;
+use uninteraction_core::Toggleable;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 

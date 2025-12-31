@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::components::animation::AnimationTimer;
-use uncore_resources::states::GameState;
+use uncore_types::states::GameState;
 
 fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut Sprite)>) {
     for (mut anim, mut sprite) in query.iter_mut() {

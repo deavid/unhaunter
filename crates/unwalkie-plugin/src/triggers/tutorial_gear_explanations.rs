@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use uncore_components::Toggleable;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
+use uninteraction_core::Toggleable;
 use unplayer_core::components::PlayerSprite;
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 

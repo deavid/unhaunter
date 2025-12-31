@@ -7,7 +7,7 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::random_seed;
 use uncore_foundation::utils::{MeanValue, PrintingTimer};
-use uncore_resources::summary::SummaryData;
+use unsummary_core::SummaryData;
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::gear_stuff::GearStuff;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};

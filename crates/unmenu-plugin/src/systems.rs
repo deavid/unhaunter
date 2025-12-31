@@ -1,6 +1,6 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use uncore_foundation::colors;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot, PrincipalMenuText};
 use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::events::MenuEscapeEvent;

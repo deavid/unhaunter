@@ -5,7 +5,7 @@ use ndarray::s;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use uncore_foundation::types::sound::SoundType;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::VisibilityData;
 use unrender_std::components::game::GameSound;

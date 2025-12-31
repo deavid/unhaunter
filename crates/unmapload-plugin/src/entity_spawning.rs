@@ -9,7 +9,6 @@ use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
 use uncore_foundation::random_seed;
 use uncore_foundation::types::sound::SoundType;
-use uncore_resources::summary::SummaryData;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::GhostBreach;
@@ -22,6 +21,7 @@ use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::{Direction, Position};
+use unsummary_core::SummaryData;
 use untags_core::{GhostTag, PlayerTag};
 
 use crate::level_setup::LoadLevelSystemParam;

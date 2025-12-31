@@ -17,9 +17,9 @@ uncore-foundation = { path = "../uncore-foundation" }
 uncore-board = { path = "../uncore-board" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
 untiled-core = { path = "../untiled-core" }
 unnavigation-core = { path = "../unnavigation-core" }
+unsummary-core = { path = "../unsummary-core" }
 ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }

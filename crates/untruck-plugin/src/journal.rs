@@ -6,7 +6,7 @@ use bevy_platform::collections::HashSet;
 use uncore_events::events::truck::TruckUIEvent;
 use uncore_foundation::types::evidence::Evidence;
 use uncore_foundation::types::ghost::types::GhostType;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;

@@ -12,7 +12,6 @@ authors.workspace = true
 uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
 unsettings-core = { path = "../unsettings-core" }
 unmenu-core = { path = "../unmenu-core" }
 unprofile-core = { path = "../unprofile-core" }

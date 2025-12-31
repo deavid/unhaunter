@@ -6,7 +6,7 @@ use uncore_assets::GameAssets;
 use uncore_assets::Maps;
 use uncore_events::events::loadlevel::LoadLevelEvent;
 use uncore_foundation::platform::plt::FONT_SCALE;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::DifficultySelectionState;
 use undifficulty_core::ManualChapterIndex;

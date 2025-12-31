@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use enum_iterator::all;
-use uncore_components::EvidenceSensor;
 use uncore_foundation::types::evidence::Evidence;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
+use ungear_core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;

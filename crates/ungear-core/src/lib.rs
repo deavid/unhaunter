@@ -17,6 +17,7 @@ pub mod gear_stuff;
 pub mod resources;
 pub mod types;
 
+pub use components::core::*;
 pub use types::gear::SpriteID;
 pub use uncore_foundation::types::gear::{
     EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,

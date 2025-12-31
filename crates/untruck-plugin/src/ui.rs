@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_foundation::colors;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::materials::UIPanelMaterial;

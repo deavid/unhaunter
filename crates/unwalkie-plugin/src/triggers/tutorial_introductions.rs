@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 

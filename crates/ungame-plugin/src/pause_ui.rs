@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use uncore_assets::GameAssets;
 use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use unrender_std::materials::UIPanelMaterial;
 
 #[derive(Debug, Component)]

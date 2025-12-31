@@ -8,9 +8,9 @@ use uncore_assets::types::root::font_assets::{
 };
 use uncore_assets::types::root::image_assets::ImageAssets;
 use uncore_events::hint::OnScreenHintEvent;
-use uncore_resources::mission_select::CurrentMissionSelectMode;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
+use unmenu_core::mission_select::CurrentMissionSelectMode;
 use unplayer_core::resources::PlayerInput;
 
 pub struct UnhaunterRootPlugin;

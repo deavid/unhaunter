@@ -4,7 +4,7 @@ use rand::seq::IndexedRandom;
 use uncore_events::events::hint::OnScreenHintEvent;
 use uncore_events::events::loadlevel::LevelReadyEvent;
 use uncore_foundation::random_seed;
-use uncore_resources::states::{AppState, GameState};
+use uncore_types::states::{AppState, GameState};
 use unsettings_core::audio::AudioSettings;
 use unui_core::components::game_ui::WalkieText;
 use unwalkie_core::{WalkiePlay, WalkieSoundState, WalkieTalkingEvent};

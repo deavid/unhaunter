@@ -1,8 +1,9 @@
 use bevy::prelude::*;
-use uncore_components::{Battery, Electronic, GearSprite, ItemName, StatusText, Toggleable};
 use uncore_foundation::types::gear::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
+use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 pub use ungearitems_core::components::estaticmeter::EStaticMeter;
+use uninteraction_core::Toggleable;
 
 pub fn update_estaticmeter(
     mut q_estaticmeter: Query<

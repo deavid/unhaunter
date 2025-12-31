@@ -6,8 +6,8 @@ use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_foundation::types::grade::Grade;
 use uncore_foundation::utils::time::PrintingTimer;
-use uncore_resources::states::AppState;
-use uncore_resources::summary::SummaryData;
+use uncore_types::states::AppState;
+use unsummary_core::SummaryData;
 use undifficulty_core::CurrentDifficulty;
 use unplayer_core::GameConfig;
 use unprofile_core::PlayerProfileData;
@@ -231,10 +231,10 @@ pub(crate) fn app_setup(app: &mut App) {
             update_player_stamina,
             handle_player_death,
         )
-            .run_if(in_state(uncore_resources::states::GameState::None)),
+            .run_if(in_state(uncore_types::states::GameState::None)),
     );
     app.add_systems(
         Update,
-        recover_sanity.run_if(in_state(uncore_resources::states::GameState::Truck)),
+        recover_sanity.run_if(in_state(uncore_types::states::GameState::Truck)),
     );
 }

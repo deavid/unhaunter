@@ -14,7 +14,6 @@ uncore-assets = { path = "../uncore-assets" }
 uncore-foundation = { path = "../uncore-foundation" }
 uncore-events = { path = "../uncore-events" }
 uncore-types = { path = "../uncore-types" }
-uncore-resources = { path = "../uncore-resources" }
 unmenu-core = { path = "../unmenu-core" }
 
 bevy = { workspace = true }

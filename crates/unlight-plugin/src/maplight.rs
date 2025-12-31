@@ -24,7 +24,6 @@ use uncore_board::behavior::{Behavior, Orientation};
 use uncore_board::resources::board_data::BoardData;
 use uncore_board::resources::roomdb::RoomDB;
 use uncore_board::types::fielddata::CollisionFieldData;
-use uncore_components::{LightEmitter, Toggleable};
 use uncore_foundation::kelvin_to_celsius;
 use uncore_foundation::platform::plt::IS_WASM;
 use undifficulty_core::CurrentDifficulty;
@@ -37,11 +36,13 @@ use ungearitems_core::components::salt::UVReactive;
 use unghost_core::components::GhostSprite;
 use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::haunt_state::HauntState;
+use uninteraction_core::Toggleable;
 use unmetrics_core::SendMetric;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::VisibilityData;
 use unrender_std::components::game::MapTileSprite;
+use unrender_std::components::light::LightEmitter;
 use unrender_std::components::sprite_type::SpriteType;
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::light::{compute_color_exposure, lerp_color};
@@ -53,7 +54,7 @@ pub use uncore_foundation::types::light::LightType;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use uncore_foundation::random_seed;
-use uncore_resources::states::AppState;
+use uncore_types::states::AppState;
 use unghost_core::components::GhostOrbParticle;
 
 /// Computes the player's visibility field, determining which areas of the map are

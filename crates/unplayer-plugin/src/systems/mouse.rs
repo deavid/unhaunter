@@ -1,7 +1,7 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore_resources::mouse::MouseVisibility;
-use uncore_resources::states::GameState;
+use uncore_types::states::GameState;
+use unui_core::resources::MouseVisibility;
 use unspatial_core::{Direction, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use untags_core::game::GCameraArena;
 

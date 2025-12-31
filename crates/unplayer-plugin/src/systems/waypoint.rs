@@ -6,8 +6,8 @@ use uncore_board::behavior::{
 };
 use uncore_board::resources::board_data::BoardData;
 use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use uncore_resources::mouse::MouseVisibility;
 use uninteraction_core::interactivestuff::InteractiveStuff;
+use unui_core::resources::MouseVisibility;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
