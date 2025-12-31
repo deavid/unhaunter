@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::time::Duration;
 
-use uncore_events::ambient_sound_mute::AmbientSoundMuteEvent;
+use unevents_core::ambient_sound_mute::AmbientSoundMuteEvent;
 
 /// Represents an active ambient sound mute effect with timing and fade logic.
 /// Tracks elapsed time and calculates volume multipliers during fade-out, mute, and fade-in phases.

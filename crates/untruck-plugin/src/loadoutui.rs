@@ -2,12 +2,11 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::EvidenceStatus;
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_foundation::colors;
-use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_foundation::types::evidence::Evidence;
-use uncore_types::states::GameState;
+use unassets_core::GameAssets;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::colors;
+use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unfoundation_core::types::evidence::Evidence;
 use ungear_core::Hand;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
@@ -16,6 +15,7 @@ use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unrender_std::materials::UIPanelMaterial;
+use untypes_core::states::GameState;
 
 #[derive(Debug, Component, Clone)]
 pub enum LoadoutButton {

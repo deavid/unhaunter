@@ -1,5 +1,5 @@
 [package]
-name = "uncore-types"
+name = "unassets-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,10 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-
-uncore-foundation = { path = "../uncore-foundation" }
+untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-serde = { workspace = true }
-ndarray = { workspace = true }
-enum-iterator = { workspace = true }
+thiserror = { workspace = true }

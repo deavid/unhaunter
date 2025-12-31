@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_types::states::AppState;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
+use untypes_core::states::AppState;
 
 fn acknowledge_blinking_gear_hint_system(
     _keyboard_input: Res<ButtonInput<KeyCode>>,

@@ -1,6 +1,6 @@
-use uncore_assets::GameAssets;
-use uncore_foundation::colors;
-use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
+use unassets_core::GameAssets;
+use unfoundation_core::colors;
+use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use bevy::prelude::*;
 

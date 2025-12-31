@@ -19,6 +19,6 @@ pub mod types;
 
 pub use components::core::*;
 pub use types::gear::SpriteID;
-pub use uncore_foundation::types::gear::{
+pub use unfoundation_core::types::gear::{
     EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,
 };

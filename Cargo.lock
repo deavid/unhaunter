@@ -2877,7 +2877,7 @@ dependencies = [
  "itertools 0.14.0",
  "serde",
  "serde_json",
- "uncore-foundation",
+ "unfoundation-core",
 ]
 
 [[package]]
@@ -5575,32 +5575,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 
 [[package]]
-name = "uncampaign-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy-persistent",
- "uncore-assets",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
- "undifficulty-core",
- "unmenu-core",
- "unprofile-core",
-]
-
-[[package]]
-name = "uncore-assets"
+name = "unassets-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
  "thiserror 2.0.17",
- "uncore-types",
+ "untypes-core",
 ]
 
 [[package]]
-name = "uncore-board"
+name = "unboard-core"
 version = "0.3.2-dev"
 dependencies = [
  "anyhow",
@@ -5612,22 +5597,92 @@ dependencies = [
  "serde",
  "serde_json",
  "tiled",
- "uncore-foundation",
+ "unfoundation-core",
  "unspatial-core",
 ]
 
 [[package]]
-name = "uncore-events"
+name = "uncampaign-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "unassets-core",
+ "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
+ "unmenu-core",
+ "unprofile-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "undifficulty-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
- "uncore-board",
+ "enum-iterator",
+ "serde",
+ "unfoundation-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unevents-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "unboard-core",
  "unspatial-core",
 ]
 
 [[package]]
-name = "uncore-foundation"
+name = "unfog-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "ndarray",
+ "rand 0.9.2",
+ "unassets-core",
+ "unboard-core",
+ "unevents-core",
+ "unfoundation-core",
+ "unghost-core",
+ "unmetrics-core",
+ "unnoise-core",
+ "unplayer-core",
+ "unrender-std",
+ "unspatial-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unfog-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "ndarray",
+ "rand 0.9.2",
+ "unassets-core",
+ "unboard-core",
+ "unevents-core",
+ "unfog-core",
+ "unfoundation-core",
+ "unghost-core",
+ "unmetrics-core",
+ "unnoise-core",
+ "unplayer-core",
+ "unrender-std",
+ "unspatial-core",
+ "untypes-core",
+]
+
+[[package]]
+name = "unfoundation-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
@@ -5639,85 +5694,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "uncore-types"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "enum-iterator",
- "ndarray",
- "serde",
- "uncore-foundation",
-]
-
-[[package]]
-name = "undifficulty-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "enum-iterator",
- "serde",
- "uncore-foundation",
- "uncore-types",
-]
-
-[[package]]
-name = "unfog-core"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "ndarray",
- "rand 0.9.2",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
- "unghost-core",
- "unmetrics-core",
- "unnoise-core",
- "unplayer-core",
- "unrender-std",
- "unspatial-core",
-]
-
-[[package]]
-name = "unfog-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy_platform",
- "ndarray",
- "rand 0.9.2",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
- "unfog-core",
- "unghost-core",
- "unmetrics-core",
- "unnoise-core",
- "unplayer-core",
- "unrender-std",
- "unspatial-core",
-]
-
-[[package]]
 name = "ungame-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "unghost-core",
  "uninteraction-core",
@@ -5728,6 +5715,7 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "untags-core",
+ "untypes-core",
  "unui-core",
 ]
 
@@ -5738,12 +5726,11 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "unghost-core",
  "unplayer-core",
  "unprofile-core",
@@ -5751,6 +5738,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -5760,12 +5748,11 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "unghost-core",
  "uninteraction-core",
@@ -5776,6 +5763,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -5785,7 +5773,7 @@ dependencies = [
  "bevy",
  "enum-iterator",
  "rand 0.9.2",
- "uncore-foundation",
+ "unfoundation-core",
  "ungear-core",
  "unspatial-core",
 ]
@@ -5800,10 +5788,9 @@ dependencies = [
  "fastapprox",
  "ndarray",
  "rand 0.9.2",
- "uncore-board",
- "uncore-foundation",
- "uncore-types",
+ "unboard-core",
  "undifficulty-core",
+ "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -5813,6 +5800,7 @@ dependencies = [
  "unrender-std",
  "unspatial-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -5824,7 +5812,7 @@ dependencies = [
  "enum-iterator",
  "rand 0.9.2",
  "serde",
- "uncore-foundation",
+ "unfoundation-core",
  "unspatial-core",
 ]
 
@@ -5835,10 +5823,10 @@ dependencies = [
  "bevy",
  "rand 0.9.2",
  "serde",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -5866,12 +5854,11 @@ dependencies = [
  "ron 0.12.0",
  "serde",
  "sha2",
+ "unassets-core",
  "uncampaign-plugin",
- "uncore-assets",
- "uncore-foundation",
- "uncore-types",
  "undifficulty-core",
  "unfog-plugin",
+ "unfoundation-core",
  "ungame-plugin",
  "ungear-core",
  "ungear-plugin",
@@ -5903,6 +5890,7 @@ dependencies = [
  "untmxmap-plugin",
  "untruck-core",
  "untruck-plugin",
+ "untypes-core",
  "unwalkie-plugin",
  "unwalkie-types",
  "walkdir",
@@ -5975,11 +5963,11 @@ name = "uninteraction-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-board",
- "uncore-events",
- "uncore-types",
+ "unboard-core",
+ "unevents-core",
  "unrender-std",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -5992,12 +5980,11 @@ dependencies = [
  "fastapprox",
  "ndarray",
  "rand 0.9.2",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
  "unfog-core",
+ "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -6007,6 +5994,7 @@ dependencies = [
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6015,12 +6003,12 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "uncore-assets",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unfoundation-core",
  "unmenu-core",
  "unprofile-core",
  "unsettings-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6030,11 +6018,11 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "serde",
- "uncore-assets",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6043,12 +6031,12 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
- "uncore-assets",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "unmenu-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6061,12 +6049,11 @@ dependencies = [
  "ndarray",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "unghost-core",
  "unnavigation-core",
@@ -6077,6 +6064,7 @@ dependencies = [
  "unsummary-core",
  "untags-core",
  "untiled-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6084,10 +6072,10 @@ name = "unmenu-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-assets",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unfoundation-core",
  "unprofile-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6095,11 +6083,11 @@ name = "unmenu-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-assets",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unfoundation-core",
  "unmenu-core",
  "unprofile-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6110,11 +6098,11 @@ dependencies = [
  "bevy-persistent",
  "bevy_platform",
  "strum",
- "uncore-assets",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unfoundation-core",
  "unmenu-core",
  "unsettings-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6139,7 +6127,7 @@ name = "unnavigation-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-board",
+ "unboard-core",
  "unspatial-core",
 ]
 
@@ -6156,14 +6144,14 @@ name = "unnpc-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
+ "unevents-core",
+ "unfoundation-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6190,7 +6178,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "serde",
- "uncore-foundation",
+ "unfoundation-core",
  "unsettings-core",
  "unspatial-core",
 ]
@@ -6202,12 +6190,11 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "uninteraction-core",
  "unnavigation-core",
@@ -6218,6 +6205,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untypes-core",
  "unui-core",
 ]
 
@@ -6228,8 +6216,8 @@ dependencies = [
  "bevy",
  "bevy_platform",
  "serde",
- "uncore-foundation",
  "undifficulty-core",
+ "unfoundation-core",
 ]
 
 [[package]]
@@ -6251,14 +6239,14 @@ dependencies = [
  "bevy_platform",
  "ndarray",
  "serde",
- "uncore-board",
- "uncore-foundation",
- "uncore-types",
+ "unboard-core",
+ "unfoundation-core",
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6269,13 +6257,13 @@ dependencies = [
  "bevy_platform",
  "ndarray",
  "serde",
- "uncore-board",
- "uncore-foundation",
- "uncore-types",
+ "unboard-core",
+ "unfoundation-core",
  "unmetrics-core",
  "unplayer-core",
  "unspatial-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6284,13 +6272,13 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
- "uncore-assets",
- "uncore-events",
- "uncore-types",
+ "unassets-core",
+ "unevents-core",
  "unghost-core",
  "unmenu-core",
  "unnoise-core",
  "unplayer-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6335,8 +6323,8 @@ name = "unsummary-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-foundation",
  "undifficulty-core",
+ "unfoundation-core",
 ]
 
 [[package]]
@@ -6345,14 +6333,14 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "uncore-assets",
- "uncore-board",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unfoundation-core",
  "unplayer-core",
  "unprofile-core",
  "unsummary-core",
+ "untypes-core",
  "unui-core",
 ]
 
@@ -6381,12 +6369,12 @@ dependencies = [
  "bevy_platform",
  "normalize-path",
  "tiled",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
+ "unevents-core",
  "unrender-std",
  "untiled-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6394,8 +6382,8 @@ name = "untruck-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "uncore-events",
- "uncore-foundation",
+ "unevents-core",
+ "unfoundation-core",
 ]
 
 [[package]]
@@ -6406,12 +6394,11 @@ dependencies = [
  "bevy-persistent",
  "bevy_platform",
  "serde",
- "uncore-assets",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unassets-core",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -6422,8 +6409,21 @@ dependencies = [
  "unsettings-core",
  "unsummary-core",
  "untruck-core",
+ "untypes-core",
  "unui-core",
  "unwalkie-core",
+]
+
+[[package]]
+name = "untypes-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "enum-iterator",
+ "ndarray",
+ "serde",
+ "unfoundation-core",
 ]
 
 [[package]]
@@ -6441,9 +6441,9 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.9.2",
- "uncore-foundation",
- "uncore-types",
+ "unfoundation-core",
  "ungear-core",
+ "untypes-core",
  "unwalkie-types",
 ]
 
@@ -6456,11 +6456,10 @@ dependencies = [
  "bevy_platform",
  "enum-iterator",
  "rand 0.9.2",
- "uncore-board",
- "uncore-events",
- "uncore-foundation",
- "uncore-types",
+ "unboard-core",
  "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
  "unghost-core",
@@ -6471,6 +6470,7 @@ dependencies = [
  "unsettings-core",
  "unspatial-core",
  "untruck-core",
+ "untypes-core",
  "unui-core",
  "unwalkie-core",
  "unwalkie-types",

@@ -2,17 +2,17 @@ use crate::components::player::Stamina;
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_board::resources::board_data::BoardData;
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_foundation::types::grade::Grade;
-use uncore_foundation::utils::time::PrintingTimer;
-use uncore_types::states::AppState;
-use unsummary_core::SummaryData;
+use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::types::grade::Grade;
+use unfoundation_core::utils::time::PrintingTimer;
 use unplayer_core::GameConfig;
 use unprofile_core::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
 use unspatial_core::Position;
+use unsummary_core::SummaryData;
+use untypes_core::states::AppState;
 use unui_core::components::game_ui::DamageBackground;
 
 const DEBUG_PLAYER: bool = false;
@@ -231,10 +231,10 @@ pub(crate) fn app_setup(app: &mut App) {
             update_player_stamina,
             handle_player_death,
         )
-            .run_if(in_state(uncore_types::states::GameState::None)),
+            .run_if(in_state(untypes_core::states::GameState::None)),
     );
     app.add_systems(
         Update,
-        recover_sanity.run_if(in_state(uncore_types::states::GameState::Truck)),
+        recover_sanity.run_if(in_state(untypes_core::states::GameState::Truck)),
     );
 }

@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use uncore_foundation::types::evidence::Evidence;
-use uncore_types::states::AppState;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::types::evidence::Evidence;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use untypes_core::states::AppState;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
 fn trigger_almost_ready_to_craft_repellent_system(

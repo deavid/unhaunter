@@ -3,9 +3,9 @@ use bevy::{
     picking::events::{Out, Over, Pointer},
     prelude::*,
 };
-use uncore_board::behavior::component::Interactive;
-use uninteraction_core::Toggleable;
+use unboard_core::behavior::component::Interactive;
 use ungear_core::components::playergear::PlayerGear;
+use uninteraction_core::Toggleable;
 use unplayer_core::components::PlayerSprite;
 
 pub(crate) fn mouse_right_click_gear_system(

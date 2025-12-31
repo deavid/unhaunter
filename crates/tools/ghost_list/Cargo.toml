@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 
-uncore-foundation = { path = "../../uncore-foundation" }
+unfoundation-core = { path = "../../unfoundation-core" }
 enum-iterator = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 itertools = { workspace = true }

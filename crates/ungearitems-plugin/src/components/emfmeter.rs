@@ -1,14 +1,14 @@
-use uncore_foundation::random_seed;
+use unfoundation_core::random_seed;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use uninteraction_core::Toggleable;
 
-use uncore_foundation::types::evidence::Evidence;
+use unfoundation_core::types::evidence::Evidence;
 use unspatial_core::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;
-use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
 

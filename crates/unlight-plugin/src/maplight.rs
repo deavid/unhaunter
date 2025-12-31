@@ -19,16 +19,16 @@ use core::f32;
 use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
-use uncore_board::behavior::component::Interactive;
-use uncore_board::behavior::{Behavior, Orientation};
-use uncore_board::resources::board_data::BoardData;
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_board::types::fielddata::CollisionFieldData;
-use uncore_foundation::kelvin_to_celsius;
-use uncore_foundation::platform::plt::IS_WASM;
+use unboard_core::behavior::component::Interactive;
+use unboard_core::behavior::{Behavior, Orientation};
+use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::roomdb::RoomDB;
+use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
+use unfoundation_core::kelvin_to_celsius;
+use unfoundation_core::platform::plt::IS_WASM;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::{EquipmentPosition, Hand};
@@ -48,14 +48,14 @@ use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unspatial_core::{BoardPosition, Direction, Position};
 
-pub use uncore_board::components::mapcolor::MapColor;
-pub use uncore_board::types::light::LightData;
-pub use uncore_foundation::types::light::LightType;
+pub use unboard_core::components::mapcolor::MapColor;
+pub use unboard_core::types::light::LightData;
+pub use unfoundation_core::types::light::LightType;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
-use uncore_foundation::random_seed;
-use uncore_types::states::AppState;
+use unfoundation_core::random_seed;
 use unghost_core::components::GhostOrbParticle;
+use untypes_core::states::AppState;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.

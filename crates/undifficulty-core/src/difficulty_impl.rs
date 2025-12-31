@@ -5,10 +5,10 @@
 use crate::Difficulty;
 use crate::ManualChapterIndex;
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
-use uncore_foundation::celsius_to_kelvin;
-use uncore_foundation::types::gear::{GearKind, PlayerGearKind};
-use uncore_foundation::types::ghost::definitions::GhostSet;
-use uncore_foundation::types::truck::TabContents;
+use unfoundation_core::celsius_to_kelvin;
+use unfoundation_core::types::gear::{GearKind, PlayerGearKind};
+use unfoundation_core::types::ghost::definitions::GhostSet;
+use unfoundation_core::types::truck::TabContents;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---
@@ -431,7 +431,7 @@ impl DifficultySettings for Difficulty {
     }
 
     fn truck_gear(&self) -> Vec<GearKind> {
-        use uncore_foundation::types::gear::GearKind::*;
+        use unfoundation_core::types::gear::GearKind::*;
         let mut gear = Vec::new();
 
         match self {

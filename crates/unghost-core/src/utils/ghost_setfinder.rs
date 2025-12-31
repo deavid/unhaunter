@@ -3,8 +3,8 @@
 use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
 use itertools::Itertools;
-use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::ghost::types::GhostType;
+use unfoundation_core::types::evidence::Evidence;
+use unfoundation_core::types::ghost::types::GhostType;
 
 const MAX_COMBO: usize = 1024 * 1024;
 

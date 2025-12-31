@@ -6,7 +6,7 @@ use super::{
     direction::Direction,
 };
 
-// use uncore_foundation::random_seed; // TODO: move or handle
+// use unfoundation_core::random_seed; // TODO: move or handle
 
 /// Represents the logical position of an object on the game board.
 ///

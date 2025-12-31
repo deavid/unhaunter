@@ -12,10 +12,10 @@ homepage.workspace = true
 bevy = { workspace = true }
 
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-types = { path = "../uncore-types" }
+unassets-core = { path = "../unassets-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unui-core = { path = "../unui-core" }
 bevy-persistent = { workspace = true }

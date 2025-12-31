@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 use ungear_core::{GearSprite, ItemName, StatusText};
 pub use ungearitems_core::components::compass::Compass;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use uncore_assets::types::root::game_assets::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 
 #[derive(Debug, Clone)]
 pub struct ManualPageData {

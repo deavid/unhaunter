@@ -1,17 +1,17 @@
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_assets::Maps;
-use uncore_assets::types::root::anchors::Anchors;
-use uncore_assets::types::root::font_assets::{
+use unassets_core::GameAssets;
+use unassets_core::Maps;
+use unassets_core::types::root::anchors::Anchors;
+use unassets_core::types::root::font_assets::{
     ChakraPetchAssets, FontAssets, KodeMonoAssets, LondrinaFontAssets, OverlockFontAssets,
     SyneFontAssets, TitilliumWebAssets, VictorMonoAssets,
 };
-use uncore_assets::types::root::image_assets::ImageAssets;
-use uncore_events::hint::OnScreenHintEvent;
-use uncore_types::states::{AppState, GameState};
+use unassets_core::types::root::image_assets::ImageAssets;
+use unevents_core::hint::OnScreenHintEvent;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unmenu_core::mission_select::CurrentMissionSelectMode;
 use unplayer_core::resources::PlayerInput;
+use untypes_core::states::{AppState, GameState};
 
 pub struct UnhaunterRootPlugin;
 

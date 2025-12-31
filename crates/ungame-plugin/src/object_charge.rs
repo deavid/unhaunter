@@ -1,6 +1,6 @@
 //! This module defines systems related to managing the charge levels of objects
 //! that influence ghost behavior.
-use uncore_board::resources::roomdb::RoomDB;
+use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::CurrentDifficulty;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::{GhostInfluence, InfluenceType};

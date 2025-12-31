@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncore_board::behavior;
-use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
-use uncore_events::events::ghost_interaction::GhostInteractionEvent;
+use unboard_core::behavior;
+use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unevents_core::events::ghost_interaction::GhostInteractionEvent;
 
 // NOTE: Old GhostEvent enum removed - replaced by GhostInteractionEvent system
 // The new system provides more sophisticated ghost AI with personality-driven behavior

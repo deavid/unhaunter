@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use uncore_board::behavior::Behavior;
-use uncore_board::behavior::component::Light;
-use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
+use unboard_core::behavior::Behavior;
+use unboard_core::behavior::component::Light;
 use undifficulty_core::CurrentDifficulty;
+use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 
 /// Cooldown timer to prevent rapid re-tripping of the breaker
 #[derive(Resource)]
@@ -79,10 +79,10 @@ fn fuse_box_overload_system(
             // Check if this is actually a breaker and if it's currently on
             if matches!(
                 breaker_behavior.class(),
-                uncore_board::behavior::Class::Breaker
+                unboard_core::behavior::Class::Breaker
             ) && matches!(
                 breaker_behavior.state(),
-                uncore_board::behavior::TileState::On
+                unboard_core::behavior::TileState::On
             ) {
                 // Dispatch a trip breaker event
                 ev_ghost_interaction.write(GhostInteractionEvent {

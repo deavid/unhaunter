@@ -10,10 +10,10 @@ authors.workspace = true
 [dependencies]
 
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unassets-core = { path = "../unassets-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
 
 bevy = { workspace = true }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_events::events::loadlevel::LevelLoadedEvent;
+use unevents_core::events::loadlevel::LevelLoadedEvent;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use untruck_core::truckgear::TruckGear;
 

@@ -13,7 +13,7 @@ pub(crate) mod chapter5;
 
 use bevy::prelude::*;
 
-use uncore_assets::types::root::game_assets::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 
 pub(crate) use resources::manual::CurrentManualPage;
 pub(crate) use resources::manual::Manual;

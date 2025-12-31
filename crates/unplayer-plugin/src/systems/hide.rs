@@ -2,8 +2,8 @@ use crate::components::player::Hiding;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use uncore_board::behavior::Behavior;
-use uncore_board::components::mapcolor::MapColor;
+use unboard_core::behavior::Behavior;
+use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use unplayer_core::components::PlayerSprite;
@@ -131,6 +131,6 @@ fn unhide_player(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         Update,
-        (hide_player, unhide_player).run_if(in_state(uncore_types::states::GameState::None)),
+        (hide_player, unhide_player).run_if(in_state(untypes_core::states::GameState::None)),
     );
 }

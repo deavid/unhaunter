@@ -12,12 +12,12 @@ authors.workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-uncore-assets = { path = "../uncore-assets" }
+unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unrender-std = { path = "../unrender-std" }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_events::events::truck::TruckUIEvent;
+use unevents_core::events::truck::TruckUIEvent;
 use unghost_core::resources::ghost_guess::GhostGuess;
 
 use super::loadoutui::EventButtonClicked;

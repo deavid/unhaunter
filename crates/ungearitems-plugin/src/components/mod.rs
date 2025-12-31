@@ -18,5 +18,5 @@ pub mod thermometer;
 pub mod uvtorch;
 pub mod videocam;
 
-pub use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
+pub use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 pub use ungear_core::types::gear::utils::on_off;

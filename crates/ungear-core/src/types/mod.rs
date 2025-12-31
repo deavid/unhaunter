@@ -1,3 +1,3 @@
 pub mod gear;
 
-pub use uncore_foundation::types::gear::GearKind;
+pub use unfoundation_core::types::gear::GearKind;

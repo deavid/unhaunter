@@ -1,8 +1,8 @@
 use crate::{bevy::bevy_load_map, map_loader::UnhaunterMapLoader};
 use bevy::prelude::*;
-use uncore_assets::Maps;
-use uncore_assets::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
-use uncore_events::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use unassets_core::Maps;
+use unassets_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
+use unevents_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
 use untiled_core::MapTileSetDb;
 
 fn load_level_handler(

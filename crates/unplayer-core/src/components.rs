@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::gear::Hand;
+use unfoundation_core::types::gear::Hand;
 use unsettings_core::controls::ControlKeys;
 use unspatial_core::{Direction, Position};
 

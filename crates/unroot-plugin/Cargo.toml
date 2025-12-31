@@ -8,9 +8,9 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-uncore-assets = { path = "../uncore-assets" }
-uncore-types = { path = "../uncore-types" }
-uncore-events = { path = "../uncore-events" }
+unassets-core = { path = "../unassets-core" }
+untypes-core = { path = "../untypes-core" }
+unevents-core = { path = "../unevents-core" }
 unmenu-core = { path = "../unmenu-core" }
 unghost-core = { path = "../unghost-core" }
 unnoise-core = { path = "../unnoise-core" }

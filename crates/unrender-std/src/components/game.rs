@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::sound::SoundType;
+use unfoundation_core::types::sound::SoundType;
 
 #[derive(Component, Debug)]
 pub struct GameSprite;

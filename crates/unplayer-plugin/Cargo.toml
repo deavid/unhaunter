@@ -11,11 +11,11 @@ authors.workspace = true
 [dependencies]
 
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unassets-core = { path = "../unassets-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }

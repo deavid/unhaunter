@@ -1,7 +1,6 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
-use uncore_board::resources::board_data::BoardData;
-use uncore_types::states::{AppState, GameState};
+use unboard_core::resources::board_data::BoardData;
 use unpicking_core::CustomSpritePickingCamera;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
@@ -10,6 +9,7 @@ use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::{Direction, Position};
 use untags_core::game::GCameraArena;
+use untypes_core::states::{AppState, GameState};
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
     // Despawn old camera if exists

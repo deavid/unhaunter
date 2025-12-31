@@ -11,10 +11,10 @@ homepage.workspace = true
 [dependencies]
 
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unfoundation-core = { path = "../unfoundation-core" }
+unassets-core = { path = "../unassets-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 unmenu-core = { path = "../unmenu-core" }
 unprofile-core = { path = "../unprofile-core" }
 

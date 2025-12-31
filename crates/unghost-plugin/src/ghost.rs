@@ -2,13 +2,12 @@ use bevy::color::palettes::css;
 use bevy::prelude::*;
 use rand::Rng;
 use std::f64::consts::PI;
-use uncore_board::components::mapcolor::MapColor;
-use uncore_board::resources::board_data::BoardData;
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_foundation::random_seed;
-use uncore_foundation::utils::{MeanValue, PrintingTimer};
-use unsummary_core::SummaryData;
+use unboard_core::components::mapcolor::MapColor;
+use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::random_seed;
+use unfoundation_core::utils::{MeanValue, PrintingTimer};
 use ungear_core::gear_stuff::GearStuff;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
@@ -22,10 +21,11 @@ use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::{BoardPosition, Direction, Position};
+use unsummary_core::SummaryData;
 use untags_core::PlayerTag;
 
 use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
-use uncore_events::events::ambient_sound_mute::AmbientSoundMuteEvent;
+use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 
 /// Enables/disables debug logs for hunting behavior.
 const DEBUG_HUNTS: bool = true;

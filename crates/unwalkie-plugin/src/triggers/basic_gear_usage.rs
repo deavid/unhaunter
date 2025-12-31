@@ -1,11 +1,10 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_foundation::types::evidence::Evidence;
-use uncore_types::states::{AppState, GameState};
+use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::ManualChapterIndex;
+use unfoundation_core::types::evidence::Evidence;
 use ungear_core::Battery;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
@@ -14,6 +13,7 @@ use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::Toggleable;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::{BoardPosition, Position};
+use untypes_core::states::{AppState, GameState};
 use unwalkie_core::{WalkieEvent, WalkiePlay}; // Core walkie types
 
 // Local struct to track the state for this specific trigger

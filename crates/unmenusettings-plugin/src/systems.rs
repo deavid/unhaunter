@@ -7,14 +7,14 @@ use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_assets::GameAssets;
-use uncore_foundation::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
-use uncore_types::states::AppState;
+use unassets_core::GameAssets;
+use unfoundation_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::templates;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
+use untypes_core::states::AppState;
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(

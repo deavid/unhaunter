@@ -2,15 +2,15 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_persistent::Persistent;
 
-use uncore_board::behavior::component::Door;
-use uncore_board::behavior::{Behavior, TileState};
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_types::states::{AppState, GameState};
+use unboard_core::behavior::component::Door;
+use unboard_core::behavior::{Behavior, TileState};
+use unboard_core::resources::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
 use unspatial_core::Position;
+use untypes_core::states::{AppState, GameState};
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::gear::GearSpriteID;
+use unfoundation_core::types::evidence::Evidence;
+use unfoundation_core::types::gear::GearSpriteID;
 
 /// The display name of an item.
 #[derive(Component, Debug, Clone, Reflect, Default)]

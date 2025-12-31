@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use std::f32::consts::TAU;
-use uncore_foundation::random_seed;
+use unfoundation_core::random_seed;
 
 #[derive(Component, Debug)]
 pub struct GhostOrbParticle {

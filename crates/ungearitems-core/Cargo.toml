@@ -12,5 +12,5 @@ bevy = { workspace = true }
 enum-iterator = { workspace = true }
 rand = { workspace = true }
 ungear-core = { path = "../ungear-core" }
-uncore-foundation = { path = "../uncore-foundation" }
+unfoundation-core = { path = "../unfoundation-core" }
 unspatial-core = { path = "../unspatial-core" }

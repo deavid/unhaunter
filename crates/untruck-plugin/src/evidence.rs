@@ -2,13 +2,13 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_types::states::{AppState, GameState};
 use ungear_core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::PlayerProfileData;
+use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;
 
 pub fn update_evidence_ui(

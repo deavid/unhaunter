@@ -1,4 +1,4 @@
 pub mod utils;
 
-pub use uncore_foundation::types::gear::{EquipmentPosition, GearKind, GearSpriteID, Hand};
+pub use unfoundation_core::types::gear::{EquipmentPosition, GearKind, GearSpriteID, Hand};
 pub type SpriteID = GearSpriteID;

@@ -1,5 +1,5 @@
 [package]
-name = "uncore-foundation"
+name = "unevents-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,9 +8,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+unboard-core = { path = "../unboard-core" }
+unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-serde = { workspace = true }
-enum-iterator = { workspace = true }
-rand = { workspace = true }
-thiserror = { workspace = true }

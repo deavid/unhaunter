@@ -2,9 +2,9 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::fmt::Debug;
 use std::time::Duration;
-use uncore_foundation::random_seed;
-use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::ghost::types::GhostType;
+use unfoundation_core::random_seed;
+use unfoundation_core::types::evidence::Evidence;
+use unfoundation_core::types::ghost::types::GhostType;
 use unspatial_core::{BoardPosition, Position};
 
 /// Per-ghost randomized noise offsets for unique behavior patterns

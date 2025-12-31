@@ -3,7 +3,7 @@ pub mod json;
 pub mod table;
 
 use crate::cli::OutputFormat;
-use uncore_foundation::types::ghost::types::GhostType;
+use unfoundation_core::types::ghost::types::GhostType;
 
 pub fn show_ghost_list(ghosts: &[GhostType], format: &OutputFormat) {
     match format {

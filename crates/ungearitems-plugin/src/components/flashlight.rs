@@ -1,4 +1,4 @@
-use uncore_foundation::random_seed;
+use unfoundation_core::random_seed;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use uninteraction_core::{Toggleable, Triggered};
@@ -8,7 +8,7 @@ use unspatial_core::Position;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
-use uncore_foundation::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::GearSpriteID;
 pub use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 
 pub fn update_flashlight(

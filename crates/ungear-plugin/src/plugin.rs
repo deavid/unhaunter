@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_events::events::sound::SoundEvent;
+use unevents_core::events::sound::SoundEvent;
 use unplayer_core::GameConfig;
 
 use super::systems;

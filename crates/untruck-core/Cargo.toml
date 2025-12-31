@@ -10,5 +10,5 @@ homepage.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-events = { path = "../uncore-events" }
+unfoundation-core = { path = "../unfoundation-core" }
+unevents-core = { path = "../unevents-core" }

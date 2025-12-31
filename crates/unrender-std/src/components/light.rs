@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::light::LightType;
+use unfoundation_core::types::light::LightType;
 
 // Define the LightSource component
 #[derive(Component, Debug, Clone, Copy, Reflect)]

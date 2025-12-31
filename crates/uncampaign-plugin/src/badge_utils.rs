@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_foundation::types::grade::Grade;
+use unassets_core::GameAssets;
+use unfoundation_core::types::grade::Grade;
 
 /// Utility for creating badge UI elements in the map hub
 pub struct BadgeUtils;

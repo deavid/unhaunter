@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_types::states::{AppState, GameState};
 use undifficulty_core::CurrentDifficulty;
+use untypes_core::states::{AppState, GameState};
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 pub struct TutorialIntroductionsTriggerPlugin;

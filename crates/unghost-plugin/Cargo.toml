@@ -10,9 +10,9 @@ authors.workspace = true
 [dependencies]
 
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+unevents-core = { path = "../unevents-core" }
 unsummary-core = { path = "../unsummary-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }

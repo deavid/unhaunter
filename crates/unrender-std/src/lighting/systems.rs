@@ -9,10 +9,10 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
-use uncore_board::behavior::{Behavior, Class};
-use uncore_board::resources::board_data::BoardData;
-use uncore_board::types::fielddata::LightFieldData;
-use uncore_board::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
+use unboard_core::behavior::{Behavior, Class};
+use unboard_core::resources::board_data::BoardData;
+use unboard_core::types::fielddata::LightFieldData;
+use unboard_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
 use unspatial_core::{BoardPosition, Position};
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors

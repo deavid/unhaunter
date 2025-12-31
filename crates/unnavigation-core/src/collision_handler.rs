@@ -1,7 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use uncore_board::resources::board_data::BoardData;
+use unboard_core::resources::board_data::BoardData;
 use unspatial_core::{BoardPosition, Position};
 
 /// System parameter for handling player collisions with the environment.

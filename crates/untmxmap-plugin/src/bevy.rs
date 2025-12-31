@@ -2,8 +2,8 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
-use uncore_board::types::floor::FloorLevelMapping;
-use uncore_board::types::tiledmap::map::{MapLayer, MapLayerGroup};
+use unboard_core::types::floor::FloorLevelMapping;
+use unboard_core::types::tiledmap::map::{MapLayer, MapLayerGroup};
 use unrender_std::materials::CustomMaterial1;
 use untiled_core::{AtlasData, MapTileSet, MapTileSetDb};
 
@@ -132,7 +132,7 @@ pub fn bevy_load_map(
 
                 // Extract child layers from this floor level group
                 let mut floor_layers = Vec::new();
-                if let uncore_board::types::tiledmap::map::MapLayerType::Group(group) = &layer.data
+                if let unboard_core::types::tiledmap::map::MapLayerType::Group(group) = &layer.data
                 {
                     for (i, mut child_layer) in group.layers.iter().cloned().enumerate() {
                         // Set floor information for each child layer

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use uncore_board::types::floor::FloorLevelMapping;
-use uncore_board::types::tiledmap::map::MapLayer;
+use unboard_core::types::floor::FloorLevelMapping;
+use unboard_core::types::tiledmap::map::MapLayer;
 
 /// Event triggered to load a new level from a TMX map file.
 ///

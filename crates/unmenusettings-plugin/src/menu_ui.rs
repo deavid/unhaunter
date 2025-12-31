@@ -1,10 +1,10 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_types::states::AppState;
+use unassets_core::GameAssets;
 use unmenu_core::components::{MenuMouseTracker, MenuRoot};
 use unmenu_core::templates;
+use untypes_core::states::AppState;
 
 fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);

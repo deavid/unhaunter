@@ -20,14 +20,13 @@ use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
-use uncore_assets::GameAssets;
-use uncore_assets::Maps;
-use uncore_events::events::loadlevel::LoadLevelEvent;
-use uncore_foundation::colors;
-use uncore_foundation::platform::plt::FONT_SCALE;
-use uncore_foundation::types::grade::Grade;
-use uncore_types::states::{AppState, MapHubState};
+use unassets_core::GameAssets;
+use unassets_core::Maps;
 use undifficulty_core::{CurrentDifficulty, DifficultySettings};
+use unevents_core::events::loadlevel::LoadLevelEvent;
+use unfoundation_core::colors;
+use unfoundation_core::platform::plt::FONT_SCALE;
+use unfoundation_core::types::grade::Grade;
 use unmenu_core::components::MenuMouseTracker;
 use unmenu_core::events::KeyboardNavigate;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
@@ -38,6 +37,7 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked},
     scrollbar, templates,
 };
+use untypes_core::states::{AppState, MapHubState};
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
@@ -330,7 +330,7 @@ pub fn setup_ui(
 
     let player_level = player_profile_resource.progression.player_level;
 
-    let filtered_maps: Vec<(usize, &uncore_assets::types::root::map::Map)> = maps_resource
+    let filtered_maps: Vec<(usize, &unassets_core::types::root::map::Map)> = maps_resource
         .maps
         .iter()
         .enumerate()
@@ -411,8 +411,8 @@ pub fn setup_ui(
         return;
     }
 
-    let sort_maps = |a: &(usize, &uncore_assets::types::root::map::Map),
-                     b: &(usize, &uncore_assets::types::root::map::Map)| {
+    let sort_maps = |a: &(usize, &unassets_core::types::root::map::Map),
+                     b: &(usize, &unassets_core::types::root::map::Map)| {
         let a_order = a.1.mission_data.order.as_str();
         let b_order = b.1.mission_data.order.as_str();
 
@@ -748,7 +748,7 @@ pub fn setup_ui(
 fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    map: &uncore_assets::types::root::map::Map,
+    map: &unassets_core::types::root::map::Map,
     player_profile: &unprofile_core::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,
@@ -847,7 +847,7 @@ fn create_mission_list_item(
 fn create_locked_mission_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    mission_data: &uncore_assets::types::mission_data::MissionData,
+    mission_data: &unassets_core::types::mission_data::MissionData,
 ) {
     mission_list
         .spawn(Node {

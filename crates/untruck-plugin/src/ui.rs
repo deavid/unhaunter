@@ -5,13 +5,13 @@ use crate::components::truck::TruckUI;
 use crate::components::truck_ui::{TabContents, TabState, TruckTab};
 use crate::components::truck_ui_button::TruckButtonTypeExt;
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_foundation::colors;
-use uncore_foundation::platform::plt::{FONT_SCALE, UI_SCALE};
-use uncore_types::states::{AppState, GameState};
+use unassets_core::GameAssets;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::colors;
+use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::materials::UIPanelMaterial;
+use untypes_core::states::{AppState, GameState};
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
 pub trait FromTab {

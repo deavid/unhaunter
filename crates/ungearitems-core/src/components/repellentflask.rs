@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::ghost::types::GhostType;
+use unfoundation_core::types::ghost::types::GhostType;
 
 #[derive(Component, Debug, Clone, Default, PartialEq, Eq)]
 pub struct RepellentFlask {

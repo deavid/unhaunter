@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::GearSpriteID;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum EMFLevel {

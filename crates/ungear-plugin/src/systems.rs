@@ -2,18 +2,17 @@ use crate::Hand;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_assets::GameAssets;
-use uncore_board::components::mapcolor::MapColor;
-use ungear_core::{GearSprite, StatusText};
-use uninteraction_core::{Toggleable, Triggered};
-use uncore_events::events::sound::SoundEvent;
-use uncore_foundation::types::gear::{GearKind, GearSpriteID};
-use uncore_types::states::GameState;
+use unassets_core::GameAssets;
+use unboard_core::components::mapcolor::MapColor;
+use unevents_core::events::sound::SoundEvent;
+use unfoundation_core::types::gear::{GearKind, GearSpriteID};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
+use ungear_core::{GearSprite, StatusText};
+use uninteraction_core::{Toggleable, Triggered};
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
@@ -21,6 +20,7 @@ use unrender_std::components::sprite_type::SpriteType;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::Position;
 use untags_core::PlayerTag;
+use untypes_core::states::GameState;
 
 fn update_deployed_gear_sprites(
     mut commands: Commands,

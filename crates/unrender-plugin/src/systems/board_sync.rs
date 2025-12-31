@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_board::resources::board_data::BoardData;
+use unboard_core::resources::board_data::BoardData;
 use unplayer_core::GameConfig;
 use unspatial_core::{MapEntityFieldBPos, Position};
 use untags_core::PlayerTag;

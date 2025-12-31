@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use uncore_board::behavior::component::{Collision, InteractableByGhost};
-use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::gear::GearSpriteID;
-use uncore_foundation::types::gear::{EquipmentPosition, GearKind};
+use unboard_core::behavior::component::{Collision, InteractableByGhost};
+use unfoundation_core::types::evidence::Evidence;
+use unfoundation_core::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 use ungear_core::*;
 use uninteraction_core::*;
@@ -28,7 +28,7 @@ use crate::components::thermometer::Thermometer as ThermometerInternal;
 use crate::components::uvtorch::UVTorch;
 use crate::components::videocam::Videocam;
 
-use uncore_foundation::types::light::LightType;
+use unfoundation_core::types::light::LightType;
 
 pub fn register_all(app: &mut App) {
     let mut registry = app.world_mut().resource_mut::<GearSpawnerRegistry>();

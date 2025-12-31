@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use uncore_board::resources::board_data::BoardData;
-use uncore_types::states::{AppState, GameState};
+use unboard_core::resources::board_data::BoardData;
 use unghost_core::components::GhostBreach;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
+use untypes_core::states::{AppState, GameState};
 
-use uncore_board::resources::roomdb::RoomDB;
+use unboard_core::resources::roomdb::RoomDB;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use ungearitems_core::components::thermometer::Thermometer;
@@ -226,7 +226,7 @@ fn trigger_thermometer_non_freezing_fixation(
     if let Some(hand_entity) = player_gear.right_hand
         && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
     {
-        let temp_c = uncore_foundation::kelvin_to_celsius(thermo.temp);
+        let temp_c = unfoundation_core::kelvin_to_celsius(thermo.temp);
         if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed_secs() > REQUIRED_DURATION {

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_foundation::types::evidence::Evidence;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::types::evidence::Evidence;
 use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;

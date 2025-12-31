@@ -1,12 +1,12 @@
 use bevy::{prelude::*, time::Stopwatch};
-use uncore_board::resources::roomdb::RoomDB;
-use uncore_types::states::{AppState, GameState};
+use unboard_core::resources::roomdb::RoomDB;
 use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::Position;
+use untypes_core::states::{AppState, GameState};
 use unwalkie_core::{WalkieEvent, WalkiePlay};
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;

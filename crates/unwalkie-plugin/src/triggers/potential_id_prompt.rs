@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_foundation::types::evidence::Evidence;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::types::evidence::Evidence;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::{PotentialIDData, PotentialIDTimer};
 use unprofile_core::PlayerProfileData;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
-use uncore_types::states::GameState;
+use untypes_core::states::GameState;
 
 // PotentialIDTimer struct definition removed from here
 

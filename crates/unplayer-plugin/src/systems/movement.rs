@@ -1,19 +1,19 @@
 use crate::components::player::{Hiding, Stamina};
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use uncore_board::behavior::Behavior;
-use uncore_board::behavior::component::{Interactive, RoomState};
-use uncore_board::resources::board_data::BoardData;
-use uncore_events::events::npc_help::NpcHelpEvent;
-use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unboard_core::behavior::Behavior;
+use unboard_core::behavior::component::{Interactive, RoomState};
+use unboard_core::resources::board_data::BoardData;
 use undifficulty_core::CurrentDifficulty;
-use unui_core::resources::MouseVisibility;
+use unevents_core::events::npc_help::NpcHelpEvent;
+use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unspatial_core::{Direction, Position};
+use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;
 const RUN_ADD_MULTIPLIER: f32 = 1.3;

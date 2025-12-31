@@ -11,12 +11,12 @@ homepage.workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-uncore-assets = { path = "../uncore-assets" }
+unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-board = { path = "../uncore-board" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 untiled-core = { path = "../untiled-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unsummary-core = { path = "../unsummary-core" }

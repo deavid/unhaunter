@@ -3,7 +3,7 @@ pub mod assetidx_updater;
 pub mod report_timer;
 pub mod utils;
 
-use uncore_assets::CliOptions;
+use unassets_core::CliOptions;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]

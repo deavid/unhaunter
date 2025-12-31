@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
-use uncore_foundation::types::evidence::Evidence;
-use uncore_foundation::types::ghost::types::GhostType;
-use uncore_types::states::AppState;
+use unfoundation_core::types::evidence::Evidence;
+use unfoundation_core::types::ghost::types::GhostType;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
+use untypes_core::states::AppState;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
 // Track which repellent types have already given hints this mission

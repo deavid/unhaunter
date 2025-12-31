@@ -2,10 +2,10 @@ use crate::metrics;
 
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_board::components::mapcolor::MapColor;
-use uncore_foundation::random_seed;
-use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
-use uncore_foundation::utils::time::format_time;
+use unboard_core::components::mapcolor::MapColor;
+use unfoundation_core::random_seed;
+use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::utils::time::format_time;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::{GearSprite, StatusText};
 pub use ungearitems_core::components::sage::{

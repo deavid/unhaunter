@@ -9,9 +9,9 @@ authors.workspace = true
 
 [dependencies]
 
-uncore-assets = { path = "../uncore-assets" }
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-types = { path = "../uncore-types" }
+unassets-core = { path = "../unassets-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+untypes-core = { path = "../untypes-core" }
 unsettings-core = { path = "../unsettings-core" }
 unmenu-core = { path = "../unmenu-core" }
 unprofile-core = { path = "../unprofile-core" }

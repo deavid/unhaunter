@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_foundation::random_seed;
-use uncore_foundation::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::random_seed;
+use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
 use ungear_core::{Battery, Electronic, GearSprite, StatusText};

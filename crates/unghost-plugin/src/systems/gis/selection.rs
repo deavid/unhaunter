@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_board::behavior::Behavior;
-use uncore_board::behavior::TileState;
-use uncore_board::behavior::component::{Door, InteractableByGhost};
-use uncore_board::resources::board_data::BoardData;
-use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
-use uncore_foundation::random_seed;
+use unboard_core::behavior::Behavior;
+use unboard_core::behavior::TileState;
+use unboard_core::behavior::component::{Door, InteractableByGhost};
+use unboard_core::resources::board_data::BoardData;
 use undifficulty_core::CurrentDifficulty;
+use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
+use unfoundation_core::random_seed;
 use unghost_core::components::GhostSprite;
 use unrender_std::VisibilityData;
 use unspatial_core::Position;
@@ -198,17 +198,17 @@ fn find_interaction_target(
                         let class = behavior.class();
                         let is_switch = matches!(
                             class,
-                            uncore_board::behavior::Class::Switch
-                                | uncore_board::behavior::Class::RoomSwitch
+                            unboard_core::behavior::Class::Switch
+                                | unboard_core::behavior::Class::RoomSwitch
                         );
                         let is_lamp = matches!(
                             class,
-                            uncore_board::behavior::Class::WallLamp
-                                | uncore_board::behavior::Class::FloorLamp
-                                | uncore_board::behavior::Class::TableLamp
-                                | uncore_board::behavior::Class::CeilingLight
-                                | uncore_board::behavior::Class::StreetLight
-                                | uncore_board::behavior::Class::CandleLight
+                            unboard_core::behavior::Class::WallLamp
+                                | unboard_core::behavior::Class::FloorLamp
+                                | unboard_core::behavior::Class::TableLamp
+                                | unboard_core::behavior::Class::CeilingLight
+                                | unboard_core::behavior::Class::StreetLight
+                                | unboard_core::behavior::Class::CandleLight
                         );
                         if behavior.can_emit_light()
                             || behavior.p.light.can_emit_light
@@ -264,14 +264,14 @@ fn find_interaction_target(
                     }
                     GhostInteractionType::TripBreaker => {
                         // Only target breakers that are currently On
-                        if GIS_DEBUG && behavior.class() == uncore_board::behavior::Class::Breaker {
+                        if GIS_DEBUG && behavior.class() == unboard_core::behavior::Class::Breaker {
                             if behavior.state() == TileState::On {
                                 breaker_on += 1;
                             } else {
                                 breaker_off += 1;
                             }
                         }
-                        if behavior.class() == uncore_board::behavior::Class::Breaker
+                        if behavior.class() == unboard_core::behavior::Class::Breaker
                             && behavior.state() == TileState::On
                         {
                             Some((entity, pos, None))

@@ -2,14 +2,14 @@
 //! which is shown as a tutorial before starting a new game on certain difficulty levels.
 use super::{CurrentManualPage, Manual};
 use bevy::prelude::*;
-use uncore_assets::GameAssets;
-use uncore_assets::Maps;
-use uncore_events::events::loadlevel::LoadLevelEvent;
-use uncore_foundation::platform::plt::FONT_SCALE;
-use uncore_types::states::AppState;
+use unassets_core::GameAssets;
+use unassets_core::Maps;
 use undifficulty_core::CurrentDifficulty;
 use undifficulty_core::DifficultySelectionState;
 use undifficulty_core::ManualChapterIndex;
+use unevents_core::events::loadlevel::LoadLevelEvent;
+use unfoundation_core::platform::plt::FONT_SCALE;
+use untypes_core::states::AppState;
 
 use super::draw_manual_page;
 

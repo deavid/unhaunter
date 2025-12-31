@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use uncore_foundation::types::evidence::Evidence;
+    use unfoundation_core::types::evidence::Evidence;
     use ungear_core::GearKind;
 
     use crate::events::{WalkieEvent, WalkieEventPriority, WalkieRepeatBehavior};

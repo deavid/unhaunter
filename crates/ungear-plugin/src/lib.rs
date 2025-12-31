@@ -15,7 +15,7 @@
 pub mod plugin;
 pub mod systems;
 
-pub use uncore_foundation::types::gear::{
+pub use unfoundation_core::types::gear::{
     EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,
 };
 pub use ungear_core::types::gear::SpriteID;

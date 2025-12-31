@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use uncore_events::events::map_selected::MapSelectedEvent;
-use uncore_types::states::AppState;
-use uncore_types::states::MapHubState;
+use unevents_core::events::map_selected::MapSelectedEvent;
+use untypes_core::states::AppState;
+use untypes_core::states::MapHubState;
 
 use crate::difficulty_selection;
 

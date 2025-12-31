@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_board::resources::board_data::BoardData;
-use uncore_foundation::types::evidence::Evidence;
+use unboard_core::resources::board_data::BoardData;
+use unfoundation_core::types::evidence::Evidence;
 use ungear_core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use uncore_types::states::AppState;
 use unsummary_core::SummaryData;
+use untypes_core::states::AppState;
 
 use crate::summary::{
     calculate_rewards_and_grades, cleanup, finalize_profile_update, keyboard, setup, setup_ui,

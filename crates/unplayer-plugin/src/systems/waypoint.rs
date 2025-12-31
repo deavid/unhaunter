@@ -1,13 +1,12 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
-use uncore_board::behavior::{
+use unboard_core::behavior::{
     Behavior,
     component::{Interactive, Stairs},
 };
-use uncore_board::resources::board_data::BoardData;
-use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unboard_core::resources::board_data::BoardData;
+use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unui_core::resources::MouseVisibility;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
@@ -16,6 +15,7 @@ use unrender_std::VisibilityData;
 use unrender_std::components::game::GameSprite;
 use unspatial_core::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, Position};
 use untags_core::game::GCameraArena;
+use unui_core::resources::MouseVisibility;
 
 use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
 
@@ -34,7 +34,7 @@ pub fn waypoint_creation_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&uncore_board::behavior::component::RoomState>,
+        Option<&unboard_core::behavior::component::RoomState>,
     )>,
     q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
@@ -197,7 +197,7 @@ pub fn waypoint_following_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&uncore_board::behavior::component::RoomState>,
+        Option<&unboard_core::behavior::component::RoomState>,
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,

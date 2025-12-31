@@ -1,5 +1,5 @@
 use bevy_platform::collections::HashMap;
-use uncore_board::types::tiledmap::map::{
+use unboard_core::types::tiledmap::map::{
     MapLayer, MapLayerGroup, MapLayerType, MapTile, MapTileList, Pos,
 };
 

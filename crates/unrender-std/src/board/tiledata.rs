@@ -1,6 +1,6 @@
 use crate::materials::CustomMaterial1;
 use bevy::prelude::*;
-use uncore_board::behavior::Behavior;
+use unboard_core::behavior::Behavior;
 
 #[derive(Component, Clone)]
 pub enum PreMesh {

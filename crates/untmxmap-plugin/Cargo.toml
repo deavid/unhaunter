@@ -9,10 +9,10 @@ authors.workspace = true
 
 [dependencies]
 
-uncore-board = { path = "../uncore-board" }
-uncore-assets = { path = "../uncore-assets" }
-uncore-events = { path = "../uncore-events" }
-uncore-types = { path = "../uncore-types" }
+unboard-core = { path = "../unboard-core" }
+unassets-core = { path = "../unassets-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
 untiled-core = { path = "../untiled-core" }
 unrender-std = { path = "../unrender-std" }
 

@@ -1,11 +1,11 @@
 use bevy_platform::collections::HashSet;
 use fastapprox::faster;
 use ndarray::Array3;
-use uncore_board::components::mapcolor::MapColor;
-use uncore_board::resources::board_data::BoardData;
-use uncore_foundation::random_seed;
-use uncore_foundation::types::gear::EquipmentPosition;
+use unboard_core::components::mapcolor::MapColor;
+use unboard_core::resources::board_data::BoardData;
 use undifficulty_core::CurrentDifficulty;
+use unfoundation_core::random_seed;
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::{GearSprite, StatusText};
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -20,7 +20,7 @@ use crate::metrics;
 
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
-use uncore_foundation::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::GearSpriteID;
 pub use ungearitems_core::components::repellentflask::RepellentFlask;
 
 // Colors for repellent particles

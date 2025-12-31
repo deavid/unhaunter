@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_foundation::random_seed;
+use unfoundation_core::random_seed;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::{Battery, Electronic};
 use uninteraction_core::Toggleable;

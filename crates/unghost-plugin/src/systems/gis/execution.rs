@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use rand::Rng;
-use uncore_board::behavior::Behavior;
-use uncore_board::behavior::component::{InteractableByGhost, Interactive, RoomState};
-use uncore_board::resources::board_data::BoardData;
-use uncore_events::events::board_data_rebuild::BoardDataToRebuild;
-use uncore_events::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
-use uncore_events::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
-use uncore_events::events::sound::SoundEvent;
-use uncore_foundation::random_seed;
+use unboard_core::behavior::Behavior;
+use unboard_core::behavior::component::{InteractableByGhost, Interactive, RoomState};
+use unboard_core::resources::board_data::BoardData;
+use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
+use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unevents_core::events::sound::SoundEvent;
+use unfoundation_core::random_seed;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unspatial_core::Position;
 

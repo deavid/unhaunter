@@ -7,9 +7,9 @@ use crate::Difficulty;
 use crate::ManualChapterIndex;
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
-use uncore_foundation::types::gear::{GearKind, PlayerGearKind};
-use uncore_foundation::types::ghost::definitions::GhostSet;
-use uncore_foundation::types::truck::TabContents;
+use unfoundation_core::types::gear::{GearKind, PlayerGearKind};
+use unfoundation_core::types::ghost::definitions::GhostSet;
+use unfoundation_core::types::truck::TabContents;
 
 /// Trait for querying difficulty-specific game settings
 pub trait DifficultySettings {

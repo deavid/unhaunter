@@ -1,15 +1,15 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use uncore_assets::GameAssets;
-use uncore_foundation::platform::plt::VERSION;
-use uncore_types::states::{AppState, MapHubState};
+use unassets_core::GameAssets;
+use unfoundation_core::platform::plt::VERSION;
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
 use unprofile_core::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
+use untypes_core::states::{AppState, MapHubState};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub enum MenuID {

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use uncore_foundation::celsius_to_kelvin;
+use unfoundation_core::celsius_to_kelvin;
 
 #[derive(Component, Debug, Clone)]
 pub struct Thermometer {

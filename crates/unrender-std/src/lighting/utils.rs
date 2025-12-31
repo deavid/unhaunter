@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use uncore_board::behavior::Behavior;
-use uncore_board::resources::board_data::BoardData;
-use uncore_board::types::fielddata::LightFieldData;
-use uncore_board::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
+use unboard_core::behavior::Behavior;
+use unboard_core::resources::board_data::BoardData;
+use unboard_core::types::fielddata::LightFieldData;
+use unboard_core::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use unspatial_core::{BoardPosition, Position};
 
 pub const WAVE_MAX_HISTORY: usize = 12;

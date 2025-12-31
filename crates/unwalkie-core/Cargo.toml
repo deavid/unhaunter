@@ -11,8 +11,8 @@ homepage.workspace = true
 [dependencies]
 unwalkie-types = { path = "../unwalkie-types" }
 
-uncore-foundation = { path = "../uncore-foundation" }
-uncore-types = { path = "../uncore-types" }
+unfoundation-core = { path = "../unfoundation-core" }
+untypes-core = { path = "../untypes-core" }
 ungear-core = { path = "../ungear-core" }
 
 bevy = { workspace = true }

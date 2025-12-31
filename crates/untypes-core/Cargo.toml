@@ -1,5 +1,5 @@
 [package]
-name = "uncore-board"
+name = "untypes-core"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -8,14 +8,10 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-unspatial-core = { path = "../unspatial-core" }
-uncore-foundation = { path = "../uncore-foundation" }
+
+unfoundation-core = { path = "../unfoundation-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
-fastapprox = { workspace = true }
-ordered-float = { workspace = true }
-tiled = { workspace = true }
-anyhow = { workspace = true }
 ndarray = { workspace = true }
+enum-iterator = { workspace = true }

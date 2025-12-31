@@ -4,8 +4,8 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use rand::Rng;
 use rand::seq::SliceRandom;
-use uncore_board::resources::board_data::BoardData;
-use uncore_foundation::random_seed;
+use unboard_core::resources::board_data::BoardData;
+use unfoundation_core::random_seed;
 use unghost_core::components::InfluenceType;
 use unspatial_core::Position;
 
