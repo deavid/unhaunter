@@ -42,11 +42,11 @@ fn update_held_object_position(
     mut q_held: Query<&mut Position, (Without<PlayerSprite>, Without<GearMarker>)>,
 ) {
     for (player_pos, player_gear) in q_player.iter() {
-        if let Some(held) = &player_gear.held_item {
-            if let Ok(mut object_pos) = q_held.get_mut(held.entity) {
-                *object_pos = *player_pos;
-                object_pos.z += 0.25;
-            }
+        if let Some(held) = &player_gear.held_item
+            && let Ok(mut object_pos) = q_held.get_mut(held.entity)
+        {
+            *object_pos = *player_pos;
+            object_pos.z += 0.25;
         }
     }
 }
@@ -106,14 +106,15 @@ fn grab_object(
                             asset_server.load("sounds/item-pickup-whoosh.ogg"),
                         ));
                     }
-                } else if let Some(behavior) = behavior {
-                    if behavior.p.object.pickable && player_gear.held_item.is_none() {
-                        player_gear.held_item = Some(HeldObject { entity });
-                        commands.entity(entity).remove::<FloorItemCollidable>();
-                        commands.spawn(AudioPlayer::new(
-                            asset_server.load("sounds/item-pickup-whoosh.ogg"),
-                        ));
-                    }
+                } else if let Some(behavior) = behavior
+                    && behavior.p.object.pickable
+                    && player_gear.held_item.is_none()
+                {
+                    player_gear.held_item = Some(HeldObject { entity });
+                    commands.entity(entity).remove::<FloorItemCollidable>();
+                    commands.spawn(AudioPlayer::new(
+                        asset_server.load("sounds/item-pickup-whoosh.ogg"),
+                    ));
                 }
             }
         }

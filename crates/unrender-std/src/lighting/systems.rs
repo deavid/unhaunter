@@ -351,10 +351,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 // Wait, the logic in runtime is:
                 // `bf.prebaked_propagation.get(source_id).get(pos).dirs`
                 // So at `pos`, we store which directions are valid to exit.
-                if let Some(prop_grid) = propagation_directions.get_mut(source_id as usize) {
-                    if let Some(dirs) = prop_grid.get_mut((pos.x as usize, pos.y as usize)) {
-                        dirs[dir_idx] = true;
-                    }
+                if let Some(prop_grid) = propagation_directions.get_mut(source_id as usize)
+                    && let Some(dirs) = prop_grid.get_mut((pos.x as usize, pos.y as usize))
+                {
+                    dirs[dir_idx] = true;
                 }
 
                 continue;
@@ -390,10 +390,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 .insert((nx, ny, nz));
 
             // Record propagation direction
-            if let Some(prop_grid) = propagation_directions.get_mut(source_id as usize) {
-                if let Some(dirs) = prop_grid.get_mut((pos.x as usize, pos.y as usize)) {
-                    dirs[dir_idx] = true;
-                }
+            if let Some(prop_grid) = propagation_directions.get_mut(source_id as usize)
+                && let Some(dirs) = prop_grid.get_mut((pos.x as usize, pos.y as usize))
+            {
+                dirs[dir_idx] = true;
             }
 
             // Update history
