@@ -1,4 +1,4 @@
-use crate::Hand;
+use unfoundation_core::types::gear::Hand;
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;

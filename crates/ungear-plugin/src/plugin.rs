@@ -3,7 +3,7 @@ use unevents_core::events::sound::SoundEvent;
 use unplayer_core::GameConfig;
 
 use super::systems;
-use crate::resources::spawner::GearSpawnerRegistry;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
 
 pub struct UnhaunterGearPlugin;
 

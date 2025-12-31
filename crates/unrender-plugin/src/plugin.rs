@@ -5,13 +5,13 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
-use crate::VisibilityData;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
 use unmetrics_core::SendMetric;
 use unspatial_core::Position;
 
-use crate::board::spritedb::SpriteDB;
+use unrender_std::board::spritedb::SpriteDB;
 
 pub const APPLY_PERSPECTIVE: DiagnosticPath =
     DiagnosticPath::const_new("unboard/systems/apply_perspective");

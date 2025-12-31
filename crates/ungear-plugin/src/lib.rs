@@ -14,9 +14,3 @@
 //! paranormal activity, gather evidence, and ultimately banish ghosts.
 pub mod plugin;
 pub(crate) mod systems;
-
-pub use unfoundation_core::types::gear::{
-    EquipmentPosition, GearKind, GearSpriteID, Hand, PlayerGearKind,
-};
-pub use ungear_core::types::gear::SpriteID;
-pub use ungear_core::*;
