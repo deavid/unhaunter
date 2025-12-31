@@ -1,5 +1,5 @@
-pub mod components;
-pub mod menu_ui;
-pub mod menus;
+pub(crate) mod components;
+pub(crate) mod menu_ui;
+pub(crate) mod menus;
 pub mod plugin;
-pub mod systems;
+pub(crate) mod systems;

@@ -1,6 +1,5 @@
-pub mod components;
-pub mod metrics;
+pub(crate) mod components;
+pub(crate) mod metrics;
 pub mod plugin;
-pub mod prelude;
-pub mod registration;
-pub mod systems;
+pub(crate) mod registration;
+pub(crate) mod systems;

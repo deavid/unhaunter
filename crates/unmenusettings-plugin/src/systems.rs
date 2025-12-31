@@ -1,7 +1,7 @@
 use crate::components::{
     AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuItem,
-    MenuSettingClassSelected, MenuType, SaveAudioSetting, SaveGameplaySetting, SettingsMenu,
-    SettingsState, SettingsStateTimer,
+    MenuSettingClassSelected, SaveAudioSetting, SaveGameplaySetting, SettingsMenu, SettingsState,
+    SettingsStateTimer,
 };
 use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
@@ -200,7 +200,6 @@ fn menu_audio_setting_selected(
                 ..default()
             })
             .insert(SettingsMenu {
-                menu_type: MenuType::SettingEdit,
                 selected_item_idx: 0,
             })
             .with_children(|parent| {
@@ -358,7 +357,6 @@ fn menu_gameplay_setting_selected(
                 ..default()
             })
             .insert(SettingsMenu {
-                menu_type: MenuType::SettingEdit,
                 selected_item_idx: 0,
             })
             .with_children(|parent| {

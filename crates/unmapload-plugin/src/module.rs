@@ -17,8 +17,6 @@
 //! * `level_finalization` - Post-load processing and environment preparation
 //! * `influence_system` - Ghost influence assignment to objects
 
-pub use crate::level_setup::LoadLevelSystemParam;
-
 use crate::level_finalization;
 use crate::level_setup;
 use bevy::prelude::App;

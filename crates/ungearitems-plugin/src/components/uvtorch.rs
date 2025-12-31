@@ -12,8 +12,6 @@ use unspatial_core::Position;
 pub trait UVTorchExt {
     fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32;
     fn update_output_power(&mut self, battery_level: f32, glitch_timer: f32);
-    fn is_enabled(&self, battery_level: f32, glitch_timer: f32) -> bool;
-    fn can_enable(&self, battery_level: f32, glitch_timer: f32) -> bool;
 }
 
 impl UVTorchExt for UVTorch {
@@ -31,14 +29,6 @@ impl UVTorchExt for UVTorch {
     fn update_output_power(&mut self, battery_level: f32, glitch_timer: f32) {
         let new_power = self.calculate_output_power(battery_level, glitch_timer);
         self.output_power = (self.output_power * 10.0 + new_power) / 11.0;
-    }
-
-    fn is_enabled(&self, battery_level: f32, glitch_timer: f32) -> bool {
-        self.enabled && battery_level > 0.0 && glitch_timer <= 0.01
-    }
-
-    fn can_enable(&self, battery_level: f32, glitch_timer: f32) -> bool {
-        battery_level > 0.0 && glitch_timer <= 0.01
     }
 }
 

@@ -40,7 +40,6 @@ pub(crate) fn setup_ui_main_cat(
             ..default()
         })
         .insert(SettingsMenu {
-            menu_type: MenuType::MainCategories,
             selected_item_idx: 0,
         })
         .with_children(|parent| {

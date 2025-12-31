@@ -4,17 +4,9 @@ use unsettings_core::{audio::AudioSettingsValue, game::GameplaySettingsValue};
 
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 
-#[derive(Component, Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum MenuType {
-    MainCategories,
-    CategorySettingList,
-    SettingEdit,
-}
-
 // Marker component for the main settings menu UI
 #[derive(Component)]
 pub struct SettingsMenu {
-    pub menu_type: MenuType,
     pub selected_item_idx: usize,
 }
 

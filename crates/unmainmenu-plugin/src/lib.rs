@@ -1,2 +1,2 @@
-pub mod mainmenu;
+pub(crate) mod mainmenu;
 pub mod plugin;

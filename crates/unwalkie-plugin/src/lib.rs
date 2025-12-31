@@ -1,6 +1,6 @@
-pub mod focus_ring_system;
+pub(crate) mod focus_ring_system;
 pub mod plugin;
-pub mod triggers;
-pub mod walkie_level_stats;
-pub mod walkie_play;
-pub mod walkie_stats;
+pub(crate) mod triggers;
+pub(crate) mod walkie_level_stats;
+pub(crate) mod walkie_play;
+pub(crate) mod walkie_stats;

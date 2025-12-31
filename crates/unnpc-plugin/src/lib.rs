@@ -1,2 +1,2 @@
-pub mod npchelp;
+pub(crate) mod npchelp;
 pub mod plugin;

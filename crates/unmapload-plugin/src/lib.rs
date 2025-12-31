@@ -1,12 +1,12 @@
-pub mod entity_spawning;
-pub mod influence_system;
-pub mod level_finalization;
-pub mod level_setup;
-pub mod module;
+pub(crate) mod entity_spawning;
+pub(crate) mod influence_system;
+pub(crate) mod level_finalization;
+pub(crate) mod level_setup;
+pub(crate) mod module;
 pub mod plugin;
-pub mod selection;
-pub mod sprite_db;
-pub mod tile_spawning;
+pub(crate) mod selection;
+pub(crate) mod sprite_db;
+pub(crate) mod tile_spawning;
 
 pub use level_setup::LoadLevelSystemParam;
 pub use plugin::UnhaunterMapLoadPlugin;

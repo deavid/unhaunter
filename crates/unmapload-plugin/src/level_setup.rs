@@ -16,7 +16,6 @@ use unboard_core::types::tiledmap::map::MapLayerType;
 use undifficulty_core::CurrentDifficulty;
 use unevents_core::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use unghost_core::components::InfluenceType;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
@@ -57,13 +56,6 @@ pub struct LoadLevelSystemParam<'w> {
 /// Marker component to handle ghost influence assignment after level loading is complete
 #[derive(Component)]
 pub struct AssignGhostInfluenceMarker(pub Vec<Entity>);
-
-/// Marker to store selected ghost setup from simulation
-#[derive(Component)]
-pub struct GhostSetupSimulationMarker {
-    pub ghost_spawn: Position,
-    pub influence_assignments: Vec<(Entity, InfluenceType)>,
-}
 
 /// Loads a new level based on the `LevelLoadedEvent`.
 ///
