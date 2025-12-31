@@ -1,13 +1,14 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_data::BoardData;
-use unpicking_core::CustomSpritePickingCamera;
-use unplayer_core::GameConfig;
+use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::PlayerSprite;
+use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
-use unspatial_core::{Direction, Position};
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
 use untags_core::game::GCameraArena;
 use untypes_core::states::{AppState, GameState};
 

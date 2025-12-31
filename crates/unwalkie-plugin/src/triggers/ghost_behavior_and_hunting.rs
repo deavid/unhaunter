@@ -1,13 +1,14 @@
 use bevy::{prelude::*, time::Stopwatch};
 use unboard_core::resources::roomdb::RoomDB;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
-use unghost_core::components::GhostSprite;
+use ungear_core::types::GearKind;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const NO_EVASION_TIMER_SECONDS: f32 = 4.0;
 const NO_EVASION_MAX_DISTANCE: f32 = 1.0; // Max distance player can move to still be considered "not evaded"

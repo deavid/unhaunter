@@ -5,20 +5,21 @@ use rand::Rng;
 use unboard_core::behavior::Behavior;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
-use unfoundation_core::{celsius_to_kelvin, kelvin_to_celsius};
+use unfoundation_core::utils::temperature::{celsius_to_kelvin, kelvin_to_celsius};
+use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 pub use ungearitems_core::components::thermometer::Thermometer;
-use unghost_core::HauntState;
 use unghost_core::components::GhostSprite;
-use uninteraction_core::Toggleable;
-use unmetrics_core::SendMetric;
-use unspatial_core::{BoardPosition, Position};
+use unghost_core::resources::haunt_state::HauntState;
+use uninteraction_core::interaction::Toggleable;
+use unmetrics_core::metrics::SendMetric;
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 
 pub fn update_thermometer(
     mut q_thermometer: Query<(

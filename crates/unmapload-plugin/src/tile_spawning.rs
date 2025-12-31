@@ -7,7 +7,8 @@ use bevy::prelude::*;
 use unboard_core::behavior::{TileState, Util};
 use unboard_core::types::tiledmap::map::{MapLayer, MapTile};
 use unrender_std::components::game::{GameSprite, MapTileSprite};
-use unspatial_core::{MapEntityFieldBPos, Position};
+use unspatial_core::boardposition::MapEntityFieldBPos;
+use unspatial_core::position::Position;
 
 use crate::level_setup::LoadLevelSystemParam;
 

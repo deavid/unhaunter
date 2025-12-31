@@ -20,9 +20,10 @@ use bevy::prelude::*;
 use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
-use unassets_core::GameAssets;
-use unassets_core::Maps;
-use undifficulty_core::{CurrentDifficulty, DifficultySettings};
+use unassets_core::resources::maps::Maps;
+use unassets_core::types::root::game_assets::GameAssets;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::FONT_SCALE;
@@ -113,7 +114,7 @@ fn handle_selection_input(
     mut ev_load_level: MessageWriter<LoadLevelEvent>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
-    mut player_profile: ResMut<Persistent<unprofile_core::PlayerProfileData>>,
+    mut player_profile: ResMut<Persistent<unprofile_core::profile::PlayerProfileData>>,
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>,
 ) {
     let mut selected_identifier: Option<usize> = None;
@@ -314,7 +315,7 @@ pub fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     asset_server: Res<AssetServer>,
-    player_profile_resource: Res<Persistent<unprofile_core::PlayerProfileData>>,
+    player_profile_resource: Res<Persistent<unprofile_core::profile::PlayerProfileData>>,
     maps_resource: Res<Maps>,
     mission_select_mode: Res<CurrentMissionSelectMode>,
     difficulty_resource: Res<CurrentDifficulty>,
@@ -749,7 +750,7 @@ fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     map: &unassets_core::types::root::map::Map,
-    player_profile: &unprofile_core::PlayerProfileData,
+    player_profile: &unprofile_core::profile::PlayerProfileData,
     ui_index: usize,
     is_selected: bool,
     mission_select_mode: &CurrentMissionSelectMode,

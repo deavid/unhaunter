@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::component::{Interactive, RoomState};
 use unboard_core::resources::board_data::BoardData;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use ungear_core::components::playergear::PlayerGear;
@@ -12,7 +12,8 @@ use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
-use unspatial_core::{Direction, Position};
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
 
 const PLAYER_SPEED: f32 = 0.04;

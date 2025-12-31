@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::evidence::Evidence;
-use unghost_core::components::GhostBehaviorDynamics;
-use unghost_core::components::GhostSprite;
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
-use unnoise_core::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
+use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
 
 /// Helper function to calculate a noise-based multiplier value
 ///

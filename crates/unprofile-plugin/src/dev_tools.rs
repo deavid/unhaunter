@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use std::env;
 use std::path::PathBuf;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 
 /// Helper function to locate the fixture directory for schema snapshots.
 /// Returns `Some(PathBuf)` if the directory exists, or `None` if it does not.
@@ -59,7 +59,7 @@ fn validate_schema_snapshots() {
     {
         use ron::de::from_str;
         use std::fs;
-        use unprofile_core::PlayerProfileData;
+        use unprofile_core::profile::PlayerProfileData;
         if let Some(fixture_dir) = get_fixture_directory() {
             if let Ok(entries) = fs::read_dir(&fixture_dir) {
                 for entry in entries.flatten() {

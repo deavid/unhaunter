@@ -6127,6 +6127,7 @@ name = "unnavigation-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "ndarray",
  "unboard-core",
  "unspatial-core",
 ]
@@ -6218,6 +6219,7 @@ dependencies = [
  "serde",
  "undifficulty-core",
  "unfoundation-core",
+ "untypes-core",
 ]
 
 [[package]]

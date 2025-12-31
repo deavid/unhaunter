@@ -1,16 +1,17 @@
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomDB;
-use undifficulty_core::CurrentDifficulty;
-use undifficulty_core::ManualChapterIndex;
-use ungear_core::GearKind;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::types::GearKind;
 use ungearitems_core::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// Triggers a feedback event when the player's quartz stone cracks, after the hunt is over or player leaves the location.
 fn quartz_cracked_feedback(

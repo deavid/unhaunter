@@ -1,7 +1,7 @@
 pub mod page1;
 pub mod page2;
 
-use super::ManualChapter;
+use crate::types::ManualChapter;
 
 pub fn create_manual_chapter() -> ManualChapter {
     ManualChapter {

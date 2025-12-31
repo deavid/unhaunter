@@ -13,7 +13,8 @@ use unboard_core::behavior::{Behavior, Class};
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::types::fielddata::LightFieldData;
 use unboard_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
-use unspatial_core::{BoardPosition, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 
 /// Rebuilds the lighting field based on the current state of the board and behaviors
 /// by switching between legacy and new implementations.

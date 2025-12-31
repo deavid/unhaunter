@@ -4,9 +4,9 @@ use unboard_core::behavior::component::RoomState;
 use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unplayer_core::resources::game_config::GameConfig;
+use unspatial_core::position::Position;
 use untags_core::game::GCameraArena;
 use untypes_core::states::GameState;
 

@@ -1,7 +1,7 @@
 use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unboard_core::behavior::Behavior;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};

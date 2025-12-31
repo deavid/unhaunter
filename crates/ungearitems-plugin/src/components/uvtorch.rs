@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::GearSpriteID;
+use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 pub use ungearitems_core::components::uvtorch::UVTorch;
-use uninteraction_core::Toggleable;
-use unspatial_core::Position;
+use uninteraction_core::interaction::Toggleable;
+use unspatial_core::position::Position;
 
 pub trait UVTorchExt {
     fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32;

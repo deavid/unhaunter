@@ -1,7 +1,7 @@
-use super::super::ManualPageData;
-use super::super::utils::{grid_img_text2, header, summary_text};
+use crate::types::ManualPageData;
+use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 
 pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Paranormal Investigator Needed!";

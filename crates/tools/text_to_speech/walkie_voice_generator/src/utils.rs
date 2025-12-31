@@ -9,7 +9,7 @@ use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use unwalkie_types::WalkieTag;
+use unwalkie_types::types::WalkieTag;
 use walkdir::WalkDir;
 
 /// Generates a sample RON file content and prints it to stdout.

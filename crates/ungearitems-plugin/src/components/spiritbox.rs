@@ -1,16 +1,16 @@
 use unfoundation_core::random_seed;
+use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use uninteraction_core::Toggleable;
+use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
 use rand::Rng;
-use unfoundation_core::kelvin_to_celsius;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
+use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::spiritbox::SpiritBox;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 pub fn update_spiritbox(
     mut q_spiritbox: Query<(

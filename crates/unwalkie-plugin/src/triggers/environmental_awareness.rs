@@ -4,15 +4,16 @@ use bevy::time::Stopwatch;
 use unboard_core::resources::board_data::BoardData;
 use unghost_core::components::GhostBreach;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 
 use unboard_core::resources::roomdb::RoomDB;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::types::GearKind;
 use ungearitems_core::components::thermometer::Thermometer;
-use uninteraction_core::Toggleable;
-use unwalkie_core::{WalkiePlay, events::WalkieEvent};
+use uninteraction_core::interaction::Toggleable;
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// System that monitors the player's exposure to darkness.
 ///
@@ -79,8 +80,8 @@ fn trigger_breach_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck_core::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck_core::TruckButtonState::Pressed
+        if let untruck_core::uibutton::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::uibutton::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -126,8 +127,8 @@ fn trigger_ghost_showcase(
 
     // Check if any evidence is confirmed
     for button_data in truck_button_query.iter() {
-        if let untruck_core::TruckButtonType::Evidence(_) = button_data.class
-            && button_data.status == untruck_core::TruckButtonState::Pressed
+        if let untruck_core::uibutton::TruckButtonType::Evidence(_) = button_data.class
+            && button_data.status == untruck_core::uibutton::TruckButtonState::Pressed
         {
             return; // Don't fire if any evidence is confirmed
         }
@@ -226,7 +227,7 @@ fn trigger_thermometer_non_freezing_fixation(
     if let Some(hand_entity) = player_gear.right_hand
         && let Ok((thermo, toggleable)) = q_thermometer.get(hand_entity)
     {
-        let temp_c = unfoundation_core::kelvin_to_celsius(thermo.temp);
+        let temp_c = unfoundation_core::utils::kelvin_to_celsius(thermo.temp);
         if toggleable.is_on && (1.0..=10.0).contains(&temp_c) {
             stopwatch.tick(time.delta());
             if stopwatch.elapsed_secs() > REQUIRED_DURATION {

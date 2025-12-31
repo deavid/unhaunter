@@ -3,5 +3,3 @@
 //! This crate defines all game events that systems use to communicate.
 
 pub mod events;
-
-pub use events::*;

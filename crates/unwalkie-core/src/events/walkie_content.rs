@@ -1,5 +1,4 @@
 use crate::{
-    ConceptTrait,
     events::walkie_types::WalkieEvent,
     generated::{
         base1::Base1Concept, basic_gear_usage::BasicGearUsageConcept,
@@ -14,12 +13,13 @@ use crate::{
         tutorial_chapter_intros::TutorialChapterIntrosConcept,
         tutorial_gear_explanations::TutorialGearExplanationsConcept,
     },
+    traits::ConceptTrait,
 };
 use bevy::log::warn;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::GearKind;
-use untypes_core::Difficulty;
-use unwalkie_types::VoiceLineData;
+use ungear_core::types::gear::GearKind;
+use untypes_core::difficulty::Difficulty;
+use unwalkie_types::types::VoiceLineData;
 
 struct NullVoice;
 

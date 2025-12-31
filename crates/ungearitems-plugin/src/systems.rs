@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
+use ungear_core::components::core::{Battery, Electronic};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{Battery, Electronic};
-use uninteraction_core::Toggleable;
-use unspatial_core::Position;
+use uninteraction_core::interaction::Toggleable;
+use unspatial_core::position::Position;
 
 pub fn system_electronic_interference(
     gs: GearStuff,

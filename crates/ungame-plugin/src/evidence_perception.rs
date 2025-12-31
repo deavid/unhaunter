@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_data::BoardData;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::EvidenceSensor;
+use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
-use uninteraction_core::Toggleable;
-use unspatial_core::Position;
-use untags_core::PlayerTag;
+use uninteraction_core::interaction::Toggleable;
+use unspatial_core::position::Position;
+use untags_core::tags::PlayerTag;
 
 fn update_current_evidence_readings_from_player_perception_system(
     mut evidence_readings: ResMut<CurrentEvidenceReadings>,

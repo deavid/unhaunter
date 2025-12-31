@@ -1,6 +1,6 @@
 use crate::components::*;
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
 
@@ -427,7 +427,7 @@ pub fn create_content_item_enabled<'a>(
 pub fn create_player_status_bar(
     parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
-    player_profile: &unprofile_core::PlayerProfileData,
+    player_profile: &unprofile_core::profile::PlayerProfileData,
 ) {
     parent
         .spawn(Node {

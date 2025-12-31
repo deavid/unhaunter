@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use unwalkie_types::WalkieTag;
+use unwalkie_types::types::WalkieTag;
 
 /// Represents a single voice line entry within a `WalkieEventConceptEntry`.
 #[derive(Serialize, Deserialize, Debug, Clone)]

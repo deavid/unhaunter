@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::Orientation;
+use unboard_core::behavior::{Behavior, Orientation};
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::types::fielddata::CollisionFieldData;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 /// Rebuilds the collision data for the board based on the current state of the board and behaviors.
 ///

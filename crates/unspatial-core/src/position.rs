@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use bevy_math::Vec3;
 
-use super::{
-    EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z, boardposition::BoardPosition,
-    direction::Direction,
-};
+use crate::boardposition::BoardPosition;
+use crate::constants::{EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use crate::direction::Direction;
 
 // use unfoundation_core::random_seed; // TODO: move or handle
 

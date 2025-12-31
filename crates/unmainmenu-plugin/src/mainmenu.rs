@@ -1,13 +1,13 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::platform::plt::VERSION;
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::MenuItemClicked;
 use unmenu_core::mission_select::{CurrentMissionSelectMode, MissionSelectMode};
 use unmenu_core::templates;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, MapHubState};
 

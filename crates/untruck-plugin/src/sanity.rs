@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
+use unplayer_core::resources::GameConfig;
 use untypes_core::states::GameState;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;

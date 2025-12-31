@@ -1,14 +1,14 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_persistent::Persistent;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
 
 use unboard_core::resources::board_data::BoardData;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::sound::SoundEvent;
 use unghost_core::resources::haunt_state::HauntState;
-use unspatial_core::Position;
-use unsummary_core::SummaryData;
+use unspatial_core::position::Position;
+use unsummary_core::summary::SummaryData;
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]

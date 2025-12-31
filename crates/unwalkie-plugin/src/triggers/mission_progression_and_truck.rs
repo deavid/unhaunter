@@ -1,14 +1,15 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::types::GearKind;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
+use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const LINGER_DURATION_SECONDS: f32 = 45.0;
 
@@ -63,7 +64,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     game_state: Res<State<GameState>>,
     mut prev_game_state: Local<GameState>,
     mut walkie_play: ResMut<WalkiePlay>,
-    difficulty: Res<undifficulty_core::CurrentDifficulty>,
+    difficulty: Res<undifficulty_core::current_difficulty::CurrentDifficulty>,
     player_gear_q: Query<(&PlayerSprite, &PlayerGear)>,
     game_config: Res<GameConfig>,
     mut exited_truck_time: Local<Option<f64>>,

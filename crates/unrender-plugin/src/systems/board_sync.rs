@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_data::BoardData;
-use unplayer_core::GameConfig;
-use unspatial_core::{MapEntityFieldBPos, Position};
-use untags_core::PlayerTag;
+use unplayer_core::resources::game_config::GameConfig;
+use unspatial_core::boardposition::MapEntityFieldBPos;
+use unspatial_core::position::Position;
+use untags_core::tags::PlayerTag;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///

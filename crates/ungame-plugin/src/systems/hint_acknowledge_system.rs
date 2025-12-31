@@ -3,7 +3,7 @@ use bevy_persistent::Persistent;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::AppState;
 
 fn acknowledge_blinking_gear_hint_system(

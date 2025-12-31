@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 
 // Component Definitions
 

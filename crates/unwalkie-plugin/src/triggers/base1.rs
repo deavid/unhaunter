@@ -1,14 +1,15 @@
 use bevy::{prelude::*, time::Stopwatch};
 use unboard_core::resources::roomdb::RoomDB;
-use undifficulty_core::CurrentDifficulty;
-use ungear_core::GearKind;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::types::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unplayer_core::resources::game_config::GameConfig;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 /// Reminds the player to pick up equipment if they enter the location without any gear during the tutorial.
 /// Only triggers if the player is in the game, not in the truck, and has accessed the truck at least once.

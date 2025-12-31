@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unmetrics_core::receive_data;
+use unmetrics_core::metrics::receive_data;
 
 pub struct UnmetricsPlugin;
 

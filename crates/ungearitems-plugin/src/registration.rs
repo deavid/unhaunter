@@ -3,9 +3,12 @@ use unboard_core::behavior::component::{Collision, InteractableByGhost};
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
+use ungear_core::components::core::{
+    Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
+    StatusText,
+};
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
-use ungear_core::*;
-use uninteraction_core::*;
+use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
 
 use crate::components::compass::Compass;

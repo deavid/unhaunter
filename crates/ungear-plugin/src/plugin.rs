@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unevents_core::events::sound::SoundEvent;
-use unplayer_core::GameConfig;
+use unplayer_core::resources::GameConfig;
 
 use super::systems;
 use ungear_core::resources::spawner::GearSpawnerRegistry;

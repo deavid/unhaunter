@@ -9,7 +9,7 @@ use unfoundation_core::types::ghost::types::GhostType;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use untypes_core::states::GameState;
 use unwalkie_core::resources::WalkiePlay;

@@ -6,6 +6,3 @@ pub mod behavior;
 pub mod components;
 pub mod resources;
 pub mod types;
-
-pub use behavior::Behavior;
-pub use types::tiledmap;

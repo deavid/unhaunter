@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unsettings_core::controls::ControlKeys;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 pub mod game_config;
 pub use game_config::GameConfig;

@@ -1,15 +1,15 @@
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
 use ungear_core::gear_stuff::GearStuff;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
 use ungear_core::types::gear::utils::on_off;
-use ungear_core::{Battery, Electronic, GearSprite, StatusText};
 pub use ungearitems_core::components::geigercounter::GeigerCounter;
-use uninteraction_core::Toggleable;
+use uninteraction_core::interaction::Toggleable;
 
 pub trait GeigerCounterExt {
     fn calculate_output_sound(&self, gs: &GearStuff) -> f32;

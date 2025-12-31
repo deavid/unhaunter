@@ -10,7 +10,7 @@ use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
 use unghost_core::components::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 use crate::level_setup::AssignGhostInfluenceMarker;
 

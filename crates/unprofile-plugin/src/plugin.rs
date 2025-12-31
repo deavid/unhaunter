@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_persistent::prelude::*;
 use std::path::Path;
-use unprofile_core::PlayerProfileData;
+use unprofile_core::profile::PlayerProfileData;
 
 pub struct UnhaunterProfilePlugin;
 

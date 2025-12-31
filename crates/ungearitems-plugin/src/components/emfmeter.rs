@@ -1,10 +1,10 @@
 use unfoundation_core::random_seed;
+use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use uninteraction_core::Toggleable;
+use uninteraction_core::interaction::Toggleable;
 
 use unfoundation_core::types::evidence::Evidence;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;

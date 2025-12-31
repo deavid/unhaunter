@@ -1,6 +1,7 @@
-use super::{CurrentManualPage, Manual, draw_manual_page};
+use crate::manual_logic::draw_manual_page;
+use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::platform::plt::FONT_SCALE;
 use untypes_core::states::AppState;
 

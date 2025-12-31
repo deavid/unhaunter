@@ -4,6 +4,3 @@
 
 pub mod difficulty;
 pub mod states;
-
-pub use difficulty::Difficulty;
-pub use states::*;

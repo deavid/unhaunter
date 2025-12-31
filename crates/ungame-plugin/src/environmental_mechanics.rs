@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::component::Light;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 
 /// Cooldown timer to prevent rapid re-tripping of the breaker

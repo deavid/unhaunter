@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{GearSprite, StatusText};
 pub use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
-use unspatial_core::Position;
-use untags_core::GhostTag;
+use unspatial_core::position::Position;
+use untags_core::tags::GhostTag;
 
 const MAX_CRACKS: u8 = 4;
 

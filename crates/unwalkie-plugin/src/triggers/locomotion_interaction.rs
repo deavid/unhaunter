@@ -8,10 +8,11 @@ use unboard_core::resources::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
-use unprofile_core::PlayerProfileData;
-use unspatial_core::Position;
+use unprofile_core::profile::PlayerProfileData;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 const PLAYER_STUCK_MAX_DISTANCE: f32 = 1.0;
 const ERRATIC_MOVEMENT_EARLY_SECONDS: f32 = 5.0;

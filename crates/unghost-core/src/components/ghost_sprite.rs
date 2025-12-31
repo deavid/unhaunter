@@ -5,7 +5,8 @@ use std::time::Duration;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::ghost::types::GhostType;
-use unspatial_core::{BoardPosition, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 
 /// Per-ghost randomized noise offsets for unique behavior patterns
 #[derive(Debug, Clone, Copy, PartialEq)]

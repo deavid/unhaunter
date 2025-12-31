@@ -4,13 +4,13 @@ use unboard_core::behavior::Behavior;
 use unboard_core::behavior::TileState;
 use unboard_core::behavior::component::{Door, InteractableByGhost};
 use unboard_core::resources::board_data::BoardData;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unfoundation_core::random_seed;
-use unghost_core::components::GhostSprite;
-use unrender_std::VisibilityData;
-use unspatial_core::Position;
-use untags_core::PlayerTag;
+use unghost_core::components::ghost_sprite::GhostSprite;
+use unrender_std::resources::visibility_data::VisibilityData;
+use unspatial_core::position::Position;
+use untags_core::tags::PlayerTag;
 
 use crate::components::interaction::Locked;
 

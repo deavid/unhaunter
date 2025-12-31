@@ -15,7 +15,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use unwalkie_types::WalkieTag;
+use unwalkie_types::types::WalkieTag;
 use walkdir::WalkDir;
 
 /// Represents a single audio generation task for a specific voice line.

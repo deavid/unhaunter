@@ -1,25 +1,26 @@
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unboard_core::components::mapcolor::MapColor;
 use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::types::gear::Hand;
 use unfoundation_core::types::gear::{GearKind, GearSpriteID};
+use ungear_core::components::core::GearSprite;
+use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::{GearSprite, StatusText};
-use uninteraction_core::{Toggleable, Triggered};
+use uninteraction_core::interaction::{Toggleable, Triggered};
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
-use unspatial_core::Position;
-use untags_core::PlayerTag;
+use unspatial_core::position::Position;
+use untags_core::tags::PlayerTag;
 use untypes_core::states::GameState;
 
 fn update_deployed_gear_sprites(

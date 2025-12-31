@@ -5,12 +5,12 @@ use rand::Rng; // Import the Rng trait
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_data::BoardData;
 use unfoundation_core::random_seed;
-use unghost_core::components::GhostBreach;
-use unghost_core::components::GhostOrbParticle;
+use unghost_core::components::ghost_breach::GhostBreach;
+use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
 #[derive(Resource)]

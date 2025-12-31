@@ -1,7 +1,7 @@
 use unfoundation_core::random_seed;
+use ungear_core::components::core::{GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{GearSprite, ItemName, StatusText};
-use uninteraction_core::Toggleable;
+use uninteraction_core::interaction::Toggleable;
 
 use crate::metrics;
 
@@ -15,8 +15,8 @@ use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::recorder::Recorder;
 use unghost_core::components::GhostSprite;
-use unmetrics_core::SendMetric;
-use unspatial_core::Position;
+use unmetrics_core::metrics::SendMetric;
+use unspatial_core::position::Position;
 
 pub fn update_recorder(
     mut q_recorder: Query<(

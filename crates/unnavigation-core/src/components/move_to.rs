@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 /// Component that marks an entity as wanting to move to a target position.
 /// When this component is present on the player entity, the click-to-move pathing system

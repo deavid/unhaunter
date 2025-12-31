@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unplayer_core::GameConfig;
+use unplayer_core::resources::GameConfig;
 
 use crate::metrics;
 

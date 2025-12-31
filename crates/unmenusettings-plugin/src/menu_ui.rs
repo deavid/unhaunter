@@ -1,7 +1,7 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unmenu_core::components::{MenuMouseTracker, MenuRoot};
 use unmenu_core::templates;
 use untypes_core::states::AppState;

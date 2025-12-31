@@ -3,18 +3,20 @@ use fastapprox::faster;
 use ndarray::Array3;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_data::BoardData;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
+use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-use ungear_core::{GearSprite, StatusText};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
-use uninteraction_core::Triggered;
-use unmetrics_core::SendMetric;
+use uninteraction_core::interaction::Triggered;
+use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
-use unspatial_core::{BoardPosition, Direction, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
 
 use crate::metrics;
 

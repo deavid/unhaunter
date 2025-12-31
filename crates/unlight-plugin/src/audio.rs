@@ -6,10 +6,11 @@ use unboard_core::resources::roomdb::RoomDB;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::types::sound::SoundType;
 use unplayer_core::components::PlayerSprite;
-use unrender_std::VisibilityData;
 use unrender_std::components::game::GameSound;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unsettings_core::audio::AudioSettings;
-use unspatial_core::{BoardPosition, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 use untypes_core::states::AppState;
 
 /// Calculates the ambient sound volumes based on player visibility.

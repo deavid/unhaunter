@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::GearSpriteID;
+use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-use ungear_core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 pub use ungearitems_core::components::redtorch::RedTorch;
-use uninteraction_core::Toggleable;
-use unspatial_core::Position;
+use uninteraction_core::interaction::Toggleable;
+use unspatial_core::position::Position;
 
 pub fn update_redtorch(
     mut q_redtorch: Query<(

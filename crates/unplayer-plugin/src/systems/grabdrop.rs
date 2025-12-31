@@ -8,11 +8,11 @@ use unfoundation_core::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearMarker;
-use uninteraction_core::Triggered;
+use uninteraction_core::interaction::Triggered;
 use unplayer_core::components::HeldObject;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
     q_player: Query<(&Position, &PlayerGear), With<PlayerSprite>>,

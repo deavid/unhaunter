@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use ungear_core::GearSpriteID;
+use unfoundation_core::types::gear::GearSpriteID;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 
 pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {

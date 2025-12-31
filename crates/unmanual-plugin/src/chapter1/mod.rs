@@ -1,4 +1,4 @@
-use super::ManualChapter;
+use crate::types::ManualChapter;
 
 pub mod page1;
 pub mod page2;

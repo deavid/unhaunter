@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::types::GearKind;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use untypes_core::states::AppState;

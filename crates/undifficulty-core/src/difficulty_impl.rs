@@ -2,13 +2,13 @@
 //!
 //! This module provides all the gameplay settings for each difficulty level.
 
-use crate::Difficulty;
-use crate::ManualChapterIndex;
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
-use unfoundation_core::celsius_to_kelvin;
+use crate::manual_types::ManualChapterIndex;
 use unfoundation_core::types::gear::{GearKind, PlayerGearKind};
 use unfoundation_core::types::ghost::definitions::GhostSet;
 use unfoundation_core::types::truck::TabContents;
+use unfoundation_core::utils::temperature::celsius_to_kelvin;
+use untypes_core::difficulty::Difficulty;
 
 impl DifficultySettings for Difficulty {
     // --- Ghost Behavior ---

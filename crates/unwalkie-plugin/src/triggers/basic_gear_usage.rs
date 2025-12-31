@@ -2,19 +2,21 @@
 
 use bevy::prelude::*;
 use unboard_core::resources::roomdb::RoomDB;
-use undifficulty_core::CurrentDifficulty;
-use undifficulty_core::ManualChapterIndex;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::manual_types::ManualChapterIndex;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::Battery;
-use ungear_core::GearKind;
+use ungear_core::components::core::Battery;
 use ungear_core::components::playergear::PlayerGear;
-use unghost_core::components::GhostSprite;
+use ungear_core::types::GearKind;
+use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
-use uninteraction_core::Toggleable;
+use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::{BoardPosition, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay}; // Core walkie types
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay; // Core walkie types
 
 // Local struct to track the state for this specific trigger
 #[derive(Debug, PartialEq, Clone)] // Added Clone for easier assignment

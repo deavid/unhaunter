@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::Hand;
 use unsettings_core::controls::ControlKeys;
-use unspatial_core::{Direction, Position};
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
 
 /// Represents an object that is currently being held by the player.
 #[derive(Component, Debug, Clone)]

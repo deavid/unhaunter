@@ -2,12 +2,12 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use ungear_core::EvidenceSensor;
+use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unprofile_core::PlayerProfileData;
+use unplayer_core::resources::GameConfig;
+use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;
 
@@ -24,8 +24,8 @@ pub fn update_evidence_ui(
         if gc.player_id == ps.id {
             for txt_entity in qs.iter_mut() {
                 let hand_entity = match looking_gear.hand() {
-                    ungear_core::Hand::Left => playergear.left_hand,
-                    ungear_core::Hand::Right => playergear.right_hand,
+                    unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
+                    unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
                 };
                 let o_evidence = hand_entity
                     .and_then(|e| q_sensor.get(e).ok())
@@ -76,8 +76,8 @@ pub fn keyboard_evidence(
             continue;
         }
         let hand_entity = match looking_gear.hand() {
-            ungear_core::Hand::Left => playergear.left_hand,
-            ungear_core::Hand::Right => playergear.right_hand,
+            unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
+            unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
         };
         let Some(evidence) = hand_entity
             .and_then(|e| q_sensor.get(e).ok())

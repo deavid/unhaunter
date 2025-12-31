@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use std::time::Duration;
 
 use crate::resources::ambient_mute::{ActiveMute, AmbientMuteController};
-use unevents_core::ambient_sound_mute::AmbientSoundMuteEvent;
+use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 
 /// Processes ambient sound mute events and updates active mute timers.
 /// Converts incoming mute events into active mutes and advances their timing state.

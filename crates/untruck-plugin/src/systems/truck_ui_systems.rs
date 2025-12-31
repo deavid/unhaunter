@@ -1,22 +1,22 @@
-use crate::TruckButtonType;
 use crate::components::truck::TruckUI;
 use crate::components::truck_ui_button::TruckUIButton;
 use crate::craft_repellent::craft_repellent;
+use crate::uibutton::TruckButtonType;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_data::BoardData;
-use undifficulty_core::CurrentDifficulty;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::truck::TruckUIEvent;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
+use ungear_core::types::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unplayer_core::GameConfig;
 use unplayer_core::components::PlayerSprite;
-use unprofile_core::PlayerProfileData;
+use unplayer_core::resources::GameConfig;
+use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
-use unsummary_core::SummaryData;
+use unsummary_core::summary::SummaryData;
 use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons

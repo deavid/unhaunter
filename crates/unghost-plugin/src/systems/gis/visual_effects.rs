@@ -4,7 +4,7 @@ use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 use crate::components::interaction::{
     InteractionParticle, InteractionParticleType, LockIndicator, Locked, MotionBlur, Tween,

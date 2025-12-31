@@ -2,7 +2,7 @@ use crate::components::walk_target_indicator::WalkTargetIndicator;
 use bevy::prelude::*;
 use unnavigation_core::components::move_to::MoveToTarget;
 use unplayer_core::components::PlayerSprite;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 /// System that manages the walk target indicator.
 /// Spawns a red dot when a player has a MoveToTarget component,

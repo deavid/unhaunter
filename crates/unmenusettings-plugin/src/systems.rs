@@ -7,7 +7,7 @@ use crate::menu_ui::setup_ui_main_cat;
 use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::GameAssets;
+use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
 use unmenu_core::components::{MenuItemInteractive, MenuMouseTracker, MenuRoot};
 use unmenu_core::events::MenuItemClicked;

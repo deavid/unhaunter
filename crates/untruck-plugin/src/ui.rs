@@ -1,12 +1,12 @@
 // untruck/src/ui.rs
 use super::{activity, journalui, loadoutui, sanity, sensors};
-use crate::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use crate::components::truck::TruckUI;
 use crate::components::truck_ui::{TabContents, TabState, TruckTab};
 use crate::components::truck_ui_button::TruckButtonTypeExt;
+use crate::uibutton::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use bevy::prelude::*;
-use unassets_core::GameAssets;
-use undifficulty_core::CurrentDifficulty;
+use unassets_core::types::root::game_assets::GameAssets;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::resources::spawner::GearSpawnerRegistry;

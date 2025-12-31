@@ -2,7 +2,7 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unfoundation_core::types::gear::{GearKind, GearSpriteID};
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.
 #[derive(Component, Debug, Clone, Copy, Reflect, Default)]

@@ -7,9 +7,9 @@ use bevy::prelude::*;
 
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
-use unmetrics_core::SendMetric;
+use unmetrics_core::metrics::SendMetric;
 use unrender_std::resources::visibility_data::VisibilityData;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 use unrender_std::board::spritedb::SpriteDB;
 

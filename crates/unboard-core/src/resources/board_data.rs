@@ -7,8 +7,8 @@ use crate::types::{
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array2, Array3};
-use unfoundation_core::celsius_to_kelvin;
-use unspatial_core::BoardPosition;
+use unfoundation_core::utils::temperature::celsius_to_kelvin;
+use unspatial_core::boardposition::BoardPosition;
 
 /// Configuration for the temperature diffusion system
 #[derive(Debug, Clone)]

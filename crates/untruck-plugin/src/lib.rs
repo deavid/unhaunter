@@ -27,8 +27,5 @@ pub(crate) mod sensors;
 pub(crate) mod systems;
 pub(crate) mod truckgear;
 pub(crate) mod types;
-
-pub(crate) use types::evidence_status::EvidenceStatus;
-pub(crate) use untruck_core::uibutton::TruckButtonType;
 pub(crate) mod ui;
 pub(crate) mod uibutton;

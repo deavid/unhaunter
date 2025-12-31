@@ -14,12 +14,14 @@ use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
-use unfoundation_core::{celsius_to_kelvin, random_seed};
+use unfoundation_core::random_seed;
+use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::lighting::systems::prebake_lighting_field;
 use unrender_std::utils::collision::rebuild_collision_data;
-use unspatial_core::{BoardPosition, Position};
+use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 
 /// Processes level completion after the level is fully loaded.

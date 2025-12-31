@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use unboard_core::types::floor::FloorLevelMapping;
 use unboard_core::types::tiledmap::map::{MapLayer, MapLayerGroup};
 use unrender_std::materials::CustomMaterial1;
-use untiled_core::{AtlasData, MapTileSet, MapTileSetDb};
+use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
 
 use super::load::load_tile_layer_iter;
 

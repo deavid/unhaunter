@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 
-use undifficulty_core::CurrentDifficulty;
-use ungear_core::GearKind;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
-use uninteraction_core::Toggleable;
+use ungear_core::types::GearKind;
+use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::PlayerSprite;
 use untypes_core::states::{AppState, GameState};
-use unwalkie_core::{WalkieEvent, WalkiePlay};
+use unwalkie_core::events::WalkieEvent;
+use unwalkie_core::resources::WalkiePlay;
 
 pub struct TutorialGearExplanationsTriggerPlugin;
 

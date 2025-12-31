@@ -1,19 +1,19 @@
 use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
-use crate::EvidenceStatus;
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
+use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
-use unassets_core::GameAssets;
-use undifficulty_core::CurrentDifficulty;
+use unassets_core::types::root::game_assets::GameAssets;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::Hand;
+use unfoundation_core::types::gear::Hand;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::{GearKind, GearSpriteID};
-use unplayer_core::GameConfig;
+use ungear_core::types::gear::{GearKind, GearSpriteID};
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
+use unplayer_core::resources::GameConfig;
 use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::GameState;
 
@@ -309,8 +309,8 @@ fn update_loadout_buttons(
         match lbut {
             LoadoutButton::Inventory(inv) => {
                 let entity = match inv.hand {
-                    ungear_core::Hand::Left => _p_gear.left_hand,
-                    ungear_core::Hand::Right => _p_gear.right_hand,
+                    unfoundation_core::types::gear::Hand::Left => _p_gear.left_hand,
+                    unfoundation_core::types::gear::Hand::Right => _p_gear.right_hand,
                 };
                 entity
                     .and_then(|e| q_gearkind.get(e).ok())
@@ -332,8 +332,8 @@ fn update_loadout_buttons(
     let click_help = if let Some(lbut) = &elem {
         match lbut {
             LoadoutButton::Inventory(inv) => match &inv.hand {
-                ungear_core::Hand::Left => "(Click to unequip Left Hand item)",
-                ungear_core::Hand::Right => "(Click to unequip Right Hand item)",
+                unfoundation_core::types::gear::Hand::Left => "(Click to unequip Left Hand item)",
+                unfoundation_core::types::gear::Hand::Right => "(Click to unequip Right Hand item)",
             },
             LoadoutButton::InventoryNext(_) => "(Click to unequip Backpack item)",
             LoadoutButton::Van(_) => "(Click to equip item)",

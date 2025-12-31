@@ -1,17 +1,17 @@
 //! This module implements the UI and systems for the pre-play manual,
 //! which is shown as a tutorial before starting a new game on certain difficulty levels.
-use super::{CurrentManualPage, Manual};
+use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
-use unassets_core::GameAssets;
-use unassets_core::Maps;
-use undifficulty_core::CurrentDifficulty;
-use undifficulty_core::DifficultySelectionState;
-use undifficulty_core::ManualChapterIndex;
+use unassets_core::resources::maps::Maps;
+use unassets_core::types::root::game_assets::GameAssets;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_state::DifficultySelectionState;
+use undifficulty_core::manual_types::ManualChapterIndex;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::platform::plt::FONT_SCALE;
 use untypes_core::states::AppState;
 
-use super::draw_manual_page;
+use crate::manual_logic::draw_manual_page;
 
 #[derive(Component)]
 pub struct ManualCamera;

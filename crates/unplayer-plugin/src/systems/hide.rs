@@ -8,7 +8,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::AnimationTimer;
-use unspatial_core::Position;
+use unspatial_core::position::Position;
 
 /// Allows the player to hide in a designated hiding spot.
 ///

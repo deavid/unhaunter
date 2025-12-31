@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use bevy_platform::time::Instant;
-use unassets_core::GameAssets;
-use undifficulty_core::DifficultySelectionState;
-use undifficulty_core::{CurrentDifficulty, Difficulty, DifficultySettings};
+use unassets_core::types::root::game_assets::GameAssets;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use undifficulty_core::difficulty_settings::DifficultySettings;
+use undifficulty_core::difficulty_state::DifficultySelectionState;
 use unevents_core::events::map_selected::MapSelectedEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
@@ -12,6 +13,7 @@ use unmenu_core::{
     events::{MenuEscapeEvent, MenuItemClicked, MenuItemSelected},
     templates,
 };
+use untypes_core::difficulty::Difficulty;
 use untypes_core::states::AppState;
 use untypes_core::states::MapHubState;
 

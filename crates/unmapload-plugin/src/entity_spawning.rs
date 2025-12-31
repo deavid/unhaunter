@@ -20,9 +20,10 @@ use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
-use unspatial_core::{Direction, Position};
-use unsummary_core::SummaryData;
-use untags_core::{GhostTag, PlayerTag};
+use unspatial_core::direction::Direction;
+use unspatial_core::position::Position;
+use unsummary_core::summary::SummaryData;
+use untags_core::tags::{GhostTag, PlayerTag};
 
 use crate::level_setup::LoadLevelSystemParam;
 

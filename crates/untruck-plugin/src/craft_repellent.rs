@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unfoundation_core::types::ghost::types::GhostType;
-use ungear_core::GearKind;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
+use ungear_core::types::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 
 /// Crafts a repellent for the specified ghost type.

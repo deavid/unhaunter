@@ -1,4 +1,4 @@
-use untypes_core::Difficulty;
+use untypes_core::difficulty::Difficulty;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MissionData {

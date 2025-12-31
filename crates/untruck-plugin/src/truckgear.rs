@@ -11,7 +11,7 @@ pub fn app_setup(app: &mut App) {
 fn initialize_truck_gear(
     mut ev_level: MessageReader<LevelLoadedEvent>,
     mut truck_gear: ResMut<TruckGear>,
-    difficulty: Res<undifficulty_core::CurrentDifficulty>,
+    difficulty: Res<undifficulty_core::current_difficulty::CurrentDifficulty>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
 ) {

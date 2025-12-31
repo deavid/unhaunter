@@ -3,7 +3,7 @@
 //! Manifest data structure for tracking generated voice lines.
 
 use serde::{Deserialize, Serialize};
-use unwalkie_types::WalkieTag;
+use unwalkie_types::types::WalkieTag;
 
 /// Represents an entry in the `manifest.ron` file.
 /// This struct stores all relevant metadata for a single generated voice line.

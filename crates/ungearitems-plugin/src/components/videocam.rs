@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-use ungear_core::{Battery, Electronic, GearSprite, StatusText};
 pub use ungearitems_core::components::videocam::Videocam;
-use uninteraction_core::Toggleable;
-use unspatial_core::Position;
+use uninteraction_core::interaction::Toggleable;
+use unspatial_core::position::Position;
 
 pub fn update_videocam(
     _gs: GearStuff,
