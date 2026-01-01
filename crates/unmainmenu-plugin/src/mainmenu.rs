@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
@@ -17,6 +18,7 @@ pub enum MenuID {
     CustomMission,
     Manual,
     Settings,
+    #[cfg(not(target_arch = "wasm32"))]
     Quit,
 }
 
@@ -27,6 +29,7 @@ impl std::fmt::Display for MenuID {
             MenuID::CustomMission => "Custom Mission",
             MenuID::Manual => "Manual",
             MenuID::Settings => "Settings",
+            #[cfg(not(target_arch = "wasm32"))]
             MenuID::Quit => "Quit",
         };
         f.write_str(text)
@@ -135,6 +138,7 @@ pub fn cleanup(
 
 pub fn menu_event(
     mut click_events: MessageReader<MenuItemClicked>,
+    #[cfg(not(target_arch = "wasm32"))]
     mut exit: MessageWriter<AppExit>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
@@ -173,6 +177,7 @@ pub fn menu_event(
                     next_app_state.set(AppState::SettingsMenu);
                     info!("Transitioning to SettingsMenu state");
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 MenuID::Quit => {
                     info!("Sending AppExit event");
                     exit.write(AppExit::default());
