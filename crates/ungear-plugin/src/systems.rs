@@ -13,7 +13,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use uninteraction_core::interaction::{Toggleable, Triggered};
+use uninteraction_core::interaction::Triggered;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
@@ -193,11 +193,7 @@ fn update_gear_ui(
     }
 }
 
-fn gear_trigger_handler(mut q_toggleable: Query<&mut Toggleable, With<Triggered>>) {
-    for mut toggle in q_toggleable.iter_mut() {
-        toggle.is_on = !toggle.is_on;
-    }
-}
+fn gear_trigger_handler() {}
 
 fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With<Triggered>>) {
     for entity in q_triggered.iter() {

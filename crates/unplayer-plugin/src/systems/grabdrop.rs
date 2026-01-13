@@ -7,8 +7,9 @@ use unboard_core::resources::board_data::BoardData;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::gear_stuff::GearStuff;
 use ungear_core::resources::spawner::GearMarker;
-use uninteraction_core::interaction::Triggered;
+use uninteraction_core::interaction::{Toggleable, Triggered};
 use unplayer_core::components::HeldObject;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
@@ -231,16 +232,34 @@ fn item_trigger_system(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     q_player: Query<(&PlayerGear, &PlayerSprite)>,
+    mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
+    mut gs: GearStuff,
 ) {
     for (player_gear, player_sprite) in q_player.iter() {
         if keyboard_input.just_pressed(player_sprite.controls.right_hand_trigger)
             && let Some(entity) = player_gear.right_hand
         {
+            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                toggle.is_on = !toggle.is_on;
+                if let Some(pos) = pos {
+                    gs.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                } else {
+                    gs.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                }
+            }
             commands.entity(entity).insert(Triggered);
         }
         if keyboard_input.just_pressed(player_sprite.controls.left_hand_trigger)
             && let Some(entity) = player_gear.left_hand
         {
+            if let Ok((mut toggle, pos)) = q_toggleable.get_mut(entity) {
+                toggle.is_on = !toggle.is_on;
+                if let Some(pos) = pos {
+                    gs.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                } else {
+                    gs.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                }
+            }
             commands.entity(entity).insert(Triggered);
         }
     }

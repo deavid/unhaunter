@@ -138,8 +138,7 @@ pub fn cleanup(
 
 pub fn menu_event(
     mut click_events: MessageReader<MenuItemClicked>,
-    #[cfg(not(target_arch = "wasm32"))]
-    mut exit: MessageWriter<AppExit>,
+    #[cfg(not(target_arch = "wasm32"))] mut exit: MessageWriter<AppExit>,
     mut next_app_state: ResMut<NextState<AppState>>,
     mut next_map_hub_state: ResMut<NextState<MapHubState>>,
     mut current_mission_select_mode: ResMut<CurrentMissionSelectMode>,
