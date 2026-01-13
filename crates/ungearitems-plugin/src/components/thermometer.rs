@@ -10,7 +10,9 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::utils::temperature::{celsius_to_kelvin, kelvin_to_celsius};
-use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{
+    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
+};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::thermometer::Thermometer;
@@ -31,11 +33,21 @@ pub fn update_thermometer(
         &Electronic,
         &Position,
         &ItemName,
+        &mut PerceivedClarity,
     )>,
     mut gs: GearStuff,
 ) {
-    for (mut thermometer, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
-        q_thermometer.iter_mut()
+    for (
+        mut thermometer,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        name,
+        mut perceived_clarity,
+    ) in q_thermometer.iter_mut()
     {
         let mut rng = random_seed::rng();
         thermometer.frame_counter = thermometer.frame_counter.wrapping_add(1);
@@ -135,6 +147,15 @@ pub fn update_thermometer(
             "".to_string()
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+
+        perceived_clarity.from_status_text = if toggle.is_on
+            && kelvin_to_celsius(thermometer.temp) < 0.0
+            && electronic.glitch_timer <= 0.0
+        {
+            1.0
+        } else {
+            0.0
+        };
     }
 }
 

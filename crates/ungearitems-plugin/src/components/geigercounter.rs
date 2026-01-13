@@ -6,7 +6,9 @@ use unspatial_core::position::Position;
 use bevy::prelude::*;
 use rand::Rng as _;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
-use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
+use ungear_core::components::core::{
+    Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
+};
 use ungear_core::types::gear::utils::on_off;
 pub use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
@@ -41,10 +43,20 @@ pub fn update_geigercounter(
         &Electronic,
         &Position,
         &EquipmentPosition,
+        &mut PerceivedClarity,
     )>,
 ) {
-    for (mut geiger, mut status, mut sprite, toggle, mut battery, electronic, pos, _ep) in
-        q_geiger.iter_mut()
+    for (
+        mut geiger,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        _ep,
+        mut perceived_clarity,
+    ) in q_geiger.iter_mut()
     {
         let mut rng = random_seed::rng();
         geiger.display_secs_since_last_update += gs.time.delta_secs(); // Increment the timer
@@ -192,6 +204,15 @@ pub fn update_geigercounter(
         } else {
             sprite.0 = GearSpriteID::GeigerOff;
         }
+
+        perceived_clarity.from_status_text = if toggle.is_on
+            && geiger.sound_display > 500.0
+            && electronic.glitch_timer <= 0.0
+        {
+            1.0
+        } else {
+            0.0
+        };
     }
 }
 

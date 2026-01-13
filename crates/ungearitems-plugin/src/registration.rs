@@ -5,7 +5,7 @@ use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
-    StatusText,
+    PerceivedClarity, StatusText,
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 use uninteraction_core::interaction::Toggleable;
@@ -87,6 +87,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::FreezingTemp,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Electronic {
                 sensitivity: 0.5,
                 ..default()
@@ -119,6 +120,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EMFLevel5,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Electronic {
                 sensitivity: 1.0,
                 ..default()
@@ -155,6 +157,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EVPRecording,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Electronic {
                 sensitivity: 1.0,
@@ -188,6 +191,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::CPM500,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Battery {
                 level: 1.0,
                 drain_rate: 0.0002,
@@ -220,6 +224,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::UVEctoplasm,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(LightEmitter {
                 power: 5.0,
                 color: Color::srgb(0.60, 0.25, 1.00),
@@ -286,6 +291,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::SpiritBox,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
                 level: 1.0,
@@ -476,6 +482,7 @@ pub fn register_all(app: &mut App) {
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::FloatingOrbs,
             });
+            cmd.insert(PerceivedClarity::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Electronic {
                 sensitivity: 1.0,

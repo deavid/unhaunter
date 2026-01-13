@@ -1,5 +1,7 @@
 use unfoundation_core::random_seed;
-use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{
+    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
+};
 use ungear_core::gear_stuff::GearStuff;
 use uninteraction_core::interaction::Toggleable;
 
@@ -23,11 +25,22 @@ pub fn update_emfmeter(
         &Position,
         &ItemName,
         &EquipmentPosition,
+        &mut PerceivedClarity,
     )>,
     mut gs: GearStuff,
 ) {
-    for (mut emf, mut status, mut sprite, toggle, mut battery, electronic, pos, name, ep) in
-        q_emf.iter_mut()
+    for (
+        mut emf,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        name,
+        ep,
+        mut perceived_clarity,
+    ) in q_emf.iter_mut()
     {
         let mut rng = random_seed::rng();
         emf.frame_counter = emf.frame_counter.wrapping_add(1);
@@ -183,6 +196,14 @@ pub fn update_emfmeter(
             "".to_string()
         };
         status.0 = format!("{}:  {}\n{}", name.0, on_s, msg);
+
+        perceived_clarity.from_status_text =
+            if toggle.is_on && emf.emf_level == EMFLevel::EMF5 && electronic.glitch_timer <= 0.0 {
+                1.0
+            } else {
+                0.0
+            };
+        perceived_clarity.from_icon = perceived_clarity.from_status_text;
     }
 }
 

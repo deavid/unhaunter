@@ -1,6 +1,15 @@
 use unfoundation_core::random_seed;
-use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{
+    Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
+};
 use ungear_core::gear_stuff::GearStuff;
+
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct SpiritBoxInternal {
+    pub last_response_time: Option<f64>,
+}
+
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
@@ -14,6 +23,7 @@ use unspatial_core::position::Position;
 
 pub fn update_spiritbox(
     mut q_spiritbox: Query<(
+        Entity,
         &mut SpiritBox,
         &mut StatusText,
         &mut GearSprite,
@@ -22,12 +32,33 @@ pub fn update_spiritbox(
         &Electronic,
         &Position,
         &ItemName,
+        &mut PerceivedClarity,
+        Option<&mut SpiritBoxInternal>,
     )>,
     mut gs: GearStuff,
+    mut commands: Commands,
 ) {
-    for (mut spiritbox, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
-        q_spiritbox.iter_mut()
+    for (
+        entity,
+        mut spiritbox,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        name,
+        mut perceived_clarity,
+        mut internal_opt,
+    ) in q_spiritbox.iter_mut()
     {
+        let internal = if let Some(i) = internal_opt.as_deref_mut() {
+            i
+        } else {
+            commands.entity(entity).insert(SpiritBoxInternal::default());
+            continue;
+        };
+
         let mut rng = random_seed::rng();
         let sec = gs.time.elapsed_secs();
         spiritbox.mode_frame = (sec * 4.0).round() as u32;
@@ -189,6 +220,21 @@ pub fn update_spiritbox(
             "".to_string()
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+
+        if spiritbox.ghost_answer {
+            internal.last_response_time = Some(gs.time.elapsed_secs_f64());
+        }
+
+        let is_recent_response = internal
+            .last_response_time
+            .is_some_and(|t| gs.time.elapsed_secs_f64() - t < 10.0);
+
+        perceived_clarity.from_sound =
+            if toggle.is_on && is_recent_response && electronic.glitch_timer <= 0.0 {
+                1.0
+            } else {
+                0.0
+            };
     }
 }
 

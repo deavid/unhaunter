@@ -58,6 +58,18 @@ pub struct EvidenceSensor {
     pub evidence: Evidence,
 }
 
+/// Tracks what evidence a piece of gear is currently "showing" to the player.
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
+pub struct PerceivedClarity {
+    /// 1.0 if status text is showing evidence, 0.0 otherwise.
+    pub from_status_text: f32,
+    /// 1.0 if the icon/sprite is showing evidence, 0.0 otherwise.
+    pub from_icon: f32,
+    /// 1.0 if audio is indicating evidence, 0.0 otherwise.
+    pub from_sound: f32,
+}
+
 /// Marker for items that can be held in hands.
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]

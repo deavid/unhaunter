@@ -1,5 +1,5 @@
 use unfoundation_core::random_seed;
-use ungear_core::components::core::{GearSprite, ItemName, StatusText};
+use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use uninteraction_core::interaction::Toggleable;
 
@@ -26,10 +26,13 @@ pub fn update_recorder(
         &Toggleable,
         &Position,
         &ItemName,
+        &mut PerceivedClarity,
     )>,
     mut gs: GearStuff,
 ) {
-    for (mut recorder, mut status, mut sprite, toggle, pos, name) in q_recorder.iter_mut() {
+    for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
+        q_recorder.iter_mut()
+    {
         let mut rng = random_seed::rng();
         recorder.frame_counter = recorder.frame_counter.wrapping_add(1);
 
@@ -198,6 +201,15 @@ pub fn update_recorder(
             "".to_string()
         };
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
+
+        perceived_clarity.from_status_text = if toggle.is_on
+            && recorder.evp_recorded_count > 0
+            && recorder.display_glitch_timer <= 0.0
+        {
+            1.0
+        } else {
+            0.0
+        };
     }
 }
 
