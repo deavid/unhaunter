@@ -12,9 +12,9 @@ use bevy::prelude::*;
 use rand::Rng as _;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
+pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
 
-pub fn update_emfmeter(
+pub(crate) fn update_emfmeter(
     mut q_emf: Query<(
         &mut EMFMeter,
         &mut StatusText,
@@ -207,6 +207,6 @@ pub fn update_emfmeter(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_emfmeter);
 }

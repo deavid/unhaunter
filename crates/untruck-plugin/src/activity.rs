@@ -6,7 +6,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     p.spawn(Text::new("Activity"))
         .insert(TextFont {
             font: handles.fonts.londrina.w300_light.clone(),

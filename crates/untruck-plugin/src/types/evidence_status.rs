@@ -5,7 +5,7 @@ use unfoundation_core::types::evidence::Evidence;
 use untruck_core::types::truck_button::TruckButtonState;
 
 #[derive(Debug, Clone)]
-pub struct EvidenceStatus {
+pub(crate) struct EvidenceStatus {
     pub title: String,
     pub status_game: String,
     pub status_desc: String,
@@ -14,7 +14,7 @@ pub struct EvidenceStatus {
 }
 
 impl EvidenceStatus {
-    pub fn from_gearkind(o_evidence: Option<Evidence>, ev_state: TruckButtonState) -> Self {
+    pub(crate) fn from_gearkind(o_evidence: Option<Evidence>, ev_state: TruckButtonState) -> Self {
         let Some(evidence) = o_evidence else {
             return Self {
                 title: "".into(),

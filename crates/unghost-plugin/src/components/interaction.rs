@@ -3,11 +3,11 @@ use unspatial_core::position::Position;
 
 /// Component for objects that are temporarily locked by ghost interactions
 #[derive(Component)]
-pub struct Locked(pub Timer);
+pub(crate) struct Locked(pub Timer);
 
 /// Component for animating object movement during ghost interactions
 #[derive(Component)]
-pub struct Tween {
+pub(crate) struct Tween {
     pub start_pos: Position,
     pub end_pos: Position,
     pub timer: Timer,
@@ -16,7 +16,7 @@ pub struct Tween {
 
 /// Different easing functions for object animations
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TweenEase {
+pub(crate) enum TweenEase {
     /// Linear interpolation - constant speed
     Linear,
     /// Parabolic arc for thrown objects
@@ -27,7 +27,7 @@ pub enum TweenEase {
 
 impl Tween {
     /// Create a new tween for throwing objects with parabolic arc
-    pub fn new_throw(start: Position, end: Position, duration: f32) -> Self {
+    pub(crate) fn new_throw(start: Position, end: Position, duration: f32) -> Self {
         Self {
             start_pos: start,
             end_pos: end,
@@ -37,7 +37,7 @@ impl Tween {
     }
 
     /// Create a new tween for nudging objects with quick back-and-forth
-    pub fn new_nudge(start: Position, duration: f32) -> Self {
+    pub(crate) fn new_nudge(start: Position, duration: f32) -> Self {
         // For nudge, we move slightly forward then back to original position
         let nudge_offset = Position {
             x: start.x + 0.3, // Small forward movement
@@ -54,7 +54,7 @@ impl Tween {
     }
 
     /// Create a new tween for nudging objects towards a specific destination (typically floor)
-    pub fn new_nudge_to(start: Position, dest: Position, duration: f32) -> Self {
+    pub(crate) fn new_nudge_to(start: Position, dest: Position, duration: f32) -> Self {
         Self {
             start_pos: start,
             end_pos: dest,
@@ -64,7 +64,7 @@ impl Tween {
     }
 
     /// Create a new tween for haunted movement with slow slide
-    pub fn new_haunted_move(start: Position, end: Position, duration: f32) -> Self {
+    pub(crate) fn new_haunted_move(start: Position, end: Position, duration: f32) -> Self {
         Self {
             start_pos: start,
             end_pos: end,
@@ -74,7 +74,7 @@ impl Tween {
     }
 
     /// Calculate the current interpolated position based on timer progress
-    pub fn current_position(&self) -> Position {
+    pub(crate) fn current_position(&self) -> Position {
         let progress = self.timer.fraction();
 
         match self.ease_fn {
@@ -119,7 +119,7 @@ impl Tween {
 
 /// Component for visual effects particles spawned during object interactions
 #[derive(Component, Debug)]
-pub struct InteractionParticle {
+pub(crate) struct InteractionParticle {
     pub life: f32,
     pub max_life: f32,
     pub velocity: Vec3,
@@ -128,7 +128,7 @@ pub struct InteractionParticle {
 
 /// Different types of visual particles for ghost interactions
 #[derive(Debug, Clone, Copy)]
-pub enum InteractionParticleType {
+pub(crate) enum InteractionParticleType {
     /// Dust particles when objects move/land
     Dust,
     /// Trail particles for thrown objects
@@ -141,14 +141,14 @@ pub enum InteractionParticleType {
 
 /// Component for objects that should have motion blur during fast movement
 #[derive(Component, Debug)]
-pub struct MotionBlur {
+pub(crate) struct MotionBlur {
     pub intensity: f32,
     pub previous_position: Position,
 }
 
 /// Component for door lock visual indicator
 #[derive(Component, Debug)]
-pub struct LockIndicator {
+pub(crate) struct LockIndicator {
     pub pulse_timer: Timer,
     pub base_alpha: f32,
 }
@@ -160,7 +160,7 @@ impl Default for LockIndicator {
 }
 
 impl LockIndicator {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             pulse_timer: Timer::from_seconds(1.0, TimerMode::Repeating),
             base_alpha: 0.8,

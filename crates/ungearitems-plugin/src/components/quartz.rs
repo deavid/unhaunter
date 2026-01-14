@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-pub use ungearitems_core::components::quartz::QuartzStoneData;
+pub(crate) use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 
 const MAX_CRACKS: u8 = 4;
 
-pub trait QuartzStoneDataExt {
+pub(crate) trait QuartzStoneDataExt {
     fn aux_quartz_update(
         &mut self,
         gear_pos: &Position,
@@ -58,7 +58,7 @@ impl QuartzStoneDataExt for QuartzStoneData {
     }
 }
 
-pub fn update_quartz(
+pub(crate) fn update_quartz(
     mut gs: GearStuff,
     mut q_quartz: Query<(
         &mut QuartzStoneData,

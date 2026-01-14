@@ -46,10 +46,10 @@ impl<'a> tiled::ResourceReader for TmxMemoryReader<'a> {
     }
 }
 
-pub struct UnhaunterMapLoader;
+pub(crate) struct UnhaunterMapLoader;
 
 impl UnhaunterMapLoader {
-    pub fn load(
+    pub(crate) fn load(
         path: impl AsRef<std::path::Path>,
         maps: &Res<Maps>,
         tmx_assets: &Res<Assets<TmxMap>>,

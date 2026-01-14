@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::compass::Compass;
+pub(crate) use ungearitems_core::components::compass::Compass;
 use uninteraction_core::interaction::Toggleable;
 
-pub fn update_compass(
+pub(crate) fn update_compass(
     mut q_compass: Query<(&mut StatusText, &mut GearSprite, &Toggleable, &ItemName), With<Compass>>,
 ) {
     for (mut status, mut sprite, toggle, name) in q_compass.iter_mut() {
@@ -21,6 +21,6 @@ pub fn update_compass(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_compass);
 }

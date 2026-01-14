@@ -7,5 +7,8 @@ repository.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 bevy = { workspace = true }

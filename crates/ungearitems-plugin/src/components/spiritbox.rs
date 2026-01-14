@@ -6,7 +6,7 @@ use ungear_core::gear_stuff::GearStuff;
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct SpiritBoxInternal {
+pub(crate) struct SpiritBoxInternal {
     pub last_response_time: Option<f64>,
 }
 
@@ -18,10 +18,10 @@ use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::spiritbox::SpiritBox;
+pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unspatial_core::position::Position;
 
-pub fn update_spiritbox(
+pub(crate) fn update_spiritbox(
     mut q_spiritbox: Query<(
         Entity,
         &mut SpiritBox,
@@ -238,6 +238,6 @@ pub fn update_spiritbox(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_spiritbox);
 }

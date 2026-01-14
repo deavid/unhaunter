@@ -14,12 +14,12 @@ use untruck_core::types::truck_button::{TruckButtonState, TruckButtonType};
 use untypes_core::states::GameState;
 use unwalkie_core::resources::WalkiePlay;
 
-pub const JOURNAL_HINT_THRESHOLD: u32 = 3;
-pub const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
+pub(crate) const JOURNAL_HINT_THRESHOLD: u32 = 3;
+pub(crate) const HIGH_CLARITY_THRESHOLD: f32 = 0.75;
 
 // Define the new resource
 #[derive(Resource, Default)]
-pub struct SeenEvidenceHints(HashSet<Evidence>);
+pub(crate) struct SeenEvidenceHints(HashSet<Evidence>);
 
 fn update_journal_button_blinking_system(
     walkie_play: Res<WalkiePlay>,

@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::photocam::Photocam;
+pub(crate) use ungearitems_core::components::photocam::Photocam;
 use uninteraction_core::interaction::Toggleable;
 
-pub fn update_photocam(
+pub(crate) fn update_photocam(
     mut q_photocam: Query<
         (
             &mut StatusText,
@@ -42,6 +42,6 @@ pub fn update_photocam(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_photocam);
 }

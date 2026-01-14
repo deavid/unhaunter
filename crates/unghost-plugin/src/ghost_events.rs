@@ -9,7 +9,7 @@ use unevents_core::events::ghost_interaction::GhostInteractionEvent;
 
 // Timer component for flickering lights - maintained for legacy light flicker effects
 #[derive(Component)]
-pub struct FlickerTimer {
+pub(crate) struct FlickerTimer {
     pub timer: Timer,
 }
 
@@ -41,7 +41,7 @@ fn update_flicker_timers(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_message::<GhostInteractionEvent>();
     app.add_systems(
         Update,

@@ -13,7 +13,7 @@ fn parse_walkie_event(event_str: &str) -> Option<WalkieEvent> {
 /// System that loads walkie event data from player profile into WalkiePlay resource
 /// when a level loads. This allows the game to track which walkie events were played
 /// in previous missions.
-pub fn load_walkie_event_stats(
+pub(crate) fn load_walkie_event_stats(
     mut ev_level_ready: MessageReader<LevelReadyEvent>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut walkie_play: ResMut<WalkiePlay>,

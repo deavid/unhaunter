@@ -5,7 +5,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::gear::GearSpriteID;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 
-pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Leftmost side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Column,
@@ -75,7 +75,7 @@ pub fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets
         .insert(InventoryStats::left());
 }
 
-pub fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
     // Right side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Row,

@@ -5,11 +5,11 @@ use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::redtorch::RedTorch;
+pub(crate) use ungearitems_core::components::redtorch::RedTorch;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
-pub fn update_redtorch(
+pub(crate) fn update_redtorch(
     mut q_redtorch: Query<(
         &mut RedTorch,
         &mut StatusText,
@@ -73,6 +73,6 @@ pub fn update_redtorch(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_redtorch);
 }

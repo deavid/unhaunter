@@ -8,7 +8,7 @@ use unwalkie_types::types::WalkieTag;
 
 /// Represents a single voice line entry within a `WalkieEventConceptEntry`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct WalkieLineEntry {
+pub(crate) struct WalkieLineEntry {
     /// The text to be synthesized by the TTS engine.
     pub tts_text: String,
     /// The subtitle text to be displayed in-game for this voice line.
@@ -19,7 +19,7 @@ pub struct WalkieLineEntry {
 
 /// Represents a "concept" or event that can trigger multiple voice lines.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WalkieEventConceptEntry {
+pub(crate) struct WalkieEventConceptEntry {
     /// The name of the concept, in PascalCase. This will be used to generate
     /// a corresponding Rust enum variant.
     pub name: String,
@@ -30,7 +30,7 @@ pub struct WalkieEventConceptEntry {
 /// The root structure of a walkie phrase RON file.
 /// Each file can contain multiple event concepts.
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WalkiePhraseFile {
+pub(crate) struct WalkiePhraseFile {
     /// A list of `WalkieEventConceptEntry` instances defined in this file.
     pub event_lines: Vec<WalkieEventConceptEntry>,
 }

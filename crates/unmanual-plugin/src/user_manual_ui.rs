@@ -6,21 +6,21 @@ use unfoundation_core::platform::plt::FONT_SCALE;
 use untypes_core::states::AppState;
 
 #[derive(Component)]
-pub struct ManualCamera;
+pub(crate) struct ManualCamera;
 
 #[derive(Component)]
-pub struct UserManualUI;
+pub(crate) struct UserManualUI;
 
 #[derive(Component)]
-pub struct PageContent;
+pub(crate) struct PageContent;
 
 #[derive(Debug, Clone, Copy, Message)]
-pub enum ManualNavigationEvent {
+pub(crate) enum ManualNavigationEvent {
     NextPage,
     PreviousPage,
     Close,
 }
-pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
+pub(crate) fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
         font_size: 30.0 * FONT_SCALE,
@@ -150,7 +150,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
         });
 }
 
-pub fn user_manual_system(
+pub(crate) fn user_manual_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut ev_navigation: MessageWriter<ManualNavigationEvent>,
     mut interaction_query: Query<
@@ -189,7 +189,7 @@ pub fn user_manual_system(
     }
 }
 
-pub fn setup(mut commands: Commands, handles: Res<GameAssets>) {
+pub(crate) fn setup(mut commands: Commands, handles: Res<GameAssets>) {
     // Spawn the 2D camera for the manual UI
     commands.spawn(Camera2d).insert(ManualCamera);
 
@@ -293,7 +293,7 @@ fn update_navigation_button_visibility(
     }
 }
 
-pub fn cleanup(
+pub(crate) fn cleanup(
     mut commands: Commands,
     q_manual_ui: Query<Entity, With<UserManualUI>>,
     q_camera: Query<Entity, With<ManualCamera>>,
@@ -309,7 +309,7 @@ pub fn cleanup(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::UserManual), setup)
         .add_systems(OnExit(AppState::UserManual), cleanup)
         .add_systems(

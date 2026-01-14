@@ -13,7 +13,7 @@ use unsettings_core::game::{GameplaySettings, MovementStyle};
 /// This system reads keyboard input and converts it to movement vectors in the PlayerInput resource.
 /// It also handles movement style transformations (e.g., screen-space orthogonal movement) and
 /// clears any active click-to-move targets and waypoint queues when keyboard movement is detected.
-pub fn keyboard_input_system(
+pub(crate) fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
     mut player_input: ResMut<PlayerInput>,

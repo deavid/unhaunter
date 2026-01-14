@@ -7,7 +7,7 @@ use ungearitems_core::components::repellentflask::RepellentFlask;
 
 /// Crafts a repellent for the specified ghost type.
 /// Returns true if a new bottle was consumed (should count as a craft).
-pub fn craft_repellent(
+pub(crate) fn craft_repellent(
     commands: &mut Commands,
     gear_registry: &GearSpawnerRegistry,
     playergear: &mut PlayerGear,

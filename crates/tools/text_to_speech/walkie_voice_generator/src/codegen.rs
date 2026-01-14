@@ -21,7 +21,7 @@ fn read_file_if_exists(path: &Path) -> Result<Option<String>, anyhow::Error> {
     }
 }
 
-pub fn generate_rust_code(
+pub(crate) fn generate_rust_code(
     manifest: &HashMap<String, WalkieLineManifestEntry>,
     output_dir_str: &str,
     delete_unused: bool, // Added delete_unused flag

@@ -35,7 +35,7 @@ fn system_hide_mouse(
         cursor_options.visible = visible;
     }
 }
-pub struct MouseTimer(Timer);
+pub(crate) struct MouseTimer(Timer);
 
 impl Default for MouseTimer {
     fn default() -> Self {

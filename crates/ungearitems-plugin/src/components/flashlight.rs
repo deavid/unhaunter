@@ -9,9 +9,9 @@ use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
 use unfoundation_core::types::gear::GearSpriteID;
-pub use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
+pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
 
-pub fn update_flashlight(
+pub(crate) fn update_flashlight(
     mut q_flashlight: Query<(
         &mut Flashlight,
         &mut LightEmitter,
@@ -137,6 +137,6 @@ pub fn update_flashlight(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_flashlight);
 }

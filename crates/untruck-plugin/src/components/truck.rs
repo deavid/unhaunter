@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 #[derive(Component, Debug)]
-pub struct TruckUI;
+pub(crate) struct TruckUI;
 
 #[derive(Component, Debug)]
-pub struct TruckUIGhostGuess;
+pub(crate) struct TruckUIGhostGuess;

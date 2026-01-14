@@ -20,7 +20,7 @@ use crate::level_setup::LoadLevelSystemParam;
 /// # Arguments
 /// * `p` - System parameters containing resources needed for sprite loading
 /// * `mesh_tileset` - Hash map to cache mesh handles for each tileset
-pub fn populate_sprite_db(
+pub(crate) fn populate_sprite_db(
     p: &mut LoadLevelSystemParam,
     mesh_tileset: &mut HashMap<String, Handle<Mesh>>,
 ) {

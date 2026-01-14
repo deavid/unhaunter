@@ -3,7 +3,7 @@ use std::time::Duration;
 
 /// Represents the different animation phases for the on-screen hint.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum HintAnimationPhase {
+pub(crate) enum HintAnimationPhase {
     #[default]
     Idle, // Not visible, or finished animating out
     AnimatingIn,
@@ -13,7 +13,7 @@ pub enum HintAnimationPhase {
 
 /// Resource to manage the state of the on-screen hint UI.
 #[derive(Resource, Debug)]
-pub struct HintUiState {
+pub(crate) struct HintUiState {
     /// The current text to display in the hint.
     pub current_text: String,
     /// The current animation phase of the hint.

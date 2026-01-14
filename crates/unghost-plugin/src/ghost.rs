@@ -70,7 +70,7 @@ struct FadeOut {
 }
 
 impl FadeOut {
-    pub fn new(duration: f32) -> Self {
+    pub(crate) fn new(duration: f32) -> Self {
         Self {
             timer: Timer::from_seconds(duration, TimerMode::Once),
             roared: false,
@@ -342,7 +342,7 @@ fn ghost_movement(
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum RoarType {
+pub(crate) enum RoarType {
     Full,
     Dim,
     Snore,
@@ -350,7 +350,7 @@ pub enum RoarType {
 }
 
 impl RoarType {
-    pub fn get_sound(&self) -> Option<String> {
+    pub(crate) fn get_sound(&self) -> Option<String> {
         let roar_sounds = match self {
             RoarType::Full => vec![
                 "sounds/ghost-roar-1.ogg",
@@ -378,7 +378,7 @@ impl RoarType {
             .map(|s| s.to_string())
     }
 
-    pub fn get_volume(&self) -> f32 {
+    pub(crate) fn get_volume(&self) -> f32 {
         match self {
             RoarType::Full => 1.0,
             RoarType::Dim => 0.9,

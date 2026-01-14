@@ -19,20 +19,20 @@ use untypes_core::states::MapHubState;
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
-pub struct DifficultySelectionUI;
+pub(crate) struct DifficultySelectionUI;
 
 /// UI component marker for the difficulty description text
 #[derive(Component, Debug)]
-pub struct DifficultyDescriptionUI;
+pub(crate) struct DifficultyDescriptionUI;
 
 /// Component that associates a menu item with a specific difficulty level
 #[derive(Component, Debug, Clone, Copy)]
-pub struct DifficultySelectionItem {
+pub(crate) struct DifficultySelectionItem {
     pub difficulty: Difficulty,
 }
 
 /// Registers all systems needed for the difficulty selection screen
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(MapHubState::DifficultySelection), setup_systems)
         .add_systems(OnExit(MapHubState::DifficultySelection), cleanup_systems)
         .add_systems(
@@ -47,7 +47,7 @@ pub fn app_setup(app: &mut App) {
 }
 
 /// Sets up the difficulty selection screen UI and initializes the difficulty state
-pub fn setup_systems(
+pub(crate) fn setup_systems(
     mut commands: Commands,
     handles: Res<GameAssets>,
     mut map_selected_events: MessageReader<MapSelectedEvent>,
@@ -85,14 +85,17 @@ pub fn setup_systems(
 }
 
 /// Cleans up the difficulty selection screen UI
-pub fn cleanup_systems(mut commands: Commands, qtui: Query<Entity, With<DifficultySelectionUI>>) {
+pub(crate) fn cleanup_systems(
+    mut commands: Commands,
+    qtui: Query<Entity, With<DifficultySelectionUI>>,
+) {
     for e in qtui.iter() {
         commands.entity(e).despawn();
     }
 }
 
 /// Handles clicks on difficulty options and the "Go Back" button
-pub fn handle_difficulty_click(
+pub(crate) fn handle_difficulty_click(
     mut ev_menu_clicks: MessageReader<MenuItemClicked>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut difficulty_resource: ResMut<CurrentDifficulty>,
@@ -158,7 +161,7 @@ pub fn handle_difficulty_click(
 }
 
 /// Updates the description text when a different difficulty is selected
-pub fn update_difficulty_description(
+pub(crate) fn update_difficulty_description(
     mut ev_menu_selection: MessageReader<MenuItemSelected>,
     mut difficulty_selection_state: ResMut<DifficultySelectionState>,
     mut q_desc_text: Query<(&mut Text, &mut TextColor), With<DifficultyDescriptionUI>>,
@@ -218,7 +221,7 @@ pub fn update_difficulty_description(
 }
 
 /// Handles ESC key press to return to main menu
-pub fn handle_difficulty_escape(
+pub(crate) fn handle_difficulty_escape(
     mut ev_escape: MessageReader<MenuEscapeEvent>,
     mut next_hub_state: ResMut<NextState<MapHubState>>,
     mut next_app_state: ResMut<NextState<AppState>>,
@@ -232,7 +235,7 @@ pub fn handle_difficulty_escape(
 
 /// Creates the UI for the difficulty selection screen using templates
 /// This now takes a Vec<Difficulty> containing only non-tutorial difficulties.
-pub fn setup_ui(
+pub(crate) fn setup_ui(
     commands: &mut Commands,
     handles: &GameAssets,
     available_difficulties: &[Difficulty],

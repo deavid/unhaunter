@@ -42,7 +42,7 @@ use untypes_core::states::{AppState, MapHubState};
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
-pub struct MissionSelectUI;
+pub(crate) struct MissionSelectUI;
 
 /// Component for the camera in mission selection
 #[derive(Component)]
@@ -50,23 +50,23 @@ struct MissionSelectCamera;
 
 /// Component for the description text area
 #[derive(Component)]
-pub struct MissionDescriptionText;
+pub(crate) struct MissionDescriptionText;
 
 /// Component for the preview image area
 #[derive(Component)]
-pub struct MissionPreviewImage;
+pub(crate) struct MissionPreviewImage;
 
 /// Resource to track UI mapping to map indices
 /// This is critical for translating UI item indices to actual map indices
 /// after filtering and sorting operations are applied
 #[derive(Resource, Debug, Default)]
-pub struct UIMissionMapping {
+pub(crate) struct UIMissionMapping {
     /// Maps UI index to original map index in maps_resource.maps
     pub ui_to_map_index: Vec<usize>,
 }
 
 #[derive(Resource, Default)]
-pub struct InitialScrollTarget(Option<usize>);
+pub(crate) struct InitialScrollTarget(Option<usize>);
 
 /// Setup function for unified mission selection systems
 pub(crate) fn app_setup(app: &mut App) {
@@ -234,7 +234,7 @@ fn handle_selection_input(
 }
 
 /// System to update the mission description and image when selection changes
-pub fn update_mission_selection(
+pub(crate) fn update_mission_selection(
     mut ev_menu_selection: MessageReader<MenuItemSelected>,
     asset_server: Res<AssetServer>,
     mut q_desc_text: Query<&mut Text, With<MissionDescriptionText>>,
@@ -311,7 +311,7 @@ pub fn update_mission_selection(
 }
 
 /// System to set up the unified mission selection UI
-pub fn setup_ui(
+pub(crate) fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     asset_server: Res<AssetServer>,

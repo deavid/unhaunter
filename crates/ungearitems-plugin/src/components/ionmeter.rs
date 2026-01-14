@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::ionmeter::IonMeter;
+pub(crate) use ungearitems_core::components::ionmeter::IonMeter;
 use uninteraction_core::interaction::Toggleable;
 
-pub fn update_ionmeter(
+pub(crate) fn update_ionmeter(
     mut q_ionmeter: Query<
         (
             &mut StatusText,
@@ -42,6 +42,6 @@ pub fn update_ionmeter(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_ionmeter);
 }

@@ -10,7 +10,7 @@ use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 
-pub fn grid_img_text2(
+pub(crate) fn grid_img_text2(
     parent: &mut ChildSpawnerCommands<'_>,
     regular_font: &Handle<Font>,
     bold_font: &Handle<Font>,
@@ -97,7 +97,7 @@ pub fn grid_img_text2(
         });
 }
 
-pub fn header(
+pub(crate) fn header(
     parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     title: impl Into<String>,
@@ -144,7 +144,7 @@ pub fn header(
     });
 }
 
-pub fn summary_text(
+pub(crate) fn summary_text(
     parent: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     summary: impl Into<String>,

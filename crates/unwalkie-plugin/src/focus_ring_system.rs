@@ -9,7 +9,7 @@ use unwalkie_core::events::WalkieTalkingEvent;
 
 /// System that listens for WalkieTalkingEvent and activates the focus ring for ghosts and breaches
 /// when the GhostShowcase or BreachShowcase events are triggered.
-pub fn focus_ring_showcase_system(
+pub(crate) fn focus_ring_showcase_system(
     mut ev_walkie_talking: MessageReader<WalkieTalkingEvent>,
     mut query_ghost_focus_rings: Query<&mut FocusRing, With<ChildOf>>,
     query_ghosts: Query<(Entity, &Children), With<GhostSprite>>,
@@ -44,7 +44,7 @@ pub fn focus_ring_showcase_system(
 
 /// System that updates focus rings, decreasing the pulse timer over time
 /// and updating the visual appearance based on the pulse value.
-pub fn update_focus_rings(
+pub(crate) fn update_focus_rings(
     time: Res<Time>,
     mut query_focus_rings: Query<(&mut FocusRing, &mut Sprite)>,
 ) {
@@ -72,6 +72,6 @@ pub fn update_focus_rings(
 }
 
 /// Registers the focus ring systems to the Bevy app.
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, (focus_ring_showcase_system, update_focus_rings));
 }

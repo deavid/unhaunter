@@ -11,7 +11,7 @@ use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;
 
-pub fn update_evidence_ui(
+pub(crate) fn update_evidence_ui(
     gc: Res<GameConfig>,
     q_gear: Query<(&PlayerSprite, &PlayerGear)>,
     q_sensor: Query<&EvidenceSensor>,
@@ -62,7 +62,7 @@ pub fn update_evidence_ui(
     }
 }
 
-pub fn keyboard_evidence(
+pub(crate) fn keyboard_evidence(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     gc: Res<GameConfig>,
     players: Query<(&PlayerSprite, &PlayerGear)>,
@@ -112,7 +112,7 @@ pub fn keyboard_evidence(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         FixedUpdate,
         update_evidence_ui.run_if(in_state(GameState::None).and(in_state(AppState::InGame))),

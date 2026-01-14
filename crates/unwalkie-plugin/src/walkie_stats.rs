@@ -5,7 +5,7 @@ use unwalkie_core::resources::{WalkiePlay, WalkieSoundState};
 
 /// System that updates the WalkieEventStats in the player profile
 /// when walkie events are played.
-pub fn update_walkie_stats(
+pub(crate) fn update_walkie_stats(
     walkie_play: Res<WalkiePlay>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     time: Res<Time>,

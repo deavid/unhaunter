@@ -8,7 +8,7 @@ use unprofile_core::profile::PlayerProfileData;
 
 /// Helper function to locate the fixture directory for schema snapshots.
 /// Returns `Some(PathBuf)` if the directory exists, or `None` if it does not.
-pub fn get_fixture_directory() -> Option<PathBuf> {
+pub(crate) fn get_fixture_directory() -> Option<PathBuf> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").ok()?;
     let fixture_dir = PathBuf::from(manifest_dir).join("tests/fixtures/player_profiles");
 

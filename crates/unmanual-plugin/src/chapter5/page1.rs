@@ -3,7 +3,7 @@ use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unassets_core::types::root::game_assets::GameAssets;
 
-pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Tools of the Adept";
     let subtitle = "Learn to use Salt, Quartz, and Sage to handle paranormal threats.";
     let grid = vec![
@@ -39,6 +39,6 @@ pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     summary_text(parent, handles, summary);
 }
 
-pub fn create_manual_page() -> ManualPageData {
+pub(crate) fn create_manual_page() -> ManualPageData {
     ManualPageData { draw_fn: draw }
 }

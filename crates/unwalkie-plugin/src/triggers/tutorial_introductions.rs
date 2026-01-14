@@ -4,7 +4,7 @@ use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
 
-pub struct TutorialIntroductionsTriggerPlugin;
+pub(crate) struct TutorialIntroductionsTriggerPlugin;
 
 impl Plugin for TutorialIntroductionsTriggerPlugin {
     fn build(&self, app: &mut App) {
@@ -16,7 +16,7 @@ impl Plugin for TutorialIntroductionsTriggerPlugin {
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_plugins(TutorialIntroductionsTriggerPlugin);
 }
 

@@ -13,7 +13,7 @@ use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, MapHubState};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
-pub enum MenuID {
+pub(crate) enum MenuID {
     Campaign,
     CustomMission,
     Manual,
@@ -37,20 +37,20 @@ impl std::fmt::Display for MenuID {
 }
 
 #[derive(Component, Debug)]
-pub struct MCamera;
+pub(crate) struct MCamera;
 
 #[derive(Component, Debug)]
-pub struct MenuUI;
+pub(crate) struct MenuUI;
 
 #[derive(Component, Debug)]
-pub struct MenuUILayout;
+pub(crate) struct MenuUILayout;
 
 #[derive(Component, Debug, Default)]
-pub struct MenuSound {
+pub(crate) struct MenuSound {
     despawn: bool,
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), (setup, setup_ui))
         .add_systems(OnExit(AppState::MainMenu), cleanup)
         .add_systems(Update, menu_event)
@@ -58,7 +58,10 @@ pub fn app_setup(app: &mut App) {
         .add_systems(Update, manage_title_song);
 }
 
-pub fn setup(mut commands: Commands, mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
+pub(crate) fn setup(
+    mut commands: Commands,
+    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
+) {
     commands.spawn(Camera2d).insert(MCamera);
 
     // Ensure player level is updated based on XP when main menu loads
@@ -72,7 +75,7 @@ pub fn setup(mut commands: Commands, mut player_profile: ResMut<Persistent<Playe
     info!("Main menu camera setup and player level updated");
 }
 
-pub fn setup_ui(
+pub(crate) fn setup_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -123,7 +126,7 @@ pub fn setup_ui(
     warn!("Main menu created with root entity: {:?}", root_entity);
 }
 
-pub fn cleanup(
+pub(crate) fn cleanup(
     mut commands: Commands,
     qc: Query<Entity, With<MCamera>>,
     qm: Query<Entity, With<MenuUI>>,
@@ -136,7 +139,7 @@ pub fn cleanup(
     }
 }
 
-pub fn menu_event(
+pub(crate) fn menu_event(
     mut click_events: MessageReader<MenuItemClicked>,
     #[cfg(not(target_arch = "wasm32"))] mut exit: MessageWriter<AppExit>,
     mut next_app_state: ResMut<NextState<AppState>>,
@@ -188,7 +191,7 @@ pub fn menu_event(
     }
 }
 
-pub fn manage_title_song(
+pub(crate) fn manage_title_song(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut q_sound: Query<&mut MenuSound>,
@@ -226,7 +229,7 @@ pub fn manage_title_song(
     }
 }
 
-pub fn despawn_sound(
+pub(crate) fn despawn_sound(
     mut commands: Commands,
     mut qs: Query<(Entity, &mut AudioSink, &MenuSound)>,
     audio_settings: Res<Persistent<AudioSettings>>,

@@ -21,16 +21,16 @@ use rand::Rng;
 use std::collections::VecDeque;
 use unboard_core::behavior::component::Interactive;
 use unboard_core::behavior::{Behavior, Orientation};
-pub use unboard_core::components::mapcolor::MapColor;
+pub(crate) use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
 use unboard_core::types::fielddata::CollisionFieldData;
-pub use unboard_core::types::light::LightData;
+pub(crate) use unboard_core::types::light::LightData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::platform::plt::IS_WASM;
-pub use unfoundation_core::types::light::LightType;
+pub(crate) use unfoundation_core::types::light::LightType;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
@@ -66,7 +66,7 @@ use untypes_core::states::AppState;
 /// into account walls, obstacles, and potentially the player's sanity level. The
 /// visibility field is stored in a `HashMap`, where the keys are `BoardPosition`s
 /// and the values are visibility factors (0.0 to 1.0).
-pub fn compute_visibility(
+pub(crate) fn compute_visibility(
     vis_field: &mut Array3<f32>,
     collision_field: &Array3<CollisionFieldData>,
     pos_start: &Position,

@@ -9,14 +9,14 @@ use unassets_core::types::root::map::Map;
 use unassets_core::types::root::map::Sheet;
 use untypes_core::difficulty::Difficulty;
 
-pub struct PreLoad<A: Asset> {
+pub(crate) struct PreLoad<A: Asset> {
     path: String,
     handle: Handle<A>,
     processed: bool,
 }
 
 #[derive(Resource, Default)]
-pub struct MapAssetIndexHandle {
+pub(crate) struct MapAssetIndexHandle {
     tmxidx: Handle<AssetIdx>,
     tsxidx: Handle<AssetIdx>,
     idxprocessed: bool,

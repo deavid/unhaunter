@@ -128,7 +128,7 @@ fn reconstruct_path(
 
 /// Performs A* pathfinding from start to goal position
 /// Returns a vector of BoardPositions representing the path, or empty vector if no path found
-pub fn find_path(
+pub(crate) fn find_path(
     start: Position,
     goal: Position,
     board_data: &BoardData,
@@ -228,7 +228,7 @@ pub fn find_path(
 /// Unlike find_path, this function treats the goal position as walkable even if it has collision,
 /// which is useful for pathfinding to interactive objects like closed doors.
 /// Returns a vector of BoardPositions representing the path, or empty vector if no path found
-pub fn find_path_to_interactive(
+pub(crate) fn find_path_to_interactive(
     start: Position,
     goal: Position,
     board_data: &BoardData,
@@ -368,7 +368,7 @@ fn get_neighbors_to_interactive(
 /// Smooths a path by removing unnecessary waypoints using line-of-sight checks.
 /// This creates more natural-looking paths that move diagonally when possible
 /// while still avoiding collisions and invisible areas.
-pub fn smooth_path(
+pub(crate) fn smooth_path(
     path: Vec<BoardPosition>,
     board_data: &BoardData,
     visibility_data: &VisibilityData,
@@ -468,7 +468,7 @@ fn is_walkable_and_visible(
 }
 
 /// Detects if a position is within a stairs area and returns stair information
-pub fn detect_stair_area(
+pub(crate) fn detect_stair_area(
     target_pos: Position,
     stairs_query: &Query<(Entity, &Position, &Stairs, &Behavior)>,
 ) -> Option<(Entity, Position, Stairs, Behavior, Position, Position)> {
@@ -593,7 +593,7 @@ fn detect_stair_direction(
 
 /// Calculates the start and end waypoints for traversing stairs
 /// Based on the stairs_player system logic in keyboard.rs
-pub fn calculate_stair_waypoints(
+pub(crate) fn calculate_stair_waypoints(
     stair_pos: &Position,
     stair_component: &Stairs,
     behavior: &Behavior,

@@ -14,21 +14,21 @@ use untypes_core::states::AppState;
 use crate::manual_logic::draw_manual_page;
 
 #[derive(Component)]
-pub struct ManualCamera;
+pub(crate) struct ManualCamera;
 
 #[derive(Component)]
-pub struct PageContent;
+pub(crate) struct PageContent;
 
 #[derive(Component)]
-pub struct PrePlayManualUI;
+pub(crate) struct PrePlayManualUI;
 
 #[derive(Component, Clone)]
-pub struct Input {
+pub(crate) struct Input {
     pub keys: Vec<KeyCode>,
 }
 
 impl Input {
-    pub fn from_keys(keys: impl IntoIterator<Item = KeyCode>) -> Self {
+    pub(crate) fn from_keys(keys: impl IntoIterator<Item = KeyCode>) -> Self {
         Self {
             keys: keys.into_iter().collect(),
         }
@@ -36,18 +36,18 @@ impl Input {
 }
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PreplayManualNavigationAction {
+pub(crate) enum PreplayManualNavigationAction {
     Continue,
     Previous,
 }
 
 #[derive(Debug, Clone, Copy, Message)]
-pub struct PreplayManualNavigationEvent {
+pub(crate) struct PreplayManualNavigationEvent {
     pub action: PreplayManualNavigationAction,
 }
 
 // System for handling user interaction and page navigation within the pre-play manual.
-pub fn preplay_manual_system(
+pub(crate) fn preplay_manual_system(
     mut evr_manual_button: MessageReader<PreplayManualNavigationEvent>,
     mut current_manual_page: ResMut<CurrentManualPage>,
     difficulty: Res<CurrentDifficulty>,
@@ -134,7 +134,7 @@ fn manual_button_system(
 }
 
 /// Draws the pre-play manual UI, which guides the player through a tutorial.
-pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
+pub(crate) fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
     let button_text_style = TextFont {
         font: handles.fonts.londrina.w300_light.clone(),
         font_size: 30.0 * FONT_SCALE,
@@ -252,7 +252,7 @@ pub fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
         });
 }
 
-pub fn setup_preplay_ui(
+pub(crate) fn setup_preplay_ui(
     mut commands: Commands,
     handles: Res<GameAssets>,
     difficulty: Res<CurrentDifficulty>,
@@ -271,7 +271,7 @@ pub fn setup_preplay_ui(
     draw_manual_ui(&mut commands, handles);
 }
 
-pub fn cleanup_preplay_ui(
+pub(crate) fn cleanup_preplay_ui(
     mut commands: Commands,
     q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
     q_camera: Query<Entity, With<ManualCamera>>,
@@ -316,7 +316,7 @@ fn redraw_manual_ui_system(
         });
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::PreplayManual), setup_preplay_ui)
         .add_systems(OnExit(AppState::PreplayManual), cleanup_preplay_ui)
         .add_systems(

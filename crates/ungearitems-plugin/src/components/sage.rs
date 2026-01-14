@@ -8,7 +8,7 @@ use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use unfoundation_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-pub use ungearitems_core::components::sage::{
+pub(crate) use ungearitems_core::components::sage::{
     SageBundleData, SageSmokeParticle, SmokeParticleTimer,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -19,7 +19,7 @@ use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
-pub fn update_sage(
+pub(crate) fn update_sage(
     mut gs: GearStuff,
     mut q_sage: Query<(
         Entity,

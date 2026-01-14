@@ -14,7 +14,7 @@ use unspatial_core::position::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
 #[derive(Resource)]
-pub struct OrbSpawnTimer(pub Timer);
+pub(crate) struct OrbSpawnTimer(pub Timer);
 
 impl Default for OrbSpawnTimer {
     fn default() -> Self {
@@ -26,7 +26,7 @@ impl Default for OrbSpawnTimer {
 }
 
 /// Spawns ghost orb particles from ghost breaches if the FloatingOrbs evidence is active
-pub fn spawn_ghost_orb_particles(
+pub(crate) fn spawn_ghost_orb_particles(
     mut commands: Commands,
     time: Res<Time>,
     mut spawn_timer: ResMut<OrbSpawnTimer>,
@@ -82,7 +82,7 @@ pub fn spawn_ghost_orb_particles(
 }
 
 /// Updates ghost orb particles (movement, collision, lifecycle)
-pub fn update_ghost_orb_particles(
+pub(crate) fn update_ghost_orb_particles(
     mut commands: Commands,
     time: Res<Time>,
     board_data: Res<BoardData>,
@@ -185,7 +185,7 @@ pub fn update_ghost_orb_particles(
 }
 
 /// Sets up the ghost orb systems in the app
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.init_resource::<OrbSpawnTimer>().add_systems(
         Update,
         (spawn_ghost_orb_particles, update_ghost_orb_particles),

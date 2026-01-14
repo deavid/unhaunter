@@ -33,7 +33,7 @@ use crate::components::videocam::Videocam;
 
 use unfoundation_core::types::light::LightType;
 
-pub fn register_all(app: &mut App) {
+pub(crate) fn register_all(app: &mut App) {
     let mut registry = app.world_mut().resource_mut::<GearSpawnerRegistry>();
 
     registry.register(

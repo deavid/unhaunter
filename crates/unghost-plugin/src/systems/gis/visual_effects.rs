@@ -314,7 +314,7 @@ fn spawn_haunted_glow_particle(
 }
 
 /// Helper function to spawn electrical sparks for breaker trips
-pub fn spawn_electrical_sparks(
+pub(crate) fn spawn_electrical_sparks(
     commands: &mut Commands,
     asset_server: &AssetServer,
     position: Position,

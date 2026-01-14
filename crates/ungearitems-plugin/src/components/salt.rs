@@ -7,7 +7,7 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
-pub use ungearitems_core::components::salt::{
+pub(crate) use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -17,7 +17,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::position::Position;
 
-pub fn update_salt(
+pub(crate) fn update_salt(
     mut gs: GearStuff,
     mut q_salt: Query<(
         Entity,

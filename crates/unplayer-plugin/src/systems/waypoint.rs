@@ -23,7 +23,7 @@ use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive}
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
 /// Only allows clicks on interactive entities that are on the same floor as the player.
-pub fn waypoint_creation_system(
+pub(crate) fn waypoint_creation_system(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
@@ -189,7 +189,7 @@ pub fn waypoint_creation_system(
 
 /// System that makes the player follow waypoints.
 /// Replaces the old click-to-move update system.
-pub fn waypoint_following_system(
+pub(crate) fn waypoint_following_system(
     mut commands: Commands,
     q_player: Query<(Entity, &Position, &WaypointQueue), With<PlayerSprite>>,
     q_waypoints: Query<(&Position, &Waypoint), (With<WaypointOwner>, Without<PlayerSprite>)>,
@@ -318,7 +318,7 @@ fn complete_waypoint(commands: &mut Commands, _player_entity: Entity, waypoint_e
 }
 
 /// System that cleans up waypoint queues by removing despawned waypoint entities
-pub fn waypoint_queue_cleanup_system(
+pub(crate) fn waypoint_queue_cleanup_system(
     mut q_player_queue: Query<&mut WaypointQueue, With<PlayerSprite>>,
     q_waypoints: Query<Entity, With<Waypoint>>,
 ) {

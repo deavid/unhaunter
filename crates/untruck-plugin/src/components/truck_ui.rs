@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::FONT_SCALE;
-pub use unfoundation_core::types::truck::{TabContents, TabState};
+pub(crate) use unfoundation_core::types::truck::{TabContents, TabState};
 
 /// Represents a tab in the truck UI.
 #[derive(Debug, Clone, Component)]
-pub struct TruckTab {
+pub(crate) struct TruckTab {
     /// The display name of the tab.
     pub tabname: String,
     /// The current visual state of the tab.
@@ -16,7 +16,7 @@ pub struct TruckTab {
 
 impl TruckTab {
     /// Updates the tab's visual state based on the given interaction.
-    pub fn update_from_interaction(&mut self, interaction: &Interaction) {
+    pub(crate) fn update_from_interaction(&mut self, interaction: &Interaction) {
         match self.state {
             TabState::Disabled | TabState::Selected => {}
             TabState::Default | TabState::Hover | TabState::Pressed => {
@@ -29,7 +29,7 @@ impl TruckTab {
         }
     }
 
-    pub fn text_color(&self) -> Color {
+    pub(crate) fn text_color(&self) -> Color {
         match self.state {
             TabState::Selected => colors::TRUCKUI_BGCOLOR.with_alpha(1.0),
             TabState::Pressed => colors::TRUCKUI_BGCOLOR.with_alpha(0.8),
@@ -42,7 +42,7 @@ impl TruckTab {
         }
     }
 
-    pub fn bg_color(&self) -> Color {
+    pub(crate) fn bg_color(&self) -> Color {
         match self.state {
             TabState::Pressed => colors::TRUCKUI_ACCENT2_COLOR,
             TabState::Selected => colors::TRUCKUI_ACCENT_COLOR,
@@ -52,7 +52,7 @@ impl TruckTab {
         }
     }
 
-    pub fn font_size(&self) -> f32 {
+    pub(crate) fn font_size(&self) -> f32 {
         match self.state {
             TabState::Selected => 35.0 * FONT_SCALE,
             _ => 24.0 * FONT_SCALE,

@@ -5,7 +5,7 @@ use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::{AppState, GameState};
 
 #[derive(Debug, Component)]
-pub struct PauseUI;
+pub(crate) struct PauseUI;
 
 const PAUSEUI_BGCOLOR: Color = Color::srgba(0.082, 0.094, 0.118, 0.6);
 const PAUSEUI_PANEL_BGCOLOR: Color = Color::srgba(0.106, 0.129, 0.157, 0.8);

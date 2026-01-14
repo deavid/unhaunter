@@ -3,7 +3,7 @@ use crate::utils::{grid_img_text2, header, summary_text};
 use bevy::prelude::*;
 use unassets_core::types::root::game_assets::GameAssets;
 
-pub fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
     let title = "Paranormal Investigator Needed!";
     let subtitle = "
 Reports of unsettling activity... restless spirits... your expertise is required to expel the ghosts haunting these locations.
@@ -50,6 +50,6 @@ What will you find? How to do a good job as a P.I.? Here are the main clues!
     summary_text(parent, handles, summary);
 }
 
-pub fn create_manual_page() -> ManualPageData {
+pub(crate) fn create_manual_page() -> ManualPageData {
     ManualPageData { draw_fn: draw }
 }

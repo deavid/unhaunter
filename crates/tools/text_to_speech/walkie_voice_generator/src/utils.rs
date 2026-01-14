@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 /// Generates a sample RON file content and prints it to stdout.
 /// This helps users understand the expected input format for voice line definitions.
-pub fn generate_sample_ron() -> String {
+pub(crate) fn generate_sample_ron() -> String {
     let sample_data = WalkiePhraseFile {
         event_lines: vec![
             WalkieEventConceptEntry {
@@ -105,7 +105,7 @@ pub fn generate_sample_ron() -> String {
 /// # Returns
 /// A `Result` containing the hex-encoded SHA256 hash string if successful,
 /// or an `anyhow::Error` if the file cannot be read or hashing fails.
-pub fn calculate_script_hash(script_path: &str) -> Result<String, anyhow::Error> {
+pub(crate) fn calculate_script_hash(script_path: &str) -> Result<String, anyhow::Error> {
     let mut file = File::open(script_path).map_err(|e| {
         anyhow::anyhow!(
             "Failed to open script file {} for hashing: {}",
@@ -134,7 +134,7 @@ pub fn calculate_script_hash(script_path: &str) -> Result<String, anyhow::Error>
 ///
 /// # Returns
 /// A hex-encoded SHA256 hash string representing the combined signature.
-pub fn calculate_combined_signature(tts_text: &str, script_hash: &str) -> String {
+pub(crate) fn calculate_combined_signature(tts_text: &str, script_hash: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(tts_text.as_bytes());
     hasher.update(script_hash.as_bytes());
@@ -152,7 +152,7 @@ pub fn calculate_combined_signature(tts_text: &str, script_hash: &str) -> String
 /// A `Result` containing a `Vec<PathBuf>` of found RON files if successful,
 /// or an `anyhow::Error` if directory traversal fails (though critical errors like
 /// non-existence lead to program exit).
-pub fn scan_ron_files(dir_path: &str) -> Result<Vec<PathBuf>, anyhow::Error> {
+pub(crate) fn scan_ron_files(dir_path: &str) -> Result<Vec<PathBuf>, anyhow::Error> {
     // Critical check: Ensure the source directory for RON files exists.
     // If not, the tool cannot proceed, so an error is printed and the program exits.
     if !Path::new(dir_path).exists() {

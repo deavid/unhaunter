@@ -8,7 +8,7 @@ use crate::components::player::Hiding;
 use crate::components::player_sprite::PlayerSprite;
 
 /// Updates the shared PlayerState resource with current player data.
-pub fn update_player_state(
+pub(crate) fn update_player_state(
     mut player_state: ResMut<PlayerState>,
     player_query: Query<(&PlayerSprite, &Position, Option<&Hiding>)>,
 ) {

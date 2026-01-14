@@ -3,13 +3,13 @@ use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::types::grade::Grade;
 
 /// Utility for creating badge UI elements in the map hub
-pub struct BadgeUtils;
+pub(crate) struct BadgeUtils;
 
 impl BadgeUtils {
     /// Creates a UI element displaying a grade badge
     ///
     /// If grade is NA, no badge will be shown unless show_na is true
-    pub fn create_badge(
+    pub(crate) fn create_badge(
         parent: &mut ChildSpawnerCommands,
         handles: &GameAssets,
         grade: Grade,

@@ -4,4 +4,4 @@ use bevy::prelude::*;
 /// This is spawned when the player has a MoveToTarget component
 /// and despawned when the MoveToTarget component is removed.
 #[derive(Component, Debug)]
-pub struct WalkTargetIndicator;
+pub(crate) struct WalkTargetIndicator;

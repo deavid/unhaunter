@@ -3,6 +3,9 @@ name = "walkie_voice_generator"
 version = "0.1.0"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 unwalkie-types = { path = "../../../unwalkie-types" }
 clap = { workspace = true, features = ["derive"] }

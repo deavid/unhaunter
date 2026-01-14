@@ -33,7 +33,7 @@ use crate::level_setup::LoadLevelSystemParam;
 /// * `player_spawn_points`/`ghost_spawn_points`/`van_entry_points` - Lists to collect special points
 /// * `movable_objects` - List to collect movable object entities
 /// * `c` - Counter used for ensuring unique z-ordering
-pub fn process_and_spawn_tile(
+pub(crate) fn process_and_spawn_tile(
     tile: &MapTile,
     layer: &MapLayer,
     map_min_x: i32,

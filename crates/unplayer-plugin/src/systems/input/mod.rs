@@ -1,2 +1,2 @@
-pub mod keyboard;
-pub mod mouse_interaction;
+pub(crate) mod keyboard;
+pub(crate) mod mouse_interaction;

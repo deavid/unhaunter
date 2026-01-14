@@ -37,7 +37,7 @@ const DIR_RED: f32 = 1.001;
 ///
 /// This system decouples movement logic from input sources, allowing both keyboard
 /// and click-to-move input to use the same movement implementation.
-pub fn player_movement_system(
+pub(crate) fn player_movement_system(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     player_input: Res<PlayerInput>,

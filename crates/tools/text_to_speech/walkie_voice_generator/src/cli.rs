@@ -5,7 +5,7 @@ use clap::Parser;
 /// Defines the command-line arguments for the `walkie_voice_generator` tool.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-pub struct Cli {
+pub(crate) struct Cli {
     /// If set, generates a sample RON file to stdout and exits.
     /// This is useful for users to see the expected input format.
     #[clap(long, help = "Generate a sample RON file to stdout")]

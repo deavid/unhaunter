@@ -8,7 +8,7 @@ use unwalkie_types::types::WalkieTag;
 /// Represents an entry in the `manifest.ron` file.
 /// This struct stores all relevant metadata for a single generated voice line.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct WalkieLineManifestEntry {
+pub(crate) struct WalkieLineManifestEntry {
     // Identification
     /// The name of the RON file from which this line originated (e.g., "low_visibility.ron").
     pub ron_file_source: String,

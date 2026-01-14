@@ -1,7 +1,7 @@
-pub mod animation;
-pub mod execution;
-pub mod selection;
-pub mod visual_effects;
+pub(crate) mod animation;
+pub(crate) mod execution;
+pub(crate) mod selection;
+pub(crate) mod visual_effects;
 
 use bevy::prelude::App;
 

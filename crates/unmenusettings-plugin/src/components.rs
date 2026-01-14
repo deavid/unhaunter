@@ -6,15 +6,15 @@ use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
 
 // Marker component for the main settings menu UI
 #[derive(Component)]
-pub struct SettingsMenu {
+pub(crate) struct SettingsMenu {
     pub selected_item_idx: usize,
 }
 
 #[derive(Component)]
-pub struct SCamera;
+pub(crate) struct SCamera;
 
 #[derive(Component, Debug, Clone, PartialEq, Eq, Hash, States, Default)]
-pub enum SettingsState {
+pub(crate) enum SettingsState {
     /// Selects which Setting file/category to edit in the UI (Audio, Video, etc)
     #[default]
     Lv1ClassSelection,
@@ -25,24 +25,24 @@ pub enum SettingsState {
 }
 
 #[derive(Component)]
-pub struct SettingsStateTimer {
+pub(crate) struct SettingsStateTimer {
     pub state_entered_at: Instant,
 }
 
 #[derive(Component)]
-pub struct MenuItem {
+pub(crate) struct MenuItem {
     pub idx: usize,
     pub on_activate: MenuEvent,
 }
 
 impl MenuItem {
-    pub fn new(idx: usize, on_activate: MenuEvent) -> Self {
+    pub(crate) fn new(idx: usize, on_activate: MenuEvent) -> Self {
         MenuItem { idx, on_activate }
     }
 }
 
 #[derive(Message, Debug, Clone, Copy, Default)]
-pub enum MenuEvent {
+pub(crate) enum MenuEvent {
     SaveAudioSetting(AudioSettingsValue),
     EditAudioSetting(AudioSettingsMenu),
     SaveGameplaySetting(GameplaySettingsValue),
@@ -54,35 +54,35 @@ pub enum MenuEvent {
 }
 
 impl MenuEvent {
-    pub fn is_none(&self) -> bool {
+    pub(crate) fn is_none(&self) -> bool {
         matches!(self, MenuEvent::None)
     }
 }
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct MenuEvBack;
+pub(crate) struct MenuEvBack;
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct MenuSettingClassSelected {
+pub(crate) struct MenuSettingClassSelected {
     pub menu: MenuSettingsLevel1,
 }
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct AudioSettingSelected {
+pub(crate) struct AudioSettingSelected {
     pub setting: AudioSettingsMenu,
 }
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct SaveAudioSetting {
+pub(crate) struct SaveAudioSetting {
     pub value: AudioSettingsValue,
 }
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct GameplaySettingSelected {
+pub(crate) struct GameplaySettingSelected {
     pub setting: GameplaySettingsMenu,
 }
 
 #[derive(Message, Debug, Clone, Copy)]
-pub struct SaveGameplaySetting {
+pub(crate) struct SaveGameplaySetting {
     pub value: GameplaySettingsValue,
 }

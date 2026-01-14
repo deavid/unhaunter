@@ -43,7 +43,7 @@ use crate::level_setup::LoadLevelSystemParam;
 ///
 /// # Returns
 /// Boolean indicating if the van should be open (based on player proximity)
-pub fn spawn_player(
+pub(crate) fn spawn_player(
     p: &LoadLevelSystemParam,
     commands: &mut Commands,
     player_spawn_points: &mut Vec<Position>,
@@ -143,7 +143,7 @@ pub fn spawn_player(
 /// * `p` - System parameters containing resources for ghost setup
 /// * `commands` - Command buffer for entity creation
 /// * `ghost_spawn_points` - List of potential spawn positions for the ghost
-pub fn spawn_ghosts(
+pub(crate) fn spawn_ghosts(
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
     ghost_spawn_points: &mut [Position],
@@ -247,7 +247,7 @@ pub fn spawn_ghosts(
 /// # Arguments
 /// * `p` - System parameters containing asset server
 /// * `commands` - Command buffer for entity creation
-pub fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
+pub(crate) fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
     // Spawn background house sound
     commands
         .spawn(AudioPlayer::new(

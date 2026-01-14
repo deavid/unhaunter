@@ -6,7 +6,7 @@ use ungear_core::gear_stuff::GearStuff;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
-pub fn system_electronic_interference(
+pub(crate) fn system_electronic_interference(
     gs: GearStuff,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
 ) {
@@ -43,7 +43,7 @@ pub fn system_electronic_interference(
     }
 }
 
-pub fn system_battery_drain(
+pub(crate) fn system_battery_drain(
     time: Res<Time>,
     mut q_battery: Query<(&mut Battery, &mut Toggleable)>,
 ) {

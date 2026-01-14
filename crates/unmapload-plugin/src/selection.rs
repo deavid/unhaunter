@@ -11,7 +11,7 @@ use unspatial_core::position::Position;
 
 /// Represents one complete ghost setup configuration (spawn + influences)
 #[derive(Clone, Debug)]
-pub struct GhostSetupCandidate {
+pub(crate) struct GhostSetupCandidate {
     /// Selected ghost spawn position
     pub spawn_point: Position,
     /// Selected entities and their assigned influence types
@@ -28,7 +28,7 @@ pub struct GhostSetupCandidate {
 ///
 /// # Returns
 /// * `Option<Position>` - The selected ghost spawn position, or None if no positions are available
-pub fn select_ghost_spawn_point(
+pub(crate) fn select_ghost_spawn_point(
     potential_spawns: &[Position],
     rng: &mut impl Rng,
 ) -> Option<Position> {
@@ -50,7 +50,7 @@ pub fn select_ghost_spawn_point(
 ///
 /// # Returns
 /// * `Vec<(Entity, InfluenceType)>` - List of selected entities and their assigned influence types
-pub fn select_influence_objects(
+pub(crate) fn select_influence_objects(
     objects_by_floor: &HashMap<i64, Vec<Entity>>,
     board_data: &BoardData,
     rng: &mut impl Rng,
@@ -339,7 +339,7 @@ fn score_ghost_setup(
 ///
 /// # Returns
 /// * Selected ghost spawn position and influence object assignments
-pub fn generate_scored_ghost_setup(
+pub(crate) fn generate_scored_ghost_setup(
     ghost_spawn_points: &[Position],
     objects_by_floor_with_positions: &HashMap<i64, Vec<(Entity, Position)>>,
     player_spawn_points: &[Position],
@@ -464,7 +464,7 @@ pub fn generate_scored_ghost_setup(
 ///
 /// # Returns
 /// * `(Position, Vec<(Entity, InfluenceType)>)` - Selected ghost spawn and influence assignments
-pub fn select_influence_objects_with_simulation(
+pub(crate) fn select_influence_objects_with_simulation(
     objects_by_floor_with_positions: &HashMap<i64, Vec<(Entity, Position)>>,
     ghost_spawn_points: &[Position],
     player_spawn_points: &[Position],

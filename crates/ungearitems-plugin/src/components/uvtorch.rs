@@ -5,11 +5,11 @@ use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::uvtorch::UVTorch;
+pub(crate) use ungearitems_core::components::uvtorch::UVTorch;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
-pub trait UVTorchExt {
+pub(crate) trait UVTorchExt {
     fn calculate_output_power(&self, battery_level: f32, glitch_timer: f32) -> f32;
     fn update_output_power(&mut self, battery_level: f32, glitch_timer: f32);
 }
@@ -32,7 +32,7 @@ impl UVTorchExt for UVTorch {
     }
 }
 
-pub fn update_uvtorch(
+pub(crate) fn update_uvtorch(
     mut q_uvtorch: Query<(
         &mut UVTorch,
         &mut StatusText,
@@ -98,6 +98,6 @@ pub fn update_uvtorch(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_uvtorch);
 }

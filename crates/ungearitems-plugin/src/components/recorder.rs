@@ -13,12 +13,12 @@ use unboard_core::resources::roomdb::RoomDB;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::recorder::Recorder;
+pub(crate) use ungearitems_core::components::recorder::Recorder;
 use unghost_core::components::GhostSprite;
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::position::Position;
 
-pub fn update_recorder(
+pub(crate) fn update_recorder(
     mut q_recorder: Query<(
         &mut Recorder,
         &mut StatusText,

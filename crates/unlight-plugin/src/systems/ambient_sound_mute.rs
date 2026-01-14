@@ -6,7 +6,7 @@ use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 
 /// Processes ambient sound mute events and updates active mute timers.
 /// Converts incoming mute events into active mutes and advances their timing state.
-pub fn process_ambient_mute_events(
+pub(crate) fn process_ambient_mute_events(
     mut mute_events: MessageReader<AmbientSoundMuteEvent>,
     mut mute_controller: ResMut<AmbientMuteController>,
     time: Res<Time>,

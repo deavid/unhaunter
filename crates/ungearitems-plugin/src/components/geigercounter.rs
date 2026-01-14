@@ -10,10 +10,10 @@ use ungear_core::components::core::{
     Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
 };
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::geigercounter::GeigerCounter;
+pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
 
-pub trait GeigerCounterExt {
+pub(crate) trait GeigerCounterExt {
     fn calculate_output_sound(&self, gs: &GearStuff) -> f32;
 }
 
@@ -32,7 +32,7 @@ impl GeigerCounterExt for GeigerCounter {
     }
 }
 
-pub fn update_geigercounter(
+pub(crate) fn update_geigercounter(
     mut gs: GearStuff,
     mut q_geiger: Query<(
         &mut GeigerCounter,
@@ -205,17 +205,15 @@ pub fn update_geigercounter(
             sprite.0 = GearSpriteID::GeigerOff;
         }
 
-        perceived_clarity.from_status_text = if toggle.is_on
-            && geiger.sound_display > 500.0
-            && electronic.glitch_timer <= 0.0
-        {
-            1.0
-        } else {
-            0.0
-        };
+        perceived_clarity.from_status_text =
+            if toggle.is_on && geiger.sound_display > 500.0 && electronic.glitch_timer <= 0.0 {
+                1.0
+            } else {
+                0.0
+            };
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_geigercounter);
 }

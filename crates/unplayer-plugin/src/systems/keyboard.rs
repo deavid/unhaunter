@@ -5,7 +5,7 @@ use unboard_core::behavior::{Behavior, Orientation};
 use unplayer_core::resources::game_config::GameConfig;
 use unspatial_core::position::Position;
 
-pub fn stairs_player(
+pub(crate) fn stairs_player(
     mut players: Query<(&mut Position, &PlayerSprite)>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
     gc: Res<GameConfig>,

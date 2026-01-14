@@ -14,7 +14,7 @@ use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::{AppState, GameState};
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
-pub trait FromTab {
+pub(crate) trait FromTab {
     fn from_tab(tab: TabContents, difficulty: &CurrentDifficulty) -> Self;
 }
 

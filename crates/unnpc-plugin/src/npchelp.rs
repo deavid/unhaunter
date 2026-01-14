@@ -13,16 +13,16 @@ use unspatial_core::position::Position;
 use untypes_core::states::GameState;
 
 #[derive(Debug, Component)]
-pub struct NpcUI;
+pub(crate) struct NpcUI;
 #[derive(Debug, Component)]
-pub struct NpcDialogText;
+pub(crate) struct NpcDialogText;
 
 #[derive(Debug, Resource, Default)]
-pub struct NpcUIData {
+pub(crate) struct NpcUIData {
     pub dialog: String,
 }
 
-pub fn keyboard(
+pub(crate) fn keyboard(
     game_state: Res<State<GameState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -35,13 +35,13 @@ pub fn keyboard(
     }
 }
 
-pub fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
+pub(crate) fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) {
     for e in qtui.iter() {
         commands.entity(e).despawn();
     }
 }
 
-pub fn setup_ui(
+pub(crate) fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     handles: Res<GameAssets>,
@@ -155,7 +155,7 @@ pub fn setup_ui(
     // ---
 }
 
-pub fn npchelp_event(
+pub(crate) fn npchelp_event(
     mut ev_npc: MessageReader<NpcHelpEvent>,
     mut npc: Query<(Entity, &mut NpcHelpDialog)>,
     mut res_npc: ResMut<NpcUIData>,
@@ -179,7 +179,7 @@ pub fn npchelp_event(
 }
 
 /// NPCs will call the player by distance & time if haven't spoken yet.
-pub fn auto_call_npchelp(
+pub(crate) fn auto_call_npchelp(
     time: Res<Time>,
     gc: Res<GameConfig>,
     q_player: Query<(&Position, &PlayerSprite, &Direction)>,
@@ -219,7 +219,7 @@ pub fn auto_call_npchelp(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_message::<NpcHelpEvent>()
         .init_resource::<NpcUIData>()
         .add_systems(Update, npchelp_event)

@@ -15,7 +15,7 @@ use std::path::Path;
 /// A `Result` containing a `HashMap` of manifest entries (keyed by a unique string identifier)
 /// if successful, or an `anyhow::Error` if the manifest cannot be read or parsed.
 /// If the manifest file does not exist, an empty `HashMap` is returned.
-pub fn load_manifest() -> Result<HashMap<String, WalkieLineManifestEntry>, anyhow::Error> {
+pub(crate) fn load_manifest() -> Result<HashMap<String, WalkieLineManifestEntry>, anyhow::Error> {
     let manifest_path = Path::new(GENERATED_ASSETS_DIR).join(MANIFEST_FILENAME);
     if !manifest_path.exists() {
         // If no manifest exists, it's not an error; just start with an empty one.
@@ -43,7 +43,7 @@ pub fn load_manifest() -> Result<HashMap<String, WalkieLineManifestEntry>, anyho
 ///
 /// # Returns
 /// An `Ok(())` if successful, or an `anyhow::Error` if the manifest cannot be serialized or written.
-pub fn save_manifest(
+pub(crate) fn save_manifest(
     manifest: &HashMap<String, WalkieLineManifestEntry>,
 ) -> Result<(), anyhow::Error> {
     let manifest_path = Path::new(GENERATED_ASSETS_DIR).join(MANIFEST_FILENAME);

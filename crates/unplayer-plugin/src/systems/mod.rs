@@ -1,14 +1,14 @@
-pub mod grabdrop;
-pub mod hide;
-pub mod input;
-pub mod keyboard;
-pub mod mouse;
-pub mod movement;
-pub mod pathfinding;
-pub mod player_state;
-pub mod sanityhealth;
-pub mod walk_target_indicator;
-pub mod waypoint;
+pub(crate) mod grabdrop;
+pub(crate) mod hide;
+pub(crate) mod input;
+pub(crate) mod keyboard;
+pub(crate) mod mouse;
+pub(crate) mod movement;
+pub(crate) mod pathfinding;
+pub(crate) mod player_state;
+pub(crate) mod sanityhealth;
+pub(crate) mod walk_target_indicator;
+pub(crate) mod waypoint;
 
 use bevy::prelude::*;
 use untypes_core::states::AppState;

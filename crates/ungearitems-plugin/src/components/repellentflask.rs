@@ -23,14 +23,14 @@ use crate::metrics;
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
 use unfoundation_core::types::gear::GearSpriteID;
-pub use ungearitems_core::components::repellentflask::RepellentFlask;
+pub(crate) use ungearitems_core::components::repellentflask::RepellentFlask;
 
 // Colors for repellent particles
 const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
 const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
 use std::ops::{Add, Mul};
 
-pub fn update_repellentflask(
+pub(crate) fn update_repellentflask(
     mut gs: GearStuff,
     mut q_repellent: Query<(
         Entity,

@@ -20,7 +20,7 @@ use walkdir::WalkDir;
 
 /// Represents a single audio generation task for a specific voice line.
 #[derive(Debug, Clone)]
-pub struct AudioGenerationTask {
+pub(crate) struct AudioGenerationTask {
     pub ron_filename_str: String,
     pub conceptual_id: String,
     pub line_idx: usize,
@@ -46,7 +46,7 @@ pub struct AudioGenerationTask {
 /// # Returns
 /// A `Result` containing a tuple of `(PathBuf, PathBuf)` for the temporary WAV path
 /// and final OGG path respectively, or an `anyhow::Error` if script execution fails.
-pub fn generate_audio_for_line(
+pub(crate) fn generate_audio_for_line(
     tts_text: &str,
     ron_file_sub_dir: &str,            // e.g., "base1"
     line_specific_filename_stem: &str, // e.g., "concept_line_01"
@@ -130,7 +130,7 @@ pub fn generate_audio_for_line(
 /// # Returns
 /// A `Result` containing the duration as `u32` (rounded to the nearest second),
 /// or an `anyhow::Error` if script execution or duration parsing fails.
-pub fn get_audio_duration(ogg_path: &Path) -> Result<u32, anyhow::Error> {
+pub(crate) fn get_audio_duration(ogg_path: &Path) -> Result<u32, anyhow::Error> {
     // Ensure the duration script is executable.
     let chmod_status = Command::new("chmod")
         .arg("+x")
@@ -202,7 +202,7 @@ pub fn get_audio_duration(ogg_path: &Path) -> Result<u32, anyhow::Error> {
 ///
 /// # Returns
 /// `Ok(())` on success, or an `anyhow::Error` if directory traversal or file deletion fails.
-pub fn cleanup_unused_files(
+pub(crate) fn cleanup_unused_files(
     generated_assets_dir_str: &str,
     active_ogg_paths: &HashSet<String>,
 ) -> Result<(), anyhow::Error> {
@@ -318,7 +318,7 @@ pub fn cleanup_unused_files(
 ///
 /// # Returns
 /// `Ok(())` on success, or an `anyhow::Error` if directory traversal fails.
-pub fn warn_unused_files(
+pub(crate) fn warn_unused_files(
     generated_assets_dir_str: &str,
     active_ogg_paths: &HashSet<String>,
 ) -> Result<(), anyhow::Error> {
@@ -367,7 +367,7 @@ pub fn warn_unused_files(
     Ok(())
 }
 
-pub fn collect_audio_generation_tasks(
+pub(crate) fn collect_audio_generation_tasks(
     ron_files: &[PathBuf],
     script_hash: &str,
     force_regenerate_pattern: Option<&str>,
@@ -439,7 +439,7 @@ pub fn collect_audio_generation_tasks(
 }
 
 /// Processes a single audio generation task. (Thread-safe version)
-pub fn process_audio_generation_task(
+pub(crate) fn process_audio_generation_task(
     task: &AudioGenerationTask,
     manifest_mutex: &Arc<Mutex<HashMap<String, WalkieLineManifestEntry>>>,
     all_generated_ogg_paths_mutex: &Arc<Mutex<HashSet<String>>>,
@@ -582,7 +582,7 @@ pub fn process_audio_generation_task(
 }
 
 /// Processes a single audio generation task. (Single-threaded version)
-pub fn process_audio_generation_task_single_thread(
+pub(crate) fn process_audio_generation_task_single_thread(
     task: &AudioGenerationTask,
     manifest: &mut HashMap<String, WalkieLineManifestEntry>,
     all_generated_ogg_paths_from_manifest: &mut HashSet<String>,

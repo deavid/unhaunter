@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::types::ManualChapter;
 
 #[derive(Resource, Debug, Clone)]
-pub struct Manual {
+pub(crate) struct Manual {
     pub chapters: Vec<ManualChapter>,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Resource, Default)]
-pub struct CurrentManualPage(pub usize, pub usize); // Chapter index, Page Index
+pub(crate) struct CurrentManualPage(pub usize, pub usize); // Chapter index, Page Index

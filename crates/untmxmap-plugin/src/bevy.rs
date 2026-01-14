@@ -10,7 +10,7 @@ use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
 use super::load::load_tile_layer_iter;
 
 /// Helps trimming the extra assets/ folder for Bevy
-pub fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
+pub(crate) fn resolve_tiled_image_path(img_path: &Path) -> PathBuf {
     use normalize_path::NormalizePath;
 
     img_path
@@ -27,7 +27,7 @@ struct FloorLevel {
     layers: Vec<(usize, MapLayer)>,
 }
 
-pub fn bevy_load_map(
+pub(crate) fn bevy_load_map(
     map: tiled::Map,
     asset_server: &AssetServer,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
@@ -267,7 +267,7 @@ fn get_floor_display_name(layer: &MapLayer) -> Option<String> {
 }
 
 /// Helper function to extract the quantity of ghost attracting objects for a floor
-pub fn get_floor_ghost_attracting_objects(layer: &MapLayer) -> Option<i32> {
+pub(crate) fn get_floor_ghost_attracting_objects(layer: &MapLayer) -> Option<i32> {
     if let Some(value) = layer
         .user_properties
         .get("FloorLevel::quantity_ghost_attracting_objects")
@@ -283,7 +283,7 @@ pub fn get_floor_ghost_attracting_objects(layer: &MapLayer) -> Option<i32> {
 }
 
 /// Helper function to extract the quantity of ghost repelling objects for a floor
-pub fn get_floor_ghost_repelling_objects(layer: &MapLayer) -> Option<i32> {
+pub(crate) fn get_floor_ghost_repelling_objects(layer: &MapLayer) -> Option<i32> {
     if let Some(value) = layer
         .user_properties
         .get("FloorLevel::quantity_ghost_repelling_objects")

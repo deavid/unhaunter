@@ -5,11 +5,11 @@ use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::videocam::Videocam;
+pub(crate) use ungearitems_core::components::videocam::Videocam;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
-pub fn update_videocam(
+pub(crate) fn update_videocam(
     _gs: GearStuff,
     mut q_videocam: Query<(
         &mut Videocam,
@@ -57,6 +57,6 @@ pub fn update_videocam(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_videocam);
 }

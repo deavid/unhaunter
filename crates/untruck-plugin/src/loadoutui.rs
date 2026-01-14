@@ -18,22 +18,22 @@ use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::GameState;
 
 #[derive(Debug, Component, Clone)]
-pub enum LoadoutButton {
+pub(crate) enum LoadoutButton {
     Inventory(Inventory),
     InventoryNext(InventoryNext),
     Van(GearKind),
 }
 
 #[derive(Debug, Message, Clone)]
-pub struct EventButtonClicked(LoadoutButton);
+pub(crate) struct EventButtonClicked(LoadoutButton);
 
 #[derive(Debug, Component, Clone)]
-pub struct GearHelp;
+pub(crate) struct GearHelp;
 
 #[derive(Debug, Component, Clone)]
-pub struct GearHelpTitle;
+pub(crate) struct GearHelpTitle;
 
-pub fn setup_loadout_ui(
+pub(crate) fn setup_loadout_ui(
     p: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     materials: &mut Assets<UIPanelMaterial>,

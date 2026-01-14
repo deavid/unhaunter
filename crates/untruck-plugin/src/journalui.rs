@@ -10,7 +10,7 @@ use untruck_core::components::truck_ui_button::TruckButtonTypeExt; // Use Curren
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 
-pub fn setup_journal_ui(
+pub(crate) fn setup_journal_ui(
     p: &mut ChildSpawnerCommands,
     handles: &GameAssets,
     difficulty: &CurrentDifficulty,

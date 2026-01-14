@@ -207,7 +207,7 @@ pub(crate) mod arch_setup {
         settings.limiter = bevy_framepace::Limiter::from_framerate(60.0);
     }
 
-    pub fn app_setup(app: &mut App) {
+    pub(crate) fn app_setup(app: &mut App) {
         app.add_plugins(bevy_framepace::FramepacePlugin)
             .add_systems(Startup, set_fps_limiter);
     }

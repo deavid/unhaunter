@@ -9,7 +9,7 @@ use unsettings_core::{
 use crate::components::MenuEvent;
 
 #[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum MenuSettingsLevel1 {
+pub(crate) enum MenuSettingsLevel1 {
     Gameplay,
     Video,
     Audio,
@@ -17,7 +17,7 @@ pub enum MenuSettingsLevel1 {
 }
 
 impl MenuSettingsLevel1 {
-    pub fn menu_event(&self) -> MenuEvent {
+    pub(crate) fn menu_event(&self) -> MenuEvent {
         use MenuSettingsLevel1 as m;
         match self {
             MenuSettingsLevel1::Gameplay => MenuEvent::SettingClassSelected(m::Gameplay),
@@ -28,7 +28,7 @@ impl MenuSettingsLevel1 {
         }
     }
 
-    pub fn iter_events() -> Vec<(String, MenuEvent)> {
+    pub(crate) fn iter_events() -> Vec<(String, MenuEvent)> {
         use strum::IntoEnumIterator;
         Self::iter()
             .map(|s| (s.to_string(), s.menu_event()))
@@ -37,7 +37,7 @@ impl MenuSettingsLevel1 {
 }
 
 #[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AudioSettingsMenu {
+pub(crate) enum AudioSettingsMenu {
     #[strum(to_string = "Master Volume")]
     VolumeMaster,
     #[strum(to_string = "Music Volume")]
@@ -59,7 +59,7 @@ pub enum AudioSettingsMenu {
 }
 
 impl AudioSettingsMenu {
-    pub fn menu_event(&self) -> MenuEvent {
+    pub(crate) fn menu_event(&self) -> MenuEvent {
         match self {
             // <-- add here the events for specific menus
             Self::VolumeMaster
@@ -72,7 +72,7 @@ impl AudioSettingsMenu {
         }
     }
 
-    pub fn setting_value(&self, audio_settings: &Res<Persistent<AudioSettings>>) -> String {
+    pub(crate) fn setting_value(&self, audio_settings: &Res<Persistent<AudioSettings>>) -> String {
         match self {
             AudioSettingsMenu::VolumeMaster => audio_settings.volume_master.to_string(),
             AudioSettingsMenu::VolumeMusic => audio_settings.volume_music.to_string(),
@@ -86,7 +86,7 @@ impl AudioSettingsMenu {
         }
     }
 
-    pub fn iter_events_item(
+    pub(crate) fn iter_events_item(
         &self,
         audio_settings: &Res<Persistent<AudioSettings>>,
     ) -> Vec<(String, MenuEvent)> {
@@ -160,7 +160,7 @@ impl AudioSettingsMenu {
         }
     }
 
-    pub fn iter_events(
+    pub(crate) fn iter_events(
         audio_settings: &Res<Persistent<AudioSettings>>,
     ) -> Vec<(String, MenuEvent)> {
         use strum::IntoEnumIterator;
@@ -176,7 +176,7 @@ impl AudioSettingsMenu {
 }
 
 #[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameplaySettingsMenu {
+pub(crate) enum GameplaySettingsMenu {
     #[strum(to_string = "Movement Style")]
     MovementStyle,
     #[strum(to_string = "Camera Controls")]
@@ -184,21 +184,24 @@ pub enum GameplaySettingsMenu {
 }
 
 impl GameplaySettingsMenu {
-    pub fn menu_event(&self) -> MenuEvent {
+    pub(crate) fn menu_event(&self) -> MenuEvent {
         match self {
             GameplaySettingsMenu::MovementStyle => MenuEvent::EditGameplaySetting(*self),
             GameplaySettingsMenu::CameraControls => MenuEvent::EditGameplaySetting(*self),
         }
     }
 
-    pub fn setting_value(&self, game_settings: &Res<Persistent<GameplaySettings>>) -> String {
+    pub(crate) fn setting_value(
+        &self,
+        game_settings: &Res<Persistent<GameplaySettings>>,
+    ) -> String {
         match self {
             GameplaySettingsMenu::MovementStyle => game_settings.movement_style.to_string(),
             GameplaySettingsMenu::CameraControls => game_settings.camera_controls.to_string(),
         }
     }
 
-    pub fn iter_events_item(
+    pub(crate) fn iter_events_item(
         &self,
         game_settings: &Res<Persistent<GameplaySettings>>,
     ) -> Vec<(String, MenuEvent)> {
@@ -230,7 +233,7 @@ impl GameplaySettingsMenu {
         }
     }
 
-    pub fn iter_events(
+    pub(crate) fn iter_events(
         game_settings: &Res<Persistent<GameplaySettings>>,
     ) -> Vec<(String, MenuEvent)> {
         use strum::IntoEnumIterator;

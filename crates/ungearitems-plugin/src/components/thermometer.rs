@@ -15,7 +15,7 @@ use ungear_core::components::core::{
 };
 use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::thermometer::Thermometer;
+pub(crate) use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::components::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
@@ -23,7 +23,7 @@ use unmetrics_core::metrics::SendMetric;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
-pub fn update_thermometer(
+pub(crate) fn update_thermometer(
     mut q_thermometer: Query<(
         &mut Thermometer,
         &mut StatusText,

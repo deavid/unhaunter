@@ -9,7 +9,7 @@ use unboard_core::types::tiledmap::map::{
 /// Example: let mut loader = tiled::Loader::new(); let map =
 /// loader.load_tmx_map("assets/maps/map_house1_3x.tmx").unwrap(); let map_layers =
 /// load_tile_layer_iter(map.layers());
-pub fn load_tile_layer_iter<'a>(
+pub(crate) fn load_tile_layer_iter<'a>(
     layer_iter: impl ExactSizeIterator<Item = tiled::Layer<'a>>,
 ) -> Vec<MapLayer> {
     let mut ret = vec![];

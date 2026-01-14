@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
-pub use ungearitems_core::components::estaticmeter::EStaticMeter;
+pub(crate) use ungearitems_core::components::estaticmeter::EStaticMeter;
 use uninteraction_core::interaction::Toggleable;
 
-pub fn update_estaticmeter(
+pub(crate) fn update_estaticmeter(
     mut q_estaticmeter: Query<
         (
             &mut StatusText,
@@ -39,6 +39,6 @@ pub fn update_estaticmeter(
     }
 }
 
-pub fn app_setup(app: &mut App) {
+pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(Update, update_estaticmeter);
 }

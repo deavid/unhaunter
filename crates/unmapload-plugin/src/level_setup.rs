@@ -36,7 +36,7 @@ use crate::tile_spawning;
 ///
 /// Using this as a system parameter simplifies function signatures throughout the level loading process.
 #[derive(SystemParam)]
-pub struct LoadLevelSystemParam<'w> {
+pub(crate) struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardData>,
     pub haunt_state: ResMut<'w, HauntState>,
@@ -55,7 +55,7 @@ pub struct LoadLevelSystemParam<'w> {
 
 /// Marker component to handle ghost influence assignment after level loading is complete
 #[derive(Component)]
-pub struct AssignGhostInfluenceMarker(pub Vec<Entity>);
+pub(crate) struct AssignGhostInfluenceMarker(pub Vec<Entity>);
 
 /// Loads a new level based on the `LevelLoadedEvent`.
 ///
