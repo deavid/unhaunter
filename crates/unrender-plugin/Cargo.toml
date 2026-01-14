@@ -13,13 +13,9 @@ workspace = true
 [dependencies]
 unrender-std = { path = "../unrender-std" }
 bevy = { workspace = true }
-serde = { workspace = true }
-unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }
 unspatial-core = { path = "../unspatial-core" }
 unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 untags-core = { path = "../untags-core" }
-bevy_platform = { workspace = true }
-ndarray = { workspace = true }

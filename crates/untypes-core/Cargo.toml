@@ -12,9 +12,6 @@ workspace = true
 
 [dependencies]
 
-unfoundation-core = { path = "../unfoundation-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
 serde = { workspace = true }
-ndarray = { workspace = true }
 enum-iterator = { workspace = true }

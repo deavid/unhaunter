@@ -17,5 +17,3 @@ unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
-serde = { workspace = true }

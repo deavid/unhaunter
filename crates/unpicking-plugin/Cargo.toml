@@ -15,4 +15,3 @@ unpicking-core = { path = "../unpicking-core" }
 unrender-std = { path = "../unrender-std" }
 bevy = { workspace = true }
 bevy_picking = { workspace = true }
-bevy_platform = { workspace = true }

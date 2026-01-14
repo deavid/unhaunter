@@ -13,17 +13,14 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
-untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
-untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

@@ -15,5 +15,4 @@ bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 unfoundation-core = { path = "../unfoundation-core" }
-undifficulty-core = { path = "../undifficulty-core" }
 untypes-core = { path = "../untypes-core" }

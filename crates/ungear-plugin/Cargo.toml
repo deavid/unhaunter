@@ -29,5 +29,4 @@ untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

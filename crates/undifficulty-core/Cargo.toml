@@ -16,4 +16,3 @@ untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 serde = { workspace = true }
-enum-iterator = { workspace = true }

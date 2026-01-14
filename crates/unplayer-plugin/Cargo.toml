@@ -14,7 +14,6 @@ workspace = true
 [dependencies]
 
 undifficulty-core = { path = "../undifficulty-core" }
-unassets-core = { path = "../unassets-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unevents-core = { path = "../unevents-core" }

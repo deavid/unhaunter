@@ -132,9 +132,7 @@ unfoundation-core = { path = "crates/unfoundation-core" }
 unassets-core = { path = "crates/unassets-core" }
 untypes-core = { path = "crates/untypes-core" }
 unfog-plugin = { path = "crates/unfog-plugin" }
-ungear-core = { path = "crates/ungear-core" }
 ungear-plugin = { path = "crates/ungear-plugin" }
-ungearitems-core = { path = "crates/ungearitems-core" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
 unghost-plugin = { path = "crates/unghost-plugin" }
 unlight-plugin = { path = "crates/unlight-plugin" }
@@ -146,8 +144,6 @@ unmenusettings-plugin = { path = "crates/unmenusettings-plugin" }
 unmetrics-plugin = { path = "crates/unmetrics-plugin" }
 unnpc-plugin = { path = "crates/unnpc-plugin" }
 unplayer-plugin = { path = "crates/unplayer-plugin" }
-unplayer-core = { path = "crates/unplayer-core" }
-unprofile-core = { path = "crates/unprofile-core" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 unsettings-plugin = { path = "crates/unsettings-plugin" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
@@ -155,13 +151,10 @@ unrender-std = { path = "crates/unrender-std" }
 unrender-plugin = { path = "crates/unrender-plugin" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
-unpicking-core = { path = "crates/unpicking-core" }
 unroot-plugin = { path = "crates/unroot-plugin" }
-untiled-core = { path = "crates/untiled-core" }
 untruck-plugin = { path = "crates/untruck-plugin" }
-untruck-core = { path = "crates/untruck-core" }
-untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
+untmxmap-plugin = { path = "crates/untmxmap-plugin" }
 unghost-core = { path = "crates/unghost-core" }
 unwalkie-types = { path = "crates/unwalkie-types" }
 ungame-plugin = { path = "crates/ungame-plugin" }

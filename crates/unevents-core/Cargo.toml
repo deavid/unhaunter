@@ -14,4 +14,3 @@ workspace = true
 unboard-core = { path = "../unboard-core" }
 unspatial-core = { path = "../unspatial-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }

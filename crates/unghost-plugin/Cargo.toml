@@ -30,4 +30,3 @@ unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 rand = { workspace = true }
-serde = { workspace = true }
