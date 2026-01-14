@@ -38,66 +38,63 @@
 
 The project is modularized into many crates to separate concerns and improve compile times.
 
-### Core Architecture (`uncore-*`)
+### Core Architecture (`un*-core`)
 
-Low-level foundation shared across the project.
+Low-level foundation shared across the project. Zero game logic (no systems or observers).
 
-- **`uncore-foundation`**: Base types, colors, platform utils. Zero game logic.
+- **`unfoundation-core`**: Base types, colors, platform utils.
   - `GhostType` (Enum of ghost types), `GhostPersonality`, `Evidence`, `Difficulty`.
-- **`uncore-types`**: Common data structures (enums, structs) used globally.
+- **`untypes-core`**: Common data structures (enums, structs) used globally.
   - `GameAssets` (Resource holding handles to all loaded assets), `GearKind`, `EvidenceStatus`.
-- **`uncore-components`**: Shared ECS components.
-  - `GhostSprite`, `PlayerSprite`.
-- **`uncore-events`**: Shared ECS events.
+- **`unevents-core`**: Shared ECS events.
   - `GhostInteractionEvent`, `LevelLoadedEvent`, `RoomChangedEvent`.
-- **`uncore-resources`**: Shared ECS resources.
-  - `GameState` (Tracks current state: Menu, Game, etc), `BoardData` (Grid/collision data), `RoomDB`.
-- **`uncore-assets`**: Asset loading infrastructure and handles.
+- **`unassets-core`**: Asset loading infrastructure and handles.
   - `AssetIdx` (Asset lookup), `TmxMap` (Tiled map asset).
-- **`uncore-board`**: Spatial system, grid/board logic, collision, `Behavior` component.
+- **`unboard-core`**: Spatial system, grid/board logic, collision, `Behavior` component.
   - `Behavior` (Entity behavior on board), `Light`, `Door`, `Stairs`.
-- **`unspatial`**: Spatial types and coordinate systems.
+- **`unspatial-core`**: Spatial types and coordinate systems.
   - `BoardPosition` (Grid position), `Direction`, `Position`.
-- **`untags`**: Marker components for entity identification.
+- **`untags-core`**: Marker components for entity identification.
   - `PlayerTag`, `GhostTag`, `InteractableTag`.
-- **`unnoise`**: Perlin noise generation.
-- **`unmetrics`**: Performance metrics and diagnostics.
+- **`unnoise-core`**: Perlin noise generation.
+- **`unmetrics-core`**: Performance metrics and diagnostics data.
+- **`unsettings-core`**: Application and game configuration.
+- **`unui-core`**: Shared UI components and resources (e.g., `MouseVisibility`).
+- **`unsummary-core`**: Data contract for the end-of-mission summary.
 
-### Game Logic & Progression
+### Standard Rendering (`unrender-std`)
 
-High-level game flow and state management.
+- Shared rendering components (`GameSprite`), materials (`CustomMaterial1`), and utilities used by multiple plugins.
 
-- **`ungame`**: Main game loop, scene management, high-level coordination.
-  - `UnhaunterGamePlugin`.
-- **`uncampaign`**: Campaign progression, mission unlocking, persistent state.
-  - `UnhaunterCampaignPlugin`.
+### Game Logic & Progression (Plugins)
+
+High-level game flow and state management. Logic is contained in `Plugin` implementations.
+
+- **`ungame-plugin`**: Main game loop, scene management, high-level coordination.
+- **`uncampaign-plugin`**: Campaign progression, mission unlocking, persistent state.
 - **`undifficulty-core`**: Difficulty levels and configuration.
-  - `DifficultyStruct` (Configuration for a difficulty level).
-- **`unprofile`**: User profile management, save/load logic.
-  - `PlayerProfileData` (Persistent player data), `StatisticsData`.
-- **`unsummary`**: End-of-mission summary screen and logic.
-  - `UnhaunterSummaryPlugin`.
-- **`unmapload`**: Map loading orchestration and setup.
-  - `UnhaunterMapLoadPlugin`.
+- **`unprofile-plugin`**: User profile management, save/load logic.
+- **`unsummary-plugin`**: End-of-mission summary screen systems.
+- **`unmapload-plugin`**: Map loading orchestration and setup.
+- **`unmainmenu-plugin`**: Main menu UI and logic.
+- **`unmenu-plugin`**: Core menu systems and shared menu components.
 
-### Entities & Gameplay Systems
+### Entities & Gameplay Systems (Plugins)
 
 Specific gameplay mechanics and entity behaviors.
 
-- **`unplayer`**: Player controller, movement, interaction, stats (sanity/health).
-  - `UnhaunterPlayerPlugin`.
-- **`unplayer-core`**: Core player components and resources.
-  - `PlayerInput`.
-- **`unghost`**: Ghost AI, behavior, hunting logic, evidence generation.
-  - `UnhaunterGhostPlugin`.
-- **`unghost-core`**: Core ghost components and resources.
-  - `HauntState`, `CurrentEvidenceReadings`.
-- **`unnpc`**: NPC interaction, dialog systems.
-  - `UnhaunterNPCPlugin`.
-- **`uninteraction`**: Generic entity interaction system.
-  - `Target`, `PositionTarget`.
-- **`unnavigation`**: Pathfinding and collision handling.
-  - `CollisionHandler`.
+- **`unplayer-plugin`**: Player controller, movement, interaction, stats.
+- **`unplayer-core`**: Core player components (e.g., `PlayerInput`).
+- **`unghost-plugin`**: Ghost AI, behavior, hunting logic, evidence generation.
+- **`unghost-core`**: Core ghost components and resources (e.g., `HauntState`).
+- **`unnpc-plugin`**: NPC interaction, dialog systems.
+- **`uninteraction-core`**: Generic entity interaction data (e.g., `Toggleable`, `Triggered`).
+- **`unnavigation-core`**: Pathfinding components and data.
+- **`unfog-plugin` / `unfog-core`**: Miasma and fog systems/data.
+- **`ungear-plugin` / `ungear-core`**: Gear logic and item components (e.g., `Electronic`, `Battery`).
+- **`unlight-plugin`**: Lighting logic and propagation (using `unrender-std`).
+- **`unwalkie-plugin` / `unwalkie-core`**: Walkie-talkie communication logic and types.
+- **`unroot-plugin`**: Root application plugin, startup logic.
 - **`ungear`**: Inventory system, equipment slots, deployment logic.
   - `Gear` (Component for gear items), `PlayerGear` (Inventory), `DeployedGear`.
 - **`ungearitems-core`**: Data definitions for all gear items (Flashlight, EMF, etc.).
