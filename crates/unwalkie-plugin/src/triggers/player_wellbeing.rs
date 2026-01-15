@@ -1,8 +1,8 @@
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
@@ -107,7 +107,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     // FIXME: WTF is "LightLevel"? this does not exist, this seems a hallucination from the original code.
     player_query: Query<(&PlayerSprite, &Position, &LightLevel), Without<Hiding>>,
     roomdb: Res<RoomDB>,
-    board_data: Res<BoardData>,
+    lg: Res<LightGrid>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut darkness_sanity_tracker: Local<Option<(f32, Stopwatch)>>, // (sanity_at_darkness_start, timer)
@@ -133,7 +133,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
         *hint_triggered_this_episode = false;
         return;
     }
-    let is_in_darkness = light_level.lux < LOW_LUX_THRESHOLD && !board_data.is_lit(player_bpos);
+    let is_in_darkness = light_level.lux < LOW_LUX_THRESHOLD && !lg.is_lit(player_bpos);
 
     // 3.c. Defining "Prolonged Darkness Period"
     if is_in_darkness {

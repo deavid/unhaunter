@@ -1,277 +1,83 @@
-use crate::lighting::utils::{
-    WAVE_MAX_HISTORY, apply_prebaked_contributions, create_stair_wave_edges, find_wave_edge_tiles,
-    identify_active_light_sources, is_in_bounds, propagate_from_wave_edges,
-    update_exposure_and_stats,
-};
+use super::utils::*;
+use crate::resources::light_grid::LightGrid;
 use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
-use bevy_platform::collections::HashSet;
+use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
-use unboard_core::behavior::{Behavior, Class, Orientation};
+use unboard_core::behavior::{Behavior, Class};
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::types::fielddata::LightFieldData;
 use unboard_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
+use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
-/// Rebuilds the lighting field based on the current state of the board and behaviors
-/// by switching between legacy and new implementations.
-///
-/// This function iterates through all entities with `Position` and `Behavior` components,
-/// calculates the light emitted and transmitted by each entity, and then propagates
-/// the light throughout the board using a multi-step process.
-///
-/// # Arguments
-///
-/// * `bf` - A mutable reference to the `BoardData` resource, which stores the lighting field.
-/// * `qt` - A query for entities with `Position` and `Behavior` components.
+/// System to rebuild the entire lighting field based on prebaked data and active sources.
+/// Triggered by BoardDataToRebuild events.
 pub fn rebuild_lighting_field(
-    bf: &mut BoardData,
-    qt: &Query<(&Position, &Behavior)>,
-    avg_time: &mut Local<(f32, f32)>,
+    mut bf: ResMut<BoardData>,
+    mut lg: ResMut<LightGrid>,
+    mut ev_bdr: MessageReader<BoardDataToRebuild>,
+    qt: Query<(&Position, &Behavior)>,
+    mut avg_time: Local<(f32, f32)>,
 ) {
-    // info!("Starting rebuild_lighting_field using prebaked data");
+    // Check if we need to rebuild lighting
+    let mut should_rebuild = false;
+    for ev in ev_bdr.read() {
+        if ev.lighting {
+            should_rebuild = true;
+            break;
+        }
+    }
+
+    if !should_rebuild {
+        return;
+    }
+
     let build_start_time = Instant::now();
 
-    // Create a new light field with default values
-    let mut lfs = Array3::from_elem(bf.map_size, LightFieldData::default());
+    // Initialize with a dark color or base ambient light
+    let mut lfs = Array3::<LightFieldData>::default(bf.map_size);
 
     // Identify active light sources
-    let active_source_ids = identify_active_light_sources(bf, qt);
+    let active_source_ids = identify_active_light_sources(&bf, &qt);
 
     // Apply prebaked contributions from active sources
-    let _initial_tiles_lit = apply_prebaked_contributions(&active_source_ids, bf, &mut lfs);
-    let _prebake_time = build_start_time.elapsed();
+    apply_prebaked_contributions(&active_source_ids, &bf, &mut lfs);
 
-    // First pass of light propagation from wave edges
-    let time_main_propagation = Instant::now();
-    let _dynamic_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &active_source_ids);
-    let _main_propagation_time = time_main_propagation.elapsed();
+    // Initial propagation from prebaked wave edges
+    propagate_from_wave_edges(&bf, &mut lfs, &active_source_ids);
 
-    // Log light statistics before stair propagation
-    // if bf.map_size.2 > 1 {
-    //     info!(
-    //         "Light field before stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-    //         lfs.slice(s![.., .., 0])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count(),
-    //         lfs.slice(s![.., .., 1])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count()
-    //     );
-    // } else {
-    //     info!(
-    //         "Light field before stair propagation - Floor 0: {} lit tiles (no additional floors)",
-    //         lfs.slice(s![.., .., 0])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count()
-    //     );
-    // }
+    // Process stairs to propagate light between floors
+    let stair_edges = create_stair_wave_edges(&bf, &lfs);
 
-    // Create wave edges from stairs and add them to a temporary list
-    let time_stair_preparation = Instant::now();
-    let stair_wave_edges = create_stair_wave_edges(bf, &lfs);
-    let _stair_preparation_time = time_stair_preparation.elapsed();
+    // If we have stair edges, propagate from them too
+    if !stair_edges.is_empty() {
+        // Temporarily swap wave edges in BoardData to use the stair ones
+        let original_edges = bf.prebaked_wave_edges.clone();
+        bf.prebaked_wave_edges = stair_edges;
 
-    // If we found stair wave edges, do a second pass of propagation using those
-    let mut _stair_propagation_count = 0;
-    let time_stair_propagation = Instant::now();
-    if !stair_wave_edges.is_empty() {
-        // Save original wave edges
-        let original_wave_edges = bf.prebaked_wave_edges.clone();
-
-        // Temporarily replace wave edges with stair wave edges
-        bf.prebaked_wave_edges = stair_wave_edges.clone();
-
-        // Propagate from the stair wave edges (using all source IDs to ensure our dummy ID is included)
-        let all_sources: HashSet<u32> =
-            (0..=active_source_ids.iter().max().unwrap_or(&0) + 1).collect();
-        // info!(
-        //     "Starting stair light propagation with {} wave edges",
-        //     stair_wave_edges.len(),
-        // );
-        _stair_propagation_count = propagate_from_wave_edges(bf, &mut lfs, &all_sources);
+        // Propagate from the stairs (using dummy source ID 0)
+        let _stair_count = propagate_from_wave_edges(&bf, &mut lfs, &vec![0].into_iter().collect());
 
         // Restore original wave edges
-        bf.prebaked_wave_edges = original_wave_edges;
+        bf.prebaked_wave_edges = original_edges;
     }
-    let _stair_propagation_time = time_stair_propagation.elapsed();
-
-    // Log light statistics after stair propagation
-    // if bf.map_size.2 > 1 {
-    //     info!(
-    //         "Light field after stair propagation - Floor 0: {} lit tiles, Floor 1: {} lit tiles",
-    //         lfs.slice(s![.., .., 0])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count(),
-    //         lfs.slice(s![.., .., 1])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count()
-    //     );
-    // } else {
-    //     info!(
-    //         "Light field after stair propagation - Floor 0: {} lit tiles (no additional floors)",
-    //         lfs.slice(s![.., .., 0])
-    //             .iter()
-    //             .filter(|x| x.lux > 0.01)
-    //             .count()
-    //     );
-    // }
 
     // Apply ambient light to walls
-    let time_ambient = Instant::now();
-    apply_ambient_light_to_walls(bf, &mut lfs);
-    let _ambient_time = time_ambient.elapsed();
+    apply_ambient_light_to_walls(&bf, &mut lfs);
 
-    // Calculate exposure and update board data
-    update_exposure_and_stats(bf, &lfs);
+    // Update final exposure and stats
+    update_exposure_and_stats(&bf, &mut lg, &lfs);
 
     let total_time = build_start_time.elapsed().as_secs_f32();
     let tot_cnt = 4.0;
     avg_time.0 = (avg_time.0 * avg_time.1 + total_time * tot_cnt) / (avg_time.1 + tot_cnt);
     avg_time.1 += 1.0;
-
-    // Log detailed performance metrics
-    // warn!(
-    //     "Lighting field rebuild performance: \
-    //     \n  Prebaking: {:?} ({} tiles) \
-    //     \n  Main propagation: {:?} ({} propagations) \
-    //     \n  Stair preparation: {:?} ({} wave edges) \
-    //     \n  Stair propagation: {:?} ({} propagations) \
-    //     \n  Ambient light: {:?} \
-    //     \n  Total time: {:?} (mean {:.2}ms)",
-    //     prebake_time,
-    //     initial_tiles_lit,
-    //     main_propagation_time,
-    //     dynamic_propagation_count,
-    //     stair_preparation_time,
-    //     stair_wave_edges.len(),
-    //     stair_propagation_time,
-    //     stair_propagation_count,
-    //     ambient_time,
-    //     build_start_time.elapsed(),
-    //     avg_time.0 * 1000.0
-    // );
 }
 
-// Applies ambient light to walls based on neighboring lit tiles
-fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>) {
-    let _wall_light_start = Instant::now();
-    let mut _walls_lit = 0;
-
-    // // Define directions for 4-way connectivity (plus weight)
-    let directions = [
-        (0, 1, 0, 0.01),
-        (1, -1, 0, 0.1),
-        (1, 0, 0, 1.0),
-        (0, -1, 0, 1.0),
-        (-1, 0, 0, 0.01),
-    ];
-
-    // Threshold for considering a tile "dark"
-    const DARK_THRESHOLD: f32 = 0.1;
-
-    let src_lfs = lfs.clone();
-
-    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
-        // Only process dark tiles
-        if src_lfs[(i, j, k)].lux > DARK_THRESHOLD && !collision.is_dynamic {
-            continue;
-        }
-        // Do not process tiles that don't have collision.
-        if collision.player_free {
-            continue;
-        }
-        // Collect light from neighbors
-        let mut total_lux = 0.0;
-        let mut weighted_color_sum = (0.0, 0.0, 0.0);
-        let mut weight_sum = 0.0;
-
-        for &(dx, dy, dz, w_factor) in &directions {
-            let nx = i as i64 + dx;
-            let ny = j as i64 + dy;
-            let nz = k as i64 + dz;
-
-            // Skip if out of bounds
-            if !is_in_bounds((nx, ny, nz), bf.map_size) {
-                continue;
-            }
-
-            let n_pos = (nx as usize, ny as usize, nz as usize);
-            let neighbor_light = &src_lfs[n_pos];
-
-            // Skip if neighbor has no light
-            if neighbor_light.lux <= 0.000000001 {
-                continue;
-            }
-
-            // Weight based on wall orientation
-            let weight = match collision.wall_orientation {
-                Orientation::XAxis => {
-                    if dy != 0 {
-                        2.0
-                    } else {
-                        1.0
-                    }
-                }
-                Orientation::YAxis => {
-                    if dx != 0 {
-                        2.0
-                    } else {
-                        1.0
-                    }
-                }
-                _ => 1.0,
-            } * w_factor;
-
-            // Apply ambient factor
-            let ambient_factor = 0.3;
-            let contribution = neighbor_light.lux * weight * ambient_factor;
-
-            total_lux += contribution;
-            weighted_color_sum.0 += neighbor_light.color.0 * weight;
-            weighted_color_sum.1 += neighbor_light.color.1 * weight;
-            weighted_color_sum.2 += neighbor_light.color.2 * weight;
-            weight_sum += weight;
-        }
-
-        // Only update if we found lit neighbors
-        if weight_sum > 0.0 {
-            // Calculate average color
-            let avg_color = (
-                weighted_color_sum.0 / weight_sum,
-                weighted_color_sum.1 / weight_sum,
-                weighted_color_sum.2 / weight_sum,
-            );
-
-            // Update the light field for this wall
-            let lfs_idx = &mut lfs[(i, j, k)];
-            lfs_idx.lux = total_lux;
-            lfs_idx.color = avg_color;
-            _walls_lit += 1;
-        }
-    }
-
-    // info!(
-    //     "Wall ambient light pass: {} walls lit in {:?}",
-    //     walls_lit,
-    //     wall_light_start.elapsed()
-    // );
-}
-
-/// Pre-computes static light propagation data using a simplified BFS approach.
-///
-/// This function:
-/// 1. Identifies all light sources
-/// 2. Propagates light using BFS
-/// 3. Marks wave edges where light stops at dynamic objects or other light sources
+/// Computes the prebaked lighting field for a map.
 pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position, &Behavior)>) {
     info!("Computing prebaked lighting field...");
     let build_start_time = Instant::now();
@@ -282,9 +88,6 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // First pass - identify all light sources and assign unique IDs
     let mut light_source_count = 0;
     let mut next_source_id = 1; // Start from 1, 0 is reserved for "no source"
-    bf.prebaked_metadata.light_source_ids.clear();
-
-    // First pass - identify all light sources and assign sequential IDs
 
     bf.prebaked_metadata = Default::default();
     // Process all entities to find light sources
@@ -347,7 +150,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 source_id,
                 data.light_info.lux,
                 data.light_info.color,
-                2.0, // Distance travelled by light (in tiles, initialized with the light height)
+                2.0, // Distance travelled by light (in tiles)
                 initial_history,
             ));
 
@@ -358,8 +161,8 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     }
 
     // Track statistics
-    let mut propagated_tiles = 0;
-    let mut wave_edges = 0;
+    let mut _propagated_tiles = 0;
+    let mut _wave_edges_count = 0;
 
     // Define neighbor directions
     let directions = [
@@ -439,7 +242,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                     ),
                 });
 
-                wave_edges += 1;
+                _wave_edges_count += 1;
 
                 // If it's the edge, it's because we stopped here. So we stop.
                 continue;
@@ -465,7 +268,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                     color,
                 };
 
-                propagated_tiles += 1;
+                _propagated_tiles += 1;
             }
 
             // Create updated path history for the neighbor
@@ -484,12 +287,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
         }
     }
 
-    info!(
-        "Prebaked light propagation: {} tiles lit, {} wave edges identified",
-        propagated_tiles, wave_edges
-    );
-
-    // Create a HashSet of all source IDs (during prebaking, all sources are considered active)
+    // Create a HashSet of all source IDs
     let all_source_ids: HashSet<u32> = visited_by_source.keys().copied().collect();
 
     // Store the prebaked data in BoardData
@@ -497,7 +295,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // Pass the HashSet of all source IDs to find_wave_edge_tiles
     bf.prebaked_wave_edges = find_wave_edge_tiles(bf, &all_source_ids);
 
-    // Add the call to prebake_propagation_data here
+    // Call prebake_propagation_data
     prebake_propagation_data(bf);
 
     info!(
@@ -508,9 +306,6 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
 
 /// Pre-computes the allowed propagation directions for each light source and tile
 fn prebake_propagation_data(bf: &mut BoardData) {
-    info!("Computing prebaked propagation directions...");
-    let build_start_time = Instant::now();
-
     let map_size = bf.map_size;
 
     // Create and initialize the vector of Array2
@@ -523,10 +318,7 @@ fn prebake_propagation_data(bf: &mut BoardData) {
     for (source_entity, source_idx) in &bf.prebaked_metadata.light_sources {
         let source_id = match bf.prebaked_metadata.light_source_ids.get(source_entity) {
             Some(id) => *id,
-            None => {
-                warn!("Light source entity not found in light_source_ids map");
-                continue;
-            }
+            None => continue,
         };
 
         let source_pos = BoardPosition::from_ndidx(*source_idx);
@@ -537,7 +329,7 @@ fn prebake_propagation_data(bf: &mut BoardData) {
         distance_field[source_pos.ndidx()] = 0.0;
 
         let mut queue = VecDeque::new();
-        queue.push_front(source_pos.clone()); // Simplified - no need to carry previous position
+        queue.push_front(source_pos.clone());
 
         while let Some(pos) = queue.pop_back() {
             let p = pos.ndidx();
@@ -561,7 +353,7 @@ fn prebake_propagation_data(bf: &mut BoardData) {
 
                 let n_idx = match neighbor_pos.ndidx_checked(bf.map_size) {
                     Some(idx) => idx,
-                    None => continue, // Out of bounds, skip
+                    None => continue,
                 };
                 let collision = &bf.collision_field[n_idx];
 
@@ -580,14 +372,9 @@ fn prebake_propagation_data(bf: &mut BoardData) {
                     bf.prebaked_propagation[source_id as usize][(pos.x as usize, pos.y as usize)]
                         [dir_idx] = true;
 
-                    queue.push_front(neighbor_pos.clone()); // Simplified - no need for previous position
+                    queue.push_front(neighbor_pos.clone());
                 }
             }
         }
     }
-
-    info!(
-        "Prebaked propagation directions computed in: {:?}",
-        build_start_time.elapsed()
-    );
 }

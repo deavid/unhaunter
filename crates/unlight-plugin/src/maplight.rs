@@ -24,6 +24,7 @@ use unboard_core::behavior::{Behavior, Orientation};
 pub(crate) use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
+use crate::resources::light_grid::LightGrid;
 use unboard_core::types::fielddata::CollisionFieldData;
 pub(crate) use unboard_core::types::light::LightData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -235,7 +236,8 @@ fn apply_lighting(
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
-    mut bf: ResMut<BoardData>,
+    bf: Res<BoardData>,
+    mut lg: ResMut<LightGrid>,
     haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
     gc: Res<GameConfig>,
@@ -360,7 +362,7 @@ fn apply_lighting(
 
         let cursor_pos = pos.to_board_position();
         for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
-            let lf = &bf.light_field[npos.ndidx()];
+            let lf = &lg.light_field[npos.ndidx()];
             let vis = vf.visibility_field[npos.ndidx()]
                 * if bf.collision_field[npos.ndidx()].player_free {
                     1.0
@@ -417,7 +419,8 @@ fn apply_lighting(
         .sum();
     cursor_exp += fl_total_power.sqrt() * 0.9;
     let f_e1 = 0.1;
-    bf.exposure_lux = bf.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
+    lg.exposure_lux = lg.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
+
     // Ensure the base is not negative before applying the power function
     let normalized_exp = (cursor_exp / center_exp.clamp(0.00001, 10000.0)).clamp(-10.0, 10.0);
     cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
@@ -430,27 +433,28 @@ fn apply_lighting(
 
     if !cursor_exp.is_normal() {
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
-        cursor_exp = bf.current_exposure;
+        cursor_exp = lg.current_exposure;
     }
-    let exp_f = ((cursor_exp) / bf.current_exposure) / bf.current_exposure_accel.powi(30);
-    let max_acc = 1.05;
-    bf.current_exposure_accel =
-        (bf.current_exposure_accel * 1000.0 + exp_f * eye_speed) / (eye_speed + 1000.0);
-    if bf.current_exposure_accel > max_acc {
-        bf.current_exposure_accel = max_acc;
-    } else if bf.current_exposure_accel.recip() > max_acc {
-        bf.current_exposure_accel = max_acc.recip();
+    let exp_f = ((cursor_exp) / lg.current_exposure) / lg.current_exposure_accel.powi(30);
+    let max_acc: f32 = 1.05;
+    lg.current_exposure_accel =
+        (lg.current_exposure_accel * 1000.0 + exp_f * eye_speed) / (eye_speed + 1000.0);
+    if lg.current_exposure_accel > max_acc {
+        lg.current_exposure_accel = max_acc;
+    } else if lg.current_exposure_accel.recip() > max_acc {
+        lg.current_exposure_accel = max_acc.recip();
     }
-    bf.current_exposure_accel = bf.current_exposure_accel.powf(0.99);
-    bf.current_exposure *= bf.current_exposure_accel;
-    let exposure = bf.current_exposure;
+    lg.current_exposure_accel = lg.current_exposure_accel.powf(0.99);
+    lg.current_exposure *= lg.current_exposure_accel;
+
+    let exposure = lg.current_exposure;
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // Primes: 13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,173,281,409,541,659,809
     const VSMALL_PRIME: usize = 59;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rng.random_range(0..usize::MAX);
-    let lf = &bf.light_field;
+    let lf = &lg.light_field;
 
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
@@ -1059,7 +1063,7 @@ fn apply_lighting(
         sprite.color = smooth_color.into();
     }
     for (bpos, ld) in lightdata_map.into_iter() {
-        bf.light_field[bpos.ndidx()].additional = ld;
+        lg.light_field[bpos.ndidx()].additional = ld;
     }
 
     measure.end_ms();

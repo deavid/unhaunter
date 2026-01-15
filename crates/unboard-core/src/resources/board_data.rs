@@ -1,7 +1,7 @@
 use crate::types::floor::FloorLevelMapping;
 use crate::types::miasma::MiasmaGrid;
 use crate::types::{
-    fielddata::{CollisionFieldData, LightFieldData},
+    fielddata::CollisionFieldData,
     prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
 };
 use bevy::prelude::*;
@@ -42,7 +42,6 @@ pub struct BoardData {
     pub map_size: (usize, usize, usize),
     pub origin: (i32, i32, i32),
 
-    pub light_field: Array3<LightFieldData>,
     pub collision_field: Array3<CollisionFieldData>,
     pub temperature_field: Array3<f32>,
     /// Previous frame's temperature for gradient calculation
@@ -58,9 +57,6 @@ pub struct BoardData {
     pub map_entity_field: Array3<Vec<Entity>>,
     pub miasma: MiasmaGrid,
     pub ambient_temp: f32,
-    pub exposure_lux: f32,
-    pub current_exposure: f32,
-    pub current_exposure_accel: f32,
 
     // New prebaked lighting field.
     pub prebaked_lighting: Array3<PrebakedLightingData>,
@@ -80,15 +76,6 @@ pub struct BoardData {
 }
 
 impl BoardData {
-    /// Returns if the given position has light above a fixed threshold.
-    pub fn is_lit(&self, pos: BoardPosition) -> bool {
-        if let Some(light_data) = self.light_field.get(pos.ndidx()) {
-            light_data.lux > 0.5
-        } else {
-            false
-        }
-    }
-
     /// Calculate connectivity score for a tile at the given position
     /// Lower scores = higher processing frequency for temperature diffusion
     pub fn calculate_connectivity_score(
@@ -219,16 +206,12 @@ impl FromWorld for BoardData {
             map_size,
             origin: (0, 0, 0),
             collision_field: Array3::from_elem(map_size, CollisionFieldData::default()),
-            light_field: Array3::from_elem(map_size, LightFieldData::default()),
             temperature_field: Array3::from_elem(map_size, 0.0),
             temperature_field_prev: Array3::from_elem(map_size, 0.0),
             temperature_activity: Array3::from_elem(map_size, 0.0),
             connectivity_scores: Array3::from_elem(map_size, 8), // Default to equivalent of current 1/8 selection
             temp_diffusion_config: TemperatureDiffusionConfig::default(),
             sound_field: HashMap::new(),
-            exposure_lux: 1.0,
-            current_exposure: 1.0,
-            current_exposure_accel: 1.0,
             ambient_temp: celsius_to_kelvin(15.0),
             miasma: MiasmaGrid::default(),
             map_entity_field: Array3::default(map_size),

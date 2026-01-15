@@ -13,6 +13,7 @@ pub(crate) struct SpiritBoxInternal {
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
+use unlight_plugin::resources::light_grid::LightGrid;
 use rand::Rng;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
@@ -36,6 +37,7 @@ pub(crate) fn update_spiritbox(
         Option<&mut SpiritBoxInternal>,
     )>,
     mut gs: GearStuff,
+    lg: Res<LightGrid>,
     mut commands: Commands,
 ) {
     for (
@@ -97,8 +99,7 @@ pub(crate) fn update_spiritbox(
             let bpos = pos.to_board_position();
             let temperature = gs.bf.temperature_field[bpos.ndidx()];
             let temp_c = kelvin_to_celsius(temperature);
-            let light_lux = gs
-                .bf
+            let light_lux = lg
                 .light_field
                 .get(bpos.ndidx())
                 .cloned()

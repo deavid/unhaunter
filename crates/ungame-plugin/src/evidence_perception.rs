@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unboard_core::resources::board_data::BoardData;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{Electronic, EvidenceSensor, PerceivedClarity};
@@ -29,7 +29,7 @@ fn update_current_evidence_readings_from_player_perception_system(
     q_ghost: Query<(&GhostSprite, &Position)>,
     q_orb: Query<&Position, With<GhostOrbParticle>>,
     q_light: Query<(&LightEmitter, &Toggleable, &Position)>,
-    board_data: Res<BoardData>,
+    light_grid: Res<LightGrid>,
     haunt_state: Res<HauntState>,
     time: Res<Time>,
 ) {
@@ -76,7 +76,7 @@ fn update_current_evidence_readings_from_player_perception_system(
                 if evidence == Evidence::FloatingOrbs {
                     // Floating orbs are visible if lights are off and actual orbs are visible near the player/camera.
                     let bpos = player_pos.to_board_position();
-                    let lux = board_data
+                    let lux = light_grid
                         .light_field
                         .get(bpos.ndidx())
                         .map(|l| l.lux)

@@ -18,7 +18,7 @@ use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::board::tiledata::PreMesh;
-use unrender_std::lighting::systems::prebake_lighting_field;
+use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;

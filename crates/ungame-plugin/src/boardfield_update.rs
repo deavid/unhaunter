@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::resources::board_data::BoardData;
 use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
-use unrender_std::lighting::systems::rebuild_lighting_field;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::position::Position;
 
@@ -16,8 +15,7 @@ use unspatial_core::position::Position;
 fn boardfield_update(
     mut bf: ResMut<BoardData>,
     mut ev_bdr: MessageReader<BoardDataToRebuild>,
-    mut qt: Query<(Entity, &Position, &Behavior)>,
-    mut avg_time: Local<(f32, f32)>,
+    qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     if ev_bdr.is_empty() {
         return;
@@ -37,11 +35,6 @@ fn boardfield_update(
 
     if bdr.collision {
         rebuild_collision_data(&mut bf, &qt);
-    }
-
-    if bdr.lighting {
-        let mut lens = qt.transmute_lens::<(&Position, &Behavior)>();
-        rebuild_lighting_field(&mut bf, &lens.query(), &mut avg_time);
     }
 }
 

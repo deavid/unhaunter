@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
-use unboard_core::resources::board_data::BoardData;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unghost_core::components::GhostBreach;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
@@ -22,7 +22,7 @@ use unwalkie_core::resources::WalkiePlay;
 /// a walkie-talkie warning event is triggered. The timer resets if the player leaves the dark or the game state changes.
 fn trigger_darkness_level_system(
     time: Res<Time>,
-    board_data: Res<BoardData>,
+    light_grid: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
@@ -50,7 +50,7 @@ fn trigger_darkness_level_system(
         return;
     }
 
-    if board_data.exposure_lux < 0.4 {
+    if light_grid.exposure_lux < 0.4 {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
         if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());
@@ -152,7 +152,7 @@ fn trigger_ghost_showcase(
 /// Triggers a walkie-talkie event if the player uses gear that requires darkness in a lit room.
 fn trigger_room_lights_on_gear_needs_dark(
     time: Res<Time>,
-    board_data: Res<BoardData>,
+    light_grid: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
@@ -183,7 +183,7 @@ fn trigger_room_lights_on_gear_needs_dark(
         let needs_darkness = matches!(kind, GearKind::UVTorch | GearKind::Flashlight);
         if needs_darkness
             && toggleable.is_on
-            && board_data.light_field[player_bpos.ndidx()].lux > 0.5
+            && light_grid.light_field[player_bpos.ndidx()].lux > 0.5
         {
             // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
             walkie_play.set(

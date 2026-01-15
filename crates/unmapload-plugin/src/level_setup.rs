@@ -11,6 +11,7 @@ use ndarray::Array3;
 use unassets_core::types::root::game_assets::GameAssets;
 use unboard_core::resources::board_data::BoardData;
 use unboard_core::resources::roomdb::RoomDB;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unboard_core::types::fielddata::{CollisionFieldData, LightFieldData};
 use unboard_core::types::tiledmap::map::MapLayerType;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
@@ -39,6 +40,7 @@ use crate::tile_spawning;
 pub(crate) struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardData>,
+    pub lg: ResMut<'w, LightGrid>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
@@ -167,14 +169,14 @@ fn load_level_handler(
     p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
     p.bf.connectivity_scores =
         Array3::from_elem(map_size, p.bf.temp_diffusion_config.default_score);
-    p.bf.light_field = Array3::from_elem(map_size, LightFieldData::default());
+    p.lg.light_field = Array3::from_elem(map_size, LightFieldData::default());
     p.bf.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
     p.bf.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
     p.bf.map_entity_field = Array3::default(map_size);
 
     // Clear other field data
     p.bf.sound_field.clear();
-    p.bf.current_exposure = 10.0;
+    p.lg.current_exposure = 10.0;
     p.roomdb.room_state.clear();
     p.roomdb.room_tiles.clear();
 

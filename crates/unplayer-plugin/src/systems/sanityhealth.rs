@@ -3,6 +3,7 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_data::BoardData;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
@@ -26,6 +27,7 @@ fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     bf: Res<BoardData>,
+    lg: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
@@ -35,7 +37,7 @@ fn lose_sanity(
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
         let p = bpos.ndidx();
-        let lux = bf.light_field[p].lux.sqrt() + 0.001;
+        let lux = lg.light_field[p].lux.sqrt() + 0.001;
         let temp = bf.temperature_field[p];
         let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
         let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
