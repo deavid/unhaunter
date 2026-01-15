@@ -2,7 +2,7 @@
 name = "unprofile-core"
 version.workspace = true
 edition.workspace = true
-description = "Player profile data structures for Unhaunter"
+description.workspace = true
 repository.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -13,6 +13,6 @@ workspace = true
 [dependencies]
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true }
 unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }

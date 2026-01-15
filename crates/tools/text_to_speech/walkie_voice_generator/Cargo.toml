@@ -1,15 +1,15 @@
 [package]
 name = "walkie_voice_generator"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
 unwalkie-types = { path = "../../../unwalkie-types" }
-clap = { workspace = true, features = ["derive"] }
-serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true }
+serde = { workspace = true }
 ron = { workspace = true }
 sha2 = { workspace = true }
 walkdir = { workspace = true }
