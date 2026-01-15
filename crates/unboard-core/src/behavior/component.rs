@@ -35,6 +35,14 @@ pub struct FloorItemCollidable;
 #[derive(Component, Debug, Clone, Copy, Default)]
 pub struct InteractableByGhost;
 
+/// Component that links an entity (like a switch) to a specific room.
+///
+/// This acts as a spatial pointer. When an interaction occurs (e.g., flipping a switch),
+/// the `room_delta` is added to the entity's board position to calculate a target coordinate.
+/// This target coordinate is then looked up in the `RoomDB` to identify the room name,
+/// allowing the interaction to affect the state of that entire room (e.g., lights).
+///
+/// - `room_delta`: Offset vector from the entity pos to a tile inside the target room.
 #[derive(Component, Debug, Clone, PartialEq, Eq, Default)]
 pub struct RoomState {
     pub room_delta: BoardPosition,
