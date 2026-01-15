@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::behavior::{Behavior, Orientation};
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::position::Position;
 
@@ -8,9 +8,9 @@ use unspatial_core::position::Position;
 ///
 /// # Arguments
 ///
-/// * `bf` - A mutable reference to the `BoardData` resource, which stores the collision field.
+/// * `bf` - A mutable reference to the `BoardTopology` resource, which stores the collision field.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
-pub fn rebuild_collision_data(bf: &mut BoardData, qt: &Query<(Entity, &Position, &Behavior)>) {
+pub fn rebuild_collision_data(bf: &mut BoardTopology, qt: &Query<(Entity, &Position, &Behavior)>) {
     // info!("Collision rebuild");
     assert_eq!(
         bf.collision_field.shape(),

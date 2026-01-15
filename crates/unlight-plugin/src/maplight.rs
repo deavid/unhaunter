@@ -12,6 +12,8 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
+use crate::resources::light_grid::LightGrid;
+pub(crate) use crate::types::light::LightData;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
@@ -22,13 +24,12 @@ use std::collections::VecDeque;
 use unboard_core::behavior::component::Interactive;
 use unboard_core::behavior::{Behavior, Orientation};
 pub(crate) use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
-use crate::resources::light_grid::LightGrid;
 use unboard_core::types::fielddata::CollisionFieldData;
-pub(crate) use unboard_core::types::light::LightData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::components::MiasmaSprite;
+use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::platform::plt::IS_WASM;
 pub(crate) use unfoundation_core::types::light::LightType;
@@ -173,7 +174,7 @@ pub(crate) fn compute_visibility(
 /// System to calculate the player's visibility field and update VisibilityData.
 fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
-    bf: Res<BoardData>,
+    bf: Res<BoardTopology>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
     mut roomdb: ResMut<RoomDB>,
@@ -236,7 +237,8 @@ fn apply_lighting(
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
-    bf: Res<BoardData>,
+    bf: Res<BoardTopology>,
+    miasma: Res<MiasmaGrid>,
     mut lg: ResMut<LightGrid>,
     haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
@@ -1008,7 +1010,7 @@ fn apply_lighting(
                         };
 
                         if let Some(neighbor_pressure) =
-                            bf.miasma.pressure_field.get(neighbor_pos.ndidx())
+                            miasma.pressure_field.get(neighbor_pos.ndidx())
                         {
                             // Calculate distance from sprite's *actual* position to the
                             // *center* of the neighbor tile. This is important for smooth

@@ -3,10 +3,11 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::component::{Interactive, RoomState};
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
+use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
@@ -65,7 +66,8 @@ pub(crate) fn player_movement_system(
     mut ev_room: MessageWriter<RoomChangedEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     difficulty: Res<CurrentDifficulty>,
-    board_data: Res<BoardData>,
+    _board_topology: Res<BoardTopology>,
+    miasma: Res<MiasmaGrid>,
     mut avg_running: Local<f32>,
     mouse_visibility: Res<MouseVisibility>,
 ) {
@@ -126,7 +128,7 @@ pub(crate) fn player_movement_system(
 
         // Miasma Logic
         let bpos = pos.to_board_position();
-        let Some(pressure) = board_data.miasma.pressure_field.get(bpos.ndidx()) else {
+        let Some(pressure) = miasma.pressure_field.get(bpos.ndidx()) else {
             continue;
         };
         let miasma_factor = (*pressure / 100.0).max(0.0).cbrt().clamp(0.0, 0.7);

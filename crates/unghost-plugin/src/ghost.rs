@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::f64::consts::PI;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
@@ -96,7 +96,7 @@ fn ghost_movement(
     player_state: Res<PlayerState>,
     roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
-    bf: Res<BoardData>,
+    bf: Res<BoardTopology>,
     mut commands: Commands,
     time: Res<Time>,
     config: Res<ObjectInteractionConfig>,
@@ -531,7 +531,7 @@ fn calculate_object_influence_score(
 fn calculate_movement_penalties(
     potential_destination: Position,
     current_ghost_pos: &Position,
-    bf: &Res<BoardData>,
+    bf: &Res<BoardTopology>,
     _difficulty: &Res<CurrentDifficulty>, // Available for future use if penalties scale with difficulty
 ) -> f32 {
     let mut penalty_score = 0.0;
@@ -821,7 +821,7 @@ fn handle_salty_trace_spawning_simple(
     ghost_position: &Position,
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    bf: &BoardData,
+    bf: &BoardTopology,
 ) {
     if !ghost.salty_effect_timer.is_finished()
         && ghost.hunting <= 0.1

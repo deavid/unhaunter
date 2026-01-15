@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unghost_core::components::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
@@ -25,7 +25,7 @@ use crate::level_setup::AssignGhostInfluenceMarker;
 /// * `marker_query` - Query to find the marker component with movable object list
 /// * `position_query` - Query to get positions of objects
 /// * `roomdb` - Room database to identify objects within valid rooms
-/// * `board_data` - Board data for accessing floor properties
+/// * `board_topology` - Board data for accessing floor properties
 fn assign_ghost_influence_system(
     mut commands: Commands,
     marker_query: Query<(Entity, &AssignGhostInfluenceMarker)>,
@@ -33,7 +33,7 @@ fn assign_ghost_influence_system(
     player_spawn_query: Query<&Position, With<unplayer_core::components::PlayerSprite>>,
     position_query: Query<&Position>,
     roomdb: Res<RoomDB>,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
     haunt_state: Res<HauntState>,
 ) {
     for (marker_entity, marker) in marker_query.iter() {
@@ -89,7 +89,7 @@ fn assign_ghost_influence_system(
             &objects_by_floor_with_positions,
             &ghost_spawn_points,
             &player_positions,
-            &board_data,
+            &board_topology,
         );
 
         let elapsed = start.elapsed();

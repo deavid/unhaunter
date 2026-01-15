@@ -3,8 +3,8 @@ use rand::Rng;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::Interactive;
 use unboard_core::behavior::component::{InteractableByGhost, RoomState};
-use unboard_core::resources::board_data::BoardData;
-use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unboard_core::resources::board_topology::BoardTopology;
+use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use unevents_core::events::sound::SoundEvent;
@@ -16,19 +16,19 @@ use unspatial_core::position::Position;
 fn validate_destination_enhanced(
     source: Position,
     destination: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
 ) -> bool {
     let board_pos = destination.to_board_position();
 
     // 1. Check bounds
-    if !board_pos.is_valid(board_data.map_size) {
+    if !board_pos.is_valid(board_topology.map_size) {
         return false;
     }
 
     // 2. Check collision - destination must be player_free (walkable)
-    if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-        if let Some(collision_data) = board_data.collision_field.get(idx) {
+    if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size) {
+        if let Some(collision_data) = board_topology.collision_field.get(idx) {
             if !collision_data.player_free {
                 return false;
             }
@@ -50,7 +50,7 @@ fn validate_destination_enhanced(
     }
 
     // 4. Check for clear path from source to destination (except source position)
-    if !has_clear_path(source, destination, board_data) {
+    if !has_clear_path(source, destination, board_topology) {
         return false;
     }
 
@@ -58,7 +58,7 @@ fn validate_destination_enhanced(
 }
 
 /// Checks if there's a clear path from source to destination
-fn has_clear_path(source: Position, destination: Position, board_data: &BoardData) -> bool {
+fn has_clear_path(source: Position, destination: Position, board_topology: &BoardTopology) -> bool {
     let dx = destination.x - source.x;
     let dy = destination.y - source.y;
     let distance = (dx * dx + dy * dy).sqrt();
@@ -83,8 +83,8 @@ fn has_clear_path(source: Position, destination: Position, board_data: &BoardDat
         };
 
         let board_pos = check_pos.to_board_position();
-        if let Some(idx) = board_pos.ndidx_checked(board_data.map_size) {
-            if let Some(collision_data) = board_data.collision_field.get(idx) {
+        if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size) {
+            if let Some(collision_data) = board_topology.collision_field.get(idx) {
                 if !collision_data.player_free {
                     return false;
                 }
@@ -103,14 +103,14 @@ fn has_clear_path(source: Position, destination: Position, board_data: &BoardDat
 fn find_valid_destination_with_retry(
     source: Position,
     original_destination: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     rng: &mut impl Rng,
     max_attempts: u32,
     search_radius: f32,
 ) -> Option<Position> {
     // First try the original destination
-    if validate_destination_enhanced(source, original_destination, board_data, q_objects) {
+    if validate_destination_enhanced(source, original_destination, board_topology, q_objects) {
         return Some(original_destination);
     }
 
@@ -126,7 +126,7 @@ fn find_valid_destination_with_retry(
             global_z: original_destination.global_z,
         };
 
-        if validate_destination_enhanced(source, candidate_pos, board_data, q_objects) {
+        if validate_destination_enhanced(source, candidate_pos, board_topology, q_objects) {
             return Some(candidate_pos);
         }
     }
@@ -160,9 +160,9 @@ fn ghost_interaction_execution_system(
     )>,
     q_objects: Query<&Position, With<InteractableByGhost>>,
     mut interactive_stuff: InteractiveStuff,
-    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
+    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
 ) {
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
@@ -215,7 +215,7 @@ fn ghost_interaction_execution_system(
                         &q_objects,
                         event.target,
                         destination,
-                        &board_data,
+                        &board_topology,
                     );
                 } else {
                     warn!(
@@ -233,7 +233,7 @@ fn ghost_interaction_execution_system(
                     &q_objects,
                     event.target,
                     event.destination,
-                    &board_data,
+                    &board_topology,
                 );
             }
 
@@ -246,7 +246,7 @@ fn ghost_interaction_execution_system(
                         &q_objects,
                         event.target,
                         destination,
-                        &board_data,
+                        &board_topology,
                     );
                 } else {
                     warn!(
@@ -282,7 +282,7 @@ fn ghost_interaction_execution_system(
 /// Execute toggle interaction (lights, switches)
 fn execute_toggle_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     ev_room: &mut MessageWriter<RoomChangedEvent>,
     q_targets: &Query<(
         &Behavior,
@@ -310,7 +310,7 @@ fn execute_toggle_interaction(
         }
 
         // Rebuild lighting and collision data
-        ev_bdr.write(BoardDataToRebuild {
+        ev_bdr.write(BoardTopologyToRebuild {
             lighting: true,
             collision: true,
         });
@@ -325,7 +325,7 @@ fn execute_toggle_interaction(
 /// Execute door slam interaction (fast door closure)
 fn execute_door_slam_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -354,7 +354,7 @@ fn execute_door_slam_interaction(
         });
 
         // Rebuild lighting and collision data
-        ev_bdr.write(BoardDataToRebuild {
+        ev_bdr.write(BoardTopologyToRebuild {
             lighting: true,
             collision: true,
         });
@@ -369,7 +369,7 @@ fn execute_door_slam_interaction(
 /// Execute door creak interaction (slow door movement)
 fn execute_door_creak_interaction(
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -398,7 +398,7 @@ fn execute_door_creak_interaction(
         });
 
         // Rebuild lighting and collision data
-        ev_bdr.write(BoardDataToRebuild {
+        ev_bdr.write(BoardTopologyToRebuild {
             lighting: true,
             collision: true,
         });
@@ -423,7 +423,7 @@ fn execute_throw_interaction(
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
     destination: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -432,7 +432,7 @@ fn execute_throw_interaction(
         if let Some(valid_destination) = find_valid_destination_with_retry(
             *current_position,
             destination,
-            board_data,
+            board_topology,
             q_objects,
             &mut rng,
             30,  // max attempts
@@ -475,7 +475,7 @@ fn execute_nudge_interaction(
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
     destination: Option<Position>,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         // Handle destination validation if provided
@@ -486,7 +486,7 @@ fn execute_nudge_interaction(
             find_valid_destination_with_retry(
                 *current_position,
                 dest,
-                board_data,
+                board_topology,
                 q_objects,
                 &mut rng,
                 30,  // max attempts
@@ -540,7 +540,7 @@ fn execute_haunted_move_interaction(
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     target: Entity,
     destination: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -549,7 +549,7 @@ fn execute_haunted_move_interaction(
         if let Some(valid_destination) = find_valid_destination_with_retry(
             *current_position,
             destination,
-            board_data,
+            board_topology,
             q_objects,
             &mut rng,
             30,  // max attempts
@@ -616,7 +616,7 @@ fn execute_trip_breaker_interaction(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     interactive_stuff: &mut InteractiveStuff,
-    ev_bdr: &mut MessageWriter<BoardDataToRebuild>,
+    ev_bdr: &mut MessageWriter<BoardTopologyToRebuild>,
     q_targets: &Query<(
         &Behavior,
         &Position,
@@ -648,7 +648,7 @@ fn execute_trip_breaker_interaction(
         visual_effects::spawn_electrical_sparks(commands, asset_server, *position);
 
         // Rebuild lighting and collision data (this will turn off all lights)
-        ev_bdr.write(BoardDataToRebuild {
+        ev_bdr.write(BoardTopologyToRebuild {
             lighting: true,
             collision: true,
         });

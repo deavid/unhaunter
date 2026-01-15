@@ -2,12 +2,12 @@ use crate::components::player::Stamina;
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unboard_core::resources::board_data::BoardData;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
@@ -26,7 +26,7 @@ fn lose_sanity(
     mut timer: Local<PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
-    bf: Res<BoardData>,
+    bf: Res<BoardTopology>,
     lg: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     // Access the difficulty settings
@@ -183,7 +183,7 @@ fn handle_player_death(
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut summary_data: ResMut<SummaryData>,
     mut next_app_state: ResMut<NextState<AppState>>,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
     difficulty_res: Res<CurrentDifficulty>,
 ) {
     for player in player_query.iter_mut() {
@@ -194,7 +194,7 @@ fn handle_player_death(
             player_profile.statistics.total_deaths += 1; // Global deaths
 
             // Record death for specific map and difficulty
-            let map_path_str = board_data.map_path.clone();
+            let map_path_str = board_topology.map_path.clone();
 
             let current_difficulty_variant = difficulty_res.0.difficulty;
 

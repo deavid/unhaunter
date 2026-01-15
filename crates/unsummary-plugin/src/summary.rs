@@ -718,26 +718,26 @@ pub(crate) fn finalize_profile_update(
 // Add a new system to ensure the mission ID is preserved and correctly set
 pub(crate) fn store_mission_id(
     mut sd: ResMut<SummaryData>,
-    board_data: Option<Res<unboard_core::resources::board_data::BoardData>>,
+    board_topology: Option<Res<unboard_core::resources::board_topology::BoardTopology>>,
 ) {
-    // Debug: Log initial state of SummaryData and BoardData
+    // Debug: Log initial state of SummaryData and BoardTopology
     info!(
         "store_mission_id: SummaryData current_mission_id='{}'",
         sd.map_path
     );
 
-    match &board_data {
+    match &board_topology {
         Some(bd) => info!(
-            "store_mission_id: BoardData is available, map_path='{}'",
+            "store_mission_id: BoardTopology is available, map_path='{}'",
             bd.map_path
         ),
-        None => info!("store_mission_id: BoardData is NOT available (resource not found)"),
+        None => info!("store_mission_id: BoardTopology is NOT available (resource not found)"),
     }
 
     // If the current_mission_id is empty but we have board data available, use that
     if sd.map_path.is_empty() {
-        if let Some(bd) = board_data {
-            info!("Setting mission ID from board_data: {}", bd.map_path);
+        if let Some(bd) = board_topology {
+            info!("Setting mission ID from board_topology: {}", bd.map_path);
             sd.map_path = bd.map_path.clone();
         } else {
             warn!("No board data available to set mission ID");

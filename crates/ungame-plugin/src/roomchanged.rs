@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::component::RoomState;
-use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unplayer_core::components::PlayerSprite;
@@ -22,7 +22,7 @@ use untypes_core::states::GameState;
 ///
 /// * Updating the game's collision and lighting data after room-related changes.
 fn roomchanged_event(
-    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
+    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
     interactables: Query<(Entity, &Position, &Behavior, &RoomState), Without<PlayerSprite>>,
@@ -46,7 +46,7 @@ fn roomchanged_event(
             // dbg!(&behavior);
         }
     }
-    ev_bdr.write(BoardDataToRebuild {
+    ev_bdr.write(BoardTopologyToRebuild {
         lighting: true,
         collision: true,
     });

@@ -5,10 +5,10 @@
 
 use bevy::prelude::*;
 use unboard_core::behavior::{TileState, Util};
-use unboard_core::types::tiledmap::map::{MapLayer, MapTile};
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
+use untiled_core::tiledmap::map::{MapLayer, MapTile};
 
 use crate::level_setup::LoadLevelSystemParam;
 
@@ -143,7 +143,7 @@ pub(crate) fn process_and_spawn_tile(
     }
 
     // Add behavior-specific components
-    unboard_core::behavior::apply_components_to_entity(&mt.behavior, &mut entity, layer);
+    crate::factory::apply_components_to_entity(&mt.behavior, &mut entity, layer);
 
     // Clone and configure behavior for this tile instance
     let mut beh = mt.behavior.clone();

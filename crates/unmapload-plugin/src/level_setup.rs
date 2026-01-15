@@ -9,20 +9,22 @@ use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use unassets_core::types::root::game_assets::GameAssets;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
-use unlight_plugin::resources::light_grid::LightGrid;
-use unboard_core::types::fielddata::{CollisionFieldData, LightFieldData};
-use unboard_core::types::tiledmap::map::MapLayerType;
+use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
+use unfog_core::miasma::MiasmaGrid;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unghost_core::resources::haunt_state::HauntState;
+use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_plugin::types::light::LightFieldData;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
 use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
+use untiled_core::tiledmap::map::MapLayerType;
 
 use crate::entity_spawning;
 use crate::sprite_db;
@@ -31,7 +33,7 @@ use crate::tile_spawning;
 /// System parameter for loading levels, providing access to various resources.
 ///
 /// This struct contains references to all resources needed throughout the level loading process:
-/// - Core data resources (BoardData, RoomDB, SpriteDB, etc.)
+/// - Core data resources (BoardTopology, RoomDB, SpriteDB, etc.)
 /// - Asset handling resources (AssetServer, Meshes, Materials, etc.)
 /// - Game configuration resources (Difficulty, Controls, Audio settings)
 ///
@@ -39,8 +41,9 @@ use crate::tile_spawning;
 #[derive(SystemParam)]
 pub(crate) struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
-    pub bf: ResMut<'w, BoardData>,
+    pub bf: ResMut<'w, BoardTopology>,
     pub lg: ResMut<'w, LightGrid>,
+    pub miasma: ResMut<'w, MiasmaGrid>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
@@ -107,7 +110,7 @@ fn load_level_handler(
     p.bf.map_path = loaded_event.map_filepath.clone();
     p.bf.level_ready_time = time.elapsed_secs();
 
-    warn!("BoardData Map path: {:?}", &p.bf.map_path);
+    warn!("BoardTopology Map path: {:?}", &p.bf.map_path);
 
     // Compute map boundaries by examining all tiles
     let mut map_min_x = i32::MAX;
@@ -170,8 +173,8 @@ fn load_level_handler(
     p.bf.connectivity_scores =
         Array3::from_elem(map_size, p.bf.temp_diffusion_config.default_score);
     p.lg.light_field = Array3::from_elem(map_size, LightFieldData::default());
-    p.bf.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
-    p.bf.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
+    p.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
+    p.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
     p.bf.map_entity_field = Array3::default(map_size);
 
     // Clear other field data
@@ -184,7 +187,7 @@ fn load_level_handler(
     entity_spawning::spawn_ambient_sounds(&p, &mut commands);
 
     // Initialize board data resource
-    commands.init_resource::<BoardData>();
+    commands.init_resource::<BoardTopology>();
     warn!("Level Loaded: {}", &loaded_event.map_filepath);
 
     // ---------- NEW MAP LOAD ----------

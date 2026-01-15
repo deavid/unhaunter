@@ -3,9 +3,10 @@ use bevy_persistent::Persistent;
 use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
 
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::sound::SoundEvent;
+use unfog_core::miasma::MiasmaGrid;
 use unghost_core::resources::haunt_state::HauntState;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -15,7 +16,9 @@ use unsummary_core::summary::SummaryData;
 pub struct GearStuff<'w, 's> {
     /// Access to the game's board data, including collision, lighting, and temperature
     /// fields.
-    pub bf: ResMut<'w, BoardData>,
+    pub bf: ResMut<'w, BoardTopology>,
+    /// Access to the miasma grid, used for EMF readings.
+    pub miasma: ResMut<'w, MiasmaGrid>,
     /// Access to the ghost's haunt state, including evidences and dynamics.
     pub haunt_state: ResMut<'w, HauntState>,
     /// Access to summary data, which tracks game progress and statistics.

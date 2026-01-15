@@ -4,7 +4,7 @@ use crate::craft_repellent::craft_repellent;
 use crate::uibutton::TruckButtonType;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::truck::TruckUIEvent;
 use ungear_core::components::playergear::PlayerGear;
@@ -324,7 +324,7 @@ fn truckui_event_handle(
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut summary_data: ResMut<SummaryData>,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
     mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
@@ -334,10 +334,10 @@ fn truckui_event_handle(
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
-                // Debug: Log the current state of board_data.map_path
+                // Debug: Log the current state of board_topology.map_path
                 info!(
-                    "[EndMission] Current board_data.map_path: '{}'",
-                    board_data.map_path
+                    "[EndMission] Current board_topology.map_path: '{}'",
+                    board_topology.map_path
                 );
 
                 let initial_deposit_held = player_profile.progression.insurance_deposit;
@@ -349,8 +349,8 @@ fn truckui_event_handle(
                     panic!("Failed to persist PlayerProfileData: {:?}", e);
                 }
 
-                // Set summary_data.current_mission_id from board_data.map_path
-                summary_data.map_path = board_data.map_path.clone();
+                // Set summary_data.current_mission_id from board_topology.map_path
+                summary_data.map_path = board_topology.map_path.clone();
 
                 // Debug: Log the updated value of summary_data.current_mission_id
                 info!(

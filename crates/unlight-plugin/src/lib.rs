@@ -6,3 +6,4 @@ mod maplight;
 mod metrics;
 pub mod resources;
 mod systems;
+pub mod types;

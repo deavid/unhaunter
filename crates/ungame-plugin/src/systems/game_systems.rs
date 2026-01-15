@@ -1,6 +1,6 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::game_config::GameConfig;
@@ -140,7 +140,7 @@ fn keyboard(
 fn keyboard_floor_switch(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&PlayerSprite, &mut Position)>,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
     game_config: Res<GameConfig>,
 ) {
     const DEBUG_FLOORS: bool = false;
@@ -175,7 +175,7 @@ fn keyboard_floor_switch(
         return;
     };
 
-    if board_data.floor_z_map.is_empty() || board_data.z_floor_map.is_empty() {
+    if board_topology.floor_z_map.is_empty() || board_topology.z_floor_map.is_empty() {
         warn!("Floor switch: No floor mapping data available");
         return;
     }
@@ -186,7 +186,7 @@ fn keyboard_floor_switch(
     // Calculate the target floor z based on the key pressed
     let target_z = if go_up {
         // Find the next higher floor if it exists
-        if current_z + 1 < board_data.map_size.2 {
+        if current_z + 1 < board_topology.map_size.2 {
             current_z + 1
         } else {
             warn!("Floor switch: Already at the highest floor ({})", current_z);
@@ -208,7 +208,7 @@ fn keyboard_floor_switch(
         player_pos.z = target_z as f32;
 
         // Log the floor change for debugging
-        if let Some(tiled_floor) = board_data.z_floor_map.get(&target_z) {
+        if let Some(tiled_floor) = board_topology.z_floor_map.get(&target_z) {
             warn!(
                 "Floor switch: Moving to z={} (Tiled floor number: {})",
                 target_z, tiled_floor

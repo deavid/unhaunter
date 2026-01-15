@@ -1,4 +1,5 @@
 pub(crate) mod entity_spawning;
+pub(crate) mod factory;
 pub(crate) mod influence_system;
 pub(crate) mod level_finalization;
 pub(crate) mod level_setup;

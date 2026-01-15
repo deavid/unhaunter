@@ -1,6 +1,8 @@
 use bevy::prelude::*;
-use ndarray::Array3;
-use unboard_core::types::fielddata::LightFieldData;
+use ndarray::{Array2, Array3};
+
+use crate::types::light::LightFieldData;
+use crate::types::prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData};
 
 #[derive(Resource, Debug, Clone)]
 pub struct LightGrid {
@@ -8,6 +10,11 @@ pub struct LightGrid {
     pub exposure_lux: f32,
     pub current_exposure: f32,
     pub current_exposure_accel: f32,
+
+    pub prebaked_lighting: Array3<PrebakedLightingData>,
+    pub prebaked_metadata: PrebakedMetadata,
+    pub prebaked_wave_edges: Vec<WaveEdgeData>,
+    pub prebaked_propagation: Vec<Array2<[bool; 4]>>,
 }
 
 impl LightGrid {
@@ -30,6 +37,10 @@ impl Default for LightGrid {
             exposure_lux: 10.0,
             current_exposure: 10.0,
             current_exposure_accel: 0.0,
+            prebaked_lighting: Array3::from_elem((1, 1, 1), PrebakedLightingData::default()),
+            prebaked_metadata: PrebakedMetadata::default(),
+            prebaked_wave_edges: Vec::new(),
+            prebaked_propagation: Vec::new(),
         }
     }
 }

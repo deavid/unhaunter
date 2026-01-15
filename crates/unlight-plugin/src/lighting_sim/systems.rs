@@ -1,24 +1,24 @@
 use super::utils::*;
 use crate::resources::light_grid::LightGrid;
+use crate::types::light::LightFieldData;
+use crate::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
 use unboard_core::behavior::{Behavior, Class};
-use unboard_core::resources::board_data::BoardData;
-use unboard_core::types::fielddata::LightFieldData;
-use unboard_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
-use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unboard_core::resources::board_topology::BoardTopology;
+use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
 /// System to rebuild the entire lighting field based on prebaked data and active sources.
-/// Triggered by BoardDataToRebuild events.
+/// Triggered by BoardTopologyToRebuild events.
 pub fn rebuild_lighting_field(
-    mut bf: ResMut<BoardData>,
+    bf: Res<BoardTopology>,
     mut lg: ResMut<LightGrid>,
-    mut ev_bdr: MessageReader<BoardDataToRebuild>,
+    mut ev_bdr: MessageReader<BoardTopologyToRebuild>,
     qt: Query<(&Position, &Behavior)>,
     mut avg_time: Local<(f32, f32)>,
 ) {
@@ -41,28 +41,29 @@ pub fn rebuild_lighting_field(
     let mut lfs = Array3::<LightFieldData>::default(bf.map_size);
 
     // Identify active light sources
-    let active_source_ids = identify_active_light_sources(&bf, &qt);
+    let active_source_ids = identify_active_light_sources(&bf, &lg, &qt);
 
     // Apply prebaked contributions from active sources
-    apply_prebaked_contributions(&active_source_ids, &bf, &mut lfs);
+    apply_prebaked_contributions(&active_source_ids, &bf, &lg, &mut lfs);
 
     // Initial propagation from prebaked wave edges
-    propagate_from_wave_edges(&bf, &mut lfs, &active_source_ids);
+    propagate_from_wave_edges(&bf, &lg, &mut lfs, &active_source_ids);
 
     // Process stairs to propagate light between floors
     let stair_edges = create_stair_wave_edges(&bf, &lfs);
 
     // If we have stair edges, propagate from them too
     if !stair_edges.is_empty() {
-        // Temporarily swap wave edges in BoardData to use the stair ones
-        let original_edges = bf.prebaked_wave_edges.clone();
-        bf.prebaked_wave_edges = stair_edges;
+        // Temporarily swap wave edges in LightGrid to use the stair ones
+        let original_edges = lg.prebaked_wave_edges.clone();
+        lg.prebaked_wave_edges = stair_edges;
 
         // Propagate from the stairs (using dummy source ID 0)
-        let _stair_count = propagate_from_wave_edges(&bf, &mut lfs, &vec![0].into_iter().collect());
+        let _stair_count =
+            propagate_from_wave_edges(&bf, &lg, &mut lfs, &vec![0].into_iter().collect());
 
         // Restore original wave edges
-        bf.prebaked_wave_edges = original_edges;
+        lg.prebaked_wave_edges = original_edges;
     }
 
     // Apply ambient light to walls
@@ -78,7 +79,11 @@ pub fn rebuild_lighting_field(
 }
 
 /// Computes the prebaked lighting field for a map.
-pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position, &Behavior)>) {
+pub fn prebake_lighting_field(
+    bf: &mut BoardTopology,
+    lg: &mut LightGrid,
+    qt: &Query<(Entity, &Position, &Behavior)>,
+) {
     info!("Computing prebaked lighting field...");
     let build_start_time = Instant::now();
 
@@ -89,7 +94,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     let mut light_source_count = 0;
     let mut next_source_id = 1; // Start from 1, 0 is reserved for "no source"
 
-    bf.prebaked_metadata = Default::default();
+    lg.prebaked_metadata = Default::default();
     // Process all entities to find light sources
     for (entity, pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
@@ -97,7 +102,7 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
         let is_door = behavior.key_cvo().class == Class::Door;
 
         if is_door {
-            bf.prebaked_metadata.doors.push(entity);
+            lg.prebaked_metadata.doors.push(entity);
         }
 
         // Check if this entity emits light
@@ -111,10 +116,10 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
                 lux,
                 color,
             };
-            bf.prebaked_metadata
+            lg.prebaked_metadata
                 .light_source_ids
                 .insert(entity, next_source_id);
-            bf.prebaked_metadata.light_sources.push((entity, idx));
+            lg.prebaked_metadata.light_sources.push((entity, idx));
             next_source_id += 1;
         }
     }
@@ -290,13 +295,13 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
     // Create a HashSet of all source IDs
     let all_source_ids: HashSet<u32> = visited_by_source.keys().copied().collect();
 
-    // Store the prebaked data in BoardData
-    bf.prebaked_lighting = prebaked;
+    // Store the prebaked data in LightGrid
+    lg.prebaked_lighting = prebaked;
     // Pass the HashSet of all source IDs to find_wave_edge_tiles
-    bf.prebaked_wave_edges = find_wave_edge_tiles(bf, &all_source_ids);
+    lg.prebaked_wave_edges = find_wave_edge_tiles(bf, lg, &all_source_ids);
 
     // Call prebake_propagation_data
-    prebake_propagation_data(bf);
+    prebake_propagation_data(bf, lg);
 
     info!(
         "Prebaked lighting field computed in: {:?}",
@@ -305,18 +310,18 @@ pub fn prebake_lighting_field(bf: &mut BoardData, qt: &Query<(Entity, &Position,
 }
 
 /// Pre-computes the allowed propagation directions for each light source and tile
-fn prebake_propagation_data(bf: &mut BoardData) {
+fn prebake_propagation_data(bf: &mut BoardTopology, lg: &mut LightGrid) {
     let map_size = bf.map_size;
 
     // Create and initialize the vector of Array2
-    bf.prebaked_propagation = vec![
+    lg.prebaked_propagation = vec![
         Array2::from_elem((map_size.0, map_size.1), [false; 4]);
-        bf.prebaked_metadata.light_sources.len() + 1
+        lg.prebaked_metadata.light_sources.len() + 1
     ];
 
     // Second pass - compute allowed propagation directions for each light source
-    for (source_entity, source_idx) in &bf.prebaked_metadata.light_sources {
-        let source_id = match bf.prebaked_metadata.light_source_ids.get(source_entity) {
+    for (source_entity, source_idx) in &lg.prebaked_metadata.light_sources {
+        let source_id = match lg.prebaked_metadata.light_source_ids.get(source_entity) {
             Some(id) => *id,
             None => continue,
         };
@@ -369,7 +374,7 @@ fn prebake_propagation_data(bf: &mut BoardData) {
                     distance_field[n_idx] = new_distance;
 
                     // Mark that we can propagate from pos in direction dir_idx
-                    bf.prebaked_propagation[source_id as usize][(pos.x as usize, pos.y as usize)]
+                    lg.prebaked_propagation[source_id as usize][(pos.x as usize, pos.y as usize)]
                         [dir_idx] = true;
 
                     queue.push_front(neighbor_pos.clone());

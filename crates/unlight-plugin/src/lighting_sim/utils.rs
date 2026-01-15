@@ -1,12 +1,12 @@
 use crate::resources::light_grid::LightGrid;
+use crate::types::light::LightFieldData;
+use crate::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use unboard_core::behavior::Behavior;
-use unboard_core::resources::board_data::BoardData;
-use unboard_core::types::fielddata::LightFieldData;
-use unboard_core::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
+use unboard_core::resources::board_topology::BoardTopology;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
@@ -14,7 +14,7 @@ use unspatial_core::position::Position;
 pub const WAVE_MAX_HISTORY: usize = 12;
 
 /// Applies ambient light to walls based on neighboring lit tiles
-pub fn apply_ambient_light_to_walls(bf: &BoardData, lfs: &mut Array3<LightFieldData>) {
+pub fn apply_ambient_light_to_walls(bf: &BoardTopology, lfs: &mut Array3<LightFieldData>) {
     // // Define directions for 4-way connectivity (plus weight)
     let directions = [
         (0, 1, 0, 0.01),
@@ -137,18 +137,19 @@ pub fn blend_colors(
 
 /// Identifies active light sources in the scene
 pub fn identify_active_light_sources(
-    bf: &BoardData,
+    _bf: &BoardTopology,
+    lg: &LightGrid,
     qt: &Query<(&Position, &Behavior)>,
 ) -> HashSet<u32> {
     let mut active_source_ids = HashSet::new();
 
-    for (entity, ndidx) in &bf.prebaked_metadata.light_sources {
+    for (entity, ndidx) in &lg.prebaked_metadata.light_sources {
         let Ok((_pos, behavior)) = qt.get(*entity) else {
             continue;
         };
 
         if behavior.p.light.light_emission_enabled
-            && let Some(source_id) = bf.prebaked_lighting[*ndidx].light_info.source_id
+            && let Some(source_id) = lg.prebaked_lighting[*ndidx].light_info.source_id
         {
             active_source_ids.insert(source_id);
         }
@@ -159,16 +160,17 @@ pub fn identify_active_light_sources(
 /// Apply prebaked light contributions from active sources
 pub fn apply_prebaked_contributions(
     active_source_ids: &HashSet<u32>,
-    bf: &BoardData,
+    _bf: &BoardTopology,
+    lg: &LightGrid,
     lfs: &mut Array3<LightFieldData>,
 ) -> usize {
     let mut tiles_lit = 0;
-    let mut v_active = vec![false; bf.prebaked_propagation.len()];
+    let mut v_active = vec![false; lg.prebaked_propagation.len()];
     for source_id in active_source_ids {
         v_active[*source_id as usize] = true;
     }
     // Apply light from active prebaked sources to the lighting field
-    for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
+    for ((i, j, k), prebaked_data) in lg.prebaked_lighting.indexed_iter() {
         let pos_idx = (i, j, k);
 
         // Get the source ID (if any)
@@ -189,7 +191,11 @@ pub fn apply_prebaked_contributions(
 }
 
 /// Update final exposure settings and log statistics
-pub fn update_exposure_and_stats(bf: &BoardData, lg: &mut LightGrid, lfs: &Array3<LightFieldData>) {
+pub fn update_exposure_and_stats(
+    bf: &BoardTopology,
+    lg: &mut LightGrid,
+    lfs: &Array3<LightFieldData>,
+) {
     let total_tiles = bf.map_size.0 * bf.map_size.1 * bf.map_size.2;
 
     // Calculate exposure
@@ -203,11 +209,15 @@ pub fn update_exposure_and_stats(bf: &BoardData, lg: &mut LightGrid, lfs: &Array
 }
 
 /// Finds wave edge tiles for continuing light propagation
-pub fn find_wave_edge_tiles(bf: &BoardData, active_source_ids: &HashSet<u32>) -> Vec<WaveEdgeData> {
+pub fn find_wave_edge_tiles(
+    _bf: &BoardTopology,
+    lg: &LightGrid,
+    active_source_ids: &HashSet<u32>,
+) -> Vec<WaveEdgeData> {
     let mut wave_edges = Vec::new();
 
     // Find all wave edge tiles where light propagation can continue
-    for ((i, j, k), prebaked_data) in bf.prebaked_lighting.indexed_iter() {
+    for ((i, j, k), prebaked_data) in lg.prebaked_lighting.indexed_iter() {
         // Skip if not a wave edge
         let Some(wave_edge) = &prebaked_data.wave_edge else {
             continue;
@@ -256,7 +266,8 @@ fn apply_iir_filter(
 
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
-    bf: &BoardData,
+    bf: &BoardTopology,
+    lg: &LightGrid,
     lfs: &mut Array3<LightFieldData>,
     active_source_ids: &HashSet<u32>,
 ) -> usize {
@@ -280,7 +291,7 @@ pub fn propagate_from_wave_edges(
     const IIR_FACTOR_2: f32 = 0.8; // Second level of smoothing
 
     // Add all wave edges to the queue
-    for edge_data in bf.prebaked_wave_edges.iter() {
+    for edge_data in lg.prebaked_wave_edges.iter() {
         if !active_source_ids.contains(&edge_data.source_id) {
             continue;
         }
@@ -314,7 +325,7 @@ pub fn propagate_from_wave_edges(
             [true, true, true, true]
         } else {
             // For regular wave edges, use prebaked directions
-            match bf
+            match lg
                 .prebaked_propagation
                 .get(edge_data.source_id as usize)
                 .and_then(|arr| arr.get((pos.x as usize, pos.y as usize)))
@@ -359,7 +370,7 @@ pub fn propagate_from_wave_edges(
             // For stair wave edges, don't skip
             if !is_stair_edge
                 && Some(edge_data.source_id)
-                    == bf.prebaked_lighting[neighbor_idx].light_info.source_id
+                    == lg.prebaked_lighting[neighbor_idx].light_info.source_id
             {
                 continue;
             }
@@ -495,7 +506,10 @@ pub fn propagate_from_wave_edges(
 }
 
 /// Creates wave edges at stair connections between floors to allow light propagation
-pub fn create_stair_wave_edges(bf: &BoardData, lfs: &Array3<LightFieldData>) -> Vec<WaveEdgeData> {
+pub fn create_stair_wave_edges(
+    bf: &BoardTopology,
+    lfs: &Array3<LightFieldData>,
+) -> Vec<WaveEdgeData> {
     let mut wave_edges = Vec::new();
 
     // Process all stair tiles

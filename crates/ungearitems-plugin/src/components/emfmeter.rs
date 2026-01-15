@@ -78,7 +78,7 @@ pub(crate) fn update_emfmeter(
                 };
                 let bpos = pos.to_board_position();
 
-                let miasma_pressure = gs.bf.miasma.pressure_field[bpos.ndidx()];
+                let miasma_pressure = gs.miasma.pressure_field[bpos.ndidx()];
 
                 emf.miasma_pressure = emf.miasma_pressure * F + miasma_pressure * (1.0 - F);
             }

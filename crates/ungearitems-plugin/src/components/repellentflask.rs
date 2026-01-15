@@ -2,7 +2,7 @@ use bevy_platform::collections::HashSet;
 use fastapprox::faster;
 use ndarray::Array3;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
@@ -134,7 +134,7 @@ fn repellent_update(
         (&mut Position, &mut RepellentParticle, &mut MapColor, Entity),
         Without<GhostSprite>,
     >,
-    bf: Res<BoardData>,
+    bf: Res<BoardTopology>,
     difficulty: Res<CurrentDifficulty>,
     mut pressure_base: Local<Array3<f32>>,
     mut positions: Local<Array3<Vec<Vec3>>>,

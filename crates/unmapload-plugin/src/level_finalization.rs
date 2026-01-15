@@ -10,15 +10,16 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;
 use unboard_core::behavior::Behavior;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unghost_core::resources::haunt_state::HauntState;
-use unrender_std::board::tiledata::PreMesh;
 use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
+use unlight_plugin::resources::light_grid::LightGrid;
+use unrender_std::board::tiledata::PreMesh;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -40,7 +41,7 @@ use untypes_core::states::{AppState, GameState};
 /// * `roomdb` - Room database resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
-    mut bf: ResMut<BoardData>,
+    mut bf: ResMut<BoardTopology>,
     haunt_state: Res<HauntState>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
@@ -233,7 +234,7 @@ fn process_pre_meshes(
                     );
 
                     // Create quad mesh with proper dimensions and anchor point
-                    let base_quad = Mesh::from(unboard_core::types::quadcc::QuadCC::new(
+                    let base_quad = Mesh::from(unrender_std::utils::quadcc::QuadCC::new(
                         sprite_size,
                         sprite_anchor,
                     ));
@@ -259,7 +260,8 @@ fn process_pre_meshes(
 /// * `bf` - Board data resource for collision/lighting fields
 /// * `qt` - Query to access all level entities with behaviors and positions
 fn load_map_add_prebaked_lighting(
-    mut bf: ResMut<BoardData>,
+    mut bf: ResMut<BoardTopology>,
+    mut lg: ResMut<LightGrid>,
     qt: Query<(Entity, &Position, &Behavior)>,
     roomdb: Res<RoomDB>,
 ) {
@@ -271,7 +273,7 @@ fn load_map_add_prebaked_lighting(
     info!("Precomputed connectivity scores for temperature diffusion");
 
     // Call the prebaking function to calculate static lighting
-    prebake_lighting_field(&mut bf, &qt);
+    prebake_lighting_field(&mut bf, &mut lg, &qt);
 
     // Log completion
     info!("Map loaded with prebaked lighting data");

@@ -3,7 +3,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
 use unboard_core::behavior::{Behavior, Orientation, component::Stairs};
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -52,10 +52,10 @@ fn heuristic(a: &BoardPosition, b: &BoardPosition) -> i32 {
 /// Helper function to check if a board position is visible to the player
 fn is_visible(
     pos: &BoardPosition,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> bool {
-    if let Some(idx) = pos.ndidx_checked(board_data.map_size)
+    if let Some(idx) = pos.ndidx_checked(board_topology.map_size)
         && let Some(visibility) = visibility_data.visibility_field.get(idx)
     {
         return *visibility > 0.0; // Assume visibility > 0 means visible
@@ -66,7 +66,7 @@ fn is_visible(
 /// Gets valid neighboring positions for pathfinding
 fn get_neighbors(
     pos: &BoardPosition,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> Vec<BoardPosition> {
     let mut neighbors = Vec::new();
@@ -87,10 +87,10 @@ fn get_neighbors(
         };
 
         // Check if the neighbor is within bounds, walkable, and visible
-        if let Some(idx) = neighbor.ndidx_checked(board_data.map_size)
-            && let Some(collision_data) = board_data.collision_field.get(idx)
+        if let Some(idx) = neighbor.ndidx_checked(board_topology.map_size)
+            && let Some(collision_data) = board_topology.collision_field.get(idx)
             && collision_data.player_free
-            && is_visible(&neighbor, board_data, visibility_data)
+            && is_visible(&neighbor, board_topology, visibility_data)
         {
             neighbors.push(neighbor);
         }
@@ -131,7 +131,7 @@ fn reconstruct_path(
 pub(crate) fn find_path(
     start: Position,
     goal: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> Vec<BoardPosition> {
     let start_board = start.to_board_position();
@@ -143,13 +143,13 @@ pub(crate) fn find_path(
     }
 
     // Check if start and goal positions are valid, walkable, and visible
-    if let Some(start_idx) = start_board.ndidx_checked(board_data.map_size) {
-        if let Some(start_collision) = board_data.collision_field.get(start_idx) {
+    if let Some(start_idx) = start_board.ndidx_checked(board_topology.map_size) {
+        if let Some(start_collision) = board_topology.collision_field.get(start_idx) {
             if !start_collision.player_free {
                 warn!("Start position {:?} is not walkable", start_board);
                 return Vec::new();
             }
-            if !is_visible(&start_board, board_data, visibility_data) {
+            if !is_visible(&start_board, board_topology, visibility_data) {
                 warn!("Start position {:?} is not visible", start_board);
                 return Vec::new();
             }
@@ -159,13 +159,13 @@ pub(crate) fn find_path(
         return Vec::new();
     }
 
-    if let Some(goal_idx) = goal_board.ndidx_checked(board_data.map_size) {
-        if let Some(goal_collision) = board_data.collision_field.get(goal_idx) {
+    if let Some(goal_idx) = goal_board.ndidx_checked(board_topology.map_size) {
+        if let Some(goal_collision) = board_topology.collision_field.get(goal_idx) {
             if !goal_collision.player_free {
                 warn!("Goal position {:?} is not walkable", goal_board);
                 return Vec::new();
             }
-            if !is_visible(&goal_board, board_data, visibility_data) {
+            if !is_visible(&goal_board, board_topology, visibility_data) {
                 warn!("Goal position {:?} is not visible", goal_board);
                 return Vec::new();
             }
@@ -192,14 +192,14 @@ pub(crate) fn find_path(
         // Check if we reached the goal
         if current_pos == goal_board {
             let raw_path = reconstruct_path(&came_from, start_board, goal_board);
-            return smooth_path(raw_path, board_data, visibility_data);
+            return smooth_path(raw_path, board_topology, visibility_data);
         }
 
         // Move current to closed set
         closed_set.insert(current_pos.clone());
 
         // Check all neighbors
-        for neighbor in get_neighbors(&current_pos, board_data, visibility_data) {
+        for neighbor in get_neighbors(&current_pos, board_topology, visibility_data) {
             if closed_set.contains(&neighbor) {
                 continue;
             }
@@ -231,7 +231,7 @@ pub(crate) fn find_path(
 pub(crate) fn find_path_to_interactive(
     start: Position,
     goal: Position,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> Vec<BoardPosition> {
     let start_board = start.to_board_position();
@@ -243,13 +243,13 @@ pub(crate) fn find_path_to_interactive(
     }
 
     // Check if start position is valid, walkable, and visible
-    if let Some(start_idx) = start_board.ndidx_checked(board_data.map_size) {
-        if let Some(start_collision) = board_data.collision_field.get(start_idx) {
+    if let Some(start_idx) = start_board.ndidx_checked(board_topology.map_size) {
+        if let Some(start_collision) = board_topology.collision_field.get(start_idx) {
             if !start_collision.player_free {
                 warn!("Start position {:?} is not walkable", start_board);
                 return Vec::new();
             }
-            if !is_visible(&start_board, board_data, visibility_data) {
+            if !is_visible(&start_board, board_topology, visibility_data) {
                 warn!("Start position {:?} is not visible", start_board);
                 return Vec::new();
             }
@@ -260,11 +260,11 @@ pub(crate) fn find_path_to_interactive(
     }
 
     // Check if goal position is within bounds and visible (but don't check walkability - treat as walkable)
-    if goal_board.ndidx_checked(board_data.map_size).is_none() {
+    if goal_board.ndidx_checked(board_topology.map_size).is_none() {
         warn!("Goal position {:?} is out of bounds", goal_board);
         return Vec::new();
     }
-    if !is_visible(&goal_board, board_data, visibility_data) {
+    if !is_visible(&goal_board, board_topology, visibility_data) {
         warn!("Goal position {:?} is not visible", goal_board);
         return Vec::new();
     }
@@ -286,7 +286,7 @@ pub(crate) fn find_path_to_interactive(
         // Check if we reached the goal
         if current_pos == goal_board {
             let raw_path = reconstruct_path(&came_from, start_board, goal_board);
-            return smooth_path(raw_path, board_data, visibility_data);
+            return smooth_path(raw_path, board_topology, visibility_data);
         }
 
         // Move current to closed set
@@ -294,7 +294,7 @@ pub(crate) fn find_path_to_interactive(
 
         // Check all neighbors - use special function that treats goal as walkable
         for neighbor in
-            get_neighbors_to_interactive(&current_pos, board_data, visibility_data, &goal_board)
+            get_neighbors_to_interactive(&current_pos, board_topology, visibility_data, &goal_board)
         {
             if closed_set.contains(&neighbor) {
                 continue;
@@ -324,7 +324,7 @@ pub(crate) fn find_path_to_interactive(
 /// Treats the goal position as walkable even if it has collision.
 fn get_neighbors_to_interactive(
     pos: &BoardPosition,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
     goal: &BoardPosition,
 ) -> Vec<BoardPosition> {
@@ -346,15 +346,16 @@ fn get_neighbors_to_interactive(
         };
 
         // Check if the neighbor is within bounds
-        if let Some(idx) = neighbor.ndidx_checked(board_data.map_size) {
+        if let Some(idx) = neighbor.ndidx_checked(board_topology.map_size) {
             // If this is the goal position, always treat it as walkable (but still check visibility)
             if neighbor == *goal {
-                if is_visible(&neighbor, board_data, visibility_data) {
+                if is_visible(&neighbor, board_topology, visibility_data) {
                     neighbors.push(neighbor);
                 }
-            } else if let Some(collision_data) = board_data.collision_field.get(idx) {
+            } else if let Some(collision_data) = board_topology.collision_field.get(idx) {
                 // For non-goal positions, check walkability and visibility normally
-                if collision_data.player_free && is_visible(&neighbor, board_data, visibility_data)
+                if collision_data.player_free
+                    && is_visible(&neighbor, board_topology, visibility_data)
                 {
                     neighbors.push(neighbor);
                 }
@@ -370,7 +371,7 @@ fn get_neighbors_to_interactive(
 /// while still avoiding collisions and invisible areas.
 pub(crate) fn smooth_path(
     path: Vec<BoardPosition>,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> Vec<BoardPosition> {
     if path.len() <= 2 {
@@ -385,7 +386,12 @@ pub(crate) fn smooth_path(
         let mut furthest_visible = current_index + 1;
 
         for i in (current_index + 2)..path.len() {
-            if has_line_of_sight(&path[current_index], &path[i], board_data, visibility_data) {
+            if has_line_of_sight(
+                &path[current_index],
+                &path[i],
+                board_topology,
+                visibility_data,
+            ) {
                 furthest_visible = i;
             } else {
                 break; // Can't see further, stop here
@@ -405,7 +411,7 @@ pub(crate) fn smooth_path(
 fn has_line_of_sight(
     from: &BoardPosition,
     to: &BoardPosition,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> bool {
     // If positions are the same, there's always line of sight
@@ -418,7 +424,7 @@ fn has_line_of_sight(
     let dy = (to.y - from.y).abs();
     if dx <= 1 && dy <= 1 && dx + dy <= 2 {
         // Adjacent or diagonal neighbors - check if destination is walkable and visible
-        return is_walkable_and_visible(to, board_data, visibility_data);
+        return is_walkable_and_visible(to, board_topology, visibility_data);
     }
 
     // For longer distances, sample points along the line
@@ -439,19 +445,19 @@ fn has_line_of_sight(
             z: from.z, // Stay on same Z level
         };
 
-        if !is_walkable_and_visible(&sample_pos, board_data, visibility_data) {
+        if !is_walkable_and_visible(&sample_pos, board_topology, visibility_data) {
             return false;
         }
     }
 
     // Also check the final destination
-    is_walkable_and_visible(to, board_data, visibility_data)
+    is_walkable_and_visible(to, board_topology, visibility_data)
 }
 
 /// Helper function to check if a board position is walkable
-fn is_walkable(pos: &BoardPosition, board_data: &BoardData) -> bool {
-    if let Some(idx) = pos.ndidx_checked(board_data.map_size)
-        && let Some(collision_data) = board_data.collision_field.get(idx)
+fn is_walkable(pos: &BoardPosition, board_topology: &BoardTopology) -> bool {
+    if let Some(idx) = pos.ndidx_checked(board_topology.map_size)
+        && let Some(collision_data) = board_topology.collision_field.get(idx)
     {
         return collision_data.player_free;
     }
@@ -461,10 +467,10 @@ fn is_walkable(pos: &BoardPosition, board_data: &BoardData) -> bool {
 /// Helper function to check if a board position is both walkable and visible
 fn is_walkable_and_visible(
     pos: &BoardPosition,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) -> bool {
-    is_walkable(pos, board_data) && is_visible(pos, board_data, visibility_data)
+    is_walkable(pos, board_topology) && is_visible(pos, board_topology, visibility_data)
 }
 
 /// Detects if a position is within a stairs area and returns stair information

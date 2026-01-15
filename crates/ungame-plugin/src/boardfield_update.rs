@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
-use unboard_core::resources::board_data::BoardData;
-use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unboard_core::resources::board_topology::BoardTopology;
+use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::position::Position;
 
@@ -9,19 +9,19 @@ use unspatial_core::position::Position;
 ///
 /// # Arguments
 ///
-/// * `bf` - A mutable reference to the `BoardData` resource.
-/// * `ev_bdr` - An event reader for `BoardDataToRebuild` events.
+/// * `bf` - A mutable reference to the `BoardTopology` resource.
+/// * `ev_bdr` - An event reader for `BoardTopologyToRebuild` events.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
 fn boardfield_update(
-    mut bf: ResMut<BoardData>,
-    mut ev_bdr: MessageReader<BoardDataToRebuild>,
+    mut bf: ResMut<BoardTopology>,
+    mut ev_bdr: MessageReader<BoardTopologyToRebuild>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
     if ev_bdr.is_empty() {
         return;
     }
 
-    let mut bdr = BoardDataToRebuild::default();
+    let mut bdr = BoardTopologyToRebuild::default();
 
     // Merge all the incoming events into a single one.
     for b in ev_bdr.read() {
@@ -40,5 +40,5 @@ fn boardfield_update(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(PostUpdate, boardfield_update)
-        .add_message::<BoardDataToRebuild>();
+        .add_message::<BoardTopologyToRebuild>();
 }

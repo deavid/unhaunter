@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use unboard_core::behavior::Behavior;
 use unboard_core::behavior::component::FloorItemCollidable;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
@@ -126,7 +126,7 @@ fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
     mut commands: Commands,
-    board_data: Res<BoardData>,
+    board_topology: Res<BoardTopology>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     asset_server: Res<AssetServer>,
 ) {
@@ -134,7 +134,7 @@ fn drop_object(
         if keyboard_input.just_pressed(player_sprite.controls.drop) {
             // Check if the tile is free
             let bpos = player_pos.to_board_position();
-            let is_free = board_data
+            let is_free = board_topology
                 .collision_field
                 .get(bpos.ndidx())
                 .map(|c| c.player_free)

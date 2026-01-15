@@ -3,7 +3,7 @@ use crate::metrics;
 use bevy::prelude::*;
 use rand::Rng;
 use unboard_core::behavior::Behavior;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
@@ -160,7 +160,7 @@ pub(crate) fn update_thermometer(
 }
 
 fn temperature_update(
-    mut bf: ResMut<BoardData>,
+    mut bf: ResMut<BoardTopology>,
     haunt_state: Res<HauntState>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,

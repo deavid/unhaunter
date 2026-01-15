@@ -8,7 +8,7 @@ use crate::metrics;
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
@@ -214,7 +214,7 @@ pub(crate) fn update_recorder(
 }
 
 fn sound_update(
-    mut bf: ResMut<BoardData>,
+    mut bf: ResMut<BoardTopology>,
     roomdb: Res<RoomDB>,
     qg: Query<(&GhostSprite, &Position)>,
 ) {

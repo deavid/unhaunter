@@ -22,6 +22,7 @@ unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unghost-core = { path = "../unghost-core" }
+unfog-core = { path = "../unfog-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

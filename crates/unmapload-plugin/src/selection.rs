@@ -4,7 +4,7 @@ use bevy_platform::collections::HashSet;
 use bevy_platform::time::Instant;
 use rand::Rng;
 use rand::seq::SliceRandom;
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unfoundation_core::random_seed;
 use unghost_core::components::InfluenceType;
 use unspatial_core::position::Position;
@@ -45,14 +45,14 @@ pub(crate) fn select_ghost_spawn_point(
 ///
 /// # Arguments
 /// * `objects_by_floor` - Map of movable objects grouped by floor Z-coordinate
-/// * `board_data` - Board data resource containing floor requirements
+/// * `board_topology` - Board data resource containing floor requirements
 /// * `rng` - Random number generator
 ///
 /// # Returns
 /// * `Vec<(Entity, InfluenceType)>` - List of selected entities and their assigned influence types
 pub(crate) fn select_influence_objects(
     objects_by_floor: &HashMap<i64, Vec<Entity>>,
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     rng: &mut impl Rng,
 ) -> Vec<(Entity, InfluenceType)> {
     // Track selected objects and influence types to be assigned
@@ -78,7 +78,7 @@ pub(crate) fn select_influence_objects(
     // First, handle floors with specific requirements
     for (&floor_z, floor_objects) in &mut objects_by_floor_copy {
         // Convert from i64 to usize for z_floor_map lookup
-        if floor_z < 0 || floor_z >= board_data.map_size.2 as i64 {
+        if floor_z < 0 || floor_z >= board_topology.map_size.2 as i64 {
             // Skip floors outside the valid range
             continue;
         }
@@ -86,9 +86,9 @@ pub(crate) fn select_influence_objects(
         let z_index = floor_z as usize;
 
         // Look up the original floor number (from the TMX file)
-        if let Some(&tiled_floor_num) = board_data.z_floor_map.get(&z_index) {
+        if let Some(&tiled_floor_num) = board_topology.z_floor_map.get(&z_index) {
             // Check if this floor has specific requirements for ghost attracting objects
-            if let Some(&attract_count) = board_data
+            if let Some(&attract_count) = board_topology
                 .floor_mapping
                 .ghost_attracting_objects
                 .get(&tiled_floor_num)
@@ -132,7 +132,7 @@ pub(crate) fn select_influence_objects(
             }
 
             // Check if this floor has specific requirements for ghost repelling objects
-            if let Some(&repel_count) = board_data
+            if let Some(&repel_count) = board_topology
                 .floor_mapping
                 .ghost_repelling_objects
                 .get(&tiled_floor_num)
@@ -333,7 +333,7 @@ fn score_ghost_setup(
 /// * `ghost_spawn_points` - List of potential ghost spawn positions
 /// * `objects_by_floor_with_positions` - Map of movable objects with their positions
 /// * `player_spawn_points` - List of player spawn positions
-/// * `board_data` - Board data resource containing floor requirements
+/// * `board_topology` - Board data resource containing floor requirements
 /// * `rng` - Random number generator
 /// * `simulation_count` - Number of simulations to run
 ///
@@ -343,7 +343,7 @@ pub(crate) fn generate_scored_ghost_setup(
     ghost_spawn_points: &[Position],
     objects_by_floor_with_positions: &HashMap<i64, Vec<(Entity, Position)>>,
     player_spawn_points: &[Position],
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
     simulation_count: usize,
 ) -> (Position, Vec<(Entity, InfluenceType)>) {
     // Start timing the simulation
@@ -378,7 +378,7 @@ pub(crate) fn generate_scored_ghost_setup(
 
         // Select influence objects
         let influence_assignments =
-            select_influence_objects(&objects_by_floor, board_data, &mut rng);
+            select_influence_objects(&objects_by_floor, board_topology, &mut rng);
 
         // Prepare data for scoring
         let mut influence_with_pos = Vec::new();
@@ -459,7 +459,7 @@ pub(crate) fn generate_scored_ghost_setup(
 /// * `objects_by_floor_with_positions` - Map of movable objects with their positions
 /// * `ghost_spawn_points` - List of potential ghost spawn positions
 /// * `player_spawn_points` - List of player spawn positions
-/// * `board_data` - Board data resource containing floor requirements
+/// * `board_topology` - Board data resource containing floor requirements
 /// * `rng` - Random number generator
 ///
 /// # Returns
@@ -468,14 +468,14 @@ pub(crate) fn select_influence_objects_with_simulation(
     objects_by_floor_with_positions: &HashMap<i64, Vec<(Entity, Position)>>,
     ghost_spawn_points: &[Position],
     player_spawn_points: &[Position],
-    board_data: &BoardData,
+    board_topology: &BoardTopology,
 ) -> (Position, Vec<(Entity, InfluenceType)>) {
     // Run the simulation with 64 candidates
     generate_scored_ghost_setup(
         ghost_spawn_points,
         objects_by_floor_with_positions,
         player_spawn_points,
-        board_data,
+        board_topology,
         64, // Number of simulations
     )
 }

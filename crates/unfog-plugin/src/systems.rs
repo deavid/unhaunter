@@ -6,7 +6,7 @@ use rand::Rng;
 use unassets_core::types::root::game_assets::GameAssets;
 use unboard_core::behavior::Behavior;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unfog_core::components::MiasmaSprite;
@@ -26,9 +26,11 @@ use unspatial_core::position::Position;
 use untypes_core::states::AppState;
 
 use crate::metrics;
+use unfog_core::miasma::MiasmaGrid;
 
 fn initialize_miasma(
-    mut board_data: ResMut<BoardData>,
+    mut board_data: ResMut<BoardTopology>,
+    mut miasma: ResMut<MiasmaGrid>,
     roomdb: Res<RoomDB>,
     config: Res<MiasmaConfig>,
     mut level_ready: MessageReader<LevelReadyEvent>,
@@ -41,7 +43,7 @@ fn initialize_miasma(
     warn!("Miasma Init");
     rebuild_collision_data(&mut board_data, &qt);
 
-    board_data.miasma.room_modifiers.clear();
+    miasma.room_modifiers.clear();
 
     let mut rng = random_seed::rng();
     let collision_field = board_data.collision_field.clone();
@@ -52,8 +54,7 @@ fn initialize_miasma(
 
         // 1. Get or Insert Room Modifier:
         let mut modifier = if let Some(room_id) = opt_room_id {
-            *board_data
-                .miasma
+            *miasma
                 .room_modifiers
                 .entry(room_id.clone()) // Try to get the modifier for this room_id.
                 .or_insert_with(|| rng.random_range(0.4..=2.9)) // If not found, create one.
@@ -65,7 +66,7 @@ fn initialize_miasma(
         }
 
         // 2. Set Initial Pressure:
-        board_data.miasma.pressure_field[board_position.ndidx()] =
+        miasma.pressure_field[board_position.ndidx()] =
             config.initial_room_pressure * modifier * rng.random_range(0.9..=1.1);
     }
     warn!("Done: Miasma Init");
@@ -73,12 +74,13 @@ fn initialize_miasma(
 
 fn spawn_miasma(
     time: Res<Time>,
+    miasma: Res<MiasmaGrid>,
     vf: Res<VisibilityData>,
     mut q_miasma: Query<(Entity, &mut MiasmaSprite)>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
     handles: Res<GameAssets>,
-    board_data: Res<BoardData>,
+    board_data: Res<BoardTopology>,
     mut commands: Commands,
 ) {
     let measure = metrics::SPAWN_MIASMA.time_measure();
@@ -122,7 +124,7 @@ fn spawn_miasma(
             continue;
         }
         let bpos = miasma_sprite.base_position.to_board_position();
-        let Some(pressure) = board_data.miasma.pressure_field.get(bpos.ndidx()) else {
+        let Some(pressure) = miasma.pressure_field.get(bpos.ndidx()) else {
             miasma_sprite.despawn = true;
             continue;
         };
@@ -134,8 +136,8 @@ fn spawn_miasma(
         let player_dst2 = player_pos.distance2(&miasma_sprite.base_position);
 
         let vis = vf.visibility_field[bpos.ndidx()] + DIST_FACTOR / player_dst2;
-        let target_count =
-            ((pressure.cbrt() / 3.1 + 0.1).min(1.0) * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
+        let target_count = ((f32::cbrt(*pressure) / 3.1 + 0.1).min(1.0)
+            * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
         let pos_count = count.entry(bpos).or_default();
 
@@ -169,7 +171,7 @@ fn spawn_miasma(
         if vis < THRESHOLD * 2.0 {
             continue;
         }
-        let target_count = ((board_data.miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
+        let target_count = ((miasma.pressure_field[bpos.ndidx()] / 1.1 + 0.1).min(1.0)
             * MIASMA_TARGET_SPRITE_COUNT as f32) as usize;
 
         let pos9_count = bpos
@@ -209,7 +211,7 @@ fn spawn_miasma(
                     despawn: false,
                     life: 1.0 + rng.random_range(0.0..0.5),
                     vel_speed: rng.random_range(0.2..1.0_f32).powi(2),
-                    direction: board_data.miasma.velocity_field[bpos.ndidx()],
+                    direction: miasma.velocity_field[bpos.ndidx()],
                 })
                 .insert(Transform::from_scale(Vec3::new(scale, scale, 1.0)))
                 .insert(SpriteType::Miasma)
@@ -223,7 +225,8 @@ fn spawn_miasma(
 
 fn animate_miasma_sprites(
     time: Res<Time>,
-    board_data: Res<BoardData>,
+    board_data: Res<BoardTopology>,
+    miasma: Res<MiasmaGrid>,
     noise_table: Res<PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
 ) {
@@ -262,7 +265,7 @@ fn animate_miasma_sprites(
                 continue;
             }
             let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
-            let vel = board_data.miasma.velocity_field[bpos.ndidx()];
+            let vel = miasma.velocity_field[bpos.ndidx()];
             total_vel += vel * w;
             total_w += w;
         }
@@ -295,7 +298,8 @@ fn animate_miasma_sprites(
 }
 
 fn update_miasma(
-    mut board_data: ResMut<BoardData>,
+    board_data: Res<BoardTopology>,
+    mut miasma: ResMut<MiasmaGrid>,
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
     roomdb: Res<RoomDB>,
@@ -378,7 +382,7 @@ fn update_miasma(
             if !collision.player_free && !collision.see_through {
                 continue; // Skip full walls that block both movement and sight
             }
-            let p1 = board_data.miasma.pressure_field[p];
+            let p1 = miasma.pressure_field[p];
             let bpos = BoardPosition::from_ndidx(p);
             let is_room = room_present[p];
             // let player_presence =
@@ -433,18 +437,8 @@ fn update_miasma(
                 }
                 let np = neighbor_pos.ndidx();
                 // Get the neighbor's pressure (treat out-of-bounds as 0.0)
-                let mut p2 = board_data
-                    .miasma
-                    .pressure_field
-                    .get(np)
-                    .copied()
-                    .unwrap_or(0.0);
-                let mut v2 = board_data
-                    .miasma
-                    .velocity_field
-                    .get(np)
-                    .copied()
-                    .unwrap_or(Vec2::ZERO);
+                let mut p2 = miasma.pressure_field.get(np).copied().unwrap_or(0.0);
+                let mut v2 = miasma.velocity_field.get(np).copied().unwrap_or(Vec2::ZERO);
                 let is_room_nb = room_present[np];
                 if !is_room_nb {
                     // Consider outside to be zero pressure and velocity.
@@ -472,11 +466,7 @@ fn update_miasma(
                 }
 
                 // --- Biased Diffusion ---
-                let velocity = *board_data
-                    .miasma
-                    .velocity_field
-                    .get(p)
-                    .unwrap_or(&Vec2::ZERO);
+                let velocity = *miasma.velocity_field.get(p).unwrap_or(&Vec2::ZERO);
                 // Skip velocity adjustments for stair connections since they're vertical
                 if !is_stair_connection {
                     // Adjust exchange based on velocity components
@@ -505,7 +495,7 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             let vel = velocity_changes[p];
-            let Some(entry) = board_data.miasma.velocity_field.get_mut(p) else {
+            let Some(entry) = miasma.velocity_field.get_mut(p) else {
                 continue;
             };
             let f = 0.0001;
@@ -525,7 +515,7 @@ fn update_miasma(
             let collision = &board_data.collision_field[p];
             let is_room = room_present[p] && (collision.player_free || collision.see_through);
 
-            let Some(entry) = board_data.miasma.pressure_field.get_mut(p) else {
+            let Some(entry) = miasma.pressure_field.get_mut(p) else {
                 continue;
             };
             *entry += delta;
@@ -541,10 +531,10 @@ fn update_miasma(
     }
 
     // --- 2. Velocity Calculation and Inertia ---
-    let mut new_velocities = board_data.miasma.velocity_field.clone();
+    let mut new_velocities = miasma.velocity_field.clone();
     for chunk in &chunks {
         for p in CellIterator::new(chunk) {
-            let p_center = board_data.miasma.pressure_field[p];
+            let p_center = miasma.pressure_field[p];
             let bpos = BoardPosition::from_ndidx(p);
             let is_room = room_present[p];
             if !is_room {
@@ -572,7 +562,7 @@ fn update_miasma(
                 let collision = &board_data.collision_field[gp];
                 if collision.player_free || collision.see_through {
                     // Allow pressure reading from half-walls (like repellent particles)
-                    board_data.miasma.pressure_field[gp]
+                    miasma.pressure_field[gp]
                 } else {
                     p_center
                 }
@@ -588,9 +578,9 @@ fn update_miasma(
                 (p_top - p_bottom) * miasma_config.velocity_scale,
             );
             let calc_vel_len = calculated_velocity.length() + 0.000001;
-            let adjusted_vel = calc_vel_len.cbrt().min(1.0);
+            let adjusted_vel = f32::cbrt(calc_vel_len).min(1.0);
             let calculated_velocity = calculated_velocity * (adjusted_vel / calc_vel_len); // .min(calculated_velocity);
-            let previous_velocity = board_data.miasma.velocity_field[p];
+            let previous_velocity = miasma.velocity_field[p];
 
             // FIXME: This should be proportional change of `dt`
             let mut new_velocity = (previous_velocity * miasma_config.inertia_factor
@@ -642,7 +632,7 @@ fn update_miasma(
     }
 
     // --- 3. Apply New Velocities ---
-    board_data.miasma.velocity_field = new_velocities;
+    miasma.velocity_field = new_velocities;
 
     measure.end_ms();
 }

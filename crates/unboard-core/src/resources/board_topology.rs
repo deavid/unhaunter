@@ -1,12 +1,8 @@
+use crate::types::fielddata::CollisionFieldData;
 use crate::types::floor::FloorLevelMapping;
-use crate::types::miasma::MiasmaGrid;
-use crate::types::{
-    fielddata::CollisionFieldData,
-    prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData},
-};
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use ndarray::{Array2, Array3};
+use ndarray::Array3;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
 use unspatial_core::boardposition::BoardPosition;
 
@@ -38,7 +34,7 @@ impl Default for TemperatureDiffusionConfig {
 }
 
 #[derive(Clone, Debug, Resource)]
-pub struct BoardData {
+pub struct BoardTopology {
     pub map_size: (usize, usize, usize),
     pub origin: (i32, i32, i32),
 
@@ -55,14 +51,7 @@ pub struct BoardData {
 
     pub sound_field: HashMap<BoardPosition, Vec<Vec2>>,
     pub map_entity_field: Array3<Vec<Entity>>,
-    pub miasma: MiasmaGrid,
     pub ambient_temp: f32,
-
-    // New prebaked lighting field.
-    pub prebaked_lighting: Array3<PrebakedLightingData>,
-    pub prebaked_metadata: PrebakedMetadata,
-    pub prebaked_wave_edges: Vec<WaveEdgeData>,
-    pub prebaked_propagation: Vec<Array2<[bool; 4]>>,
 
     // Floor mapping (Tiled floor number to z-index)
     pub floor_z_map: HashMap<i32, usize>, // Maps Tiled floor numbers to contiguous z indices
@@ -75,7 +64,7 @@ pub struct BoardData {
     pub level_ready_time: f32, // Time when the level became ready
 }
 
-impl BoardData {
+impl BoardTopology {
     /// Calculate connectivity score for a tile at the given position
     /// Lower scores = higher processing frequency for temperature diffusion
     pub fn calculate_connectivity_score(
@@ -198,7 +187,7 @@ impl BoardData {
     }
 }
 
-impl FromWorld for BoardData {
+impl FromWorld for BoardTopology {
     fn from_world(_world: &mut World) -> Self {
         // Using from_world to initialize is not needed but just in case we need it later.
         let map_size = (0, 0, 0);
@@ -213,12 +202,7 @@ impl FromWorld for BoardData {
             temp_diffusion_config: TemperatureDiffusionConfig::default(),
             sound_field: HashMap::new(),
             ambient_temp: celsius_to_kelvin(15.0),
-            miasma: MiasmaGrid::default(),
             map_entity_field: Array3::default(map_size),
-            prebaked_lighting: Array3::from_elem(map_size, PrebakedLightingData::default()),
-            prebaked_metadata: PrebakedMetadata::default(),
-            prebaked_wave_edges: Vec::new(),
-            prebaked_propagation: Vec::new(),
             floor_z_map: HashMap::new(),
             z_floor_map: HashMap::new(),
             floor_mapping: FloorLevelMapping {

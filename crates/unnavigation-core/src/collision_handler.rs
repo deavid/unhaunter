@@ -1,7 +1,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use unboard_core::resources::board_data::BoardData;
+use unboard_core::resources::board_topology::BoardTopology;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -9,7 +9,7 @@ use unspatial_core::position::Position;
 #[derive(SystemParam)]
 pub struct CollisionHandler<'w> {
     /// Access to the game's board data, including collision information.
-    bf: Res<'w, BoardData>,
+    bf: Res<'w, BoardTopology>,
 }
 
 impl CollisionHandler<'_> {

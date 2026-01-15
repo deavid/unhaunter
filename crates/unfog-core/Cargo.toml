@@ -16,3 +16,5 @@ workspace = true
 unspatial-core = { path = "../unspatial-core" }
 
 bevy = { workspace = true }
+bevy_platform = { workspace = true }
+ndarray = { workspace = true }

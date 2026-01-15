@@ -24,6 +24,7 @@ unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
+unfog-core = { path = "../unfog-core" }
 unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
 ungear-core = { path = "../ungear-core" }

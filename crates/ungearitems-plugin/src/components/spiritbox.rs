@@ -13,13 +13,13 @@ pub(crate) struct SpiritBoxInternal {
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
-use unlight_plugin::resources::light_grid::LightGrid;
 use rand::Rng;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
+use unlight_plugin::resources::light_grid::LightGrid;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_spiritbox(

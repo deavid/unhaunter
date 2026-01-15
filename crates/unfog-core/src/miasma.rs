@@ -1,8 +1,8 @@
-use bevy::math::Vec2;
+use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Resource)]
 pub struct MiasmaGrid {
     pub pressure_field: Array3<f32>,
     pub velocity_field: Array3<Vec2>,

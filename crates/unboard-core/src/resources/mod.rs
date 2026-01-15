@@ -1,2 +1,2 @@
-pub mod board_data;
+pub mod board_topology;
 pub mod roomdb;

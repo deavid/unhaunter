@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::behavior;
-use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
+use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::GhostInteractionEvent;
 
 // NOTE: Old GhostEvent enum removed - replaced by GhostInteractionEvent system
@@ -25,7 +25,7 @@ fn update_flicker_timers(
     mut commands: Commands,
     time: Res<Time>,
     mut q_lights: Query<(Entity, &mut FlickerTimer, &mut behavior::Behavior)>,
-    mut ev_bdr: MessageWriter<BoardDataToRebuild>,
+    mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
     for (entity, mut flicker_timer, mut behavior) in q_lights.iter_mut() {
         flicker_timer.timer.tick(time.delta());
@@ -33,7 +33,7 @@ fn update_flicker_timers(
             // Reset the light to its original state using the public method
             behavior.p.light.flickering = false;
             commands.entity(entity).remove::<FlickerTimer>();
-            ev_bdr.write(BoardDataToRebuild {
+            ev_bdr.write(BoardTopologyToRebuild {
                 lighting: true,
                 collision: true,
             });
