@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::{InteractableByGhost, Interactive, RoomState};
+use unboard_core::behavior::Interactive;
+use unboard_core::behavior::component::{InteractableByGhost, RoomState};
 use unboard_core::resources::board_data::BoardData;
 use unevents_core::events::board_data_rebuild::BoardDataToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};

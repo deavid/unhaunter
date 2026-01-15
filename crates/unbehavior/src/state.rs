@@ -1,3 +1,4 @@
+use crate::traits::AutoSerialize;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -16,3 +17,5 @@ pub enum TileState {
     #[default]
     None,
 }
+
+impl AutoSerialize for TileState {}

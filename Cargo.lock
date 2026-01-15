@@ -5590,6 +5590,7 @@ version = "0.3.2-dev"
 dependencies = [
  "anyhow",
  "bevy",
+ "bevy_platform",
  "fastapprox",
  "ordered-float 5.1.0",
  "serde",
