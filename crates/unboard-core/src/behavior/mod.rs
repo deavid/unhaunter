@@ -32,6 +32,9 @@ use bevy_platform::collections::HashMap;
 use fastapprox::faster;
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
+pub use unbehavior::class::Class;
+pub use unbehavior::state::TileState;
+pub use unspatial_core::orientation::Orientation;
 
 /// The `Behavior` component defines the behavior of an object in the game world.
 ///
@@ -250,65 +253,7 @@ pub struct Movement {
     pub stair_offset: i32,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub enum Class {
-    Floor,
-    Wall,
-    LowWall,
-    Door,
-    Switch,
-    RoomSwitch,
-    Breaker,
-    Doorway,
-    Decor,
-    Item,
-    Furniture,
-    PlayerSpawn,
-    GhostSpawn,
-    VanEntry,
-    RoomDef,
-    WallLamp,
-    FloorLamp,
-    TableLamp,
-    WallDecor,
-    CeilingLight,
-    StreetLight,
-    CandleLight,
-    Appliance,
-    Van,
-    Window,
-    InvisibleWall,
-    CornerWall,
-    StairsUp,
-    StairsDown,
-    NPC,
-    FakeGhost,
-    FakeBreach,
-    #[default]
-    None,
-}
-
 impl AutoSerialize for Class {}
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub enum Orientation {
-    XAxis,
-    YAxis,
-    Both,
-    #[default]
-    None,
-}
-
-impl Orientation {
-    fn flip(&mut self) {
-        match self {
-            Orientation::XAxis => *self = Orientation::YAxis,
-            Orientation::YAxis => *self = Orientation::XAxis,
-            Orientation::Both => {}
-            Orientation::None => {}
-        }
-    }
-}
 
 impl AutoSerialize for Orientation {}
 
@@ -328,23 +273,6 @@ trait AutoSerialize: Serialize + for<'a> Deserialize<'a> + Default {
             .map(|x| x.replace('"', ""))
             .context("Auto serialize error")
     }
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub enum TileState {
-    // Switch states
-    On,
-    Off,
-    // Door states
-    Open,
-    Closed,
-    // Wall states
-    Full,
-    Partial,
-    Minimum,
-    // Default state
-    #[default]
-    None,
 }
 
 impl AutoSerialize for TileState {}

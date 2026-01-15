@@ -5585,6 +5585,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "unbehavior"
+version = "0.3.2-dev"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "fastapprox",
+ "ordered-float 5.1.0",
+ "serde",
+ "serde_json",
+ "tiled",
+ "unfoundation-core",
+ "unspatial-core",
+]
+
+[[package]]
 name = "unboard-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -5597,6 +5612,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiled",
+ "unbehavior",
  "unfoundation-core",
  "unspatial-core",
 ]
