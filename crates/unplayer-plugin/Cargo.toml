@@ -31,6 +31,8 @@ ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unspatial-core = { path = "../unspatial-core" }
+unthermal-core = { path = "../unthermal-core" }
+unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

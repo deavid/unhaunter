@@ -11,8 +11,10 @@ use unlight_plugin::resources::light_grid::LightGrid;
 use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
+use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
+use unthermal_core::resources::ThermalGrid;
 use untypes_core::states::AppState;
 use unui_core::components::game_ui::DamageBackground;
 
@@ -26,7 +28,9 @@ fn lose_sanity(
     mut timer: Local<PrintingTimer>,
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
-    bf: Res<BoardTopology>,
+    _bf: Res<BoardTopology>,
+    thermal_grid: Res<ThermalGrid>,
+    sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
     roomdb: Res<RoomDB>,
     // Access the difficulty settings
@@ -38,15 +42,15 @@ fn lose_sanity(
         let bpos = pos.to_board_position();
         let p = bpos.ndidx();
         let lux = lg.light_field[p].lux.sqrt() + 0.001;
-        let temp = bf.temperature_field[p];
-        let f_temp = (temp - bf.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
-        let f_temp2 = (bf.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
+        let temp = thermal_grid.temperature_field[p];
+        let f_temp = (temp - thermal_grid.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;
+        let f_temp2 = (thermal_grid.ambient_temp / 2.0 - temp).clamp(0.0, 10.0) + 1.0;
         let mut sound = 0.0;
         for bpos in bpos.iter_xy_neighbors_nosize(3) {
-            sound += bf
+            sound += sound_grid
                 .sound_field
                 .get(&bpos)
-                .map(|x| x.iter().map(|y| y.length()).sum::<f32>())
+                .map(|x: &Vec<Vec2>| x.iter().map(|y: &Vec2| y.length()).sum::<f32>())
                 .unwrap_or_default()
                 * 10.0;
         }

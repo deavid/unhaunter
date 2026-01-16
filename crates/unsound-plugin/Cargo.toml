@@ -1,0 +1,23 @@
+[package]
+name = "unsound-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unsound-core = { path = "../unsound-core" }
+unboard-core = { path = "../unboard-core" }
+unspatial-core = { path = "../unspatial-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unevents-core = { path = "../unevents-core" }
+unghost-core = { path = "../unghost-core" }
+unmetrics-core = { path = "../unmetrics-core" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+rand = { workspace = true }

@@ -97,7 +97,7 @@ pub(crate) fn update_spiritbox(
         // Update Logic
         if toggle.is_on {
             let bpos = pos.to_board_position();
-            let temperature = gs.bf.temperature_field[bpos.ndidx()];
+            let temperature = gs.tg.temperature_field[bpos.ndidx()];
             let temp_c = kelvin_to_celsius(temperature);
             let light_lux = lg
                 .light_field
@@ -118,7 +118,7 @@ pub(crate) fn update_spiritbox(
 
             // Only charge up for a response if the ghost has the Spirit Box evidence.
             if gs.haunt_state.evidences.contains(&Evidence::SpiritBox) && ghost_near {
-                let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
+                let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
                 let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
                 let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
                 let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);

@@ -23,6 +23,8 @@ unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unghost-core = { path = "../unghost-core" }
 unfog-core = { path = "../unfog-core" }
+unthermal-core = { path = "../unthermal-core" }
+unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

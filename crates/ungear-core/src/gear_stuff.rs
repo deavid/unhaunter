@@ -8,8 +8,10 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::sound::SoundEvent;
 use unfog_core::miasma::MiasmaGrid;
 use unghost_core::resources::haunt_state::HauntState;
+use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
+use unthermal_core::resources::ThermalGrid;
 
 /// A collection of resources and commands frequently used by gear-related systems.
 #[derive(SystemParam)]
@@ -17,6 +19,10 @@ pub struct GearStuff<'w, 's> {
     /// Access to the game's board data, including collision, lighting, and temperature
     /// fields.
     pub bf: ResMut<'w, BoardTopology>,
+    /// Access to the thermal grid, for temperature readings.
+    pub tg: ResMut<'w, ThermalGrid>,
+    /// Access to the sound grid, for audio readings.
+    pub sg: ResMut<'w, SoundGrid>,
     /// Access to the miasma grid, used for EMF readings.
     pub miasma: ResMut<'w, MiasmaGrid>,
     /// Access to the ghost's haunt state, including evidences and dynamics.

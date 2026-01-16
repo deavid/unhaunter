@@ -14,6 +14,7 @@
 //!   interacts with the environment.
 use crate::resources::light_grid::LightGrid;
 pub(crate) use crate::types::light::LightData;
+use bevy::ecs::system::SystemParam;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_platform::collections::HashMap;
 use bevy_platform::collections::HashSet;
@@ -28,6 +29,17 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unsound_core::resources::SoundGrid;
+use unthermal_core::resources::ThermalGrid;
+
+#[derive(SystemParam)]
+struct GridResources<'w> {
+    bf: Res<'w, BoardTopology>,
+    tg: Res<'w, ThermalGrid>,
+    sg: Res<'w, SoundGrid>,
+    miasma: Res<'w, MiasmaGrid>,
+    miasma_config: Res<'w, MiasmaConfig>,
+}
 use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
@@ -237,9 +249,8 @@ fn apply_lighting(
     qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
-    bf: Res<BoardTopology>,
-    miasma: Res<MiasmaGrid>,
     mut lg: ResMut<LightGrid>,
+    grids: GridResources,
     haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
     gc: Res<GameConfig>,
@@ -265,9 +276,14 @@ fn apply_lighting(
         >,
     )>,
     difficulty: Res<CurrentDifficulty>,
-    miasma_config: Res<MiasmaConfig>,
     mut visible: Local<HashSet<Entity>>,
 ) {
+    let bf = &grids.bf;
+    let tg = &grids.tg;
+    let sg = &grids.sg;
+    let miasma = &grids.miasma;
+    let miasma_config = &grids.miasma_config;
+
     let measure = APPLY_LIGHTING.time_measure();
 
     let mut rng = random_seed::rng();
@@ -740,8 +756,8 @@ fn apply_lighting(
             new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
             new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
             const DEBUG_SOUND: bool = false;
-            if DEBUG_SOUND && let Some(sf) = bf.sound_field.get(&bpos) {
-                let l: f32 = sf.iter().map(|x| x.length() + 0.01).sum();
+            if DEBUG_SOUND && let Some(sf) = sg.sound_field.get(&bpos) {
+                let l: f32 = sf.iter().map(|x: &Vec2| x.length() + 0.01).sum();
                 if l > 0.0001 {
                     new_mat.data.gamma = 2.0;
                     new_mat.data.color = Color::srgb(1.0, l / 4.0, l / 16.0).into();
@@ -749,7 +765,7 @@ fn apply_lighting(
             }
             const DEBUG_TEMPERATURE: bool = false;
             if DEBUG_TEMPERATURE {
-                let temp_celsius = kelvin_to_celsius(bf.temperature_field[bpos.ndidx()]);
+                let temp_celsius = kelvin_to_celsius(tg.temperature_field[bpos.ndidx()]);
                 // Map temperature to continuous color gradient: 0°C to 16°C -> blue-cyan-green-yellow-red
                 let normalized_temp = (temp_celsius / 16.0).clamp(0.0, 1.0);
 

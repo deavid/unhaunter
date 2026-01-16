@@ -8,15 +8,11 @@
 
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use rand::Rng;
 use unboard_core::behavior::Behavior;
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
-use unfoundation_core::random_seed;
-use unfoundation_core::utils::temperature::celsius_to_kelvin;
-use unghost_core::resources::haunt_state::HauntState;
 use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
 use unlight_plugin::resources::light_grid::LightGrid;
 use unrender_std::board::tiledata::PreMesh;
@@ -41,8 +37,7 @@ use untypes_core::states::{AppState, GameState};
 /// * `roomdb` - Room database resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
-    mut bf: ResMut<BoardTopology>,
-    haunt_state: Res<HauntState>,
+    bf: Res<BoardTopology>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
@@ -53,35 +48,12 @@ fn after_level_ready(
         return;
     }
 
-    // Get RNG and level parameters
-    let mut rng = random_seed::rng();
+    // Get level parameters
     let open_van = ev.read().next().unwrap().open_van;
 
     // Switch to in-game state
     next_app_state.set(AppState::InGame);
     next_game_state.set(GameState::None);
-
-    // Store ambient temperature for reference
-    let ambient_temp = bf.ambient_temp;
-
-    // Identify the room containing the ghost breach
-    let breach_room = roomdb
-        .room_tiles
-        .get(&haunt_state.breach_pos.to_board_position());
-
-    // Randomize initial temperatures to create a more realistic distribution
-    for (idxpos, temperature) in bf.temperature_field.indexed_iter_mut() {
-        let room = roomdb.room_tiles.get(&BoardPosition::from_ndidx(idxpos));
-
-        // Make the breach room cold
-        if room == breach_room {
-            *temperature = celsius_to_kelvin(0.5); // Near freezing
-        } else {
-            // Other rooms get ambient temp with slight variance
-            let ambient = ambient_temp + rng.random_range(-3.0..3.0);
-            *temperature = ambient;
-        }
-    }
 
     // Send room changed event with van open state
     ev_room.write(RoomChangedEvent::init(open_van));
@@ -146,52 +118,6 @@ fn after_level_ready(
 
     info!("Grand Total Usable Area: {:.2} m²", total_usable_area_m2);
     info!("--------------------------------------");
-
-    // Smooth temperature field to avoid abrupt changes
-    warn!(
-        "Computing 32x{:?} = {}",
-        bf.map_size,
-        32 * bf.map_size.0 * bf.map_size.1 * bf.map_size.2
-    );
-
-    // Apply temperature smoothing iterations
-    for _ in 0..32 {
-        let temp_snap = bf.temperature_field.clone();
-        for z in 0..bf.map_size.2 {
-            for y in 0..bf.map_size.1 {
-                for x in 0..bf.map_size.0 {
-                    let p = (x, y, z);
-                    let free_tot =
-                        bf.collision_field[p].player_free || bf.collision_field[p].is_dynamic;
-                    if !free_tot {
-                        continue;
-                    }
-                    let bpos = BoardPosition::from_ndidx(p);
-                    let nbors = bpos.iter_xy_neighbors(1, bf.map_size);
-                    let mut t_temp = temp_snap.get(p).copied().unwrap_or(ambient_temp);
-                    let mut count = 1.0;
-                    if t_temp < celsius_to_kelvin(1.0) {
-                        // Don't warm up the cold ghost room during init.
-                        continue;
-                    }
-                    for npos in nbors {
-                        let free = bf
-                            .collision_field
-                            .get(npos.ndidx())
-                            .map(|x| x.player_free || x.is_dynamic)
-                            .unwrap_or(true);
-                        if free {
-                            t_temp += temp_snap.get(npos.ndidx()).copied().unwrap_or(ambient_temp);
-                            count += 1.0;
-                        }
-                    }
-                    t_temp /= count;
-                    bf.temperature_field[p] = t_temp;
-                }
-            }
-        }
-    }
-    warn!("Done: Computing 16x");
 }
 
 /// Processes sprite placeholders (PreMesh) into actual mesh components.
@@ -263,14 +189,10 @@ fn load_map_add_prebaked_lighting(
     mut bf: ResMut<BoardTopology>,
     mut lg: ResMut<LightGrid>,
     qt: Query<(Entity, &Position, &Behavior)>,
-    roomdb: Res<RoomDB>,
+    _roomdb: Res<RoomDB>,
 ) {
     // Ensure the collision field is up to date first
     rebuild_collision_data(&mut bf, &qt);
-
-    // Precompute connectivity scores for temperature diffusion
-    bf.precompute_connectivity_scores(Some(&roomdb));
-    info!("Precomputed connectivity scores for temperature diffusion");
 
     // Call the prebaking function to calculate static lighting
     prebake_lighting_field(&mut bf, &mut lg, &qt);

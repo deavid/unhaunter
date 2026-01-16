@@ -48,7 +48,11 @@ members = [
     "crates/unspatial-core",
     "crates/unsummary-core",
     "crates/unsummary-plugin",
+    "crates/unsound-core",
+    "crates/unsound-plugin",
     "crates/untags-core",
+    "crates/unthermal-core",
+    "crates/unthermal-plugin",
     "crates/untiled-core",
     "crates/untruck-core",
     "crates/untruck-plugin",
@@ -150,6 +154,8 @@ unplayer-plugin = { path = "crates/unplayer-plugin" }
 unprofile-plugin = { path = "crates/unprofile-plugin" }
 unsettings-plugin = { path = "crates/unsettings-plugin" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
+unthermal-plugin = { path = "crates/unthermal-plugin" }
+unsound-plugin = { path = "crates/unsound-plugin" }
 unrender-std = { path = "crates/unrender-std" }
 unrender-plugin = { path = "crates/unrender-plugin" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }

@@ -8,7 +8,7 @@ use unboard_core::behavior::Behavior;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
 use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
-use unevents_core::events::loadlevel::LevelReadyEvent;
+use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::random_seed;
@@ -27,6 +27,16 @@ use untypes_core::states::AppState;
 
 use crate::metrics;
 use unfog_core::miasma::MiasmaGrid;
+
+pub(crate) fn init_miasma_grid(
+    mut miasma: ResMut<MiasmaGrid>,
+    mut ev: MessageReader<MapGeometryInitializedEvent>,
+) {
+    for ev in ev.read() {
+        miasma.pressure_field = Array3::from_elem(ev.map_size, 0.0);
+        miasma.velocity_field = Array3::from_elem(ev.map_size, Vec2::ZERO);
+    }
+}
 
 fn initialize_miasma(
     mut board_data: ResMut<BoardTopology>,
@@ -638,9 +648,12 @@ fn update_miasma(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, init_miasma_grid);
     app.add_systems(
         Update,
-        initialize_miasma.run_if(on_message::<LevelReadyEvent>),
+        initialize_miasma
+            .run_if(on_message::<LevelReadyEvent>)
+            .after(init_miasma_grid),
     );
     app.add_systems(Update, spawn_miasma);
     app.add_systems(

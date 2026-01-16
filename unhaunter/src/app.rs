@@ -31,7 +31,9 @@ use unrender_std::materials::CustomMaterial1;
 use unrender_std::materials::UIPanelMaterial;
 use unroot_plugin::plugin::UnhaunterRootPlugin;
 use unsettings_plugin::plugin::UnhaunterSettingsPlugin;
+use unsound_plugin::plugin::SoundPlugin;
 use unsummary_plugin::plugin::UnhaunterSummaryPlugin;
+use unthermal_plugin::plugin::ThermalPlugin;
 use untmxmap_plugin::plugin::UnhaunterTmxMapPlugin;
 use untruck_plugin::plugin::UnhaunterTruckPlugin;
 use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
@@ -77,10 +79,14 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins((
         UnhaunterRootPlugin,
         UnmetricsPlugin,
+        ThermalPlugin,
+        SoundPlugin,
         UnhaunterBoardPlugin,
         UnhaunterManualPlugin,
         UnhaunterSummaryPlugin,
         UnhaunterGearPlugin,
+    ));
+    app.add_plugins((
         UnhaunterGearItemsPlugin,
         UnhaunterMapHubPlugin,
         UnhaunterTruckPlugin,

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use unevents_core::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent};
+use unevents_core::events::loadlevel::{
+    LevelLoadedEvent, LevelReadyEvent, LoadLevelEvent, MapGeometryInitializedEvent,
+};
 
 /// Plugin for map loading functionality
 ///
@@ -11,7 +13,8 @@ impl Plugin for UnhaunterMapLoadPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<LoadLevelEvent>()
             .add_message::<LevelLoadedEvent>()
-            .add_message::<LevelReadyEvent>();
+            .add_message::<LevelReadyEvent>()
+            .add_message::<MapGeometryInitializedEvent>();
 
         // Call the main app_setup from the module
         crate::module::app_setup(app);

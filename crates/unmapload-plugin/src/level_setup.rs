@@ -13,12 +13,11 @@ use unboard_core::resources::board_topology::BoardTopology;
 use unboard_core::resources::roomdb::RoomDB;
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::loadlevel::{LevelLoadedEvent, LevelReadyEvent};
-use unfog_core::miasma::MiasmaGrid;
+use unevents_core::events::loadlevel::{
+    LevelLoadedEvent, LevelReadyEvent, MapGeometryInitializedEvent,
+};
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unghost_core::resources::haunt_state::HauntState;
-use unlight_plugin::resources::light_grid::LightGrid;
-use unlight_plugin::types::light::LightFieldData;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
@@ -42,8 +41,6 @@ use crate::tile_spawning;
 pub(crate) struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardTopology>,
-    pub lg: ResMut<'w, LightGrid>,
-    pub miasma: ResMut<'w, MiasmaGrid>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
@@ -85,6 +82,7 @@ fn load_level_handler(
     qgs2: Query<Entity, With<GameSound>>,
     mut p: LoadLevelSystemParam,
     mut ev_level_ready: MessageWriter<LevelReadyEvent>,
+    mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
 ) {
     // Get the loaded event or return early if none
@@ -166,22 +164,18 @@ fn load_level_handler(
     // Initialize board data fields
     p.bf.map_size = map_size;
     p.bf.origin = (map_min_x, map_min_y, 0);
-    p.bf.temperature_field = Array3::from_elem(map_size, p.bf.ambient_temp);
-    p.bf.temperature_field_prev = Array3::from_elem(map_size, p.bf.ambient_temp);
-    p.bf.temperature_activity = Array3::from_elem(map_size, 0.0);
     p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
-    p.bf.connectivity_scores =
-        Array3::from_elem(map_size, p.bf.temp_diffusion_config.default_score);
-    p.lg.light_field = Array3::from_elem(map_size, LightFieldData::default());
-    p.miasma.pressure_field = Array3::from_elem(map_size, 0.0);
-    p.miasma.velocity_field = Array3::from_elem(map_size, Vec2::ZERO);
     p.bf.map_entity_field = Array3::default(map_size);
 
     // Clear other field data
-    p.bf.sound_field.clear();
-    p.lg.current_exposure = 10.0;
     p.roomdb.room_state.clear();
     p.roomdb.room_tiles.clear();
+
+    // Broadcast map geometry initialization
+    ev_geometry_init.write(MapGeometryInitializedEvent {
+        map_size,
+        origin: p.bf.origin,
+    });
 
     // Spawn ambient sound entities
     entity_spawning::spawn_ambient_sounds(&p, &mut commands);

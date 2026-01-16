@@ -10,8 +10,20 @@ use std::collections::VecDeque;
 use unboard_core::behavior::{Behavior, Class};
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
+use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
+
+pub fn init_light_grid(
+    mut lg: ResMut<LightGrid>,
+    mut ev: MessageReader<MapGeometryInitializedEvent>,
+) {
+    for ev in ev.read() {
+        lg.light_field = Array3::from_elem(ev.map_size, LightFieldData::default());
+        lg.current_exposure = 10.0;
+        lg.current_exposure_accel = 0.0;
+    }
+}
 
 /// System to rebuild the entire lighting field based on prebaked data and active sources.
 /// Triggered by BoardTopologyToRebuild events.

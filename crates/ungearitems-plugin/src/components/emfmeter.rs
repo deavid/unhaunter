@@ -92,8 +92,8 @@ pub(crate) fn update_emfmeter(
             };
             let bpos = posk.to_board_position();
 
-            let temperature = gs.bf.temperature_field[bpos.ndidx()];
-            let sound = gs.bf.sound_field.get(&bpos).cloned().unwrap_or_default();
+            let temperature = gs.tg.temperature_field[bpos.ndidx()];
+            let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
             let temp_reading = temperature / 10.0 + sound_reading;
             let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
