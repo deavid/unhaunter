@@ -5872,20 +5872,11 @@ dependencies = [
  "bevy_dylib",
  "clap",
  "image",
- "ordered-float 5.1.0",
- "rayon",
- "ron 0.12.0",
- "serde",
- "sha2",
- "unassets-core",
  "uncampaign-plugin",
- "undifficulty-core",
  "unfog-plugin",
- "unfoundation-core",
  "ungame-plugin",
  "ungear-plugin",
  "ungearitems-plugin",
- "unghost-core",
  "unghost-plugin",
  "unlight-plugin",
  "unmainmenu-plugin",
@@ -5900,7 +5891,6 @@ dependencies = [
  "unplayer-plugin",
  "unprofile-plugin",
  "unrender-plugin",
- "unrender-std",
  "unroot-plugin",
  "unsettings-plugin",
  "unsound-plugin",
@@ -5910,7 +5900,6 @@ dependencies = [
  "untruck-plugin",
  "untypes-core",
  "unwalkie-plugin",
- "unwalkie-types",
  "walkdir",
  "wasm-bindgen",
  "winit",
@@ -6137,7 +6126,9 @@ name = "unmetrics-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "ordered-float 5.1.0",
  "unmetrics-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -6256,14 +6247,17 @@ name = "unrender-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "image",
  "unbehavior",
  "unboard-core",
+ "unfoundation-core",
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",
  "untags-core",
  "untypes-core",
+ "winit",
 ]
 
 [[package]]
@@ -6286,6 +6280,7 @@ dependencies = [
  "bevy",
  "bevy_framepace",
  "unassets-core",
+ "undifficulty-core",
  "unevents-core",
  "unghost-core",
  "unmenu-core",

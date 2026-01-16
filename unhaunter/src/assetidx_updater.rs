@@ -1,5 +1,4 @@
 #![cfg(not(target_arch = "wasm32"))]
-
 use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::{Read, Write};
@@ -20,7 +19,8 @@ fn get_asset_types() -> Vec<(&'static str, Vec<&'static str>)> {
 
 fn get_asset_list() -> Result<Vec<String>> {
     let mut list = vec![];
-    let assets_dir = crate::utils::find_assets_directory().context("Assets directory not found")?;
+    let assets_dir =
+        untypes_core::utils::find_assets_directory().context("Assets directory not found")?;
 
     for entry in WalkDir::new(&assets_dir).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
@@ -36,7 +36,8 @@ fn get_asset_list() -> Result<Vec<String>> {
 pub fn update_assetidx_files() -> Result<()> {
     let asset_list = get_asset_list()?;
     let asset_types = get_asset_types();
-    let assets_dir = crate::utils::find_assets_directory().context("Assets directory not found")?;
+    let assets_dir =
+        untypes_core::utils::find_assets_directory().context("Assets directory not found")?;
 
     for (folder_name, ext_list) in asset_types {
         for ext in &ext_list {

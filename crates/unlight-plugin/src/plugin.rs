@@ -7,7 +7,7 @@ pub struct UnhaunterLightPlugin;
 impl Plugin for UnhaunterLightPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LightGrid>()
-            .add_systems(Update, lighting_sim::systems::init_light_grid)
+            .add_systems(PreUpdate, lighting_sim::systems::init_light_grid)
             .add_systems(PostUpdate, lighting_sim::systems::rebuild_lighting_field);
         audio::app_setup(app);
         maplight::app_setup(app);

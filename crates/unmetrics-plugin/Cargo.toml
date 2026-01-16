@@ -12,4 +12,6 @@ workspace = true
 
 [dependencies]
 unmetrics-core = { path = "../unmetrics-core" }
+untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
+ordered-float = { workspace = true }

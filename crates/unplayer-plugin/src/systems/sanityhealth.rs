@@ -42,6 +42,12 @@ fn lose_sanity(
     for (mut ps, pos) in &mut qp {
         let bpos = pos.to_board_position();
         let p = bpos.ndidx();
+        if p.0 >= lg.light_field.shape()[0]
+            || p.1 >= lg.light_field.shape()[1]
+            || p.2 >= lg.light_field.shape()[2]
+        {
+            continue;
+        }
         let lux = lg.light_field[p].lux.sqrt() + 0.001;
         let temp = thermal_grid.temperature_field[p];
         let f_temp = (temp - thermal_grid.ambient_temp / 2.0).clamp(0.0, 10.0) + 1.0;

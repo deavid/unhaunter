@@ -1,5 +1,5 @@
 use crate::app;
-use unassets_core::resources::cli_options::CliOptions;
+use untypes_core::cli::CliOptions;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]

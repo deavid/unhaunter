@@ -4,7 +4,6 @@ use std::path::PathBuf;
 #[cfg(not(target_arch = "wasm32"))]
 pub fn find_assets_directory() -> Option<PathBuf> {
     // 1. Check for CARGO_MANIFEST_DIR (development mode)
-
     use std::{env, path::PathBuf};
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let assets_path = PathBuf::from(manifest_dir).join("assets");

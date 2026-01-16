@@ -1,5 +1,5 @@
 use clap::Parser;
-use unassets_core::resources::cli_options::CliOptions;
+use untypes_core::cli::CliOptions;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unassets_core::resources::maps::Maps;
+use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
 use unevents_core::events::hint::OnScreenHintEvent;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unmenu_core::mission_select::CurrentMissionSelectMode;
@@ -10,6 +11,7 @@ pub struct UnhaunterRootPlugin;
 
 impl Plugin for UnhaunterRootPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(UnhaunterDifficultyPlugin);
         app.init_state::<AppState>()
             .init_state::<GameState>()
             .init_resource::<Maps>()

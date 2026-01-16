@@ -133,11 +133,15 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-uncampaign-plugin = { path = "crates/uncampaign-plugin" }
-undifficulty-core = { path = "crates/undifficulty-core" }
-unfoundation-core = { path = "crates/unfoundation-core" }
-unassets-core = { path = "crates/unassets-core" }
+clap = { workspace = true }
+wasm-bindgen = { workspace = true }
+bevy = { workspace = true }
+walkdir = { workspace = true }
+anyhow = { workspace = true }
+
 untypes-core = { path = "crates/untypes-core" }
+
+uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear-plugin = { path = "crates/ungear-plugin" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
@@ -156,7 +160,6 @@ unsettings-plugin = { path = "crates/unsettings-plugin" }
 unsummary-plugin = { path = "crates/unsummary-plugin" }
 unthermal-plugin = { path = "crates/unthermal-plugin" }
 unsound-plugin = { path = "crates/unsound-plugin" }
-unrender-std = { path = "crates/unrender-std" }
 unrender-plugin = { path = "crates/unrender-plugin" }
 unmanual-plugin = { path = "crates/unmanual-plugin" }
 unpicking-plugin = { path = "crates/unpicking-plugin" }
@@ -164,30 +167,11 @@ unroot-plugin = { path = "crates/unroot-plugin" }
 untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
-unghost-core = { path = "crates/unghost-core" }
-unwalkie-types = { path = "crates/unwalkie-types" }
 ungame-plugin = { path = "crates/ungame-plugin" }
-
-clap = { workspace = true }
-serde = { workspace = true }
-ron = { workspace = true }
-sha2 = { workspace = true }
-rayon = { workspace = true }
-
-wasm-bindgen = { workspace = true }
-bevy = { workspace = true }
-ordered-float = { workspace = true }
-walkdir = { workspace = true }
-anyhow = { workspace = true }
 
 [[bin]]
 name = "unhaunter_game"
 path = "unhaunter/src/bin/unhaunter.rs"
-
-[[bin]]
-name = "walkie_voice_generator"
-path = "crates/tools/text_to_speech/walkie_voice_generator/src/main.rs"
-required-features = []
 
 [lib]
 crate-type = ["cdylib", "rlib"]
