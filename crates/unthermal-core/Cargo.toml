@@ -11,8 +11,5 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-unspatial-core = { path = "../unspatial-core" }
-unfoundation-core = { path = "../unfoundation-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
 ndarray = { workspace = true }

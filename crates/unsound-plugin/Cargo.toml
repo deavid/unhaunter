@@ -19,5 +19,4 @@ unevents-core = { path = "../unevents-core" }
 unghost-core = { path = "../unghost-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
 rand = { workspace = true }

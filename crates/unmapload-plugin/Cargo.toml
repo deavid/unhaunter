@@ -18,7 +18,6 @@ unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
-untmxmap-plugin = { path = "../untmxmap-plugin" }
 unlight-plugin = { path = "../unlight-plugin" }
 unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
@@ -28,7 +27,6 @@ unsummary-core = { path = "../unsummary-core" }
 ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
-unfog-core = { path = "../unfog-core" }
 unplayer-core = { path = "../unplayer-core" }
 unbehavior = { path = "../unbehavior" }
 unrender-std = { path = "../unrender-std" }

@@ -5596,7 +5596,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tiled",
- "unfoundation-core",
  "unspatial-core",
 ]
 
@@ -5604,16 +5603,10 @@ dependencies = [
 name = "unboard-core"
 version = "0.3.2-dev"
 dependencies = [
- "anyhow",
  "bevy",
  "bevy_platform",
- "fastapprox",
  "ndarray",
- "ordered-float 5.1.0",
- "serde",
- "serde_json",
  "unbehavior",
- "unfoundation-core",
  "unspatial-core",
 ]
 
@@ -6049,7 +6042,6 @@ dependencies = [
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
- "unfog-core",
  "unfoundation-core",
  "ungear-core",
  "unghost-core",
@@ -6062,7 +6054,6 @@ dependencies = [
  "unsummary-core",
  "untags-core",
  "untiled-core",
- "untmxmap-plugin",
  "untypes-core",
 ]
 
@@ -6310,7 +6301,6 @@ name = "unsound-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
  "rand 0.9.2",
  "unboard-core",
  "unevents-core",
@@ -6369,10 +6359,7 @@ name = "unthermal-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_platform",
  "ndarray",
- "unfoundation-core",
- "unspatial-core",
 ]
 
 [[package]]
