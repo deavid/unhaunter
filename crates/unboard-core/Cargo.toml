@@ -12,7 +12,6 @@ workspace = true
 
 [dependencies]
 unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }

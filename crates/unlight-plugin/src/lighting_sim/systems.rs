@@ -7,7 +7,7 @@ use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
-use unboard_core::behavior::{Behavior, Class};
+use unbehavior::{Behavior, Class};
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;

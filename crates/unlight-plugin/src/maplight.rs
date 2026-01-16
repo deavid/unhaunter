@@ -22,14 +22,15 @@ use core::f32;
 use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
-use unboard_core::behavior::component::Interactive;
-use unboard_core::behavior::{Behavior, Orientation};
+use unbehavior::Behavior;
+use unbehavior::behavior::Interactive;
+use unbehavior::roomdb::RoomDB;
 pub(crate) use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::BoardTopology;
-use unboard_core::resources::roomdb::RoomDB;
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unsound_core::resources::SoundGrid;
+use unspatial_core::orientation::Orientation;
 use unthermal_core::resources::ThermalGrid;
 
 #[derive(SystemParam)]

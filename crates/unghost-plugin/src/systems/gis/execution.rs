@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use rand::Rng;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::Interactive;
-use unboard_core::behavior::component::{InteractableByGhost, RoomState};
+use unbehavior::Behavior;
+use unbehavior::behavior::Interactive;
+use unbehavior::components::{InteractableByGhost, RoomState};
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};

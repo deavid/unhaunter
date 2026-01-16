@@ -1,7 +1,7 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::FloorItemCollidable;
+use unbehavior::Behavior;
+use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::BoardTopology;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind, Hand};

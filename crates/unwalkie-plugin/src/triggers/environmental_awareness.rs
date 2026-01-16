@@ -7,7 +7,7 @@ use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use ungearitems_core::components::thermometer::Thermometer;

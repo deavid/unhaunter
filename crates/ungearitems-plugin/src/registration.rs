@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unboard_core::behavior::component::{Collision, InteractableByGhost};
+use unbehavior::components::{Collision, InteractableByGhost};
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};

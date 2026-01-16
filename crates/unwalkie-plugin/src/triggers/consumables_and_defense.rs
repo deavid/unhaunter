@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use ungear_core::components::playergear::PlayerGear;

@@ -1,5 +1,5 @@
 use bevy::{prelude::*, time::Stopwatch};
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;

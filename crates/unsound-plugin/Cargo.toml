@@ -12,11 +12,12 @@ workspace = true
 
 [dependencies]
 unsound-core = { path = "../unsound-core" }
-unboard-core = { path = "../unboard-core" }
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 unghost-core = { path = "../unghost-core" }
 unmetrics-core = { path = "../unmetrics-core" }
+unbehavior = { path = "../unbehavior" }
+
 bevy = { workspace = true }
 rand = { workspace = true }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::Light;
+use unbehavior::components::Light;
+use unbehavior::{Behavior, Class, TileState};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 
@@ -77,13 +77,9 @@ fn fuse_box_overload_system(
         // Find a breaker to trip - look for breakers that are currently "On"
         for (breaker_entity, breaker_behavior) in q_breakers.iter() {
             // Check if this is actually a breaker and if it's currently on
-            if matches!(
-                breaker_behavior.class(),
-                unboard_core::behavior::Class::Breaker
-            ) && matches!(
-                breaker_behavior.state(),
-                unboard_core::behavior::TileState::On
-            ) {
+            if matches!(breaker_behavior.class(), Class::Breaker)
+                && matches!(breaker_behavior.state(), TileState::On)
+            {
                 // Dispatch a trip breaker event
                 ev_ghost_interaction.write(GhostInteractionEvent {
                     target: breaker_entity,

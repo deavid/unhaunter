@@ -1,9 +1,8 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
-use unboard_core::behavior::{
-    Behavior,
-    component::{Interactive, Stairs},
-};
+use unbehavior::Behavior;
+use unbehavior::behavior::Interactive;
+use unbehavior::components::Stairs;
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
@@ -35,7 +34,7 @@ pub(crate) fn waypoint_creation_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&unboard_core::behavior::component::RoomState>,
+        Option<&unbehavior::components::RoomState>,
     )>,
     q_stairs: Query<(Entity, &Position, &Stairs, &Behavior)>,
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
@@ -198,7 +197,7 @@ pub(crate) fn waypoint_following_system(
         &Position,
         &Interactive,
         &Behavior,
-        Option<&unboard_core::behavior::component::RoomState>,
+        Option<&unbehavior::components::RoomState>,
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,

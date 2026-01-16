@@ -1,7 +1,7 @@
 // In unwalkie/src/triggers/basic_gear_usage.rs
 
 use bevy::prelude::*;
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use unfoundation_core::types::evidence::Evidence;

@@ -13,9 +13,9 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
+unbehavior = { path = "../unbehavior" }
 unassets-core = { path = "../unassets-core" }
 unfoundation-core = { path = "../unfoundation-core" }
-unboard-core = { path = "../unboard-core" }
 unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unrender-std = { path = "../unrender-std" }

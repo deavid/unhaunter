@@ -1,4 +1,4 @@
-use crate::behavior::Orientation;
+use unspatial_core::orientation::Orientation;
 
 #[derive(Clone, Debug, Default, Copy)]
 pub struct CollisionFieldData {

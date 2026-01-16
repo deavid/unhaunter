@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::RoomState;
+use unbehavior::Behavior;
+use unbehavior::components::RoomState;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;

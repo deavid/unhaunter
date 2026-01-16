@@ -14,6 +14,7 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
+unbehavior = { path = "../unbehavior" }
 unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
@@ -28,7 +29,6 @@ ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
-unbehavior = { path = "../unbehavior" }
 unrender-std = { path = "../unrender-std" }
 unghost-core = { path = "../unghost-core" }
 

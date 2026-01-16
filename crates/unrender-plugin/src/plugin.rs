@@ -5,8 +5,8 @@
 use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
+use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::BoardTopology;
-use unboard_core::resources::roomdb::RoomDB;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;

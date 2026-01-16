@@ -1,6 +1,7 @@
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::{Interactive, RoomState};
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::Behavior;
+use unbehavior::behavior::Interactive;
+use unbehavior::components::RoomState;
+use unbehavior::roomdb::RoomDB;
 use unevents_core::events::roomchanged::InteractionExecutionType;
 use unevents_core::events::sound::SoundEvent;
 use unrender_std::board::spritedb::SpriteDB;

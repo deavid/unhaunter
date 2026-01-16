@@ -2,7 +2,7 @@ use crate::metrics;
 use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
 use unfoundation_core::random_seed;
 use unghost_core::components::GhostSprite;

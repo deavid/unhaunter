@@ -1,8 +1,9 @@
 use crate::components::player::{Hiding, Stamina};
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::component::{Interactive, RoomState};
+use unbehavior::Behavior;
+use unbehavior::behavior::Interactive;
+use unbehavior::components::RoomState;
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;

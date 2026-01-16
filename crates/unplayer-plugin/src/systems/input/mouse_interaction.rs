@@ -3,7 +3,7 @@ use bevy::{
     picking::events::{Out, Over, Pointer},
     prelude::*,
 };
-use unboard_core::behavior::component::Interactive;
+use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;
 use uninteraction_core::interaction::Toggleable;

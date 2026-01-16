@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
-use unboard_core::behavior::Behavior;
-use unboard_core::behavior::TileState;
-use unboard_core::behavior::component::{Door, InteractableByGhost};
+use unbehavior::components::{Door, InteractableByGhost};
+use unbehavior::{Behavior, Class, TileState};
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
@@ -196,19 +195,15 @@ fn find_interaction_target(
                     GhostInteractionType::Toggle => {
                         // Can toggle lights, lamps, or switches.
                         let class = behavior.class();
-                        let is_switch = matches!(
-                            class,
-                            unboard_core::behavior::Class::Switch
-                                | unboard_core::behavior::Class::RoomSwitch
-                        );
+                        let is_switch = matches!(class, Class::Switch | Class::RoomSwitch);
                         let is_lamp = matches!(
                             class,
-                            unboard_core::behavior::Class::WallLamp
-                                | unboard_core::behavior::Class::FloorLamp
-                                | unboard_core::behavior::Class::TableLamp
-                                | unboard_core::behavior::Class::CeilingLight
-                                | unboard_core::behavior::Class::StreetLight
-                                | unboard_core::behavior::Class::CandleLight
+                            Class::WallLamp
+                                | Class::FloorLamp
+                                | Class::TableLamp
+                                | Class::CeilingLight
+                                | Class::StreetLight
+                                | Class::CandleLight
                         );
                         if behavior.can_emit_light()
                             || behavior.p.light.can_emit_light
@@ -264,16 +259,14 @@ fn find_interaction_target(
                     }
                     GhostInteractionType::TripBreaker => {
                         // Only target breakers that are currently On
-                        if GIS_DEBUG && behavior.class() == unboard_core::behavior::Class::Breaker {
+                        if GIS_DEBUG && behavior.class() == Class::Breaker {
                             if behavior.state() == TileState::On {
                                 breaker_on += 1;
                             } else {
                                 breaker_off += 1;
                             }
                         }
-                        if behavior.class() == unboard_core::behavior::Class::Breaker
-                            && behavior.state() == TileState::On
-                        {
+                        if behavior.class() == Class::Breaker && behavior.state() == TileState::On {
                             Some((entity, pos, None))
                         } else {
                             None

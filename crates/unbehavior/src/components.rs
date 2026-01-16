@@ -1,8 +1,8 @@
-use super::Orientation;
 use bevy::ecs::component::Component;
 use unspatial_core::boardposition::BoardPosition;
+use unspatial_core::orientation::Orientation;
 
-pub use unbehavior::behavior::{Interactive, NpcHelpDialog};
+pub use crate::behavior::{Interactive, NpcHelpDialog};
 
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct Ground;

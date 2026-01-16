@@ -1,6 +1,6 @@
 use unbehavior::behavior::{Behavior, Interactive, NpcHelpDialog};
 use unbehavior::class::Class;
-use unboard_core::behavior::component;
+use unbehavior::components;
 use untiled_core::tiledmap::map::MapLayer;
 
 pub(crate) fn apply_components_to_entity(
@@ -13,31 +13,31 @@ pub(crate) fn apply_components_to_entity(
 
     match cfg.class {
         Class::Floor => entity
-            .insert(component::Ground)
-            .insert(component::UVSurface),
+            .insert(components::Ground)
+            .insert(components::UVSurface),
         Class::Wall => entity
-            .insert(component::Collision)
-            .insert(component::Opaque)
-            .insert(component::UVSurface),
+            .insert(components::Collision)
+            .insert(components::Opaque)
+            .insert(components::UVSurface),
         Class::LowWall => entity
-            .insert(component::Collision)
-            .insert(component::Opaque)
-            .insert(component::UVSurface),
+            .insert(components::Collision)
+            .insert(components::Opaque)
+            .insert(components::UVSurface),
         Class::Door => entity
             .insert(Pickable::default())
             .insert(Interactive::new(
                 "sounds/door-open.ogg",
                 "sounds/door-close.ogg",
             ))
-            .insert(component::FloorItemCollidable)
-            .insert(component::Door),
+            .insert(components::FloorItemCollidable)
+            .insert(components::Door),
         Class::Switch => entity
             .insert(Pickable::default())
             .insert(Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
             ))
-            .insert(component::RoomState::default()),
+            .insert(components::RoomState::default()),
         Class::RoomSwitch => {
             // Check for opposite_side property
             let opposite_side = cfg.properties.get_bool("switch:opposite_side");
@@ -48,7 +48,7 @@ pub(crate) fn apply_components_to_entity(
                     "sounds/switch-on-1.ogg",
                     "sounds/switch-off-1.ogg",
                 ))
-                .insert(component::RoomState::with_opposite_side(
+                .insert(components::RoomState::with_opposite_side(
                     &cfg.orientation,
                     opposite_side,
                 ))
@@ -58,9 +58,9 @@ pub(crate) fn apply_components_to_entity(
             "sounds/switch-off-1.ogg",
         )),
         Class::Doorway => entity,
-        Class::Decor => entity.insert(component::FloorItemCollidable),
-        Class::Item => entity.insert(component::FloorItemCollidable),
-        Class::Furniture => entity.insert(component::FloorItemCollidable),
+        Class::Decor => entity.insert(components::FloorItemCollidable),
+        Class::Item => entity.insert(components::FloorItemCollidable),
+        Class::Furniture => entity.insert(components::FloorItemCollidable),
         Class::PlayerSpawn => entity,
         Class::GhostSpawn => entity,
         Class::VanEntry => entity
@@ -69,34 +69,34 @@ pub(crate) fn apply_components_to_entity(
                 "sounds/door-open.ogg",
                 "sounds/door-close.ogg",
             ))
-            .insert(component::FloorItemCollidable),
+            .insert(components::FloorItemCollidable),
         Class::RoomDef => entity,
         Class::WallLamp => entity
-            .insert(component::RoomState::default())
-            .insert(component::Light),
+            .insert(components::RoomState::default())
+            .insert(components::Light),
         Class::FloorLamp => entity
             .insert(Pickable::default())
             .insert(Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
             ))
-            .insert(component::FloorItemCollidable)
-            .insert(component::Light),
+            .insert(components::FloorItemCollidable)
+            .insert(components::Light),
         Class::TableLamp => entity
             .insert(Pickable::default())
             .insert(Interactive::new(
                 "sounds/switch-on-1.ogg",
                 "sounds/switch-off-1.ogg",
             ))
-            .insert(component::FloorItemCollidable)
-            .insert(component::Light),
+            .insert(components::FloorItemCollidable)
+            .insert(components::Light),
         Class::WallDecor => entity,
         Class::CeilingLight => entity
-            .insert(component::RoomState::default())
-            .insert(component::Light),
-        Class::StreetLight => entity.insert(component::Light),
-        Class::CandleLight => entity.insert(component::Light),
-        Class::Appliance => entity.insert(component::FloorItemCollidable),
+            .insert(components::RoomState::default())
+            .insert(components::Light),
+        Class::StreetLight => entity.insert(components::Light),
+        Class::CandleLight => entity.insert(components::Light),
+        Class::Appliance => entity.insert(components::FloorItemCollidable),
         Class::Van => entity,
         Class::Window => entity,
         Class::None => entity,
@@ -115,9 +115,9 @@ pub(crate) fn apply_components_to_entity(
                 "sounds/effects-dongdongdong.ogg",
                 "sounds/effects-dongdongdong.ogg",
             ))
-            .insert(component::FloorItemCollidable),
-        Class::StairsDown => entity.insert(component::Stairs { z: -1 }),
-        Class::StairsUp => entity.insert(component::Stairs { z: 1 }),
+            .insert(components::FloorItemCollidable),
+        Class::StairsDown => entity.insert(components::Stairs { z: -1 }),
+        Class::StairsUp => entity.insert(components::Stairs { z: 1 }),
     };
 
     // Add InteractableByGhost marker component for entities that ghosts can interact with
@@ -139,6 +139,6 @@ pub(crate) fn apply_components_to_entity(
     };
 
     if should_add_ghost_interaction {
-        entity.insert(component::InteractableByGhost);
+        entity.insert(components::InteractableByGhost);
     }
 }

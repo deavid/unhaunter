@@ -15,6 +15,7 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
+unbehavior = { path = "../unbehavior" }
 unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }

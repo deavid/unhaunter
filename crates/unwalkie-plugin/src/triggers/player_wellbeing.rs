@@ -1,7 +1,7 @@
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_plugin::resources::light_grid::LightGrid;
 use unplayer_core::components::Hiding;

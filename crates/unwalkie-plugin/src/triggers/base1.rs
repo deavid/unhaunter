@@ -1,5 +1,5 @@
 use bevy::{prelude::*, time::Stopwatch};
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;

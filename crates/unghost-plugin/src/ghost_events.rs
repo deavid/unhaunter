@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unboard_core::behavior;
+use unbehavior as behavior;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::GhostInteractionEvent;
 

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
-use unboard_core::resources::roomdb::RoomDB;
+use unbehavior::roomdb::RoomDB;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::ghost::types::GhostType;
 use ungear_core::components::playergear::PlayerGear;
