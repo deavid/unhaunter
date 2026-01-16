@@ -203,9 +203,12 @@ pub(crate) fn find_path(
         closed_set.insert(current_pos.clone());
 
         // Check all neighbors
-        for neighbor in
-            get_neighbors(&current_pos, board_topology, board_collision, visibility_data)
-        {
+        for neighbor in get_neighbors(
+            &current_pos,
+            board_topology,
+            board_collision,
+            visibility_data,
+        ) {
             if closed_set.contains(&neighbor) {
                 continue;
             }

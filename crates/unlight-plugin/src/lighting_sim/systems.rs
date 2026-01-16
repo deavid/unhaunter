@@ -73,13 +73,8 @@ pub fn rebuild_lighting_field(
         lg.prebaked_wave_edges = stair_edges;
 
         // Propagate from the stairs (using dummy source ID 0)
-        let _stair_count = propagate_from_wave_edges(
-            &bf,
-            &bcf,
-            &lg,
-            &mut lfs,
-            &vec![0].into_iter().collect(),
-        );
+        let _stair_count =
+            propagate_from_wave_edges(&bf, &bcf, &lg, &mut lfs, &vec![0].into_iter().collect());
 
         // Restore original wave edges
         lg.prebaked_wave_edges = original_edges;
@@ -330,11 +325,7 @@ pub fn prebake_lighting_field(
 }
 
 /// Pre-computes the allowed propagation directions for each light source and tile
-fn prebake_propagation_data(
-    bf: &BoardTopology,
-    bcf: &BoardCollisionField,
-    lg: &mut LightGrid,
-) {
+fn prebake_propagation_data(bf: &BoardTopology, bcf: &BoardCollisionField, lg: &mut LightGrid) {
     let map_size = bf.map_size;
 
     // Create and initialize the vector of Array2

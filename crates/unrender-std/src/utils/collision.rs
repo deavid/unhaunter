@@ -18,10 +18,7 @@ pub fn rebuild_collision_data(
     qt: &Query<(Entity, &Position, &Behavior)>,
 ) {
     // info!("Collision rebuild");
-    assert_eq!(
-        bcf.0.shape(),
-        [bf.map_size.0, bf.map_size.1, bf.map_size.2]
-    );
+    assert_eq!(bcf.0.shape(), [bf.map_size.0, bf.map_size.1, bf.map_size.2]);
     bcf.0.fill(CollisionFieldData::default());
 
     for (_entity, pos, behavior) in qt.iter().filter(|(_e, _p, b)| b.p.movement.walkable) {

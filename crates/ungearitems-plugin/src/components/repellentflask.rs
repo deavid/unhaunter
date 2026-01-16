@@ -151,13 +151,9 @@ fn repellent_update(
         *pressure_base = Array3::from_elem(bf.map_size, 0.0);
     }
 
-    pressure_base.indexed_iter_mut().for_each(|(p, v)| {
-        *v = if bcf.0[p].player_free {
-            20.0
-        } else {
-            0.0
-        }
-    });
+    pressure_base
+        .indexed_iter_mut()
+        .for_each(|(p, v)| *v = if bcf.0[p].player_free { 20.0 } else { 0.0 });
     if positions.dim() != bf.map_size {
         *positions = Array3::from_elem(bf.map_size, Vec::with_capacity(8));
     }

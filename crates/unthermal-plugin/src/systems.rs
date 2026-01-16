@@ -53,8 +53,7 @@ pub fn temperature_update(
         const ENABLE_GHOST_COLD_TEMPS: bool = true;
         if ENABLE_GHOST_COLD_TEMPS {
             for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
-                if ghost_in_room != roomdb.room_tiles.get(&npos)
-                    || !bcf.0[npos.ndidx()].player_free
+                if ghost_in_room != roomdb.room_tiles.get(&npos) || !bcf.0[npos.ndidx()].player_free
                 {
                     continue;
                 }
@@ -68,9 +67,7 @@ pub fn temperature_update(
             }
         }
         for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
-            if breach_in_room != roomdb.room_tiles.get(&npos)
-                || !bcf.0[npos.ndidx()].player_free
-            {
+            if breach_in_room != roomdb.room_tiles.get(&npos) || !bcf.0[npos.ndidx()].player_free {
                 continue;
             }
 

@@ -270,7 +270,9 @@ fn apply_iir_filter(
 
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
-    bf: &BoardTopology,    bcf: &BoardCollisionField,    lg: &LightGrid,
+    bf: &BoardTopology,
+    bcf: &BoardCollisionField,
+    lg: &LightGrid,
     lfs: &mut Array3<LightFieldData>,
     active_source_ids: &HashSet<u32>,
 ) -> usize {

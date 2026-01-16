@@ -295,7 +295,8 @@ fn animate_miasma_sprites(
         miasma_sprite.base_position.x += vel.x * dt * SPEED * miasma_sprite.vel_speed;
         miasma_sprite.base_position.y += vel.y * dt * SPEED * miasma_sprite.vel_speed;
         let bpos = miasma_sprite.base_position.to_board_position();
-        if !bcf.0
+        if !bcf
+            .0
             .get(bpos.ndidx())
             .map(|collision| collision.player_free)
             .unwrap_or_default()
@@ -440,9 +441,7 @@ fn update_miasma(
             let nb_len = neighbors.len() as f32 + 0.01;
             let mut total_v = Vec2::ZERO;
             for neighbor_pos in neighbors {
-                if bcf.0.get(neighbor_pos.ndidx())
-                    .is_none()
-                {
+                if bcf.0.get(neighbor_pos.ndidx()).is_none() {
                     continue;
                 }
                 let np = neighbor_pos.ndidx();
@@ -601,7 +600,8 @@ fn update_miasma(
             const WALL_REPEL_SPEED: f32 = 0.00;
             let old_speed = new_velocity.length();
             if new_velocity.x > -WALL_REPEL_SPEED
-                && !bcf.0
+                && !bcf
+                    .0
                     .get(bpos.right().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -609,7 +609,8 @@ fn update_miasma(
                 new_velocity.x = -WALL_REPEL_SPEED;
             }
             if new_velocity.x < WALL_REPEL_SPEED
-                && !bcf.0
+                && !bcf
+                    .0
                     .get(bpos.left().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -617,7 +618,8 @@ fn update_miasma(
                 new_velocity.x = WALL_REPEL_SPEED;
             }
             if new_velocity.y < WALL_REPEL_SPEED
-                && !bcf.0
+                && !bcf
+                    .0
                     .get(bpos.top().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -625,7 +627,8 @@ fn update_miasma(
                 new_velocity.y = WALL_REPEL_SPEED;
             }
             if new_velocity.y > -WALL_REPEL_SPEED
-                && !bcf.0
+                && !bcf
+                    .0
                     .get(bpos.bottom().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)

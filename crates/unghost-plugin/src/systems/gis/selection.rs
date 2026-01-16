@@ -284,9 +284,14 @@ fn find_interaction_target(
                                 throwable_flag += 1;
                             }
                             // Find a destination for throwing with collision checking
-                            if let Some(destination) =
-                                find_throw_destination(entity, pos, q_player, board_topology, board_collision, rng)
-                            {
+                            if let Some(destination) = find_throw_destination(
+                                entity,
+                                pos,
+                                q_player,
+                                board_topology,
+                                board_collision,
+                                rng,
+                            ) {
                                 if GIS_DEBUG {
                                     throwable_with_dest += 1;
                                 }
@@ -306,9 +311,13 @@ fn find_interaction_target(
                             }
                             // Find a small, nearby floor destination to nudge towards.
                             // Only emit if a safe destination is found to avoid collisions/overlaps.
-                            if let Some(destination) =
-                                find_nudge_destination(entity, pos, board_topology, board_collision, rng)
-                            {
+                            if let Some(destination) = find_nudge_destination(
+                                entity,
+                                pos,
+                                board_topology,
+                                board_collision,
+                                rng,
+                            ) {
                                 Some((entity, pos, Some(destination)))
                             } else {
                                 None
@@ -324,9 +333,13 @@ fn find_interaction_target(
                                 haunt_flag += 1;
                             }
                             // Find a destination for haunted movement with collision checking
-                            if let Some(destination) =
-                                find_movement_destination(entity, pos, board_topology, board_collision, rng)
-                            {
+                            if let Some(destination) = find_movement_destination(
+                                entity,
+                                pos,
+                                board_topology,
+                                board_collision,
+                                rng,
+                            ) {
                                 if GIS_DEBUG {
                                     haunt_with_dest += 1;
                                 }

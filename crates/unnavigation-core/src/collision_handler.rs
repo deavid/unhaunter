@@ -61,12 +61,7 @@ impl CollisionHandler<'_> {
         let mut delta = Vec3::ZERO;
 
         for npos in bpos.iter_xy_neighbors_nosize(1) {
-            let cf = self
-                .bcf
-                .0
-                .get(npos.ndidx())
-                .copied()
-                .unwrap_or_default();
+            let cf = self.bcf.0.get(npos.ndidx()).copied().unwrap_or_default();
 
             if !cf.player_free && Self::ENABLE_COLLISION {
                 let dpos = npos.to_position().to_vec3() - pos.to_vec3();
