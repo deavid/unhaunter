@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unassets_core::types::root::game_assets::GameAssets;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::{Interactive, NpcHelpDialog};
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unfoundation_core::colors;

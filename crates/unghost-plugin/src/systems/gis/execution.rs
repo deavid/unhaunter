@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::{InteractableByGhost, RoomState};
 use unboard_core::resources::board_topology::BoardTopology;

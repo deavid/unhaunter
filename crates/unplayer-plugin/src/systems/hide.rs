@@ -2,7 +2,7 @@ use crate::components::player::Hiding;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::gear_stuff::GearStuff;

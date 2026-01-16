@@ -2,9 +2,10 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use bevy_persistent::Persistent;
 
+use unbehavior::behavior::Behavior;
 use unbehavior::components::Door;
 use unbehavior::roomdb::RoomDB;
-use unbehavior::{Behavior, TileState};
+use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;

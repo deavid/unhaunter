@@ -1,7 +1,7 @@
 use crate::components::player::{Hiding, Stamina};
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
 use unboard_core::resources::board_topology::BoardTopology;

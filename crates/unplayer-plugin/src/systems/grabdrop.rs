@@ -1,6 +1,6 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::BoardTopology;

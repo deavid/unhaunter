@@ -1,6 +1,6 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
 use unboard_core::resources::board_topology::BoardTopology;

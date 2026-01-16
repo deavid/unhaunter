@@ -1,4 +1,4 @@
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
 use unbehavior::roomdb::RoomDB;

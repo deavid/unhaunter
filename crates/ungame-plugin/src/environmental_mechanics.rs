@@ -1,6 +1,8 @@
 use bevy::prelude::*;
+use unbehavior::behavior::Behavior;
+use unbehavior::class::Class;
 use unbehavior::components::Light;
-use unbehavior::{Behavior, Class, TileState};
+use unbehavior::state::TileState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 

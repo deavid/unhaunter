@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::BoardTopology;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;

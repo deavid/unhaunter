@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::BoardTopology;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unrender_std::utils::collision::rebuild_collision_data;

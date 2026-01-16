@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::components::Stairs;
 use unboard_core::resources::board_topology::BoardTopology;
 use unrender_std::resources::visibility_data::VisibilityData;

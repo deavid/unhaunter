@@ -1,6 +1,6 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::components::Stairs;
 use unplayer_core::resources::game_config::GameConfig;
 use unspatial_core::orientation::Orientation;

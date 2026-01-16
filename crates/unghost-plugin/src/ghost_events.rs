@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unbehavior as behavior;
+use unbehavior::behavior::Behavior;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::GhostInteractionEvent;
 
@@ -24,7 +24,7 @@ impl Default for FlickerTimer {
 fn update_flicker_timers(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_lights: Query<(Entity, &mut FlickerTimer, &mut behavior::Behavior)>,
+    mut q_lights: Query<(Entity, &mut FlickerTimer, &mut Behavior)>,
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
 ) {
     for (entity, mut flicker_timer, mut behavior) in q_lights.iter_mut() {

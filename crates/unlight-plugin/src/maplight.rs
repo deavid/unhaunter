@@ -22,7 +22,7 @@ use core::f32;
 use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
-use unbehavior::Behavior;
+use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::roomdb::RoomDB;
 pub(crate) use unboard_core::components::mapcolor::MapColor;
