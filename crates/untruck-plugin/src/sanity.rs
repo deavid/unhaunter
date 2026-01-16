@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
 use untypes_core::states::GameState;
+use unui_core::assets::UiAssets;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
@@ -12,11 +12,11 @@ const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 #[derive(Component, Debug)]
 pub(crate) struct SanityText;
 
-pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &UiAssets) {
     let title = (
         Text::new("Sanity"),
         TextFont {
-            font: handles.fonts.londrina.w300_light.clone(),
+            font: handles.font_londrina_light.clone(),
             font_size: 35.0 * FONT_SCALE,
             ..default()
         },
@@ -38,7 +38,7 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets
     let p1_sanity = (
         Text::new("Player 1: 90% Sanity"),
         TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
+            font: handles.font_chakra_light.clone(),
             font_size: 25.0 * FONT_SCALE,
             ..default()
         },

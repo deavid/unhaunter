@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::{AppState, GameState};
+use unui_core::assets::UiAssets;
 
 #[derive(Debug, Component)]
 pub(crate) struct PauseUI;
@@ -39,7 +39,7 @@ fn cleanup(mut commands: Commands, qtui: Query<Entity, With<PauseUI>>) {
 fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
@@ -82,7 +82,7 @@ fn setup_ui(
                     mid_blk
                         .spawn(Text::new("Pause"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 35.0 * FONT_SCALE,
                             ..default()
                         })
@@ -101,7 +101,7 @@ fn setup_ui(
                             "The game is paused. Hit [ESC] again to resume or [Q] to Quit.",
                         ))
                         .insert(TextFont {
-                            font: handles.fonts.chakra.w300_light.clone(),
+                            font: ui_assets.font_chakra_light.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         })

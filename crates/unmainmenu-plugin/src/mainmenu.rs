@@ -2,7 +2,6 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::platform::plt::VERSION;
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::MenuItemClicked;
@@ -11,6 +10,7 @@ use unmenu_core::templates;
 use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, MapHubState};
+use unui_core::assets::UiAssets;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
 pub(crate) enum MenuID {
@@ -77,7 +77,7 @@ pub(crate) fn setup(
 
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     let menu_items = vec![
@@ -105,7 +105,7 @@ pub(crate) fn setup_ui(
     // Call create_standard_menu_layout directly with commands, not with parent
     let menu_layout_entity = templates::create_standard_menu_layout(
         &mut commands,
-        &handles,
+        &ui_assets,
         &menu_items,
         0,
         Some(format!(
@@ -120,7 +120,7 @@ pub(crate) fn setup_ui(
 
     // Add the persistent player status bar as a child of root_entity
     commands.entity(root_entity).with_children(|parent| {
-        templates::create_player_status_bar(parent, &handles, &player_profile);
+        templates::create_player_status_bar(parent, &ui_assets, &player_profile);
     });
 
     warn!("Main menu created with root entity: {:?}", root_entity);

@@ -14,16 +14,16 @@ workspace = true
 
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
-unassets-core = { path = "../unassets-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unevents-core = { path = "../unevents-core" }
+unmapload-core = { path = "../unmapload-core" }
+unghost-core = { path = "../unghost-core" }
 untypes-core = { path = "../untypes-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 unnoise-core = { path = "../unnoise-core" }
-unghost-core = { path = "../unghost-core" }
 unfog-core = { path = "../unfog-core" }
 
 bevy = { workspace = true }

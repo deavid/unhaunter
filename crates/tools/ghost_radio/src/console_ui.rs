@@ -2,7 +2,7 @@
 use crate::data::GhostResponse;
 use std::io::{self, Write};
 
-pub fn display_ghost_options(ghost_responses: &[&str]) {
+pub(crate) fn display_ghost_options(ghost_responses: &[&str]) {
     println!("Available Ghosts:");
     for (i, key) in ghost_responses.iter().enumerate() {
         println!("{}. {}", i + 1, key);
@@ -11,7 +11,7 @@ pub fn display_ghost_options(ghost_responses: &[&str]) {
     io::stdout().flush().unwrap();
 }
 
-pub fn get_player_phrase(phrases: &[String]) -> String {
+pub(crate) fn get_player_phrase(phrases: &[String]) -> String {
     print!("Enter a phrase (enter number 1-{}): ", phrases.len());
     io::stdout().flush().unwrap();
     let mut input = String::new();
@@ -20,6 +20,6 @@ pub fn get_player_phrase(phrases: &[String]) -> String {
     phrases[idx - 1].to_owned()
 }
 
-pub fn display_ghost_response(response: &GhostResponse) {
+pub(crate) fn display_ghost_response(response: &GhostResponse) {
     println!("Ghost response: {}", response.phrase);
 }

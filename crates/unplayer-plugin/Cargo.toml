@@ -12,19 +12,18 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-
 undifficulty-core = { path = "../undifficulty-core" }
 unbehavior = { path = "../unbehavior" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unlight-plugin = { path = "../unlight-plugin" }
 unevents-core = { path = "../unevents-core" }
+unplayer-core = { path = "../unplayer-core" }
 untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
-unplayer-core = { path = "../unplayer-core" }
 unfog-core = { path = "../unfog-core" }
 unrender-std = { path = "../unrender-std" }
 uninteraction-core = { path = "../uninteraction-core" }
@@ -38,3 +37,4 @@ unsound-core = { path = "../unsound-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }
+bevy_asset_loader = { workspace = true }

@@ -1,11 +1,16 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::gear::GearSpriteID;
+use ungear_core::assets::GearAssets;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
+use unui_core::assets::UiAssets;
 
-pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_ui_gear_inv_left(
+    p: &mut ChildSpawnerCommands,
+    ui_assets: &UiAssets,
+    gear_assets: &GearAssets,
+) {
     // Leftmost side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Column,
@@ -16,10 +21,10 @@ pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &Gam
     })
     .with_children(|p| {
         p.spawn(ImageNode {
-            image: handles.images.gear.clone(),
+            image: gear_assets.gear.clone(),
             texture_atlas: Some(TextureAtlas {
                 index: GearSpriteID::Flashlight2 as usize,
-                layout: handles.images.gear_atlas.clone(),
+                layout: gear_assets.gear_layout.clone(),
             }),
             ..default()
         })
@@ -31,7 +36,7 @@ pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &Gam
         .insert(Inventory::new_left());
         p.spawn(Text::new("[TAB]: T.Aux"))
             .insert(TextFont {
-                font: handles.fonts.chakra.w300_light.clone(),
+                font: ui_assets.font_chakra_light.clone(),
                 font_size: 16.0 * FONT_SCALE,
                 ..default()
             })
@@ -53,7 +58,7 @@ pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &Gam
     });
     p.spawn(Text::new("-"))
         .insert(TextFont {
-            font: handles.fonts.victormono.w600_semibold.clone(),
+            font: ui_assets.font_victor_semibold.clone(),
             font_size: 15.0 * FONT_SCALE,
             ..default()
         })
@@ -75,7 +80,11 @@ pub(crate) fn setup_ui_gear_inv_left(p: &mut ChildSpawnerCommands, handles: &Gam
         .insert(InventoryStats::left());
 }
 
-pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_ui_gear_inv_right(
+    p: &mut ChildSpawnerCommands,
+    ui_assets: &UiAssets,
+    gear_assets: &GearAssets,
+) {
     // Right side panel - inventory
     p.spawn(Node {
         flex_direction: FlexDirection::Row,
@@ -85,10 +94,10 @@ pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &Ga
     })
     .with_children(|p| {
         p.spawn(ImageNode {
-            image: handles.images.gear.clone(),
+            image: gear_assets.gear.clone(),
             texture_atlas: Some(TextureAtlas {
                 index: GearSpriteID::Flashlight2 as usize,
-                layout: handles.images.gear_atlas.clone(),
+                layout: gear_assets.gear_layout.clone(),
             }),
             ..default()
         })
@@ -107,10 +116,10 @@ pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &Ga
         })
         .insert(InventoryNext::non_empty());
         p.spawn(ImageNode {
-            image: handles.images.gear.clone(),
+            image: gear_assets.gear.clone(),
             texture_atlas: Some(TextureAtlas {
                 index: GearSpriteID::IonMeter2 as usize,
-                layout: handles.images.gear_atlas.clone(),
+                layout: gear_assets.gear_layout.clone(),
             }),
             ..default()
         })
@@ -122,7 +131,7 @@ pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &Ga
         .insert(Inventory::new_right());
         p.spawn(Text::new("-"))
             .insert(TextFont {
-                font: handles.fonts.victormono.w600_semibold.clone(),
+                font: ui_assets.font_victor_semibold.clone(),
                 font_size: 15.0 * FONT_SCALE,
                 ..default()
             })
@@ -144,7 +153,7 @@ pub(crate) fn setup_ui_gear_inv_right(p: &mut ChildSpawnerCommands, handles: &Ga
     });
     p.spawn(Text::new("[R]: M.Toggle"))
         .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
+            font: ui_assets.font_chakra_light.clone(),
             font_size: 16.0 * FONT_SCALE,
             ..default()
         })

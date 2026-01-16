@@ -13,7 +13,6 @@ workspace = true
 [dependencies]
 untruck-core = { path = "../untruck-core" }
 undifficulty-core = { path = "../undifficulty-core" }
-unassets-core = { path = "../unassets-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unevents-core = { path = "../unevents-core" }
@@ -30,5 +29,6 @@ unwalkie-core = { path = "../unwalkie-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

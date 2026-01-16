@@ -1,18 +1,18 @@
 use super::uibutton::TruckButtonType; // Assuming TruckUIGhostGuess and uibutton are still relevant here
 use crate::components::truck::TruckUIGhostGuess;
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::evidence::Evidence;
-use untruck_core::components::truck_ui_button::TruckButtonTypeExt; // Use CurrentDifficulty
+use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
+use unui_core::assets::UiAssets; // Use CurrentDifficulty
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 
 pub(crate) fn setup_journal_ui(
     p: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     difficulty: &CurrentDifficulty,
 ) {
     // Journal contents
@@ -20,7 +20,7 @@ pub(crate) fn setup_journal_ui(
         Text::new("Select evidence:"),
         TextColor(colors::TRUCKUI_TEXT_COLOR),
         TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
+            font: ui_assets.font_chakra_light.clone(),
             font_size: 25.0 * FONT_SCALE,
             ..default()
         },
@@ -69,7 +69,7 @@ pub(crate) fn setup_journal_ui(
                     btn.spawn((
                         Text::new(evidence.name()),
                         TextFont {
-                            font: handles.fonts.titillium.w400_regular.clone(),
+                            font: ui_assets.font_titillium_regular.clone(),
                             font_size: 18.0 * FONT_SCALE,
                             ..default()
                         },
@@ -95,7 +95,7 @@ pub(crate) fn setup_journal_ui(
         guess.spawn((
             Text::new("Possible ghost with the selected evidence:"),
             TextFont {
-                font: handles.fonts.chakra.w300_light.clone(),
+                font: ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -152,7 +152,7 @@ pub(crate) fn setup_journal_ui(
                     btn.spawn((
                         Text::new(ghost_type.name()),
                         TextFont {
-                            font: handles.fonts.titillium.w400_regular.clone(),
+                            font: ui_assets.font_titillium_regular.clone(),
                             font_size: 18.0 * FONT_SCALE,
                             ..default()
                         },
@@ -178,7 +178,7 @@ pub(crate) fn setup_journal_ui(
         guess.spawn((
             Text::new("With the above evidence we believe the ghost is:"),
             TextFont {
-                font: handles.fonts.chakra.w300_light.clone(),
+                font: ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -192,7 +192,7 @@ pub(crate) fn setup_journal_ui(
         let ghost_guess = (
             Text::new("-- Unknown --"),
             TextFont {
-                font: handles.fonts.titillium.w600_semibold.clone(),
+                font: ui_assets.font_titillium_semibold.clone(),
                 font_size: 20.0 * FONT_SCALE,
                 ..default()
             },
@@ -236,7 +236,7 @@ pub(crate) fn setup_journal_ui(
             btn.spawn((
                 Text::new("Craft Unhaunter™ Ghost Repellent"),
                 TextFont {
-                    font: handles.fonts.titillium.w600_semibold.clone(),
+                    font: ui_assets.font_titillium_semibold.clone(),
                     font_size: 23.0 * FONT_SCALE,
                     ..default()
                 },

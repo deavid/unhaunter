@@ -1,5 +1,5 @@
 use clap::Parser;
-use ghost_list::Cli;
+use ghost_list::cli::Cli;
 
 fn main() {
     let cli = Cli::parse();

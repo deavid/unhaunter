@@ -13,7 +13,7 @@ workspace = true
 
 [dependencies]
 
-unassets-core = { path = "../unassets-core" }
+unui-core = { path = "../unui-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }
 unprofile-core = { path = "../unprofile-core" }

@@ -245,10 +245,16 @@ pub(crate) fn app_setup(app: &mut App) {
             update_player_stamina,
             handle_player_death,
         )
-            .run_if(in_state(untypes_core::states::GameState::None)),
+            .run_if(
+                in_state(untypes_core::states::GameState::None)
+                    .and(in_state(untypes_core::states::AppState::InGame)),
+            ),
     );
     app.add_systems(
         Update,
-        recover_sanity.run_if(in_state(untypes_core::states::GameState::Truck)),
+        recover_sanity.run_if(
+            in_state(untypes_core::states::GameState::Truck)
+                .and(in_state(untypes_core::states::AppState::InGame)),
+        ),
     );
 }

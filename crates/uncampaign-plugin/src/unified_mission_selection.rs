@@ -21,7 +21,6 @@ use bevy::ui::ComputedNode;
 use bevy::ui::ScrollPosition;
 use bevy_persistent::Persistent;
 use unassets_core::resources::maps::Maps;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use unevents_core::events::loadlevel::LoadLevelEvent;
@@ -39,6 +38,7 @@ use unmenu_core::{
     scrollbar, templates,
 };
 use untypes_core::states::{AppState, MapHubState};
+use unui_core::assets::UiAssets;
 
 /// Marker component for the unified Mission Select UI root node
 #[derive(Component)]
@@ -313,7 +313,7 @@ pub(crate) fn update_mission_selection(
 /// System to set up the unified mission selection UI
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     asset_server: Res<AssetServer>,
     player_profile_resource: Res<Persistent<unprofile_core::profile::PlayerProfileData>>,
     maps_resource: Res<Maps>,
@@ -376,7 +376,7 @@ pub(crate) fn setup_ui(
                         mode_name
                     )))
                     .insert(TextFont {
-                        font: handles.fonts.londrina.w300_light.clone(),
+                        font: ui_assets.font_londrina_light.clone(),
                         font_size: 24.0 * FONT_SCALE,
                         ..default()
                     })
@@ -397,7 +397,7 @@ pub(crate) fn setup_ui(
                             "Go Back",
                             0,
                             true,
-                            &handles,
+                            &ui_assets,
                         )
                         .insert(MenuItemInteractive {
                             identifier: 0,
@@ -562,18 +562,18 @@ pub(crate) fn setup_ui(
     };
 
     commands.entity(root_entity).with_children(|parent| {
-            templates::create_background(parent, &handles);
-            templates::create_logo(parent, &handles);
+            templates::create_background(parent, &ui_assets);
+            templates::create_logo(parent, &ui_assets);
             templates::create_breadcrumb_navigation(
                 parent,
-                &handles,
+                &ui_assets,
                 title_text,
                 &subtitle_text,
             );
 
             let mut content_area = templates::create_selectable_content_area(
                 parent,
-                &handles,
+                &ui_assets,
                 default_selected_idx_in_sorted_list,
             );
             content_area.insert(MenuMouseTracker::default());
@@ -609,7 +609,7 @@ pub(crate) fn setup_ui(
                                     let selected = idx == default_selected_idx_in_sorted_list;
                                     create_mission_list_item(
                                         mission_list,
-                                        &handles,
+                                        &ui_assets,
                                         map,
                                         &player_profile_resource,
                                         current_ui_index,
@@ -634,7 +634,7 @@ pub(crate) fn setup_ui(
                                 if let Some((_original_idx, map)) = sorted_locked_maps.iter().map(|(idx, map)| (*idx, map)).next() {
                                     let mission_data = &map.mission_data;
 
-                                    create_locked_mission_item(mission_list, &handles, mission_data);
+                                    create_locked_mission_item(mission_list, &ui_assets, mission_data);
                                 }
 
                                 if !sorted_locked_maps.is_empty() {
@@ -651,7 +651,7 @@ pub(crate) fn setup_ui(
                                     "Go Back",
                                     current_ui_index,
                                     false,
-                                    &handles,
+                                    &ui_assets,
                                 )
                                 .insert(MenuItemInteractive {
                                     identifier: current_ui_index,
@@ -667,7 +667,7 @@ pub(crate) fn setup_ui(
                                 }).insert(Pickable { should_block_lower: false, ..default() });
                             });
 
-                        scrollbar::build_scrollbar_ui(list_and_scrollbar_container, &handles);
+                        scrollbar::build_scrollbar_ui(list_and_scrollbar_container, &ui_assets);
                     });
 
                 content
@@ -707,7 +707,7 @@ pub(crate) fn setup_ui(
                                 text_container
                                     .spawn(Text::new(initial_desc))
                                     .insert(TextFont {
-                                        font: handles.fonts.titillium.w300_light.clone(),
+                                        font: ui_assets.font_titillium_light.clone(),
                                         font_size: 19.0 * FONT_SCALE,
                                         ..default()
                                     })
@@ -730,11 +730,11 @@ pub(crate) fn setup_ui(
 
             templates::create_help_text(
                 parent,
-                &handles,
+                &ui_assets,
                 Some(help_text.to_string()),
             );
 
-            templates::create_player_status_bar(parent, &handles, &player_profile_resource);
+            templates::create_player_status_bar(parent, &ui_assets, &player_profile_resource);
         });
 
     // If there are available missions, set the target for initial scroll.
@@ -748,7 +748,7 @@ pub(crate) fn setup_ui(
 /// Helper function to create a mission list item in the UI
 fn create_mission_list_item(
     mission_list: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     map: &unassets_core::types::root::map::Map,
     player_profile: &unprofile_core::profile::PlayerProfileData,
     ui_index: usize,
@@ -798,7 +798,7 @@ fn create_mission_list_item(
                     row.spawn((
                         Text::new(mission_data.display_name.clone()),
                         TextFont {
-                            font: handles.fonts.titillium.w400_regular.clone(),
+                            font: ui_assets.font_titillium_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         },
@@ -838,7 +838,7 @@ fn create_mission_list_item(
                         Grade::NA // No stats for this map at all
                     };
 
-                    BadgeUtils::create_badge(row, handles, grade, 32.0, false);
+                    BadgeUtils::create_badge(row, ui_assets, grade, 32.0, false);
                 });
         })
         .id()
@@ -847,7 +847,7 @@ fn create_mission_list_item(
 /// Helper function to create a locked mission list item
 fn create_locked_mission_item(
     mission_list: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     mission_data: &unassets_core::types::mission_data::MissionData,
 ) {
     mission_list
@@ -882,7 +882,7 @@ fn create_locked_mission_item(
                             mission_data.min_player_level
                         )),
                         TextFont {
-                            font: handles.fonts.titillium.w400_regular.clone(),
+                            font: ui_assets.font_titillium_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         },
@@ -897,7 +897,7 @@ fn create_locked_mission_item(
 
                     row.spawn(Text::new("🔒"))
                         .insert(TextFont {
-                            font: handles.fonts.titillium.w400_regular.clone(),
+                            font: ui_assets.font_titillium_regular.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })

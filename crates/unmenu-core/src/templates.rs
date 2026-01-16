@@ -1,14 +1,14 @@
 use crate::components::*;
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE, VERSION};
+use unui_core::assets::UiAssets;
 
 /// Creates a standard menu background with the background image
-pub fn create_background(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub fn create_background(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
     parent.spawn((
         ImageNode {
-            image: handles.images.menu_background.clone(),
+            image: ui_assets.menu_background.clone(),
             ..default()
         },
         Node {
@@ -23,10 +23,10 @@ pub fn create_background(parent: &mut ChildSpawnerCommands, handles: &GameAssets
 }
 
 /// Creates a standard menu logo
-pub fn create_logo(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub fn create_logo(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
     parent.spawn((
         ImageNode {
-            image: handles.images.title.clone(),
+            image: ui_assets.title.clone(),
             ..default()
         },
         Node {
@@ -45,7 +45,7 @@ pub fn create_logo(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
 /// Creates a standard menu left strip
 pub fn create_menu_strip<'a, T: Component + Copy>(
     parent: &'a mut ChildSpawnerCommands,
-    _handles: &GameAssets,  // Explicit unused parameter
+    _ui_assets: &UiAssets,  // Explicit unused parameter
     _items: &[(T, String)], // Explicit unused parameter
     selected_item_idx: usize,
 ) -> EntityCommands<'a> {
@@ -87,7 +87,7 @@ pub fn create_menu_item<'a>(
     text: impl Into<String>,
     idx: usize,
     is_selected: bool,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
     warn!("Creating menu item {} with idx {}", text, idx);
@@ -113,7 +113,7 @@ pub fn create_menu_item<'a>(
             parent
                 .spawn(Text::new(text.clone()))
                 .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
+                    font: ui_assets.font_londrina_light.clone(),
                     font_size: 38.0 * FONT_SCALE,
                     ..default()
                 })
@@ -131,7 +131,7 @@ pub fn create_menu_item<'a>(
 /// Creates a standard help text at the bottom of the screen
 pub fn create_help_text(
     parent: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     text: Option<String>,
 ) {
     let default_help_text = format!(
@@ -153,7 +153,7 @@ pub fn create_help_text(
             bottom_bar
                 .spawn(Text::new(text.unwrap_or(default_help_text)))
                 .insert(TextFont {
-                    font: handles.fonts.titillium.w300_light.clone(),
+                    font: ui_assets.font_titillium_light.clone(),
                     font_size: 14.0 * FONT_SCALE,
                     ..default()
                 })
@@ -169,7 +169,7 @@ pub fn create_help_text(
 /// Creates a complete standard menu layout
 pub fn create_standard_menu_layout<T: Component + Copy>(
     commands: &mut Commands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     items: &[(T, String)],
     selected_item_idx: usize,
     help_text: Option<String>,
@@ -187,13 +187,13 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
         .insert(menu_marker) // Add the marker component for easy cleanup
         .with_children(|parent| {
             // Background
-            create_background(parent, handles);
+            create_background(parent, ui_assets);
 
             // Logo
-            create_logo(parent, handles);
+            create_logo(parent, ui_assets);
 
             // Left strip with menu items
-            let mut strip_entity = create_menu_strip(parent, handles, items, selected_item_idx);
+            let mut strip_entity = create_menu_strip(parent, ui_assets, items, selected_item_idx);
 
             // Add mouse tracker to prevent unwanted initial hover selection
             strip_entity.insert(MenuMouseTracker::default());
@@ -206,14 +206,14 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
                         text.clone(),
                         idx,
                         idx == selected_item_idx,
-                        handles,
+                        ui_assets,
                     );
                     entity_cmd.insert(menu_id.to_owned());
                 }
             });
 
             // Help text
-            create_help_text(parent, handles, help_text);
+            create_help_text(parent, ui_assets, help_text);
         })
         .id()
 }
@@ -221,7 +221,7 @@ pub fn create_standard_menu_layout<T: Component + Copy>(
 /// Creates a breadcrumb-style navigation in the left strip, showing the current section path
 pub fn create_breadcrumb_navigation<'a>(
     parent: &'a mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     main_text: impl Into<String>,
     sub_text: impl Into<String>,
 ) -> EntityCommands<'a> {
@@ -266,7 +266,7 @@ pub fn create_breadcrumb_navigation<'a>(
                 .with_children(|node| {
                     node.spawn(Text::new(main_text))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 38.0 * FONT_SCALE,
                             ..default()
                         })
@@ -287,7 +287,7 @@ pub fn create_breadcrumb_navigation<'a>(
                 .with_children(|node| {
                     node.spawn(Text::new(sub_text))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 30.0 * FONT_SCALE,
                             ..default()
                         })
@@ -301,7 +301,7 @@ pub fn create_breadcrumb_navigation<'a>(
 /// Creates a content area with a semi-transparent background and selectable items
 pub fn create_selectable_content_area<'a>(
     parent: &'a mut ChildSpawnerCommands,
-    _handles: &GameAssets, // Explicit unused parameter
+    _ui_assets: &UiAssets, // Explicit unused parameter
     initial_selection: usize,
 ) -> EntityCommands<'a> {
     let content_bg_color = Color::Srgba(Srgba {
@@ -339,17 +339,17 @@ pub fn create_content_item<'a>(
     text: impl Into<String>,
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
 ) -> EntityCommands<'a> {
-    create_content_item_enabled(parent, text, idx, _is_selected, true, handles)
+    create_content_item_enabled(parent, text, idx, _is_selected, true, ui_assets)
 }
 
 pub fn create_content_item_disabled<'a>(
     parent: &'a mut ChildSpawnerCommands,
     text: impl Into<String>,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
 ) -> EntityCommands<'a> {
-    create_content_item_enabled(parent, text, 0, false, false, handles)
+    create_content_item_enabled(parent, text, 0, false, false, ui_assets)
 }
 
 pub fn create_content_item_enabled<'a>(
@@ -358,7 +358,7 @@ pub fn create_content_item_enabled<'a>(
     idx: usize,
     _is_selected: bool, // Always start unselected, systems will update this
     is_enabled: bool,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
 ) -> EntityCommands<'a> {
     let text: String = text.into();
     // Always start with not selected to avoid UI jumping
@@ -400,7 +400,7 @@ pub fn create_content_item_enabled<'a>(
             parent
                 .spawn(Text::new(text))
                 .insert(TextFont {
-                    font: handles.fonts.titillium.w400_regular.clone(),
+                    font: ui_assets.font_titillium_regular.clone(),
                     font_size: 24.0 * FONT_SCALE,
                     ..default()
                 })
@@ -426,7 +426,7 @@ pub fn create_content_item_enabled<'a>(
 /// Should be added to a root UI node of a menu screen.
 pub fn create_player_status_bar(
     parent: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     player_profile: &unprofile_core::profile::PlayerProfileData,
 ) {
     parent
@@ -451,7 +451,7 @@ pub fn create_player_status_bar(
                     player_profile.progression.player_level
                 )))
                 .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
+                    font: ui_assets.font_londrina_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
                     ..default()
                 })
@@ -503,7 +503,7 @@ pub fn create_player_status_bar(
                     player_profile.progression.bank
                 )))
                 .insert(TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
+                    font: ui_assets.font_londrina_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
                     ..default()
                 })

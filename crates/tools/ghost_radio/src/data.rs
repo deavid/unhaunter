@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PlayerPhrase {
+pub(crate) struct PlayerPhrase {
     pub phrase: String,
     pub speech_act: String,
     pub semantic_tags: Vec<String>,
@@ -11,7 +11,7 @@ pub struct PlayerPhrase {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GhostResponse {
+pub(crate) struct GhostResponse {
     pub phrase: String,
     pub speech_act: String,
     pub emotional_signature: GhostEmotionalSignature,
@@ -23,14 +23,14 @@ pub struct GhostResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GhostMetadata {
+pub(crate) struct GhostMetadata {
     pub name: String,
     pub ghost_type: String,
     pub mood: EmotionalSignature,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EmotionalSignature {
+pub(crate) struct EmotionalSignature {
     #[serde(default = "default_f32")]
     pub curiosity: f32,
     #[serde(default = "default_f32")]
@@ -52,7 +52,7 @@ fn default_usize() -> usize {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GhostEmotionalSignature {
+pub(crate) struct GhostEmotionalSignature {
     pub emotional_signature_filter: EmotionalSignature,
     pub emotional_signature_delta: EmotionalSignature,
 }

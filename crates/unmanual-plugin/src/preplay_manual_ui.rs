@@ -3,13 +3,14 @@
 use crate::resources::manual::{CurrentManualPage, Manual};
 use bevy::prelude::*;
 use unassets_core::resources::maps::Maps;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_state::DifficultySelectionState;
 use undifficulty_core::manual_types::ManualChapterIndex;
 use unevents_core::events::loadlevel::LoadLevelEvent;
 use unfoundation_core::platform::plt::FONT_SCALE;
+use unmanual_core::assets::ManualAssets;
 use untypes_core::states::AppState;
+use unui_core::assets::UiAssets;
 
 use crate::manual_logic::draw_manual_page;
 
@@ -134,9 +135,9 @@ fn manual_button_system(
 }
 
 /// Draws the pre-play manual UI, which guides the player through a tutorial.
-pub(crate) fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) {
+pub(crate) fn draw_manual_ui(commands: &mut Commands, ui_assets: &UiAssets) {
     let button_text_style = TextFont {
-        font: handles.fonts.londrina.w300_light.clone(),
+        font: ui_assets.font_londrina_light.clone(),
         font_size: 30.0 * FONT_SCALE,
         ..default()
     };
@@ -236,7 +237,7 @@ pub(crate) fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) 
             // Add menu background first
             parent
                 .spawn(ImageNode {
-                    image: handles.images.menu_background_low_contrast.clone(),
+                    image: ui_assets.menu_background_low_contrast.clone(),
                     ..default()
                 })
                 .insert(Node {
@@ -254,7 +255,7 @@ pub(crate) fn draw_manual_ui(commands: &mut Commands, handles: Res<GameAssets>) 
 
 pub(crate) fn setup_preplay_ui(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     commands.insert_resource(CurrentManualPage(
@@ -268,7 +269,7 @@ pub(crate) fn setup_preplay_ui(
     ));
     commands.spawn(Camera2d).insert(ManualCamera);
 
-    draw_manual_ui(&mut commands, handles);
+    draw_manual_ui(&mut commands, &ui_assets);
 }
 
 pub(crate) fn cleanup_preplay_ui(
@@ -290,7 +291,8 @@ fn redraw_manual_ui_system(
     current_manual_page: Res<CurrentManualPage>,
     q_manual_ui: Query<Entity, With<PrePlayManualUI>>,
     q_page_content: Query<Entity, With<PageContent>>,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
+    manual_assets: Res<ManualAssets>,
     manuals: Res<Manual>,
 ) {
     // Get the ManualUI entity
@@ -312,7 +314,13 @@ fn redraw_manual_ui_system(
     commands
         .entity(page_content_entity)
         .with_children(|parent| {
-            draw_manual_page(parent, &handles, &manuals, &current_manual_page);
+            draw_manual_page(
+                parent,
+                &manual_assets,
+                &ui_assets,
+                &manuals,
+                &current_manual_page,
+            );
         });
 }
 

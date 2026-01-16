@@ -1,14 +1,15 @@
 use super::gear_ui::{setup_ui_gear_inv_left, setup_ui_gear_inv_right};
 use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
-use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::behavior::Behavior;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unsettings_core::game::GameplaySettings;
 use untypes_core::states::{AppState, GameState};
+use unui_core::assets::UiAssets;
 use unui_core::components::game_ui::{
     DamageBackground, ElementObjectUI, EvidenceUI, GameUI, RightSideGearUI, WalkieText,
     WalkieTextUIRoot,
@@ -42,7 +43,8 @@ fn resume(mut qg: Query<&mut Visibility, With<GameUI>>) {
 
 fn setup_ui(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
+    gear_assets: Res<GearAssets>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
     // Spawn independent WalkieText UI
@@ -65,7 +67,7 @@ fn setup_ui(
             parent
                 .spawn(Text::new(""))
                 .insert(TextFont {
-                    font: handles.fonts.chakra.w400i_regular.clone(),
+                    font: ui_assets.font_chakra_italic.clone(),
                     font_size: 18.0 * FONT_SCALE,
                     ..default()
                 })
@@ -94,7 +96,7 @@ fn setup_ui(
         .insert(DamageBackground::new(4.0));
     commands
         .spawn(ImageNode {
-            image: handles.images.vignette.clone(),
+            image: ui_assets.vignette.clone(),
             color: Color::NONE,
             ..default()
         })
@@ -135,7 +137,7 @@ fn setup_ui(
             .with_children(|p| {
                 p.spawn(Text::new(ctrl))
                     .insert(TextFont {
-                        font: handles.fonts.chakra.w300_light.clone(),
+                        font: ui_assets.font_chakra_light.clone(),
                         font_size: 16.0 * FONT_SCALE,
                         ..default()
                     })
@@ -152,9 +154,9 @@ fn setup_ui(
             });
         }
     };
-    let evidence = |p: Cb| setup_ui_evidence(p, &handles);
-    let inv_left = |p: Cb| setup_ui_gear_inv_left(p, &handles);
-    let inv_right = |p: Cb| setup_ui_gear_inv_right(p, &handles);
+    let evidence = |p: Cb| setup_ui_evidence(p, &ui_assets);
+    let inv_left = |p: Cb| setup_ui_gear_inv_left(p, &ui_assets, &gear_assets);
+    let inv_right = |p: Cb| setup_ui_gear_inv_right(p, &ui_assets, &gear_assets);
     let bottom_panel = |p: Cb| {
         // Left side
         // Split for the bottom side in three regions Leftmost side - Inventory left
@@ -222,7 +224,7 @@ fn setup_ui(
             // .insert(colors::DEBUG_BCOLOR)
             // .insert(BackgroundColor(colors::PANEL_BGCOLOR))
             // .insert(HeldObjectUI)
-            // .with_children(|parent| setup_ui_held_object(parent, &handles));
+            // .with_children(|parent| setup_ui_held_object(parent, &ui_assets));
         });
     };
     let game_ui = |p: Cb| {
@@ -240,7 +242,7 @@ fn setup_ui(
             // logo
             parent
                 .spawn(ImageNode {
-                    image: handles.images.title.clone(),
+                    image: ui_assets.title.clone(),
                     ..default()
                 })
                 .insert(Node {
@@ -315,12 +317,12 @@ fn setup_ui(
     info!("Game UI loaded");
 }
 
-fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
     parent
         .spawn((
             Text::default(),
             TextFont {
-                font: handles.fonts.chakra.w400_regular.clone(),
+                font: ui_assets.font_chakra_regular.clone(),
                 font_size: 22.0 * FONT_SCALE,
                 ..default()
             },
@@ -333,7 +335,7 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
             parent
                 .spawn(TextSpan::new("Freezing temps:"))
                 .insert(TextFont {
-                    font: handles.fonts.chakra.w400_regular.clone(),
+                    font: ui_assets.font_chakra_regular.clone(),
                     font_size: 22.0 * FONT_SCALE,
                     ..default()
                  })
@@ -341,7 +343,7 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
             parent
                 .spawn(TextSpan::new(" [+] Evidence Found\n"))
                 .insert(TextFont {
-                    font: handles.fonts.victormono.w600_semibold.clone(),
+                    font: ui_assets.font_victor_semibold.clone(),
                     font_size: 20.0 * FONT_SCALE,
                     ..default()
                 })
@@ -351,7 +353,7 @@ fn setup_ui_evidence(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
                     "The ghost and the breach will make the ambient colder.\nSome ghosts will make the temperature drop below 0.0ºC.",
                 ))
                 .insert(TextFont {
-                    font: handles.fonts.chakra.w300_light.clone(),
+                    font: ui_assets.font_chakra_light.clone(),
                     font_size: 20.0 * FONT_SCALE,
                     ..default()
                  })

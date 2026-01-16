@@ -13,6 +13,7 @@ workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 
 undifficulty-core = { path = "../undifficulty-core" }
 unassets-core = { path = "../unassets-core" }
@@ -21,6 +22,5 @@ unboard-core = { path = "../unboard-core" }
 untypes-core = { path = "../untypes-core" }
 unsummary-core = { path = "../unsummary-core" }
 unui-core = { path = "../unui-core" }
-bevy-persistent = { workspace = true }
 unprofile-core = { path = "../unprofile-core" }
 unplayer-core = { path = "../unplayer-core" }

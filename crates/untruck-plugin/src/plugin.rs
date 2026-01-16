@@ -1,6 +1,9 @@
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 use unevents_core::events::truck::TruckUIEvent;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use untruck_core::assets::TruckAssets;
+use untypes_core::states::AppState;
 
 use super::loadoutui::EventButtonClicked;
 
@@ -8,6 +11,9 @@ pub struct UnhaunterTruckPlugin;
 
 impl Plugin for UnhaunterTruckPlugin {
     fn build(&self, app: &mut App) {
+        app.add_loading_state(
+            LoadingState::new(AppState::Loading).load_collection::<TruckAssets>(),
+        );
         app.add_message::<TruckUIEvent>()
             .add_message::<EventButtonClicked>()
             .init_resource::<GhostGuess>();

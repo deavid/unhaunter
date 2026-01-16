@@ -17,7 +17,9 @@ untypes-core = { path = "../untypes-core" }
 unevents-core = { path = "../unevents-core" }
 unmenu-core = { path = "../unmenu-core" }
 unghost-core = { path = "../unghost-core" }
-unnoise-core = { path = "../unnoise-core" }
 unplayer-core = { path = "../unplayer-core" }
+unnoise-core = { path = "../unnoise-core" }
+unui-plugin = { path = "../unui-plugin" }
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy_framepace = { workspace = true }

@@ -2,7 +2,7 @@
 use crate::data::{EmotionalSignature, GhostResponse, PlayerPhrase};
 use std::collections::HashMap;
 
-pub fn score_responses(
+pub(crate) fn score_responses(
     player_phrase: &PlayerPhrase,
     ghost_responses: &HashMap<String, GhostResponse>,
     ghost_mood: &EmotionalSignature,
@@ -34,7 +34,7 @@ fn emotional_signature_to_vec(es: &EmotionalSignature) -> Vec<f32> {
     vec![es.curiosity, es.fear, es.anger, es.sadness, es.joy]
 }
 
-pub fn cosine_similarity(v1: &[String], v2: &[String]) -> f32 {
+pub(crate) fn cosine_similarity(v1: &[String], v2: &[String]) -> f32 {
     // Create sets of the unique elements in each vector
     let mut set1: std::collections::HashSet<_> = v1.iter().cloned().collect();
     let mut set2: std::collections::HashSet<_> = v2.iter().cloned().collect();

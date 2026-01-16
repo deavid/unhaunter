@@ -27,5 +27,6 @@ unthermal-core = { path = "../unthermal-core" }
 unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

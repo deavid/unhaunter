@@ -16,4 +16,8 @@ untypes-core = { path = "../untypes-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 undifficulty-core = { path = "../undifficulty-core" }
+unmanual-core = { path = "../unmanual-core" }
+unui-core = { path = "../unui-core" }
+
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }

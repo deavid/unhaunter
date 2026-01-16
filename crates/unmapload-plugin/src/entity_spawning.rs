@@ -96,14 +96,14 @@ pub(crate) fn spawn_player(
     // Spawn the player entity
     commands
         .spawn(Sprite {
-            image: p.handles.images.character1.clone(),
+            image: p.player_assets.character.clone(),
             texture_atlas: Some(TextureAtlas {
-                layout: p.handles.images.character1_atlas.clone(),
+                layout: p.player_assets.character_layout.clone(),
                 ..Default::default()
             }),
             ..default()
         })
-        .insert(Anchor(p.handles.anchors.grid1x1x4))
+        .insert(Anchor(unplayer_core::assets::PLAYER_ANCHOR))
         .insert(
             Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
@@ -181,11 +181,11 @@ pub(crate) fn spawn_ghosts(
     // Spawn the ghost breach entity
     let breach_id = commands
         .spawn(Sprite {
-            image: p.asset_server.load("img/breach.png"),
+            image: p.ghost_assets.breach.clone(),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
-        .insert(Anchor(p.handles.anchors.grid1x1x4))
+        .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Breach)
@@ -194,7 +194,7 @@ pub(crate) fn spawn_ghosts(
         .with_children(|parent| {
             parent
                 .spawn(Sprite {
-                    image: p.asset_server.load("img/focus_ring_vignette.png"),
+                    image: p.ghost_assets.focus_ring_vignette.clone(),
                     color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                     ..default()
                 })
@@ -209,11 +209,11 @@ pub(crate) fn spawn_ghosts(
     // Spawn the ghost entity
     commands
         .spawn(Sprite {
-            image: p.asset_server.load("img/ghost.png"),
+            image: p.ghost_assets.ghost.clone(),
             color: Color::srgba(0.0, 0.0, 0.0, 0.0),
             ..default()
         })
-        .insert(Anchor(p.handles.anchors.grid1x1x4))
+        .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(SpriteType::Ghost)
@@ -224,7 +224,7 @@ pub(crate) fn spawn_ghosts(
         .with_children(|parent| {
             parent
                 .spawn(Sprite {
-                    image: p.asset_server.load("img/focus_ring_vignette.png"),
+                    image: p.ghost_assets.focus_ring_vignette.clone(),
                     color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                     ..default()
                 })

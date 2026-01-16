@@ -1,10 +1,10 @@
 use crate::components::*;
 use crate::menus::MenuSettingsLevel1;
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unmenu_core::components::{MenuMouseTracker, MenuRoot};
 use unmenu_core::templates;
 use untypes_core::states::AppState;
+use unui_core::assets::UiAssets;
 
 fn setup_ui_cam(mut commands: Commands) {
     commands.spawn(Camera2d).insert(SCamera);
@@ -12,17 +12,17 @@ fn setup_ui_cam(mut commands: Commands) {
 
 fn setup_ui_main_cat_system(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     qtui: Query<Entity, With<SettingsMenu>>,
 ) {
     let menu_items = MenuSettingsLevel1::iter_events();
-    setup_ui_main_cat(&mut commands, &handles, &qtui, "Settings", &menu_items);
+    setup_ui_main_cat(&mut commands, &ui_assets, &qtui, "Settings", &menu_items);
 }
 
 /// Helper function to set up the main categories UI for settings menu (not a system)
 pub(crate) fn setup_ui_main_cat(
     commands: &mut Commands,
-    handles: &Res<GameAssets>,
+    ui_assets: &Res<UiAssets>,
     qtui: &Query<Entity, With<SettingsMenu>>,
     title: impl Into<String>,
     menu_items: &[(String, MenuEvent)],
@@ -44,15 +44,15 @@ pub(crate) fn setup_ui_main_cat(
         })
         .with_children(|parent| {
             // Background
-            templates::create_background(parent, handles);
+            templates::create_background(parent, ui_assets);
 
             // Logo
-            templates::create_logo(parent, handles);
+            templates::create_logo(parent, ui_assets);
 
             // Create breadcrumb navigation with title
             templates::create_breadcrumb_navigation(
                 parent,
-                handles,
+                ui_assets,
                 title,
                 "" // No subtitle for this level
             );
@@ -60,7 +60,7 @@ pub(crate) fn setup_ui_main_cat(
             // Create content area for settings items
             let mut content_area_entity = templates::create_selectable_content_area(
                 parent,
-                handles,
+                ui_assets,
                 0 // Initial selection
             );
 
@@ -94,7 +94,7 @@ pub(crate) fn setup_ui_main_cat(
                                     item_text,
                                     idx,
                                     idx == 0, // First item selected by default
-                                    handles
+                                    ui_assets
                                 )
                                 .insert(MenuItem::new(idx, *event));
                                 idx += 1;
@@ -103,7 +103,7 @@ pub(crate) fn setup_ui_main_cat(
                                 templates::create_content_item_disabled(
                                     menu_list,
                                     item_text,
-                                    handles
+                                    ui_assets
                                 );
                             }
                         }
@@ -114,7 +114,7 @@ pub(crate) fn setup_ui_main_cat(
                             "Go Back",
                             idx,
                             false,
-                            handles
+                            ui_assets
                         )
                         .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
                     });
@@ -123,7 +123,7 @@ pub(crate) fn setup_ui_main_cat(
             // Help text
             templates::create_help_text(
                 parent,
-                handles,
+                ui_assets,
                 Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
             );
         })

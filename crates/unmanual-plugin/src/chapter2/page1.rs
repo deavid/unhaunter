@@ -1,44 +1,49 @@
 use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header};
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
+use unmanual_core::assets::ManualAssets;
+use unui_core::assets::UiAssets;
 
-pub(crate) fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn draw(
+    parent: &mut ChildSpawnerCommands,
+    manual_assets: &ManualAssets,
+    ui_assets: &UiAssets,
+) {
     let title = "Mastering UV and Night Vision Camera";
     let subtitle = "Understanding gear and seeing the invisible.";
     let grid = vec![
         (
-            &handles.images.manual_uv_breach,
+            &manual_assets.manual_uv_breach,
             "*1. Breach under UV:* The breach always glows golden under UV Light, making it easier to spot.",
         ),
         (
-            &handles.images.manual_uv_ghost,
+            &manual_assets.manual_uv_ghost,
             "*2. UV Ectoplasm:* Some ghosts emit a greenish glow under UV light, which is evidence for *UV Ectoplasm*.",
         ),
         (
-            &handles.images.manual_uv_object,
+            &manual_assets.manual_uv_object,
             "*3. Ghost Influence:* Certain objects emit a green glow under UV light. Ghosts are naturally attracted to these.",
         ),
         (
-            &handles.images.manual_left_hand_videocam,
+            &manual_assets.manual_left_hand_videocam,
             "*4. Left Hand:* The Videocam can be used with *[TAB]* too if it's placed on the left hand slot.",
         ),
         (
-            &handles.images.manual_floating_orbs,
+            &manual_assets.manual_floating_orbs,
             "*5. Floating Orbs:* If you see that the breach glows bright white under Night Vision means that this ghost has *Floating Orbs* as evidence.",
         ),
         (
-            &handles.images.manual_truck_refuge,
+            &manual_assets.manual_truck_refuge,
             "*6. Truck as Refuge:* Remember to return to the truck to prepare your investigation, rest and recover. *Sanity* and *Health* are recovered while on the truck.",
         ),
     ];
 
-    header(parent, handles, title, subtitle);
+    header(parent, ui_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &handles.fonts.chakra.w400_regular,
-        &handles.fonts.chakra.w600_semibold,
+        &ui_assets.font_chakra_regular,
+        &ui_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );

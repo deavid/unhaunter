@@ -17,7 +17,7 @@ bevy-persistent = { workspace = true }
 strum = { workspace = true }
 
 
-unassets-core = { path = "../unassets-core" }
+unui-core = { path = "../unui-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 untypes-core = { path = "../untypes-core" }
 unsettings-core = { path = "../unsettings-core" }

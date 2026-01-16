@@ -1,44 +1,49 @@
 use crate::types::ManualPageData;
 use crate::utils::{grid_img_text2, header};
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
+use unmanual_core::assets::ManualAssets;
+use unui_core::assets::UiAssets;
 
-pub(crate) fn draw(parent: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn draw(
+    parent: &mut ChildSpawnerCommands,
+    manual_assets: &ManualAssets,
+    ui_assets: &UiAssets,
+) {
     let title = "Ghost Hunts and the Truck";
     let subtitle = "Surviving the paranormal and using your truck as your headquarters.";
     let grid = vec![
         (
-            &handles.images.manual_ghost_red,
+            &manual_assets.manual_ghost_red,
             "*1. Ghost's Hunt:* The ghost may become aggressive and start a hunt. This is a very dangerous state.",
         ),
         (
-            &handles.images.manual_ghost_roar,
+            &manual_assets.manual_ghost_roar,
             "*2. Loud Ghost Roar:* Before a hunt starts, the ghost will make a loud, angry roar, giving you a hint of what's coming.",
         ),
         (
-            &handles.images.manual_hide_table,
+            &manual_assets.manual_hide_table,
             "*3. Hiding Places:* If a hunt starts, hold *[E]* for a second to hide behind tables or beds, hoping the ghost will not find you.",
         ),
         (
-            &handles.images.manual_truck_loadout,
+            &manual_assets.manual_truck_loadout,
             "*4. Select Your Equipment:* You can select which equipment you want to take with you from the *Loadout* tab of the truck before starting the investigation.",
         ),
         (
-            &handles.images.manual_inventory_all,
+            &manual_assets.manual_inventory_all,
             "*5. Be organized!*: The spots in your inventory are for the Left Hand *[TAB]*, Right Hand *[R]*, and two extra backpack slots *[Q]*.",
         ),
         (
-            &handles.images.manual_truck_endmission,
+            &manual_assets.manual_truck_endmission,
             "*6. End Mission:* When you are sure that you have expelled all of the ghosts, click \"End Mission\" on the truck to receive your score.",
         ),
     ];
 
-    header(parent, handles, title, subtitle);
+    header(parent, ui_assets, title, subtitle);
 
     grid_img_text2(
         parent,
-        &handles.fonts.chakra.w400_regular,
-        &handles.fonts.chakra.w600_semibold,
+        &ui_assets.font_chakra_regular,
+        &ui_assets.font_chakra_semibold,
         (3, 2),
         grid,
     );

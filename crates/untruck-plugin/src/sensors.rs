@@ -1,17 +1,17 @@
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 
 use bevy::prelude::*;
+use unui_core::assets::UiAssets;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub(crate) fn setup_sensors_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_sensors_ui(p: &mut ChildSpawnerCommands, handles: &UiAssets) {
     let title = (
         Text::new("Sensors"),
         TextFont {
-            font: handles.fonts.londrina.w300_light.clone(),
+            font: handles.font_londrina_light.clone(),
             font_size: 35.0 * FONT_SCALE,
             ..default()
         },
@@ -35,7 +35,7 @@ pub(crate) fn setup_sensors_ui(p: &mut ChildSpawnerCommands, handles: &GameAsset
     let sensor1 = (
         Text::new("No Sensors"),
         TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
+            font: handles.font_chakra_light.clone(),
             font_size: 25.0 * FONT_SCALE,
             ..default()
         },

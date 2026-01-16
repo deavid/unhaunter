@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_platform::time::Instant;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use undifficulty_core::difficulty_settings::DifficultySettings;
 use undifficulty_core::difficulty_state::DifficultySelectionState;
@@ -16,6 +15,7 @@ use unmenu_core::{
 use untypes_core::difficulty::Difficulty;
 use untypes_core::states::AppState;
 use untypes_core::states::MapHubState;
+use unui_core::assets::UiAssets;
 
 /// UI component marker for the difficulty selection screen
 #[derive(Component, Debug)]
@@ -49,7 +49,7 @@ pub(crate) fn app_setup(app: &mut App) {
 /// Sets up the difficulty selection screen UI and initializes the difficulty state
 pub(crate) fn setup_systems(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     mut map_selected_events: MessageReader<MapSelectedEvent>,
 ) {
     // Filter for non-tutorial difficulties to display
@@ -57,7 +57,7 @@ pub(crate) fn setup_systems(
         .filter(|d| !d.is_tutorial_difficulty())
         .collect();
 
-    setup_ui(&mut commands, &handles, &available_difficulties);
+    setup_ui(&mut commands, &ui_assets, &available_difficulties);
 
     // Default to the first *non-tutorial* difficulty, or a sensible fallback
     let default_difficulty = available_difficulties
@@ -237,7 +237,7 @@ pub(crate) fn handle_difficulty_escape(
 /// This now takes a Vec<Difficulty> containing only non-tutorial difficulties.
 pub(crate) fn setup_ui(
     commands: &mut Commands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
     available_difficulties: &[Difficulty],
 ) {
     // Use the first available non-tutorial difficulty for initial description
@@ -263,16 +263,16 @@ pub(crate) fn setup_ui(
         })
         .insert(DifficultySelectionUI)
         .with_children(|parent| {
-            templates::create_background(parent, handles);
-            templates::create_logo(parent, handles);
+            templates::create_background(parent, ui_assets);
+            templates::create_logo(parent, ui_assets);
             templates::create_breadcrumb_navigation(
                 parent,
-                handles,
+                ui_assets,
                 "Custom Mission", // Changed from "New Game"
                 "Select Difficulty",
             );
 
-            let mut content_area = templates::create_selectable_content_area(parent, handles, 0);
+            let mut content_area = templates::create_selectable_content_area(parent, ui_assets, 0);
             content_area.insert(MenuMouseTracker::default());
 
             content_area.with_children(|content| {
@@ -295,7 +295,7 @@ pub(crate) fn setup_ui(
                                 difficulty.difficulty_name(),
                                 idx,
                                 idx == 0,
-                                handles,
+                                ui_assets,
                             )
                             .insert(DifficultySelectionItem {
                                 difficulty: *difficulty,
@@ -312,7 +312,7 @@ pub(crate) fn setup_ui(
                             "Go Back",
                             available_difficulties.len(), // Index for "Go Back" is after all difficulties
                             false,
-                            handles,
+                            ui_assets,
                         )
                         .insert(MenuItemInteractive {
                             // Ensure MenuItemInteractive uses the correct index
@@ -333,7 +333,7 @@ pub(crate) fn setup_ui(
                         desc_column.spawn((
                             Text::new(initial_desc),
                             TextFont {
-                                font: handles.fonts.titillium.w300_light.clone(),
+                                font: ui_assets.font_titillium_light.clone(),
                                 font_size: 19.0 * FONT_SCALE,
                                 ..default()
                             },
@@ -349,7 +349,7 @@ pub(crate) fn setup_ui(
 
             templates::create_help_text(
                 parent,
-                handles,
+                ui_assets,
                 Some(
                     "[Up]/[Down]: Change Difficulty    |    [Enter]: Select    |    [ESC]: Go Back"
                         .to_string(),

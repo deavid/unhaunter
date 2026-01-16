@@ -14,7 +14,7 @@ workspace = true
 
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
-unassets-core = { path = "../unassets-core" }
+unui-core = { path = "../unui-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }

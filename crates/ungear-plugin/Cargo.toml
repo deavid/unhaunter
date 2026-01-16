@@ -14,7 +14,6 @@ workspace = true
 ungear-core = { path = "../ungear-core" }
 unrender-std = { path = "../unrender-std" }
 unspatial-core = { path = "../unspatial-core" }
-unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
@@ -29,4 +28,5 @@ untags-core = { path = "../untags-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy-persistent = { workspace = true }

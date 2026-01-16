@@ -2,7 +2,6 @@ use bevy::{color::palettes::css, prelude::*};
 use bevy_persistent::Persistent;
 
 use unassets_core::resources::maps::Maps;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::ghost::types::GhostType;
@@ -13,6 +12,7 @@ use unprofile_core::profile::PlayerProfileData;
 use unsummary_core::summary::SummaryData;
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
+use unui_core::assets::UiAssets;
 use unui_core::components::summary_ui::{SCamera, SummaryUI, SummaryUIType};
 
 pub(crate) fn setup(mut commands: Commands) {
@@ -84,7 +84,7 @@ pub(crate) fn keyboard(
 }
 pub(crate) fn setup_ui(
     mut commands: Commands,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     rsd: Res<SummaryData>,
     player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
@@ -133,7 +133,7 @@ pub(crate) fn setup_ui(
                     // logo
                     parent
                         .spawn(ImageNode {
-                            image: handles.images.title.clone(),
+                            image: ui_assets.title.clone(),
                             ..default()
                         })
                         .insert(Node {
@@ -183,7 +183,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Mission Summary"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 32.0 * FONT_SCALE,
                             ..default()
                         })
@@ -192,7 +192,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Map: Unknown"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -202,7 +202,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Difficulty: Unknown"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -213,7 +213,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Ghost list"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -223,7 +223,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Time taken: 00.00.00"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -233,7 +233,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("Players Alive: 0/0"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -261,7 +261,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new(format!("Grade Achieved: {}", rsd.grade_achieved)))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 28.0 * FONT_SCALE,
                             ..default()
                         })
@@ -277,7 +277,7 @@ pub(crate) fn setup_ui(
                             rsd.base_score, rsd.difficulty_multiplier, rsd.animated_final_score
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 24.0 * FONT_SCALE,
                             ..default()
                         })
@@ -307,7 +307,7 @@ pub(crate) fn setup_ui(
                             rsd.mission_reward_base
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -320,7 +320,7 @@ pub(crate) fn setup_ui(
                             rsd.grade_multiplier
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -333,7 +333,7 @@ pub(crate) fn setup_ui(
                             rsd.money_earned
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -364,7 +364,7 @@ pub(crate) fn setup_ui(
                             rsd.deposit_originally_held
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -376,7 +376,7 @@ pub(crate) fn setup_ui(
                             rsd.costs_deducted_from_deposit
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -388,7 +388,7 @@ pub(crate) fn setup_ui(
                             rsd.deposit_returned_to_bank
                         )))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })
@@ -414,7 +414,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new(format!("Net Change to Bank: ${}", net_change)))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 26.0 * FONT_SCALE,
                             ..default()
                         })
@@ -427,7 +427,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new(format!("Final Money in Bank: ${}", final_bank)))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 26.0 * FONT_SCALE,
                             ..default()
                         })
@@ -445,7 +445,7 @@ pub(crate) fn setup_ui(
                     parent
                         .spawn(Text::new("[ - Press enter to continue - ]"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 22.0 * FONT_SCALE,
                             ..default()
                         })

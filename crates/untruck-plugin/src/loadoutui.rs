@@ -2,12 +2,12 @@ use super::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use crate::systems::truck_ui_systems::RepellentCraftTracker;
 use crate::types::evidence_status::EvidenceStatus;
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::Hand;
+use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::{GearKind, GearSpriteID};
@@ -16,6 +16,7 @@ use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::resources::GameConfig;
 use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::GameState;
+use unui_core::assets::UiAssets;
 
 #[derive(Debug, Component, Clone)]
 pub(crate) enum LoadoutButton {
@@ -35,7 +36,8 @@ pub(crate) struct GearHelpTitle;
 
 pub(crate) fn setup_loadout_ui(
     p: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    ui_assets: &UiAssets,
+    gear_assets: &GearAssets,
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
     gear_registry: &GearSpawnerRegistry,
@@ -63,10 +65,10 @@ pub(crate) fn setup_loadout_ui(
     let equipment = |g: GearSpriteID| {
         (
             ImageNode {
-                image: handles.images.gear.clone(),
+                image: gear_assets.gear.clone(),
                 texture_atlas: Some(TextureAtlas {
                     index: g as usize,
-                    layout: handles.images.gear_atlas.clone(),
+                    layout: gear_assets.gear_layout.clone(),
                 }),
                 ..default()
             },
@@ -97,7 +99,7 @@ pub(crate) fn setup_loadout_ui(
         p.spawn((
             Text::new("Player Inventory:"),
             TextFont {
-                font: handles.fonts.chakra.w300_light.clone(),
+                font: ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -142,7 +144,7 @@ pub(crate) fn setup_loadout_ui(
         p.spawn((
             Text::new("Van Inventory:"),
             TextFont {
-                font: handles.fonts.chakra.w300_light.clone(),
+                font: ui_assets.font_chakra_light.clone(),
                 font_size: 25.0 * FONT_SCALE,
                 ..default()
             },
@@ -215,7 +217,7 @@ pub(crate) fn setup_loadout_ui(
             p.spawn((
                 Text::new("Help and Item description:"),
                 TextFont {
-                    font: handles.fonts.chakra.w300_light.clone(),
+                    font: ui_assets.font_chakra_light.clone(),
                     font_size: 25.0 * FONT_SCALE,
                     ..default()
                 },
@@ -230,7 +232,7 @@ pub(crate) fn setup_loadout_ui(
             p.spawn((
                 Text::new("Select which gear do you want to use to investigate. Click items on the truck inventory to bring them to your inventory. Click on items on your inventory to remove them. Hover items to see the description here."),
                 TextFont {
-                    font: handles.fonts.titillium.w400_regular.clone(),
+                    font: ui_assets.font_titillium_regular.clone(),
                     font_size: 16.0 * FONT_SCALE,
                     ..default()
                 },

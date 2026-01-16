@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod components;
 pub mod journal;
 pub mod truckgear;

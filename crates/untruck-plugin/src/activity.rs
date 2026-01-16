@@ -1,15 +1,15 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use unui_core::assets::UiAssets;
 
 const MARGIN_PERCENT: f32 = 0.5 * UI_SCALE;
 const TEXT_MARGIN: UiRect = UiRect::percent(2.0 * UI_SCALE, 0.0, 0.0, 0.0);
 
-pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &UiAssets) {
     p.spawn(Text::new("Activity"))
         .insert(TextFont {
-            font: handles.fonts.londrina.w300_light.clone(),
+            font: handles.font_londrina_light.clone(),
             font_size: 35.0 * FONT_SCALE,
             ..default()
         })
@@ -30,7 +30,7 @@ pub(crate) fn setup_activity_ui(p: &mut ChildSpawnerCommands, handles: &GameAsse
     p.spawn(Text::new("Instrumentation broken"))
         .insert(TextColor(colors::TRUCKUI_TEXT_COLOR))
         .insert(TextFont {
-            font: handles.fonts.chakra.w300_light.clone(),
+            font: handles.font_chakra_light.clone(),
             font_size: 25.0 * FONT_SCALE,
             ..default()
         })

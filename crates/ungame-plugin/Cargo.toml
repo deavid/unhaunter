@@ -16,7 +16,6 @@ workspace = true
 
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
-unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
@@ -26,10 +25,10 @@ untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unrender-std = { path = "../unrender-std" }
+ungear-core = { path = "../ungear-core" }
 unplayer-core = { path = "../unplayer-core" }
 unpicking-core = { path = "../unpicking-core" }
 uninteraction-core = { path = "../uninteraction-core" }
-ungear-core = { path = "../ungear-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
 unghost-core = { path = "../unghost-core" }

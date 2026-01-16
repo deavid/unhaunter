@@ -1,11 +1,11 @@
 use bevy::audio::SpatialScale;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unassets_core::types::root::game_assets::GameAssets;
 use unboard_core::components::mapcolor::MapColor;
 use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::types::gear::Hand;
 use unfoundation_core::types::gear::{GearKind, GearSpriteID};
+use ungear_core::assets::GearAssets;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;
@@ -21,12 +21,12 @@ use unrender_std::components::sprite_type::SpriteType;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
-use untypes_core::states::GameState;
+use untypes_core::states::{AppState, GameState};
 
 fn update_deployed_gear_sprites(
     mut commands: Commands,
     mut q_gear: Query<(Entity, &Position, &GearSprite, Option<&mut Sprite>), With<DeployedGear>>,
-    handles: Res<GameAssets>,
+    gear_assets: Res<GearAssets>,
 ) {
     for (entity, pos, gear_sprite, sprite) in q_gear.iter_mut() {
         if let Some(mut sprite) = sprite {
@@ -36,9 +36,9 @@ fn update_deployed_gear_sprites(
         } else {
             commands.entity(entity).insert((
                 Sprite {
-                    image: handles.images.gear.clone(),
+                    image: gear_assets.gear.clone(),
                     texture_atlas: Some(TextureAtlas {
-                        layout: handles.images.gear_atlas.clone(),
+                        layout: gear_assets.gear_layout.clone(),
                         index: gear_sprite.0 as usize,
                     }),
                     ..default()
@@ -203,9 +203,15 @@ fn clear_trigger_handler(mut commands: Commands, q_triggered: Query<Entity, With
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(FixedUpdate, update_gear_ui)
-        .add_systems(Update, update_deployed_gear_sprites)
+        .add_systems(
+            Update,
+            (
+                update_deployed_gear_sprites,
+                sound_playback_system,
+                gear_trigger_handler,
+            )
+                .run_if(in_state(AppState::InGame)),
+        )
         .add_systems(Update, keyboard_gear.run_if(in_state(GameState::None)))
-        .add_systems(Update, sound_playback_system)
-        .add_systems(Update, gear_trigger_handler)
         .add_systems(PostUpdate, clear_trigger_handler);
 }

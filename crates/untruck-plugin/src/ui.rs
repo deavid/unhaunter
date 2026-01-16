@@ -5,13 +5,14 @@ use crate::components::truck_ui::{TabContents, TabState, TruckTab};
 use crate::components::truck_ui_button::TruckButtonTypeExt;
 use crate::uibutton::TruckButtonType; // Assuming this is where TruckButtonType is for .into_component()
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
+use ungear_core::assets::GearAssets;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::materials::UIPanelMaterial;
 use untypes_core::states::{AppState, GameState};
+use unui_core::assets::UiAssets;
 
 /// Trait to prevent CurrentDifficulty spilling to uncore
 pub(crate) trait FromTab {
@@ -39,7 +40,8 @@ fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
     game_state: Res<State<GameState>>,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
+    gear_assets: Res<GearAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
     gear_registry: Res<GearSpawnerRegistry>,
 ) {
@@ -60,7 +62,7 @@ fn setup_ui(
     let panel_material = materials.add(UIPanelMaterial {
         color: colors::TRUCKUI_PANEL_BGCOLOR.into(),
     });
-    let sensors = |p: Cb| sensors::setup_sensors_ui(p, &handles);
+    let sensors = |p: Cb| sensors::setup_sensors_ui(p, &ui_assets);
     let left_column = |p: Cb| {
         p.spawn((
             MaterialNode(panel_material.clone()),
@@ -76,7 +78,7 @@ fn setup_ui(
                 ..default()
             },
         ))
-        .with_children(|p| sanity::setup_sanity_ui(p, &handles));
+        .with_children(|p| sanity::setup_sanity_ui(p, &ui_assets));
 
         p.spawn((
             MaterialNode(panel_material.clone()),
@@ -105,7 +107,7 @@ fn setup_ui(
             let text = (
                 Text::new(&truck_tab.tabname),
                 TextFont {
-                    font: handles.fonts.londrina.w300_light.clone(),
+                    font: ui_assets.font_londrina_light.clone(),
                     font_size: 35.0 * FONT_SCALE,
                     ..default()
                 },
@@ -178,14 +180,15 @@ fn setup_ui(
             .with_children(|p| {
                 loadoutui::setup_loadout_ui(
                     p,
-                    &handles,
+                    &ui_assets,
+                    &gear_assets,
                     &mut materials,
                     &difficulty,
                     &gear_registry,
                 )
             });
         p.spawn((base_node.clone(), TabContents::Journal))
-            .with_children(|p| journalui::setup_journal_ui(p, &handles, &difficulty));
+            .with_children(|p| journalui::setup_journal_ui(p, &ui_assets, &difficulty));
 
         p.spawn(Node {
             justify_content: JustifyContent::FlexStart,
@@ -210,7 +213,7 @@ fn setup_ui(
                 ..default()
             },
         ))
-        .with_children(|p| activity::setup_activity_ui(p, &handles));
+        .with_children(|p| activity::setup_activity_ui(p, &ui_assets));
 
         p.spawn((
             Node {
@@ -251,7 +254,7 @@ fn setup_ui(
                     btn.spawn((
                         Text::new("Exit Truck"),
                         TextFont {
-                            font: handles.fonts.titillium.w600_semibold.clone(),
+                            font: ui_assets.font_titillium_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         },
@@ -280,7 +283,7 @@ fn setup_ui(
                     btn.spawn((
                         Text::new("End Mission"),
                         TextFont {
-                            font: handles.fonts.titillium.w600_semibold.clone(),
+                            font: ui_assets.font_titillium_semibold.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         },

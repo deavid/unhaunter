@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::{Interactive, NpcHelpDialog};
 use unevents_core::events::npc_help::NpcHelpEvent;
@@ -11,6 +10,7 @@ use unrender_std::materials::UIPanelMaterial;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use untypes_core::states::GameState;
+use unui_core::assets::UiAssets;
 
 #[derive(Debug, Component)]
 pub(crate) struct NpcUI;
@@ -44,7 +44,7 @@ pub(crate) fn cleanup(mut commands: Commands, qtui: Query<Entity, With<NpcUI>>) 
 pub(crate) fn setup_ui(
     mut commands: Commands,
     mut materials: ResMut<Assets<UIPanelMaterial>>,
-    handles: Res<GameAssets>,
+    ui_assets: Res<UiAssets>,
     npcdata: Res<NpcUIData>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
@@ -89,7 +89,7 @@ pub(crate) fn setup_ui(
                     mid_blk
                         .spawn(Text::new("Stranger says:"))
                         .insert(TextFont {
-                            font: handles.fonts.londrina.w300_light.clone(),
+                            font: ui_assets.font_londrina_light.clone(),
                             font_size: 35.0 * FONT_SCALE,
                             ..default()
                         })
@@ -108,7 +108,7 @@ pub(crate) fn setup_ui(
                     mid_blk
                         .spawn(Text::new(npcdata.dialog.clone()))
                         .insert(TextFont {
-                            font: handles.fonts.syne.w400_regular.clone(),
+                            font: ui_assets.font_syne_regular.clone(),
                             font_size: 21.0 * FONT_SCALE,
                             ..default()
                         })
@@ -126,7 +126,7 @@ pub(crate) fn setup_ui(
                     mid_blk
                         .spawn(Text::new("Close: [ESC] or [E]"))
                         .insert(TextFont {
-                            font: handles.fonts.chakra.w300_light.clone(),
+                            font: ui_assets.font_chakra_light.clone(),
                             font_size: 25.0 * FONT_SCALE,
                             ..default()
                         })

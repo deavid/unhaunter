@@ -641,6 +641,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_asset_loader"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "472306c894bee7f562442dffbcd8e10c8c48ec0239e8b4af9c13c240340ab2ab"
+dependencies = [
+ "anyhow",
+ "bevy_app",
+ "bevy_asset",
+ "bevy_asset_loader_derive",
+ "bevy_ecs",
+ "bevy_image",
+ "bevy_log",
+ "bevy_math",
+ "bevy_platform",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_sprite",
+ "bevy_state",
+ "bevy_utils",
+ "path-slash",
+]
+
+[[package]]
+name = "bevy_asset_loader_derive"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "228284d057a86657530cc0a96176b699b031cfba4bbe303f1b92938a5d66f831"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "bevy_asset_macros"
 version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -768,15 +802,6 @@ dependencies = [
  "log",
  "serde",
  "sysinfo",
-]
-
-[[package]]
-name = "bevy_dylib"
-version = "0.17.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d50a92aea6e896b6939ea51db6ced3a7e2dfd591016286e3eed9cb60d9e4f149"
-dependencies = [
- "bevy_internal",
 ]
 
 [[package]]
@@ -4293,6 +4318,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
+name = "path-slash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e91099d4268b0e11973f036e885d652fb0b21fedcf69738c627f94db6a44f42"
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5649,6 +5680,7 @@ dependencies = [
  "unmenu-core",
  "unprofile-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -5690,13 +5722,13 @@ dependencies = [
  "bevy_platform",
  "ndarray",
  "rand 0.9.2",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "unevents-core",
  "unfog-core",
  "unfoundation-core",
  "unghost-core",
+ "unmapload-core",
  "unmetrics-core",
  "unnoise-core",
  "unplayer-core",
@@ -5724,7 +5756,6 @@ dependencies = [
  "bevy",
  "bevy-persistent",
  "bevy_platform",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -5751,6 +5782,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_platform",
  "unboard-core",
  "undifficulty-core",
@@ -5773,7 +5805,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unassets-core",
+ "bevy_asset_loader",
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
@@ -5831,8 +5863,10 @@ name = "unghost-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
+ "itertools 0.14.0",
  "rand 0.9.2",
  "serde",
  "unfoundation-core",
@@ -5844,6 +5878,7 @@ name = "unghost-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "rand 0.9.2",
  "unbehavior",
  "unboard-core",
@@ -5861,6 +5896,7 @@ dependencies = [
  "unspatial-core",
  "unsummary-core",
  "untags-core",
+ "untypes-core",
 ]
 
 [[package]]
@@ -5869,9 +5905,7 @@ version = "0.3.2-dev"
 dependencies = [
  "anyhow",
  "bevy",
- "bevy_dylib",
  "clap",
- "image",
  "uncampaign-plugin",
  "unfog-plugin",
  "ungame-plugin",
@@ -5902,7 +5936,6 @@ dependencies = [
  "unwalkie-plugin",
  "walkdir",
  "wasm-bindgen",
- "winit",
 ]
 
 [[package]]
@@ -6013,12 +6046,20 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
- "unassets-core",
  "unfoundation-core",
  "unmenu-core",
  "unprofile-core",
  "unsettings-core",
  "untypes-core",
+ "unui-core",
+]
+
+[[package]]
+name = "unmanual-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
 ]
 
 [[package]]
@@ -6026,11 +6067,14 @@ name = "unmanual-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "unassets-core",
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
+ "unmanual-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -6039,12 +6083,20 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
- "unassets-core",
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
  "unmenu-core",
  "untypes-core",
+ "unui-core",
+]
+
+[[package]]
+name = "unmapload-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
 ]
 
 [[package]]
@@ -6053,11 +6105,11 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_platform",
  "ndarray",
  "ordered-float 5.1.0",
  "rand 0.9.2",
- "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -6066,6 +6118,7 @@ dependencies = [
  "ungear-core",
  "unghost-core",
  "unlight-plugin",
+ "unmapload-core",
  "unnavigation-core",
  "unplayer-core",
  "unrender-std",
@@ -6082,10 +6135,10 @@ name = "unmenu-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unassets-core",
  "unfoundation-core",
  "unprofile-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -6106,11 +6159,11 @@ dependencies = [
  "bevy-persistent",
  "bevy_platform",
  "strum",
- "unassets-core",
  "unfoundation-core",
  "unmenu-core",
  "unsettings-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -6153,7 +6206,6 @@ name = "unnpc-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "unassets-core",
  "unbehavior",
  "unevents-core",
  "unfoundation-core",
@@ -6161,6 +6213,7 @@ dependencies = [
  "unrender-std",
  "unspatial-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -6185,6 +6238,7 @@ name = "unplayer-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "unfoundation-core",
  "unsettings-core",
  "unspatial-core",
@@ -6196,6 +6250,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_platform",
  "unbehavior",
  "unboard-core",
@@ -6278,6 +6333,7 @@ name = "unroot-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "bevy_framepace",
  "unassets-core",
  "undifficulty-core",
@@ -6287,6 +6343,7 @@ dependencies = [
  "unnoise-core",
  "unplayer-core",
  "untypes-core",
+ "unui-plugin",
 ]
 
 [[package]]
@@ -6441,6 +6498,7 @@ name = "untruck-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "unevents-core",
  "unfoundation-core",
 ]
@@ -6451,8 +6509,8 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "bevy_asset_loader",
  "bevy_platform",
- "unassets-core",
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
@@ -6485,6 +6543,17 @@ name = "unui-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
+]
+
+[[package]]
+name = "unui-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
+ "untypes-core",
+ "unui-core",
 ]
 
 [[package]]

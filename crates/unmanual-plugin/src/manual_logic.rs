@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
+use unmanual_core::assets::ManualAssets;
+use unui_core::assets::UiAssets;
 
 use crate::chapter1;
 use crate::chapter2;
@@ -23,7 +24,8 @@ pub(crate) fn create_manual() -> Manual {
 
 pub(crate) fn draw_manual_page(
     parent: &mut ChildSpawnerCommands,
-    handles: &GameAssets,
+    manual_assets: &ManualAssets,
+    ui_assets: &UiAssets,
     manual: &Manual,
     current_page: &CurrentManualPage,
 ) {
@@ -55,5 +57,5 @@ pub(crate) fn draw_manual_page(
     let page = &chapter.pages[page_index];
 
     // --- Draw the Page ---
-    (page.draw_fn)(parent, handles);
+    (page.draw_fn)(parent, manual_assets, ui_assets);
 }

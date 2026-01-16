@@ -11,7 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-
+untypes-core = { path = "../untypes-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unbehavior = { path = "../unbehavior" }
 unfoundation-core = { path = "../unfoundation-core" }
@@ -30,4 +30,5 @@ unspatial-core = { path = "../unspatial-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 rand = { workspace = true }

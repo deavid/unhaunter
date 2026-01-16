@@ -8,7 +8,6 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
-use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
@@ -51,7 +50,8 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
-    pub handles: Res<'w, GameAssets>,
+    pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
+    pub ghost_assets: Res<'w, unghost_core::assets::GhostAssets>,
     pub roomdb: ResMut<'w, RoomDB>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
@@ -267,5 +267,8 @@ fn load_level_handler(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(PostUpdate, load_level_handler);
+    app.add_systems(
+        PostUpdate,
+        load_level_handler.run_if(on_message::<LevelLoadedEvent>),
+    );
 }

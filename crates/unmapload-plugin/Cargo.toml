@@ -12,10 +12,8 @@ homepage.workspace = true
 workspace = true
 
 [dependencies]
-
 unspatial-core = { path = "../unspatial-core" }
 unbehavior = { path = "../unbehavior" }
-unassets-core = { path = "../unassets-core" }
 undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
@@ -31,8 +29,10 @@ untags-core = { path = "../untags-core" }
 unplayer-core = { path = "../unplayer-core" }
 unrender-std = { path = "../unrender-std" }
 unghost-core = { path = "../unghost-core" }
+unmapload-core = { path = "../unmapload-core" }
 
 bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
 rand = { workspace = true }

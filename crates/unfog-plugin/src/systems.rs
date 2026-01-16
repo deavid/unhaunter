@@ -3,7 +3,6 @@ use bevy::sprite::Anchor;
 use bevy_platform::collections::HashMap;
 use ndarray::{Array3, s};
 use rand::Rng;
-use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
@@ -90,7 +89,7 @@ fn spawn_miasma(
     mut q_miasma: Query<(Entity, &mut MiasmaSprite)>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
-    handles: Res<GameAssets>,
+    ghost_assets: Res<unghost_core::assets::GhostAssets>,
     board_data: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     mut commands: Commands,
@@ -204,11 +203,11 @@ fn spawn_miasma(
 
             commands
                 .spawn(Sprite {
-                    image: handles.images.miasma.clone(),
+                    image: ghost_assets.miasma.clone(),
                     color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
                     ..default()
                 })
-                .insert(Anchor(handles.anchors.grid1x1))
+                .insert(Anchor(unmapload_core::assets::GRID_1X1_ANCHOR))
                 .insert(MiasmaSprite {
                     base_position: pos,
                     radius: rng.random_range(0.15..0.45), // Small radius
@@ -654,9 +653,8 @@ pub(crate) fn app_setup(app: &mut App) {
             .run_if(on_message::<LevelReadyEvent>)
             .after(init_miasma_grid),
     );
-    app.add_systems(Update, spawn_miasma);
     app.add_systems(
         Update,
-        (animate_miasma_sprites, update_miasma).run_if(in_state(AppState::InGame)),
+        (spawn_miasma, animate_miasma_sprites, update_miasma).run_if(in_state(AppState::InGame)),
     );
 }

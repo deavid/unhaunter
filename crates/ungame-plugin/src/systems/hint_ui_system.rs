@@ -4,6 +4,7 @@ use crate::resources::hint_ui_state::{HintAnimationPhase, HintUiState};
 use unevents_core::events::hint::OnScreenHintEvent;
 use unfoundation_core::platform::plt;
 use untypes_core::states::AppState;
+use unui_core::assets::UiAssets;
 use unui_core::components::hint_ui::{HintBoxText, HintBoxUIRoot};
 
 const HINT_BOX_WIDTH_PX: f32 = 350.0;
@@ -17,7 +18,6 @@ const HINT_BOX_TEXT_COLOR: Color = Color::BLACK;
 const HINT_BOX_BORDER_RADIUS_VAL: f32 = 10.0;
 const HINT_BOX_PADDING_PX: f32 = 15.0;
 const HINT_BOX_PADDING_UIVAL: UiRect = UiRect::all(Val::Px(HINT_BOX_PADDING_PX));
-const HINT_TEXT_FONT_PATH: &str = "fonts/overlock/Overlock-Regular.ttf";
 
 // --- Easing Functions ---
 fn lerp(start: f32, end: f32, t: f32) -> f32 {
@@ -44,8 +44,8 @@ pub(crate) fn app_setup(app: &mut App) {
 
 /// Sets up the on-screen hint UI elements.
 /// Renamed from setup_hint_ui to match plan.
-fn setup_hint_ui_system(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font_handle: Handle<Font> = asset_server.load(HINT_TEXT_FONT_PATH);
+fn setup_hint_ui_system(mut commands: Commands, ui_assets: Res<UiAssets>) {
+    let font_handle: Handle<Font> = ui_assets.font_overlock_regular.clone();
     let text_font_size = 18.0 * plt::FONT_SCALE;
 
     commands

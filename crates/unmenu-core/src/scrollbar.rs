@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unassets_core::types::root::game_assets::GameAssets;
+use unui_core::assets::UiAssets;
 
 // Component Definitions
 
@@ -33,7 +33,7 @@ pub struct ScrollbarDownArrow;
 /// where the scrollbar is intended to be placed.
 ///
 /// This is not a system but a helper function.
-pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAssets) {
+pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, ui_assets: &UiAssets) {
     scrollbar
         .spawn(Node {
             width: Val::Px(48.0),
@@ -60,7 +60,7 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAs
                 .insert(Interaction::default())
                 .with_children(|button| {
                     button.spawn(ImageNode {
-                        image: handles.images.scroll_arrow_up.clone(),
+                        image: ui_assets.scroll_arrow_up.clone(),
                         color: Color::WHITE,
                         ..default()
                     });
@@ -81,7 +81,7 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAs
                     // Track
                     track_container
                         .spawn(ImageNode {
-                            image: handles.images.scroll_track.clone(),
+                            image: ui_assets.scroll_track.clone(),
                             color: Color::srgba(0.5, 0.5, 0.5, 0.4),
                             ..default()
                         })
@@ -115,7 +115,7 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAs
                         .insert(Interaction::default())
                         .with_children(|thumb| {
                             thumb.spawn(ImageNode {
-                                image: handles.images.scroll_thumb.clone(),
+                                image: ui_assets.scroll_thumb.clone(),
                                 color: Color::srgba(0.6, 0.6, 0.6, 0.4),
                                 ..default()
                             });
@@ -136,7 +136,7 @@ pub fn build_scrollbar_ui(scrollbar: &mut ChildSpawnerCommands, handles: &GameAs
                 .insert(Interaction::default())
                 .with_children(|button| {
                     button.spawn(ImageNode {
-                        image: handles.images.scroll_arrow_down.clone(),
+                        image: ui_assets.scroll_arrow_down.clone(),
                         color: Color::WHITE,
                         ..default()
                     });
