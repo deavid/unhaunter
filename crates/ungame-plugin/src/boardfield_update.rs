@@ -39,6 +39,9 @@ fn boardfield_update(
 }
 
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(PostUpdate, boardfield_update)
-        .add_message::<BoardTopologyToRebuild>();
+    app.add_systems(
+        PostUpdate,
+        boardfield_update.run_if(on_message::<BoardTopologyToRebuild>),
+    )
+    .add_message::<BoardTopologyToRebuild>();
 }
