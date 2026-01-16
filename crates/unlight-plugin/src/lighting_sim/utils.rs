@@ -6,7 +6,7 @@ use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
@@ -14,7 +14,11 @@ use unspatial_core::position::Position;
 pub const WAVE_MAX_HISTORY: usize = 12;
 
 /// Applies ambient light to walls based on neighboring lit tiles
-pub fn apply_ambient_light_to_walls(bf: &BoardTopology, lfs: &mut Array3<LightFieldData>) {
+pub fn apply_ambient_light_to_walls(
+    bf: &BoardTopology,
+    bcf: &BoardCollisionField,
+    lfs: &mut Array3<LightFieldData>,
+) {
     // // Define directions for 4-way connectivity (plus weight)
     let directions = [
         (0, 1, 0, 0.01),
@@ -29,7 +33,7 @@ pub fn apply_ambient_light_to_walls(bf: &BoardTopology, lfs: &mut Array3<LightFi
 
     let src_lfs = lfs.clone();
 
-    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
+    for ((i, j, k), collision) in bcf.0.indexed_iter() {
         // Only process dark tiles
         if src_lfs[(i, j, k)].lux > DARK_THRESHOLD && !collision.is_dynamic {
             continue;
@@ -266,8 +270,7 @@ fn apply_iir_filter(
 
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
-    bf: &BoardTopology,
-    lg: &LightGrid,
+    bf: &BoardTopology,    bcf: &BoardCollisionField,    lg: &LightGrid,
     lfs: &mut Array3<LightFieldData>,
     active_source_ids: &HashSet<u32>,
 ) -> usize {
@@ -376,7 +379,7 @@ pub fn propagate_from_wave_edges(
             }
 
             // Check collision data
-            let collision = &bf.collision_field[neighbor_idx];
+            let collision = &bcf.0[neighbor_idx];
 
             // Update wave edge position using IIR filter
             let new_pos_f32 = (nx as f32, ny as f32, nz as f32);
@@ -508,12 +511,13 @@ pub fn propagate_from_wave_edges(
 /// Creates wave edges at stair connections between floors to allow light propagation
 pub fn create_stair_wave_edges(
     bf: &BoardTopology,
+    bcf: &BoardCollisionField,
     lfs: &Array3<LightFieldData>,
 ) -> Vec<WaveEdgeData> {
     let mut wave_edges = Vec::new();
 
     // Process all stair tiles
-    for ((i, j, k), collision) in bf.collision_field.indexed_iter() {
+    for ((i, j, k), collision) in bcf.0.indexed_iter() {
         // Only process stairs
         if collision.stair_offset == 0 {
             continue;

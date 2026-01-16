@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfoundation_core::random_seed;
@@ -18,6 +18,7 @@ use unthermal_core::resources::ThermalGrid;
 pub fn temperature_update(
     mut thermal_grid: ResMut<ThermalGrid>,
     bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     haunt_state: Res<HauntState>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,
@@ -53,7 +54,7 @@ pub fn temperature_update(
         if ENABLE_GHOST_COLD_TEMPS {
             for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
                 if ghost_in_room != roomdb.room_tiles.get(&npos)
-                    || !bf.collision_field[npos.ndidx()].player_free
+                    || !bcf.0[npos.ndidx()].player_free
                 {
                     continue;
                 }
@@ -68,7 +69,7 @@ pub fn temperature_update(
         }
         for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
             if breach_in_room != roomdb.room_tiles.get(&npos)
-                || !bf.collision_field[npos.ndidx()].player_free
+                || !bcf.0[npos.ndidx()].player_free
             {
                 continue;
             }
@@ -111,7 +112,7 @@ pub fn temperature_update(
         std::collections::HashMap::new();
 
     for (p, temp) in old_temps.into_iter() {
-        let cp = &bf.collision_field[p];
+        let cp = &bcf.0[p];
         let free = (cp.see_through, cp.see_through || cp.is_dynamic);
 
         let mut self_k = match free {
@@ -144,8 +145,8 @@ pub fn temperature_update(
 
         for neigh in &neighbors {
             let neigh_ndidx = neigh.ndidx();
-            let Some(neigh_free) = bf
-                .collision_field
+            let Some(neigh_free) = bcf
+                .0
                 .get(neigh_ndidx)
                 .map(|ncp| (ncp.see_through, ncp.see_through || ncp.is_dynamic))
             else {
@@ -283,6 +284,7 @@ pub fn init_thermal_grid_allocation(
 pub fn init_thermal_grid_content(
     mut thermal_grid: ResMut<ThermalGrid>,
     bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     haunt_state: Res<HauntState>,
     roomdb: Res<RoomDB>,
     mut ev: MessageReader<LevelReadyEvent>,
@@ -312,7 +314,7 @@ pub fn init_thermal_grid_content(
     let config = thermal_grid.temp_diffusion_config.clone();
     crate::utils::precompute_connectivity_scores(
         bf.map_size,
-        &bf.collision_field,
+        &bcf.0,
         &mut thermal_grid.connectivity_scores,
         &config,
     );

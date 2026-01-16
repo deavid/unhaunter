@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
 use unplayer_core::resources::game_config::GameConfig;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
@@ -7,14 +7,15 @@ use untags_core::tags::PlayerTag;
 
 /// Synchronizes the map entity field with the current positions of entities.
 ///
-/// This system updates the `BoardTopology` resource to reflect the current positions
+/// This system updates the `BoardEntityField` resource to reflect the current positions
 /// of entities that have moved. It ensures that entities are correctly added to
 /// and removed from the map entity field based on their new positions.
 ///
 /// Optimized to only process entities within a reasonable radius of the player
-/// using the map_entity_field for efficient entity lookup.
+/// using the BoardEntityField for efficient entity lookup.
 fn sync_map_entity_field(
-    mut board_topology: ResMut<BoardTopology>,
+    mut board_entity_field: ResMut<BoardEntityField>,
+    board_topology: Res<BoardTopology>,
     game_config: Res<GameConfig>,
     player_query: Query<(&PlayerTag, &Position)>,
     position_query: Query<&Position>,
@@ -43,7 +44,7 @@ fn sync_map_entity_field(
     // Process entities within the update radius
     for x in min_x..=max_x {
         for y in min_y..=max_y {
-            let entities = &board_topology.map_entity_field[(x, y, z)];
+            let entities = &board_entity_field.0[(x, y, z)];
 
             for &entity in entities.iter() {
                 // Check if entity has a Position component
@@ -71,15 +72,12 @@ fn sync_map_entity_field(
     }
     for (entity, current_bpos, old_bpos) in to_update {
         // Remove from the current position in the map_entity_field
-        if let Some(entity_vec) = board_topology.map_entity_field.get_mut(old_bpos.ndidx()) {
+        if let Some(entity_vec) = board_entity_field.0.get_mut(old_bpos.ndidx()) {
             entity_vec.retain(|&e| e != entity);
         }
 
         // Add to the new position
-        if let Some(entity_vec) = board_topology
-            .map_entity_field
-            .get_mut(current_bpos.ndidx())
-        {
+        if let Some(entity_vec) = board_entity_field.0.get_mut(current_bpos.ndidx()) {
             entity_vec.push(entity);
         }
     }

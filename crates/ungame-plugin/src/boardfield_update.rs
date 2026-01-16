@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::position::Position;
@@ -9,11 +9,13 @@ use unspatial_core::position::Position;
 ///
 /// # Arguments
 ///
-/// * `bf` - A mutable reference to the `BoardTopology` resource.
+/// * `bf` - A reference to the `BoardTopology` resource.
+/// * `bcf` - A mutable reference to the `BoardCollisionField` resource.
 /// * `ev_bdr` - An event reader for `BoardTopologyToRebuild` events.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
 fn boardfield_update(
-    mut bf: ResMut<BoardTopology>,
+    bf: Res<BoardTopology>,
+    mut bcf: ResMut<BoardCollisionField>,
     mut ev_bdr: MessageReader<BoardTopologyToRebuild>,
     qt: Query<(Entity, &Position, &Behavior)>,
 ) {
@@ -34,7 +36,7 @@ fn boardfield_update(
     }
 
     if bdr.collision {
-        rebuild_collision_data(&mut bf, &qt);
+        rebuild_collision_data(&bf, &mut bcf, &qt);
     }
 }
 

@@ -4,7 +4,7 @@ use unbehavior::behavior::Behavior;
 use unbehavior::class::Class;
 use unbehavior::components::{Door, InteractableByGhost};
 use unbehavior::state::TileState;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unfoundation_core::random_seed;
@@ -31,6 +31,7 @@ fn ghost_interaction_selection_system(
     time: Res<Time>,
     difficulty: Res<CurrentDifficulty>,
     board_topology: Res<BoardTopology>,
+    board_collision: Res<BoardCollisionField>,
     visibility_data: Res<VisibilityData>,
     q_player: Query<&Position, With<PlayerTag>>,
     q_ghost: Query<(&GhostSprite, &Position)>,
@@ -103,6 +104,7 @@ fn ghost_interaction_selection_system(
                 &q_interactables,
                 &q_player,
                 &board_topology,
+                &board_collision,
                 &visibility_data,
                 &mut rng,
             ) {
@@ -151,6 +153,7 @@ fn find_interaction_target(
     )>,
     q_player: &Query<&Position, With<PlayerTag>>,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     visibility_data: &VisibilityData,
     rng: &mut impl Rng,
 ) -> Option<(Entity, Option<Position>)> {
@@ -282,7 +285,7 @@ fn find_interaction_target(
                             }
                             // Find a destination for throwing with collision checking
                             if let Some(destination) =
-                                find_throw_destination(entity, pos, q_player, board_topology, rng)
+                                find_throw_destination(entity, pos, q_player, board_topology, board_collision, rng)
                             {
                                 if GIS_DEBUG {
                                     throwable_with_dest += 1;
@@ -304,7 +307,7 @@ fn find_interaction_target(
                             // Find a small, nearby floor destination to nudge towards.
                             // Only emit if a safe destination is found to avoid collisions/overlaps.
                             if let Some(destination) =
-                                find_nudge_destination(entity, pos, board_topology, rng)
+                                find_nudge_destination(entity, pos, board_topology, board_collision, rng)
                             {
                                 Some((entity, pos, Some(destination)))
                             } else {
@@ -322,7 +325,7 @@ fn find_interaction_target(
                             }
                             // Find a destination for haunted movement with collision checking
                             if let Some(destination) =
-                                find_movement_destination(entity, pos, board_topology, rng)
+                                find_movement_destination(entity, pos, board_topology, board_collision, rng)
                             {
                                 if GIS_DEBUG {
                                     haunt_with_dest += 1;
@@ -448,6 +451,7 @@ fn find_throw_destination(
     object_pos: &Position,
     q_player: &Query<&Position, With<PlayerTag>>,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     rng: &mut impl Rng,
 ) -> Option<Position> {
     // Get player position for dramatic effect preference
@@ -471,7 +475,7 @@ fn find_throw_destination(
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
         if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_topology.collision_field.get(idx)
+            && let Some(collision_data) = board_collision.0.get(idx)
             && collision_data.player_free
         {
             return Some(candidate_pos);
@@ -495,7 +499,7 @@ fn find_throw_destination(
 
         let board_pos = candidate_pos.to_board_position();
         if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_topology.collision_field.get(idx)
+            && let Some(collision_data) = board_collision.0.get(idx)
             && collision_data.player_free
         {
             return Some(candidate_pos);
@@ -512,6 +516,7 @@ fn find_movement_destination(
     _entity: Entity,
     object_pos: &Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     rng: &mut impl Rng,
 ) -> Option<Position> {
     // Try several nearby positions for subtle movement
@@ -532,7 +537,7 @@ fn find_movement_destination(
         // Check if destination is valid (walkable floor) AND within map bounds
         let board_pos = candidate_pos.to_board_position();
         if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_topology.collision_field.get(idx)
+            && let Some(collision_data) = board_collision.0.get(idx)
             && collision_data.player_free
         {
             return Some(candidate_pos);
@@ -547,6 +552,7 @@ fn find_nudge_destination(
     _entity: Entity,
     object_pos: &Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     rng: &mut impl Rng,
 ) -> Option<Position> {
     // Try a handful of tiny offsets around the object
@@ -566,7 +572,7 @@ fn find_nudge_destination(
 
         let board_pos = candidate_pos.to_board_position();
         if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size)
-            && let Some(collision_data) = board_topology.collision_field.get(idx)
+            && let Some(collision_data) = board_collision.0.get(idx)
             && collision_data.player_free
         {
             return Some(candidate_pos);

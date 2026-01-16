@@ -3,7 +3,7 @@ use rand::Rng;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::{InteractableByGhost, RoomState};
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
@@ -17,6 +17,7 @@ fn validate_destination_enhanced(
     source: Position,
     destination: Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
 ) -> bool {
     let board_pos = destination.to_board_position();
@@ -28,7 +29,7 @@ fn validate_destination_enhanced(
 
     // 2. Check collision - destination must be player_free (walkable)
     if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size) {
-        if let Some(collision_data) = board_topology.collision_field.get(idx) {
+        if let Some(collision_data) = board_collision.0.get(idx) {
             if !collision_data.player_free {
                 return false;
             }
@@ -50,7 +51,7 @@ fn validate_destination_enhanced(
     }
 
     // 4. Check for clear path from source to destination (except source position)
-    if !has_clear_path(source, destination, board_topology) {
+    if !has_clear_path(source, destination, board_topology, board_collision) {
         return false;
     }
 
@@ -58,7 +59,12 @@ fn validate_destination_enhanced(
 }
 
 /// Checks if there's a clear path from source to destination
-fn has_clear_path(source: Position, destination: Position, board_topology: &BoardTopology) -> bool {
+fn has_clear_path(
+    source: Position,
+    destination: Position,
+    board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
+) -> bool {
     let dx = destination.x - source.x;
     let dy = destination.y - source.y;
     let distance = (dx * dx + dy * dy).sqrt();
@@ -84,7 +90,7 @@ fn has_clear_path(source: Position, destination: Position, board_topology: &Boar
 
         let board_pos = check_pos.to_board_position();
         if let Some(idx) = board_pos.ndidx_checked(board_topology.map_size) {
-            if let Some(collision_data) = board_topology.collision_field.get(idx) {
+            if let Some(collision_data) = board_collision.0.get(idx) {
                 if !collision_data.player_free {
                     return false;
                 }
@@ -104,13 +110,20 @@ fn find_valid_destination_with_retry(
     source: Position,
     original_destination: Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
     q_objects: &Query<&Position, With<InteractableByGhost>>,
     rng: &mut impl Rng,
     max_attempts: u32,
     search_radius: f32,
 ) -> Option<Position> {
     // First try the original destination
-    if validate_destination_enhanced(source, original_destination, board_topology, q_objects) {
+    if validate_destination_enhanced(
+        source,
+        original_destination,
+        board_topology,
+        board_collision,
+        q_objects,
+    ) {
         return Some(original_destination);
     }
 
@@ -126,7 +139,13 @@ fn find_valid_destination_with_retry(
             global_z: original_destination.global_z,
         };
 
-        if validate_destination_enhanced(source, candidate_pos, board_topology, q_objects) {
+        if validate_destination_enhanced(
+            source,
+            candidate_pos,
+            board_topology,
+            board_collision,
+            q_objects,
+        ) {
             return Some(candidate_pos);
         }
     }
@@ -163,6 +182,7 @@ fn ghost_interaction_execution_system(
     mut ev_bdr: MessageWriter<BoardTopologyToRebuild>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     board_topology: Res<BoardTopology>,
+    board_collision: Res<BoardCollisionField>,
 ) {
     for event in ev_ghost_interaction.read() {
         // Minimal one-line log for each received interaction event
@@ -216,6 +236,7 @@ fn ghost_interaction_execution_system(
                         event.target,
                         destination,
                         &board_topology,
+                        &board_collision,
                     );
                 } else {
                     warn!(
@@ -234,6 +255,7 @@ fn ghost_interaction_execution_system(
                     event.target,
                     event.destination,
                     &board_topology,
+                    &board_collision,
                 );
             }
 
@@ -247,6 +269,7 @@ fn ghost_interaction_execution_system(
                         event.target,
                         destination,
                         &board_topology,
+                        &board_collision,
                     );
                 } else {
                     warn!(
@@ -424,6 +447,7 @@ fn execute_throw_interaction(
     target: Entity,
     destination: Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -433,6 +457,7 @@ fn execute_throw_interaction(
             *current_position,
             destination,
             board_topology,
+            board_collision,
             q_objects,
             &mut rng,
             30,  // max attempts
@@ -476,6 +501,7 @@ fn execute_nudge_interaction(
     target: Entity,
     destination: Option<Position>,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         // Handle destination validation if provided
@@ -487,6 +513,7 @@ fn execute_nudge_interaction(
                 *current_position,
                 dest,
                 board_topology,
+                board_collision,
                 q_objects,
                 &mut rng,
                 30,  // max attempts
@@ -541,6 +568,7 @@ fn execute_haunted_move_interaction(
     target: Entity,
     destination: Position,
     board_topology: &BoardTopology,
+    board_collision: &BoardCollisionField,
 ) {
     if let Ok((_, current_position, _, _)) = q_targets.get(target) {
         let mut rng = random_seed::rng();
@@ -550,6 +578,7 @@ fn execute_haunted_move_interaction(
             *current_position,
             destination,
             board_topology,
+            board_collision,
             q_objects,
             &mut rng,
             30,  // max attempts

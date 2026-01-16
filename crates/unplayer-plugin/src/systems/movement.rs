@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::RoomState;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
@@ -68,6 +68,7 @@ pub(crate) fn player_movement_system(
     mut ev_npc: MessageWriter<NpcHelpEvent>,
     difficulty: Res<CurrentDifficulty>,
     _board_topology: Res<BoardTopology>,
+    _board_collision: Res<BoardCollisionField>,
     miasma: Res<MiasmaGrid>,
     mut avg_running: Local<f32>,
     mouse_visibility: Res<MouseVisibility>,

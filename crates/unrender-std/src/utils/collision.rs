@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unboard_core::types::fielddata::CollisionFieldData;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
@@ -9,15 +9,20 @@ use unspatial_core::position::Position;
 ///
 /// # Arguments
 ///
-/// * `bf` - A mutable reference to the `BoardTopology` resource, which stores the collision field.
+/// * `bf` - A reference to the `BoardTopology` resource.
+/// * `bcf` - A mutable reference to the `BoardCollisionField` resource.
 /// * `qt` - A query for entities with `Position` and `Behavior` components.
-pub fn rebuild_collision_data(bf: &mut BoardTopology, qt: &Query<(Entity, &Position, &Behavior)>) {
+pub fn rebuild_collision_data(
+    bf: &BoardTopology,
+    bcf: &mut BoardCollisionField,
+    qt: &Query<(Entity, &Position, &Behavior)>,
+) {
     // info!("Collision rebuild");
     assert_eq!(
-        bf.collision_field.shape(),
+        bcf.0.shape(),
         [bf.map_size.0, bf.map_size.1, bf.map_size.2]
     );
-    bf.collision_field.fill(CollisionFieldData::default());
+    bcf.0.fill(CollisionFieldData::default());
 
     for (_entity, pos, behavior) in qt.iter().filter(|(_e, _p, b)| b.p.movement.walkable) {
         let bpos = pos.to_board_position();
@@ -29,7 +34,7 @@ pub fn rebuild_collision_data(bf: &mut BoardTopology, qt: &Query<(Entity, &Posit
             is_dynamic: false,
             stair_offset: behavior.p.movement.stair_offset,
         };
-        bf.collision_field[bpos.ndidx()] = colfd;
+        bcf.0[bpos.ndidx()] = colfd;
     }
     for (_entity, pos, behavior) in qt
         .iter()
@@ -45,13 +50,13 @@ pub fn rebuild_collision_data(bf: &mut BoardTopology, qt: &Query<(Entity, &Posit
             is_dynamic: behavior.p.movement.is_dynamic,
             stair_offset: behavior.p.movement.stair_offset,
         };
-        bf.collision_field[bpos.ndidx()] = colfd;
+        bcf.0[bpos.ndidx()] = colfd;
     }
     for (_entity, pos, behavior) in qt
         .iter()
         .filter(|(_e, _p, b)| b.p.movement.stair_offset != 0)
     {
         let bpos = pos.to_board_position();
-        bf.collision_field[bpos.ndidx()].stair_offset = behavior.p.movement.stair_offset;
+        bcf.0[bpos.ndidx()].stair_offset = behavior.p.movement.stair_offset;
     }
 }

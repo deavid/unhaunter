@@ -9,7 +9,7 @@ use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unbehavior::class::Class;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
 use unspatial_core::boardposition::BoardPosition;
@@ -30,6 +30,7 @@ pub fn init_light_grid(
 /// Triggered by BoardTopologyToRebuild events.
 pub fn rebuild_lighting_field(
     bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     mut lg: ResMut<LightGrid>,
     mut ev_bdr: MessageReader<BoardTopologyToRebuild>,
     qt: Query<(&Position, &Behavior)>,
@@ -60,10 +61,10 @@ pub fn rebuild_lighting_field(
     apply_prebaked_contributions(&active_source_ids, &bf, &lg, &mut lfs);
 
     // Initial propagation from prebaked wave edges
-    propagate_from_wave_edges(&bf, &lg, &mut lfs, &active_source_ids);
+    propagate_from_wave_edges(&bf, &bcf, &lg, &mut lfs, &active_source_ids);
 
     // Process stairs to propagate light between floors
-    let stair_edges = create_stair_wave_edges(&bf, &lfs);
+    let stair_edges = create_stair_wave_edges(&bf, &bcf, &lfs);
 
     // If we have stair edges, propagate from them too
     if !stair_edges.is_empty() {
@@ -72,15 +73,20 @@ pub fn rebuild_lighting_field(
         lg.prebaked_wave_edges = stair_edges;
 
         // Propagate from the stairs (using dummy source ID 0)
-        let _stair_count =
-            propagate_from_wave_edges(&bf, &lg, &mut lfs, &vec![0].into_iter().collect());
+        let _stair_count = propagate_from_wave_edges(
+            &bf,
+            &bcf,
+            &lg,
+            &mut lfs,
+            &vec![0].into_iter().collect(),
+        );
 
         // Restore original wave edges
         lg.prebaked_wave_edges = original_edges;
     }
 
     // Apply ambient light to walls
-    apply_ambient_light_to_walls(&bf, &mut lfs);
+    apply_ambient_light_to_walls(&bf, &bcf, &mut lfs);
 
     // Update final exposure and stats
     update_exposure_and_stats(&bf, &mut lg, &lfs);
@@ -93,7 +99,8 @@ pub fn rebuild_lighting_field(
 
 /// Computes the prebaked lighting field for a map.
 pub fn prebake_lighting_field(
-    bf: &mut BoardTopology,
+    bf: &BoardTopology,
+    bcf: &BoardCollisionField,
     lg: &mut LightGrid,
     qt: &Query<(Entity, &Position, &Behavior)>,
 ) {
@@ -213,7 +220,7 @@ pub fn prebake_lighting_field(
             let neighbor_idx = neighbor_pos.ndidx();
 
             // Get collision data for the neighbor
-            let collision = &bf.collision_field[neighbor_idx];
+            let collision = &bcf.0[neighbor_idx];
 
             // Check if already visited by this source
             let source_visited = visited_by_source.entry(source_id).or_default();
@@ -314,7 +321,7 @@ pub fn prebake_lighting_field(
     lg.prebaked_wave_edges = find_wave_edge_tiles(bf, lg, &all_source_ids);
 
     // Call prebake_propagation_data
-    prebake_propagation_data(bf, lg);
+    prebake_propagation_data(bf, bcf, lg);
 
     info!(
         "Prebaked lighting field computed in: {:?}",
@@ -323,7 +330,11 @@ pub fn prebake_lighting_field(
 }
 
 /// Pre-computes the allowed propagation directions for each light source and tile
-fn prebake_propagation_data(bf: &mut BoardTopology, lg: &mut LightGrid) {
+fn prebake_propagation_data(
+    bf: &BoardTopology,
+    bcf: &BoardCollisionField,
+    lg: &mut LightGrid,
+) {
     let map_size = bf.map_size;
 
     // Create and initialize the vector of Array2
@@ -373,7 +384,7 @@ fn prebake_propagation_data(bf: &mut BoardTopology, lg: &mut LightGrid) {
                     Some(idx) => idx,
                     None => continue,
                 };
-                let collision = &bf.collision_field[n_idx];
+                let collision = &bcf.0[n_idx];
 
                 // Skip if this is a static obstacle (except doors)
                 if !collision.see_through && !collision.is_dynamic {

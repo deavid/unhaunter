@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::FloorItemCollidable;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::BoardCollisionField;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
@@ -126,7 +126,7 @@ fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut players: Query<(&mut PlayerGear, &Position, &PlayerSprite)>,
     mut commands: Commands,
-    board_topology: Res<BoardTopology>,
+    board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,
     asset_server: Res<AssetServer>,
 ) {
@@ -134,8 +134,8 @@ fn drop_object(
         if keyboard_input.just_pressed(player_sprite.controls.drop) {
             // Check if the tile is free
             let bpos = player_pos.to_board_position();
-            let is_free = board_topology
-                .collision_field
+            let is_free = board_collision
+                .0
                 .get(bpos.ndidx())
                 .map(|c| c.player_free)
                 .unwrap_or(false);
@@ -275,7 +275,7 @@ pub(crate) fn app_setup(app: &mut App) {
             drop_object,
             cycle_inventory,
             swap_hands,
-            item_trigger_system,
         ),
     );
+    app.add_systems(PreUpdate, item_trigger_system);
 }

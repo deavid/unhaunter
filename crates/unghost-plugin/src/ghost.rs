@@ -4,7 +4,7 @@ use rand::Rng;
 use std::f64::consts::PI;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::{MeanValue, PrintingTimer};
@@ -97,6 +97,7 @@ fn ghost_movement(
     roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardTopology>,
+    board_collision: Res<BoardCollisionField>,
     mut commands: Commands,
     time: Res<Time>,
     config: Res<ObjectInteractionConfig>,
@@ -263,8 +264,14 @@ fn ghost_movement(
                         calculate_object_influence_score(candidate_dest, &object_query, &config)
                             / difficulty.0.ghost_attraction_to_breach.max(0.1); // Scale object influence
                     let penalty = 1.0
-                        + calculate_movement_penalties(candidate_dest, &pos, &bf, &difficulty)
-                            .abs()
+                        + calculate_movement_penalties(
+                            candidate_dest,
+                            &pos,
+                            &bf,
+                            &board_collision,
+                            &difficulty,
+                        )
+                        .abs()
                             / 10.0;
                     score /= penalty;
                     potential_destinations.push((score, candidate_dest));
@@ -280,7 +287,7 @@ fn ghost_movement(
                     if score > best_score {
                         let point_bpos = point.to_board_position();
                         if point_bpos.is_valid(bf.map_size)
-                            && bf.collision_field[point_bpos.ndidx()].player_free
+                            && board_collision.0[point_bpos.ndidx()].player_free
                         {
                             best_score = score;
                             best_destination = point;
@@ -295,7 +302,7 @@ fn ghost_movement(
             target_point.z = target_point.z.clamp(0.0, (bf.map_size.2 - 1) as f32);
             let bpos = target_point.to_board_position();
             let dstroom = roomdb.room_tiles.get(&bpos);
-            if dstroom.is_some() && bf.collision_field[bpos.ndidx()].ghost_free {
+            if dstroom.is_some() && board_collision.0[bpos.ndidx()].ghost_free {
                 if hunt {
                     if !ghost.hunt_target {
                         ghost.hunt_time_secs = time.elapsed_secs();
@@ -307,7 +314,7 @@ fn ghost_movement(
                 }
                 // Final check to ensure the chosen bpos is valid before assigning.
                 // This is somewhat redundant with checks in sampling, but good for safety.
-                if bpos.is_valid(bf.map_size) && bf.collision_field[bpos.ndidx()].ghost_free {
+                if bpos.is_valid(bf.map_size) && board_collision.0[bpos.ndidx()].ghost_free {
                     ghost.target_point = Some(target_point);
                 }
                 ghost.hunt_target = hunt;
@@ -401,6 +408,7 @@ fn ghost_enrage(
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     mut player_state: ResMut<PlayerState>,
     mut gs: GearStuff,
+    board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
     roomdb: Res<RoomDB>,
@@ -422,7 +430,7 @@ fn ghost_enrage(
             ghost_position,
             &mut gs.commands,
             &gs.asset_server,
-            &gs.bf,
+            &board_collision,
         );
 
         // 3. Calculate minimum player distance for this ghost
@@ -532,6 +540,7 @@ fn calculate_movement_penalties(
     potential_destination: Position,
     current_ghost_pos: &Position,
     bf: &Res<BoardTopology>,
+    board_collision: &Res<BoardCollisionField>,
     _difficulty: &Res<CurrentDifficulty>, // Available for future use if penalties scale with difficulty
 ) -> f32 {
     let mut penalty_score = 0.0;
@@ -544,7 +553,7 @@ fn calculate_movement_penalties(
 
     // Wall Avoidance Penalty
     // Penalize if the destination tile itself is not player_free (we don't use ghost_free here because that would be for future use on pathfinding)
-    if !bf.collision_field[dest_bpos.ndidx()].player_free {
+    if !board_collision.0[dest_bpos.ndidx()].player_free {
         penalty_score += WALL_AVOIDANCE_PENALTY;
     }
 
@@ -821,7 +830,7 @@ fn handle_salty_trace_spawning_simple(
     ghost_position: &Position,
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    bf: &BoardTopology,
+    board_collision: &BoardCollisionField,
 ) {
     if !ghost.salty_effect_timer.is_finished()
         && ghost.hunting <= 0.1
@@ -832,7 +841,7 @@ fn handle_salty_trace_spawning_simple(
             let ghost_board_position = ghost_position.to_board_position();
             let mut valid_tile = None;
             for nearby_tile in ghost_board_position.iter_xy_neighbors_nosize(1) {
-                let collision_data = bf.collision_field[nearby_tile.ndidx()];
+                let collision_data = board_collision.0[nearby_tile.ndidx()];
                 if collision_data.player_free {
                     valid_tile = Some(nearby_tile);
                     break;

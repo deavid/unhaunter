@@ -6,7 +6,9 @@ use bevy::diagnostic::{Diagnostic, DiagnosticPath, RegisterDiagnostic};
 use bevy::prelude::*;
 
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{
+    BoardCollisionField, BoardEntityField, BoardTopology,
+};
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
@@ -45,6 +47,8 @@ impl Plugin for UnhaunterBoardPlugin {
         crate::systems::animation::app_setup(app);
         crate::systems::board_sync::app_setup(app);
         app.init_resource::<BoardTopology>()
+            .init_resource::<BoardEntityField>()
+            .init_resource::<BoardCollisionField>()
             .init_resource::<VisibilityData>()
             .init_resource::<SpriteDB>()
             .init_resource::<RoomDB>()

@@ -2,7 +2,7 @@ use bevy_platform::collections::HashSet;
 use fastapprox::faster;
 use ndarray::Array3;
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
@@ -135,6 +135,7 @@ fn repellent_update(
         Without<GhostSprite>,
     >,
     bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     difficulty: Res<CurrentDifficulty>,
     mut pressure_base: Local<Array3<f32>>,
     mut positions: Local<Array3<Vec<Vec3>>>,
@@ -151,7 +152,7 @@ fn repellent_update(
     }
 
     pressure_base.indexed_iter_mut().for_each(|(p, v)| {
-        *v = if bf.collision_field[p].player_free {
+        *v = if bcf.0[p].player_free {
             20.0
         } else {
             0.0
@@ -250,7 +251,7 @@ fn repellent_update(
             .mul(0.999);
 
         for nb in bpos.iter_xy_neighbors(1, bf.map_size) {
-            let coll_tile_data = &bf.collision_field[nb.ndidx()];
+            let coll_tile_data = &bcf.0[nb.ndidx()];
             if !coll_tile_data.player_free && !coll_tile_data.see_through {
                 // Collision with walls
                 let wall_pos = nb.to_position();

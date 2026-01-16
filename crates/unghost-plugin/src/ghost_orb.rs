@@ -3,7 +3,7 @@ use std::{f32::consts::TAU, time::Duration};
 use bevy::prelude::*;
 use rand::Rng; // Import the Rng trait
 use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
@@ -86,6 +86,7 @@ pub(crate) fn update_ghost_orb_particles(
     mut commands: Commands,
     time: Res<Time>,
     board_topology: Res<BoardTopology>,
+    board_collision: Res<BoardCollisionField>,
     mut query: Query<(Entity, &mut Position, &mut GhostOrbParticle), With<GhostOrbParticle>>,
 ) {
     for (entity, mut position, mut particle) in query.iter_mut() {
@@ -128,7 +129,7 @@ pub(crate) fn update_ghost_orb_particles(
 
         // Check if next position is within board bounds and is free to move into
         if let Some(idx) = next_bpos.ndidx_checked(board_topology.map_size) {
-            if board_topology.collision_field[idx].player_free {
+            if board_collision.0[idx].player_free {
                 // Move to the new position if it's valid
                 *position = next_pos;
             } else {
@@ -145,7 +146,7 @@ pub(crate) fn update_ghost_orb_particles(
                 .to_board_position();
 
                 if let Some(x_idx) = x_check_bpos.ndidx_checked(board_topology.map_size) {
-                    if board_topology.collision_field[x_idx].player_free {
+                    if board_collision.0[x_idx].player_free {
                         position.x = target_x;
                     } else {
                         // Reverse x direction by adjusting phase
@@ -163,7 +164,7 @@ pub(crate) fn update_ghost_orb_particles(
                 .to_board_position();
 
                 if let Some(y_idx) = y_check_bpos.ndidx_checked(board_topology.map_size) {
-                    if board_topology.collision_field[y_idx].player_free {
+                    if board_collision.0[y_idx].player_free {
                         position.y = target_y;
                     } else {
                         // Reverse y direction by adjusting phase

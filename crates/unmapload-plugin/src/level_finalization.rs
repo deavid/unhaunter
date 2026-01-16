@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
 use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
@@ -37,7 +37,7 @@ use untypes_core::states::{AppState, GameState};
 /// * `roomdb` - Room database resource for room information
 /// * `next_game_state` - State machine to transition to in-game state
 fn after_level_ready(
-    bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     mut ev: MessageReader<LevelReadyEvent>,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     roomdb: Res<RoomDB>,
@@ -66,7 +66,7 @@ fn after_level_ready(
 
     // Calculate usable area for each floor and room (excluding solid walls)
     for bpos in roomdb.room_tiles.keys() {
-        if let Some(cf) = bf.collision_field.get(bpos.ndidx()) {
+        if let Some(cf) = bcf.0.get(bpos.ndidx()) {
             // Exclude static walls (opaque and not dynamic)
             if cf.see_through || cf.is_dynamic {
                 // Get the floor and increment its area
@@ -183,19 +183,21 @@ fn process_pre_meshes(
 /// - Calls the lighting prebake system to calculate static lighting
 ///
 /// # Arguments
-/// * `bf` - Board data resource for collision/lighting fields
+/// * `bf` - Board metadata resource
+/// * `bcf` - Board collision field resource
 /// * `qt` - Query to access all level entities with behaviors and positions
 fn load_map_add_prebaked_lighting(
-    mut bf: ResMut<BoardTopology>,
+    bf: Res<BoardTopology>,
+    mut bcf: ResMut<BoardCollisionField>,
     mut lg: ResMut<LightGrid>,
     qt: Query<(Entity, &Position, &Behavior)>,
     _roomdb: Res<RoomDB>,
 ) {
     // Ensure the collision field is up to date first
-    rebuild_collision_data(&mut bf, &qt);
+    rebuild_collision_data(&bf, &mut bcf, &qt);
 
     // Call the prebaking function to calculate static lighting
-    prebake_lighting_field(&mut bf, &mut lg, &qt);
+    prebake_lighting_field(&bf, &bcf, &mut lg, &qt);
 
     // Log completion
     info!("Map loaded with prebaked lighting data");

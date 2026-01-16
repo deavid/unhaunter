@@ -10,7 +10,9 @@ use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{
+    BoardCollisionField, BoardEntityField, BoardTopology,
+};
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{
@@ -41,6 +43,8 @@ use crate::tile_spawning;
 pub(crate) struct LoadLevelSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardTopology>,
+    pub bef: ResMut<'w, BoardEntityField>,
+    pub bcf: ResMut<'w, BoardCollisionField>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
@@ -164,8 +168,8 @@ fn load_level_handler(
     // Initialize board data fields
     p.bf.map_size = map_size;
     p.bf.origin = (map_min_x, map_min_y, 0);
-    p.bf.collision_field = Array3::from_elem(map_size, CollisionFieldData::default());
-    p.bf.map_entity_field = Array3::default(map_size);
+    p.bcf.0 = Array3::from_elem(map_size, CollisionFieldData::default());
+    p.bef.0 = Array3::default(map_size);
 
     // Clear other field data
     p.roomdb.room_state.clear();

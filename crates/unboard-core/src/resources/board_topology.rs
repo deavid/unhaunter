@@ -10,8 +10,6 @@ pub struct BoardTopology {
     pub map_size: (usize, usize, usize),
     pub origin: (i32, i32, i32),
 
-    pub collision_field: Array3<CollisionFieldData>,
-    pub map_entity_field: Array3<Vec<Entity>>,
     pub ambient_temp: f32,
 
     // Floor mapping (Tiled floor number to z-index)
@@ -27,7 +25,7 @@ pub struct BoardTopology {
 
 impl BoardTopology {
     /// Check if a position is passable (for connectivity calculations)
-    pub fn is_position_passable(&self, pos: BoardPosition) -> bool {
+    pub fn is_position_passable(&self, bcf: &BoardCollisionField, pos: BoardPosition) -> bool {
         if pos.x < 0
             || pos.y < 0
             || pos.z < 0
@@ -38,10 +36,16 @@ impl BoardTopology {
             return false;
         }
 
-        let collision_data = &self.collision_field[pos.ndidx()];
+        let collision_data = &bcf.0[pos.ndidx()];
         collision_data.player_free || collision_data.see_through
     }
 }
+
+#[derive(Clone, Debug, Resource, Default)]
+pub struct BoardEntityField(pub Array3<Vec<Entity>>);
+
+#[derive(Clone, Debug, Resource, Default)]
+pub struct BoardCollisionField(pub Array3<CollisionFieldData>);
 
 impl FromWorld for BoardTopology {
     fn from_world(_world: &mut World) -> Self {
@@ -50,9 +54,7 @@ impl FromWorld for BoardTopology {
         Self {
             map_size,
             origin: (0, 0, 0),
-            collision_field: Array3::from_elem(map_size, CollisionFieldData::default()),
             ambient_temp: 288.15, // celsius_to_kelvin(15.0)
-            map_entity_field: Array3::default(map_size),
             floor_z_map: HashMap::new(),
             z_floor_map: HashMap::new(),
             floor_mapping: FloorLevelMapping {

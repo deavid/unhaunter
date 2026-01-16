@@ -26,7 +26,9 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::roomdb::RoomDB;
 pub(crate) use unboard_core::components::mapcolor::MapColor;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{
+    BoardCollisionField, BoardEntityField, BoardTopology,
+};
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unsound_core::resources::SoundGrid;
@@ -36,6 +38,8 @@ use unthermal_core::resources::ThermalGrid;
 #[derive(SystemParam)]
 struct GridResources<'w> {
     bf: Res<'w, BoardTopology>,
+    bef: Res<'w, BoardEntityField>,
+    bcf: Res<'w, BoardCollisionField>,
     tg: Res<'w, ThermalGrid>,
     sg: Res<'w, SoundGrid>,
     miasma: Res<'w, MiasmaGrid>,
@@ -187,7 +191,7 @@ pub(crate) fn compute_visibility(
 /// System to calculate the player's visibility field and update VisibilityData.
 fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
-    bf: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
     mut roomdb: ResMut<RoomDB>,
@@ -204,15 +208,15 @@ fn player_visibility_system(
     }) else {
         return;
     };
-    if vf.visibility_field.dim() != bf.collision_field.dim() {
-        vf.visibility_field = Array3::from_elem(bf.collision_field.dim(), -0.001_f32);
+    if vf.visibility_field.dim() != bcf.0.dim() {
+        vf.visibility_field = Array3::from_elem(bcf.0.dim(), -0.001_f32);
     } else {
         vf.visibility_field.fill(-0.001_f32);
     }
     // Calculate visibility
     compute_visibility(
         &mut vf.visibility_field,
-        &bf.collision_field,
+        &bcf.0,
         &player_pos,
         Some(&mut roomdb),
         false,
@@ -280,6 +284,8 @@ fn apply_lighting(
     mut visible: Local<HashSet<Entity>>,
 ) {
     let bf = &grids.bf;
+    let bef = &grids.bef;
+    let bcf = &grids.bcf;
     let tg = &grids.tg;
     let sg = &grids.sg;
     let miasma = &grids.miasma;
@@ -307,7 +313,7 @@ fn apply_lighting(
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
-    let board_dim = bf.collision_field.dim();
+    let board_dim = bcf.0.dim();
     if bf.map_size.0 == 0 {
         // If we don't have a valid map, skip this
         return;
@@ -383,7 +389,7 @@ fn apply_lighting(
         for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
             let lf = &lg.light_field[npos.ndidx()];
             let vis = vf.visibility_field[npos.ndidx()]
-                * if bf.collision_field[npos.ndidx()].player_free {
+                * if bcf.0[npos.ndidx()].player_free {
                     1.0
                 } else {
                     0.01
@@ -397,7 +403,7 @@ fn apply_lighting(
         player_pos = *pos;
     }
     for (pos, _fldir, _power, _color, _light_type, vis_field) in flashlights.iter_mut() {
-        compute_visibility(vis_field, &bf.collision_field, pos, None, false);
+        compute_visibility(vis_field, &bcf.0, pos, None, false);
     }
 
     // --- Access queries from the ParamSet ---
@@ -503,7 +509,7 @@ fn apply_lighting(
                     continue;
                 }
                 if vf.visibility_field[(x, y, z)] > 0.00001 {
-                    entities.extend_from_slice(&bf.map_entity_field[(x, y, z)]);
+                    entities.extend_from_slice(&bef.0[(x, y, z)]);
                 }
             }
         }

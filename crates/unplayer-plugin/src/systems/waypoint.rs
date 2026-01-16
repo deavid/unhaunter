@@ -3,7 +3,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::components::waypoint::{
@@ -40,6 +40,7 @@ pub(crate) fn waypoint_creation_system(
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
+    board_collision: Res<BoardCollisionField>,
     board_topology: Res<BoardTopology>,
     visibility_data: Res<VisibilityData>,
 ) {
@@ -120,6 +121,7 @@ pub(crate) fn waypoint_creation_system(
                     *interactive_pos,
                     interactive_entity,
                     &mut waypoint_queue,
+                    &board_collision,
                     &board_topology,
                     &visibility_data,
                 );
@@ -178,6 +180,7 @@ pub(crate) fn waypoint_creation_system(
                     *player_pos,
                     target,
                     &mut waypoint_queue,
+                    &board_collision,
                     &board_topology,
                     &visibility_data,
                 );
@@ -372,6 +375,7 @@ fn create_pathfinding_waypoints(
     start_pos: Position,
     target_pos: Position,
     waypoint_queue: &mut WaypointQueue,
+    board_collision: &BoardCollisionField,
     board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) {
@@ -384,7 +388,13 @@ fn create_pathfinding_waypoints(
     );
 
     // Use pathfinding to get a sequence of board positions
-    let path = find_path(start_pos, target_pos, board_topology, visibility_data);
+    let path = find_path(
+        start_pos,
+        target_pos,
+        board_topology,
+        board_collision,
+        visibility_data,
+    );
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);
@@ -425,6 +435,7 @@ fn create_pathfinding_waypoints_to_interaction(
     target_pos: Position,
     interaction_target: Entity,
     waypoint_queue: &mut WaypointQueue,
+    board_collision: &BoardCollisionField,
     board_topology: &BoardTopology,
     visibility_data: &VisibilityData,
 ) {
@@ -437,7 +448,13 @@ fn create_pathfinding_waypoints_to_interaction(
     );
 
     // Use pathfinding to get a sequence of board positions (treating target as walkable)
-    let path = find_path_to_interactive(start_pos, target_pos, board_topology, visibility_data);
+    let path = find_path_to_interactive(
+        start_pos,
+        target_pos,
+        board_topology,
+        board_collision,
+        visibility_data,
+    );
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);

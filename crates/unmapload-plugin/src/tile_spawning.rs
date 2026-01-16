@@ -150,7 +150,7 @@ pub(crate) fn process_and_spawn_tile(
     let mut beh = mt.behavior.clone();
 
     // Register the entity in the board's map entity field
-    p.bf.map_entity_field[pos.to_board_position().ndidx()].push(entity.id());
+    p.bef.0[pos.to_board_position().ndidx()].push(entity.id());
 
     // Handle horizontal flipping for behavior
     beh.flip(tile.flip_x);

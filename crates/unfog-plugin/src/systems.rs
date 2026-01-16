@@ -7,7 +7,7 @@ use unassets_core::types::root::game_assets::GameAssets;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
@@ -39,7 +39,8 @@ pub(crate) fn init_miasma_grid(
 }
 
 fn initialize_miasma(
-    mut board_data: ResMut<BoardTopology>,
+    board_data: Res<BoardTopology>,
+    mut bcf: ResMut<BoardCollisionField>,
     mut miasma: ResMut<MiasmaGrid>,
     roomdb: Res<RoomDB>,
     config: Res<MiasmaConfig>,
@@ -51,12 +52,12 @@ fn initialize_miasma(
         return;
     }
     warn!("Miasma Init");
-    rebuild_collision_data(&mut board_data, &qt);
+    rebuild_collision_data(&board_data, &mut bcf, &qt);
 
     miasma.room_modifiers.clear();
 
     let mut rng = random_seed::rng();
-    let collision_field = board_data.collision_field.clone();
+    let collision_field = bcf.0.clone();
 
     for (p, cfield) in collision_field.indexed_iter() {
         let board_position = BoardPosition::from_ndidx(p);
@@ -91,6 +92,7 @@ fn spawn_miasma(
     qp: Query<(&Position, &PlayerSprite)>,
     handles: Res<GameAssets>,
     board_data: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     mut commands: Commands,
 ) {
     let measure = metrics::SPAWN_MIASMA.time_measure();
@@ -115,7 +117,7 @@ fn spawn_miasma(
     };
     let player_bpos = player_pos.to_board_position();
 
-    if vf.visibility_field.dim() != board_data.collision_field.dim() {
+    if vf.visibility_field.dim() != bcf.0.dim() {
         // If the visibility field hasn't updated to the same size, skip processing.
         // This happens on map load and takes 1-2 frames to stabilize.
         return;
@@ -171,7 +173,7 @@ fn spawn_miasma(
         .indexed_iter()
     {
         let bp = (bp.0 + min_x, bp.1 + min_y, bp.2 + z);
-        let collision = &board_data.collision_field[bp];
+        let collision = &bcf.0[bp];
         if !collision.player_free && !collision.see_through {
             continue; // Skip only full walls, allow half-walls for miasma sprites
         }
@@ -236,6 +238,7 @@ fn spawn_miasma(
 fn animate_miasma_sprites(
     time: Res<Time>,
     board_data: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     miasma: Res<MiasmaGrid>,
     noise_table: Res<PerlinNoise>,
     mut query: Query<(&mut Position, &mut MiasmaSprite)>,
@@ -271,7 +274,7 @@ fn animate_miasma_sprites(
         let mut total_vel = Vec2::ZERO;
         let mut total_w = 0.0001;
         for bpos in bpos.iter_xy_neighbors(1, board_data.map_size) {
-            if !board_data.collision_field[bpos.ndidx()].player_free {
+            if !bcf.0[bpos.ndidx()].player_free {
                 continue;
             }
             let w = (bpos.to_position().distance2(&pos) + 0.1).recip();
@@ -292,8 +295,7 @@ fn animate_miasma_sprites(
         miasma_sprite.base_position.x += vel.x * dt * SPEED * miasma_sprite.vel_speed;
         miasma_sprite.base_position.y += vel.y * dt * SPEED * miasma_sprite.vel_speed;
         let bpos = miasma_sprite.base_position.to_board_position();
-        if !board_data
-            .collision_field
+        if !bcf.0
             .get(bpos.ndidx())
             .map(|collision| collision.player_free)
             .unwrap_or_default()
@@ -309,6 +311,7 @@ fn animate_miasma_sprites(
 
 fn update_miasma(
     board_data: Res<BoardTopology>,
+    bcf: Res<BoardCollisionField>,
     mut miasma: ResMut<MiasmaGrid>,
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
@@ -388,7 +391,7 @@ fn update_miasma(
         for p in CellIterator::new(chunk) {
             // Check for walls and closed doors (collision)
             // Allow miasma to spread through half-walls (like repellent particles)
-            let collision = &board_data.collision_field[p];
+            let collision = &bcf.0[p];
             if !collision.player_free && !collision.see_through {
                 continue; // Skip full walls that block both movement and sight
             }
@@ -407,7 +410,7 @@ fn update_miasma(
             let mut neighbors = vec![bpos.top(), bpos.bottom(), bpos.left(), bpos.right()];
 
             // Add stair connections for very strong miasma transmission
-            let cp = &board_data.collision_field[p];
+            let cp = &bcf.0[p];
             if cp.stair_offset != 0 {
                 let stair_target_z = bpos.z + cp.stair_offset as i64;
                 if stair_target_z >= 0 && stair_target_z < board_data.map_size.2 as i64 {
@@ -425,8 +428,7 @@ fn update_miasma(
                 .into_iter()
                 .filter(|nb_pos| {
                     let n_idx = nb_pos.ndidx();
-                    board_data
-                        .collision_field
+                    bcf.0
                         .get(n_idx)
                         .map(|collision| {
                             // Allow miasma to spread through half-walls (like repellent particles)
@@ -438,9 +440,7 @@ fn update_miasma(
             let nb_len = neighbors.len() as f32 + 0.01;
             let mut total_v = Vec2::ZERO;
             for neighbor_pos in neighbors {
-                if board_data
-                    .collision_field
-                    .get(neighbor_pos.ndidx())
+                if bcf.0.get(neighbor_pos.ndidx())
                     .is_none()
                 {
                     continue;
@@ -511,7 +511,7 @@ fn update_miasma(
             let f = 0.0001;
             *entry = *entry * (1.0 - f) + vel * f;
 
-            // let is_room = room_present[p] && board_data.collision_field[p].player_free;
+            // let is_room = room_present[p] && bcf.0[p].player_free;
             // if !is_room {
             //     // Slow particles that aren't in a room.
             //     *entry /= 1.00001;
@@ -522,7 +522,7 @@ fn update_miasma(
         // Iterate through all cells in the pressure field within the chunk.
         for p in CellIterator::new(chunk) {
             let delta = pressure_changes[p];
-            let collision = &board_data.collision_field[p];
+            let collision = &bcf.0[p];
             let is_room = room_present[p] && (collision.player_free || collision.see_through);
 
             let Some(entry) = miasma.pressure_field.get_mut(p) else {
@@ -569,7 +569,7 @@ fn update_miasma(
                     // Consider outside to be zero pressure always.
                     return 0.0;
                 }
-                let collision = &board_data.collision_field[gp];
+                let collision = &bcf.0[gp];
                 if collision.player_free || collision.see_through {
                     // Allow pressure reading from half-walls (like repellent particles)
                     miasma.pressure_field[gp]
@@ -601,8 +601,7 @@ fn update_miasma(
             const WALL_REPEL_SPEED: f32 = 0.00;
             let old_speed = new_velocity.length();
             if new_velocity.x > -WALL_REPEL_SPEED
-                && !board_data
-                    .collision_field
+                && !bcf.0
                     .get(bpos.right().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -610,8 +609,7 @@ fn update_miasma(
                 new_velocity.x = -WALL_REPEL_SPEED;
             }
             if new_velocity.x < WALL_REPEL_SPEED
-                && !board_data
-                    .collision_field
+                && !bcf.0
                     .get(bpos.left().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -619,8 +617,7 @@ fn update_miasma(
                 new_velocity.x = WALL_REPEL_SPEED;
             }
             if new_velocity.y < WALL_REPEL_SPEED
-                && !board_data
-                    .collision_field
+                && !bcf.0
                     .get(bpos.top().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)
@@ -628,8 +625,7 @@ fn update_miasma(
                 new_velocity.y = WALL_REPEL_SPEED;
             }
             if new_velocity.y > -WALL_REPEL_SPEED
-                && !board_data
-                    .collision_field
+                && !bcf.0
                     .get(bpos.bottom().ndidx())
                     .map(|c| c.player_free)
                     .unwrap_or(true)

@@ -3,7 +3,7 @@ use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unbehavior::roomdb::RoomDB;
-use unboard_core::resources::board_topology::BoardTopology;
+use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
@@ -29,6 +29,7 @@ fn lose_sanity(
     mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     _bf: Res<BoardTopology>,
+    _bcf: Res<BoardCollisionField>,
     thermal_grid: Res<ThermalGrid>,
     sound_grid: Res<SoundGrid>,
     lg: Res<LightGrid>,
@@ -188,6 +189,7 @@ fn handle_player_death(
     mut summary_data: ResMut<SummaryData>,
     mut next_app_state: ResMut<NextState<AppState>>,
     board_topology: Res<BoardTopology>,
+    _board_collision: Res<BoardCollisionField>,
     difficulty_res: Res<CurrentDifficulty>,
 ) {
     for player in player_query.iter_mut() {
