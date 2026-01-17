@@ -1,6 +1,6 @@
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearAudio;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
@@ -24,7 +24,7 @@ pub(crate) fn update_flashlight(
         &Position,
         &ItemName,
     )>,
-    mut gs: GearStuff,
+    mut ga: GearAudio,
 ) {
     for (
         mut flashlight,
@@ -73,7 +73,7 @@ pub(crate) fn update_flashlight(
             flashlight.inner_temp /= 1.00032;
             if flashlight.inner_temp > 1.0 && flashlight.status != FlashlightStatus::Off {
                 flashlight.status = FlashlightStatus::Off;
-                gs.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
+                ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
             }
         } else if flashlight.status != FlashlightStatus::Off {
             // If it was on and it's glitching, turn it off temporarily

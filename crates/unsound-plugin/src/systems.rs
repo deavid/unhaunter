@@ -37,7 +37,7 @@ pub fn sound_update(
                     x: (bpos.x as f32 + vn.x),
                     y: (bpos.y as f32 + vn.y),
                     z: bpos.z as f32,
-                    global_z: 0.0,
+                    visual_priority: 0.0,
                 }
                 .to_board_position();
                 sound_grid.sound_field.entry(newbpos).or_default().push(v);
@@ -69,7 +69,7 @@ pub fn sound_update(
                 x: mpos.x as f32 + v1.x,
                 y: mpos.y as f32 + v1.y,
                 z: mpos.z as f32,
-                global_z: 0.0,
+                visual_priority: 0.0,
             };
             let bn_p = n_p.to_board_position();
             if roomdb.room_tiles.get(&bn_p).is_some() && v.length() > 0.00002 {

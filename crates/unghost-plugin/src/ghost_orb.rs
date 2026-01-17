@@ -66,7 +66,7 @@ pub(crate) fn spawn_ghost_orb_particles(
                 x: base_position.x,
                 y: base_position.y,
                 z: base_position.z,
-                global_z: breach_pos.global_z,
+                visual_priority: breach_pos.visual_priority,
             })
             .insert(GameSprite)
             .insert(MapColor {
@@ -124,7 +124,7 @@ pub(crate) fn update_ghost_orb_particles(
             x: target_x,
             y: target_y,
             z: target_z,
-            global_z: position.global_z, // Preserve global_z
+            visual_priority: position.visual_priority, // Preserve visual_priority
         };
 
         // Get board position for collision detection
@@ -144,7 +144,7 @@ pub(crate) fn update_ghost_orb_particles(
                     x: target_x,
                     y: position.y,
                     z: position.z,
-                    global_z: position.global_z,
+                    visual_priority: position.visual_priority,
                 }
                 .to_board_position();
 
@@ -162,7 +162,7 @@ pub(crate) fn update_ghost_orb_particles(
                     x: position.x,
                     y: target_y,
                     z: position.z,
-                    global_z: position.global_z,
+                    visual_priority: position.visual_priority,
                 }
                 .to_board_position();
 

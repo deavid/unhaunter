@@ -2,7 +2,7 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
@@ -36,7 +36,9 @@ pub(crate) fn update_spiritbox(
         &mut PerceivedClarity,
         Option<&mut SpiritBoxInternal>,
     )>,
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    gs_res: GearResources,
+    gs_state: GearGameState,
     lg: Res<LightGrid>,
     mut commands: Commands,
 ) {
@@ -62,7 +64,7 @@ pub(crate) fn update_spiritbox(
         };
 
         let mut rng = random_seed::rng();
-        let sec = gs.time.elapsed_secs();
+        let sec = gs_audio.time.elapsed_secs();
         spiritbox.mode_frame = (sec * 4.0).round() as u32;
 
         // Update Battery Drain Rate
@@ -97,7 +99,7 @@ pub(crate) fn update_spiritbox(
         // Update Logic
         if toggle.is_on {
             let bpos = pos.to_board_position();
-            let temperature = gs.tg.temperature_field[bpos.ndidx()];
+            let temperature = gs_res.tg.temperature_field[bpos.ndidx()];
             let temp_c = kelvin_to_celsius(temperature);
             let light_lux = lg
                 .light_field
@@ -107,7 +109,7 @@ pub(crate) fn update_spiritbox(
                 .lux;
 
             let mut ghost_near = false;
-            if let Some(ghost_pos) = gs.haunt_state.ghost_warning_position {
+            if let Some(ghost_pos) = gs_state.haunt_state.ghost_warning_position {
                 let dist2 = pos.distance2(&ghost_pos);
                 if dist2 < 3.0 * 3.0 {
                     ghost_near = true;
@@ -117,13 +119,27 @@ pub(crate) fn update_spiritbox(
             let delta = sec - spiritbox.last_change_secs;
 
             // Only charge up for a response if the ghost has the Spirit Box evidence.
-            if gs.haunt_state.evidences.contains(&Evidence::SpiritBox) && ghost_near {
-                let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
+            if gs_state
+                .haunt_state
+                .evidences
+                .contains(&Evidence::SpiritBox)
+                && ghost_near
+            {
+                let sound = gs_res
+                    .sg
+                    .sound_field
+                    .get(&bpos)
+                    .cloned()
+                    .unwrap_or_default();
                 let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
                 let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
                 let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
                 spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
-                    * gs.haunt_state.ghost_dynamics.spirit_box_clarity.max(0.0);
+                    * gs_state
+                        .haunt_state
+                        .ghost_dynamics
+                        .spirit_box_clarity
+                        .max(0.0);
             }
 
             if spiritbox.ghost_answer {
@@ -133,7 +149,7 @@ pub(crate) fn update_spiritbox(
                 }
             } else if delta > 0.3 && electronic.glitch_timer <= 0.0 {
                 spiritbox.last_change_secs = sec;
-                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
 
                 let r = if spiritbox.charge > 30.0 {
                     spiritbox.charge = 0.0;
@@ -146,16 +162,24 @@ pub(crate) fn update_spiritbox(
 
                 if spiritbox.ghost_answer {
                     match r {
-                        0 => gs.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, pos),
-                        1 => gs.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, pos),
-                        2 => gs.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, pos),
-                        3 => gs.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos),
+                        0 => {
+                            gs_audio.play_audio("sounds/effects-radio-answer1.ogg".into(), 0.7, pos)
+                        }
+                        1 => {
+                            gs_audio.play_audio("sounds/effects-radio-answer2.ogg".into(), 0.7, pos)
+                        }
+                        2 => {
+                            gs_audio.play_audio("sounds/effects-radio-answer3.ogg".into(), 0.7, pos)
+                        }
+                        3 => {
+                            gs_audio.play_audio("sounds/effects-radio-answer4.ogg".into(), 0.4, pos)
+                        }
                         _ => spiritbox.ghost_answer = false, // Should not happen, but safeguard.
                     }
 
                     // Update blinking_hint_active
                     const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-                    let count = gs
+                    let count = gs_audio
                         .player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::SpiritBox)
@@ -165,20 +189,20 @@ pub(crate) fn update_spiritbox(
                 }
             } else if delta > 0.3 && electronic.glitch_timer > 0.0 {
                 spiritbox.last_change_secs = sec;
-                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
             }
 
             // Play more static sounds when glitching
             if electronic.glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.6 {
-                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
+                gs_audio.play_audio("sounds/effects-chirp-click.ogg".into(), 0.5, pos);
             }
 
             // Play scanning sound
             if !spiritbox.ghost_answer && spiritbox.mode_frame % 10 == 0 {
-                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.1, pos);
+                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.1, pos);
             }
             if spiritbox.ghost_answer && spiritbox.mode_frame % 20 == 0 {
-                gs.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
+                gs_audio.play_audio("sounds/effects-radio-scan.ogg".into(), 0.4, pos);
             }
         } else {
             // Ensure hint is off when disabled
@@ -223,12 +247,12 @@ pub(crate) fn update_spiritbox(
         status.0 = format!("{}: {}\n{}", name.0, on_s, msg);
 
         if spiritbox.ghost_answer {
-            internal.last_response_time = Some(gs.time.elapsed_secs_f64());
+            internal.last_response_time = Some(gs_audio.time.elapsed_secs_f64());
         }
 
         let is_recent_response = internal
             .last_response_time
-            .is_some_and(|t| gs.time.elapsed_secs_f64() - t < 10.0);
+            .is_some_and(|t| gs_audio.time.elapsed_secs_f64() - t < 10.0);
 
         perceived_clarity.from_sound =
             if toggle.is_on && is_recent_response && electronic.glitch_timer <= 0.0 {

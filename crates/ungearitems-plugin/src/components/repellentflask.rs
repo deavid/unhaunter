@@ -7,7 +7,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
@@ -31,7 +31,6 @@ const BRIGHT_RED: Color = Color::srgba(1.0, 0.2, 0.0, 1.0);
 use std::ops::{Add, Mul};
 
 pub(crate) fn update_repellentflask(
-    mut gs: GearStuff,
     mut q_repellent: Query<(
         Entity,
         &mut RepellentFlask,
@@ -41,6 +40,10 @@ pub(crate) fn update_repellentflask(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
+    __gs_audio: GearAudio,
+    mut gs_state: GearGameState,
+    _gs_res: GearResources,
+    mut commands: Commands,
 ) {
     for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
         q_repellent.iter_mut()
@@ -51,14 +54,14 @@ pub(crate) fn update_repellentflask(
             && repellent.liquid_content.is_some()
         {
             repellent.active = true;
-            gs.commands.entity(entity).remove::<Triggered>();
+            commands.entity(entity).remove::<Triggered>();
         }
 
         if repellent.active {
             let mut rng = random_seed::rng();
             if rng.random_range(0.0..1.0) <= 0.5 {
                 if repellent.qty == RepellentFlask::MAX_QTY {
-                    gs.summary.repellent_used_amt += 1;
+                    gs_state.summary.repellent_used_amt += 1;
                 }
                 repellent.qty -= 1;
                 if repellent.qty <= 0 {
@@ -74,7 +77,7 @@ pub(crate) fn update_repellentflask(
                     };
                     pos.x += rng.random_range(-spread..spread);
                     pos.y += rng.random_range(-spread..spread);
-                    gs.commands
+                    commands
                         .spawn(Sprite {
                             color: Color::NONE,
                             ..default()
@@ -214,7 +217,7 @@ fn repellent_update(
             x: r_pos.x + rng.random_range(-0.5..0.5),
             y: r_pos.y + rng.random_range(-0.5..0.5),
             z: r_pos.z + rng.random_range(-0.5..0.5),
-            global_z: r_pos.global_z,
+            visual_priority: r_pos.visual_priority,
         };
         let ndidx = bpos.ndidx();
 

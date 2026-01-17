@@ -90,7 +90,7 @@ impl BoardPosition {
             x: self.x as f32,
             y: self.y as f32,
             z: self.z as f32,
-            global_z: 0.0,
+            visual_priority: 0.0,
         }
     }
 
@@ -100,7 +100,7 @@ impl BoardPosition {
             x: self.x as f32 + 0.5,
             y: self.y as f32 + 0.5,
             z: self.z as f32,
-            global_z: 0.0,
+            visual_priority: 0.0,
         }
     }
 

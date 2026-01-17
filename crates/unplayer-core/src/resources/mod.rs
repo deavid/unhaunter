@@ -27,7 +27,7 @@ impl Default for PlayerState {
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
-                global_z: 0.0,
+                visual_priority: 0.0,
             },
             mean_sound: 0.0,
             controls: ControlKeys::default(),

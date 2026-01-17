@@ -253,7 +253,7 @@ fn spawn_dust_particles(
                 x: position.x + rng.random_range(-0.15..0.15),
                 y: position.y + rng.random_range(-0.15..0.15),
                 z: position.z + rng.random_range(0.0..0.1),
-                global_z: position.global_z,
+                visual_priority: position.visual_priority,
             })
             .insert(GameSprite)
             .insert(MapColor {
@@ -293,7 +293,7 @@ fn spawn_haunted_glow_particle(
             x: position.x + rng.random_range(-0.2..0.2),
             y: position.y + rng.random_range(-0.2..0.2),
             z: position.z + rng.random_range(0.0..0.2),
-            global_z: position.global_z,
+            visual_priority: position.visual_priority,
         })
         .insert(GameSprite)
         .insert(MapColor {
@@ -333,7 +333,7 @@ pub(crate) fn spawn_electrical_sparks(
                 x: position.x + rng.random_range(-0.1..0.1),
                 y: position.y + rng.random_range(-0.1..0.1),
                 z: position.z + rng.random_range(0.1..0.4),
-                global_z: position.global_z,
+                visual_priority: position.visual_priority,
             })
             .insert(GameSprite)
             .insert(MapColor {

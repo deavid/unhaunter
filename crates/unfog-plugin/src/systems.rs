@@ -197,7 +197,7 @@ fn spawn_miasma(
             let scale = rng.random_range(0.15..1.0_f32).sqrt() * 1.8;
             let mut pos = bpos
                 .to_position_center()
-                .with_global_z(0.00037 * rng.random_range(0.99..1.01));
+                .with_visual_priority(0.00037 * rng.random_range(0.99..1.01));
             pos.x += rng.random_range(-0.5..0.5);
             pos.y += rng.random_range(-0.5..0.5);
 
@@ -270,7 +270,7 @@ fn animate_miasma_sprites(
         pos.x = miasma_sprite.base_position.x + (circular_x + noise_x * 0.6) * MOVEMENT_FACTOR; // Scale noise influence
         pos.y = miasma_sprite.base_position.y + (circular_y + noise_y * 0.6) * MOVEMENT_FACTOR;
 
-        // We do *not* modify pos.z or pos.global_z here.  The Z position is set
+        // We do *not* modify pos.z or pos.visual_priority here.  The Z position is set
         // during initialization and should remain constant.
         let bpos = pos.to_board_position();
         let mut total_vel = Vec2::ZERO;

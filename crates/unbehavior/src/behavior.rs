@@ -130,7 +130,7 @@ pub enum Util {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Display {
     pub disable: bool,
-    pub global_z: NotNan<f32>,
+    pub visual_priority: NotNan<f32>,
     pub auto_hide: bool,
     pub light_recv_offset: (i64, i64),
 }
@@ -290,37 +290,37 @@ impl SpriteConfig {
         match self.class {
             Class::Floor => {
                 p.movement.walkable = true;
-                p.display.global_z = (-0.00035).try_into().unwrap();
+                p.display.visual_priority = (-0.00035).try_into().unwrap();
             }
             Class::Wall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.opaque = true;
-                p.display.global_z = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = (-0.00005).try_into().unwrap();
             }
             Class::LowWall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.see_through = true;
-                p.display.global_z = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = (-0.00005).try_into().unwrap();
             }
             Class::Door => {
-                p.display.global_z = (0.000015).try_into().unwrap();
+                p.display.visual_priority = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == TileState::Closed;
                 p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
             }
             Class::Switch | Class::RoomSwitch | Class::Breaker => {
-                p.display.global_z = (0.000040).try_into().unwrap();
+                p.display.visual_priority = (0.000040).try_into().unwrap();
             }
             Class::Doorway => {
-                p.display.global_z = (-0.00005).try_into().unwrap();
+                p.display.visual_priority = (-0.00005).try_into().unwrap();
             }
             Class::Decor | Class::Item => {
-                p.display.global_z = (0.000065).try_into().unwrap();
+                p.display.visual_priority = (0.000065).try_into().unwrap();
             }
             Class::Furniture | Class::NPC => {
-                p.display.global_z = (0.000050).try_into().unwrap();
+                p.display.visual_priority = (0.000050).try_into().unwrap();
             }
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
@@ -351,14 +351,14 @@ impl SpriteConfig {
                 p.util = Util::RoomDef(self.variant.clone());
             }
             Class::WallLamp => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = (-0.00004).try_into().unwrap();
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.0).try_into().unwrap();
                 p.light.heat_coef = -1;
             }
             Class::FloorLamp | Class::TableLamp => {
-                p.display.global_z = (0.000050).try_into().unwrap();
+                p.display.visual_priority = (0.000050).try_into().unwrap();
                 p.light.can_emit_light = true;
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = match self.class {
@@ -367,7 +367,7 @@ impl SpriteConfig {
                 };
             }
             Class::WallDecor => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = (-0.00004).try_into().unwrap();
             }
             Class::CeilingLight => {
                 p.display.disable = true;
@@ -391,18 +391,18 @@ impl SpriteConfig {
                 p.light.heat_coef = 6;
             }
             Class::Appliance => {
-                p.display.global_z = (0.000070).try_into().unwrap();
+                p.display.visual_priority = (0.000070).try_into().unwrap();
             }
             Class::Van => {
-                p.display.global_z = (0.000050).try_into().unwrap();
+                p.display.visual_priority = (0.000050).try_into().unwrap();
                 p.display.auto_hide = true;
                 p.display.light_recv_offset = (5, 0);
             }
             Class::Window => {
-                p.display.global_z = (-0.00004).try_into().unwrap();
+                p.display.visual_priority = (-0.00004).try_into().unwrap();
             }
             Class::StairsDown | Class::StairsUp => {
-                p.display.global_z = (0.000005).try_into().unwrap();
+                p.display.visual_priority = (0.000005).try_into().unwrap();
                 p.movement.stair_offset = match self.class {
                     Class::StairsDown => -1,
                     _ => 1,

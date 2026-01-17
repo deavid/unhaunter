@@ -7,7 +7,7 @@ use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
@@ -25,7 +25,9 @@ pub(crate) fn update_thermometer(
         &ItemName,
         &mut PerceivedClarity,
     )>,
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    gs_res: GearResources,
+    gs_state: GearGameState,
 ) {
     for (
         mut thermometer,
@@ -58,12 +60,12 @@ pub(crate) fn update_thermometer(
                 x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
                 y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
                 z: pos.z,
-                global_z: pos.global_z,
+                visual_priority: pos.visual_priority,
             };
             let bpos = pos.to_board_position();
-            let temperature = gs.tg.temperature_field[bpos.ndidx()];
+            let temperature = gs_res.tg.temperature_field[bpos.ndidx()];
             let temp_reading = temperature;
-            let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
+            let air_mass: f32 = 5.0 / gs_state.difficulty.0.equipment_sensitivity;
 
             // Double noise reduction to remove any noise from measurement.
             let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();
@@ -79,7 +81,7 @@ pub(crate) fn update_thermometer(
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0 {
-                    let count = gs
+                    let count = gs_audio
                         .player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::FreezingTemp)
@@ -100,7 +102,7 @@ pub(crate) fn update_thermometer(
 
             // Possibly play crackling/static sounds during glitches
             if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
+                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, &pos);
             }
         }
 

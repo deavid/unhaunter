@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 pub(crate) use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
 use unspatial_core::position::Position;
@@ -59,7 +59,9 @@ impl QuartzStoneDataExt for QuartzStoneData {
 }
 
 pub(crate) fn update_quartz(
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    _gs_res: GearResources,
+    gs_state: GearGameState,
     mut q_quartz: Query<(
         &mut QuartzStoneData,
         &mut StatusText,
@@ -69,10 +71,10 @@ pub(crate) fn update_quartz(
     )>,
     mut q_ghost: Query<(&Position, &mut GhostSprite), With<GhostTag>>,
 ) {
-    let dt = gs.time.delta_secs();
+    let dt = gs_audio.time.delta_secs();
     for (mut quartz, mut status, mut sprite, pos, _ep) in q_quartz.iter_mut() {
         // Update logic
-        if quartz.energy_absorbed > 10.0 * gs.difficulty.0.ghost_hunt_duration.sqrt()
+        if quartz.energy_absorbed > 10.0 * gs_state.difficulty.0.ghost_hunt_duration.sqrt()
             && quartz.cracks <= MAX_CRACKS
         {
             quartz.energy_absorbed = 0.0;
@@ -81,7 +83,7 @@ pub(crate) fn update_quartz(
             quartz.cracks += 1;
 
             // Play cracking sound
-            gs.play_audio("sounds/quartz_crack.ogg".into(), 1.0, pos);
+            gs_audio.play_audio("sounds/quartz_crack.ogg".into(), 1.0, pos);
         }
 
         for (ghost_pos, mut ghost) in q_ghost.iter_mut() {

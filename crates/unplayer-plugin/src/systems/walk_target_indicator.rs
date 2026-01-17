@@ -31,7 +31,7 @@ pub(crate) fn manage_walk_target_indicator(
                     x: target_position.x,
                     y: target_position.y,
                     z: target_position.z,
-                    global_z: target_position.global_z + 0.01,
+                    visual_priority: target_position.visual_priority + 0.01,
                 })
                 .insert(WalkTargetIndicator);
         }
@@ -47,7 +47,7 @@ pub(crate) fn manage_walk_target_indicator(
             indicator_position.x = move_target.position.x;
             indicator_position.y = move_target.position.y;
             indicator_position.z = move_target.position.z;
-            indicator_position.global_z = move_target.position.global_z + 0.01;
+            indicator_position.visual_priority = move_target.position.visual_priority + 0.01;
         }
     }
 }

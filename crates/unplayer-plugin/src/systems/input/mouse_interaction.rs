@@ -5,7 +5,7 @@ use bevy::{
 };
 use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearAudio;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
@@ -14,7 +14,7 @@ pub(crate) fn mouse_right_click_gear_system(
     mouse: Res<ButtonInput<MouseButton>>,
     q_player: Query<&PlayerGear, With<PlayerSprite>>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
-    mut gs: GearStuff,
+    mut ga: GearAudio,
 ) {
     if mouse.just_pressed(MouseButton::Right) {
         for player_gear in q_player.iter() {
@@ -23,9 +23,9 @@ pub(crate) fn mouse_right_click_gear_system(
             {
                 toggle.is_on = !toggle.is_on;
                 if let Some(pos) = pos {
-                    gs.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
+                    ga.play_audio("sounds/switch-on-1.ogg".into(), 1.0, pos);
                 } else {
-                    gs.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
+                    ga.play_audio_nopos("sounds/switch-on-1.ogg".into(), 1.0);
                 }
             }
         }

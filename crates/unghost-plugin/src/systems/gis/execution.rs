@@ -85,7 +85,7 @@ fn has_clear_path(
             x: check_x,
             y: check_y,
             z: source.z,
-            global_z: source.global_z,
+            visual_priority: source.visual_priority,
         };
 
         let board_pos = check_pos.to_board_position();
@@ -136,7 +136,7 @@ fn find_valid_destination_with_retry(
             x: original_destination.x + offset_x,
             y: original_destination.y + offset_y,
             z: original_destination.z,
-            global_z: original_destination.global_z,
+            visual_priority: original_destination.visual_priority,
         };
 
         if validate_destination_enhanced(

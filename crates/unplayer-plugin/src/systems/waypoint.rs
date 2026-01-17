@@ -3,21 +3,19 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
-use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
-use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
+use unnavigation_core::pathfinding::Pathfinder;
 use unplayer_core::resources::PlayerInput;
 use unrender_std::components::game::GameSprite;
-use unrender_std::resources::visibility_data::VisibilityData;
-use unspatial_core::constants::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
+use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 use untags_core::game::GCameraArena;
 use unui_core::resources::MouseVisibility;
 
-use super::pathfinding::{detect_stair_area, find_path, find_path_to_interactive};
+use super::pathfinding::detect_stair_area;
 
 /// System that creates waypoint entities when the player clicks.
 /// Handles both interactive objects (via picking) and ground clicks (via raw mouse input).
@@ -40,9 +38,7 @@ pub(crate) fn waypoint_creation_system(
     mut click_events: MessageReader<bevy::picking::events::Pointer<bevy::picking::events::Click>>,
     mouse: Res<ButtonInput<MouseButton>>,
     mouse_visibility: Res<MouseVisibility>,
-    board_collision: Res<BoardCollisionField>,
-    board_topology: Res<BoardTopology>,
-    visibility_data: Res<VisibilityData>,
+    pathfinder: Pathfinder,
 ) {
     // Only process clicks when mouse is visible
     if !mouse_visibility.is_visible {
@@ -121,9 +117,7 @@ pub(crate) fn waypoint_creation_system(
                     *interactive_pos,
                     interactive_entity,
                     &mut waypoint_queue,
-                    &board_collision,
-                    &board_topology,
-                    &visibility_data,
+                    &pathfinder,
                 );
             }
             interactive_clicked = true;
@@ -144,7 +138,7 @@ pub(crate) fn waypoint_creation_system(
 
         // Convert cursor position to world coordinates
         if let Some(target) =
-            screen_to_world_coords(cursor_pos, player_pos.z, camera, camera_transform)
+            perspective::screen_to_world(cursor_pos, player_pos.z, camera, camera_transform)
         {
             debug!("Ground click detected at {:?}", target);
 
@@ -180,9 +174,7 @@ pub(crate) fn waypoint_creation_system(
                     *player_pos,
                     target,
                     &mut waypoint_queue,
-                    &board_collision,
-                    &board_topology,
-                    &visibility_data,
+                    &pathfinder,
                 );
             }
         }
@@ -204,7 +196,6 @@ pub(crate) fn waypoint_following_system(
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,
-    mut ev_room: MessageWriter<RoomChangedEvent>,
 ) {
     for (player_entity, player_pos, waypoint_queue) in q_player.iter() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
@@ -230,16 +221,14 @@ pub(crate) fn waypoint_following_system(
                             let distance = player_pos.distance(interactive_pos);
                             if distance <= INTERACTION_DISTANCE {
                                 // Execute the interaction
-                                if interactive_stuff.execute_interaction(
+                                interactive_stuff.execute_interaction(
                                     *interaction_target,
                                     interactive_pos,
                                     Some(interactive),
                                     behavior,
                                     room_state,
-                                    InteractionExecutionType::ChangeState,
-                                ) {
-                                    ev_room.write(RoomChangedEvent::default());
-                                }
+                                    unevents_core::events::roomchanged::InteractionExecutionType::ChangeState,
+                                );
                                 true // Complete the waypoint after interaction
                             } else {
                                 // Still too far, keep moving
@@ -313,7 +302,9 @@ fn create_interaction_waypoint(
 /// Helper function to complete a waypoint (remove it and advance queue)
 fn complete_waypoint(commands: &mut Commands, _player_entity: Entity, waypoint_entity: Entity) {
     // Despawn the waypoint entity
-    commands.entity(waypoint_entity).despawn();
+    if let Ok(mut entity) = commands.get_entity(waypoint_entity) {
+        entity.despawn();
+    }
 
     // Remove from player's queue (will be handled by queue management system)
     // For now we'll update it in the next system run
@@ -332,41 +323,6 @@ pub(crate) fn waypoint_queue_cleanup_system(
     }
 }
 
-/// Converts screen coordinates to world coordinates using the game's isometric projection.
-fn screen_to_world_coords(
-    screen_pos: Vec2,
-    target_z: f32,
-    camera: &Camera,
-    camera_transform: &GlobalTransform,
-) -> Option<Position> {
-    // Get the world position on the camera's near plane using Bevy's built-in conversion
-    let world_pos_on_near_plane = camera
-        .viewport_to_world_2d(camera_transform, screen_pos)
-        .ok()?;
-
-    // Calculate the determinant of the 2x2 isometric projection matrix
-    let det = PERSPECTIVE_X[0] * PERSPECTIVE_Y[1] - PERSPECTIVE_Y[0] * PERSPECTIVE_X[1];
-    if det.abs() < 1e-6 {
-        return None; // Matrix is not invertible
-    }
-    let inv_det = 1.0 / det;
-
-    // Adjust screen coordinates by removing the Z-level contribution
-    let b_x = world_pos_on_near_plane.x - target_z * PERSPECTIVE_Z[0];
-    let b_y = world_pos_on_near_plane.y - target_z * PERSPECTIVE_Z[1];
-
-    // Apply the inverse transformation matrix to find world X and Y coordinates
-    let world_x = inv_det * (b_x * PERSPECTIVE_Y[1] - PERSPECTIVE_Y[0] * b_y);
-    let world_y = inv_det * (PERSPECTIVE_X[0] * b_y - b_x * PERSPECTIVE_X[1]);
-
-    Some(Position {
-        x: world_x,
-        y: world_y,
-        z: target_z,
-        global_z: 0.0,
-    })
-}
-
 /// Helper function to create waypoints using pathfinding
 fn create_pathfinding_waypoints(
     commands: &mut Commands,
@@ -375,9 +331,7 @@ fn create_pathfinding_waypoints(
     start_pos: Position,
     target_pos: Position,
     waypoint_queue: &mut WaypointQueue,
-    board_collision: &BoardCollisionField,
-    board_topology: &BoardTopology,
-    visibility_data: &VisibilityData,
+    pathfinder: &Pathfinder,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -388,13 +342,7 @@ fn create_pathfinding_waypoints(
     );
 
     // Use pathfinding to get a sequence of board positions
-    let path = find_path(
-        start_pos,
-        target_pos,
-        board_topology,
-        board_collision,
-        visibility_data,
-    );
+    let path = pathfinder.find_path(start_pos, target_pos);
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);
@@ -435,9 +383,7 @@ fn create_pathfinding_waypoints_to_interaction(
     target_pos: Position,
     interaction_target: Entity,
     waypoint_queue: &mut WaypointQueue,
-    board_collision: &BoardCollisionField,
-    board_topology: &BoardTopology,
-    visibility_data: &VisibilityData,
+    pathfinder: &Pathfinder,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -448,13 +394,7 @@ fn create_pathfinding_waypoints_to_interaction(
     );
 
     // Use pathfinding to get a sequence of board positions (treating target as walkable)
-    let path = find_path_to_interactive(
-        start_pos,
-        target_pos,
-        board_topology,
-        board_collision,
-        visibility_data,
-    );
+    let path = pathfinder.find_path_to_interactive(start_pos, target_pos);
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);

@@ -5833,18 +5833,14 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "unboard-core",
- "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
  "ungear-core",
- "unghost-core",
  "uninteraction-core",
  "unplayer-core",
- "unprofile-core",
  "unrender-std",
  "unsettings-core",
  "unspatial-core",
- "unsummary-core",
  "untags-core",
  "untypes-core",
 ]
@@ -6206,6 +6202,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "unboard-core",
+ "unrender-std",
  "unspatial-core",
 ]
 

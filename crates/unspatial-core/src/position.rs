@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_math::Vec3;
 
 use crate::boardposition::BoardPosition;
-use crate::constants::{EPSILON, PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
 use crate::direction::Direction;
 
 // use unfoundation_core::random_seed; // TODO: move or handle
@@ -10,7 +9,7 @@ use crate::direction::Direction;
 /// Represents the logical position of an object on the game board.
 ///
 /// This component stores the object's 3D coordinates (`x`, `y`, `z`) in a logical
-/// coordinate system, as well as a `global_z` value for fine-tuning the object's
+/// coordinate system, as well as a `visual_priority` value for fine-tuning the object's
 /// vertical position in the isometric view.
 ///
 /// The `to_screen_coord` method converts the logical position to screen
@@ -25,7 +24,7 @@ pub struct Position {
     pub x: f32,
     pub y: f32,
     pub z: f32,
-    pub global_z: f32,
+    pub visual_priority: f32,
 }
 
 impl Position {
@@ -34,21 +33,24 @@ impl Position {
             x: x as f32,
             y: y as f32,
             z: z as f32,
-            global_z: 0 as f32,
+            visual_priority: 0 as f32,
         }
     }
 
-    pub fn with_global_z(&self, global_z: f32) -> Self {
+    pub fn with_visual_priority(&self, visual_priority: f32) -> Self {
         Self {
             x: self.x,
             y: self.y,
             z: self.z,
-            global_z,
+            visual_priority,
         }
     }
 
     pub fn is_finite(&self) -> bool {
-        self.x.is_finite() && self.y.is_finite() && self.z.is_finite() && self.global_z.is_finite()
+        self.x.is_finite()
+            && self.y.is_finite()
+            && self.z.is_finite()
+            && self.visual_priority.is_finite()
     }
 
     pub fn lerp(&self, other: &Self, t: f32) -> Self {
@@ -56,7 +58,7 @@ impl Position {
             x: self.x + (other.x - self.x) * t,
             y: self.y + (other.y - self.y) * t,
             z: self.z + (other.z - self.z) * t,
-            global_z: self.global_z,
+            visual_priority: self.visual_priority,
         }
     }
 
@@ -66,12 +68,12 @@ impl Position {
     //         x: self.x + rng.random_range(-range..range),
     //         y: self.y + rng.random_range(-range..range),
     //         z: self.z,
-    //         global_z: self.global_z,
+    //         visual_priority: self.visual_priority,
     //     }
     // }
 
-    pub fn into_global_z(mut self, global_z: f32) -> Self {
-        self.global_z = global_z;
+    pub fn into_visual_priority(mut self, visual_priority: f32) -> Self {
+        self.visual_priority = visual_priority;
         self
     }
 
@@ -79,25 +81,16 @@ impl Position {
         Vec3::new(self.x, self.y, self.z)
     }
 
-    pub fn to_screen_coord(self) -> Vec3 {
-        let x = self.x * PERSPECTIVE_X[0] + self.y * PERSPECTIVE_Y[0] + self.z * PERSPECTIVE_Z[0];
-        let y = self.x * PERSPECTIVE_X[1] + self.y * PERSPECTIVE_Y[1] + self.z * PERSPECTIVE_Z[1];
-        let z = self.x * PERSPECTIVE_X[2]
-            + self.y * PERSPECTIVE_Y[2]
-            + self.z.round() * PERSPECTIVE_Z[2];
-        Vec3::new(x, y, z + self.global_z)
-    }
-
     pub fn same_x(&self, other: &Self) -> bool {
-        (self.x - other.x).abs() < EPSILON
+        (self.x - other.x).abs() < 0.0001
     }
 
     pub fn same_y(&self, other: &Self) -> bool {
-        (self.y - other.y).abs() < EPSILON
+        (self.y - other.y).abs() < 0.0001
     }
 
     pub fn same_z(&self, other: &Self) -> bool {
-        (self.z - other.z).abs() < EPSILON
+        (self.z - other.z).abs() < 0.0001
     }
 
     pub fn same_xy(&self, other: &Self) -> bool {
@@ -173,7 +166,7 @@ impl Position {
             x: self.x * x_axis.dx + self.y * y_axis.dx + self.z * z_axis.dx,
             y: self.x * x_axis.dy + self.y * y_axis.dy + self.z * z_axis.dy,
             z: self.x * x_axis.dz + self.y * y_axis.dz + self.z * z_axis.dz,
-            global_z: self.global_z,
+            visual_priority: self.visual_priority,
         }
     }
 
@@ -204,7 +197,7 @@ impl std::ops::Add<Direction> for &Position {
             x: self.x + rhs.dx,
             y: self.y + rhs.dy,
             z: self.z + rhs.dz,
-            global_z: self.global_z,
+            visual_priority: self.visual_priority,
         }
     }
 }
@@ -223,7 +216,7 @@ impl std::ops::Sub for Position {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
-            global_z: self.global_z - rhs.global_z,
+            visual_priority: self.visual_priority - rhs.visual_priority,
         }
     }
 }
@@ -236,7 +229,7 @@ impl std::ops::Sub for &Position {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
-            global_z: self.global_z - rhs.global_z,
+            visual_priority: self.visual_priority - rhs.visual_priority,
         }
     }
 }

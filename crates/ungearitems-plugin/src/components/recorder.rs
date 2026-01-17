@@ -1,6 +1,6 @@
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
@@ -21,7 +21,9 @@ pub(crate) fn update_recorder(
         &ItemName,
         &mut PerceivedClarity,
     )>,
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    gs_res: GearResources,
+    gs_state: GearGameState,
 ) {
     for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
         q_recorder.iter_mut()
@@ -63,7 +65,12 @@ pub(crate) fn update_recorder(
         // Update Logic
         if toggle.is_on {
             let bpos = pos.to_board_position();
-            let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
+            let sound = gs_res
+                .sg
+                .sound_field
+                .get(&bpos)
+                .cloned()
+                .unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
 
             recorder.sound_l.push(sound_reading);
@@ -71,7 +78,7 @@ pub(crate) fn update_recorder(
                 recorder.sound_l.remove(0);
             }
 
-            let dt = gs.time.delta_secs();
+            let dt = gs_audio.time.delta_secs();
             recorder.display_secs_since_last_update += dt;
             if recorder.display_secs_since_last_update > 0.5 {
                 recorder.display_secs_since_last_update = 0.0;
@@ -80,7 +87,7 @@ pub(crate) fn update_recorder(
             }
 
             let mut evp_recorded = false;
-            if let Some(ghost_pos) = gs.haunt_state.ghost_warning_position {
+            if let Some(ghost_pos) = gs_state.haunt_state.ghost_warning_position {
                 let dist2 = pos.distance2(&ghost_pos);
                 if dist2 < 2.0 * 2.0 {
                     evp_recorded = true;
@@ -88,7 +95,7 @@ pub(crate) fn update_recorder(
             }
 
             if evp_recorded {
-                recorder.amt_recorded += dt * gs.difficulty.0.equipment_sensitivity;
+                recorder.amt_recorded += dt * gs_state.difficulty.0.equipment_sensitivity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }
@@ -101,7 +108,7 @@ pub(crate) fn update_recorder(
 
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-                let count = gs
+                let count = gs_audio
                     .player_profile
                     .times_evidence_acknowledged_on_gear
                     .get(&Evidence::EVPRecording)
@@ -124,7 +131,7 @@ pub(crate) fn update_recorder(
 
                 // Play static/interference sound when glitching
                 if rng.random_range(0.0..1.0) < 0.4 {
-                    gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
+                    gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
                 }
             }
 
@@ -134,9 +141,9 @@ pub(crate) fn update_recorder(
             }
 
             // Apply EMI if warning is active and we're electronic
-            if let Some(ghost_pos) = &gs.haunt_state.ghost_warning_position {
+            if let Some(ghost_pos) = &gs_state.haunt_state.ghost_warning_position {
                 let distance2 = pos.distance2(ghost_pos);
-                let warning_level = gs.haunt_state.ghost_warning_intensity;
+                let warning_level = gs_state.haunt_state.ghost_warning_intensity;
                 if warning_level > 0.0001 {
                     // Scale effect by distance and warning level
                     let effect_strength = warning_level * (100.0 / distance2).min(1.0);

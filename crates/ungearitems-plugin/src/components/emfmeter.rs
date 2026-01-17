@@ -2,7 +2,7 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use uninteraction_core::interaction::Toggleable;
 
 use unfoundation_core::types::evidence::Evidence;
@@ -27,7 +27,9 @@ pub(crate) fn update_emfmeter(
         &EquipmentPosition,
         &mut PerceivedClarity,
     )>,
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    gs_res: GearResources,
+    gs_state: GearGameState,
 ) {
     for (
         mut emf,
@@ -74,11 +76,11 @@ pub(crate) fn update_emfmeter(
                     x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
                     y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
                     z: pos.z,
-                    global_z: pos.global_z,
+                    visual_priority: pos.visual_priority,
                 };
                 let bpos = pos.to_board_position();
 
-                let miasma_pressure = gs.miasma.pressure_field[bpos.ndidx()];
+                let miasma_pressure = gs_res.miasma.pressure_field[bpos.ndidx()];
 
                 emf.miasma_pressure = emf.miasma_pressure * F + miasma_pressure * (1.0 - F);
             }
@@ -88,15 +90,20 @@ pub(crate) fn update_emfmeter(
                 x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
                 y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
                 z: pos.z,
-                global_z: pos.global_z,
+                visual_priority: pos.visual_priority,
             };
             let bpos = posk.to_board_position();
 
-            let temperature = gs.tg.temperature_field[bpos.ndidx()];
-            let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
+            let temperature = gs_res.tg.temperature_field[bpos.ndidx()];
+            let sound = gs_res
+                .sg
+                .sound_field
+                .get(&bpos)
+                .cloned()
+                .unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
             let temp_reading = temperature / 10.0 + sound_reading;
-            let air_mass: f32 = 5.0 / gs.difficulty.0.equipment_sensitivity;
+            let air_mass: f32 = 5.0 / gs_state.difficulty.0.equipment_sensitivity;
             if emf.temp_l2.len() < 2 {
                 emf.temp_l2.push(temp_reading);
             }
@@ -109,15 +116,19 @@ pub(crate) fn update_emfmeter(
                 let temp_l1 = emf.temp_l1;
                 emf.temp_l2.push(temp_l1);
             }
-            let sec = gs.time.elapsed_secs();
+            let sec = gs_audio.time.elapsed_secs();
             if emf.last_meter_update_secs + 0.5 < sec {
                 emf.last_meter_update_secs = sec;
                 let sum_temp: f32 = emf.temp_l2.iter().sum();
                 let avg_temp: f32 = sum_temp / emf.temp_l2.len() as f32;
                 let mut new_emf = (avg_temp - emf.temp_l1).abs() * 3.0;
-                emf.emf -= 0.2 * gs.difficulty.0.equipment_sensitivity;
-                emf.emf /= 1.4_f32.powf(gs.difficulty.0.equipment_sensitivity);
-                let emf5_evidence = gs.haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);
+                emf.emf -= 0.2 * gs_state.difficulty.0.equipment_sensitivity;
+                emf.emf /= 1.4_f32.powf(gs_state.difficulty.0.equipment_sensitivity);
+                let emf5_evidence = gs_state
+                    .haunt_state
+                    .ghost_dynamics
+                    .emf_level5_clarity
+                    .max(-0.2);
                 new_emf = f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0))
                     * (15.0 + emf5_evidence * 30.0);
                 emf.emf = emf.emf.max(new_emf);
@@ -126,7 +137,7 @@ pub(crate) fn update_emfmeter(
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if emf.emf_level == EMFLevel::EMF5 {
-                    let count = gs
+                    let count = gs_audio
                         .player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::EMFLevel5)
@@ -141,13 +152,13 @@ pub(crate) fn update_emfmeter(
                     emf.last_sound_secs = sec;
                     match ep {
                         EquipmentPosition::Hand(_) => {
-                            gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, pos)
+                            gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 1.0, pos)
                         }
                         EquipmentPosition::Stowed => {
-                            gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, pos)
+                            gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.5, pos)
                         }
                         EquipmentPosition::Deployed => {
-                            gs.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, pos)
+                            gs_audio.play_audio("sounds/effects-chirp-shorter.ogg".into(), 0.7, pos)
                         }
                     }
                 }
@@ -158,7 +169,7 @@ pub(crate) fn update_emfmeter(
                 && toggle.is_on
                 && random_seed::rng().random_range(0.0..1.0) < 0.5
             {
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, pos);
+                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.4, pos);
             }
         }
 

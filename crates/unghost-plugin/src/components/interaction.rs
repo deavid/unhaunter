@@ -43,7 +43,7 @@ impl Tween {
             x: start.x + 0.3, // Small forward movement
             y: start.y,
             z: start.z,
-            global_z: start.global_z,
+            visual_priority: start.visual_priority,
         };
         Self {
             start_pos: start,
@@ -82,8 +82,8 @@ impl Tween {
                 x: self.start_pos.x + (self.end_pos.x - self.start_pos.x) * progress,
                 y: self.start_pos.y + (self.end_pos.y - self.start_pos.y) * progress,
                 z: self.start_pos.z + (self.end_pos.z - self.start_pos.z) * progress,
-                global_z: self.start_pos.global_z
-                    + (self.end_pos.global_z - self.start_pos.global_z) * progress,
+                visual_priority: self.start_pos.visual_priority
+                    + (self.end_pos.visual_priority - self.start_pos.visual_priority) * progress,
             },
             TweenEase::ParabolicArc => {
                 // Create a parabolic arc for thrown objects
@@ -97,8 +97,9 @@ impl Tween {
                     z: self.start_pos.z
                         + (self.end_pos.z - self.start_pos.z) * linear_progress
                         + arc_progress,
-                    global_z: self.start_pos.global_z
-                        + (self.end_pos.global_z - self.start_pos.global_z) * linear_progress,
+                    visual_priority: self.start_pos.visual_priority
+                        + (self.end_pos.visual_priority - self.start_pos.visual_priority)
+                            * linear_progress,
                 }
             }
             TweenEase::SineEaseOut => {
@@ -109,8 +110,9 @@ impl Tween {
                     x: self.start_pos.x + (self.end_pos.x - self.start_pos.x) * smooth_progress,
                     y: self.start_pos.y + (self.end_pos.y - self.start_pos.y) * smooth_progress,
                     z: self.start_pos.z + (self.end_pos.z - self.start_pos.z) * smooth_progress,
-                    global_z: self.start_pos.global_z
-                        + (self.end_pos.global_z - self.start_pos.global_z) * smooth_progress,
+                    visual_priority: self.start_pos.visual_priority
+                        + (self.end_pos.visual_priority - self.start_pos.visual_priority)
+                            * smooth_progress,
                 }
             }
         }

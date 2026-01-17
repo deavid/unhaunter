@@ -14,3 +14,4 @@ workspace = true
 bevy = { workspace = true }
 unspatial-core = { path = "../unspatial-core" }
 unboard-core = { path = "../unboard-core" }
+unrender-std = { path = "../unrender-std" }

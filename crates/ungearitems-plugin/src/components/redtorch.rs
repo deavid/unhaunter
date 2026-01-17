@@ -3,7 +3,7 @@ use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearAudio;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::redtorch::RedTorch;
 use uninteraction_core::interaction::Toggleable;
@@ -20,7 +20,7 @@ pub(crate) fn update_redtorch(
         &Position,
         &ItemName,
     )>,
-    mut gs: GearStuff,
+    mut ga: GearAudio,
 ) {
     for (mut redtorch, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
         q_redtorch.iter_mut()
@@ -36,7 +36,7 @@ pub(crate) fn update_redtorch(
             && redtorch.enabled
             && random_seed::rng().random_range(0.0..1.0) < 0.2
         {
-            gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
+            ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
         }
 
         // Update Sprite

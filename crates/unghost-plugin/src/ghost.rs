@@ -8,7 +8,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::{MeanValue, PrintingTimer};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
@@ -19,6 +19,7 @@ use unmetrics_core::metrics::SendMetric;
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::utils::perspective;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -402,12 +403,14 @@ impl RoarType {
 /// sound levels. It triggers hunts when rage exceeds a threshold and handles
 /// player damage during hunts.
 fn ghost_enrage(
-    time: Res<Time>,
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     mut player_state: ResMut<PlayerState>,
-    mut gs: GearStuff,
+    mut gs_audio: GearAudio,
+    _gs_res: GearResources,
+    _gs_state: GearGameState,
+    mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,
     difficulty: Res<CurrentDifficulty>,
@@ -416,20 +419,20 @@ fn ghost_enrage(
 ) {
     let measure = GHOST_ENRAGE.time_measure();
 
-    timer.tick(time.delta());
-    let dt = time.delta_secs();
+    timer.tick(gs_audio.time.delta());
+    let dt = gs_audio.time.delta_secs();
     *last_roar += dt;
 
     for (mut ghost, ghost_position, dynamics) in qg.iter_mut() {
         // 1. Update basic timers
-        update_ghost_timers_simple(&mut ghost, dt, &time);
+        update_ghost_timers_simple(&mut ghost, dt, &gs_audio.time);
 
         // 2. Handle salty trace spawning
         handle_salty_trace_spawning_simple(
             &mut ghost,
             ghost_position,
-            &mut gs.commands,
-            &gs.asset_server,
+            &mut commands,
+            &gs_audio.asset_server,
             &board_collision,
         );
 
@@ -445,7 +448,7 @@ fn ghost_enrage(
                 &mut ghost,
                 ghost_position,
                 &mut player_state,
-                &time,
+                &gs_audio.time,
                 &difficulty,
                 dt,
             );
@@ -458,13 +461,19 @@ fn ghost_enrage(
                     time_override: None,
                 };
 
-                execute_roar_decision(&roar_decision, &mut last_roar, &mut gs, ghost_position);
+                execute_roar_decision(
+                    &roar_decision,
+                    &mut last_roar,
+                    &mut gs_audio,
+                    ghost_position,
+                );
             }
             continue;
         }
 
         // 6. Handle pre-warning and warning phases
-        let warning_result = handle_warning_phases(&mut ghost, dt, &time, &mut ev_ambient_mute);
+        let warning_result =
+            handle_warning_phases(&mut ghost, dt, &gs_audio.time, &mut ev_ambient_mute);
 
         // 7. Calculate rage
         let rage_result = calculate_rage_update(
@@ -495,7 +504,12 @@ fn ghost_enrage(
         }
 
         #[allow(clippy::explicit_auto_deref)]
-        execute_roar_decision(&roar_decision, &mut *last_roar, &mut gs, ghost_position);
+        execute_roar_decision(
+            &roar_decision,
+            &mut *last_roar,
+            &mut gs_audio,
+            ghost_position,
+        );
 
         // 10. Debug logging
         if timer.just_finished() && DEBUG_HUNTS {
@@ -585,7 +599,8 @@ fn spawn_salty_trace(
             ..default()
         })
         .insert(
-            Transform::from_translation(pos.to_screen_coord()).with_scale(Vec3::new(0.5, 0.5, 0.5)),
+            Transform::from_translation(perspective::to_screen_coord(pos))
+                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(pos)
         .insert(SaltyTrace)
@@ -600,8 +615,6 @@ fn spawn_salty_trace(
 
 fn ghost_fade_out_system(
     mut commands: Commands,
-    time: Res<Time>,
-    asset_server: Res<AssetServer>,
     mut query: Query<(
         Entity,
         &mut FadeOut,
@@ -609,11 +622,11 @@ fn ghost_fade_out_system(
         &Position,
         Option<&GhostSprite>,
     )>,
-    mut gs: GearStuff,
+    mut ga: GearAudio,
 ) {
     let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
-        fade_out.timer.tick(time.delta());
+        fade_out.timer.tick(ga.time.delta());
         let rem_f = fade_out.timer.remaining_secs() / fade_out.timer.duration().as_secs_f32();
 
         // Fade out the sprite
@@ -624,12 +637,12 @@ fn ghost_fade_out_system(
             let pos = *position;
             commands
                 .spawn(Sprite {
-                    image: asset_server.load("img/smoke.png"),
+                    image: ga.asset_server.load("img/smoke.png"),
                     color: Color::NONE,
                     ..default()
                 })
                 .insert(
-                    Transform::from_translation(pos.to_screen_coord())
+                    Transform::from_translation(perspective::to_screen_coord(pos))
                         .with_scale(Vec3::new(0.2, 0.2, 0.2)),
                 )
                 .insert(SageSmokeParticle)
@@ -655,13 +668,13 @@ fn ghost_fade_out_system(
             if !fade_out.roared {
                 // Play the first roar at 100% volume
                 if let Some(roar_sound) = RoarType::Full.get_sound() {
-                    gs.play_audio(roar_sound, 1.0, position);
+                    ga.play_audio(roar_sound, 1.0, position);
                 }
                 fade_out.roared = true;
             } else if fade_out.timer.is_finished() {
                 // Play the second roar at a lower volume
                 if let Some(roar_sound) = RoarType::Full.get_sound() {
-                    gs.play_audio(roar_sound, 0.2, position);
+                    ga.play_audio(roar_sound, 0.2, position);
                 }
 
                 // Despawn the entity
@@ -1141,7 +1154,7 @@ fn determine_roar_decision(
 fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
-    gs: &mut GearStuff,
+    ga: &mut GearAudio,
     ghost_position: &Position,
 ) {
     if roar_decision.should_play_now {
@@ -1149,7 +1162,7 @@ fn execute_roar_decision(
         if *last_roar > roar_time_threshold
             && let Some(roar_sound) = roar_decision.roar_type.get_sound()
         {
-            gs.play_audio(
+            ga.play_audio(
                 roar_sound,
                 roar_decision.roar_type.get_volume(),
                 ghost_position,

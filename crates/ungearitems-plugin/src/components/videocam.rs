@@ -3,14 +3,12 @@ use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
-use ungear_core::gear_stuff::GearStuff;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::videocam::Videocam;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_videocam(
-    _gs: GearStuff,
     mut q_videocam: Query<(
         &mut Videocam,
         &mut StatusText,

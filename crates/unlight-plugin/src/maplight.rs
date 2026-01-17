@@ -31,6 +31,7 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unrender_std::utils::perspective;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::orientation::Orientation;
 use unthermal_core::resources::ThermalGrid;
@@ -547,7 +548,8 @@ fn apply_lighting(
                 const MAX_DIST: f32 = 8.0;
                 let dist = pos.distance(&player_pos);
                 if dist < MAX_DIST {
-                    let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
+                    let delta_z = perspective::to_screen_coord(*pos).z
+                        - perspective::to_screen_coord(player_pos).z;
                     if delta_z > 0.0 {
                         opacity = 0.1;
                     }

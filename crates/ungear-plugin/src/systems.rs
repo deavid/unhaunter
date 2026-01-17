@@ -10,7 +10,6 @@ use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearStuff;
 use ungear_core::resources::looking_gear::LookingGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use uninteraction_core::interaction::Triggered;
@@ -18,6 +17,7 @@ use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::utils::perspective;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
@@ -43,7 +43,8 @@ fn update_deployed_gear_sprites(
                     }),
                     ..default()
                 },
-                Transform::from_translation(pos.to_screen_coord()).with_scale(Vec3::splat(0.25)),
+                Transform::from_translation(perspective::to_screen_coord(*pos))
+                    .with_scale(Vec3::splat(0.25)),
                 Visibility::Inherited,
                 GameSprite,
                 SpriteType::default(),
@@ -94,7 +95,7 @@ fn sound_playback_system(
             ..default()
         });
         if let Some(position) = sound_event.position {
-            let mut spos_vec = position.to_screen_coord();
+            let mut spos_vec = perspective::to_screen_coord(position);
             spos_vec.z -= 10.0 / audio_settings.sound_output.to_ear_offset();
             sound.insert(Transform::from_translation(spos_vec));
         }
@@ -106,7 +107,6 @@ fn keyboard_gear(
     mut _q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
     _player_state: Res<PlayerState>,
     _looking_gear: Res<LookingGear>,
-    mut _gs: GearStuff,
 ) {
     // TODO: Implement using Entity-based gear
 }

@@ -11,6 +11,7 @@ use unboard_core::resources::board_topology::{
 };
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::resources::visibility_data::VisibilityData;
+use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 
 use unrender_std::board::spritedb::SpriteDB;
@@ -32,7 +33,7 @@ pub fn apply_perspective(mut q: Query<(&Position, &mut Transform), Changed<Posit
     let measure = APPLY_PERSPECTIVE.time_measure();
 
     for (pos, mut transform) in q.iter_mut() {
-        transform.translation = pos.to_screen_coord();
+        transform.translation = perspective::to_screen_coord(*pos);
     }
 
     measure.end_ms();

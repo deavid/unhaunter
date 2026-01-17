@@ -111,16 +111,16 @@ pub(crate) fn process_and_spawn_tile(
         x: t_x,
         y: t_y,
         z: floor_z as f32 + layer.z_offset, // Apply the z-offset directly
-        global_z: 0.0,
+        visual_priority: 0.0,
     };
 
     // Ensure unique z-ordering within the same floor level
     *c += 0.000000001;
-    pos.global_z = f32::from(mt.behavior.p.display.global_z) + *c;
+    pos.visual_priority = f32::from(mt.behavior.p.display.visual_priority) + *c;
 
     // Position for spawn points (slightly adjusted)
     let new_pos = Position {
-        global_z: 0.0001,
+        visual_priority: 0.0001,
         ..pos
     };
 
@@ -173,7 +173,7 @@ pub(crate) fn process_and_spawn_tile(
     }
 
     // Add standard components to all tile entities
-    let mut transform = Transform::from_xyz(t_x, t_y, pos.global_z);
+    let mut transform = Transform::from_xyz(t_x, t_y, pos.visual_priority);
     if tile.flip_x {
         transform.scale.x = -1.0;
     }

@@ -26,6 +26,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, InfraredSensitive, LightSensitive, UltravioletSensitive,
 };
+use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -70,7 +71,7 @@ pub fn classic_mode_orchestrator(
     // --- Spawn Player ---
     let mut rng = random_seed::rng();
     let player_position = player_spawn_points.choose(&mut rng).copied().unwrap();
-    let player_scoord = player_position.to_screen_coord();
+    let player_scoord = perspective::to_screen_coord(player_position);
 
     let mut player_gear = PlayerGear::default();
     if p.difficulty.0.player_gear.left_hand.is_some() {

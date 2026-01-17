@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_math::Vec3;
 
-use crate::constants::{PERSPECTIVE_X, PERSPECTIVE_Y, PERSPECTIVE_Z};
 use crate::position::Position;
 
 #[derive(Component, Debug, Clone, Copy, PartialEq)]
@@ -44,7 +43,7 @@ impl Direction {
             x: self.dx + rhs.x,
             y: self.dy + rhs.y,
             z: self.dz + rhs.z,
-            global_z: rhs.global_z,
+            visual_priority: rhs.visual_priority,
         }
     }
 
@@ -73,16 +72,6 @@ impl Direction {
             dy: self.dy / dst,
             dz: self.dz / dst,
         }
-    }
-
-    pub fn to_screen_coord(self) -> Vec3 {
-        let x =
-            self.dx * PERSPECTIVE_X[0] + self.dy * PERSPECTIVE_Y[0] + self.dz * PERSPECTIVE_Z[0];
-        let y =
-            self.dx * PERSPECTIVE_X[1] + self.dy * PERSPECTIVE_Y[1] + self.dz * PERSPECTIVE_Z[1];
-        let z =
-            self.dx * PERSPECTIVE_X[2] + self.dy * PERSPECTIVE_Y[2] + self.dz * PERSPECTIVE_Z[2];
-        Vec3::new(x, y, z)
     }
 }
 

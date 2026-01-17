@@ -5,6 +5,7 @@ use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::{GameSound, GameSprite};
+use unrender_std::utils::perspective;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
@@ -86,7 +87,7 @@ fn keyboard(
             // Move the reference point a bit up since we have the UI on the bottom, so the player is better centered on the remaining available space.
             ref_point.y -= 10.0;
             // let sc_dir = p_dir.to_screen_coord();
-            let sc_dir = player.movement.to_screen_coord();
+            let sc_dir = perspective::direction_to_screen_coord(player.movement);
             const CAMERA_AHEAD_FACTOR: f32 = 0.11 / 1.8;
             ref_point.y += 20.0 + sc_dir.y * CAMERA_AHEAD_FACTOR;
             ref_point.x += sc_dir.x * CAMERA_AHEAD_FACTOR;

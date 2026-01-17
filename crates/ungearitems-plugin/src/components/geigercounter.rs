@@ -1,6 +1,6 @@
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
@@ -14,14 +14,14 @@ pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
 
 pub(crate) trait GeigerCounterExt {
-    fn calculate_output_sound(&self, gs: &GearStuff) -> f32;
+    fn calculate_output_sound(&self, gs_state: &GearGameState) -> f32;
 }
 
 impl GeigerCounterExt for GeigerCounter {
-    fn calculate_output_sound(&self, gs: &GearStuff) -> f32 {
+    fn calculate_output_sound(&self, gs_state: &GearGameState) -> f32 {
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        let evidence = gs
+        let evidence = gs_state
             .haunt_state
             .ghost_dynamics
             .cpm500_clarity
@@ -33,7 +33,6 @@ impl GeigerCounterExt for GeigerCounter {
 }
 
 pub(crate) fn update_geigercounter(
-    mut gs: GearStuff,
     mut q_geiger: Query<(
         &mut GeigerCounter,
         &mut StatusText,
@@ -45,6 +44,9 @@ pub(crate) fn update_geigercounter(
         &EquipmentPosition,
         &mut PerceivedClarity,
     )>,
+    mut gs_audio: GearAudio,
+    gs_res: GearResources,
+    gs_state: GearGameState,
 ) {
     for (
         mut geiger,
@@ -59,7 +61,7 @@ pub(crate) fn update_geigercounter(
     ) in q_geiger.iter_mut()
     {
         let mut rng = random_seed::rng();
-        geiger.display_secs_since_last_update += gs.time.delta_secs(); // Increment the timer
+        geiger.display_secs_since_last_update += gs_audio.time.delta_secs(); // Increment the timer
         geiger.frame_counter += 1;
         geiger.frame_counter %= 65413;
 
@@ -71,31 +73,36 @@ pub(crate) fn update_geigercounter(
             x: pos.x + rng.random_range(-K..K) + rng.random_range(-K..K),
             y: pos.y + rng.random_range(-K..K) + rng.random_range(-K..K),
             z: pos.z,
-            global_z: pos.global_z,
+            visual_priority: pos.visual_priority,
         };
-        let dist2breach = gs.haunt_state.breach_pos.distance2(&posk) + 10.0;
+        let dist2breach = gs_state.haunt_state.breach_pos.distance2(&posk) + 10.0;
         let breach_energy = dist2breach.recip() * 20000.0;
         let bpos = posk.to_board_position();
         for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
-            let sound = gs.sg.sound_field.get(&bpos).cloned().unwrap_or_default();
+            let sound = gs_res
+                .sg
+                .sound_field
+                .get(&bpos)
+                .cloned()
+                .unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
             if geiger.sound_l.len() < 1200 {
                 geiger.sound_l.push(sound_reading);
             }
             let n = (geiger.frame_counter as usize + i) % geiger.sound_l.len();
-            geiger.sound_l[n] /= 4.0 * gs.difficulty.0.equipment_sensitivity;
+            geiger.sound_l[n] /= 4.0 * gs_state.difficulty.0.equipment_sensitivity;
             if toggle.is_on {
-                geiger.sound_l[n] +=
-                    sound_reading * 40.0 + breach_energy * gs.difficulty.0.equipment_sensitivity;
+                geiger.sound_l[n] += sound_reading * 40.0
+                    + breach_energy * gs_state.difficulty.0.equipment_sensitivity;
             }
         }
 
         geiger.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 8.0 * gs.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 8.0 * gs_state.difficulty.0.equipment_sensitivity;
         if toggle.is_on {
             // Calculate the *current* output sound.
-            let current_output_sound = geiger.calculate_output_sound(&gs);
+            let current_output_sound = geiger.calculate_output_sound(&gs_state);
             // Smooth the *current* output to get sound_a1 (first IIR filter).
             geiger.sound_a1 = (geiger.sound_a1 * mass + current_output_sound * mass.recip())
                 / (mass + mass.recip());
@@ -117,15 +124,17 @@ pub(crate) fn update_geigercounter(
             geiger.sound_a2 /= 1.01;
         }
 
-        if gs.time.elapsed_secs() - geiger.last_sound_time_secs > 60.0 / geiger.sound_a1
+        if gs_audio.time.elapsed_secs() - geiger.last_sound_time_secs > 60.0 / geiger.sound_a1
             && toggle.is_on
         {
             if electronic.glitch_timer <= 0.0001 {
-                geiger.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
-                gs.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, pos);
+                geiger.last_sound_time_secs =
+                    gs_audio.time.elapsed_secs() + rng.random_range(0.01..0.02);
+                gs_audio.play_audio("sounds/effects-chirp-click.ogg".into(), 0.25, pos);
             } else {
-                geiger.last_sound_time_secs = gs.time.elapsed_secs() + rng.random_range(0.01..0.02);
-                gs.play_audio("sounds/effects-chirp-short.ogg".into(), 0.25, pos);
+                geiger.last_sound_time_secs =
+                    gs_audio.time.elapsed_secs() + rng.random_range(0.01..0.02);
+                gs_audio.play_audio("sounds/effects-chirp-short.ogg".into(), 0.25, pos);
             }
         }
         // Update sound_display *only* if enough time has passed.
@@ -137,7 +146,7 @@ pub(crate) fn update_geigercounter(
             const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
             // Consider evidence showing if cpm is >= 500 and not glitching
             if geiger.sound_display >= 499.9 && electronic.glitch_timer <= 0.0 {
-                let count = gs
+                let count = gs_audio
                     .player_profile
                     .times_evidence_acknowledged_on_gear
                     .get(&Evidence::CPM500)

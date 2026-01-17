@@ -13,39 +13,22 @@ use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use unthermal_core::resources::ThermalGrid;
 
-/// A collection of resources and commands frequently used by gear-related systems.
+/// A collection of resources frequently used for audio playback.
 #[derive(SystemParam)]
-pub struct GearStuff<'w, 's> {
-    /// Access to the game's board data, including collision, lighting, and temperature
-    /// fields.
-    pub bf: ResMut<'w, BoardTopology>,
-    /// Access to the thermal grid, for temperature readings.
-    pub tg: ResMut<'w, ThermalGrid>,
-    /// Access to the sound grid, for audio readings.
-    pub sg: ResMut<'w, SoundGrid>,
-    /// Access to the miasma grid, used for EMF readings.
-    pub miasma: ResMut<'w, MiasmaGrid>,
-    /// Access to the ghost's haunt state, including evidences and dynamics.
-    pub haunt_state: ResMut<'w, HauntState>,
-    /// Access to summary data, which tracks game progress and statistics.
-    pub summary: ResMut<'w, SummaryData>,
-    /// Allows gear systems to spawn new entities (e.g., for sound effects).
-    pub commands: Commands<'w, 's>,
+pub struct GearAudio<'w> {
     /// Provides access to the asset server for loading sound effects.
     pub asset_server: Res<'w, AssetServer>,
     /// Access to the current game time.
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
     pub sound_events: MessageWriter<'w, SoundEvent>,
-    /// Access to the current difficulty.
-    pub difficulty: Res<'w, CurrentDifficulty>,
     /// Audio settings from the game.
     pub audio_settings: Res<'w, Persistent<AudioSettings>>,
     /// Player profile data.
     pub player_profile: Res<'w, Persistent<PlayerProfileData>>,
 }
 
-impl GearStuff<'_, '_> {
+impl GearAudio<'_> {
     /// Plays a sound effect using the specified file path and volume from the given
     /// position.
     pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
@@ -83,5 +66,54 @@ impl GearStuff<'_, '_> {
 
         // Send the SoundEvent to be handled by the sound playback system
         self.sound_events.write(sound_event);
+    }
+}
+
+/// A collection of resources for observing board fields.
+#[derive(SystemParam)]
+pub struct GearResources<'w> {
+    /// Access to the game's board data, including collision, lighting, and temperature
+    /// fields.
+    pub bf: ResMut<'w, BoardTopology>,
+    /// Access to the thermal grid, for temperature readings.
+    pub tg: ResMut<'w, ThermalGrid>,
+    /// Access to the sound grid, for audio readings.
+    pub sg: ResMut<'w, SoundGrid>,
+    /// Access to the miasma grid, used for EMF readings.
+    pub miasma: ResMut<'w, MiasmaGrid>,
+}
+
+/// A collection of resources tracking game-wide state.
+#[derive(SystemParam)]
+pub struct GearGameState<'w> {
+    /// Access to the ghost's haunt state, including evidences and dynamics.
+    pub haunt_state: ResMut<'w, HauntState>,
+    /// Access to summary data, which tracks game progress and statistics.
+    pub summary: ResMut<'w, SummaryData>,
+    /// Access to the current difficulty.
+    pub difficulty: Res<'w, CurrentDifficulty>,
+}
+
+/// A collection of resources and commands frequently used by gear-related systems.
+///
+/// This is a legacy "God Object" bundle that is being decomposed into:
+/// - [`GearAudio`]
+/// - [`GearResources`]
+/// - [`GearGameState`]
+#[derive(SystemParam)]
+pub struct GearStuff<'w, 's> {
+    pub audio: GearAudio<'w>,
+    pub resources: GearResources<'w>,
+    pub game_state: GearGameState<'w>,
+    pub commands: Commands<'w, 's>,
+}
+
+impl GearStuff<'_, '_> {
+    pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
+        self.audio.play_audio(sound_file, volume, position);
+    }
+
+    pub fn play_audio_nopos(&mut self, sound_file: String, volume: f32) {
+        self.audio.play_audio_nopos(sound_file, volume);
     }
 }

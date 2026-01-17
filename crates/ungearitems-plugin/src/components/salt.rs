@@ -6,7 +6,7 @@ use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 pub(crate) use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
@@ -15,10 +15,10 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_salt(
-    mut gs: GearStuff,
     mut q_salt: Query<(
         Entity,
         &mut SaltData,
@@ -28,28 +28,32 @@ pub(crate) fn update_salt(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
+    mut gs_audio: GearAudio,
+    _gs_res: GearResources,
+    _gs_state: GearGameState,
+    mut commands: Commands,
 ) {
     for (entity, mut salt, mut status, mut sprite, pos, _ep, triggered) in q_salt.iter_mut() {
         if triggered.is_some() && salt.charges > 0 {
             salt.charges -= 1;
 
             // Spawn salt pile entity
-            gs.commands
+            commands
                 .spawn(Sprite {
-                    image: gs.asset_server.load("img/salt_pile.png"),
+                    image: gs_audio.asset_server.load("img/salt_pile.png"),
                     ..default()
                 })
                 .insert(
-                    Transform::from_translation(pos.to_screen_coord())
+                    Transform::from_translation(perspective::to_screen_coord(*pos))
                         .with_scale(Vec3::new(0.5, 0.5, 0.5)),
                 )
                 .insert(SaltPile)
                 .insert(GameSprite)
                 .insert(*pos)
                 .insert(SpriteType::Other);
-            gs.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
+            gs_audio.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
 
-            gs.commands.entity(entity).remove::<Triggered>();
+            commands.entity(entity).remove::<Triggered>();
         }
 
         // Update StatusText
@@ -103,9 +107,9 @@ fn salt_pile_system(
                             custom_size: Some(Vec2::new(4.0, 4.0)),
                             ..default()
                         })
-                        .insert(Transform::from_translation(
-                            particle_position.to_screen_coord(),
-                        ))
+                        .insert(Transform::from_translation(perspective::to_screen_coord(
+                            particle_position,
+                        )))
                         // Insert the modified Position
                         .insert(particle_position)
                         .insert(GameSprite)

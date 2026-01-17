@@ -7,7 +7,7 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
 use unfoundation_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 pub(crate) use ungearitems_core::components::sage::{
     SageBundleData, SageSmokeParticle, SmokeParticleTimer,
 };
@@ -16,11 +16,11 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_sage(
-    mut gs: GearStuff,
     mut q_sage: Query<(
         Entity,
         &mut SageBundleData,
@@ -30,6 +30,10 @@ pub(crate) fn update_sage(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
+    mut gs_audio: GearAudio,
+    _gs_res: GearResources,
+    _gs_state: GearGameState,
+    mut commands: Commands,
 ) {
     for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {
         if triggered.is_some() && !sage.is_active && !sage.consumed {
@@ -37,13 +41,13 @@ pub(crate) fn update_sage(
             sage.burn_timer.reset();
 
             // Play activation sound
-            gs.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
+            gs_audio.play_audio_nopos("sounds/sage_activation.ogg".into(), 0.8);
 
-            gs.commands.entity(entity).remove::<Triggered>();
+            commands.entity(entity).remove::<Triggered>();
         }
 
         if sage.is_active && !sage.consumed {
-            sage.burn_timer.tick(gs.time.delta());
+            sage.burn_timer.tick(gs_audio.time.delta());
 
             // Spawn smoke particles
             if sage.burn_timer.just_finished() {
@@ -57,13 +61,13 @@ pub(crate) fn update_sage(
                 pos.y += rng.random_range(-0.2..0.2);
 
                 // Spawn smoke particle
-                gs.commands
+                commands
                     .spawn(Sprite {
-                        image: gs.asset_server.load("img/smoke.png"),
+                        image: gs_audio.asset_server.load("img/smoke.png"),
                         ..default()
                     })
                     .insert(
-                        Transform::from_translation(pos.to_screen_coord())
+                        Transform::from_translation(perspective::to_screen_coord(pos))
                             .with_scale(Vec3::new(0.2, 0.2, 0.2)),
                     )
                     .insert(SageSmokeParticle)

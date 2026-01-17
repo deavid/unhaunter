@@ -482,7 +482,7 @@ fn find_throw_destination(
                 .z
                 .floor()
                 .clamp(0.0, (board_topology.map_size.2 as f32) - 1.0), // Clamp to valid floor range
-            global_z: 0.0,
+            visual_priority: 0.0,
         };
 
         // Check if destination is valid (walkable floor) AND within map bounds
@@ -507,7 +507,7 @@ fn find_throw_destination(
                 .z
                 .floor()
                 .clamp(0.0, (board_topology.map_size.2 as f32) - 1.0), // Clamp to valid floor range
-            global_z: 0.0,
+            visual_priority: 0.0,
         };
 
         let board_pos = candidate_pos.to_board_position();
@@ -544,7 +544,7 @@ fn find_movement_destination(
                 .z
                 .floor()
                 .clamp(0.0, (board_topology.map_size.2 as f32) - 1.0), // Clamp to valid floor range
-            global_z: object_pos.global_z,
+            visual_priority: object_pos.visual_priority,
         };
 
         // Check if destination is valid (walkable floor) AND within map bounds
@@ -580,7 +580,7 @@ fn find_nudge_destination(
                 .z
                 .floor()
                 .clamp(0.0, (board_topology.map_size.2 as f32) - 1.0), // Clamp to valid floor range
-            global_z: object_pos.global_z,
+            visual_priority: object_pos.visual_priority,
         };
 
         let board_pos = candidate_pos.to_board_position();

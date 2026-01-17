@@ -5,7 +5,7 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearStuff;
+use ungear_core::gear_stuff::GearAudio;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::AnimationTimer;
 use unspatial_core::position::Position;
@@ -24,9 +24,7 @@ fn hide_player(
         (Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<(Entity, &Position, &Behavior), Without<PlayerSprite>>,
-    asset_server: Res<AssetServer>,
-    mut gs: GearStuff,
-    time: Res<Time>,
+    mut ga: GearAudio,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
     for (player_entity, player, mut player_pos, player_gear) in players.iter_mut() {
@@ -48,7 +46,7 @@ fn hide_player(
                 .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.3)
             {
                 // Key is held down, tick the timer
-                timer.tick(time.delta());
+                timer.tick(ga.time.delta());
                 if !timer.is_finished() {
                     continue;
                 }
@@ -67,13 +65,13 @@ fn hide_player(
                 player_pos.y = (player_pos.y + hiding_spot_pos.y) / 2.0;
 
                 // Play "Hide" sound effect
-                gs.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
+                ga.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
                     parent
                         .spawn(Sprite {
-                            image: asset_server.load("img/hiding_overlay.png"),
+                            image: ga.asset_server.load("img/hiding_overlay.png"),
                             color: css::WHITE.with_alpha(0.4).into(),
                             ..default()
                         })

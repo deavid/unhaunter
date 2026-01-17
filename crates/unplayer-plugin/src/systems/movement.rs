@@ -14,6 +14,7 @@ use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
 use unplayer_core::resources::PlayerInput;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
+use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
@@ -153,7 +154,7 @@ pub(crate) fn player_movement_system(
 
         // Check if Player is Hiding
         if hiding.is_some() {
-            let dscreen = delta.to_screen_coord();
+            let dscreen = perspective::direction_to_screen_coord(delta);
             anim.set_range(
                 CharacterAnimation::from_dir(dscreen.x / 2000.0, dscreen.y / 1000.0).to_vec(),
             );
@@ -176,7 +177,7 @@ pub(crate) fn player_movement_system(
 
         // Update player animation - make animations faster when running
         let animation_speed_factor = if run_multiplier > 1.0 { 1.5 } else { 1.0 };
-        let dscreen = delta.to_screen_coord();
+        let dscreen = perspective::direction_to_screen_coord(delta);
         anim.set_range(
             CharacterAnimation::from_dir(
                 dscreen.x * animation_speed_factor,
@@ -195,7 +196,7 @@ pub(crate) fn player_movement_system(
                     x: item_pos.x + cp_delta.x,
                     y: item_pos.y + cp_delta.y,
                     z: item_pos.z + cp_delta.z,
-                    global_z: item_pos.global_z,
+                    visual_priority: item_pos.visual_priority,
                 };
                 let new_dist = pos.delta(item_pos);
                 let dref = new_dist;

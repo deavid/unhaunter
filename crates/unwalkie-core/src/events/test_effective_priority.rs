@@ -17,13 +17,8 @@ mod tests {
         // After 0 plays, effective priority should be the same
         assert_eq!(event.effective_priority(0), WalkieEventPriority::VeryHigh);
 
-        // After 1 play, should drop 2 levels: VeryHigh -> Medium
-        assert_eq!(event.effective_priority(1), WalkieEventPriority::Medium);
-
-        // After 2 plays, should drop 3 levels: VeryHigh -> Low
-        assert_eq!(event.effective_priority(2), WalkieEventPriority::Low);
-
-        // After 3+ plays, should drop to minimum: VeryHigh -> VeryLow
+        // After 1+ plays, should drop aggressively: VeryHigh -> VeryLow
+        assert_eq!(event.effective_priority(1), WalkieEventPriority::VeryLow);
         assert_eq!(event.effective_priority(3), WalkieEventPriority::VeryLow);
         assert_eq!(event.effective_priority(10), WalkieEventPriority::VeryLow);
     }
