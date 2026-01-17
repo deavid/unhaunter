@@ -6,6 +6,7 @@ use unghost_core::components::GhostBreach;
 use unghost_core::components::GhostInfluence;
 use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
+use unrender_std::components::visuals::SpectralInfluence;
 use unspatial_core::position::Position;
 
 pub fn assign_ghost_influence(
@@ -53,9 +54,12 @@ pub fn assign_ghost_influence(
     );
 
     for (entity, influence_type) in selected_objects {
-        commands.entity(entity).insert(GhostInfluence {
-            influence_type,
-            charge_value: 0.0,
-        });
+        commands.entity(entity).insert((
+            GhostInfluence {
+                influence_type,
+                charge_value: 0.0,
+            },
+            SpectralInfluence::default(),
+        ));
     }
 }

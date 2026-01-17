@@ -48,6 +48,14 @@ pub struct SummaryData {
     pub costs_deducted_from_deposit: i64,
 }
 
+pub trait MissionEvaluator: Send + Sync {
+    fn calculate_base_score(&self, data: &SummaryData) -> i64;
+    fn evaluate_grade(&self, score: i64) -> Grade;
+}
+
+#[derive(Resource)]
+pub struct ActiveMissionEvaluator(pub Box<dyn MissionEvaluator>);
+
 impl SummaryData {
     pub fn new(ghost_types: Vec<GhostType>, difficulty: CurrentDifficulty) -> Self {
         Self {
@@ -58,35 +66,19 @@ impl SummaryData {
         }
     }
 
-    pub fn calculate_score(&mut self) -> i64 {
-        // Calculate base score without difficulty multiplier
-        let mut base_score = (250.0 * self.ghosts_unhaunted as f64)
-            / (1.0 + self.repellent_used_amt as f64)
-            / (1.0 + (self.ghost_types.len() as u32 - self.ghosts_unhaunted) as f64);
+    pub fn calculate_score(&mut self, evaluator: &dyn MissionEvaluator) -> i64 {
+        // Calculate base score using evaluator
+        let base_score = evaluator.calculate_base_score(self);
 
-        // Sanity modifier
-        base_score *= (self.average_sanity as f64 + 30.0) / 50.0;
+        // Store the rounded base score
+        self.base_score = base_score;
 
         // Store the difficulty multiplier
         let difficulty_multiplier = self.difficulty.0.difficulty_score_multiplier;
-
-        // Apply additional multipliers
-        let additional_multiplier = if self.player_count == self.alive_count {
-            // Apply time bonus multiplier
-            1.0 + 360.0 / (60.0 + self.time_taken_secs as f64)
-        } else {
-            self.alive_count as f64 / (self.player_count as f64 + 1.0)
-        };
-
-        // Apply additional multipliers to final score
-        base_score *= additional_multiplier;
-
-        // Calculate final score before time or survival bonuses
-        let score = base_score.round() * (difficulty_multiplier as f64);
-
-        // Store the rounded base score
-        self.base_score = base_score.round() as i64;
         self.difficulty_multiplier = difficulty_multiplier;
+
+        // Apply difficulty multiplier to final score
+        let score = (base_score as f32) * difficulty_multiplier;
 
         // Ensure score is within a reasonable range and return
         self.full_score = score.clamp(0.0, 1000000.0).round() as i64;

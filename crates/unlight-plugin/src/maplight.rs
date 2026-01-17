@@ -57,7 +57,6 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::Hand;
 use ungearitems_core::components::salt::UVReactive;
-use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
@@ -66,7 +65,7 @@ use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::components::visuals::{
     EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, Luminescent, ShadowCaster,
-    UltravioletSensitive, Viewer,
+    SpectralInfluence, SpectralInfluenceType, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -77,7 +76,6 @@ use unspatial_core::position::Position;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use unfoundation_core::random_seed;
-use unghost_core::components::GhostOrbParticle;
 use untypes_core::states::AppState;
 
 /// Computes the player's visibility field, determining which areas of the map are
@@ -247,7 +245,7 @@ fn apply_lighting(
             &MeshMaterial2d<CustomMaterial1>,
             &Behavior,
             &mut Visibility,
-            Option<&GhostInfluence>,
+            Option<&SpectralInfluence>,
             Option<&Interactive>,
         ),
         With<MapTileSprite>,
@@ -277,7 +275,6 @@ fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
-            Option<&GhostOrbParticle>,
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -526,7 +523,7 @@ fn apply_lighting(
     for e in visible.iter() {
         if rng.random_range(0..100) < 15 {
             entities.push(e.to_owned());
-        } else if let Ok((_pos, _mat, _behavior, _vis, _o_ghost_influence, o_interactive)) =
+        } else if let Ok((_pos, _mat, _behavior, _vis, _o_spectral_influence, o_interactive)) =
             qt2.get(*e)
         {
             // Ensure entities with hover state changes are always processed
@@ -538,7 +535,7 @@ fn apply_lighting(
 
     for entity in entities.iter() {
         let min_threshold: f32 = rng.random::<f32>() / 10.0;
-        if let Ok((pos, mat, behavior, mut vis, o_ghost_influence, o_interactive)) =
+        if let Ok((pos, mat, behavior, mut vis, o_spectral_influence, o_interactive)) =
             qt2.get_mut(*entity)
         {
             let on_hover = o_interactive.map(|x| x.hovered).unwrap_or_default();
@@ -634,10 +631,10 @@ fn apply_lighting(
             };
             let ((mut r, mut g, mut b), light_data) =
                 fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
-            let (att_charge, rep_charge) = o_ghost_influence
+            let (att_charge, rep_charge) = o_spectral_influence
                 .map(|x| match x.influence_type {
-                    InfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
-                    InfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+                    SpectralInfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
+                    SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
                 })
                 .unwrap_or_default();
             let rgbl = (r + g + b) / 3.0 + 1.0;
@@ -847,7 +844,6 @@ fn apply_lighting(
         o_color,
         uv_reactive,
         o_miasma,
-        _o_orb,
     ) in qt.iter_mut()
     {
         let bpos = pos.to_board_position_size(bf.map_size);

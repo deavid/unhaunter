@@ -146,6 +146,20 @@ pub struct Viewer {
     pub sanity: f32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]
+pub enum SpectralInfluenceType {
+    #[default]
+    Attractive,
+    Repulsive,
+}
+
+/// Component for entities that have a "spectral signature" that reacts to non-visible light (UV/IR).
+#[derive(Component, Debug, Clone, Copy, PartialEq, Default, Reflect)]
+pub struct SpectralInfluence {
+    pub influence_type: SpectralInfluenceType,
+    pub charge_value: f32,
+}
+
 /// Component for solid entities that should cast shadows or have standard responsive lighting.
 #[derive(Component, Debug, Clone, Copy)]
 pub struct ShadowCaster {

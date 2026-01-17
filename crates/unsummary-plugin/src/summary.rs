@@ -9,7 +9,7 @@ use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::format_time;
 use unplayer_core::components::PlayerSprite;
 use unprofile_core::profile::PlayerProfileData;
-use unsummary_core::summary::SummaryData;
+use unsummary_core::summary::{ActiveMissionEvaluator, SummaryData};
 use untypes_core::states::AppState;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
@@ -553,11 +553,18 @@ pub(crate) fn update_ui(
     }
 }
 
-pub(crate) fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<AppState>>) {
+pub(crate) fn update_score(
+    mut sd: ResMut<SummaryData>,
+    app_state: Res<State<AppState>>,
+    evaluator: Option<Res<ActiveMissionEvaluator>>,
+) {
     if *app_state != AppState::Summary {
         return;
     }
-    let desired_score = sd.calculate_score();
+    let Some(evaluator) = evaluator else {
+        return;
+    };
+    let desired_score = sd.calculate_score(evaluator.0.as_ref());
     let max_delta = desired_score - sd.animated_final_score;
     let delta = (max_delta / 200).max(10).min(max_delta);
     sd.animated_final_score += delta;
@@ -566,11 +573,16 @@ pub(crate) fn update_score(mut sd: ResMut<SummaryData>, app_state: Res<State<App
 pub(crate) fn calculate_rewards_and_grades(
     mut sd: ResMut<SummaryData>,
     maps: Res<Maps>,
+    evaluator: Option<Res<ActiveMissionEvaluator>>,
     app_state: Res<State<AppState>>,
 ) {
     if *app_state != AppState::Summary {
         return;
     }
+
+    let Some(evaluator) = evaluator else {
+        return;
+    };
 
     // Debug: Log current state of SummaryData
     info!(
@@ -581,7 +593,7 @@ pub(crate) fn calculate_rewards_and_grades(
     // Ensure we have calculated the base score before proceeding
     if sd.base_score == 0 && sd.mission_successful {
         // Only calculate if not already done and mission was potentially successful
-        sd.calculate_score();
+        sd.calculate_score(evaluator.0.as_ref());
         info!(
             "Calculated score before grading. New base_score: {}",
             sd.base_score
@@ -599,6 +611,9 @@ pub(crate) fn calculate_rewards_and_grades(
             let base_score = sd.base_score;
 
             // Determine grade for successful mission using mission data
+            // NOTE: We are still using map-based thresholds here for now,
+            // but we could also use evaluator.0.evaluate_grade(base_score)
+            // if we want to bypass map-based thresholds.
             sd.grade_achieved = Grade::from_score(
                 base_score,
                 mission_data.grade_a_score_threshold,
