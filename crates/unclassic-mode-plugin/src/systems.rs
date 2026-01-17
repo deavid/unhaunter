@@ -25,7 +25,7 @@ use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, ShadowCaster,
-    UltravioletSensitive, Viewer,
+    SpectralClarity, UltravioletSensitive, Viewer,
 };
 use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
@@ -233,6 +233,7 @@ pub fn classic_mode_orchestrator(
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
         .insert(ghost_spawn)
+        .insert(SpectralClarity::default())
         .insert(LightSensitive {
             exposure_factor: 0.5,
             bias: 0.0,
@@ -354,4 +355,15 @@ fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
         .insert(GameSound {
             class: SoundType::Insane,
         });
+}
+
+pub fn sync_ghost_visuals(
+    haunt_state: Res<HauntState>,
+    mut q_ghost: Query<&mut SpectralClarity, With<GhostTag>>,
+) {
+    for mut clarity in q_ghost.iter_mut() {
+        clarity.uv = haunt_state.ghost_dynamics.uv_ectoplasm_clarity;
+        clarity.rl = haunt_state.ghost_dynamics.rl_presence_clarity;
+        clarity.alpha = haunt_state.ghost_dynamics.visual_alpha_multiplier;
+    }
 }

@@ -14,8 +14,11 @@ impl Plugin for ClassicModePlugin {
         )));
         app.add_systems(
             Update,
-            systems::classic_mode_orchestrator
-                .run_if(on_message::<unevents_core::events::loadlevel::MapEntitiesReadyEvent>),
+            (
+                systems::classic_mode_orchestrator
+                    .run_if(on_message::<unevents_core::events::loadlevel::MapEntitiesReadyEvent>),
+                systems::sync_ghost_visuals,
+            ),
         );
     }
 }

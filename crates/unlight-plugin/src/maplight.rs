@@ -57,12 +57,13 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::Hand;
 use ungearitems_core::components::salt::UVReactive;
-use unghost_core::resources::haunt_state::HauntState;
+// use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
+use unrender_std::components::visuals::SpectralClarity;
 use unrender_std::components::visuals::{
     EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, Luminescent, ShadowCaster,
     SpectralInfluence, SpectralInfluenceType, UltravioletSensitive, Viewer,
@@ -256,7 +257,7 @@ fn apply_lighting(
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
     mut lg: ResMut<LightGrid>,
     grids: GridResources,
-    haunt_state: Res<HauntState>,
+    // haunt_state: Res<HauntState>,
     vf: Res<VisibilityData>,
     gc: Res<GameConfig>,
     time: Res<Time>,
@@ -275,6 +276,7 @@ fn apply_lighting(
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
+            Option<&SpectralClarity>,
         )>,
         Query<
             (&Position, &mut Sprite),
@@ -844,6 +846,7 @@ fn apply_lighting(
         o_color,
         uv_reactive,
         o_miasma,
+        o_spectral_clarity,
     ) in qt.iter_mut()
     {
         let bpos = pos.to_board_position_size(bf.map_size);
@@ -939,17 +942,14 @@ fn apply_lighting(
                 dst_color = dst_color.with_luminance(l);
                 let r = dst_color.to_srgba().red;
                 let g = dst_color.to_srgba().green;
-                let e_uv = ld.ultraviolet
-                    * 13.0
-                    * haunt_state.ghost_dynamics.uv_ectoplasm_clarity.max(0.0);
-                let e_rl =
-                    (ld.red * 52.0 * haunt_state.ghost_dynamics.rl_presence_clarity.max(0.0))
-                        .clamp(0.0, 1.5);
+                let clarity = o_spectral_clarity.cloned().unwrap_or_default();
+                let e_uv = ld.ultraviolet * 13.0 * clarity.uv.max(0.0);
+                let e_rl = (ld.red * 52.0 * clarity.rl.max(0.0)).clamp(0.0, 1.5);
                 let e_infra = (ld.infrared * 1.1 * difficulty.0.evidence_visibility).sqrt();
                 let f = (ld.visible * difficulty.0.evidence_visibility * 0.5 + ld.infrared * 4.0)
                     .clamp(0.001, 0.999);
                 opacity = opacity * f + orig_opacity * (1.0 - f);
-                opacity *= (haunt_state.ghost_dynamics.visual_alpha_multiplier * 0.5
+                opacity *= (clarity.alpha * 0.5
                     + 0.5
                     + e_uv
                     + e_rl

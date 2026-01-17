@@ -18,6 +18,14 @@ impl Default for LightSensitive {
     }
 }
 
+/// Component that gives the renderer information about how to render the ghost implementation.
+#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+pub struct SpectralClarity {
+    pub uv: f32,
+    pub rl: f32,
+    pub alpha: f32,
+}
+
 /// Component for entities that react to Ultraviolet light (evidence/fluorescence).
 #[derive(Component, Debug, Clone, Copy)]
 pub struct UltravioletSensitive {

@@ -6053,7 +6053,6 @@ dependencies = [
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
- "unghost-core",
  "uninteraction-core",
  "unmetrics-core",
  "unplayer-core",
