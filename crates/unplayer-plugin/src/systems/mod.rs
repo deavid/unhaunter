@@ -7,6 +7,7 @@ pub(crate) mod movement;
 pub(crate) mod pathfinding;
 pub(crate) mod player_state;
 pub(crate) mod sanityhealth;
+pub(crate) mod viewer_sync;
 pub(crate) mod walk_target_indicator;
 pub(crate) mod waypoint;
 
@@ -39,6 +40,8 @@ pub(crate) fn app_setup(app: &mut App) {
             movement::player_movement_system,
             // Update player state for cross-domain access
             player_state::update_player_state,
+            // Sync viewer data for rendering
+            viewer_sync::viewer_visual_sync,
             // Stairs system runs last
             keyboard::stairs_player,
         )

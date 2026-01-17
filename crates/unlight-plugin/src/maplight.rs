@@ -57,17 +57,16 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::Hand;
 use ungearitems_core::components::salt::UVReactive;
-use unghost_core::components::GhostSprite;
 use unghost_core::components::{GhostInfluence, InfluenceType};
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::components::visuals::{
-    EctoplasmVisuals, InfraredSensitive, LightSensitive, UltravioletSensitive,
+    EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, Luminescent, ShadowCaster,
+    UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -196,14 +195,14 @@ fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bcf: Res<BoardCollisionField>,
     gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(&Position, &Viewer)>,
     mut roomdb: ResMut<RoomDB>,
 ) {
     let measure = PLAYER_VISIBILITY.time_measure();
 
     // Find the active player's position
-    let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
-        if player.id == gc.player_id {
+    let Some(player_pos) = qp.iter().find_map(|(pos, viewer)| {
+        if viewer.id == gc.player_id {
             Some(*pos)
         } else {
             None
@@ -254,7 +253,7 @@ fn apply_lighting(
         With<MapTileSprite>,
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    qp: Query<(&Position, &PlayerSprite, &Direction, &PlayerGear)>,
+    qp: Query<(&Position, &Viewer, &Direction, &PlayerGear)>,
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
     mut lg: ResMut<LightGrid>,
@@ -272,8 +271,9 @@ fn apply_lighting(
             Option<&UltravioletSensitive>,
             Option<&InfraredSensitive>,
             Option<&EctoplasmVisuals>,
-            Option<&PlayerSprite>,
-            Option<&GhostSprite>,
+            Option<&Ethereal>,
+            Option<&Luminescent>,
+            Option<&ShadowCaster>,
             Option<&MapColor>,
             Option<&UVReactive>,
             Option<&MiasmaSprite>,
@@ -283,8 +283,8 @@ fn apply_lighting(
             (&Position, &mut Sprite),
             (
                 With<MapTileSprite>,
-                Without<PlayerSprite>,
-                Without<GhostSprite>,
+                Without<Ethereal>,
+                Without<ShadowCaster>,
             ),
         >,
     )>,
@@ -352,7 +352,7 @@ fn apply_lighting(
             ));
         }
     }
-    for (pos, player, direction, gear) in qp.iter() {
+    for (pos, viewer, direction, gear) in qp.iter() {
         let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
 
         let mut check_gear = |entity: Entity, p: EquipmentPosition| {
@@ -389,7 +389,7 @@ fn apply_lighting(
                 flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
-        if player.id != gc.player_id {
+        if viewer.id != gc.player_id {
             continue;
         }
 
@@ -841,8 +841,9 @@ fn apply_lighting(
         _o_uv_sens,
         o_ir_sens,
         o_ecto_vis,
-        o_player,
-        o_gs,
+        o_ethereal,
+        _o_luminescent,
+        o_shadow_caster,
         o_color,
         uv_reactive,
         o_miasma,
@@ -916,18 +917,18 @@ fn apply_lighting(
                 opacity = 0.0;
             }
         }
-        if let Some(gs) = o_gs {
-            if gs.hunt_warning_active {
+        if let Some(ethereal) = o_ethereal {
+            if ethereal.warning_active {
                 dst_color = lerp_color(
                     css::RED.into(),
                     css::ALICE_BLUE.into(),
-                    gs.hunt_warning_intensity.clamp(0.0, 1.0),
+                    ethereal.warning_intensity.clamp(0.0, 1.0),
                 );
-            } else if gs.hunt_target {
+            } else if ethereal.hunt_target {
                 dst_color = lerp_color(
                     css::RED.into(),
                     css::ALICE_BLUE.into(),
-                    (gs.calm_time_secs / 10.0).clamp(0.0, 1.0),
+                    (ethereal.calm_time_secs / 10.0).clamp(0.0, 1.0),
                 );
             } else {
                 let orig_opacity = opacity;
@@ -936,7 +937,7 @@ fn apply_lighting(
                 // Make the ghost oscilate to increase visibility:
                 let osc1 = (elapsed * 1.0 * difficulty.0.evidence_visibility).sin() * 0.25 + 0.75;
                 let osc2 = (elapsed * 1.15 * difficulty.0.evidence_visibility).cos() * 0.5 + 0.5;
-                opacity = opacity.min(osc1 + 0.2) / (1.0 + gs.warp / 5.0)
+                opacity = opacity.min(osc1 + 0.2) / (1.0 + ethereal.warp / 5.0)
                     * difficulty.0.evidence_visibility;
                 let l = (dst_color.luminance() + osc2) / 2.0;
                 dst_color = dst_color.with_luminance(l);
@@ -962,19 +963,18 @@ fn apply_lighting(
                     .clamp(difficulty.0.evidence_visibility * 0.1, 1.0);
                 let srgba = dst_color
                     .with_luminance(
-                        (l * ld.visible - ld.infrared - gs.repellent_hits_delta * 3.0)
-                            .clamp(0.0, 1.0),
+                        (l * ld.visible - ld.infrared - ethereal.hit_delta * 3.0).clamp(0.0, 1.0),
                     )
                     .to_srgba();
 
-                let k_hit = (gs.repellent_hits_delta + gs.repellent_misses_delta)
+                let k_hit = (ethereal.hit_delta + ethereal.miss_delta)
                     .clamp(0.0, 1.0)
                     .cbrt();
                 opacity = opacity * (1.0 - k_hit) + orig_opacity.cbrt() * k_hit;
 
                 dst_color = srgba
-                    .with_red(r * ld.visible + e_rl * 1.1 + gs.repellent_misses_delta / 2.0)
-                    .with_green(g * ld.visible + e_uv + e_rl + gs.repellent_misses_delta / 2.5)
+                    .with_red(r * ld.visible + e_rl * 1.1 + ethereal.miss_delta / 2.0)
+                    .with_green(g * ld.visible + e_uv + e_rl + ethereal.miss_delta / 2.5)
                     .into();
                 dst_color = dst_color
                     .with_luminance((dst_color.luminance() - e_infra / 2.0).clamp(0.0, 1.0));
@@ -1075,7 +1075,11 @@ fn apply_lighting(
         );
         let src_linear = sprite.color.to_linear();
         let dst_linear = dst_color.to_linear();
-        let f = if o_player.is_some() { 0.01 } else { 0.11 }; // Smoothing factor
+        let f = if o_shadow_caster.is_some() {
+            0.01
+        } else {
+            0.11
+        }; // Smoothing factor
         let smooth_color = LinearRgba::from_vec4(
             (src_linear.to_vec4() * (1.0 - f) + dst_linear.to_vec4() * f)
                 .clamp(Vec4::ZERO, Vec4::ONE),

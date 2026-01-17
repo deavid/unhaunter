@@ -5,8 +5,8 @@ use ndarray::s;
 use unbehavior::roomdb::RoomDB;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::types::sound::SoundType;
-use unplayer_core::components::PlayerSprite;
 use unrender_std::components::game::GameSound;
+use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unsettings_core::audio::AudioSettings;
 use unspatial_core::boardposition::BoardPosition;
@@ -95,14 +95,14 @@ fn calculate_ambient_sound_volumes(
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
-    player_query: Query<(&Position, &PlayerSprite), With<PlayerSprite>>,
+    player_query: Query<(&Position, &Viewer)>,
     visibility_data: Res<VisibilityData>,
     roomdb: Res<RoomDB>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
 ) {
-    // Get player position and sprite data
-    let Some((player_pos, player_sprite)) = player_query.iter().next() else {
+    // Get player position and viewer data
+    let Some((player_pos, viewer)) = player_query.iter().next() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -111,9 +111,9 @@ fn update_ambient_sound_volumes(
     let (house_volume, street_volume) =
         calculate_ambient_sound_volumes(&visibility_data, &roomdb, &player_bpos);
 
-    // Calculate HeartBeat volume based on player health (analog/fuzzy logic)
+    // Calculate HeartBeat volume based on health (analog/fuzzy logic)
     // HeartBeat should get louder as health gets lower
-    let health_ratio = (player_sprite.health / 100.0).clamp(0.0, 1.0);
+    let health_ratio = (viewer.health / 100.0).clamp(0.0, 1.0);
     let heartbeat_volume = if health_ratio < 0.5 {
         // Health is below 50%, calculate heartbeat intensity
         let health_deficit = 1.0 - health_ratio; // 0.5 to 1.0
@@ -123,9 +123,9 @@ fn update_ambient_sound_volumes(
         0.0 // No heartbeat when health is above 50%
     };
 
-    // Calculate Insane volume based on player sanity (analog/fuzzy logic)
+    // Calculate Insane volume based on sanity (analog/fuzzy logic)
     // Insane sounds should get louder as sanity gets lower
-    let sanity_ratio = (player_sprite.sanity() / 100.0).clamp(0.0, 1.0);
+    let sanity_ratio = (viewer.sanity / 100.0).clamp(0.0, 1.0);
     let insane_volume = if sanity_ratio < 0.7 {
         // Sanity is below 70%, calculate insane sound intensity
         let sanity_deficit = 1.0 - sanity_ratio; // 0.3 to 1.0

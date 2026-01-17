@@ -24,7 +24,8 @@ use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, InfraredSensitive, LightSensitive, UltravioletSensitive,
+    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, ShadowCaster,
+    UltravioletSensitive, Viewer,
 };
 use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
@@ -120,6 +121,8 @@ pub fn classic_mode_orchestrator(
         .insert(GameSprite)
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
+        .insert(ShadowCaster::default())
+        .insert(Viewer { id: 1, ..default() })
         .insert(SpatialListener::new(
             -p.audio_settings.sound_output.to_ear_offset(),
         ))
@@ -226,6 +229,7 @@ pub fn classic_mode_orchestrator(
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
         .insert(ghost_sprite.with_breachid(breach_id))
+        .insert(Ethereal::default())
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
         .insert(ghost_spawn)

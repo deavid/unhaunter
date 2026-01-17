@@ -27,6 +27,7 @@ use unsummary_core::summary::SummaryData;
 use untags_core::tags::PlayerTag;
 
 use crate::metrics::{GHOST_ENRAGE, GHOST_MOVEMENT};
+use crate::systems::visual_sync::ghost_visual_sync;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 
 /// Enables/disables debug logs for hunting behavior.
@@ -814,6 +815,7 @@ pub(crate) fn app_setup(app: &mut App) {
             ghost_fade_out_system,
             update_ghost_warning_field,
             ghost_scale_glitch_system,
+            ghost_visual_sync,
         ),
     );
 
