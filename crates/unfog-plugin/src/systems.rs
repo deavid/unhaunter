@@ -6,12 +6,12 @@ use rand::Rng;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::chunk::{CellIterator, ChunkIterator};
+use unboard_core::components::physics::FluidEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfog_core::components::MiasmaSprite;
 use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::random_seed;
-use unghost_core::components::ghost_sprite::GhostSprite;
 use unmetrics_core::metrics::SendMetric;
 use unnoise_core::perlin::PerlinNoise;
 use unplayer_core::components::PlayerSprite;
@@ -318,7 +318,7 @@ fn update_miasma(
     roomdb: Res<RoomDB>,
     gc: Res<GameConfig>,
     qp: Query<(&Position, &PlayerSprite)>,
-    ghost_query: Query<&GhostSprite>,
+    fluid_emitter_query: Query<&FluidEmitter>,
     mut room_present: Local<Array3<bool>>,
 ) {
     let measure = metrics::UPDATE_MIASMA.time_measure();
@@ -328,8 +328,8 @@ fn update_miasma(
     rng.fill(&mut arr);
 
     let dt = time.delta_secs();
-    let ghosts_remain = !ghost_query.is_empty();
-    let diffusion_rate = if ghosts_remain {
+    let emitters_remain = !fluid_emitter_query.is_empty();
+    let diffusion_rate = if emitters_remain {
         miasma_config.diffusion_rate
     } else {
         miasma_config.diffusion_rate * 20.0
@@ -531,7 +531,7 @@ fn update_miasma(
                 // Evaporate miasma fast when outside.
                 *entry /= 1.00001;
             }
-            if !ghosts_remain {
+            if !emitters_remain {
                 // Once every ghost is expelled, evaporate the miasma.
                 *entry /= 1.001;
             }

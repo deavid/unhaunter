@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::evidence::Evidence;
+use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
 use unnoise_core::perlin::{LONG_TERM_NOISE_FREQ, PerlinNoise, SHORT_TERM_NOISE_FREQ};
@@ -113,6 +115,51 @@ fn update_ghost_behavior_dynamics_system(
     }
 }
 
+fn sync_ghost_emitters(
+    haunt_state: Res<HauntState>,
+    mut q_emitters: Query<(
+        &mut ThermalEmitter,
+        &mut FluidEmitter,
+        &mut SoundEmitter,
+        Option<&GhostSprite>,
+        Option<&GhostBreach>,
+    )>,
+) {
+    let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
+    let ghost_target_temp =
+        unfoundation_core::utils::temperature::celsius_to_kelvin(1.0 - 4.0 * freezing);
+    let power = freezing * 0.5 + 0.5;
+
+    const GHOST_MAX_POWER: f32 = 0.01;
+    const BREACH_MAX_POWER: f32 = 10.0;
+
+    for (mut thermal, mut fluid, mut sound, opt_ghost, opt_breach) in q_emitters.iter_mut() {
+        if opt_ghost.is_none() && opt_breach.is_none() {
+            continue;
+        }
+        thermal.target_temp = ghost_target_temp;
+        if opt_ghost.is_some() {
+            thermal.power = GHOST_MAX_POWER * power;
+        } else {
+            // It's the breach
+            thermal.power = BREACH_MAX_POWER * power;
+        }
+
+        // Fluid emitter logic (based on existence currently)
+        fluid.pressure = 1.0;
+
+        // Sound emitter logic (volume)
+        sound.volume = 1.0;
+    }
+}
+
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
-    app.add_systems(bevy::prelude::Update, update_ghost_behavior_dynamics_system);
+    app.add_systems(
+        bevy::prelude::Update,
+        (
+            update_ghost_behavior_dynamics_system,
+            sync_ghost_emitters,
+        )
+            .chain(),
+    );
 }

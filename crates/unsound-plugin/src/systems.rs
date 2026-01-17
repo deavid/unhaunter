@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::mem::swap;
 use unbehavior::roomdb::RoomDB;
+use unboard_core::components::physics::SoundEmitter;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
 use unfoundation_core::random_seed;
-use unghost_core::components::GhostSprite;
 use unmetrics_core::metrics::SendMetric;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
@@ -13,7 +13,7 @@ use unspatial_core::position::Position;
 pub fn sound_update(
     mut sound_grid: ResMut<SoundGrid>,
     roomdb: Res<RoomDB>,
-    qg: Query<(&GhostSprite, &Position)>,
+    qe: Query<(&SoundEmitter, &Position)>,
 ) {
     let measure = metrics::SOUND_UPDATE.time_measure();
 
@@ -21,7 +21,8 @@ pub fn sound_update(
     let gn = rng.random_range(0..30_u32);
     if gn == 0 {
         // Ghost talk once in a while
-        for (_, pos) in qg.iter() {
+        for (_, pos) in qe.iter() {
+            let pos: &Position = pos;
             let bpos = pos.to_board_position();
             for _ in 0..16 {
                 let mut v = Vec2::new(rng.random_range(-2.0..2.0), rng.random_range(-2.0..2.0));

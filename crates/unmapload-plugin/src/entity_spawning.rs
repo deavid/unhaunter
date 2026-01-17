@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use ordered_float::OrderedFloat;
 use rand::seq::SliceRandom;
+use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use unfoundation_core::random_seed;
 use unfoundation_core::types::sound::SoundType;
 use ungear_core::components::playergear::PlayerGear;
@@ -191,6 +192,12 @@ pub(crate) fn spawn_ghosts(
         .insert(SpriteType::Breach)
         .insert(GhostBreach)
         .insert(ghost_spawn)
+        .insert(ThermalEmitter {
+            room_restricted: true,
+            ..default()
+        })
+        .insert(FluidEmitter::default())
+        .insert(SoundEmitter::default())
         .with_children(|parent| {
             parent
                 .spawn(Sprite {
@@ -221,6 +228,12 @@ pub(crate) fn spawn_ghosts(
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
         .insert(ghost_spawn)
+        .insert(ThermalEmitter {
+            room_restricted: true,
+            ..default()
+        })
+        .insert(FluidEmitter::default())
+        .insert(SoundEmitter::default())
         .with_children(|parent| {
             parent
                 .spawn(Sprite {

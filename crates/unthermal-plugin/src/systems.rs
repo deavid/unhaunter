@@ -3,13 +3,12 @@ use bevy::prelude::*;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
 use unbehavior::roomdb::RoomDB;
+use unboard_core::components::physics::ThermalEmitter;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
-use unghost_core::components::GhostSprite;
-use unghost_core::resources::haunt_state::HauntState;
 use unmetrics_core::metrics::SendMetric;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -19,14 +18,12 @@ pub fn temperature_update(
     mut thermal_grid: ResMut<ThermalGrid>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
-    haunt_state: Res<HauntState>,
     roomdb: Res<RoomDB>,
     qt: Query<(&Position, &Behavior)>,
-    qg: Query<(&GhostSprite, &Position)>,
+    qe: Query<(&ThermalEmitter, &Position)>,
     difficulty: Res<CurrentDifficulty>,
 ) {
     let measure = metrics::TEMPERATURE_UPDATE.time_measure();
-    let freezing = haunt_state.ghost_dynamics.freezing_temp_clarity;
 
     for (pos, bh) in qt.iter() {
         let h_out: f32 = bh.temp_heat_output();
@@ -39,44 +36,29 @@ pub fn temperature_update(
         let t_out = h_out * k * 0.2 * difficulty.0.light_heat;
         thermal_grid.temperature_field[bpos.ndidx()] += t_out;
     }
-    for (gs, pos) in qg.iter() {
+    for (emitter, pos) in qe.iter() {
         let bpos = pos.to_board_position();
         if bpos.z < 0 || bpos.z >= bf.map_size.2 as i64 {
             continue;
         }
-        let ghost_target_temp: f32 = celsius_to_kelvin(1.0 - 4.0 * freezing);
-        const GHOST_MAX_POWER: f32 = 0.01;
-        const BREACH_MAX_POWER: f32 = 10.0;
-        let ghost_in_room = roomdb.room_tiles.get(&bpos);
-        let breach_in_room = roomdb.room_tiles.get(&gs.spawn_point);
-        let power = freezing * 0.5 + 0.5;
-        const ENABLE_GHOST_COLD_TEMPS: bool = true;
-        if ENABLE_GHOST_COLD_TEMPS {
+        let center_room = roomdb.room_tiles.get(&bpos);
+        const ENABLE_COLD_TEMPS: bool = true;
+        if ENABLE_COLD_TEMPS {
             for npos in bpos.iter_xy_neighbors(3, bf.map_size) {
-                if ghost_in_room != roomdb.room_tiles.get(&npos) || !bcf.0[npos.ndidx()].player_free
-                {
+                if emitter.room_restricted && center_room != roomdb.room_tiles.get(&npos) {
+                    continue;
+                }
+                if !bcf.0[npos.ndidx()].player_free {
                     continue;
                 }
 
                 let distance2 = npos.distance2(&bpos) + 1.0;
                 let distance_decay = 1.0 / distance2;
-                let effective_power = GHOST_MAX_POWER * power * distance_decay;
+                let effective_power = emitter.power * distance_decay;
 
                 let t = &mut thermal_grid.temperature_field[npos.ndidx()];
-                *t = (*t + ghost_target_temp * effective_power) / (1.0 + effective_power);
+                *t = (*t + emitter.target_temp * effective_power) / (1.0 + effective_power);
             }
-        }
-        for npos in gs.spawn_point.iter_xy_neighbors(3, bf.map_size) {
-            if breach_in_room != roomdb.room_tiles.get(&npos) || !bcf.0[npos.ndidx()].player_free {
-                continue;
-            }
-
-            let distance2 = npos.distance2(&gs.spawn_point) + 1.0;
-            let distance_decay = 1.0 / distance2;
-            let effective_power = BREACH_MAX_POWER * power * distance_decay;
-
-            let t = &mut thermal_grid.temperature_field[npos.ndidx()];
-            *t = (*t + ghost_target_temp * effective_power) / (1.0 + effective_power);
         }
     }
 
@@ -282,8 +264,7 @@ pub fn init_thermal_grid_content(
     mut thermal_grid: ResMut<ThermalGrid>,
     bf: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
-    haunt_state: Res<HauntState>,
-    roomdb: Res<RoomDB>,
+    _roomdb: Res<RoomDB>,
     mut ev: MessageReader<LevelReadyEvent>,
 ) {
     if ev.is_empty() {
@@ -293,18 +274,10 @@ pub fn init_thermal_grid_content(
 
     let mut rng = random_seed::rng();
     let ambient_temp = thermal_grid.ambient_temp;
-    let breach_room = roomdb
-        .room_tiles
-        .get(&haunt_state.breach_pos.to_board_position());
 
-    for (idxpos, temperature) in thermal_grid.temperature_field.indexed_iter_mut() {
-        let room = roomdb.room_tiles.get(&BoardPosition::from_ndidx(idxpos));
-        if room == breach_room {
-            *temperature = celsius_to_kelvin(0.5);
-        } else {
-            let ambient = ambient_temp + rng.random_range(-3.0..3.0);
-            *temperature = ambient;
-        }
+    for (_idxpos, temperature) in thermal_grid.temperature_field.indexed_iter_mut() {
+        let ambient = ambient_temp + rng.random_range(-3.0..3.0);
+        *temperature = ambient;
     }
 
     // Connectivity scores
