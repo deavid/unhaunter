@@ -6,9 +6,9 @@ use uninteraction_core::interaction::Toggleable;
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::recorder::Recorder;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_recorder(
@@ -33,12 +33,12 @@ pub(crate) fn update_recorder(
 
         // Update Sprite
         sprite.0 = if !toggle.is_on {
-            GearSpriteID::RecorderOff
+            GearSpriteID::RecorderOff.to_visual_key()
         } else if recorder.display_glitch_timer > 0.0 && rng.random_range(0.0..1.0) < 0.4 {
             match rng.random_range(0..3) {
-                0 => GearSpriteID::RecorderOff,
-                1 => GearSpriteID::Recorder4, // Show max reading
-                _ => GearSpriteID::Recorder1,
+                0 => GearSpriteID::RecorderOff.to_visual_key(),
+                1 => GearSpriteID::Recorder4.to_visual_key(), // Show max reading
+                _ => GearSpriteID::Recorder1.to_visual_key(),
             }
         } else {
             // Normal operation
@@ -52,13 +52,13 @@ pub(crate) fn update_recorder(
             s *= f;
 
             if s < 5.0 {
-                GearSpriteID::Recorder1
+                GearSpriteID::Recorder1.to_visual_key()
             } else if s < 15.0 {
-                GearSpriteID::Recorder2
+                GearSpriteID::Recorder2.to_visual_key()
             } else if s < 45.0 {
-                GearSpriteID::Recorder3
+                GearSpriteID::Recorder3.to_visual_key()
             } else {
-                GearSpriteID::Recorder4
+                GearSpriteID::Recorder4.to_visual_key()
             }
         };
 

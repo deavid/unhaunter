@@ -1,15 +1,15 @@
 use bevy::prelude::*;
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::compass::Compass;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_compass(
     mut q_compass: Query<(&mut StatusText, &mut GearSprite, &Toggleable, &ItemName), With<Compass>>,
 ) {
     for (mut status, mut sprite, toggle, name) in q_compass.iter_mut() {
-        sprite.0 = GearSpriteID::Compass;
+        sprite.0 = GearSpriteID::Compass.to_visual_key();
 
         let on_s = on_off(toggle.is_on);
         let msg = if toggle.is_on {

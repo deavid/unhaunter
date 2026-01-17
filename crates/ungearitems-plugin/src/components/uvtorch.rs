@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::gear_stuff::GearAudio;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::uvtorch::UVTorch;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) trait UVTorchExt {
@@ -67,14 +67,14 @@ pub(crate) fn update_uvtorch(
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
             if random_seed::rng().random_range(0.0..1.0) < 0.3 {
-                GearSpriteID::UVTorchOff
+                GearSpriteID::UVTorchOff.to_visual_key()
             } else {
-                GearSpriteID::UVTorchOn
+                GearSpriteID::UVTorchOn.to_visual_key()
             }
         } else if uvtorch.enabled {
-            GearSpriteID::UVTorchOn
+            GearSpriteID::UVTorchOn.to_visual_key()
         } else {
-            GearSpriteID::UVTorchOff
+            GearSpriteID::UVTorchOff.to_visual_key()
         };
 
         // Update Status Text

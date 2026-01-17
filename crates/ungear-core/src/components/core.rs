@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::gear::GearSpriteID;
+use unfoundation_core::types::gear::VisualKey;
 
 /// The display name of an item.
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -25,9 +25,9 @@ impl ItemDescription {
 }
 
 /// The sprite index for the gear.
-#[derive(Component, Debug, Clone, Copy, Reflect, Default)]
+#[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct GearSprite(pub GearSpriteID);
+pub struct GearSprite(pub VisualKey);
 
 /// Marker for items that are electronic and susceptible to EMI.
 #[derive(Component, Debug, Clone, Reflect, Default)]

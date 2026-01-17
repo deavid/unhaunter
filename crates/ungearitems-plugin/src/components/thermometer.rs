@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
@@ -11,6 +10,7 @@ use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_thermometer(
@@ -49,8 +49,8 @@ pub(crate) fn update_thermometer(
 
         // Update Sprite
         sprite.0 = match toggle.is_on {
-            true => GearSpriteID::ThermometerOn,
-            false => GearSpriteID::ThermometerOff,
+            true => GearSpriteID::ThermometerOn.to_visual_key(),
+            false => GearSpriteID::ThermometerOff.to_visual_key(),
         };
 
         // Update Logic

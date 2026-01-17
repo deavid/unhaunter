@@ -3,8 +3,7 @@ use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use unevents_core::events::sound::SoundEvent;
-use unfoundation_core::types::gear::Hand;
-use unfoundation_core::types::gear::{GearKind, GearSpriteID};
+use unfoundation_core::types::gear::{GearKind, Hand, VisualKey};
 use ungear_core::assets::GearAssets;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
@@ -17,6 +16,7 @@ use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unrender_std::utils::perspective;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
 use unspatial_core::position::Position;
@@ -27,11 +27,13 @@ fn update_deployed_gear_sprites(
     mut commands: Commands,
     mut q_gear: Query<(Entity, &Position, &GearSprite, Option<&mut Sprite>), With<DeployedGear>>,
     gear_assets: Res<GearAssets>,
+    sprite_registry: Res<SpriteRegistry>,
 ) {
     for (entity, pos, gear_sprite, sprite) in q_gear.iter_mut() {
+        let index = sprite_registry.get(&gear_sprite.0);
         if let Some(mut sprite) = sprite {
             if let Some(atlas) = &mut sprite.texture_atlas {
-                atlas.index = gear_sprite.0 as usize;
+                atlas.index = index;
             }
         } else {
             commands.entity(entity).insert((
@@ -39,7 +41,7 @@ fn update_deployed_gear_sprites(
                     image: gear_assets.gear.clone(),
                     texture_atlas: Some(TextureAtlas {
                         layout: gear_assets.gear_layout.clone(),
-                        index: gear_sprite.0 as usize,
+                        index,
                     }),
                     ..default()
                 },
@@ -120,6 +122,7 @@ fn update_gear_ui(
     q_status: Query<&StatusText>,
     q_sprite: Query<&GearSprite>,
     gear_registry: Res<GearSpawnerRegistry>,
+    sprite_registry: Res<SpriteRegistry>,
     looking_gear: Res<LookingGear>,
 ) {
     let Some(player_gear) = q_gear.iter().next() else {
@@ -137,14 +140,14 @@ fn update_gear_ui(
 
         let sprite_idx = entity
             .and_then(|e| q_sprite.get(e).ok())
-            .map(|s| s.0 as usize)
+            .map(|s| sprite_registry.get(&s.0))
             .or_else(|| {
                 gear_registry
                     .metadata
                     .get(kind)
-                    .map(|m| m.sprite_idx as usize)
+                    .map(|m| sprite_registry.get(&m.sprite_idx))
             })
-            .unwrap_or(GearSpriteID::None as usize);
+            .unwrap_or_else(|| sprite_registry.get(&VisualKey::new(VisualKey::NONE)));
 
         if let Some(atlas) = &mut image.texture_atlas {
             atlas.index = sprite_idx;
@@ -159,14 +162,14 @@ fn update_gear_ui(
 
         let sprite_idx = entity
             .and_then(|e| q_sprite.get(*e).ok())
-            .map(|s| s.0 as usize)
+            .map(|s| sprite_registry.get(&s.0))
             .or_else(|| {
                 gear_registry
                     .metadata
                     .get(kind)
-                    .map(|m| m.sprite_idx as usize)
+                    .map(|m| sprite_registry.get(&m.sprite_idx))
             })
-            .unwrap_or(GearSpriteID::None as usize);
+            .unwrap_or_else(|| sprite_registry.get(&VisualKey::new(VisualKey::NONE)));
 
         if let Some(atlas) = &mut image.texture_atlas {
             atlas.index = sprite_idx;

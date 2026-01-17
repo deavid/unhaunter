@@ -18,3 +18,5 @@ unbehavior = { path = "../unbehavior" }
 unboard-core = { path = "../unboard-core" }
 bevy_platform = { workspace = true }
 ndarray = { workspace = true }
+enum-iterator = { workspace = true }
+serde = { workspace = true }

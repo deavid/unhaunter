@@ -5852,6 +5852,7 @@ dependencies = [
  "bevy",
  "enum-iterator",
  "unfoundation-core",
+ "unrender-std",
 ]
 
 [[package]]
@@ -6334,7 +6335,9 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
+ "enum-iterator",
  "ndarray",
+ "serde",
  "unbehavior",
  "unboard-core",
  "unfoundation-core",

@@ -5,13 +5,14 @@ use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;
-use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, PerceivedClarity, StatusText,
 };
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::geigercounter::GeigerCounter;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) trait GeigerCounterExt {
     fn calculate_output_sound(&self, gs_state: &GearGameState) -> f32;
@@ -201,17 +202,17 @@ pub(crate) fn update_geigercounter(
             if electronic.glitch_timer > 0.0 {
                 // Glitching: flicker between Off and Tick
                 if rng.random_bool(0.7) {
-                    sprite.0 = GearSpriteID::GeigerOff;
+                    sprite.0 = GearSpriteID::GeigerOff.to_visual_key();
                 } else {
-                    sprite.0 = GearSpriteID::GeigerTick;
+                    sprite.0 = GearSpriteID::GeigerTick.to_visual_key();
                 }
             } else if geiger.sound_a1 > 10.0 {
-                sprite.0 = GearSpriteID::GeigerTick;
+                sprite.0 = GearSpriteID::GeigerTick.to_visual_key();
             } else {
-                sprite.0 = GearSpriteID::GeigerOn;
+                sprite.0 = GearSpriteID::GeigerOn.to_visual_key();
             }
         } else {
-            sprite.0 = GearSpriteID::GeigerOff;
+            sprite.0 = GearSpriteID::GeigerOff.to_visual_key();
         }
 
         perceived_clarity.from_status_text =

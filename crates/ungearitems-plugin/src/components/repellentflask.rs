@@ -22,8 +22,8 @@ use crate::metrics;
 
 use bevy::{color::palettes::css, prelude::*};
 use rand::Rng;
-use unfoundation_core::types::gear::GearSpriteID;
 pub(crate) use ungearitems_core::components::repellentflask::RepellentFlask;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 // Colors for repellent particles
 const ELECTRIC_BLUE: Color = Color::srgba(0.0, 0.3, 1.0, 1.0);
@@ -123,9 +123,9 @@ pub(crate) fn update_repellentflask(
 
         // Update GearSprite
         if repellent.liquid_content.is_some() && repellent.qty > 0 {
-            sprite.0 = GearSpriteID::RepelentFlaskFull;
+            sprite.0 = GearSpriteID::RepelentFlaskFull.to_visual_key();
         } else {
-            sprite.0 = GearSpriteID::RepelentFlaskEmpty;
+            sprite.0 = GearSpriteID::RepelentFlaskEmpty.to_visual_key();
         }
     }
 }

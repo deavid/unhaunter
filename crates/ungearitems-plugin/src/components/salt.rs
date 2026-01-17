@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use rand::Rng as _;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 pub(crate) use ungearitems_core::components::salt::{
@@ -15,6 +15,7 @@ use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 
@@ -61,12 +62,12 @@ pub(crate) fn update_salt(
 
         // Update GearSprite
         sprite.0 = match salt.charges {
-            4 => GearSpriteID::Salt4,
-            3 => GearSpriteID::Salt3,
-            2 => GearSpriteID::Salt2,
-            1 => GearSpriteID::Salt1,
+            4 => GearSpriteID::Salt4.to_visual_key(),
+            3 => GearSpriteID::Salt3.to_visual_key(),
+            2 => GearSpriteID::Salt2.to_visual_key(),
+            1 => GearSpriteID::Salt1.to_visual_key(),
             // Empty
-            _ => GearSpriteID::Salt0,
+            _ => GearSpriteID::Salt0.to_visual_key(),
         };
     }
 }

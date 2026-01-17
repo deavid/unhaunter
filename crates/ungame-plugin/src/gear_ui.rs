@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::assets::GearAssets;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unui_core::assets::UiAssets;
 
 pub(crate) fn setup_ui_gear_inv_left(

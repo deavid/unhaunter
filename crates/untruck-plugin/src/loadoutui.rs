@@ -10,11 +10,12 @@ use unfoundation_core::types::gear::Hand;
 use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
-use ungear_core::types::gear::{GearKind, GearSpriteID};
+use ungear_core::types::gear::{GearKind, VisualKey};
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
 use unplayer_core::resources::GameConfig;
 use unrender_std::materials::UIPanelMaterial;
+use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
 
@@ -41,6 +42,7 @@ pub(crate) fn setup_loadout_ui(
     materials: &mut Assets<UIPanelMaterial>,
     difficulty: &CurrentDifficulty,
     gear_registry: &GearSpawnerRegistry,
+    sprite_registry: &SpriteRegistry,
 ) {
     let button = || {
         (
@@ -62,12 +64,12 @@ pub(crate) fn setup_loadout_ui(
             },
         )
     };
-    let equipment = |g: GearSpriteID| {
+    let equipment = |g: VisualKey| {
         (
             ImageNode {
                 image: gear_assets.gear.clone(),
                 texture_atlas: Some(TextureAtlas {
-                    index: g as usize,
+                    index: sprite_registry.get(&g),
                     layout: gear_assets.gear_layout.clone(),
                 }),
                 ..default()
@@ -80,7 +82,7 @@ pub(crate) fn setup_loadout_ui(
             },
         )
     };
-    let equipment_def = || equipment(GearSpriteID::None);
+    let equipment_def = || equipment(VisualKey::new(VisualKey::NONE));
 
     let equipment_frame = |materials: &mut Assets<UIPanelMaterial>| {
         (
@@ -181,8 +183,8 @@ pub(crate) fn setup_loadout_ui(
                     let sprite_idx = gear_registry
                         .metadata
                         .get(gear_kind)
-                        .map(|m| m.sprite_idx)
-                        .unwrap_or(GearSpriteID::None);
+                        .map(|m| m.sprite_idx.clone())
+                        .unwrap_or_else(|| VisualKey::new(VisualKey::NONE));
                     p.spawn(button())
                         .insert(LoadoutButton::Van(*gear_kind))
                         .with_children(|p| {
@@ -414,6 +416,7 @@ fn update_loadout_icons(
     mut q_image: Query<&mut ImageNode>,
     gc: Res<GameConfig>,
     gear_registry: Res<GearSpawnerRegistry>,
+    sprite_registry: Res<SpriteRegistry>,
 ) {
     let Some(p_gear) = q_gear
         .iter()
@@ -450,8 +453,8 @@ fn update_loadout_icons(
                 let sprite_idx = gear_registry
                     .metadata
                     .get(&kind)
-                    .map(|m| m.sprite_idx as usize)
-                    .unwrap_or(GearSpriteID::None as usize);
+                    .map(|m| sprite_registry.get(&m.sprite_idx))
+                    .unwrap_or_else(|| sprite_registry.get(&VisualKey::new(VisualKey::NONE)));
                 atlas.index = sprite_idx;
             }
         }

@@ -11,6 +11,7 @@ use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::assets::GearAssets;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unrender_std::materials::UIPanelMaterial;
+use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untypes_core::states::{AppState, GameState};
 use unui_core::assets::UiAssets;
 
@@ -44,6 +45,7 @@ fn setup_ui(
     gear_assets: Res<GearAssets>,
     difficulty: Res<CurrentDifficulty>, // Access the difficulty settings
     gear_registry: Res<GearSpawnerRegistry>,
+    sprite_registry: Res<SpriteRegistry>,
 ) {
     const MARGIN_PERCENT: f32 = 0.5;
     const MARGIN: UiRect = UiRect::percent(
@@ -185,6 +187,7 @@ fn setup_ui(
                     &mut materials,
                     &difficulty,
                     &gear_registry,
+                    &sprite_registry,
                 )
             });
         p.spawn((base_node.clone(), TabContents::Journal))

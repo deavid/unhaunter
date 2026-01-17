@@ -46,6 +46,10 @@ impl Plugin for UnhaunterRenderPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::animation::app_setup(app);
         crate::systems::board_sync::app_setup(app);
+        app.add_systems(
+            Startup,
+            unrender_std::resources::sprite_registry::setup_sprite_registry,
+        );
         app.init_resource::<BoardTopology>()
             .init_resource::<BoardEntityField>()
             .init_resource::<BoardCollisionField>()

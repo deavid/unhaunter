@@ -8,8 +8,8 @@ use unspatial_core::position::Position;
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 use rand::Rng;
-use unfoundation_core::types::gear::GearSpriteID;
 pub(crate) use ungearitems_core::components::flashlight::{Flashlight, FlashlightStatus};
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_flashlight(
     mut q_flashlight: Query<(
@@ -90,20 +90,20 @@ pub(crate) fn update_flashlight(
 
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
-            GearSpriteID::Flashlight3
+            GearSpriteID::Flashlight3.to_visual_key()
         } else if flashlight.rand == 0 {
             match flashlight.status {
-                FlashlightStatus::Off => GearSpriteID::FlashlightOff,
-                FlashlightStatus::Low => GearSpriteID::Flashlight2,
-                FlashlightStatus::Mid => GearSpriteID::Flashlight1,
-                FlashlightStatus::High => GearSpriteID::Flashlight2,
+                FlashlightStatus::Off => GearSpriteID::FlashlightOff.to_visual_key(),
+                FlashlightStatus::Low => GearSpriteID::Flashlight2.to_visual_key(),
+                FlashlightStatus::Mid => GearSpriteID::Flashlight1.to_visual_key(),
+                FlashlightStatus::High => GearSpriteID::Flashlight2.to_visual_key(),
             }
         } else {
             match flashlight.status {
-                FlashlightStatus::Off => GearSpriteID::FlashlightOff,
-                FlashlightStatus::Low => GearSpriteID::Flashlight1,
-                FlashlightStatus::Mid => GearSpriteID::Flashlight2,
-                FlashlightStatus::High => GearSpriteID::Flashlight3,
+                FlashlightStatus::Off => GearSpriteID::FlashlightOff.to_visual_key(),
+                FlashlightStatus::Low => GearSpriteID::Flashlight1.to_visual_key(),
+                FlashlightStatus::Mid => GearSpriteID::Flashlight2.to_visual_key(),
+                FlashlightStatus::High => GearSpriteID::Flashlight3.to_visual_key(),
             }
         };
 

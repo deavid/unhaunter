@@ -1,9 +1,10 @@
 use bevy::prelude::*;
-use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
 use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
 pub(crate) use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 
@@ -106,12 +107,12 @@ pub(crate) fn update_quartz(
 
         // Update GearSprite
         sprite.0 = match quartz.cracks {
-            0 => GearSpriteID::QuartzStone0,
-            1 => GearSpriteID::QuartzStone1,
-            2 => GearSpriteID::QuartzStone2,
-            3 => GearSpriteID::QuartzStone3,
+            0 => GearSpriteID::QuartzStone0.to_visual_key(),
+            1 => GearSpriteID::QuartzStone1.to_visual_key(),
+            2 => GearSpriteID::QuartzStone2.to_visual_key(),
+            3 => GearSpriteID::QuartzStone3.to_visual_key(),
             // Shattered
-            _ => GearSpriteID::QuartzStone4,
+            _ => GearSpriteID::QuartzStone4.to_visual_key(),
         };
     }
 }

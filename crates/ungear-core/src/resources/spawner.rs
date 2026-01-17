@@ -1,7 +1,7 @@
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unfoundation_core::types::gear::{GearKind, GearSpriteID};
+use unfoundation_core::types::gear::{GearKind, VisualKey};
 use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.
@@ -14,7 +14,7 @@ pub struct GearMarker;
 pub struct GearMetadata {
     pub name: String,
     pub description: String,
-    pub sprite_idx: GearSpriteID,
+    pub sprite_idx: VisualKey,
 }
 
 /// A registry that knows how to spawn entities for each GearKind.

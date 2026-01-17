@@ -10,9 +10,10 @@ use unspatial_core::position::Position;
 
 use bevy::prelude::*;
 use rand::Rng as _;
-use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::emfmeter::{EMFLevel, EMFMeter};
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_emfmeter(
     mut q_emf: Query<(
@@ -55,16 +56,16 @@ pub(crate) fn update_emfmeter(
             if electronic.glitch_timer > 0.0 && random_seed::rng().random_range(0.0..1.0) < 0.3 {
                 // Flicker when glitching but enabled
                 sprite.0 = match random_seed::rng().random_range(0..3) {
-                    0 => GearSpriteID::EMFMeterOff,
-                    1 => GearSpriteID::EMFMeter4, // Example: flicker to a high reading or specific glitch sprite
-                    _ => emf.emf_level.to_spriteid(), // Or back to its current reading sprite
+                    0 => GearSpriteID::EMFMeterOff.to_visual_key(),
+                    1 => GearSpriteID::EMFMeter4.to_visual_key(), // Example: flicker to a high reading or specific glitch sprite
+                    _ => emf.emf_level.to_spriteid().to_visual_key(), // Or back to its current reading sprite
                 };
             } else {
                 // Normal operation, not glitching or glitch not causing visual disruption this frame
-                sprite.0 = emf.emf_level.to_spriteid();
+                sprite.0 = emf.emf_level.to_spriteid().to_visual_key();
             }
         } else {
-            sprite.0 = GearSpriteID::EMFMeterOff;
+            sprite.0 = GearSpriteID::EMFMeterOff.to_visual_key();
         }
 
         // Update Logic

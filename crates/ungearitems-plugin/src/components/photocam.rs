@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::photocam::Photocam;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_photocam(
     mut q_photocam: Query<
@@ -23,9 +23,9 @@ pub(crate) fn update_photocam(
         battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
 
         sprite.0 = if toggle.is_on {
-            GearSpriteID::PhotocamFlash2
+            GearSpriteID::PhotocamFlash2.to_visual_key()
         } else {
-            GearSpriteID::Photocam
+            GearSpriteID::Photocam.to_visual_key()
         };
 
         let on_s = on_off(toggle.is_on);

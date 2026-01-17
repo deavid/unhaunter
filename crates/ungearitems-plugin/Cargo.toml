@@ -18,8 +18,8 @@ undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
 unlight-plugin = { path = "../unlight-plugin" }
-uninteraction-core = { path = "../uninteraction-core" }
 unrender-std = { path = "../unrender-std" }
+uninteraction-core = { path = "../uninteraction-core" }
 unmetrics-core = { path = "../unmetrics-core" }
 ungear-core = { path = "../ungear-core" }
 untags-core = { path = "../untags-core" }

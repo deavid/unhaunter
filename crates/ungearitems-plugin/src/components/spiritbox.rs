@@ -15,11 +15,11 @@ use uninteraction_core::interaction::Toggleable;
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unlight_plugin::resources::light_grid::LightGrid;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_spiritbox(
@@ -73,27 +73,27 @@ pub(crate) fn update_spiritbox(
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
             match rng.random_range(0..5) {
-                0 => GearSpriteID::SpiritBoxOff,   // Blank/off
-                1 => GearSpriteID::SpiritBoxScan1, // Flickering
-                2 => GearSpriteID::SpiritBoxScan2,
-                3 => GearSpriteID::SpiritBoxScan3,
-                _ => GearSpriteID::SpiritBoxAns1, // Maybe show as if it answered
+                0 => GearSpriteID::SpiritBoxOff.to_visual_key(), // Blank/off
+                1 => GearSpriteID::SpiritBoxScan1.to_visual_key(), // Flickering
+                2 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
+                3 => GearSpriteID::SpiritBoxScan3.to_visual_key(),
+                _ => GearSpriteID::SpiritBoxAns1.to_visual_key(), // Maybe show as if it answered
             }
         } else if toggle.is_on {
             if spiritbox.ghost_answer {
                 match spiritbox.mode_frame % 2 {
-                    0 => GearSpriteID::SpiritBoxAns1,
-                    _ => GearSpriteID::SpiritBoxAns2,
+                    0 => GearSpriteID::SpiritBoxAns1.to_visual_key(),
+                    _ => GearSpriteID::SpiritBoxAns2.to_visual_key(),
                 }
             } else {
                 match spiritbox.mode_frame % 3 {
-                    0 => GearSpriteID::SpiritBoxScan1,
-                    1 => GearSpriteID::SpiritBoxScan2,
-                    _ => GearSpriteID::SpiritBoxScan3,
+                    0 => GearSpriteID::SpiritBoxScan1.to_visual_key(),
+                    1 => GearSpriteID::SpiritBoxScan2.to_visual_key(),
+                    _ => GearSpriteID::SpiritBoxScan3.to_visual_key(),
                 }
             }
         } else {
-            GearSpriteID::SpiritBoxOff
+            GearSpriteID::SpiritBoxOff.to_visual_key()
         };
 
         // Update Logic

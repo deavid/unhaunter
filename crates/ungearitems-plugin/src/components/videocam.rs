@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::gear::{EquipmentPosition, GearSpriteID};
+use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, StatusText};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::videocam::Videocam;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_videocam(
@@ -51,7 +52,7 @@ pub(crate) fn update_videocam(
         }
 
         // Update GearSprite
-        sprite.0 = GearSpriteID::Videocam;
+        sprite.0 = GearSpriteID::Videocam.to_visual_key();
     }
 }
 

@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use unbehavior::components::{Collision, InteractableByGhost};
 use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::gear::GearSpriteID;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
@@ -10,6 +9,7 @@ use ungear_core::components::core::{
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 use crate::components::compass::Compass;
 use crate::components::emfmeter::EMFMeter as EMFMeterInternal;
@@ -41,14 +41,14 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Flashlight".into(),
             description: "Iluminates the way. Imprescindible tool to work in the dark.".into(),
-            sprite_idx: GearSpriteID::FlashlightOff,
+            sprite_idx: GearSpriteID::FlashlightOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Flashlight"));
             cmd.insert(ItemDescription::new(
                 "Iluminates the way. Imprescindible tool to work in the dark.",
             ));
-            cmd.insert(GearSprite(GearSpriteID::FlashlightOff));
+            cmd.insert(GearSprite(GearSpriteID::FlashlightOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(LightEmitter {
                 power: 10.0,
@@ -77,12 +77,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Thermometer".into(),
             description: "Reads the temperature of the room. Most paranormal interactions have been correlated with unusual cold temperatures.".into(),
-            sprite_idx: GearSpriteID::ThermometerOff,
+            sprite_idx: GearSpriteID::ThermometerOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Thermometer"));
             cmd.insert(ItemDescription::new("Reads the temperature of the room. Most paranormal interactions have been correlated with unusual cold temperatures."));
-            cmd.insert(GearSprite(GearSpriteID::ThermometerOff));
+            cmd.insert(GearSprite(GearSpriteID::ThermometerOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::FreezingTemp,
@@ -110,12 +110,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "EMF Meter".into(),
             description: "Used to find electric wires behind walls. Ghosts might disturb the electromagnetic field.".into(),
-            sprite_idx: GearSpriteID::EMFMeterOff,
+            sprite_idx: GearSpriteID::EMFMeterOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("EMF Meter"));
             cmd.insert(ItemDescription::new("Used to find electric wires behind walls. Ghosts might disturb the electromagnetic field."));
-            cmd.insert(GearSprite(GearSpriteID::EMFMeterOff));
+            cmd.insert(GearSprite(GearSpriteID::EMFMeterOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EMFLevel5,
@@ -145,14 +145,14 @@ pub(crate) fn register_all(app: &mut App) {
             description:
                 "Records ambient sounds and conversations. Sometimes it can capture EVP phenomena."
                     .into(),
-            sprite_idx: GearSpriteID::RecorderOff,
+            sprite_idx: GearSpriteID::RecorderOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Recorder"));
             cmd.insert(ItemDescription::new(
                 "Records ambient sounds and conversations. Sometimes it can capture EVP phenomena.",
             ));
-            cmd.insert(GearSprite(GearSpriteID::RecorderOff));
+            cmd.insert(GearSprite(GearSpriteID::RecorderOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::EVPRecording,
@@ -181,12 +181,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Geiger Counter".into(),
             description: "Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience.".into(),
-            sprite_idx: GearSpriteID::GeigerOff,
+            sprite_idx: GearSpriteID::GeigerOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Geiger Counter"));
             cmd.insert(ItemDescription::new("Measures radioactivity by counting alpha and beta particles. It can be used to roughly locate the ghost with patience."));
-            cmd.insert(GearSprite(GearSpriteID::GeigerOff));
+            cmd.insert(GearSprite(GearSpriteID::GeigerOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::CPM500,
@@ -214,12 +214,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "UV Torch".into(),
             description: "Ultraviolet light that can be used to expose evidence invisible to the naked eye since some substances react to it and glow.".into(),
-            sprite_idx: GearSpriteID::UVTorchOff,
+            sprite_idx: GearSpriteID::UVTorchOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("UV Torch"));
             cmd.insert(ItemDescription::new("Ultraviolet light that can be used to expose evidence invisible to the naked eye since some substances react to it and glow."));
-            cmd.insert(GearSprite(GearSpriteID::UVTorchOff));
+            cmd.insert(GearSprite(GearSpriteID::UVTorchOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::UVEctoplasm,
@@ -252,12 +252,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Ion Meter".into(),
             description: "Detects charged particles in the air. Ghost leave a trace as they move and this tool may help following the ghost.".into(),
-            sprite_idx: GearSpriteID::IonMeterOff,
+            sprite_idx: GearSpriteID::IonMeterOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Ion Meter"));
             cmd.insert(ItemDescription::new("Detects charged particles in the air. Ghost leave a trace as they move and this tool may help following the ghost."));
-            cmd.insert(GearSprite(GearSpriteID::IonMeterOff));
+            cmd.insert(GearSprite(GearSpriteID::IonMeterOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
@@ -281,12 +281,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Spirit Box".into(),
             description: "A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living if you're close to its breach, and with the lights off.".into(),
-            sprite_idx: GearSpriteID::SpiritBoxOff,
+            sprite_idx: GearSpriteID::SpiritBoxOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Spirit Box"));
             cmd.insert(ItemDescription::new("A modified AM Radio that constantly changes radio stations. It is said that the ghost can manipulate this to send messages to the living if you're close to its breach, and with the lights off."));
-            cmd.insert(GearSprite(GearSpriteID::SpiritBoxOff));
+            cmd.insert(GearSprite(GearSpriteID::SpiritBoxOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::SpiritBox,
@@ -314,12 +314,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Thermal Imager".into(),
             description: "Heat vision to see easily what's hot and what's cold. Might improve visibility of the paranormal and haunted objects.".into(),
-            sprite_idx: GearSpriteID::ThermalImagerOff,
+            sprite_idx: GearSpriteID::ThermalImagerOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Thermal Imager"));
             cmd.insert(ItemDescription::new("Heat vision to see easily what's hot and what's cold. Might improve visibility of the paranormal and haunted objects."));
-            cmd.insert(GearSprite(GearSpriteID::ThermalImagerOff));
+            cmd.insert(GearSprite(GearSpriteID::ThermalImagerOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
@@ -343,12 +343,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Red Torch".into(),
             description: "A simple red light used by astronomers to see on the dark without losing night vision eye's adaptation. But the ghost might also react to this too.".into(),
-            sprite_idx: GearSpriteID::RedTorchOff,
+            sprite_idx: GearSpriteID::RedTorchOff.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Red Torch"));
             cmd.insert(ItemDescription::new("A simple red light used by astronomers to see on the dark without losing night vision eye's adaptation. But the ghost might also react to this too."));
-            cmd.insert(GearSprite(GearSpriteID::RedTorchOff));
+            cmd.insert(GearSprite(GearSpriteID::RedTorchOff.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(EvidenceSensor {
                 evidence: Evidence::RLPresence,
@@ -380,14 +380,14 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Photo Camera".into(),
             description: "Takes photos, hopefully of something paranormal.".into(),
-            sprite_idx: GearSpriteID::Photocam,
+            sprite_idx: GearSpriteID::Photocam.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Photo Camera"));
             cmd.insert(ItemDescription::new(
                 "Takes photos, hopefully of something paranormal.",
             ));
-            cmd.insert(GearSprite(GearSpriteID::Photocam));
+            cmd.insert(GearSprite(GearSpriteID::Photocam.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
@@ -411,14 +411,14 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Compass".into(),
             description: "Measures the Earth's magnetic field, and sometimes the ghost.".into(),
-            sprite_idx: GearSpriteID::Compass,
+            sprite_idx: GearSpriteID::Compass.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Compass"));
             cmd.insert(ItemDescription::new(
                 "Measures the Earth's magnetic field, and sometimes the ghost.",
             ));
-            cmd.insert(GearSprite(GearSpriteID::Compass));
+            cmd.insert(GearSprite(GearSpriteID::Compass.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Handheld);
@@ -436,14 +436,14 @@ pub(crate) fn register_all(app: &mut App) {
             description:
                 "Measures static electricity in the air. Might warn if the ghost is angering."
                     .into(),
-            sprite_idx: GearSpriteID::EStaticMeter,
+            sprite_idx: GearSpriteID::EStaticMeter.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Electrostatic Meter"));
             cmd.insert(ItemDescription::new(
                 "Measures static electricity in the air. Might warn if the ghost is angering.",
             ));
-            cmd.insert(GearSprite(GearSpriteID::EStaticMeter));
+            cmd.insert(GearSprite(GearSpriteID::EStaticMeter.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
@@ -467,12 +467,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Video Camera NV".into(),
             description: "Mainly used for its infrared night vision, it can also transmit images to the van in real time.".into(),
-            sprite_idx: GearSpriteID::Videocam,
+            sprite_idx: GearSpriteID::Videocam.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Video Camera NV"));
             cmd.insert(ItemDescription::new("Mainly used for its infrared night vision, it can also transmit images to the van in real time."));
-            cmd.insert(GearSprite(GearSpriteID::Videocam));
+            cmd.insert(GearSprite(GearSpriteID::Videocam.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(LightEmitter {
                 power: 35.0,
@@ -505,12 +505,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Motion Sensor".into(),
             description: "Shoots an infrared beam that if cut will make the device beep. Can alert if a presence passes through.".into(),
-            sprite_idx: GearSpriteID::MotionSensor,
+            sprite_idx: GearSpriteID::MotionSensor.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Motion Sensor"));
             cmd.insert(ItemDescription::new("Shoots an infrared beam that if cut will make the device beep. Can alert if a presence passes through."));
-            cmd.insert(GearSprite(GearSpriteID::MotionSensor));
+            cmd.insert(GearSprite(GearSpriteID::MotionSensor.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Toggleable { is_on: false });
             cmd.insert(Battery {
@@ -534,12 +534,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Repellent".into(),
             description: "Crafted in the van, specifically targeting a single ghost type to be effective enough to expel a ghost.".into(),
-            sprite_idx: GearSpriteID::RepelentFlaskEmpty,
+            sprite_idx: GearSpriteID::RepelentFlaskEmpty.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Repellent"));
             cmd.insert(ItemDescription::new("Crafted in the van, specifically targeting a single ghost type to be effective enough to expel a ghost."));
-            cmd.insert(GearSprite(GearSpriteID::RepelentFlaskEmpty));
+            cmd.insert(GearSprite(GearSpriteID::RepelentFlaskEmpty.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Handheld);
             cmd.insert(EquipmentPosition::Stowed);
@@ -554,12 +554,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Quartz Stone".into(),
             description: "A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses.".into(),
-            sprite_idx: GearSpriteID::QuartzStone0,
+            sprite_idx: GearSpriteID::QuartzStone0.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Quartz Stone"));
             cmd.insert(ItemDescription::new("A protective charm that absorbs the ghost's hunting energy, preventing or shortening hunts. The stone gradually cracks and eventually breaks after repeated uses."));
-            cmd.insert(GearSprite(GearSpriteID::QuartzStone0));
+            cmd.insert(GearSprite(GearSpriteID::QuartzStone0.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Handheld);
             cmd.insert(EquipmentPosition::Stowed);
@@ -574,12 +574,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Salt".into(),
             description: "A bottle containing four charges of salt. Players can drop salt piles to repel the ghost and create temporary trails of UV-reactive salt particles.".into(),
-            sprite_idx: GearSpriteID::Salt4,
+            sprite_idx: GearSpriteID::Salt4.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Salt"));
             cmd.insert(ItemDescription::new("A bottle containing four charges of salt. Players can drop salt piles to repel the ghost and create temporary trails of UV-reactive salt particles."));
-            cmd.insert(GearSprite(GearSpriteID::Salt4));
+            cmd.insert(GearSprite(GearSpriteID::Salt4.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Handheld);
             cmd.insert(EquipmentPosition::Stowed);
@@ -594,12 +594,12 @@ pub(crate) fn register_all(app: &mut App) {
         GearMetadata {
             name: "Sage Bundle".into(),
             description: "A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time.".into(),
-            sprite_idx: GearSpriteID::SageBundle0,
+            sprite_idx: GearSpriteID::SageBundle0.to_visual_key(),
         },
         |cmd| {
             cmd.insert(ItemName::new("Sage Bundle"));
             cmd.insert(ItemDescription::new("A bundle of sage that, when activated, burns slowly and emits soothing smoke particles that calm the ghost over time."));
-            cmd.insert(GearSprite(GearSpriteID::SageBundle0));
+            cmd.insert(GearSprite(GearSpriteID::SageBundle0.to_visual_key()));
             cmd.insert(StatusText::default());
             cmd.insert(Handheld);
             cmd.insert(EquipmentPosition::Stowed);

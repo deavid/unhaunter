@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unfoundation_core::types::gear::GearSpriteID;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::motionsensor::MotionSensor;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) fn update_motionsensor(
     mut q_motionsensor: Query<
@@ -23,7 +23,7 @@ pub(crate) fn update_motionsensor(
         // Update Battery Drain Rate
         battery.drain_rate = if toggle.is_on { 0.0001 } else { 0.0 };
 
-        sprite.0 = GearSpriteID::MotionSensor;
+        sprite.0 = GearSpriteID::MotionSensor.to_visual_key();
 
         let on_s = on_off(toggle.is_on);
         let msg = if toggle.is_on {
