@@ -4,8 +4,8 @@ use crate::craft_repellent::craft_repellent;
 use crate::uibutton::TruckButtonType;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
-use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unevents_core::events::mission::MissionEvent;
 use unevents_core::events::truck::TruckUIEvent;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
@@ -14,9 +14,7 @@ use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
-use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
-use unsummary_core::summary::SummaryData;
 use untypes_core::states::{AppState, GameState};
 
 // Component to mark the progress bar for hold buttons
@@ -317,62 +315,21 @@ fn truckui_event_handle(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ev_truckui: MessageReader<TruckUIEvent>,
-    mut next_state: ResMut<NextState<AppState>>,
     mut game_next_state: ResMut<NextState<GameState>>,
     gg: Res<GhostGuess>,
     gc: Res<GameConfig>,
     mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
     audio_settings: Res<Persistent<AudioSettings>>,
-    mut summary_data: ResMut<SummaryData>,
-    board_topology: Res<BoardTopology>,
-    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut q_repellent: Query<&mut RepellentFlask>,
     q_gearkind: Query<&GearKind>,
+    mut ev_mission: MessageWriter<MissionEvent>,
 ) {
     for ev in ev_truckui.read() {
         match ev {
             TruckUIEvent::EndMission => {
-                // Debug: Log the current state of board_topology.map_path
-                info!(
-                    "[EndMission] Current board_topology.map_path: '{}'",
-                    board_topology.map_path
-                );
-
-                let initial_deposit_held = player_profile.progression.insurance_deposit;
-
-                player_profile.progression.bank += initial_deposit_held;
-                player_profile.progression.insurance_deposit = 0;
-
-                if let Err(e) = player_profile.persist() {
-                    panic!("Failed to persist PlayerProfileData: {:?}", e);
-                }
-
-                // Set summary_data.current_mission_id from board_topology.map_path
-                summary_data.map_path = board_topology.map_path.clone();
-
-                // Debug: Log the updated value of summary_data.current_mission_id
-                info!(
-                    "[EndMission] Set summary_data.current_mission_id to: '{}'",
-                    summary_data.map_path
-                );
-
-                summary_data.deposit_originally_held = initial_deposit_held;
-                summary_data.deposit_returned_to_bank = initial_deposit_held;
-                summary_data.costs_deducted_from_deposit = 0;
-                summary_data.money_earned = 0;
-
-                if summary_data.ghosts_unhaunted == summary_data.ghost_types.len() as u32 {
-                    // All ghosts were unhaunted, successful completion
-                    summary_data.mission_successful = true;
-                } else {
-                    summary_data.mission_successful = false;
-                }
-                // grade_achieved is now determined in the summary screen based on mission_successful
-
-                game_next_state.set(GameState::None);
-                next_state.set(AppState::Summary);
+                ev_mission.write(MissionEvent::End);
             }
             TruckUIEvent::ExitTruck => game_next_state.set(GameState::None),
             TruckUIEvent::CraftRepellent => {

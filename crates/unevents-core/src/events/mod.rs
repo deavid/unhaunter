@@ -4,6 +4,7 @@ pub mod ghost_interaction;
 pub mod hint;
 pub mod loadlevel;
 pub mod map_selected;
+pub mod mission;
 pub mod npc_help;
 pub mod roomchanged;
 pub mod sound;

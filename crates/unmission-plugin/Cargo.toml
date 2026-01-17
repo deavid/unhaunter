@@ -1,0 +1,21 @@
+[package]
+name = "unmission-plugin"
+version.workspace = true
+edition.workspace = true
+description = "Mission lifecycle logic for Unhaunter"
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unboard-core = { path = "../unboard-core" }
+unevents-core = { path = "../unevents-core" }
+untypes-core = { path = "../untypes-core" }
+unsummary-core = { path = "../unsummary-core" }
+unprofile-core = { path = "../unprofile-core" }
+
+bevy = { workspace = true }
+bevy-persistent = { workspace = true }

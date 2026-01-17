@@ -173,7 +173,7 @@ fn load_level_handler(
     // ---------- NEW MAP LOAD ----------
     // Create containers for different entity types
     let mut player_spawn_points: Vec<Position> = vec![];
-    let mut ghost_spawn_points: Vec<Position> = vec![];
+    let mut hostile_spawn_points: Vec<Position> = vec![];
     let mut van_entry_points: Vec<Position> = vec![];
     let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
 
@@ -214,7 +214,7 @@ fn load_level_handler(
                 &mut p,
                 &mut commands,
                 &mut player_spawn_points,
-                &mut ghost_spawn_points,
+                &mut hostile_spawn_points,
                 &mut van_entry_points,
                 &mut movable_objects,
                 &mut c,
@@ -233,7 +233,7 @@ fn load_level_handler(
     ev_entities_ready.write(MapEntitiesReadyEvent {
         movable_objects: movable_objects.clone(),
         player_spawn_points: player_spawn_points.clone(),
-        ghost_spawn_points: ghost_spawn_points.clone(),
+        hostile_spawn_points: hostile_spawn_points.clone(),
         van_entry_points: van_entry_points.clone(),
     });
     warn!("Done: load_level_handler");

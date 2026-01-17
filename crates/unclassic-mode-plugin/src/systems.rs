@@ -61,7 +61,7 @@ pub fn classic_mode_orchestrator(
     };
 
     let player_spawn_points = &ev.player_spawn_points;
-    let ghost_spawn_points = &ev.ghost_spawn_points;
+    let ghost_spawn_points = &ev.hostile_spawn_points;
     let van_entry_points = &ev.van_entry_points;
 
     if player_spawn_points.is_empty() {

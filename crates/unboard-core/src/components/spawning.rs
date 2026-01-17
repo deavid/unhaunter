@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-/// A component that marks a location where a ghost can be spawned.
+/// A component that marks a location where a hostile entity can be spawned.
 #[derive(Component, Debug, Clone, Copy, Default)]
-pub struct GhostSpawnPoint;
+pub struct HostileSpawnPoint;
 
 /// A component that marks a location where a player can be spawned.
 #[derive(Component, Debug, Clone, Copy, Default)]

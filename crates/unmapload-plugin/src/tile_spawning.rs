@@ -6,7 +6,7 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Util;
 use unbehavior::state::TileState;
-use unboard_core::components::spawning::{GhostSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
+use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
@@ -45,7 +45,7 @@ pub(crate) fn process_and_spawn_tile(
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
     player_spawn_points: &mut Vec<Position>,
-    ghost_spawn_points: &mut Vec<Position>,
+    hostile_spawn_points: &mut Vec<Position>,
     van_entry_points: &mut Vec<Position>,
     movable_objects: &mut Vec<Entity>,
     c: &mut f32,
@@ -131,8 +131,8 @@ pub(crate) fn process_and_spawn_tile(
             commands.spawn((new_pos, PlayerSpawnPoint, GameSprite));
         }
         Util::GhostSpawn => {
-            ghost_spawn_points.push(new_pos);
-            commands.spawn((new_pos, GhostSpawnPoint, GameSprite));
+            hostile_spawn_points.push(new_pos);
+            commands.spawn((new_pos, HostileSpawnPoint, GameSprite));
         }
         Util::RoomDef(name) => {
             p.roomdb

@@ -17,6 +17,7 @@ use unmapload_plugin::plugin::UnhaunterMapLoadPlugin;
 use unmenu_plugin::plugin::UnhaunterCoreMenuPlugin;
 use unmenusettings_plugin::plugin::UnhaunterMenuSettingsPlugin;
 use unmetrics_plugin::plugin::UnmetricsPlugin;
+use unmission_plugin::MissionPlugin;
 use unnpc_plugin::plugin::UnhaunterNPCPlugin;
 use unpicking_plugin::plugin::CustomSpritePickingPlugin;
 use unplayer_plugin::plugin::UnhaunterPlayerPlugin;
@@ -73,6 +74,7 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterManualPlugin,
         UnhaunterSummaryPlugin,
         UnhaunterGearPlugin,
+        MissionPlugin,
     ));
     app.add_plugins((
         UnhaunterGearItemsPlugin,
