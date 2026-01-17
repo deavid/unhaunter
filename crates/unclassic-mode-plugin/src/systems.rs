@@ -1,19 +1,22 @@
-//! # Entity Spawning Module
-//!
-//! This module is responsible for spawning various game entities like players, ghosts, and ambient sounds.
-//! It handles the creation of these entities with all their required components and initial configuration.
-
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use bevy_persistent::Persistent;
 use ordered_float::OrderedFloat;
-use rand::seq::SliceRandom;
+use rand::prelude::IndexedRandom;
+use unbehavior::roomdb::RoomDB;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unboard_core::resources::board_topology::BoardTopology;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unevents_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
 use unfoundation_core::random_seed;
 use unfoundation_core::types::sound::SoundType;
 use ungear_core::components::playergear::PlayerGear;
+use ungear_core::resources::spawner::GearSpawnerRegistry;
 use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::resources::haunt_state::HauntState;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::Stamina;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
@@ -26,67 +29,68 @@ use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
 
-use crate::level_setup::LoadLevelSystemParam;
+#[derive(SystemParam)]
+pub struct ClassicModeSystemParam<'w> {
+    pub asset_server: Res<'w, AssetServer>,
+    pub haunt_state: ResMut<'w, HauntState>,
+    pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
+    pub ghost_assets: Res<'w, unghost_core::assets::GhostAssets>,
+    pub difficulty: Res<'w, CurrentDifficulty>,
+    pub gear_registry: Res<'w, GearSpawnerRegistry>,
+    pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
+    pub control_settings: Res<'w, Persistent<unsettings_core::controls::ControlKeys>>,
+    pub board_topology: Res<'w, BoardTopology>,
+    pub roomdb: Res<'w, RoomDB>,
+}
 
-/// Spawns the player entity with all needed components.
-///
-/// This function handles:
-/// - Selecting a spawn point from the available options
-/// - Creating the player entity with appropriate appearance and components
-/// - Setting up player controls and equipment
-/// - Determining if the van should be open based on player position
-///
-/// # Arguments
-/// * `p` - System parameters containing resources for player setup
-/// * `commands` - Command buffer for entity creation
-/// * `player_spawn_points` - List of potential spawn positions for the player
-/// * `van_entry_points` - List of van entry positions (used to determine van open state)
-///
-/// # Returns
-/// Boolean indicating if the van should be open (based on player proximity)
-pub(crate) fn spawn_player(
-    p: &LoadLevelSystemParam,
-    commands: &mut Commands,
-    player_spawn_points: &mut Vec<Position>,
-    van_entry_points: &[Position],
-) -> bool {
-    // Shuffle spawn points for randomization
-    player_spawn_points.shuffle(&mut random_seed::rng());
+pub fn classic_mode_orchestrator(
+    mut p: ClassicModeSystemParam,
+    mut commands: Commands,
+    mut ev_level_ready: MessageWriter<LevelReadyEvent>,
+    mut ev_entities_ready: MessageReader<MapEntitiesReadyEvent>,
+    q_ghost_breach: Query<&Position, With<GhostBreach>>,
+    q_player_sprite: Query<&Position, With<PlayerSprite>>,
+    q_position: Query<&Position>,
+) {
+    let Some(ev) = ev_entities_ready.read().next() else {
+        return;
+    };
+
+    let player_spawn_points = &ev.player_spawn_points;
+    let ghost_spawn_points = &ev.ghost_spawn_points;
+    let van_entry_points = &ev.van_entry_points;
+
     if player_spawn_points.is_empty() {
-        error!(
-            "No player spawn points found!! - that will probably not display the map because the player will be out of bounds"
-        );
-        return false;
+        error!("No player spawn points found!!");
+        return;
     }
 
-    // Select and convert the spawn position
-    let player_position = player_spawn_points.pop().unwrap();
+    // --- Spawn Player ---
+    let mut rng = random_seed::rng();
+    let player_position = player_spawn_points.choose(&mut rng).copied().unwrap();
     let player_scoord = player_position.to_screen_coord();
 
-    // Spawn gear from difficulty settings
     let mut player_gear = PlayerGear::default();
-
     if p.difficulty.0.player_gear.left_hand.is_some() {
         player_gear.left_hand = Some(
             p.gear_registry
-                .spawn(commands, p.difficulty.0.player_gear.left_hand),
+                .spawn(&mut commands, p.difficulty.0.player_gear.left_hand),
         );
     }
     if p.difficulty.0.player_gear.right_hand.is_some() {
         player_gear.right_hand = Some(
             p.gear_registry
-                .spawn(commands, p.difficulty.0.player_gear.right_hand),
+                .spawn(&mut commands, p.difficulty.0.player_gear.right_hand),
         );
     }
     for kind in &p.difficulty.0.player_gear.inventory {
         if kind.is_some() {
             player_gear
                 .inventory
-                .push(p.gear_registry.spawn(commands, *kind));
+                .push(p.gear_registry.spawn(&mut commands, *kind));
         }
     }
 
-    // Calculate distance to nearest van entry point
     let dist_to_van = van_entry_points
         .iter()
         .map(|v| OrderedFloat(v.distance(&player_position)))
@@ -94,7 +98,8 @@ pub(crate) fn spawn_player(
         .unwrap_or(OrderedFloat(1000.0))
         .into_inner();
 
-    // Spawn the player entity
+    let open_van = dist_to_van < 8.0 && p.difficulty.0.van_auto_open;
+
     commands
         .spawn(Sprite {
             image: p.player_assets.character.clone(),
@@ -110,10 +115,8 @@ pub(crate) fn spawn_player(
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(GameSprite)
-        .insert(player_gear)
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
-        // Update the SpatialListener to use the ear offset from audio settings
         .insert(SpatialListener::new(
             -p.audio_settings.sound_output.to_ear_offset(),
         ))
@@ -125,61 +128,41 @@ pub(crate) fn spawn_player(
             CharacterAnimation::from_dir(0.5, 0.5).to_vec(),
         ))
         .insert(Stamina::default())
-        .insert(unnavigation_core::components::waypoint::WaypointQueue::default());
-
-    // Determine if the van should be open based on distance to van and difficulty setting
-    dist_to_van < 8.0 && p.difficulty.0.van_auto_open
-}
-
-/// Spawns the ghost entity and its breach with all required components.
-///
-/// This function:
-/// - Selects a ghost spawn point
-/// - Determines the ghost type based on difficulty settings
-/// - Creates both the ghost breach and ghost entity
-/// - Updates the evidence list in the board data
-/// - Sets up the SummaryData resource
-///
-/// # Arguments
-/// * `p` - System parameters containing resources for ghost setup
-/// * `commands` - Command buffer for entity creation
-/// * `ghost_spawn_points` - List of potential spawn positions for the ghost
-pub(crate) fn spawn_ghosts(
-    p: &mut LoadLevelSystemParam,
-    commands: &mut Commands,
-    ghost_spawn_points: &mut [Position],
-) {
-    // Clear existing evidence records and get RNG
-    p.haunt_state.evidences.clear();
-    let mut rng = random_seed::rng();
-
-    // Select a ghost spawn point using the selection function
-    let ghost_spawn = crate::selection::select_ghost_spawn_point(ghost_spawn_points, &mut rng)
-        .unwrap_or_else(|| {
-            error!(
-                "No ghost spawn points found!! - that will probably break the gameplay as the ghost will spawn out of bounds"
-            );
-            // Fallback to a default position if no spawn points are available
-            Position::new_i64(0, 0, 0)
+        .insert(unnavigation_core::components::waypoint::WaypointQueue::default())
+        .insert(player_gear)
+        .with_children(|parent| {
+            parent
+                .spawn(Sprite {
+                    image: p.ghost_assets.focus_ring_vignette.clone(),
+                    color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                    ..default()
+                })
+                .insert(
+                    Transform::from_scale(Vec3::splat(1.1))
+                        .with_translation(Vec3::new(0.0, 0.1, 0.01)),
+                )
+                .insert(FocusRing::default());
         });
 
-    // Determine ghost type based on difficulty settings
+    // --- Spawn Ghost ---
+    p.haunt_state.evidences.clear();
+
+    let ghost_spawn = ghost_spawn_points
+        .choose(&mut rng)
+        .copied()
+        .unwrap_or(Position::new_i64(0, 0, 0));
+
     let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
     let ghost_types = vec![ghost_sprite.class];
 
-    // Collect ghost evidences in board data
     for evidence in ghost_sprite.class.evidences() {
         p.haunt_state.evidences.insert(evidence);
     }
-
-    // Store breach position in board data
     p.haunt_state.breach_pos = ghost_spawn;
 
-    // Update summary data resource with ghost information
     commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 
-    // Spawn the ghost breach entity
     let breach_id = commands
         .spawn(Sprite {
             image: p.ghost_assets.breach.clone(),
@@ -213,7 +196,6 @@ pub(crate) fn spawn_ghosts(
         })
         .id();
 
-    // Spawn the ghost entity
     commands
         .spawn(Sprite {
             image: p.ghost_assets.ghost.clone(),
@@ -247,21 +229,24 @@ pub(crate) fn spawn_ghosts(
                 )
                 .insert(FocusRing::default());
         });
+
+    spawn_ambient_sounds(&p, &mut commands);
+
+    crate::influence_system::assign_ghost_influence(
+        &mut commands,
+        &ev.movable_objects,
+        &q_ghost_breach,
+        &q_player_sprite,
+        &q_position,
+        &p.roomdb,
+        &p.board_topology,
+        &p.haunt_state,
+    );
+
+    ev_level_ready.write(LevelReadyEvent { open_van });
 }
 
-/// Spawns ambient sound entities for the game environment.
-///
-/// This function creates audio entities for various ambient sounds:
-/// - Background house sounds
-/// - Background street sounds
-/// - Heartbeat sounds
-/// - Insanity sounds
-///
-/// # Arguments
-/// * `p` - System parameters containing asset server
-/// * `commands` - Command buffer for entity creation
-pub(crate) fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Commands) {
-    // Spawn background house sound
+fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
     commands
         .spawn(AudioPlayer::new(
             p.asset_server.load("sounds/background-noise-house-1.ogg"),
@@ -279,7 +264,6 @@ pub(crate) fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Comm
             class: SoundType::BackgroundHouse,
         });
 
-    // Spawn background street sound
     commands
         .spawn(AudioPlayer::new(
             p.asset_server.load("sounds/ambient-clean.ogg"),
@@ -297,7 +281,6 @@ pub(crate) fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Comm
             class: SoundType::BackgroundStreet,
         });
 
-    // Spawn heartbeat sound
     commands
         .spawn(AudioPlayer::new(
             p.asset_server.load("sounds/heartbeat-1.ogg"),
@@ -315,7 +298,6 @@ pub(crate) fn spawn_ambient_sounds(p: &LoadLevelSystemParam, commands: &mut Comm
             class: SoundType::HeartBeat,
         });
 
-    // Spawn insane sound
     commands
         .spawn(AudioPlayer::new(p.asset_server.load("sounds/insane-1.ogg")))
         .insert(PlaybackSettings {

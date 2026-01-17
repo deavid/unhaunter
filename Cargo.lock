@@ -5684,6 +5684,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "unclassic-mode-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "bevy_platform",
+ "ordered-float 5.1.0",
+ "rand 0.9.2",
+ "unbehavior",
+ "unboard-core",
+ "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
+ "ungear-core",
+ "unghost-core",
+ "unmapload-core",
+ "unnavigation-core",
+ "unplayer-core",
+ "unrender-std",
+ "unsettings-core",
+ "unspatial-core",
+ "unsummary-core",
+ "untags-core",
+]
+
+[[package]]
 name = "undifficulty-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -5907,6 +5933,7 @@ dependencies = [
  "bevy",
  "clap",
  "uncampaign-plugin",
+ "unclassic-mode-plugin",
  "unfog-plugin",
  "ungame-plugin",
  "ungear-plugin",
@@ -6104,28 +6131,17 @@ name = "unmapload-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
  "ndarray",
- "ordered-float 5.1.0",
- "rand 0.9.2",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
- "unfoundation-core",
- "ungear-core",
- "unghost-core",
  "unlight-plugin",
  "unmapload-core",
- "unnavigation-core",
- "unplayer-core",
  "unrender-std",
- "unsettings-core",
  "unspatial-core",
- "unsummary-core",
- "untags-core",
  "untiled-core",
  "untypes-core",
 ]

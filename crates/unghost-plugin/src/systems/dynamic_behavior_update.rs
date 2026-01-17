@@ -1,7 +1,7 @@
 use bevy::prelude::*;
+use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::evidence::Evidence;
-use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::resources::haunt_state::HauntState;
@@ -156,10 +156,6 @@ fn sync_ghost_emitters(
 pub(crate) fn app_setup(app: &mut bevy::prelude::App) {
     app.add_systems(
         bevy::prelude::Update,
-        (
-            update_ghost_behavior_dynamics_system,
-            sync_ghost_emitters,
-        )
-            .chain(),
+        (update_ghost_behavior_dynamics_system, sync_ghost_emitters).chain(),
     );
 }

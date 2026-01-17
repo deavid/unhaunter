@@ -1,0 +1,34 @@
+[package]
+name = "unclassic-mode-plugin"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+undifficulty-core = { path = "../undifficulty-core" }
+unfoundation-core = { path = "../unfoundation-core" }
+unboard-core = { path = "../unboard-core" }
+unbehavior = { path = "../unbehavior" }
+unevents-core = { path = "../unevents-core" }
+unsummary-core = { path = "../unsummary-core" }
+unspatial-core = { path = "../unspatial-core" }
+unghost-core = { path = "../unghost-core" }
+unplayer-core = { path = "../unplayer-core" }
+ungear-core = { path = "../ungear-core" }
+unrender-std = { path = "../unrender-std" }
+untags-core = { path = "../untags-core" }
+unmapload-core = { path = "../unmapload-core" }
+unsettings-core = { path = "../unsettings-core" }
+unnavigation-core = { path = "../unnavigation-core" }
+
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+bevy-persistent = { workspace = true }
+rand = { workspace = true }
+ordered-float = { workspace = true }

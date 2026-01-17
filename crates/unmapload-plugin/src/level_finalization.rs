@@ -206,9 +206,11 @@ fn load_map_add_prebaked_lighting(
 pub(crate) fn app_setup(app: &mut App) {
     use bevy::prelude::on_message;
     use unevents_core::events::loadlevel::LevelReadyEvent;
-    app.add_systems(Update, (process_pre_meshes, after_level_ready))
-        .add_systems(
-            Update,
-            load_map_add_prebaked_lighting.run_if(on_message::<LevelReadyEvent>),
-        );
+
+    app.add_systems(Update, process_pre_meshes).add_systems(
+        Update,
+        (load_map_add_prebaked_lighting, after_level_ready)
+            .chain()
+            .run_if(on_message::<LevelReadyEvent>),
+    );
 }

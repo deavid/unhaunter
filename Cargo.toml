@@ -4,6 +4,7 @@ members = [
     "crates/tools/ghost_radio",
     "crates/tools/text_to_speech/walkie_voice_generator",
     "crates/uncampaign-plugin",
+    "crates/unclassic-mode-plugin",
     "crates/unassets-core",
     "crates/unbehavior",
     "crates/unboard-core",
@@ -146,6 +147,7 @@ anyhow = { workspace = true }
 untypes-core = { path = "crates/untypes-core" }
 
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
+unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear-plugin = { path = "crates/ungear-plugin" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }

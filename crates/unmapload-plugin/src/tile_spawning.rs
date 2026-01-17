@@ -6,6 +6,7 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Util;
 use unbehavior::state::TileState;
+use unboard_core::components::spawning::{GhostSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
@@ -57,7 +58,7 @@ pub(crate) fn process_and_spawn_tile(
         .expect("Map references non-existent tileset+tileuid");
 
     // Spawn the base entity
-    let mut entity = {
+    let entity_id = {
         let mut b = mt.bundle.clone();
         let mut beh = mt.behavior.clone();
 
@@ -75,7 +76,7 @@ pub(crate) fn process_and_spawn_tile(
         let mat = p.materials1.add(mat);
         b.material = MeshMaterial2d(mat);
 
-        commands.spawn(b)
+        commands.spawn(b).id()
     };
 
     // Calculate position on the map
@@ -123,13 +124,15 @@ pub(crate) fn process_and_spawn_tile(
         ..pos
     };
 
-    // Handle special tile types based on utility
+    // Handle special tile types based on utility (spawning separate entities)
     match &mt.behavior.p.util {
         Util::PlayerSpawn => {
             player_spawn_points.push(new_pos);
+            commands.spawn((new_pos, PlayerSpawnPoint, GameSprite));
         }
         Util::GhostSpawn => {
             ghost_spawn_points.push(new_pos);
+            commands.spawn((new_pos, GhostSpawnPoint, GameSprite));
         }
         Util::RoomDef(name) => {
             p.roomdb
@@ -139,9 +142,13 @@ pub(crate) fn process_and_spawn_tile(
         }
         Util::Van => {
             van_entry_points.push(new_pos);
+            commands.spawn((new_pos, VanEntryPoint, GameSprite));
         }
         Util::None => {}
     }
+
+    // Now finish setting up the main tile entity
+    let mut entity = commands.entity(entity_id);
 
     // Add behavior-specific components
     crate::factory::apply_components_to_entity(&mt.behavior, &mut entity, layer);
@@ -150,7 +157,7 @@ pub(crate) fn process_and_spawn_tile(
     let mut beh = mt.behavior.clone();
 
     // Register the entity in the board's map entity field
-    p.bef.0[pos.to_board_position().ndidx()].push(entity.id());
+    p.bef.0[pos.to_board_position().ndidx()].push(entity_id);
 
     // Handle horizontal flipping for behavior
     beh.flip(tile.flip_x);
@@ -162,14 +169,19 @@ pub(crate) fn process_and_spawn_tile(
     if mt.behavior.p.object.movable {
         // FIXME: It does not check if the item is in a valid room, since the rooms are
         // still being constructed at this point. This is something to fix later on.
-        movable_objects.push(entity.id());
+        movable_objects.push(entity_id);
     }
 
     // Add standard components to all tile entities
+    let mut transform = Transform::from_xyz(t_x, t_y, pos.global_z);
+    if tile.flip_x {
+        transform.scale.x = -1.0;
+    }
     entity
         .insert(beh)
         .insert(GameSprite)
         .insert(MapTileSprite)
         .insert(pos)
-        .insert(Visibility::Hidden);
+        .insert(Visibility::Hidden)
+        .insert(transform);
 }

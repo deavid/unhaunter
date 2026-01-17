@@ -5,7 +5,6 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_persistent::Persistent;
 use bevy_platform::collections::HashMap;
 use ndarray::Array3;
 use unbehavior::roomdb::RoomDB;
@@ -15,10 +14,8 @@ use unboard_core::resources::board_topology::{
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{
-    LevelLoadedEvent, LevelReadyEvent, MapGeometryInitializedEvent,
+    LevelLoadedEvent, MapEntitiesReadyEvent, MapGeometryInitializedEvent,
 };
-use ungear_core::resources::spawner::GearSpawnerRegistry;
-use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
@@ -26,7 +23,6 @@ use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
 
-use crate::entity_spawning;
 use crate::sprite_db;
 use crate::tile_spawning;
 
@@ -40,28 +36,17 @@ use crate::tile_spawning;
 /// Using this as a system parameter simplifies function signatures throughout the level loading process.
 #[derive(SystemParam)]
 pub(crate) struct LoadLevelSystemParam<'w> {
-    pub asset_server: Res<'w, AssetServer>,
     pub bf: ResMut<'w, BoardTopology>,
     pub bef: ResMut<'w, BoardEntityField>,
     pub bcf: ResMut<'w, BoardCollisionField>,
-    pub haunt_state: ResMut<'w, HauntState>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
     pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,
-    pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
-    pub ghost_assets: Res<'w, unghost_core::assets::GhostAssets>,
     pub roomdb: ResMut<'w, RoomDB>,
     pub difficulty: Res<'w, CurrentDifficulty>,
-    pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
-    pub control_settings: Res<'w, Persistent<unsettings_core::controls::ControlKeys>>,
-    pub gear_registry: Res<'w, GearSpawnerRegistry>,
 }
-
-/// Marker component to handle ghost influence assignment after level loading is complete
-#[derive(Component)]
-pub(crate) struct AssignGhostInfluenceMarker(pub Vec<Entity>);
 
 /// Loads a new level based on the `LevelLoadedEvent`.
 ///
@@ -85,7 +70,7 @@ fn load_level_handler(
     qgs: Query<Entity, With<GameSprite>>,
     qgs2: Query<Entity, With<GameSound>>,
     mut p: LoadLevelSystemParam,
-    mut ev_level_ready: MessageWriter<LevelReadyEvent>,
+    mut ev_entities_ready: MessageWriter<MapEntitiesReadyEvent>,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
 ) {
@@ -181,9 +166,6 @@ fn load_level_handler(
         origin: p.bf.origin,
     });
 
-    // Spawn ambient sound entities
-    entity_spawning::spawn_ambient_sounds(&p, &mut commands);
-
     // Initialize board data resource
     commands.init_resource::<BoardTopology>();
     warn!("Level Loaded: {}", &loaded_event.map_filepath);
@@ -247,22 +229,13 @@ fn load_level_handler(
         );
     }
 
-    // Schedule ghost influence assignment for after level loading
-    commands.spawn(AssignGhostInfluenceMarker(movable_objects.clone()));
-
-    // Spawn player entity
-    let open_van = entity_spawning::spawn_player(
-        &p,
-        &mut commands,
-        &mut player_spawn_points,
-        &van_entry_points,
-    );
-
-    // Spawn ghost and breach entities
-    entity_spawning::spawn_ghosts(&mut p, &mut commands, &mut ghost_spawn_points);
-
-    // Send level ready event
-    ev_level_ready.write(LevelReadyEvent { open_van });
+    // Send entities ready event
+    ev_entities_ready.write(MapEntitiesReadyEvent {
+        movable_objects: movable_objects.clone(),
+        player_spawn_points: player_spawn_points.clone(),
+        ghost_spawn_points: ghost_spawn_points.clone(),
+        van_entry_points: van_entry_points.clone(),
+    });
     warn!("Done: load_level_handler");
 }
 
