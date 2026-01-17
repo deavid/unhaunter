@@ -23,7 +23,9 @@ use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::visuals::{
+    AlphaModulator, EctoplasmVisuals, InfraredSensitive, LightSensitive, UltravioletSensitive,
+};
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -120,8 +122,11 @@ pub fn classic_mode_orchestrator(
         .insert(SpatialListener::new(
             -p.audio_settings.sound_output.to_ear_offset(),
         ))
-        .insert(SpriteType::Player)
         .insert(player_position)
+        .insert(LightSensitive {
+            exposure_factor: 1.1,
+            bias: 0.1,
+        })
         .insert(Direction::new_right())
         .insert(AnimationTimer::from_range(
             Timer::from_seconds(0.20, TimerMode::Repeating),
@@ -172,9 +177,23 @@ pub fn classic_mode_orchestrator(
         .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
-        .insert(SpriteType::Breach)
         .insert(GhostBreach)
         .insert(ghost_spawn)
+        .insert(LightSensitive {
+            exposure_factor: 1.2,
+            bias: 0.2,
+        })
+        .insert(UltravioletSensitive {
+            intensity: 1.0,
+            color_shift: 1.0,
+        })
+        .insert(AlphaModulator {
+            frequency: 0.92,
+            amplitude: 0.5,
+        })
+        .insert(EctoplasmVisuals {
+            use_breach_curve: true,
+        })
         .insert(ThermalEmitter {
             room_restricted: true,
             ..default()
@@ -205,11 +224,29 @@ pub fn classic_mode_orchestrator(
         .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
-        .insert(SpriteType::Ghost)
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
         .insert(ghost_spawn)
+        .insert(LightSensitive {
+            exposure_factor: 0.5,
+            bias: 0.0,
+        })
+        .insert(UltravioletSensitive {
+            intensity: 1.0,
+            ..default()
+        })
+        .insert(InfraredSensitive {
+            intensity: 1.0,
+            ..default()
+        })
+        .insert(AlphaModulator {
+            frequency: 1.0,
+            amplitude: 0.5,
+        })
+        .insert(EctoplasmVisuals {
+            use_breach_curve: false,
+        })
         .insert(ThermalEmitter {
             room_restricted: true,
             ..default()

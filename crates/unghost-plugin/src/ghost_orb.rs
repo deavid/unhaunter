@@ -9,7 +9,7 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::visuals::InfraredSensitive;
 use unspatial_core::position::Position;
 
 // Timer resource for controlling orb spawn rate (~1 per second)
@@ -72,7 +72,10 @@ pub(crate) fn spawn_ghost_orb_particles(
             .insert(MapColor {
                 color: Color::WHITE,
             })
-            .insert(SpriteType::GhostOrb)
+            .insert(InfraredSensitive {
+                intensity: 1.0,
+                thresholds: Some(0.5),
+            })
             .insert(GhostOrbParticle::new(
                 5.0, // 5 second lifetime
                 time.elapsed_secs(),

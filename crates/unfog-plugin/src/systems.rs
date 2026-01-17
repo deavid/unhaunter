@@ -17,7 +17,7 @@ use unnoise_core::perlin::PerlinNoise;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::visuals::LightSensitive;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
@@ -225,7 +225,10 @@ fn spawn_miasma(
                     direction: miasma.velocity_field[bpos.ndidx()],
                 })
                 .insert(Transform::from_scale(Vec3::new(scale, scale, 1.0)))
-                .insert(SpriteType::Miasma)
+                .insert(LightSensitive {
+                    exposure_factor: 0.5,
+                    bias: 0.6,
+                })
                 .insert(pos)
                 .insert(GameSprite);
             *pos_count += 1;

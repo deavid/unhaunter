@@ -65,7 +65,9 @@ use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::visuals::{
+    EctoplasmVisuals, InfraredSensitive, LightSensitive, UltravioletSensitive,
+};
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::light::{compute_color_exposure, lerp_color};
@@ -262,9 +264,14 @@ fn apply_lighting(
     time: Res<Time>,
     mut sprite_set: ParamSet<(
         Query<(
+            Entity,
             &Position,
             &mut Sprite,
-            &SpriteType,
+            Option<&LightSensitive>,
+            Option<&UltravioletSensitive>,
+            Option<&InfraredSensitive>,
+            Option<&EctoplasmVisuals>,
+            Option<&PlayerSprite>,
             Option<&GhostSprite>,
             Option<&MapColor>,
             Option<&UVReactive>,
@@ -824,8 +831,22 @@ fn apply_lighting(
 
     // Light ilumination for sprites on map that aren't part of the map (player,
     // ghost, ghost breach)
-    for (pos, mut sprite, o_type, o_gs, o_color, uv_reactive, o_miasma, _o_orb) in qt.iter_mut() {
-        let sprite_type = o_type.clone();
+    for (
+        _entity,
+        pos,
+        mut sprite,
+        o_light_sens,
+        _o_uv_sens,
+        o_ir_sens,
+        o_ecto_vis,
+        o_player,
+        o_gs,
+        o_color,
+        uv_reactive,
+        o_miasma,
+        _o_orb,
+    ) in qt.iter_mut()
+    {
         let bpos = pos.to_board_position_size(bf.map_size);
         let map_color = o_color.map(|x| x.color).unwrap_or_default();
         let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
@@ -869,42 +890,31 @@ fn apply_lighting(
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
             let mut rel_lux = ld_mag / exposure;
             rel_lux += ld.ultraviolet * uv_reactive * 5.0;
-            if sprite_type == SpriteType::Ghost {
-                rel_lux /= 2.0;
-            }
-            if sprite_type == SpriteType::Player {
-                rel_lux *= 1.1;
-                rel_lux += 0.1;
-            }
-            if sprite_type == SpriteType::Breach {
-                rel_lux *= 1.2;
-                rel_lux += 0.2;
-            }
-            if sprite_type == SpriteType::Miasma {
-                rel_lux /= 2.0;
-                rel_lux += 0.6;
+
+            if let Some(light_sens) = o_light_sens {
+                rel_lux *= light_sens.exposure_factor;
+                rel_lux += light_sens.bias;
             }
             compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };
 
         // 20.0;
         let mut smooth: f32 = 1.0;
-        if sprite_type == SpriteType::GhostOrb {
+        if let Some(ir_sens) = o_ir_sens
+            && let Some(threshold) = ir_sens.thresholds
+        {
             smooth = 10.0;
             let total_light =
                 ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
             let ir_ratio = ld_abs.infrared / total_light;
-            if ir_ratio > 0.5 && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
+            if ir_ratio > threshold && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
                 opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
-                opacity = opacity.clamp(0.0, 1.0);
+                opacity = (opacity * ir_sens.intensity).clamp(0.0, 1.0);
             } else {
                 opacity = 0.0;
             }
         }
-        if sprite_type == SpriteType::Ghost {
-            let Some(gs) = o_gs else {
-                continue;
-            };
+        if let Some(gs) = o_gs {
             if gs.hunt_warning_active {
                 dst_color = lerp_color(
                     css::RED.into(),
@@ -970,7 +980,9 @@ fn apply_lighting(
             smooth = 1.0;
             dst_color = lerp_color(sprite.color, dst_color, 0.1);
         }
-        if sprite_type == SpriteType::Breach {
+        if let Some(ecto) = o_ecto_vis
+            && ecto.use_breach_curve
+        {
             smooth = 2.0;
             let e_nv = ld.ultraviolet.cbrt() / 10.0 * difficulty.0.evidence_visibility
                 - ld.infrared * 3.0
@@ -1005,82 +1017,63 @@ fn apply_lighting(
                 )
                 .into();
         }
-        let mut old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
-        if sprite_type == SpriteType::Other {
-            // Old code to make the van semitransparent when the player walked behind, no longer in use
-            // because the Van is no longer a sprite - now it works as a regular tile.
-            const MAX_DIST: f32 = 8.0;
-            let dist = pos.distance(&player_pos);
-            if dist < MAX_DIST {
-                let delta_z = pos.to_screen_coord().z - player_pos.to_screen_coord().z;
-                if delta_z > 0.0 {
-                    old_a /= 1.1;
-                }
-            }
-        }
-        if sprite_type == SpriteType::Miasma {
+        let old_a = (sprite.color.alpha()).clamp(0.0001, 1.0);
+        if let Some(miasma_sprite) = o_miasma {
             let bpos = pos.to_board_position();
-            if let Some(miasma_sprite) = o_miasma {
-                let mut total_pressure = 0.0;
-                let mut total_weight = 0.0;
+            let mut total_pressure = 0.0;
+            let mut total_weight = 0.0;
 
-                for dx in -1..1 {
-                    for dy in -1..1 {
-                        let neighbor_pos = BoardPosition {
-                            x: bpos.x + dx,
-                            y: bpos.y + dy,
-                            z: bpos.z,
-                        };
+            for dx in -1..1 {
+                for dy in -1..1 {
+                    let neighbor_pos = BoardPosition {
+                        x: bpos.x + dx,
+                        y: bpos.y + dy,
+                        z: bpos.z,
+                    };
 
-                        if let Some(neighbor_pressure) =
-                            miasma.pressure_field.get(neighbor_pos.ndidx())
-                        {
-                            // Calculate distance from sprite's *actual* position to the
-                            // *center* of the neighbor tile. This is important for smooth
-                            // weighting.
-                            let neighbor_center = neighbor_pos.to_position_center();
-                            let distance = pos.distance(&neighbor_center); // Euclidean distance
-                            let weight = (distance + 0.1).recip(); // Avoid division by zero
+                    if let Some(neighbor_pressure) = miasma.pressure_field.get(neighbor_pos.ndidx())
+                    {
+                        // Calculate distance from sprite's *actual* position to the
+                        // *center* of the neighbor tile. This is important for smooth
+                        // weighting.
+                        let neighbor_center = neighbor_pos.to_position_center();
+                        let distance = pos.distance(&neighbor_center); // Euclidean distance
+                        let weight = (distance + 0.1).recip(); // Avoid division by zero
 
-                            total_pressure += neighbor_pressure * weight;
-                            total_weight += weight;
-                        }
+                        total_pressure += neighbor_pressure * weight;
+                        total_weight += weight;
                     }
                 }
-
-                let average_pressure = if total_weight > 0.0 {
-                    total_pressure / total_weight
-                } else {
-                    0.0 // Default to 0 if no neighbors have pressure (shouldn't happen)
-                };
-
-                let miasma_visibility = average_pressure.max(0.0).sqrt()
-                    * miasma_config.miasma_visibility_factor
-                    * miasma_sprite.time_alive.clamp(0.0, 1.0)
-                    * (miasma_sprite.life / 2.0).clamp(0.0, 1.0)
-                    * (ld.magnitude().atan() / 1.2 + 0.25);
-
-                dst_color = dst_color
-                    .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
-                opacity = opacity.max(0.0);
-                opacity *= miasma_visibility.clamp(0.0, 0.45)
-                    * miasma_sprite.visibility
-                    * (1.0 - dst_color.luminance() * 0.5);
-                // if opacity < old_a {
-                //     smooth = 25.0;
-                // }
             }
+
+            let average_pressure = if total_weight > 0.0 {
+                total_pressure / total_weight
+            } else {
+                0.0 // Default to 0 if no neighbors have pressure (shouldn't happen)
+            };
+
+            let miasma_visibility = average_pressure.max(0.0).sqrt()
+                * miasma_config.miasma_visibility_factor
+                * miasma_sprite.time_alive.clamp(0.0, 1.0)
+                * (miasma_sprite.life / 2.0).clamp(0.0, 1.0)
+                * (ld.magnitude().atan() / 1.2 + 0.25);
+
+            dst_color = dst_color
+                .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
+            opacity = opacity.max(0.0);
+            opacity *= miasma_visibility.clamp(0.0, 0.45)
+                * miasma_sprite.visibility
+                * (1.0 - dst_color.luminance() * 0.5);
+            // if opacity < old_a {
+            //     smooth = 25.0;
+            // }
         }
         dst_color.set_alpha(
             ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
         );
         let src_linear = sprite.color.to_linear();
         let dst_linear = dst_color.to_linear();
-        let f = if sprite_type == SpriteType::Player {
-            0.01
-        } else {
-            0.11
-        }; // Smoothing factor
+        let f = if o_player.is_some() { 0.01 } else { 0.11 }; // Smoothing factor
         let smooth_color = LinearRgba::from_vec4(
             (src_linear.to_vec4() * (1.0 - f) + dst_linear.to_vec4() * f)
                 .clamp(Vec4::ZERO, Vec4::ONE),
