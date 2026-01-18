@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use unengine_core::{MCamera, MenuUI};
+use unengine_core::{GCameraArena, MCamera, MenuUI};
 use unrender_std::components::game::{GameSound, GameSprite};
-use untags_core::game::GCameraArena;
 use untypes_core::states::{AppState, GameState};
 
 pub fn setup_menu_camera(mut commands: Commands) {

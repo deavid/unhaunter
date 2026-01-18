@@ -1,14 +1,13 @@
 use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
+use unengine_core::GCameraArena;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::game_config::GameConfig;
-use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::utils::perspective;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
-use untags_core::game::GCameraArena;
 use untypes_core::states::{AppState, GameState};
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
@@ -28,28 +27,6 @@ fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {
         .insert(GCameraArena)
         .insert(Direction::zero())
         .insert(CustomSpritePickingCamera);
-}
-
-fn cleanup(
-    mut commands: Commands,
-    qc: Query<Entity, With<GCameraArena>>,
-    qgs: Query<Entity, With<GameSprite>>,
-    qs: Query<Entity, With<GameSound>>,
-) {
-    // Despawn old camera if exists
-    for cam in qc.iter() {
-        commands.entity(cam).despawn();
-    }
-
-    // Despawn game sprites if not used
-    for gs in qgs.iter() {
-        commands.entity(gs).despawn();
-    }
-
-    // Despawn game sound
-    for gs in qs.iter() {
-        commands.entity(gs).despawn();
-    }
 }
 
 fn camera_follow_system(
@@ -128,7 +105,6 @@ fn camera_follow_system(
 
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::InGame), setup);
-    app.add_systems(OnExit(AppState::InGame), cleanup);
     app.add_systems(
         Update,
         camera_follow_system.run_if(in_state(AppState::InGame)),

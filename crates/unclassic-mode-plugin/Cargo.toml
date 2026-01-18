@@ -22,6 +22,7 @@ unghost-core = { path = "../unghost-core" }
 unplayer-core = { path = "../unplayer-core" }
 ungear-core = { path = "../ungear-core" }
 unrender-std = { path = "../unrender-std" }
+unengine-core = { path = "../unengine-core" }
 untags-core = { path = "../untags-core" }
 unmapload-core = { path = "../unmapload-core" }
 unsettings-core = { path = "../unsettings-core" }

@@ -19,9 +19,3 @@ pub struct NpcTag;
 
 #[derive(Component)]
 pub struct TruckTag;
-
-pub mod game {
-    use bevy::prelude::*;
-    #[derive(Component)]
-    pub struct GCameraArena;
-}

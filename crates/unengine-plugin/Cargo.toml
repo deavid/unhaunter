@@ -20,6 +20,5 @@ unboard-core = { path = "../unboard-core" }
 unbehavior = { path = "../unbehavior" }
 unevents-core = { path = "../unevents-core" }
 unspatial-core = { path = "../unspatial-core" }
-untags-core = { path = "../untags-core" }
 
 bevy = { workspace = true }

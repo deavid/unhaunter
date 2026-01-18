@@ -3,6 +3,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
+use unengine_core::GCameraArena;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
@@ -12,7 +13,6 @@ use unplayer_core::resources::PlayerInput;
 use unrender_std::components::game::GameSprite;
 use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
-use untags_core::game::GCameraArena;
 use unui_core::resources::MouseVisibility;
 
 use super::pathfinding::detect_stair_area;
