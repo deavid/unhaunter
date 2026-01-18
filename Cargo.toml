@@ -20,7 +20,6 @@ members = [
     "crates/ungear-plugin",
     "crates/ungearitems-core",
     "crates/ungearitems-plugin",
-    "crates/unclassic-plugin",
     "crates/unghost-plugin",
     "crates/unghost-core",
     "crates/uninteraction-core",
@@ -178,7 +177,6 @@ unroot-plugin = { path = "crates/unroot-plugin" }
 untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
-unclassic-plugin = { path = "crates/unclassic-plugin" }
 
 [[bin]]
 name = "unhaunter_game"

@@ -4,7 +4,6 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::ClassicModePlugin;
-use unclassic_plugin::plugin::UnhaunterClassicPlugin;
 use unengine_plugin::plugin::UnhaunterEnginePlugin;
 use unfog_plugin::plugin::UnhaunterFogPlugin;
 use ungear_plugin::plugin::UnhaunterGearPlugin;
@@ -82,7 +81,6 @@ pub fn app_run(cli_options: CliOptions) {
         UnhaunterGearItemsPlugin,
         UnhaunterMapHubPlugin,
         UnhaunterTruckPlugin,
-        UnhaunterClassicPlugin,
         UnhaunterPlayerPlugin,
         UnhaunterGhostPlugin,
         UnhaunterMenuPlugin,

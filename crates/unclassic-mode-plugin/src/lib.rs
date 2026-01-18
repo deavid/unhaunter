@@ -1,5 +1,13 @@
+pub(crate) mod environmental_mechanics;
 mod evaluator;
+pub(crate) mod evidence_perception;
+pub(crate) mod game_ui;
+pub(crate) mod gear_ui;
 mod influence_system;
+pub(crate) mod looking_gear;
+pub(crate) mod object_charge;
 pub mod plugin;
+pub(crate) mod resources;
+pub(crate) mod roomchanged;
 mod selection;
-mod systems;
+pub(crate) mod systems;

@@ -27,6 +27,12 @@ unmapload-core = { path = "../unmapload-core" }
 unsettings-core = { path = "../unsettings-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 
+unlight-plugin = { path = "../unlight-plugin" }
+untypes-core = { path = "../untypes-core" }
+unui-core = { path = "../unui-core" }
+unpicking-core = { path = "../unpicking-core" }
+uninteraction-core = { path = "../uninteraction-core" }
+unprofile-core = { path = "../unprofile-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

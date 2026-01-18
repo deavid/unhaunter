@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use unengine_core::{MCamera, MenuUI};
+use unrender_std::components::game::{GameSound, GameSprite};
+use untags_core::game::GCameraArena;
 use untypes_core::states::{AppState, GameState};
 
 pub fn setup_menu_camera(mut commands: Commands) {
@@ -16,6 +18,28 @@ pub fn cleanup_menu(
     }
     for ui_entity in qm.iter() {
         commands.entity(ui_entity).despawn();
+    }
+}
+
+pub fn cleanup_game(
+    mut commands: Commands,
+    qc: Query<Entity, With<GCameraArena>>,
+    qgs: Query<Entity, With<GameSprite>>,
+    qs: Query<Entity, With<GameSound>>,
+) {
+    // Despawn old camera if exists
+    for cam in qc.iter() {
+        commands.entity(cam).despawn();
+    }
+
+    // Despawn game sprites if not used
+    for gs in qgs.iter() {
+        commands.entity(gs).despawn();
+    }
+
+    // Despawn game sound
+    for gs in qs.iter() {
+        commands.entity(gs).despawn();
     }
 }
 
@@ -42,5 +66,6 @@ pub fn keyboard_state_transitions(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
     app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
+    app.add_systems(OnExit(AppState::InGame), cleanup_game);
     app.add_systems(Update, keyboard_state_transitions);
 }

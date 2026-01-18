@@ -15,25 +15,13 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-unbehavior = { path = "../unbehavior" }
-undifficulty-core = { path = "../undifficulty-core" }
-unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
-unlight-plugin = { path = "../unlight-plugin" }
-unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
-unengine-plugin = { path = "../unengine-plugin" }
-unui-core = { path = "../unui-core" }
 untags-core = { path = "../untags-core" }
 unrender-std = { path = "../unrender-std" }
-ungear-core = { path = "../ungear-core" }
 unplayer-core = { path = "../unplayer-core" }
 unpicking-core = { path = "../unpicking-core" }
-uninteraction-core = { path = "../uninteraction-core" }
 unsettings-core = { path = "../unsettings-core" }
-unprofile-core = { path = "../unprofile-core" }
-unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
-bevy_platform = { workspace = true }
 bevy-persistent = { workspace = true }

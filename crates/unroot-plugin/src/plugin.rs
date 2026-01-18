@@ -25,6 +25,7 @@ impl Plugin for UnhaunterRootPlugin {
         app.init_resource::<CurrentEvidenceReadings>();
         app.init_resource::<CurrentMissionSelectMode>();
         app.init_resource::<unnoise_core::perlin::PerlinNoise>();
+        app.init_resource::<unplayer_core::resources::game_config::GameConfig>();
         app.init_resource::<PlayerInput>();
         app.add_message::<OnScreenHintEvent>();
 
