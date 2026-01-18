@@ -6,7 +6,6 @@ pub(crate) mod gear_ui;
 pub(crate) mod hide_mouse;
 pub(crate) mod looking_gear;
 pub(crate) mod object_charge;
-pub(crate) mod pause_ui;
 pub mod plugin;
 pub(crate) mod resources;
 pub(crate) mod roomchanged;

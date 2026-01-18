@@ -5710,6 +5710,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "unclassic-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "bevy-persistent",
+ "bevy_platform",
+ "unbehavior",
+ "unboard-core",
+ "undifficulty-core",
+ "unevents-core",
+ "unfoundation-core",
+ "ungear-core",
+ "unghost-core",
+ "uninteraction-core",
+ "unlight-plugin",
+ "unpicking-core",
+ "unplayer-core",
+ "unprofile-core",
+ "unrender-std",
+ "unsettings-core",
+ "unspatial-core",
+ "untags-core",
+ "untypes-core",
+ "unui-core",
+]
+
+[[package]]
 name = "undifficulty-core"
 version = "0.3.2-dev"
 dependencies = [
@@ -5720,6 +5747,25 @@ dependencies = [
  "ungear-core",
  "unghost-core",
  "untypes-core",
+]
+
+[[package]]
+name = "unengine-core"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
+name = "unengine-plugin"
+version = "0.3.2-dev"
+dependencies = [
+ "bevy",
+ "unengine-core",
+ "unfoundation-core",
+ "unrender-std",
+ "untypes-core",
+ "unui-core",
 ]
 
 [[package]]
@@ -5774,33 +5820,6 @@ dependencies = [
  "enum-iterator",
  "rand 0.9.2",
  "serde",
-]
-
-[[package]]
-name = "ungame-plugin"
-version = "0.3.2-dev"
-dependencies = [
- "bevy",
- "bevy-persistent",
- "bevy_platform",
- "unbehavior",
- "unboard-core",
- "undifficulty-core",
- "unevents-core",
- "unfoundation-core",
- "ungear-core",
- "unghost-core",
- "uninteraction-core",
- "unlight-plugin",
- "unpicking-core",
- "unplayer-core",
- "unprofile-core",
- "unrender-std",
- "unsettings-core",
- "unspatial-core",
- "untags-core",
- "untypes-core",
- "unui-core",
 ]
 
 [[package]]
@@ -5931,8 +5950,9 @@ dependencies = [
  "clap",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
+ "unclassic-plugin",
+ "unengine-plugin",
  "unfog-plugin",
- "ungame-plugin",
  "ungear-plugin",
  "ungearitems-plugin",
  "unghost-plugin",
@@ -6070,6 +6090,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy-persistent",
+ "unengine-core",
  "unfoundation-core",
  "unmenu-core",
  "unprofile-core",

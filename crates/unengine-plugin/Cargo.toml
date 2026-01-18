@@ -1,5 +1,5 @@
 [package]
-name = "unmainmenu-plugin"
+name = "unengine-plugin"
 version.workspace = true
 edition.workspace = true
 description.workspace = true
@@ -11,14 +11,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-
 unfoundation-core = { path = "../unfoundation-core" }
 unengine-core = { path = "../unengine-core" }
-unui-core = { path = "../unui-core" }
 untypes-core = { path = "../untypes-core" }
-unsettings-core = { path = "../unsettings-core" }
-unmenu-core = { path = "../unmenu-core" }
-unprofile-core = { path = "../unprofile-core" }
+unui-core = { path = "../unui-core" }
+unrender-std = { path = "../unrender-std" }
 
 bevy = { workspace = true }
-bevy-persistent = { workspace = true }

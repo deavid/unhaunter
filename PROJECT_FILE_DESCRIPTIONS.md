@@ -82,7 +82,7 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 
 - **\`unroot-plugin\`**: Root application plugin, startup logic and framepace management.
 - **\`unui-plugin\`**: Centralized UI asset loading and theme management.
-- **\`ungame-plugin\`**: Main game loop, scene management, high-level coordination.
+- **`unclassic-plugin`**: Main game loop, scene management, high-level coordination.
 - **\`uncampaign-plugin\`**: Campaign progression, mission unlocking, persistent state.
 - **\`unprofile-plugin\`**: User profile management, save/load logic.
 - **\`unsummary-plugin\`**: End-of-mission summary screen systems.

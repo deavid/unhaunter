@@ -16,7 +16,7 @@ Systems"), DDD organizes code into **Bounded Contexts**—independent modules th
 The transition from a monolithic "Uncore" structure to the current **Core vs. Plugin** architecture was the first major
 step toward DDD. The intent is to:
 
-- **Enforce Bounded Contexts:** Ensure that change in the `ungame-plugin` (game flow) doesn't require a recompile or
+- **Enforce Bounded Contexts:** Ensure that change in the `unclassic-plugin` (game flow) doesn't require a recompile or
   architectural change in the `unghost-plugin` (ghost AI).
 - **Prevent Semantic Leakage:** Stop technical details (like sprite indices or asset handles) from polluting the core
   game rules.

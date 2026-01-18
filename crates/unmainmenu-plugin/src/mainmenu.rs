@@ -2,6 +2,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
+use unengine_core::MenuUI;
 use unfoundation_core::platform::plt::VERSION;
 use unmenu_core::components::MenuItemInteractive;
 use unmenu_core::events::MenuItemClicked;
@@ -36,34 +37,22 @@ impl std::fmt::Display for MenuID {
     }
 }
 
-#[derive(Component, Debug)]
-pub(crate) struct MCamera;
-
-#[derive(Component, Debug)]
-pub(crate) struct MenuUI;
-
-#[derive(Component, Debug)]
-pub(crate) struct MenuUILayout;
-
 #[derive(Component, Debug, Default)]
 pub(crate) struct MenuSound {
     despawn: bool,
 }
 
+#[derive(Component, Debug)]
+pub(crate) struct MenuUILayout;
+
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), (setup, setup_ui))
-        .add_systems(OnExit(AppState::MainMenu), cleanup)
         .add_systems(Update, menu_event)
         .add_systems(Update, despawn_sound)
         .add_systems(Update, manage_title_song);
 }
 
-pub(crate) fn setup(
-    mut commands: Commands,
-    mut player_profile: ResMut<Persistent<PlayerProfileData>>,
-) {
-    commands.spawn(Camera2d).insert(MCamera);
-
+pub(crate) fn setup(mut player_profile: ResMut<Persistent<PlayerProfileData>>) {
     // Ensure player level is updated based on XP when main menu loads
     player_profile.progression.update_level();
 
@@ -124,19 +113,6 @@ pub(crate) fn setup_ui(
     });
 
     warn!("Main menu created with root entity: {:?}", root_entity);
-}
-
-pub(crate) fn cleanup(
-    mut commands: Commands,
-    qc: Query<Entity, With<MCamera>>,
-    qm: Query<Entity, With<MenuUI>>,
-) {
-    for cam in qc.iter() {
-        commands.entity(cam).despawn();
-    }
-    for ui_entity in qm.iter() {
-        commands.entity(ui_entity).despawn();
-    }
 }
 
 pub(crate) fn menu_event(

@@ -1,0 +1,46 @@
+use bevy::prelude::*;
+use unengine_core::{MCamera, MenuUI};
+use untypes_core::states::{AppState, GameState};
+
+pub fn setup_menu_camera(mut commands: Commands) {
+    commands.spawn(Camera2d).insert(MCamera);
+}
+
+pub fn cleanup_menu(
+    mut commands: Commands,
+    qc: Query<Entity, With<MCamera>>,
+    qm: Query<Entity, With<MenuUI>>,
+) {
+    for cam in qc.iter() {
+        commands.entity(cam).despawn();
+    }
+    for ui_entity in qm.iter() {
+        commands.entity(ui_entity).despawn();
+    }
+}
+
+pub fn keyboard_state_transitions(
+    app_state: Res<State<AppState>>,
+    game_state: Res<State<GameState>>,
+    mut game_next_state: ResMut<NextState<GameState>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if *app_state.get() != AppState::InGame {
+        return;
+    }
+
+    let in_game = *game_state.get() == GameState::None;
+    if *game_state.get() == GameState::Pause {
+        return;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Escape) && in_game {
+        game_next_state.set(GameState::Pause);
+    }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(OnEnter(AppState::MainMenu), setup_menu_camera);
+    app.add_systems(OnExit(AppState::MainMenu), cleanup_menu);
+    app.add_systems(Update, keyboard_state_transitions);
+}

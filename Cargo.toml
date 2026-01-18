@@ -5,6 +5,8 @@ members = [
     "crates/tools/text_to_speech/walkie_voice_generator",
     "crates/uncampaign-plugin",
     "crates/unclassic-mode-plugin",
+    "crates/unengine-core",
+    "crates/unengine-plugin",
     "crates/unassets-core",
     "crates/unbehavior",
     "crates/unboard-core",
@@ -18,7 +20,7 @@ members = [
     "crates/ungear-plugin",
     "crates/ungearitems-core",
     "crates/ungearitems-plugin",
-    "crates/ungame-plugin",
+    "crates/unclassic-plugin",
     "crates/unghost-plugin",
     "crates/unghost-core",
     "crates/uninteraction-core",
@@ -149,6 +151,7 @@ untypes-core = { path = "crates/untypes-core" }
 
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }
+unengine-plugin = { path = "crates/unengine-plugin" }
 unfog-plugin = { path = "crates/unfog-plugin" }
 ungear-plugin = { path = "crates/ungear-plugin" }
 ungearitems-plugin = { path = "crates/ungearitems-plugin" }
@@ -175,7 +178,7 @@ unroot-plugin = { path = "crates/unroot-plugin" }
 untruck-plugin = { path = "crates/untruck-plugin" }
 unwalkie-plugin = { path = "crates/unwalkie-plugin" }
 untmxmap-plugin = { path = "crates/untmxmap-plugin" }
-ungame-plugin = { path = "crates/ungame-plugin" }
+unclassic-plugin = { path = "crates/unclassic-plugin" }
 
 [[bin]]
 name = "unhaunter_game"
