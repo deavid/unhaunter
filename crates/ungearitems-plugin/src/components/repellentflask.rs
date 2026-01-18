@@ -12,7 +12,7 @@ use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
@@ -88,7 +88,7 @@ pub(crate) fn update_repellentflask(
                             color: css::YELLOW.with_alpha(0.3).with_blue(0.02).into(),
                         })
                         .insert(RepellentParticle::new(liquid_content))
-                        .insert(SpriteType::Other);
+                        .insert(SpriteLayer::default());
                 } else {
                     repellent.qty = 0;
                     repellent.active = false;

@@ -17,7 +17,7 @@ use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::utils::perspective;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
@@ -609,7 +609,7 @@ fn spawn_salty_trace(
             color: css::DARK_GRAY.with_alpha(0.5).into(),
         })
         .insert(GameSprite)
-        .insert(SpriteType::Other);
+        .insert(SpriteLayer::default());
 }
 
 fn ghost_fade_out_system(
@@ -659,7 +659,7 @@ fn ghost_fade_out_system(
                     5.0,
                     TimerMode::Once,
                 )))
-                .insert(SpriteType::Other);
+                .insert(SpriteLayer::default());
         }
 
         // Play roar sounds

@@ -11,7 +11,7 @@ use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::GearKind;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
@@ -101,7 +101,7 @@ fn grab_object(
                         commands.entity(entity).remove::<Transform>();
                         commands.entity(entity).remove::<Visibility>();
                         commands.entity(entity).remove::<GameSprite>();
-                        commands.entity(entity).remove::<SpriteType>();
+                        commands.entity(entity).remove::<SpriteLayer>();
                         commands.entity(entity).remove::<MapColor>();
                         commands.spawn(AudioPlayer::new(
                             asset_server.load("sounds/item-pickup-whoosh.ogg"),

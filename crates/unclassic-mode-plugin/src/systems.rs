@@ -23,6 +23,7 @@ use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
     AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, ShadowCaster,
     SpectralClarity, UltravioletSensitive, Viewer,
@@ -119,6 +120,7 @@ pub(crate) fn classic_mode_orchestrator(
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(GameSprite)
+        .insert(SpriteLayer(0.1))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
         .insert(ShadowCaster::default())
@@ -181,6 +183,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
+        .insert(SpriteLayer(0.01))
         .insert(GhostBreach)
         .insert(ghost_spawn)
         .insert(LightSensitive {
@@ -228,6 +231,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
         .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
         .insert(GameSprite)
+        .insert(SpriteLayer(10.0))
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(Ethereal::default())
         .insert(GhostBehaviorDynamics::default())

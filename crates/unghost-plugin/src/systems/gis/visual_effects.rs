@@ -3,7 +3,7 @@ use rand::Rng;
 use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unspatial_core::position::Position;
 
 use crate::components::interaction::{
@@ -218,7 +218,7 @@ fn spawn_trail_particle(
         .insert(MapColor {
             color: Color::srgba(0.8, 0.8, 0.9, 0.4),
         })
-        .insert(SpriteType::Other)
+        .insert(SpriteLayer::default())
         .insert(InteractionParticle {
             life: 0.5,
             max_life: 0.5,
@@ -259,7 +259,7 @@ fn spawn_dust_particles(
             .insert(MapColor {
                 color: Color::srgba(0.6, 0.5, 0.4, 0.6),
             })
-            .insert(SpriteType::Other)
+            .insert(SpriteLayer::default())
             .insert(InteractionParticle {
                 life: 1.5,
                 max_life: 1.5,
@@ -299,7 +299,7 @@ fn spawn_haunted_glow_particle(
         .insert(MapColor {
             color: Color::srgba(0.3, 0.8, 0.3, 0.7),
         })
-        .insert(SpriteType::Other)
+        .insert(SpriteLayer::default())
         .insert(InteractionParticle {
             life: 2.0,
             max_life: 2.0,
@@ -339,7 +339,7 @@ pub(crate) fn spawn_electrical_sparks(
             .insert(MapColor {
                 color: Color::srgba(1.0, 0.9, 0.3, 0.9),
             })
-            .insert(SpriteType::Other)
+            .insert(SpriteLayer::default())
             .insert(InteractionParticle {
                 life: 0.8,
                 max_life: 0.8,

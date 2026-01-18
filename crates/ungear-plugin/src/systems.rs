@@ -16,7 +16,7 @@ use uninteraction_core::interaction::Triggered;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use unrender_std::utils::perspective;
 use unsettings_core::audio::{AudioSettings, SoundOutput};
@@ -50,7 +50,7 @@ fn update_deployed_gear_sprites(
                     .with_scale(Vec3::splat(0.25)),
                 Visibility::Inherited,
                 GameSprite,
-                SpriteType::default(),
+                SpriteLayer::default(),
                 MapColor::default(),
             ));
         }

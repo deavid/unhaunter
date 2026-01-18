@@ -9,6 +9,7 @@ use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
 use unghost_core::resources::haunt_state::HauntState;
 use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::InfraredSensitive;
 use unspatial_core::position::Position;
 
@@ -69,6 +70,7 @@ pub(crate) fn spawn_ghost_orb_particles(
                 visual_priority: breach_pos.visual_priority,
             })
             .insert(GameSprite)
+            .insert(SpriteLayer(5.0))
             .insert(MapColor {
                 color: Color::WHITE,
             })

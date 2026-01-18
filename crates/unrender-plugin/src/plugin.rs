@@ -15,6 +15,7 @@ use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 
 use unrender_std::board::spritedb::SpriteDB;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::materials::{CustomMaterial1, UIPanelMaterial};
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -29,11 +30,20 @@ pub const APPLY_PERSPECTIVE: DiagnosticPath =
 /// # Arguments
 ///
 /// * `q` - A query for entities with `Position` and `Transform` components that have changed.
-pub fn apply_perspective(mut q: Query<(&Position, &mut Transform), Changed<Position>>) {
+pub fn apply_perspective(
+    mut q: Query<
+        (&Position, &mut Transform, Option<&SpriteLayer>),
+        Or<(Changed<Position>, Changed<SpriteLayer>)>,
+    >,
+) {
     let measure = APPLY_PERSPECTIVE.time_measure();
 
-    for (pos, mut transform) in q.iter_mut() {
-        transform.translation = perspective::to_screen_coord(*pos);
+    for (pos, mut transform, layer) in q.iter_mut() {
+        let mut translation = perspective::to_screen_coord(*pos);
+        if let Some(layer) = layer {
+            translation.z += layer.0;
+        }
+        transform.translation = translation;
     }
 
     measure.end_ms();

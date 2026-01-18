@@ -17,6 +17,7 @@ use unnoise_core::perlin::PerlinNoise;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::GameSprite;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::LightSensitive;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::collision::rebuild_collision_data;
@@ -230,7 +231,8 @@ fn spawn_miasma(
                     bias: 0.6,
                 })
                 .insert(pos)
-                .insert(GameSprite);
+                .insert(GameSprite)
+                .insert(SpriteLayer(-0.1));
             *pos_count += 1;
         }
     }

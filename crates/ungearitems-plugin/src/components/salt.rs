@@ -13,7 +13,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::sprite_type::SpriteType;
+use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unrender_std::utils::perspective;
 use unsound_core::emitter::SoundEmitter;
@@ -49,7 +49,7 @@ pub(crate) fn update_salt(
                 .insert(SaltPile)
                 .insert(GameSprite)
                 .insert(*pos)
-                .insert(SpriteType::Other);
+                .insert(SpriteLayer::default());
             gs_audio.play_audio("sounds/salt_drop.ogg".into(), 1.0, pos);
 
             commands.entity(entity).remove::<Triggered>();
@@ -117,7 +117,7 @@ fn salt_pile_system(
                             30.0,
                             TimerMode::Once,
                         )))
-                        .insert(SpriteType::Other)
+                        .insert(SpriteLayer::default())
                         .id();
                 }
 
