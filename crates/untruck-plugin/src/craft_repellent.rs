@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use unfoundation_core::types::ghost::types::GhostType;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
+use unghost_core::types::ghost::types::GhostType;
 
 /// Crafts a repellent for the specified ghost type.
 /// Returns true if a new bottle was consumed (should count as a craft).

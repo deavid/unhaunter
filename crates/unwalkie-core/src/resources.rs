@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use rand::Rng;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::evidence::Evidence;
+use unghost_core::types::evidence::Evidence;
 use unwalkie_types::types::VoiceLineData;
 
 #[derive(Clone, Debug, Default)]

@@ -1,10 +1,10 @@
+use crate::types::evidence::Evidence;
+use crate::types::ghost::types::GhostType;
 use bevy::prelude::*;
 use rand::Rng;
 use std::fmt::Debug;
 use std::time::Duration;
 use unfoundation_core::random_seed;
-use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::ghost::types::GhostType;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 

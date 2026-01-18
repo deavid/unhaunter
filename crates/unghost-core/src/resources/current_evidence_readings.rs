@@ -1,6 +1,6 @@
+use crate::types::evidence::Evidence;
 use bevy::prelude::*;
 use enum_iterator::all;
-use unfoundation_core::types::evidence::Evidence;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct EvidenceReading {

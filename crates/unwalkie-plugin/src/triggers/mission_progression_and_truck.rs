@@ -1,10 +1,10 @@
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_platform::collections::HashSet;
-use unfoundation_core::types::evidence::Evidence;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
+use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::{AppState, GameState};

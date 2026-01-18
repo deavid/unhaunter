@@ -2,7 +2,7 @@ pub mod evidence_parser;
 
 use crate::cli::Cli;
 use evidence_parser::parse_evidence_list;
-use unfoundation_core::types::ghost::types::GhostType;
+use unghost_core::types::ghost::types::GhostType;
 
 pub fn apply_evidence_filters(ghosts: Vec<GhostType>, cli: &Cli) -> Vec<GhostType> {
     let mut filtered = ghosts;

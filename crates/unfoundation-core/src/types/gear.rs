@@ -1,4 +1,3 @@
-use crate::types::evidence::{Evidence, EvidenceError};
 use bevy::prelude::{Component, Reflect, ReflectComponent};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
@@ -104,31 +103,5 @@ impl<T: Into<String>> From<T> for VisualKey {
 impl std::fmt::Display for VisualKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl TryFrom<&GearKind> for Evidence {
-    type Error = EvidenceError;
-
-    fn try_from(value: &GearKind) -> Result<Self, Self::Error> {
-        match value {
-            GearKind::Thermometer => Ok(Evidence::FreezingTemp),
-            GearKind::EMFMeter => Ok(Evidence::EMFLevel5),
-            GearKind::Recorder => Ok(Evidence::EVPRecording),
-            GearKind::GeigerCounter => Ok(Evidence::CPM500),
-            GearKind::UVTorch => Ok(Evidence::UVEctoplasm),
-            GearKind::SpiritBox => Ok(Evidence::SpiritBox),
-            GearKind::RedTorch => Ok(Evidence::RLPresence),
-            GearKind::Videocam => Ok(Evidence::FloatingOrbs),
-            _ => Err(EvidenceError::NoEvidenceForGear),
-        }
-    }
-}
-
-impl TryFrom<GearKind> for Evidence {
-    type Error = EvidenceError;
-
-    fn try_from(value: GearKind) -> Result<Self, Self::Error> {
-        Evidence::try_from(&value)
     }
 }

@@ -24,3 +24,4 @@ unsummary-core = { path = "../unsummary-core" }
 unui-core = { path = "../unui-core" }
 unprofile-core = { path = "../unprofile-core" }
 unplayer-core = { path = "../unplayer-core" }
+unghost-core = { path = "../unghost-core" }

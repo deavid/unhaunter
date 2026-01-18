@@ -1,5 +1,5 @@
 use enum_iterator::all;
-use unfoundation_core::types::ghost::types::GhostType;
+use unghost_core::types::ghost::types::GhostType;
 
 pub fn parse_ghost_list(ghost_str: &str) -> Vec<GhostType> {
     ghost_str

@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
-use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::ghost::types::GhostType;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unghost_core::resources::ghost_guess::GhostGuess;
+use unghost_core::types::evidence::Evidence;
+use unghost_core::types::ghost::types::GhostType;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::states::AppState;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};

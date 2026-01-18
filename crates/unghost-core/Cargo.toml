@@ -20,3 +20,4 @@ rand = { workspace = true }
 enum-iterator = { workspace = true }
 itertools = { workspace = true }
 bevy_platform = { workspace = true }
+thiserror = { workspace = true }

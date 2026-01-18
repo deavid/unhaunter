@@ -2,8 +2,8 @@ use crate::filtering::evidence_parser::parse_evidence_list;
 use enum_iterator::all;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::ghost::types::GhostType;
+use unghost_core::types::evidence::Evidence;
+use unghost_core::types::ghost::types::GhostType;
 
 // This command will find ghosts that become indistinguishable if only a certain subset of evidence is considered,
 // or find evidence types that are "in conflict" (e.g., never appear together or always appear together).

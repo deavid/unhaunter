@@ -1,8 +1,8 @@
 use crate::cli::OutputFormat;
 use enum_iterator::all;
 use std::collections::HashMap;
-use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::ghost::types::GhostType;
+use unghost_core::types::evidence::Evidence;
+use unghost_core::types::ghost::types::GhostType;
 
 pub fn show_stats(ghosts: &[GhostType], format: &OutputFormat) {
     match format {

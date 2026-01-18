@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::VisualKey;
+use unghost_core::types::evidence::Evidence;
 
 /// The display name of an item.
 #[derive(Component, Debug, Clone, Reflect, Default)]

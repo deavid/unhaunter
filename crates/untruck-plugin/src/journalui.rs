@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unfoundation_core::types::evidence::Evidence;
+use unghost_core::types::evidence::Evidence;
 use untruck_core::components::truck_ui_button::TruckButtonTypeExt;
 use unui_core::assets::UiAssets; // Use CurrentDifficulty
 

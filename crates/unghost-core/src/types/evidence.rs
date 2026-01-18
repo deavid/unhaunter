@@ -5,6 +5,7 @@ use enum_iterator::all;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use thiserror::Error;
+use unfoundation_core::types::gear::GearKind;
 
 #[derive(
     Debug, Clone, Copy, Hash, PartialEq, Eq, Sequence, Serialize, Deserialize, Reflect, Default,
@@ -91,4 +92,30 @@ impl Display for Evidence {
 pub enum EvidenceError {
     #[error("No Evidence for Gear")]
     NoEvidenceForGear,
+}
+
+impl TryFrom<&GearKind> for Evidence {
+    type Error = EvidenceError;
+
+    fn try_from(value: &GearKind) -> Result<Self, Self::Error> {
+        match value {
+            GearKind::Thermometer => Ok(Evidence::FreezingTemp),
+            GearKind::EMFMeter => Ok(Evidence::EMFLevel5),
+            GearKind::Recorder => Ok(Evidence::EVPRecording),
+            GearKind::GeigerCounter => Ok(Evidence::CPM500),
+            GearKind::UVTorch => Ok(Evidence::UVEctoplasm),
+            GearKind::SpiritBox => Ok(Evidence::SpiritBox),
+            GearKind::RedTorch => Ok(Evidence::RLPresence),
+            GearKind::Videocam => Ok(Evidence::FloatingOrbs),
+            _ => Err(EvidenceError::NoEvidenceForGear),
+        }
+    }
+}
+
+impl TryFrom<GearKind> for Evidence {
+    type Error = EvidenceError;
+
+    fn try_from(value: GearKind) -> Result<Self, Self::Error> {
+        Evidence::try_from(&value)
+    }
 }

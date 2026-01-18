@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use unbehavior::components::{Collision, InteractableByGhost};
-use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
 use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{
@@ -9,6 +8,7 @@ use ungear_core::components::core::{
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
 use ungearitems_core::prelude::{QuartzStoneData, Recorder, SageBundleData, SaltData, Thermometer};
+use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::resources::sprite_registry::GearSpriteID;

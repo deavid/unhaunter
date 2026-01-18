@@ -18,6 +18,7 @@ unevents-core = { path = "../unevents-core" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
+unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

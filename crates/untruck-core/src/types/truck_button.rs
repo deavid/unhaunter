@@ -1,4 +1,4 @@
-use unfoundation_core::types::{evidence::Evidence, ghost::types::GhostType};
+use unghost_core::types::{evidence::Evidence, ghost::types::GhostType};
 
 /// Represents the type of a button in the truck UI.
 #[derive(Debug, Clone, PartialEq, Eq)]

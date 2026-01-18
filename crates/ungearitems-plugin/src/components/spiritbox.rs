@@ -17,10 +17,10 @@ use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
 use rand::Rng;
-use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
+use unghost_core::types::evidence::Evidence;
 use unlight_plugin::resources::light_grid::LightGrid;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;

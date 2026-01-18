@@ -5,9 +5,9 @@
 use crate::difficulty_settings::{DifficultySettings, DifficultyStruct};
 use crate::manual_types::ManualChapterIndex;
 use unfoundation_core::types::gear::{GearKind, PlayerGearKind};
-use unfoundation_core::types::ghost::definitions::GhostSet;
 use unfoundation_core::types::truck::TabContents;
 use unfoundation_core::utils::temperature::celsius_to_kelvin;
+use unghost_core::types::ghost::definitions::GhostSet;
 use untypes_core::difficulty::Difficulty;
 
 impl DifficultySettings for Difficulty {

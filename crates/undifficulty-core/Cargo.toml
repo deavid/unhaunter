@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 unfoundation-core = { path = "../unfoundation-core" }
+unghost-core = { path = "../unghost-core" }
 untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }

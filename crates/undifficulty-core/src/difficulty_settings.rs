@@ -7,8 +7,8 @@ use crate::manual_types::ManualChapterIndex;
 use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use unfoundation_core::types::gear::{GearKind, PlayerGearKind};
-use unfoundation_core::types::ghost::definitions::GhostSet;
 use unfoundation_core::types::truck::TabContents;
+use unghost_core::types::ghost::definitions::GhostSet;
 use untypes_core::difficulty::Difficulty;
 
 /// Trait for querying difficulty-specific game settings

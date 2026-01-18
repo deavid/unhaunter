@@ -15,6 +15,7 @@ workspace = true
 unwalkie-types = { path = "../unwalkie-types" }
 
 unfoundation-core = { path = "../unfoundation-core" }
+unghost-core = { path = "../unghost-core" }
 untypes-core = { path = "../untypes-core" }
 ungear-core = { path = "../ungear-core" }
 

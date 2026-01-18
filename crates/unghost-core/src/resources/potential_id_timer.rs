@@ -1,6 +1,6 @@
+use crate::types::evidence::Evidence;
+use crate::types::ghost::types::GhostType;
 use bevy::prelude::Resource;
-use unfoundation_core::types::evidence::Evidence;
-use unfoundation_core::types::ghost::types::GhostType;
 
 #[derive(Resource, Default, Debug)]
 pub struct PotentialIDTimer {

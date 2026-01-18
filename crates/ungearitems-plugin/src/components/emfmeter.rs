@@ -10,7 +10,7 @@ use uninteraction_core::interaction::Toggleable;
 use unsound_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
 
-use unfoundation_core::types::evidence::Evidence;
+use unghost_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;

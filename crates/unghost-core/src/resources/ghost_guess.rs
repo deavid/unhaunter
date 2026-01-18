@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 
-use unfoundation_core::types::{evidence::Evidence, ghost::types::GhostType};
+use crate::types::{evidence::Evidence, ghost::types::GhostType};
 
 #[derive(Debug, Resource, Default)]
 pub struct GhostGuess {

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{Electronic, EvidenceSensor, PerceivedClarity};
 use ungear_core::components::deployedgear::DeployedGear;
@@ -9,6 +8,7 @@ use unghost_core::components::GhostOrbParticle;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_plugin::resources::light_grid::LightGrid;
 use unrender_std::components::light::LightEmitter;

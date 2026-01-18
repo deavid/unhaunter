@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unfoundation_core::types::evidence::Evidence;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::{PotentialIDData, PotentialIDTimer};
+use unghost_core::types::evidence::Evidence;
 use unprofile_core::profile::PlayerProfileData;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 

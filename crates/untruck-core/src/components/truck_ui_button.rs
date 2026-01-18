@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::types::truck_button::{TruckButtonState, TruckButtonType};
 use unevents_core::events::truck::TruckUIEvent;
 use unfoundation_core::colors;
-use unfoundation_core::types::evidence::Evidence;
+use unghost_core::types::evidence::Evidence;
 
 /// Represents a button in the truck UI, handling its state, type, and visual
 /// appearance.
