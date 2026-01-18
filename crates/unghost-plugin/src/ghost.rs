@@ -8,7 +8,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::{MeanValue, PrintingTimer};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
@@ -409,8 +409,6 @@ fn ghost_enrage(
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     mut player_state: ResMut<PlayerState>,
     mut gs_audio: GearAudio,
-    _gs_res: GearResources,
-    _gs_state: GearGameState,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,

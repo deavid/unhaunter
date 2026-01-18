@@ -1,13 +1,16 @@
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
+use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unsound_core::resources::SoundGrid;
 
 use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::types::evidence::Evidence;
 use ungear_core::types::gear::utils::on_off;
-pub(crate) use ungearitems_core::components::recorder::Recorder;
+use ungearitems_core::components::recorder::Recorder;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
@@ -22,8 +25,9 @@ pub(crate) fn update_recorder(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: GearAudio,
-    gs_res: GearResources,
-    gs_state: GearGameState,
+    sg: Res<SoundGrid>,
+    haunt_state: Res<HauntState>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
         q_recorder.iter_mut()
@@ -65,12 +69,7 @@ pub(crate) fn update_recorder(
         // Update Logic
         if toggle.is_on {
             let bpos = pos.to_board_position();
-            let sound = gs_res
-                .sg
-                .sound_field
-                .get(&bpos)
-                .cloned()
-                .unwrap_or_default();
+            let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
 
             recorder.sound_l.push(sound_reading);
@@ -87,7 +86,7 @@ pub(crate) fn update_recorder(
             }
 
             let mut evp_recorded = false;
-            if let Some(ghost_pos) = gs_state.haunt_state.ghost_warning_position {
+            if let Some(ghost_pos) = haunt_state.ghost_warning_position {
                 let dist2 = pos.distance2(&ghost_pos);
                 if dist2 < 2.0 * 2.0 {
                     evp_recorded = true;
@@ -95,7 +94,7 @@ pub(crate) fn update_recorder(
             }
 
             if evp_recorded {
-                recorder.amt_recorded += dt * gs_state.difficulty.0.equipment_sensitivity;
+                recorder.amt_recorded += dt * difficulty.0.equipment_sensitivity;
             } else {
                 recorder.amt_recorded -= dt * 0.1;
             }
@@ -141,9 +140,9 @@ pub(crate) fn update_recorder(
             }
 
             // Apply EMI if warning is active and we're electronic
-            if let Some(ghost_pos) = &gs_state.haunt_state.ghost_warning_position {
+            if let Some(ghost_pos) = &haunt_state.ghost_warning_position {
                 let distance2 = pos.distance2(ghost_pos);
-                let warning_level = gs_state.haunt_state.ghost_warning_intensity;
+                let warning_level = haunt_state.ghost_warning_intensity;
                 if warning_level > 0.0001 {
                     // Scale effect by distance and warning level
                     let effect_strength = warning_level * (100.0 / distance2).min(1.0);

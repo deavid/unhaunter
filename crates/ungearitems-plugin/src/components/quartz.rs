@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
-pub(crate) use ungearitems_core::components::quartz::QuartzStoneData;
+use ungear_core::gear_stuff::GearAudio;
+use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
@@ -61,8 +62,7 @@ impl QuartzStoneDataExt for QuartzStoneData {
 
 pub(crate) fn update_quartz(
     mut gs_audio: GearAudio,
-    _gs_res: GearResources,
-    gs_state: GearGameState,
+    difficulty: Res<CurrentDifficulty>,
     mut q_quartz: Query<(
         &mut QuartzStoneData,
         &mut StatusText,
@@ -75,7 +75,7 @@ pub(crate) fn update_quartz(
     let dt = gs_audio.time.delta_secs();
     for (mut quartz, mut status, mut sprite, pos, _ep) in q_quartz.iter_mut() {
         // Update logic
-        if quartz.energy_absorbed > 10.0 * gs_state.difficulty.0.ghost_hunt_duration.sqrt()
+        if quartz.energy_absorbed > 10.0 * difficulty.0.ghost_hunt_duration.sqrt()
             && quartz.cracks <= MAX_CRACKS
         {
             quartz.energy_absorbed = 0.0;

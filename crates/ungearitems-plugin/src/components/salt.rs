@@ -6,8 +6,8 @@ use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
-pub(crate) use ungearitems_core::components::salt::{
+use ungear_core::gear_stuff::GearAudio;
+use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
 use unghost_core::components::ghost_sprite::GhostSprite;
@@ -30,8 +30,6 @@ pub(crate) fn update_salt(
         Option<&Triggered>,
     )>,
     mut gs_audio: GearAudio,
-    _gs_res: GearResources,
-    _gs_state: GearGameState,
     mut commands: Commands,
 ) {
     for (entity, mut salt, mut status, mut sprite, pos, _ep, triggered) in q_salt.iter_mut() {

@@ -5810,19 +5810,12 @@ dependencies = [
  "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
- "unboard-core",
- "undifficulty-core",
  "unevents-core",
- "unfog-core",
  "unfoundation-core",
- "unghost-core",
  "unplayer-core",
  "unprofile-core",
  "unsettings-core",
- "unsound-core",
  "unspatial-core",
- "unsummary-core",
- "unthermal-core",
 ]
 
 [[package]]
@@ -5868,6 +5861,7 @@ dependencies = [
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
+ "unfog-core",
  "unfoundation-core",
  "ungear-core",
  "ungearitems-core",
@@ -5877,8 +5871,11 @@ dependencies = [
  "unmetrics-core",
  "unplayer-core",
  "unrender-std",
+ "unsound-core",
  "unspatial-core",
+ "unsummary-core",
  "untags-core",
+ "unthermal-core",
 ]
 
 [[package]]

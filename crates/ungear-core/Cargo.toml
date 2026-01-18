@@ -13,18 +13,11 @@ workspace = true
 [dependencies]
 
 unspatial-core = { path = "../unspatial-core" }
-undifficulty-core = { path = "../undifficulty-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
-unsummary-core = { path = "../unsummary-core" }
-unboard-core = { path = "../unboard-core" }
 unplayer-core = { path = "../unplayer-core" }
 unsettings-core = { path = "../unsettings-core" }
 unprofile-core = { path = "../unprofile-core" }
-unghost-core = { path = "../unghost-core" }
-unfog-core = { path = "../unfog-core" }
-unthermal-core = { path = "../unthermal-core" }
-unsound-core = { path = "../unsound-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }

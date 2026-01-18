@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
+use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unspatial_core::position::Position;
 
 pub(crate) fn system_electronic_interference(
     gs_audio: GearAudio,
-    _gs_res: GearResources,
-    gs_state: GearGameState,
+    haunt_state: Res<HauntState>,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
 ) {
     let mut rng = random_seed::rng();
@@ -22,11 +22,11 @@ pub(crate) fn system_electronic_interference(
         }
 
         // Apply EMI if warning is active and item is on
-        if let Some(ghost_pos) = &gs_state.haunt_state.ghost_warning_position {
+        if let Some(ghost_pos) = &haunt_state.ghost_warning_position {
             let distance2 = pos.distance2(ghost_pos);
-            if gs_state.haunt_state.ghost_warning_intensity > 0.0001 && toggle.is_on {
+            if haunt_state.ghost_warning_intensity > 0.0001 && toggle.is_on {
                 // Scale effect by distance and warning level
-                let effect_strength = gs_state.haunt_state.ghost_warning_intensity
+                let effect_strength = haunt_state.ghost_warning_intensity
                     * (100.0 / distance2).min(1.0)
                     * electronic.sensitivity;
 

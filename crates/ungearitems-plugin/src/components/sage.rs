@@ -7,10 +7,8 @@ use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use unfoundation_core::utils::time::format_time;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
-pub(crate) use ungearitems_core::components::sage::{
-    SageBundleData, SageSmokeParticle, SmokeParticleTimer,
-};
+use ungear_core::gear_stuff::GearAudio;
+use ungearitems_core::components::sage::{SageBundleData, SageSmokeParticle, SmokeParticleTimer};
 use unghost_core::components::ghost_sprite::GhostSprite;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
@@ -32,8 +30,6 @@ pub(crate) fn update_sage(
         Option<&Triggered>,
     )>,
     mut gs_audio: GearAudio,
-    _gs_res: GearResources,
-    _gs_state: GearGameState,
     mut commands: Commands,
 ) {
     for (entity, mut sage, mut status, mut sprite, pos, _ep, triggered) in q_sage.iter_mut() {

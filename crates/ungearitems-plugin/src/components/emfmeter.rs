@@ -1,9 +1,14 @@
+use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unfog_core::miasma::MiasmaGrid;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
+use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unsound_core::resources::SoundGrid;
+use unthermal_core::resources::ThermalGrid;
 
 use unfoundation_core::types::evidence::Evidence;
 use unspatial_core::position::Position;
@@ -29,8 +34,11 @@ pub(crate) fn update_emfmeter(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: GearAudio,
-    gs_res: GearResources,
-    gs_state: GearGameState,
+    miasma: Res<MiasmaGrid>,
+    tg: Res<ThermalGrid>,
+    sg: Res<SoundGrid>,
+    difficulty: Res<CurrentDifficulty>,
+    haunt_state: Res<HauntState>,
 ) {
     for (
         mut emf,
@@ -81,7 +89,7 @@ pub(crate) fn update_emfmeter(
                 };
                 let bpos = pos.to_board_position();
 
-                let miasma_pressure = gs_res.miasma.pressure_field[bpos.ndidx()];
+                let miasma_pressure = miasma.pressure_field[bpos.ndidx()];
 
                 emf.miasma_pressure = emf.miasma_pressure * F + miasma_pressure * (1.0 - F);
             }
@@ -95,16 +103,11 @@ pub(crate) fn update_emfmeter(
             };
             let bpos = posk.to_board_position();
 
-            let temperature = gs_res.tg.temperature_field[bpos.ndidx()];
-            let sound = gs_res
-                .sg
-                .sound_field
-                .get(&bpos)
-                .cloned()
-                .unwrap_or_default();
+            let temperature = tg.temperature_field[bpos.ndidx()];
+            let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
             let temp_reading = temperature / 10.0 + sound_reading;
-            let air_mass: f32 = 5.0 / gs_state.difficulty.0.equipment_sensitivity;
+            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
             if emf.temp_l2.len() < 2 {
                 emf.temp_l2.push(temp_reading);
             }
@@ -123,13 +126,9 @@ pub(crate) fn update_emfmeter(
                 let sum_temp: f32 = emf.temp_l2.iter().sum();
                 let avg_temp: f32 = sum_temp / emf.temp_l2.len() as f32;
                 let mut new_emf = (avg_temp - emf.temp_l1).abs() * 3.0;
-                emf.emf -= 0.2 * gs_state.difficulty.0.equipment_sensitivity;
-                emf.emf /= 1.4_f32.powf(gs_state.difficulty.0.equipment_sensitivity);
-                let emf5_evidence = gs_state
-                    .haunt_state
-                    .ghost_dynamics
-                    .emf_level5_clarity
-                    .max(-0.2);
+                emf.emf -= 0.2 * difficulty.0.equipment_sensitivity;
+                emf.emf /= 1.4_f32.powf(difficulty.0.equipment_sensitivity);
+                let emf5_evidence = haunt_state.ghost_dynamics.emf_level5_clarity.max(-0.2);
                 new_emf = f32::tanh(new_emf / (20.0 + emf5_evidence * 20.0))
                     * (15.0 + emf5_evidence * 30.0);
                 emf.emf = emf.emf.max(new_emf);

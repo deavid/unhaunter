@@ -1,17 +1,19 @@
 use bevy::prelude::*;
 use rand::Rng;
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
 use ungear_core::types::gear::utils::on_off;
-pub(crate) use ungearitems_core::components::thermometer::Thermometer;
+use ungearitems_core::components::thermometer::Thermometer;
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
+use unthermal_core::resources::ThermalGrid;
 
 pub(crate) fn update_thermometer(
     mut q_thermometer: Query<(
@@ -26,8 +28,8 @@ pub(crate) fn update_thermometer(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: GearAudio,
-    gs_res: GearResources,
-    gs_state: GearGameState,
+    tg: Res<ThermalGrid>,
+    difficulty: Res<CurrentDifficulty>,
 ) {
     for (
         mut thermometer,
@@ -63,9 +65,9 @@ pub(crate) fn update_thermometer(
                 visual_priority: pos.visual_priority,
             };
             let bpos = pos.to_board_position();
-            let temperature = gs_res.tg.temperature_field[bpos.ndidx()];
+            let temperature = tg.temperature_field[bpos.ndidx()];
             let temp_reading = temperature;
-            let air_mass: f32 = 5.0 / gs_state.difficulty.0.equipment_sensitivity;
+            let air_mass: f32 = 5.0 / difficulty.0.equipment_sensitivity;
 
             // Double noise reduction to remove any noise from measurement.
             let n = thermometer.frame_counter as usize % thermometer.temp_l2.len();

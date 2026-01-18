@@ -7,7 +7,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
@@ -17,6 +17,7 @@ use unrender_std::components::sprite_type::SpriteType;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+use unsummary_core::summary::SummaryData;
 
 use crate::metrics;
 
@@ -40,9 +41,8 @@ pub(crate) fn update_repellentflask(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
-    __gs_audio: GearAudio,
-    mut gs_state: GearGameState,
-    _gs_res: GearResources,
+    _gs_audio: GearAudio,
+    mut summary: ResMut<SummaryData>,
     mut commands: Commands,
 ) {
     for (entity, mut repellent, mut status, mut sprite, pos, ep, triggered) in
@@ -61,7 +61,7 @@ pub(crate) fn update_repellentflask(
             let mut rng = random_seed::rng();
             if rng.random_range(0.0..1.0) <= 0.5 {
                 if repellent.qty == RepellentFlask::MAX_QTY {
-                    gs_state.summary.repellent_used_amt += 1;
+                    summary.repellent_used_amt += 1;
                 }
                 repellent.qty -= 1;
                 if repellent.qty <= 0 {

@@ -1,6 +1,9 @@
+use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::evidence::Evidence;
-use ungear_core::gear_stuff::{GearAudio, GearGameState, GearResources};
+use ungear_core::gear_stuff::GearAudio;
+use unghost_core::resources::haunt_state::HauntState;
+use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
@@ -15,19 +18,14 @@ use uninteraction_core::interaction::Toggleable;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 
 pub(crate) trait GeigerCounterExt {
-    fn calculate_output_sound(&self, gs_state: &GearGameState) -> f32;
+    fn calculate_output_sound(&self, haunt_state: &HauntState) -> f32;
 }
 
 impl GeigerCounterExt for GeigerCounter {
-    fn calculate_output_sound(&self, gs_state: &GearGameState) -> f32 {
+    fn calculate_output_sound(&self, haunt_state: &HauntState) -> f32 {
         let sum_snd: f32 = self.sound_l.iter().sum();
         let avg_snd: f32 = sum_snd / self.sound_l.len() as f32;
-        let evidence = gs_state
-            .haunt_state
-            .ghost_dynamics
-            .cpm500_clarity
-            .cbrt()
-            .max(-0.05);
+        let evidence = haunt_state.ghost_dynamics.cpm500_clarity.cbrt().max(-0.05);
 
         f32::tanh(avg_snd.sqrt() / (10.0 + evidence * 2.0)) * (480.0 + evidence * 500.0)
     }
@@ -46,8 +44,9 @@ pub(crate) fn update_geigercounter(
         &mut PerceivedClarity,
     )>,
     mut gs_audio: GearAudio,
-    gs_res: GearResources,
-    gs_state: GearGameState,
+    sg: Res<SoundGrid>,
+    difficulty: Res<CurrentDifficulty>,
+    haunt_state: Res<HauntState>,
 ) {
     for (
         mut geiger,
@@ -76,34 +75,29 @@ pub(crate) fn update_geigercounter(
             z: pos.z,
             visual_priority: pos.visual_priority,
         };
-        let dist2breach = gs_state.haunt_state.breach_pos.distance2(&posk) + 10.0;
+        let dist2breach = haunt_state.breach_pos.distance2(&posk) + 10.0;
         let breach_energy = dist2breach.recip() * 20000.0;
         let bpos = posk.to_board_position();
         for (i, bpos) in bpos.iter_xy_neighbors_nosize(4).enumerate() {
-            let sound = gs_res
-                .sg
-                .sound_field
-                .get(&bpos)
-                .cloned()
-                .unwrap_or_default();
+            let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
             let sound_reading = sound.iter().sum::<Vec2>().length() * 1000.0;
             if geiger.sound_l.len() < 1200 {
                 geiger.sound_l.push(sound_reading);
             }
             let n = (geiger.frame_counter as usize + i) % geiger.sound_l.len();
-            geiger.sound_l[n] /= 4.0 * gs_state.difficulty.0.equipment_sensitivity;
+            geiger.sound_l[n] /= 4.0 * difficulty.0.equipment_sensitivity;
             if toggle.is_on {
-                geiger.sound_l[n] += sound_reading * 40.0
-                    + breach_energy * gs_state.difficulty.0.equipment_sensitivity;
+                geiger.sound_l[n] +=
+                    sound_reading * 40.0 + breach_energy * difficulty.0.equipment_sensitivity;
             }
         }
 
         geiger.sound_l.iter_mut().for_each(|x| *x /= 1.06);
 
-        let mass: f32 = 8.0 * gs_state.difficulty.0.equipment_sensitivity;
+        let mass: f32 = 8.0 * difficulty.0.equipment_sensitivity;
         if toggle.is_on {
             // Calculate the *current* output sound.
-            let current_output_sound = geiger.calculate_output_sound(&gs_state);
+            let current_output_sound = geiger.calculate_output_sound(&haunt_state);
             // Smooth the *current* output to get sound_a1 (first IIR filter).
             geiger.sound_a1 = (geiger.sound_a1 * mass + current_output_sound * mass.recip())
                 / (mass + mass.recip());

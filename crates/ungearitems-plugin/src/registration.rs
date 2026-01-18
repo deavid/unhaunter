@@ -2,36 +2,31 @@ use bevy::prelude::*;
 use unbehavior::components::{Collision, InteractableByGhost};
 use unfoundation_core::types::evidence::Evidence;
 use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
+use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
+use ungearitems_core::prelude::{QuartzStoneData, Recorder, SageBundleData, SaltData, Thermometer};
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 
 use crate::components::compass::Compass;
-use crate::components::emfmeter::EMFMeter as EMFMeterInternal;
+use crate::components::emfmeter::EMFMeter;
 use crate::components::estaticmeter::EStaticMeter;
-use crate::components::flashlight::Flashlight as FlashlightInternal;
+use crate::components::flashlight::Flashlight;
 use crate::components::geigercounter::GeigerCounter;
 use crate::components::ionmeter::IonMeter;
 use crate::components::motionsensor::MotionSensor;
 use crate::components::photocam::Photocam;
-use crate::components::quartz::QuartzStoneData;
-use crate::components::recorder::Recorder;
 use crate::components::redtorch::RedTorch;
 use crate::components::repellentflask::RepellentFlask;
-use crate::components::sage::SageBundleData;
-use crate::components::salt::SaltData;
 use crate::components::spiritbox::SpiritBox;
 use crate::components::thermalimager::ThermalImager;
-use crate::components::thermometer::Thermometer as ThermometerInternal;
 use crate::components::uvtorch::UVTorch;
 use crate::components::videocam::Videocam;
-
-use unfoundation_core::types::light::LightType;
 
 pub(crate) fn register_all(app: &mut App) {
     let mut registry = app.world_mut().resource_mut::<GearSpawnerRegistry>();
@@ -68,7 +63,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(FlashlightInternal::default());
+            cmd.insert(Flashlight::default());
         },
     );
 
@@ -101,7 +96,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(ThermometerInternal::default());
+            cmd.insert(Thermometer::default());
         },
     );
 
@@ -134,7 +129,7 @@ pub(crate) fn register_all(app: &mut App) {
             cmd.insert(EquipmentPosition::Stowed);
             cmd.insert(InteractableByGhost);
             cmd.insert(Collision);
-            cmd.insert(EMFMeterInternal::default());
+            cmd.insert(EMFMeter::default());
         },
     );
 

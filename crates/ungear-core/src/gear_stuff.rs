@@ -1,17 +1,9 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_persistent::Persistent;
+use unevents_core::events::sound::SoundEvent;
 use unprofile_core::profile::PlayerProfileData;
 use unsettings_core::audio::AudioSettings;
-
-use unboard_core::resources::board_topology::BoardTopology;
-use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::sound::SoundEvent;
-use unfog_core::miasma::MiasmaGrid;
-use unghost_core::resources::haunt_state::HauntState;
-use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
-use unsummary_core::summary::SummaryData;
-use unthermal_core::resources::ThermalGrid;
 
 /// A collection of resources frequently used for audio playback.
 #[derive(SystemParam)]
@@ -66,54 +58,5 @@ impl GearAudio<'_> {
 
         // Send the SoundEvent to be handled by the sound playback system
         self.sound_events.write(sound_event);
-    }
-}
-
-/// A collection of resources for observing board fields.
-#[derive(SystemParam)]
-pub struct GearResources<'w> {
-    /// Access to the game's board data, including collision, lighting, and temperature
-    /// fields.
-    pub bf: ResMut<'w, BoardTopology>,
-    /// Access to the thermal grid, for temperature readings.
-    pub tg: ResMut<'w, ThermalGrid>,
-    /// Access to the sound grid, for audio readings.
-    pub sg: ResMut<'w, SoundGrid>,
-    /// Access to the miasma grid, used for EMF readings.
-    pub miasma: ResMut<'w, MiasmaGrid>,
-}
-
-/// A collection of resources tracking game-wide state.
-#[derive(SystemParam)]
-pub struct GearGameState<'w> {
-    /// Access to the ghost's haunt state, including evidences and dynamics.
-    pub haunt_state: ResMut<'w, HauntState>,
-    /// Access to summary data, which tracks game progress and statistics.
-    pub summary: ResMut<'w, SummaryData>,
-    /// Access to the current difficulty.
-    pub difficulty: Res<'w, CurrentDifficulty>,
-}
-
-/// A collection of resources and commands frequently used by gear-related systems.
-///
-/// This is a legacy "God Object" bundle that is being decomposed into:
-/// - [`GearAudio`]
-/// - [`GearResources`]
-/// - [`GearGameState`]
-#[derive(SystemParam)]
-pub struct GearStuff<'w, 's> {
-    pub audio: GearAudio<'w>,
-    pub resources: GearResources<'w>,
-    pub game_state: GearGameState<'w>,
-    pub commands: Commands<'w, 's>,
-}
-
-impl GearStuff<'_, '_> {
-    pub fn play_audio(&mut self, sound_file: String, volume: f32, position: &Position) {
-        self.audio.play_audio(sound_file, volume, position);
-    }
-
-    pub fn play_audio_nopos(&mut self, sound_file: String, volume: f32) {
-        self.audio.play_audio_nopos(sound_file, volume);
     }
 }
