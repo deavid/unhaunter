@@ -9,7 +9,7 @@ use unplayer_core::components::PlayerSprite;
 use unrender_std::components::visuals::SpectralInfluence;
 use unspatial_core::position::Position;
 
-pub fn assign_ghost_influence(
+pub(crate) fn assign_ghost_influence(
     commands: &mut Commands,
     movable_objects: &[Entity],
     ghost_spawn_query: &Query<&Position, With<GhostBreach>>,

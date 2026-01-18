@@ -1,7 +1,7 @@
 use unfoundation_core::types::grade::Grade;
 use unsummary_core::summary::{MissionEvaluator, SummaryData};
 
-pub struct ClassicEvaluator;
+pub(crate) struct ClassicEvaluator;
 
 impl MissionEvaluator for ClassicEvaluator {
     fn calculate_base_score(&self, data: &SummaryData) -> i64 {

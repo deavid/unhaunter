@@ -34,7 +34,7 @@ use unsummary_core::summary::SummaryData;
 use untags_core::tags::{GhostTag, PlayerTag};
 
 #[derive(SystemParam)]
-pub struct ClassicModeSystemParam<'w> {
+pub(crate) struct ClassicModeSystemParam<'w> {
     pub asset_server: Res<'w, AssetServer>,
     pub haunt_state: ResMut<'w, HauntState>,
     pub player_assets: Res<'w, unplayer_core::assets::PlayerAssets>,
@@ -47,7 +47,7 @@ pub struct ClassicModeSystemParam<'w> {
     pub roomdb: Res<'w, RoomDB>,
 }
 
-pub fn classic_mode_orchestrator(
+pub(crate) fn classic_mode_orchestrator(
     mut p: ClassicModeSystemParam,
     mut commands: Commands,
     mut ev_level_ready: MessageWriter<LevelReadyEvent>,
@@ -357,7 +357,7 @@ fn spawn_ambient_sounds(p: &ClassicModeSystemParam, commands: &mut Commands) {
         });
 }
 
-pub fn sync_ghost_visuals(
+pub(crate) fn sync_ghost_visuals(
     haunt_state: Res<HauntState>,
     mut q_ghost: Query<&mut SpectralClarity, With<GhostTag>>,
 ) {
