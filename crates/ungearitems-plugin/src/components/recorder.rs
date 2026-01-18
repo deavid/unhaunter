@@ -1,9 +1,11 @@
+use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{GearSprite, ItemName, PerceivedClarity, StatusText};
 use ungear_core::gear_stuff::GearAudio;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unprofile_core::profile::PlayerProfileData;
 use unsound_core::resources::SoundGrid;
 
 use bevy::prelude::*;
@@ -28,6 +30,7 @@ pub(crate) fn update_recorder(
     sg: Res<SoundGrid>,
     haunt_state: Res<HauntState>,
     difficulty: Res<CurrentDifficulty>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     for (mut recorder, mut status, mut sprite, toggle, pos, name, mut perceived_clarity) in
         q_recorder.iter_mut()
@@ -107,8 +110,7 @@ pub(crate) fn update_recorder(
 
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-                let count = gs_audio
-                    .player_profile
+                let count = player_profile
                     .times_evidence_acknowledged_on_gear
                     .get(&Evidence::EVPRecording)
                     .copied()

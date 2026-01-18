@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use rand::Rng;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
@@ -11,6 +12,7 @@ use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
+use unprofile_core::profile::PlayerProfileData;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
@@ -30,6 +32,7 @@ pub(crate) fn update_thermometer(
     mut gs_audio: GearAudio,
     tg: Res<ThermalGrid>,
     difficulty: Res<CurrentDifficulty>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     for (
         mut thermometer,
@@ -83,8 +86,7 @@ pub(crate) fn update_thermometer(
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if kelvin_to_celsius(thermometer.temp) < 0.0 && electronic.glitch_timer <= 0.0 {
-                    let count = gs_audio
-                        .player_profile
+                    let count = player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::FreezingTemp)
                         .copied()

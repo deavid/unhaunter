@@ -1,7 +1,8 @@
+use crate::types::gear::kind::GearKind;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
-use unfoundation_core::types::gear::{GearKind, VisualKey};
+use unfoundation_core::types::gear::VisualKey;
 use unspatial_core::position::Position;
 
 /// A marker component for all gear entities.

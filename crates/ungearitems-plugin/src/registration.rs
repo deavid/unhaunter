@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use unbehavior::components::{Collision, InteractableByGhost};
-use unfoundation_core::types::gear::{EquipmentPosition, GearKind};
+use unfoundation_core::types::gear::EquipmentPosition;
 use unfoundation_core::types::light::LightType;
 use ungear_core::components::core::{
     Battery, Electronic, EvidenceSensor, GearSprite, Handheld, ItemDescription, ItemName,
     PerceivedClarity, StatusText,
 };
 use ungear_core::resources::spawner::{GearMetadata, GearSpawnerRegistry};
+use ungear_core::types::gear::GearKind;
 use ungearitems_core::prelude::{QuartzStoneData, Recorder, SageBundleData, SaltData, Thermometer};
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;

@@ -1,3 +1,4 @@
+use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfog_core::miasma::MiasmaGrid;
 use unfoundation_core::random_seed;
@@ -7,6 +8,7 @@ use ungear_core::components::core::{
 use ungear_core::gear_stuff::GearAudio;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unprofile_core::profile::PlayerProfileData;
 use unsound_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
 
@@ -39,6 +41,7 @@ pub(crate) fn update_emfmeter(
     sg: Res<SoundGrid>,
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
 ) {
     for (
         mut emf,
@@ -137,8 +140,7 @@ pub(crate) fn update_emfmeter(
                 // Update blinking_hint_active
                 const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
                 if emf.emf_level == EMFLevel::EMF5 {
-                    let count = gs_audio
-                        .player_profile
+                    let count = player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::EMFLevel5)
                         .copied()

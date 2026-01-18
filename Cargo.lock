@@ -5717,6 +5717,7 @@ dependencies = [
  "bevy_platform",
  "serde",
  "unfoundation-core",
+ "ungear-core",
  "unghost-core",
  "untypes-core",
 ]
@@ -5807,15 +5808,15 @@ name = "ungear-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy-persistent",
  "bevy_asset_loader",
  "bevy_platform",
+ "enum-iterator",
+ "serde",
+ "thiserror 2.0.17",
  "unevents-core",
  "unfoundation-core",
  "unghost-core",
  "unplayer-core",
- "unprofile-core",
- "unsettings-core",
  "unspatial-core",
 ]
 
@@ -5855,6 +5856,7 @@ name = "ungearitems-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "bevy_platform",
  "enum-iterator",
  "fastapprox",
@@ -5872,6 +5874,7 @@ dependencies = [
  "unlight-plugin",
  "unmetrics-core",
  "unplayer-core",
+ "unprofile-core",
  "unrender-std",
  "unsound-core",
  "unspatial-core",
@@ -5891,7 +5894,6 @@ dependencies = [
  "itertools 0.14.0",
  "rand 0.9.2",
  "serde",
- "thiserror 2.0.17",
  "unfoundation-core",
  "unspatial-core",
 ]

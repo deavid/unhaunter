@@ -1,8 +1,5 @@
 use bevy::{ecs::system::SystemParam, prelude::*};
-use bevy_persistent::Persistent;
 use unevents_core::events::sound::SoundEvent;
-use unprofile_core::profile::PlayerProfileData;
-use unsettings_core::audio::AudioSettings;
 use unspatial_core::position::Position;
 
 /// A collection of resources frequently used for audio playback.
@@ -14,10 +11,6 @@ pub struct GearAudio<'w> {
     pub time: Res<'w, Time>,
     /// Event writer for sending sound events.
     pub sound_events: MessageWriter<'w, SoundEvent>,
-    /// Audio settings from the game.
-    pub audio_settings: Res<'w, Persistent<AudioSettings>>,
-    /// Player profile data.
-    pub player_profile: Res<'w, Persistent<PlayerProfileData>>,
 }
 
 impl GearAudio<'_> {

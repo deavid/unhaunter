@@ -16,12 +16,14 @@ pub(crate) struct SpiritBoxInternal {
 use uninteraction_core::interaction::Toggleable;
 
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use rand::Rng;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
 use unghost_core::types::evidence::Evidence;
 use unlight_plugin::resources::light_grid::LightGrid;
+use unprofile_core::profile::PlayerProfileData;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unspatial_core::position::Position;
 
@@ -44,6 +46,7 @@ pub(crate) fn update_spiritbox(
     sg: Res<SoundGrid>,
     haunt_state: Res<HauntState>,
     lg: Res<LightGrid>,
+    player_profile: Res<Persistent<PlayerProfileData>>,
     mut commands: Commands,
 ) {
     for (
@@ -169,8 +172,7 @@ pub(crate) fn update_spiritbox(
 
                     // Update blinking_hint_active
                     const HINT_ACKNOWLEDGE_THRESHOLD: u32 = 3;
-                    let count = gs_audio
-                        .player_profile
+                    let count = player_profile
                         .times_evidence_acknowledged_on_gear
                         .get(&Evidence::SpiritBox)
                         .copied()

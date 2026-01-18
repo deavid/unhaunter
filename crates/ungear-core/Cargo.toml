@@ -16,11 +16,11 @@ unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
 unevents-core = { path = "../unevents-core" }
 unplayer-core = { path = "../unplayer-core" }
-unsettings-core = { path = "../unsettings-core" }
-unprofile-core = { path = "../unprofile-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }
 bevy_asset_loader = { workspace = true }
 bevy_platform = { workspace = true }
-bevy-persistent = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+enum-iterator = { workspace = true }

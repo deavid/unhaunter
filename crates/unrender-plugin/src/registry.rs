@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use enum_iterator::all;
 use std::collections::HashMap;
-use unfoundation_core::types::gear::{GearSpriteID, VisualKey};
+use unfoundation_core::types::gear::VisualKey;
+use unrender_std::resources::sprite_registry::GearSpriteID;
 
 #[derive(Resource, Debug, Default, Clone)]
 pub struct SpriteRegistry {

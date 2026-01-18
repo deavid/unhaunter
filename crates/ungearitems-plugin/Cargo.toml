@@ -29,8 +29,10 @@ unfog-core = { path = "../unfog-core" }
 unsound-core = { path = "../unsound-core" }
 unsummary-core = { path = "../unsummary-core" }
 unthermal-core = { path = "../unthermal-core" }
+unprofile-core = { path = "../unprofile-core" }
 
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
 rand = { workspace = true }
 ndarray = { workspace = true }
