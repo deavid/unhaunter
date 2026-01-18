@@ -62,6 +62,19 @@ Low-level foundation shared across the project. Zero game logic (no systems or o
 - **\`unprofile-core\`**: User profile data structures.
 - **\`unthermal-core\`**: Thermal-specific data types and components.
 - **\`untiled-core\`**: Low-level Tiled map data structures.
+- **\`undifficulty-core\`**: Difficulty levels and configuration.
+- **\`unfog-core\`**: Components and resources for the miasma/fog system.
+- **\`ungear-core\`**: Base gear traits, types, and resources.
+- **\`ungearitems-core\`**: Specific item components and traits (e.g., EMF).
+- **\`unghost-core\`**: Core ghost components and evidence decay logic.
+- **\`unmanual-core\`**: Data structures and asset handles for the in-game manual.
+- **\`unmapload-core\`**: Map loading metadata and shared logic.
+- **\`unmenu-core\`**: Shared UI templates and mission selection data.
+- **\`unpicking-core\`**: Low-level picking logic and backend components.
+- **\`unplayer-core\`**: Core player components and animation data.
+- **\`unsound-core\`**: Sound-related resources and types.
+- **\`untruck-core\`**: Truck-specific components, journal, and loadout data.
+- **\`unwalkie-core\`**: Walkie-talkie traits, events, and resources.
 
 ### Plugins & Gameplay Systems
 
@@ -71,7 +84,6 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unui-plugin\`**: Centralized UI asset loading and theme management.
 - **\`ungame-plugin\`**: Main game loop, scene management, high-level coordination.
 - **\`uncampaign-plugin\`**: Campaign progression, mission unlocking, persistent state.
-- **\`undifficulty-core\`**: Difficulty levels and configuration.
 - **\`unprofile-plugin\`**: User profile management, save/load logic.
 - **\`unsummary-plugin\`**: End-of-mission summary screen systems.
 - **\`unmapload-plugin\`**: Map loading orchestration and setup.
@@ -93,6 +105,11 @@ High-level game flow and specific gameplay mechanics. Logic is contained in \`Pl
 - **\`unsound-plugin\`**: Audio playback and sound triggering logic.
 - **\`unthermal-plugin\`**: Thermal vision and heat signature simulation.
 - **\`unmetrics-plugin\`**: Performance monitoring and reporting.
+- **\`unclassic-mode-plugin\`**: Classic mode gameplay logic and mission evaluation.
+- **\`unmanual-plugin\`**: In-game manual UI, chapters, and navigation logic.
+- **\`unmission-plugin\`**: Mission lifecycle events and summary data preparation.
+- **\`unsettings-plugin\`**: Persistence of application and gameplay settings.
+- **\`untmxmap-plugin\`**: Tiled map loading integration and Bevy compatibility.
 
 ### Tools & Utilities
 
