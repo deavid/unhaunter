@@ -1,8 +1,8 @@
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use ungear_core::gear_stuff::GearAudio;
 use uninteraction_core::interaction::{Toggleable, Triggered};
 use unrender_std::components::light::LightEmitter;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 use bevy::prelude::*;
@@ -24,7 +24,7 @@ pub(crate) fn update_flashlight(
         &Position,
         &ItemName,
     )>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
 ) {
     for (
         mut flashlight,

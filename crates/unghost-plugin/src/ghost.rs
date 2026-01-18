@@ -8,7 +8,6 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::utils::{MeanValue, PrintingTimer};
-use ungear_core::gear_stuff::GearAudio;
 use ungearitems_core::components::sage::{SageSmokeParticle, SmokeParticleTimer};
 use ungearitems_core::components::salt::{SaltyTrace, SaltyTraceTimer, UVReactive};
 use unghost_core::components::ghost_influence::{GhostInfluence, InfluenceType};
@@ -20,6 +19,7 @@ use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unrender_std::utils::perspective;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -408,7 +408,7 @@ fn ghost_enrage(
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
     mut player_state: ResMut<PlayerState>,
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     mut last_roar: Local<f32>,
@@ -621,7 +621,7 @@ fn ghost_fade_out_system(
         &Position,
         Option<&GhostSprite>,
     )>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
 ) {
     let mut rng = random_seed::rng();
     for (entity, mut fade_out, mut map_color, position, ghost_sprite) in query.iter_mut() {
@@ -1155,7 +1155,7 @@ fn determine_roar_decision(
 fn execute_roar_decision(
     roar_decision: &RoarDecision,
     last_roar: &mut f32,
-    ga: &mut GearAudio,
+    ga: &mut SoundEmitter,
     ghost_position: &Position,
 ) {
     if roar_decision.should_play_now {

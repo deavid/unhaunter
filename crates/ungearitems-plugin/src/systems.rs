@@ -2,13 +2,13 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic};
-use ungear_core::gear_stuff::GearAudio;
 use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 pub(crate) fn system_electronic_interference(
-    gs_audio: GearAudio,
+    gs_audio: SoundEmitter,
     haunt_state: Res<HauntState>,
     mut q_electronic: Query<(&Position, &mut Electronic, &Toggleable)>,
 ) {

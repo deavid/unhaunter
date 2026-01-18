@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use rand::Rng;
 use unfoundation_core::random_seed;
 use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, StatusText};
-use ungear_core::gear_stuff::GearAudio;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::redtorch::RedTorch;
 use uninteraction_core::interaction::Toggleable;
 use unrender_std::resources::sprite_registry::GearSpriteID;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_redtorch(
@@ -20,7 +20,7 @@ pub(crate) fn update_redtorch(
         &Position,
         &ItemName,
     )>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
 ) {
     for (mut redtorch, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
         q_redtorch.iter_mut()

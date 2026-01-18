@@ -4,12 +4,6 @@ use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
-/// Represents an object that is currently being held by the player.
-#[derive(Component, Debug, Clone)]
-pub struct HeldObject {
-    pub entity: Entity,
-}
-
 #[derive(Component, Debug, Clone)]
 pub struct InventoryNext {
     pub idx: Option<usize>,

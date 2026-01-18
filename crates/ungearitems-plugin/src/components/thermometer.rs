@@ -7,13 +7,13 @@ use unfoundation_core::utils::temperature::kelvin_to_celsius;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::GearAudio;
 use ungear_core::types::gear::utils::on_off;
 use ungearitems_core::components::thermometer::Thermometer;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::resources::sprite_registry::GearSpriteID;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use unthermal_core::resources::ThermalGrid;
 
@@ -29,7 +29,7 @@ pub(crate) fn update_thermometer(
         &ItemName,
         &mut PerceivedClarity,
     )>,
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     tg: Res<ThermalGrid>,
     difficulty: Res<CurrentDifficulty>,
     player_profile: Res<Persistent<PlayerProfileData>>,

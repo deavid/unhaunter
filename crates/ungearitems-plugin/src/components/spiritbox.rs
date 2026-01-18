@@ -2,8 +2,8 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use ungear_core::gear_stuff::GearAudio;
 use unghost_core::resources::haunt_state::HauntState;
+use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
 
@@ -41,7 +41,7 @@ pub(crate) fn update_spiritbox(
         &mut PerceivedClarity,
         Option<&mut SpiritBoxInternal>,
     )>,
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     tg: Res<ThermalGrid>,
     sg: Res<SoundGrid>,
     haunt_state: Res<HauntState>,

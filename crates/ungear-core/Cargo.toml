@@ -14,8 +14,6 @@ workspace = true
 
 unspatial-core = { path = "../unspatial-core" }
 unfoundation-core = { path = "../unfoundation-core" }
-unevents-core = { path = "../unevents-core" }
-unplayer-core = { path = "../unplayer-core" }
 unghost-core = { path = "../unghost-core" }
 
 bevy = { workspace = true }

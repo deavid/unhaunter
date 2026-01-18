@@ -6,14 +6,13 @@ use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::BoardCollisionField;
 use unfoundation_core::types::gear::{EquipmentPosition, Hand};
 use ungear_core::components::deployedgear::DeployedGear;
-use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearAudio;
+use ungear_core::components::playergear::{HeldObject, PlayerGear};
 use ungear_core::resources::spawner::GearMarker;
 use ungear_core::types::gear::GearKind;
 use uninteraction_core::interaction::{Toggleable, Triggered};
-use unplayer_core::components::HeldObject;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 fn sync_held_gear_position(
@@ -234,7 +233,7 @@ fn item_trigger_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     q_player: Query<(&PlayerGear, &PlayerSprite)>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
 ) {
     for (player_gear, player_sprite) in q_player.iter() {
         if keyboard_input.just_pressed(player_sprite.controls.right_hand_trigger)

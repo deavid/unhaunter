@@ -1,10 +1,10 @@
 use bevy_persistent::Persistent;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
-use ungear_core::gear_stuff::GearAudio;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use unprofile_core::profile::PlayerProfileData;
+use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::position::Position;
 
@@ -45,7 +45,7 @@ pub(crate) fn update_geigercounter(
         &EquipmentPosition,
         &mut PerceivedClarity,
     )>,
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     sg: Res<SoundGrid>,
     difficulty: Res<CurrentDifficulty>,
     haunt_state: Res<HauntState>,

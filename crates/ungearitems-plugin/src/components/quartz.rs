@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearAudio;
 use ungearitems_core::components::quartz::QuartzStoneData;
 use unghost_core::components::GhostSprite;
 use unrender_std::resources::sprite_registry::GearSpriteID;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::GhostTag;
 
@@ -61,7 +61,7 @@ impl QuartzStoneDataExt for QuartzStoneData {
 }
 
 pub(crate) fn update_quartz(
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     difficulty: Res<CurrentDifficulty>,
     mut q_quartz: Query<(
         &mut QuartzStoneData,

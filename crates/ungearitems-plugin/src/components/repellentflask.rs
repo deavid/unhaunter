@@ -7,13 +7,13 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearAudio;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use uninteraction_core::interaction::Triggered;
 use unmetrics_core::metrics::SendMetric;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -41,7 +41,7 @@ pub(crate) fn update_repellentflask(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
-    _gs_audio: GearAudio,
+    _gs_audio: SoundEmitter,
     mut summary: ResMut<SummaryData>,
     mut commands: Commands,
 ) {

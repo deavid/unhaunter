@@ -5,9 +5,9 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearAudio;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::AnimationTimer;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 /// Allows the player to hide in a designated hiding spot.
@@ -24,7 +24,7 @@ fn hide_player(
         (Without<Hiding>, Without<Behavior>),
     >,
     hiding_spots: Query<(Entity, &Position, &Behavior), Without<PlayerSprite>>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
     for (player_entity, player, mut player_pos, player_gear) in players.iter_mut() {

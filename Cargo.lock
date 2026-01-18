@@ -5813,10 +5813,8 @@ dependencies = [
  "enum-iterator",
  "serde",
  "thiserror 2.0.17",
- "unevents-core",
  "unfoundation-core",
  "unghost-core",
- "unplayer-core",
  "unspatial-core",
 ]
 
@@ -5910,7 +5908,6 @@ dependencies = [
  "undifficulty-core",
  "unevents-core",
  "unfoundation-core",
- "ungear-core",
  "ungearitems-core",
  "unghost-core",
  "uninteraction-core",
@@ -5918,6 +5915,7 @@ dependencies = [
  "unnoise-core",
  "unplayer-core",
  "unrender-std",
+ "unsound-core",
  "unspatial-core",
  "unsummary-core",
  "untags-core",
@@ -6411,6 +6409,7 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_platform",
+ "unevents-core",
  "unspatial-core",
 ]
 

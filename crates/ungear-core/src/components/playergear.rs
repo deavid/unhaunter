@@ -1,5 +1,9 @@
 use bevy::prelude::*;
-use unplayer_core::components::HeldObject;
+/// Represents an object that is currently being held by the player.
+#[derive(Component, Debug, Clone)]
+pub struct HeldObject {
+    pub entity: Entity,
+}
 
 #[derive(Clone, Debug, Component, Default)]
 pub struct PlayerGear {

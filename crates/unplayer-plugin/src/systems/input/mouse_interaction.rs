@@ -5,16 +5,16 @@ use bevy::{
 };
 use unbehavior::components::Interactive;
 use ungear_core::components::playergear::PlayerGear;
-use ungear_core::gear_stuff::GearAudio;
 use uninteraction_core::interaction::Toggleable;
 use unplayer_core::components::PlayerSprite;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 pub(crate) fn mouse_right_click_gear_system(
     mouse: Res<ButtonInput<MouseButton>>,
     q_player: Query<&PlayerGear, With<PlayerSprite>>,
     mut q_toggleable: Query<(&mut Toggleable, Option<&Position>)>,
-    mut ga: GearAudio,
+    mut ga: SoundEmitter,
 ) {
     if mouse.just_pressed(MouseButton::Right) {
         for player_gear in q_player.iter() {

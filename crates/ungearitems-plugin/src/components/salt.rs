@@ -6,7 +6,6 @@ use unboard_core::components::mapcolor::MapColor;
 use unfoundation_core::random_seed;
 use unfoundation_core::types::gear::EquipmentPosition;
 use ungear_core::components::core::{GearSprite, StatusText};
-use ungear_core::gear_stuff::GearAudio;
 use ungearitems_core::components::salt::{
     SaltData, SaltParticle, SaltParticleTimer, SaltPile, SaltyTrace, SaltyTraceTimer, UVReactive,
 };
@@ -17,6 +16,7 @@ use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_type::SpriteType;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unrender_std::utils::perspective;
+use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
 pub(crate) fn update_salt(
@@ -29,7 +29,7 @@ pub(crate) fn update_salt(
         &EquipmentPosition,
         Option<&Triggered>,
     )>,
-    mut gs_audio: GearAudio,
+    mut gs_audio: SoundEmitter,
     mut commands: Commands,
 ) {
     for (entity, mut salt, mut status, mut sprite, pos, _ep, triggered) in q_salt.iter_mut() {
