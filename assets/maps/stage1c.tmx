@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="46" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="50" nextobjectid="15">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="46" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="50" nextobjectid="15">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter1"/>
+  <property name="campaign_order" value="01C"/>
   <property name="display_name" value="Crimson Comb - 102 Main Street"/>
   <property name="flavor_text" value="This old barber shop closed its doors decades ago, but the energy within remains. Locals report seeing lights turn on after dark and hearing the phantom snip of scissors. Step inside and see if the stories hold true."/>
-  <property name="location_address" value="102 Main Street"/>
-  <property name="location_name" value="Crimson Comb"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="01C"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter1"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage1c.png"/>
-  <property name="required_deposit" type="int" value="13"/>
-  <property name="mission_reward_base" type="int" value="23"/>
   <property name="grade_a_score_threshold" type="int" value="800"/>
   <property name="grade_b_score_threshold" type="int" value="600"/>
   <property name="grade_c_score_threshold" type="int" value="300"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="102 Main Street"/>
+  <property name="location_name" value="Crimson Comb"/>
+  <property name="map_preview_image" value="maps/previews/stage1c.png"/>
+  <property name="mission_reward_base" type="int" value="23"/>
+  <property name="required_deposit" type="int" value="13"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -415,7 +415,7 @@
 0,0,0,0,0,0,0,266,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483925,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,280,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,566,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,266,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,565,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

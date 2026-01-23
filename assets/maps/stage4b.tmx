@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="34" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="34" nextobjectid="1">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter4"/>
+  <property name="campaign_order" value="04B"/>
   <property name="display_name" value="Black Creek Animal Clinic - 24 Paws Way"/>
   <property name="flavor_text" value="This small-town vet clinic closed suddenly after Dr. Black passed away under mysterious circumstances. Locals whisper about strange animal-like sounds coming from the empty building at night, equipment activating on its own, and an unsettling feeling of being watched by unseen eyes. The place feels cold and heavy with unspoken stories."/>
-  <property name="location_address" value="24 Paws Way"/>
-  <property name="location_name" value="Black Creek Animal Clinic"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="04B"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter4"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage4b.png"/>
-  <property name="required_deposit" type="int" value="1121"/>
-  <property name="mission_reward_base" type="int" value="577"/>
   <property name="grade_a_score_threshold" type="int" value="650"/>
   <property name="grade_b_score_threshold" type="int" value="450"/>
   <property name="grade_c_score_threshold" type="int" value="250"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="24 Paws Way"/>
+  <property name="location_name" value="Black Creek Animal Clinic"/>
+  <property name="map_preview_image" value="maps/previews/stage4b.png"/>
   <property name="min_player_level" type="int" value="7"/>
+  <property name="mission_reward_base" type="int" value="577"/>
+  <property name="required_deposit" type="int" value="1121"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -175,7 +175,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,61,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,61,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,0,61,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,61,0,61,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,61,0,0,0,61,61,61,61,61,61,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,61,0,61,61,0,0,0,0,0,0,0,2147483927,0,0,0,0,0,0,61,0,0,0,61,61,61,61,61,61,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,61,61,0,0,0,0,61,61,0,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,61,61,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

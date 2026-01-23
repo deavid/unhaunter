@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="22" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="22" nextobjectid="1">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter2"/>
+  <property name="campaign_order" value="02B"/>
   <property name="display_name" value="The Quiet Stacks - 7 Quiet Lane"/>
   <property name="flavor_text" value="This small community library hasn't seen visitors in years. The books gather dust on silent shelves, yet a strange energy occasionally rustles pages and makes the old card catalog drawers slide open. Is a lonely spirit still looking for a good read?"/>
-  <property name="location_address" value="7 Quiet Lane"/>
-  <property name="location_name" value="The Quiet Stacks"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="02B"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter2"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage2b.png"/>
-  <property name="required_deposit" type="int" value="69"/>
-  <property name="mission_reward_base" type="int" value="51"/>
   <property name="grade_a_score_threshold" type="int" value="700"/>
   <property name="grade_b_score_threshold" type="int" value="500"/>
   <property name="grade_c_score_threshold" type="int" value="300"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="7 Quiet Lane"/>
+  <property name="location_name" value="The Quiet Stacks"/>
+  <property name="map_preview_image" value="maps/previews/stage2b.png"/>
+  <property name="mission_reward_base" type="int" value="51"/>
+  <property name="required_deposit" type="int" value="69"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -324,7 +324,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,596,0,0,0,0,0,0,0,0,0,0,0,0,0,0,65,0,476,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,0,2147483947,0,0,0,0,0,0,0,52,2147484125,0,474,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483947,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483939,0,2147483939,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,63,2147483928,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483939,0,2147483939,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,2147483698,0,0,0,0,0,299,0,299,0,0,0,0,0,0,2147483699,0,2147483699,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,2147483938,0,0,0,0,0,0,0,0,0,2147483947,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,299,0,299,0,0,0,0,0,0,2147483698,0,2147483698,0,0,0,0,0,0,0,0,0,0,0,0,

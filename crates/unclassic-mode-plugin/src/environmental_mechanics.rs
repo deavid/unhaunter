@@ -1,10 +1,12 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
-use unbehavior::class::Class;
 use unbehavior::components::Light;
 use unbehavior::state::TileState;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::ghost_interaction::{GhostInteractionEvent, GhostInteractionType};
+use unevents_core::events::roomchanged::InteractionExecutionType;
+use uninteraction_core::interactivestuff::InteractiveStuff;
+use unspatial_core::position::Position;
 
 /// Cooldown timer to prevent rapid re-tripping of the breaker
 #[derive(Resource)]
@@ -13,7 +15,7 @@ struct FuseBoxCooldownTimer(Timer);
 
 impl Default for FuseBoxCooldownTimer {
     fn default() -> Self {
-        Self(Timer::from_seconds(30.0, TimerMode::Once))
+        Self(Timer::from_seconds(10.0, TimerMode::Once))
     }
 }
 
@@ -32,7 +34,7 @@ fn fuse_box_overload_system(
 ) {
     // Initialize cooldown timer if it doesn't exist
     if cooldown_timer.is_none() {
-        *cooldown_timer = Some(Timer::from_seconds(30.0, TimerMode::Once));
+        *cooldown_timer = Some(Timer::from_seconds(5.0, TimerMode::Once));
     }
 
     // Tick the cooldown timer
@@ -45,12 +47,12 @@ fn fuse_box_overload_system(
         }
     }
 
-    // Count total lights and lights that are currently on
+    // Count total house-powered lights and lights that are currently on
     let mut total_lights = 0;
     let mut lights_on = 0;
 
     for behavior in q_lights.iter() {
-        if behavior.can_emit_light() {
+        if behavior.can_emit_light() && behavior.p.is_house_powered {
             total_lights += 1;
             if behavior.p.light.light_emission_enabled {
                 lights_on += 1;
@@ -75,13 +77,12 @@ fn fuse_box_overload_system(
         base_threshold * (2.0 - difficulty.0.ghost_interaction_frequency.clamp(0.5, 2.0));
 
     // Check if we've exceeded the threshold
-    if lights_on_percentage > threshold {
+    // Minimum 6-light bonus: Only check for overload if more than 6 lights are actually on.
+    if lights_on > 6 && lights_on_percentage > threshold {
         // Find a breaker to trip - look for breakers that are currently "On"
         for (breaker_entity, breaker_behavior) in q_breakers.iter() {
             // Check if this is actually a breaker and if it's currently on
-            if matches!(breaker_behavior.class(), Class::Breaker)
-                && matches!(breaker_behavior.state(), TileState::On)
-            {
+            if breaker_behavior.p.is_breaker && matches!(breaker_behavior.state(), TileState::On) {
                 // Dispatch a trip breaker event
                 ev_ghost_interaction.write(GhostInteractionEvent {
                     target: breaker_entity,
@@ -114,7 +115,42 @@ fn initialize_fuse_box_system(mut commands: Commands) {
     commands.insert_resource(FuseBoxCooldownTimer::default());
 }
 
+/// System that ensures all breakers in the level share the same state.
+///
+/// If one breaker is flipped (by player or ghost), all other breakers
+/// will automatically flip to match its state.
+fn breaker_sync_system(
+    q_changed: Query<&Behavior, (With<Position>, Changed<Behavior>)>,
+    q_all: Query<(Entity, &Position, &Behavior)>,
+    mut interactive_stuff: InteractiveStuff,
+) {
+    // Check if any breaker changed state this frame
+    let target_state = q_changed
+        .iter()
+        .filter(|b| b.p.is_breaker)
+        .map(|b| b.state())
+        .next();
+
+    let Some(state) = target_state else {
+        return;
+    };
+
+    // Synchronize all other breakers to match this state
+    for (entity, pos, behavior) in q_all.iter() {
+        if behavior.p.is_breaker && behavior.state() != state {
+            interactive_stuff.execute_interaction(
+                entity,
+                pos,
+                None,
+                behavior,
+                None,
+                InteractionExecutionType::ChangeState,
+            );
+        }
+    }
+}
+
 pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(Update, fuse_box_overload_system);
+    app.add_systems(Update, (fuse_box_overload_system, breaker_sync_system));
     app.add_systems(Startup, initialize_fuse_box_system);
 }

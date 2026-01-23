@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
+use unboard_core::BoardUpdateSet;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unrender_std::utils::collision::rebuild_collision_data;
@@ -36,7 +37,9 @@ fn boardfield_update(
 pub(crate) fn app_setup(app: &mut App) {
     app.add_systems(
         PostUpdate,
-        boardfield_update.run_if(on_message::<BoardTopologyToRebuild>),
+        boardfield_update
+            .run_if(on_message::<BoardTopologyToRebuild>)
+            .in_set(BoardUpdateSet::Collision),
     )
     .add_message::<BoardTopologyToRebuild>();
 }

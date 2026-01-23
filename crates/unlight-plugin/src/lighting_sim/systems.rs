@@ -8,7 +8,6 @@ use bevy_platform::time::Instant;
 use ndarray::{Array2, Array3};
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
-use unbehavior::class::Class;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
@@ -114,10 +113,13 @@ pub fn prebake_lighting_field(
     for (entity, pos, behavior) in qt.iter() {
         let board_pos = pos.to_board_position();
         let idx = board_pos.ndidx();
-        let is_door = behavior.key_cvo().class == Class::Door;
 
-        if is_door {
+        if behavior.p.is_door {
             lg.prebaked_metadata.doors.push(entity);
+        }
+
+        if behavior.p.is_breaker {
+            lg.prebaked_metadata.breakers.push(entity);
         }
 
         // Check if this entity emits light

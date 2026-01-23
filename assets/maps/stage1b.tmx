@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="51" nextobjectid="15">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="51" nextobjectid="15">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter1"/>
+  <property name="campaign_order" value="01B"/>
   <property name="display_name" value="Apartment 4A - 11 Oakwood Ave"/>
   <property name="flavor_text" value="The previous tenant moved out abruptly, claiming strange sounds and a constant feeling of being watched. Now, nobody wants to rent Apartment 4A. The air inside feels heavy and cold, even on the warmest days. Can you discover why?"/>
-  <property name="location_address" value="11 Oakwood Ave"/>
-  <property name="location_name" value="Apartment 4A"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="01B"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter1"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage1b.png"/>
-  <property name="required_deposit" type="int" value="2"/>
-  <property name="mission_reward_base" type="int" value="15"/>
   <property name="grade_a_score_threshold" type="int" value="850"/>
   <property name="grade_b_score_threshold" type="int" value="650"/>
   <property name="grade_c_score_threshold" type="int" value="450"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="11 Oakwood Ave"/>
+  <property name="location_name" value="Apartment 4A"/>
+  <property name="map_preview_image" value="maps/previews/stage1b.png"/>
+  <property name="mission_reward_base" type="int" value="15"/>
+  <property name="required_deposit" type="int" value="2"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -1022,7 +1022,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483914,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483928,2147483914,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483922,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,266,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

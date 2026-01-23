@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="37" nextobjectid="15">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="37" nextobjectid="15">
  <properties>
   <property name="author" value="deavidsedice"/>
   <property name="campaign_difficulty" value="TutorialChapter1"/>
   <property name="campaign_order" value="01A"/>
   <property name="display_name" value="The Whispering Shed - 27 Briar Patch Rd"/>
   <property name="flavor_text" value="This old garden shed sits at the back of a neglected property. Locals whisper that after the original owner passed, a strange, cold feeling settled within its walls, and tools seem to move on their own when no one is watching. It's small, but something definitely lingers here."/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="location_address" value="27 Briar Patch Rd"/>
-  <property name="location_name" value="The Whispering Shed"/>
-  <property name="map_preview_image" value="maps/previews/stage1a.png"/>
-  <property name="required_deposit" type="int" value="0"/>
-  <property name="mission_reward_base" type="int" value="10"/>
   <property name="grade_a_score_threshold" type="int" value="900"/>
   <property name="grade_b_score_threshold" type="int" value="700"/>
   <property name="grade_c_score_threshold" type="int" value="500"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="27 Briar Patch Rd"/>
+  <property name="location_name" value="The Whispering Shed"/>
+  <property name="map_preview_image" value="maps/previews/stage1a.png"/>
+  <property name="mission_reward_base" type="int" value="10"/>
+  <property name="required_deposit" type="int" value="0"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -407,7 +407,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483923,0,2147483916,0,2147483914,2147483916,2147483927,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483923,0,2147483916,0,2147483914,2147483916,2147483928,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

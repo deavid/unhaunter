@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="45" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="45" nextobjectid="1">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter5"/>
+  <property name="campaign_order" value="05A"/>
   <property name="display_name" value="The Majestic Theatre - 1 Grand Boulevard"/>
   <property name="flavor_text" value="Once the crown jewel of the city's entertainment scene, the Majestic Theatre has stood dark for decades, condemned after a tragic accident during a performance. Dust hangs thick in the air, spotlights rustle inexplicably, and phantom whispers echo from the empty stage and shadowy wings. Some say the show never truly ended."/>
-  <property name="location_address" value="1 Grand Boulevard"/>
-  <property name="location_name" value="The Majestic Theatre"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="05A"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter5"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage5a.png"/>
-  <property name="required_deposit" type="int" value="2563"/>
-  <property name="mission_reward_base" type="int" value="1297"/>
   <property name="grade_a_score_threshold" type="int" value="500"/>
   <property name="grade_b_score_threshold" type="int" value="400"/>
   <property name="grade_c_score_threshold" type="int" value="300"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="1 Grand Boulevard"/>
+  <property name="location_name" value="The Majestic Theatre"/>
+  <property name="map_preview_image" value="maps/previews/stage5a.png"/>
   <property name="min_player_level" type="int" value="9"/>
+  <property name="mission_reward_base" type="int" value="1297"/>
+  <property name="required_deposit" type="int" value="2563"/>
  </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
@@ -401,7 +401,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483923,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,2147483927,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483923,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

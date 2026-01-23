@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="70" nextobjectid="15">
+<map version="1.10" tiledversion="1.11.2" class="UnhaunterMap1" orientation="isometric" renderorder="right-down" width="42" height="42" tilewidth="24" tileheight="12" infinite="0" nextlayerid="70" nextobjectid="15">
  <properties>
   <property name="author" value="deavidsedice"/>
+  <property name="campaign_difficulty" value="TutorialChapter5"/>
+  <property name="campaign_order" value="05C"/>
   <property name="display_name" value="Black Creek Farmstead - 99 Old Mill Road"/>
   <property name="flavor_text" value="This isolated farmstead has been in the Black family for generations, but the current descendants refuse to set foot on the property. They speak of an oppressive presence, strange occurrences escalating over the years – from phantom footsteps in the dead of night to farm equipment malfunctioning violently. The farm feels ancient, weathered, and deeply unwelcoming."/>
-  <property name="location_address" value="99 Old Mill Road"/>
-  <property name="location_name" value="Black Creek Farmstead"/>
-  <property name="is_campaign_mission" type="bool" value="true"/>
-  <property name="campaign_order" type="string" value="05C"/>
-  <property name="campaign_difficulty" type="string" value="TutorialChapter5"/>
-  <property name="map_preview_image" type="string" value="maps/previews/stage5c.png"/>
-  <property name="required_deposit" type="int" value="5807"/>
-  <property name="mission_reward_base" type="int" value="2919"/>
   <property name="grade_a_score_threshold" type="int" value="500"/>
   <property name="grade_b_score_threshold" type="int" value="400"/>
   <property name="grade_c_score_threshold" type="int" value="300"/>
   <property name="grade_d_score_threshold" type="int" value="100"/>
+  <property name="is_campaign_mission" type="bool" value="true"/>
+  <property name="location_address" value="99 Old Mill Road"/>
+  <property name="location_name" value="Black Creek Farmstead"/>
+  <property name="map_preview_image" value="maps/previews/stage5c.png"/>
   <property name="min_player_level" type="int" value="9"/>
-</properties>
+  <property name="mission_reward_base" type="int" value="2919"/>
+  <property name="required_deposit" type="int" value="5807"/>
+ </properties>
  <tileset firstgid="1" source="unhaunter_custom_tileset.tsx"/>
  <tileset firstgid="2" source="unhaunter_spritesheetA_3x3x3.tsx"/>
  <tileset firstgid="266" source="unhaunter_spritesheetA_6x6x10.tsx"/>
- <group id="58" name="Cellar" class="FloorLevel" visible="0">
+ <group id="58" name="Cellar" class="FloorLevel">
   <properties>
    <property name="FloorLevel::display_name" value="Cellar"/>
    <property name="FloorLevel::number" type="int" value="-1"/>
@@ -321,7 +321,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2147483927,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -999,7 +999,7 @@
 </data>
   </layer>
  </group>
- <group id="36" name="Second Floor" class="FloorLevel">
+ <group id="36" name="Second Floor" class="FloorLevel" visible="0">
   <properties>
    <property name="FloorLevel::display_name" value="Second Floor"/>
    <property name="FloorLevel::number" type="int" value="1"/>

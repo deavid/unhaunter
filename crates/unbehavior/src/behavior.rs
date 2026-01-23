@@ -45,7 +45,12 @@ impl Behavior {
         self.cfg.state.clone()
     }
 
-    pub fn class(&self) -> Class {
+    /// Returns the class of the behavior.
+    ///
+    /// WARNING: Do not use this function outside of the `unbehavior` crate.
+    /// Instead, prefer adding a new property to `Behavior::Properties` to expose
+    /// the specific functionality or characteristic you need.
+    fn _class(&self) -> Class {
         self.cfg.class.clone()
     }
 
@@ -77,11 +82,11 @@ impl Behavior {
     }
 
     pub fn is_van_entry(&self) -> bool {
-        self.cfg.class == Class::VanEntry
+        self.p.is_van_entry
     }
 
     pub fn is_npc(&self) -> bool {
-        self.cfg.class == Class::NPC
+        self.p.is_npc
     }
 
     pub fn can_emit_light(&self) -> bool {
@@ -102,6 +107,48 @@ pub struct Properties {
     pub display: Display,
     pub flip: bool,
     pub object: Object,
+    /// Whether the object is electrical and depends on the map's power grid.
+    pub is_electrical: bool,
+    /// Whether the object depends on house power (main breaker).
+    pub is_house_powered: bool,
+    /// Whether the object depends on street power (external grid).
+    pub is_street_powered: bool,
+    /// Whether the object is a door.
+    pub is_door: bool,
+    /// Whether the object is a main power breaker.
+    pub is_breaker: bool,
+    /// Whether the object is a light switch.
+    pub is_switch: bool,
+    /// Whether the object is a primary light source (lamp, candle, street light).
+    pub is_light_source: bool,
+    /// Whether the object is the van entry point.
+    pub is_van_entry: bool,
+    /// Whether the object is an NPC.
+    pub is_npc: bool,
+    /// Whether the object is a floor.
+    pub is_floor: bool,
+    /// Whether the object is a wall.
+    pub is_wall: bool,
+    /// Whether the object is a low wall.
+    pub is_low_wall: bool,
+    /// Whether the object is a room light switch.
+    pub is_room_switch: bool,
+    /// Whether the object is a wall-mounted light.
+    pub is_wall_light: bool,
+    /// Whether the object is a floor-standing light.
+    pub is_floor_light: bool,
+    /// Whether the object is a table-top light.
+    pub is_table_light: bool,
+    /// Whether the object is a ceiling-mounted light.
+    pub is_ceiling_light: bool,
+    /// Whether the object is a street light.
+    pub is_street_light: bool,
+    /// Whether the object is a candle.
+    pub is_candle_light: bool,
+    /// Whether the object is an appliance.
+    pub is_appliance: bool,
+    /// Whether the object is a stationary collidable object (furniture, decor, item).
+    pub is_stationary_collidable: bool,
 }
 
 /// Represents properties specific to objects in the game world.
@@ -179,14 +226,14 @@ pub struct Movement {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SpriteCVOKey {
-    pub class: Class,
+    pub(crate) class: Class,
     pub variant: String,
     pub orientation: Orientation,
 }
 
 #[derive(Debug, Clone)]
 pub struct SpriteConfig {
-    pub class: Class,
+    pub(crate) class: Class,
     pub variant: String,
     pub orientation: Orientation,
     pub cvo_key: SpriteCVOKey,
@@ -291,36 +338,46 @@ impl SpriteConfig {
             Class::Floor => {
                 p.movement.walkable = true;
                 p.display.visual_priority = (-0.00035).try_into().unwrap();
+                p.is_floor = true;
             }
             Class::Wall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.opaque = true;
                 p.display.visual_priority = (-0.00005).try_into().unwrap();
+                p.is_wall = true;
             }
             Class::LowWall => {
                 p.movement.player_collision = true;
                 p.movement.ghost_collision = true;
                 p.light.see_through = true;
                 p.display.visual_priority = (-0.00005).try_into().unwrap();
+                p.is_low_wall = true;
             }
             Class::Door => {
                 p.display.visual_priority = (0.000015).try_into().unwrap();
                 p.movement.player_collision = self.state == TileState::Closed;
                 p.movement.is_dynamic = true;
                 p.light.opaque = self.state == TileState::Closed;
+                p.is_door = true;
             }
             Class::Switch | Class::RoomSwitch | Class::Breaker => {
                 p.display.visual_priority = (0.000040).try_into().unwrap();
+                p.is_breaker = self.class == Class::Breaker;
+                p.is_switch = self.class == Class::Switch || self.class == Class::RoomSwitch;
+                p.is_room_switch = self.class == Class::RoomSwitch;
             }
             Class::Doorway => {
                 p.display.visual_priority = (-0.00005).try_into().unwrap();
             }
             Class::Decor | Class::Item => {
                 p.display.visual_priority = (0.000065).try_into().unwrap();
+                p.is_stationary_collidable = true;
             }
             Class::Furniture | Class::NPC => {
                 p.display.visual_priority = (0.000050).try_into().unwrap();
+                p.is_npc = self.class == Class::NPC;
+                p.is_stationary_collidable = self.class == Class::Furniture;
             }
             Class::InvisibleWall => {
                 p.movement.player_collision = true;
@@ -345,6 +402,7 @@ impl SpriteConfig {
             }
             Class::VanEntry => {
                 p.util = Util::Van;
+                p.is_van_entry = true;
             }
             Class::RoomDef => {
                 p.display.disable = true;
@@ -356,6 +414,10 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.0).try_into().unwrap();
                 p.light.heat_coef = -1;
+                p.is_electrical = true;
+                p.is_house_powered = true;
+                p.is_light_source = true;
+                p.is_wall_light = true;
             }
             Class::FloorLamp | Class::TableLamp => {
                 p.display.visual_priority = (0.000050).try_into().unwrap();
@@ -365,6 +427,11 @@ impl SpriteConfig {
                     Class::FloorLamp => (2.0).try_into().unwrap(),
                     _ => (1.0).try_into().unwrap(),
                 };
+                p.is_electrical = true;
+                p.is_house_powered = true;
+                p.is_light_source = true;
+                p.is_floor_light = self.class == Class::FloorLamp;
+                p.is_table_light = self.class == Class::TableLamp;
             }
             Class::WallDecor => {
                 p.display.visual_priority = (-0.00004).try_into().unwrap();
@@ -375,6 +442,10 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.5).try_into().unwrap();
                 p.light.heat_coef = -2;
+                p.is_electrical = true;
+                p.is_house_powered = true;
+                p.is_light_source = true;
+                p.is_ceiling_light = true;
             }
             Class::StreetLight => {
                 p.display.disable = true;
@@ -382,6 +453,11 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = true;
                 p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
+                p.is_electrical = true;
+                p.is_house_powered = false;
+                p.is_street_powered = true;
+                p.is_light_source = true;
+                p.is_street_light = true;
             }
             Class::CandleLight => {
                 p.display.disable = true;
@@ -389,9 +465,14 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = true;
                 p.light.emission_power = (-0.5).try_into().unwrap();
                 p.light.heat_coef = 6;
+                p.is_light_source = true;
+                p.is_candle_light = true;
             }
             Class::Appliance => {
                 p.display.visual_priority = (0.000070).try_into().unwrap();
+                p.is_electrical = true;
+                p.is_house_powered = true;
+                p.is_appliance = true;
             }
             Class::Van => {
                 p.display.visual_priority = (0.000050).try_into().unwrap();
@@ -427,6 +508,10 @@ impl SpriteConfig {
             p.object.throwable = true;
             p.object.nudgeable = true;
             p.object.haunt_movable = true;
+        }
+
+        if self.properties.get_bool("light:can_emit_light") {
+            p.light.can_emit_light = true;
         }
     }
 }
@@ -527,13 +612,14 @@ impl Interactive {
     }
 
     pub fn control_point_delta(&self, behavior: &Behavior) -> Vec3 {
-        match behavior.cfg.class {
-            Class::Door => match behavior.cfg.orientation {
+        if behavior.p.is_door {
+            match behavior.cfg.orientation {
                 Orientation::XAxis => Vec3::new(0.0, -0.25, 0.0),
                 Orientation::YAxis => Vec3::new(0.25, 0.0, 0.0),
                 _ => Vec3::ZERO,
-            },
-            _ => Vec3::ZERO,
+            }
+        } else {
+            Vec3::ZERO
         }
     }
 }

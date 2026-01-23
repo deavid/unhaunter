@@ -147,14 +147,31 @@ pub fn identify_active_light_sources(
 ) -> HashSet<u32> {
     let mut active_source_ids = HashSet::new();
 
+    // Check if building has power.
+    // If no breakers are present, we assume the map has permanent power.
+    // If breakers are present, power is ON if at least one breaker is ON.
+    let has_power = if lg.prebaked_metadata.breakers.is_empty() {
+        true
+    } else {
+        lg.prebaked_metadata.breakers.iter().any(|&entity| {
+            qt.get(entity)
+                .map(|(_, behavior)| behavior.state() == unbehavior::state::TileState::On)
+                .unwrap_or(false)
+        })
+    };
+
     for (entity, ndidx) in &lg.prebaked_metadata.light_sources {
         let Ok((_pos, behavior)) = qt.get(*entity) else {
             continue;
         };
 
-        if behavior.p.light.light_emission_enabled
-            && let Some(source_id) = lg.prebaked_lighting[*ndidx].light_info.source_id
-        {
+        let can_emit = if behavior.p.is_house_powered {
+            behavior.p.light.light_emission_enabled && has_power
+        } else {
+            behavior.p.light.light_emission_enabled
+        };
+
+        if can_emit && let Some(source_id) = lg.prebaked_lighting[*ndidx].light_info.source_id {
             active_source_ids.insert(source_id);
         }
     }
@@ -457,10 +474,12 @@ pub fn propagate_from_wave_edges(
                 } else {
                     0.1 // Still need some penalty for walls
                 }
-            } else if collision.player_free && collision.see_through && !collision.is_dynamic {
-                0.98 / turn_penalty.min(1.5)
             } else if collision.see_through {
-                0.4
+                if collision.player_free && !collision.is_dynamic {
+                    0.98 / turn_penalty.min(1.5)
+                } else {
+                    0.9 / turn_penalty.min(1.5) // Open doors or other see-through dynamic objects
+                }
             } else {
                 0.05
             };

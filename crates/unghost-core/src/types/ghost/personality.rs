@@ -44,7 +44,7 @@ impl Default for GhostPersonality {
             nudge_rate: (12.0, 35.0),
             haunted_move_rate: (8.0, 25.0),
             lock_rate: (2.0, 8.0),
-            trip_breaker_rate: (1.0, 4.0),
+            trip_breaker_rate: (0.5, 2.0),
         }
     }
 }
@@ -60,7 +60,7 @@ impl GhostPersonality {
             nudge_rate: (8.0, 18.0),
             haunted_move_rate: (5.0, 15.0),
             lock_rate: (1.0, 5.0),
-            trip_breaker_rate: (0.5, 3.0),
+            trip_breaker_rate: (0.2, 1.5),
         }
     }
 
@@ -74,7 +74,7 @@ impl GhostPersonality {
             nudge_rate: (20.0, 65.0),
             haunted_move_rate: (15.0, 45.0),
             lock_rate: (5.0, 15.0),
-            trip_breaker_rate: (3.0, 10.0),
+            trip_breaker_rate: (1.0, 5.0),
         }
     }
 
@@ -88,7 +88,7 @@ impl GhostPersonality {
             nudge_rate: (35.0, 75.0),
             haunted_move_rate: (25.0, 55.0),
             lock_rate: (8.0, 20.0),
-            trip_breaker_rate: (5.0, 12.0),
+            trip_breaker_rate: (2.0, 6.0),
         }
     }
 
@@ -102,7 +102,7 @@ impl GhostPersonality {
             nudge_rate: (10.0, 28.0),
             haunted_move_rate: (15.0, 35.0),
             lock_rate: (1.0, 5.0),
-            trip_breaker_rate: (0.5, 3.0),
+            trip_breaker_rate: (0.2, 1.5),
         }
     }
 }

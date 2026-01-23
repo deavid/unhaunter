@@ -37,7 +37,7 @@ use unspatial_core::orientation::Orientation;
 use unthermal_core::resources::ThermalGrid;
 
 #[derive(SystemParam)]
-struct GridResources<'w> {
+pub(crate) struct GridResources<'w> {
     bf: Res<'w, BoardTopology>,
     bef: Res<'w, BoardEntityField>,
     bcf: Res<'w, BoardCollisionField>,
@@ -77,7 +77,6 @@ use unspatial_core::position::Position;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use unfoundation_core::random_seed;
-use untypes_core::states::AppState;
 
 /// Computes the player's visibility field, determining which areas of the map are
 /// visible.
@@ -190,7 +189,7 @@ pub(crate) fn compute_visibility(
 }
 
 /// System to calculate the player's visibility field and update VisibilityData.
-fn player_visibility_system(
+pub(crate) fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bcf: Res<BoardCollisionField>,
     gc: Res<GameConfig>,
@@ -239,7 +238,7 @@ fn player_visibility_system(
 /// * Adjusts tile and sprite colors based on lighting, visibility, and exposure,
 ///   creating a realistic and atmospheric visual experience.
 #[expect(clippy::type_complexity)]
-fn apply_lighting(
+pub(crate) fn apply_lighting(
     mut qt2: Query<
         (
             &Position,
@@ -1089,12 +1088,4 @@ fn apply_lighting(
     measure.end_ms();
 }
 
-pub(crate) fn app_setup(app: &mut App) {
-    app.add_systems(
-        Update,
-        (
-            player_visibility_system.run_if(in_state(AppState::InGame)),
-            apply_lighting.run_if(in_state(AppState::InGame)),
-        ),
-    );
-}
+pub(crate) fn app_setup(_app: &mut App) {}

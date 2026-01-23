@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
-use unbehavior::class::Class;
 use unbehavior::components::{Door, InteractableByGhost};
 use unbehavior::state::TileState;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -199,21 +198,10 @@ fn find_interaction_target(
                 match interaction_type {
                     GhostInteractionType::Toggle => {
                         // Can toggle lights, lamps, or switches.
-                        let class = behavior.class();
-                        let is_switch = matches!(class, Class::Switch | Class::RoomSwitch);
-                        let is_lamp = matches!(
-                            class,
-                            Class::WallLamp
-                                | Class::FloorLamp
-                                | Class::TableLamp
-                                | Class::CeilingLight
-                                | Class::StreetLight
-                                | Class::CandleLight
-                        );
                         if behavior.can_emit_light()
                             || behavior.p.light.can_emit_light
-                            || is_switch
-                            || is_lamp
+                            || behavior.p.is_switch
+                            || behavior.p.is_light_source
                         {
                             if GIS_DEBUG {
                                 can_emit_light_count += 1;
@@ -264,14 +252,14 @@ fn find_interaction_target(
                     }
                     GhostInteractionType::TripBreaker => {
                         // Only target breakers that are currently On
-                        if GIS_DEBUG && behavior.class() == Class::Breaker {
+                        if GIS_DEBUG && behavior.p.is_breaker {
                             if behavior.state() == TileState::On {
                                 breaker_on += 1;
                             } else {
                                 breaker_off += 1;
                             }
                         }
-                        if behavior.class() == Class::Breaker && behavior.state() == TileState::On {
+                        if behavior.p.is_breaker && behavior.state() == TileState::On {
                             Some((entity, pos, None))
                         } else {
                             None

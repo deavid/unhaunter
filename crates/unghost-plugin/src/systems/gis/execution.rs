@@ -668,8 +668,8 @@ fn execute_trip_breaker_interaction(
 
         // Play breaker trip sound effect
         interactive_stuff.sound_events.write(SoundEvent {
-            sound_file: "sounds/breaker_trip.ogg".to_string(),
-            volume: 1.2,
+            sound_file: "sounds/switch-on-2.ogg".to_string(),
+            volume: 1.0,
             position: Some(*position),
         });
 
