@@ -93,6 +93,43 @@ pub fn rebuild_lighting_field(
     // Apply ambient light to walls
     apply_ambient_light_to_walls(&bf, &bcf, &mut lfs);
 
+    // Diagnostic check for abrupt light cut-offs
+    let mut failure_indices = Vec::new();
+    let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
+    for ((i, j, k), data) in lfs.indexed_iter() {
+        if data.lux > 0.00001 && bcf.0[(i, j, k)].see_through {
+            let mut failed = false;
+            for &(dx, dy, dz) in &directions {
+                let ni = i as i64 + dx;
+                let nj = j as i64 + dy;
+                let nk = k as i64 + dz;
+                if is_in_bounds((ni, nj, nk), bf.map_size) {
+                    let n_idx = (ni as usize, nj as usize, nk as usize);
+                    if bcf.0[n_idx].see_through {
+                        let n_lux = lfs[n_idx].lux;
+                        if n_lux < data.lux / 4.0 || n_lux > data.lux * 4.0 {
+                            failed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if failed {
+                failure_indices.push((i, j, k));
+            }
+        }
+    }
+    if !failure_indices.is_empty() {
+        error!(
+            "Lighting consistency check failed at {} points",
+            failure_indices.len()
+        );
+        for &idx in &failure_indices {
+            lfs[idx].lux += 1.0;
+            lfs[idx].color = (1.0, 0.0, 0.0); // Highlight in Red
+        }
+    }
+
     // Update final exposure and stats
     update_exposure_and_stats(&bf, &mut lg, &lfs);
 
