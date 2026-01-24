@@ -629,9 +629,9 @@ pub(crate) fn apply_lighting(
                 }
                 const AMBIENT_LIGHT: f32 = 0.0001;
                 lf.get(bpos.ndidx()).map(|lf| {
-                    let r = (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure;
-                    let g = (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure;
-                    let b = (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure;
+                    let r = (lf.lux * lf.color.0 + lux_fl[0] + AMBIENT_LIGHT) / exposure;
+                    let g = (lf.lux * lf.color.1 + lux_fl[1] + AMBIENT_LIGHT) / exposure;
+                    let b = (lf.lux * lf.color.2 + lux_fl[2] + AMBIENT_LIGHT) / exposure;
 
                     // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
                     // x^1.1 provides shadow contrast. The divisor creates a "shoulder" to prevent
