@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
-use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
+use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightFieldData;
 use unlight_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
@@ -98,6 +98,20 @@ pub fn rebuild_lighting_field(
     let tot_cnt = 4.0;
     avg_time.0 = (avg_time.0 * avg_time.1 + total_time * tot_cnt) / (avg_time.1 + tot_cnt);
     avg_time.1 += 1.0;
+}
+
+/// System to prebake lighting when the level is ready.
+pub fn prebake_lighting_on_level_ready(
+    bf: Res<BoardTopology>,
+    mut bcf: ResMut<BoardCollisionField>,
+    mut lg: ResMut<LightGrid>,
+    mut ev: MessageReader<LevelReadyEvent>,
+    qt: Query<(Entity, &Position, &Behavior)>,
+) {
+    for _ in ev.read() {
+        unrender_std::utils::collision::rebuild_collision_data(&bf, &mut bcf, &qt);
+        prebake_lighting_field(&bf, &bcf, &mut lg, &qt);
+    }
 }
 
 /// Computes the prebaked lighting field for a map.

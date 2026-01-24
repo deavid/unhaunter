@@ -4,10 +4,7 @@ use untypes_core::states::AppState;
 
 use unlight_core::resources::light_grid::LightGrid;
 
-use crate::{
-    audio, lighting_sim, maplight, metrics,
-    systems::power_visuals,
-};
+use crate::{audio, lighting_sim, maplight, metrics, systems::power_visuals};
 
 pub struct UnhaunterLightPlugin;
 
@@ -15,6 +12,10 @@ impl Plugin for UnhaunterLightPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LightGrid>()
             .add_systems(PreUpdate, lighting_sim::systems::init_light_grid)
+            .add_systems(
+                Update,
+                lighting_sim::systems::prebake_lighting_on_level_ready,
+            )
             .add_systems(
                 PostUpdate,
                 (

@@ -3,7 +3,7 @@
 //! This module handles post-load processing for levels, including:
 //! - Temperature field initialization and smoothing
 //! - Processing mesh placeholders into actual mesh instances
-//! - Adding prebaked lighting to the level
+//! - Rebuilding collision data
 //! - Computing usable area statistics for the level
 
 use bevy::prelude::*;
@@ -13,8 +13,6 @@ use unbehavior::roomdb::RoomDB;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
-use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
-use unlight_core::resources::light_grid::LightGrid;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
@@ -176,31 +174,17 @@ fn process_pre_meshes(
     }
 }
 
-/// Adds prebaked lighting to the level after loading is complete.
-///
-/// This function:
-/// - Ensures the collision field is fully updated
-/// - Calls the lighting prebake system to calculate static lighting
-///
-/// # Arguments
-/// * `bf` - Board metadata resource
-/// * `bcf` - Board collision field resource
-/// * `qt` - Query to access all level entities with behaviors and positions
-fn load_map_add_prebaked_lighting(
+/// Rebuilds collision data after the level is fully loaded.
+fn rebuild_collision_on_level_ready(
     bf: Res<BoardTopology>,
     mut bcf: ResMut<BoardCollisionField>,
-    mut lg: ResMut<LightGrid>,
     qt: Query<(Entity, &Position, &Behavior)>,
-    _roomdb: Res<RoomDB>,
 ) {
     // Ensure the collision field is up to date first
     rebuild_collision_data(&bf, &mut bcf, &qt);
 
-    // Call the prebaking function to calculate static lighting
-    prebake_lighting_field(&bf, &bcf, &mut lg, &qt);
-
     // Log completion
-    info!("Map loaded with prebaked lighting data");
+    info!("Map collision data rebuilt");
 }
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -209,7 +193,7 @@ pub(crate) fn app_setup(app: &mut App) {
 
     app.add_systems(Update, process_pre_meshes).add_systems(
         Update,
-        (load_map_add_prebaked_lighting, after_level_ready)
+        (rebuild_collision_on_level_ready, after_level_ready)
             .chain()
             .run_if(on_message::<LevelReadyEvent>),
     );

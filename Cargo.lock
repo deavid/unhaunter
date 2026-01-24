@@ -6154,8 +6154,6 @@ dependencies = [
  "unboard-core",
  "undifficulty-core",
  "unevents-core",
- "unlight-core",
- "unlight-plugin",
  "unmapload-core",
  "unrender-std",
  "unspatial-core",
