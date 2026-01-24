@@ -229,50 +229,6 @@ pub fn update_exposure_and_stats(
     lg.light_field = lfs.clone();
 }
 
-/// Finds wave edge tiles for continuing light propagation
-pub fn find_wave_edge_tiles(
-    _bf: &BoardTopology,
-    lg: &LightGrid,
-    active_source_ids: &HashSet<u32>,
-) -> Vec<WaveEdgeData> {
-    let mut wave_edges = Vec::new();
-
-    // Find all wave edge tiles where light propagation can continue
-    for ((i, j, k), prebaked_data) in lg.prebaked_lighting.indexed_iter() {
-        // Skip if not a wave edge
-        let Some(wave_edge) = &prebaked_data.wave_edge else {
-            continue;
-        };
-
-        // Skip if no source info
-        let Some(source_id) = prebaked_data.light_info.source_id else {
-            continue;
-        };
-
-        // Skip if source is not active
-        if !active_source_ids.contains(&source_id) {
-            continue;
-        }
-
-        // Add to wave edges (whether or not it's near a door)
-        let pos = BoardPosition {
-            x: i as i64,
-            y: j as i64,
-            z: k as i64,
-        };
-
-        wave_edges.push(WaveEdgeData {
-            position: pos,
-            source_id,
-            lux: prebaked_data.light_info.lux,
-            color: prebaked_data.light_info.color,
-            wave_edge: wave_edge.clone(),
-        });
-    }
-
-    wave_edges
-}
-
 fn apply_iir_filter(
     current_value: (f32, f32, f32),
     new_value: (f32, f32, f32),
@@ -350,7 +306,7 @@ pub fn propagate_from_wave_edges(
             match lg
                 .prebaked_propagation
                 .get(edge_data.source_id as usize)
-                .and_then(|arr| arr.get((pos.x as usize, pos.y as usize)))
+                .and_then(|arr| arr.get(pos.ndidx()))
             {
                 Some(dirs) => *dirs,
                 None => {

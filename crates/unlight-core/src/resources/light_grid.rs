@@ -1,7 +1,7 @@
 use crate::types::light::LightFieldData;
 use crate::types::prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData};
 use bevy::prelude::*;
-use ndarray::{Array2, Array3};
+use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 
@@ -17,7 +17,7 @@ pub struct LightGrid {
     pub prebaked_lighting: Array3<PrebakedLightingData>,
     pub prebaked_metadata: PrebakedMetadata,
     pub prebaked_wave_edges: Vec<WaveEdgeData>,
-    pub prebaked_propagation: Vec<Array2<[bool; 4]>>,
+    pub prebaked_propagation: Vec<Array3<[bool; 4]>>,
 }
 
 impl LightGrid {

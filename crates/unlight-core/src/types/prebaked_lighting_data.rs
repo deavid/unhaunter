@@ -18,11 +18,6 @@ use unspatial_core::boardposition::BoardPosition;
 pub struct PrebakedLightingData {
     /// Base light data for this tile
     pub light_info: LightInfo,
-
-    /// Indicates if this is a wave edge (point where light wave stopped propagating)
-    /// These points can be used to continue light propagation at runtime
-    /// for dynamic elements like doors
-    pub wave_edge: Option<WaveEdge>,
 }
 
 #[derive(Clone, Debug, Default)]

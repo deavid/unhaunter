@@ -2,7 +2,7 @@ use super::utils::*;
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
-use ndarray::{Array2, Array3};
+use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
@@ -10,7 +10,9 @@ use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapGeometryInitializedEvent};
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::types::light::LightFieldData;
-use unlight_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
+use unlight_core::types::prebaked_lighting_data::{
+    LightInfo, PrebakedLightingData, WaveEdge, WaveEdgeData,
+};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -207,7 +209,7 @@ pub fn prebake_lighting_field(
 
     // Track statistics
     let mut _propagated_tiles = 0;
-    let mut _wave_edges_count = 0;
+    lg.prebaked_wave_edges = Vec::new();
 
     // Define neighbor directions
     let directions = [
@@ -275,19 +277,23 @@ pub fn prebake_lighting_field(
                     .unwrap()
                     .clone();
                 // Mark the current position as a wave edge with history
-                prebaked[pos.ndidx()].wave_edge = Some(WaveEdge {
-                    src_light_lux,
-                    distance_travelled,
-                    current_pos: (pos.x as f32, pos.y as f32, pos.z as f32),
-                    iir_mean_pos: (pos_mid.x as f32, pos_mid.y as f32, pos_mid.z as f32),
-                    iir_mean_iir_mean_pos: (
-                        pos_last.x as f32,
-                        pos_last.y as f32,
-                        pos_last.z as f32,
-                    ),
+                lg.prebaked_wave_edges.push(WaveEdgeData {
+                    position: pos.clone(),
+                    source_id,
+                    lux: src_light_lux / (distance_travelled * distance_travelled),
+                    color,
+                    wave_edge: WaveEdge {
+                        src_light_lux,
+                        distance_travelled,
+                        current_pos: (pos.x as f32, pos.y as f32, pos.z as f32),
+                        iir_mean_pos: (pos_mid.x as f32, pos_mid.y as f32, pos_mid.z as f32),
+                        iir_mean_iir_mean_pos: (
+                            pos_last.x as f32,
+                            pos_last.y as f32,
+                            pos_last.z as f32,
+                        ),
+                    },
                 });
-
-                _wave_edges_count += 1;
 
                 // If it's the edge, it's because we stopped here. So we stop.
                 continue;
@@ -333,12 +339,10 @@ pub fn prebake_lighting_field(
     }
 
     // Create a HashSet of all source IDs
-    let all_source_ids: HashSet<u32> = visited_by_source.keys().copied().collect();
+    let _all_source_ids: HashSet<u32> = visited_by_source.keys().copied().collect();
 
     // Store the prebaked data in LightGrid
     lg.prebaked_lighting = prebaked;
-    // Pass the HashSet of all source IDs to find_wave_edge_tiles
-    lg.prebaked_wave_edges = find_wave_edge_tiles(bf, lg, &all_source_ids);
 
     // Call prebake_propagation_data
     prebake_propagation_data(bf, bcf, lg);
@@ -353,11 +357,12 @@ pub fn prebake_lighting_field(
 fn prebake_propagation_data(bf: &BoardTopology, bcf: &BoardCollisionField, lg: &mut LightGrid) {
     let map_size = bf.map_size;
 
-    // Create and initialize the vector of Array2
-    lg.prebaked_propagation = vec![
-        Array2::from_elem((map_size.0, map_size.1), [false; 4]);
-        lg.prebaked_metadata.light_sources.len() + 1
-    ];
+    // Create and initialize the vector of Array3
+    lg.prebaked_propagation =
+        vec![
+            Array3::from_elem((map_size.0, map_size.1, map_size.2), [false; 4]);
+            lg.prebaked_metadata.light_sources.len() + 1
+        ];
 
     // Second pass - compute allowed propagation directions for each light source
     for (source_entity, source_idx) in &lg.prebaked_metadata.light_sources {
@@ -414,8 +419,7 @@ fn prebake_propagation_data(bf: &BoardTopology, bcf: &BoardCollisionField, lg: &
                     distance_field[n_idx] = new_distance;
 
                     // Mark that we can propagate from pos in direction dir_idx
-                    lg.prebaked_propagation[source_id as usize][(pos.x as usize, pos.y as usize)]
-                        [dir_idx] = true;
+                    lg.prebaked_propagation[source_id as usize][pos.ndidx()][dir_idx] = true;
 
                     queue.push_front(neighbor_pos.clone());
                 }
