@@ -1,12 +1,12 @@
-use unlight_core::resources::light_grid::LightGrid;
-use unlight_core::types::light::LightFieldData;
-use unlight_core::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;
 use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
+use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::types::light::LightFieldData;
+use unlight_core::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
@@ -513,7 +513,10 @@ pub fn propagate_from_wave_edges(
             }
 
             lfs[neighbor_idx].lux += new_lux;
-
+            if queue.len() > 1_000_000 {
+                error_once!("Propagate from waves BFS queue >1M!!");
+                continue;
+            }
             // Add neighbor to queue with updated history
             queue.push_back(InternalWaveEdge {
                 position: neighbor_pos,
