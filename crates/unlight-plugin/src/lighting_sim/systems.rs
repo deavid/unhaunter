@@ -97,7 +97,7 @@ pub fn rebuild_lighting_field(
     let mut failure_indices = Vec::new();
     let directions = [(0, 1, 0), (1, 0, 0), (0, -1, 0), (-1, 0, 0)];
     for ((i, j, k), data) in lfs.indexed_iter() {
-        if data.lux > 0.00001 && bcf.0[(i, j, k)].see_through {
+        if data.lux > 0.1 && bcf.0[(i, j, k)].see_through {
             let mut failed = false;
             for &(dx, dy, dz) in &directions {
                 let ni = i as i64 + dx;
@@ -107,7 +107,7 @@ pub fn rebuild_lighting_field(
                     let n_idx = (ni as usize, nj as usize, nk as usize);
                     if bcf.0[n_idx].see_through {
                         let n_lux = lfs[n_idx].lux;
-                        if n_lux < data.lux / 4.0 || n_lux > data.lux * 4.0 {
+                        if n_lux < data.lux / 10.0 || n_lux > data.lux * 10.0 {
                             failed = true;
                             break;
                         }
@@ -124,8 +124,8 @@ pub fn rebuild_lighting_field(
             "Lighting consistency check failed at {} points",
             failure_indices.len()
         );
-        for &idx in &failure_indices {
-            lfs[idx].lux += 1.0;
+        for idx in failure_indices {
+            lfs[idx].lux += 50.0;
             lfs[idx].color = (1.0, 0.0, 0.0); // Highlight in Red
         }
     }

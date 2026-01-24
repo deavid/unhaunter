@@ -240,7 +240,6 @@ fn apply_iir_filter(
         current_value.2 * factor + new_value.2 * (1.0 - factor),
     )
 }
-
 /// Propagates light from wave edge tiles past dynamic objects
 pub fn propagate_from_wave_edges(
     bf: &BoardTopology,
@@ -249,238 +248,152 @@ pub fn propagate_from_wave_edges(
     lfs: &mut Array3<LightFieldData>,
     active_source_ids: &HashSet<u32>,
 ) -> usize {
-    // New struct to track position history for turn detection
     #[derive(Clone)]
     struct InternalWaveEdge {
         position: BoardPosition,
         wave_edge: WaveEdge,
-        source_id: u32,
         color: (f32, f32, f32),
+        /// Directional source intensity (portion that follows beams)
+        dir_src_lux: f32,
+        /// Diffuse source intensity (portion that floods rooms)
+        diff_src_lux: f32,
     }
 
     let mut queue = VecDeque::with_capacity(4096);
     let mut propagation_count = 0;
-
-    // Define directions for propagation
     let directions = [(0, -1, 0), (0, 1, 0), (-1, 0, 0), (1, 0, 0)];
 
-    // IIR factors (adjust these to control the "smoothness")
-    const IIR_FACTOR_1: f32 = 0.8; // First level of smoothing
-    const IIR_FACTOR_2: f32 = 0.8; // Second level of smoothing
+    // IIR factors for turn detection
+    const IIR_FACTOR_1: f32 = 0.8;
+    const IIR_FACTOR_2: f32 = 0.8;
 
-    // Add all wave edges to the queue
+    // Initial load
     for edge_data in lg.prebaked_wave_edges.iter() {
-        if !active_source_ids.contains(&edge_data.source_id) {
+        if !active_source_ids.contains(&edge_data.source_id) && edge_data.source_id != 0 {
             continue;
         }
 
+        let idx = edge_data.position.ndidx();
+        if lfs[idx].lux < edge_data.lux {
+            if lfs[idx].lux > 0.0 {
+                lfs[idx].color =
+                    blend_colors(lfs[idx].color, lfs[idx].lux, edge_data.color, edge_data.lux);
+            } else {
+                lfs[idx].color = edge_data.color;
+            }
+            lfs[idx].lux = edge_data.lux;
+        }
+
+        // Split initial lighting source power: 95% Highlight, 5% Flood
         queue.push_back(InternalWaveEdge {
             position: edge_data.position.clone(),
             wave_edge: edge_data.wave_edge.clone(),
-            source_id: edge_data.source_id,
             color: edge_data.color,
+            dir_src_lux: edge_data.wave_edge.src_light_lux * 0.95,
+            diff_src_lux: edge_data.wave_edge.src_light_lux * 0.05,
         });
     }
 
-    // Process queue using BFS
+    // BFS
     while let Some(edge_data) = queue.pop_front() {
-        let pos = edge_data.position;
-        let max_lux_possible = edge_data.wave_edge.src_light_lux
-            / (edge_data.wave_edge.distance_travelled * edge_data.wave_edge.distance_travelled);
+        let pos = edge_data.position.clone();
+        let src_total = edge_data.dir_src_lux + edge_data.diff_src_lux;
+        let d = edge_data.wave_edge.distance_travelled;
+        let p_lux = src_total / (d * d);
 
-        // If light is too low, skip
-        if max_lux_possible < 0.0000001 {
+        if p_lux < 0.01 {
             continue;
         }
 
-        // Special handling for stair wave edges (source_id == 0)
-        let is_stair_edge = edge_data.source_id == 0;
-
-        // For stair wave edges, we don't use prebaked propagation directions
-        // For regular wave edges, we check the prebaked propagation directions
-        let allowed_directions = if is_stair_edge {
-            // For stair wave edges, allow all directions
-            [true, true, true, true]
-        } else {
-            // For regular wave edges, use prebaked directions
-            match lg
-                .prebaked_propagation
-                .get(edge_data.source_id as usize)
-                .and_then(|arr| arr.get(pos.ndidx()))
-            {
-                Some(dirs) => *dirs,
-                None => {
-                    continue;
-                }
-            }
-        };
-
-        // Process each neighbor direction
-        for (dir_idx, &(dx, dy, dz)) in directions.iter().enumerate() {
-            // Skip if not allowed in this direction
-            if !is_stair_edge && !allowed_directions[dir_idx] {
-                continue;
-            }
-
+        for &(dx, dy, dz) in directions.iter() {
             let nx = pos.x + dx;
             let ny = pos.y + dy;
             let nz = pos.z + dz;
 
-            // Skip if out of bounds
             if !is_in_bounds((nx, ny, nz), bf.map_size) {
                 continue;
             }
 
-            let neighbor_pos = BoardPosition {
-                x: nx,
-                y: ny,
-                z: nz,
-            };
+            let n_idx = (nx as usize, ny as usize, nz as usize);
 
-            let neighbor_idx = neighbor_pos.ndidx();
-
-            // Stop checking early if this neighbor is already too bright
-            if lfs[neighbor_idx].lux > max_lux_possible * 4.0 {
+            // Overlap check: skip if already significantly brighter.
+            if lfs[n_idx].lux > p_lux * 1.5 {
                 continue;
             }
 
-            // For regular wave edges, skip if neighbor was already in prebaked data
-            // For stair wave edges, don't skip
-            if !is_stair_edge
-                && Some(edge_data.source_id)
-                    == lg.prebaked_lighting[neighbor_idx].light_info.source_id
-            {
-                continue;
-            }
+            let collision = &bcf.0[n_idx];
 
-            // Check collision data
-            let collision = &bcf.0[neighbor_idx];
+            // Nuanced transparency: air is mostly clear, obstacles are opaque.
+            let transparency = if collision.see_through { 0.93 } else { 0.05 };
 
-            // Update wave edge position using IIR filter
+            let mut next_edge = edge_data.clone();
             let new_pos_f32 = (nx as f32, ny as f32, nz as f32);
-
-            // Update the current position.
-            let mut new_wave_edge = edge_data.wave_edge.clone();
-            new_wave_edge.current_pos = new_pos_f32;
-
-            // Apply the first IIR filter to update the mean position.
-            new_wave_edge.iir_mean_pos =
-                apply_iir_filter(new_wave_edge.iir_mean_pos, new_pos_f32, IIR_FACTOR_1);
-
-            // Apply the second IIR filter to update the mean of the mean position.
-            new_wave_edge.iir_mean_iir_mean_pos = apply_iir_filter(
-                new_wave_edge.iir_mean_iir_mean_pos,
-                new_wave_edge.iir_mean_pos,
+            next_edge.wave_edge.current_pos = new_pos_f32;
+            next_edge.wave_edge.iir_mean_pos =
+                apply_iir_filter(next_edge.wave_edge.iir_mean_pos, new_pos_f32, IIR_FACTOR_1);
+            next_edge.wave_edge.iir_mean_iir_mean_pos = apply_iir_filter(
+                next_edge.wave_edge.iir_mean_iir_mean_pos,
+                next_edge.wave_edge.iir_mean_pos,
                 IIR_FACTOR_2,
             );
 
-            let mut turn_penalty = {
-                // old_dir is now: from iir_mean_iir_mean_pos to iir_mean_pos
-                let old_dir = (
-                    new_wave_edge.iir_mean_pos.0 - new_wave_edge.iir_mean_iir_mean_pos.0,
-                    new_wave_edge.iir_mean_pos.1 - new_wave_edge.iir_mean_iir_mean_pos.1,
-                    new_wave_edge.iir_mean_pos.2 - new_wave_edge.iir_mean_iir_mean_pos.2,
+            // Calculate Turn Penalty (Scattering)
+            let (old_dir, recent_dir) = {
+                let d1 = (
+                    next_edge.wave_edge.iir_mean_pos.0
+                        - next_edge.wave_edge.iir_mean_iir_mean_pos.0,
+                    next_edge.wave_edge.iir_mean_pos.1
+                        - next_edge.wave_edge.iir_mean_iir_mean_pos.1,
+                    next_edge.wave_edge.iir_mean_pos.2
+                        - next_edge.wave_edge.iir_mean_iir_mean_pos.2,
                 );
-
-                // recent_dir is now: from iir_mean_pos to current_pos
-                let recent_dir = (
-                    new_wave_edge.current_pos.0 - new_wave_edge.iir_mean_pos.0,
-                    new_wave_edge.current_pos.1 - new_wave_edge.iir_mean_pos.1,
-                    new_wave_edge.current_pos.2 - new_wave_edge.iir_mean_pos.2,
+                let d2 = (
+                    next_edge.wave_edge.current_pos.0 - next_edge.wave_edge.iir_mean_pos.0,
+                    next_edge.wave_edge.current_pos.1 - next_edge.wave_edge.iir_mean_pos.1,
+                    next_edge.wave_edge.current_pos.2 - next_edge.wave_edge.iir_mean_pos.2,
                 );
+                (d1, d2)
+            };
 
-                // Normalize vectors and compute dot product
-                let old_len =
-                    (old_dir.0 * old_dir.0 + old_dir.1 * old_dir.1 + old_dir.2 * old_dir.2).sqrt();
-                let recent_len = (recent_dir.0 * recent_dir.0
-                    + recent_dir.1 * recent_dir.1
-                    + recent_dir.2 * recent_dir.2)
-                    .sqrt();
-
-                if old_len > 0.0 && recent_len > 0.0 {
-                    let old_norm = (
-                        old_dir.0 / old_len,
-                        old_dir.1 / old_len,
-                        old_dir.2 / old_len,
-                    );
-                    let recent_norm = (
-                        recent_dir.0 / recent_len,
-                        recent_dir.1 / recent_len,
-                        recent_dir.2 / recent_len,
-                    );
-                    let dot_product = old_norm.0 * recent_norm.0
-                        + old_norm.1 * recent_norm.1
-                        + old_norm.2 * recent_norm.2;
-
-                    let dot_product = (dot_product + 0.01).clamp(-1.0, 1.0);
-                    const TURN_FACTOR: f32 = 0.6; // Adjust for turn penalty
-                    1.0 + (1.0 - dot_product) * TURN_FACTOR
+            let dot = {
+                let l1 = (old_dir.0.powi(2) + old_dir.1.powi(2) + old_dir.2.powi(2)).sqrt();
+                let l2 =
+                    (recent_dir.0.powi(2) + recent_dir.1.powi(2) + recent_dir.2.powi(2)).sqrt();
+                if l1 > 1e-6 && l2 > 1e-6 {
+                    (old_dir.0 * recent_dir.0 + old_dir.1 * recent_dir.1 + old_dir.2 * recent_dir.2)
+                        / (l1 * l2)
                 } else {
                     1.0
                 }
             };
-            if max_lux_possible > 0.2 {
-                turn_penalty += 0.1;
+            let dot = (dot + 0.01).clamp(-1.0, 1.0);
+
+            // Scattering conversion: Turns take energy from the "beam" and give it to the "flood".
+            let turn_factor = (1.0 - dot).clamp(0.0, 1.0);
+            let scatter_amount = next_edge.dir_src_lux * turn_factor * 0.5;
+
+            next_edge.dir_src_lux = (next_edge.dir_src_lux - scatter_amount) * transparency;
+            next_edge.diff_src_lux = (next_edge.diff_src_lux + scatter_amount) * transparency;
+            next_edge.wave_edge.distance_travelled += 1.0;
+
+            let n_d = next_edge.wave_edge.distance_travelled;
+            let n_lux = (next_edge.dir_src_lux + next_edge.diff_src_lux) / (n_d * n_d);
+
+            if n_lux < 0.01 {
+                continue;
             }
 
-            // Use higher transparency for stair wave edges
-            let transparency = if is_stair_edge {
-                if collision.see_through {
-                    0.9 // Higher transparency for stairs
-                } else {
-                    0.1 // Still need some penalty for walls
-                }
-            } else if collision.see_through {
-                if collision.player_free && !collision.is_dynamic {
-                    0.98 / turn_penalty.min(1.5)
-                } else {
-                    0.9 / turn_penalty.min(1.5) // Open doors or other see-through dynamic objects
-                }
-            } else {
-                0.05
+            // Update Tile
+            lfs[n_idx].color =
+                blend_colors(lfs[n_idx].color, lfs[n_idx].lux, edge_data.color, n_lux);
+            lfs[n_idx].lux += n_lux;
+
+            next_edge.position = BoardPosition {
+                x: nx,
+                y: ny,
+                z: nz,
             };
-
-            let src_light_lux = edge_data.wave_edge.src_light_lux * transparency;
-            let distance_travelled = edge_data.wave_edge.distance_travelled;
-
-            // Apply the turn penalty to the light intensity
-            let new_lux = src_light_lux / (distance_travelled * distance_travelled);
-
-            new_wave_edge.distance_travelled += 1.0;
-            new_wave_edge.src_light_lux = src_light_lux;
-
-            // Skip propagating if the contribution is too small
-            if lfs[neighbor_idx].lux > new_lux * 5.0 {
-                continue;
-            } else if lfs[neighbor_idx].lux > new_lux * 2.0 {
-                new_wave_edge.src_light_lux /= 1.1;
-            }
-
-            // Update light field for neighbor
-            if lfs[neighbor_idx].lux > 0.0 {
-                lfs[neighbor_idx].color = blend_colors(
-                    lfs[neighbor_idx].color,
-                    lfs[neighbor_idx].lux,
-                    edge_data.color,
-                    new_lux,
-                );
-            } else {
-                lfs[neighbor_idx].color = edge_data.color;
-            }
-
-            lfs[neighbor_idx].lux += new_lux;
-            if queue.len() > 1_000_000 {
-                error_once!("Propagate from waves BFS queue >1M!!");
-                continue;
-            }
-            // Add neighbor to queue with updated history
-            queue.push_back(InternalWaveEdge {
-                position: neighbor_pos,
-                wave_edge: new_wave_edge,
-                source_id: edge_data.source_id,
-                color: edge_data.color,
-            });
-
+            queue.push_back(next_edge);
             propagation_count += 1;
         }
     }
@@ -539,12 +452,16 @@ pub fn create_stair_wave_edges(
             z: target_z,
         };
 
-        // Calculate the distance between floors (1.0 for adjacent floors)
-        let distance = 1.0;
+        // Calculate a virtual distance to make stair light decay more gracefully.
+        // Starting at a larger distance makes the 1/d^2 curve flatter,
+        // acting more like an ambient relay than a point source.
+        let distance = 8.0;
 
-        // Create a wave edge with the same relative intensity
+        // Create a wave edge with the same relative intensity.
+        // We multiply stair_lux by distance^2 so that at the entry point,
+        // the calculated lux (src / dst) equals the original stair_lux.
         let wave_edge = WaveEdge {
-            src_light_lux: stair_lux * (distance * distance), // Compensate for distance attenuation
+            src_light_lux: stair_lux * (distance * distance),
             distance_travelled: distance,
             current_pos: (
                 target_board_pos.x as f32,
