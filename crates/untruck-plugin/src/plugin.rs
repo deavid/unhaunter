@@ -19,7 +19,7 @@ impl Plugin for UnhaunterTruckPlugin {
             .init_resource::<GhostGuess>();
 
         super::evidence::app_setup(app);
-        super::systems::app_setup(app);
+        super::systems::setup::app_setup(app);
         super::ui::app_setup(app);
         super::journal::app_setup(app);
         super::sanity::app_setup(app);

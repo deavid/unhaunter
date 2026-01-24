@@ -15,6 +15,7 @@ impl Plugin for UnhaunterGhostPlugin {
         app.add_loading_state(
             LoadingState::new(AppState::Loading).load_collection::<GhostAssets>(),
         );
+        crate::systems::hydration::app_setup(app);
         unghost_core::systems::evidence_decay::app_setup(app);
         ghost::app_setup(app);
         ghost_events::app_setup(app);

@@ -1,0 +1,19 @@
+use bevy::prelude::*;
+use unbehavior::behavior::{Behavior, Util};
+use unboard_core::components::spawning::PlayerSpawnPoint;
+use untypes_core::hydration::HydrationStage;
+
+fn hydration_player_logic_system(
+    mut q: Query<(Entity, &Behavior), With<HydrationStage<3>>>,
+    mut commands: Commands,
+) {
+    for (entity, behavior) in q.iter_mut() {
+        if let Util::PlayerSpawn = &behavior.p.util {
+            commands.entity(entity).insert(PlayerSpawnPoint);
+        }
+    }
+}
+
+pub(crate) fn app_setup(app: &mut App) {
+    app.add_systems(Update, hydration_player_logic_system);
+}

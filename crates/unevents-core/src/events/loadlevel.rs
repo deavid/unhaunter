@@ -35,9 +35,4 @@ pub struct MapGeometryInitializedEvent {
 }
 
 #[derive(Debug, Clone, Message, Default)]
-pub struct MapEntitiesReadyEvent {
-    pub movable_objects: Vec<Entity>,
-    pub player_spawn_points: Vec<unspatial_core::position::Position>,
-    pub hostile_spawn_points: Vec<unspatial_core::position::Position>,
-    pub van_entry_points: Vec<unspatial_core::position::Position>,
-}
+pub struct MapEntitiesReadyEvent {}

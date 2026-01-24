@@ -12,7 +12,7 @@ impl Plugin for UnhaunterWalkiePlugin {
         app.init_resource::<PotentialIDTimer>();
 
         crate::walkie_play::app_setup(app);
-        crate::triggers::app_setup(app);
+        crate::triggers::setup::app_setup(app);
         crate::walkie_stats::app_setup(app);
         crate::walkie_level_stats::setup_walkie_level_systems(app);
         crate::focus_ring_system::app_setup(app);

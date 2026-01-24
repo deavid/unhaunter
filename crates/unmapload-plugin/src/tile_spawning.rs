@@ -5,12 +5,13 @@
 
 use bevy::prelude::*;
 use unbehavior::behavior::Util;
-use unbehavior::state::TileState;
-use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
+use unboard_core::components::spawning::VanEntryPoint;
+use unmapload_core::components::PendingTiledLayerProperties;
 use unrender_std::components::game::{GameSprite, MapTileSprite};
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
 use untiled_core::tiledmap::map::{MapLayer, MapTile};
+use untypes_core::hydration::HydrationStage;
 
 use crate::level_setup::LoadLevelSystemParam;
 
@@ -20,8 +21,7 @@ use crate::level_setup::LoadLevelSystemParam;
 /// - Positioning based on map coordinates
 /// - Handling flipping and orientation
 /// - Adding appropriate game components
-/// - Registering special tile types (player spawn, ghost spawn, etc.)
-/// - Adding to the movable objects list if appropriate
+/// - Hydration stage initialization
 ///
 /// # Arguments
 ///
@@ -32,8 +32,6 @@ use crate::level_setup::LoadLevelSystemParam;
 /// * `floor_z` - Z-coordinate (floor level) for this tile
 /// * `p` - System parameters containing necessary resources
 /// * `commands` - Command buffer for entity creation
-/// * `player_spawn_points`/`ghost_spawn_points`/`van_entry_points` - Lists to collect special points
-/// * `movable_objects` - List to collect movable object entities
 /// * `c` - Counter used for ensuring unique z-ordering
 pub(crate) fn process_and_spawn_tile(
     tile: &MapTile,
@@ -44,10 +42,6 @@ pub(crate) fn process_and_spawn_tile(
     floor_z: usize,
     p: &mut LoadLevelSystemParam,
     commands: &mut Commands,
-    player_spawn_points: &mut Vec<Position>,
-    hostile_spawn_points: &mut Vec<Position>,
-    van_entry_points: &mut Vec<Position>,
-    movable_objects: &mut Vec<Entity>,
     c: &mut f32,
 ) {
     // Get the map tile components from the SpriteDB
@@ -76,7 +70,11 @@ pub(crate) fn process_and_spawn_tile(
         let mat = p.materials1.add(mat);
         b.material = MeshMaterial2d(mat);
 
-        commands.spawn(b).id()
+        commands
+            .spawn(b)
+            .insert(HydrationStage::<1>)
+            .insert(PendingTiledLayerProperties(layer.user_properties.clone()))
+            .id()
     };
 
     // Calculate position on the map
@@ -118,40 +116,18 @@ pub(crate) fn process_and_spawn_tile(
     *c += 0.000000001;
     pos.visual_priority = f32::from(mt.behavior.p.display.visual_priority) + *c;
 
-    // Position for spawn points (slightly adjusted)
-    let new_pos = Position {
-        visual_priority: 0.0001,
-        ..pos
-    };
-
     // Handle special tile types based on utility (spawning separate entities)
-    match &mt.behavior.p.util {
-        Util::PlayerSpawn => {
-            player_spawn_points.push(new_pos);
-            commands.spawn((new_pos, PlayerSpawnPoint, GameSprite));
-        }
-        Util::GhostSpawn => {
-            hostile_spawn_points.push(new_pos);
-            commands.spawn((new_pos, HostileSpawnPoint, GameSprite));
-        }
-        Util::RoomDef(name) => {
-            p.roomdb
-                .room_tiles
-                .insert(pos.to_board_position(), name.to_owned());
-            p.roomdb.room_state.insert(name.clone(), TileState::Off);
-        }
-        Util::Van => {
-            van_entry_points.push(new_pos);
-            commands.spawn((new_pos, VanEntryPoint, GameSprite));
-        }
-        Util::None => {}
+    if matches!(&mt.behavior.p.util, Util::Van) {
+        // Position for spawn points (slightly adjusted)
+        let new_pos = Position {
+            visual_priority: 0.0001,
+            ..pos
+        };
+        commands.spawn((new_pos, VanEntryPoint, GameSprite));
     }
 
     // Now finish setting up the main tile entity
     let mut entity = commands.entity(entity_id);
-
-    // Add behavior-specific components
-    crate::factory::apply_components_to_entity(&mt.behavior, &mut entity, layer);
 
     // Clone and configure behavior for this tile instance
     let mut beh = mt.behavior.clone();
@@ -164,13 +140,6 @@ pub(crate) fn process_and_spawn_tile(
 
     // Add board position component
     entity.insert(MapEntityFieldBPos(pos.to_board_position()));
-
-    // Check if the object is movable
-    if mt.behavior.p.object.movable {
-        // FIXME: It does not check if the item is in a valid room, since the rooms are
-        // still being constructed at this point. This is something to fix later on.
-        movable_objects.push(entity_id);
-    }
 
     // Add standard components to all tile entities
     let mut transform = Transform::from_xyz(t_x, t_y, pos.visual_priority);

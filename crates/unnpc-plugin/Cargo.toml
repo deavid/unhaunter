@@ -20,5 +20,6 @@ unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 unrender-std = { path = "../unrender-std" }
 unplayer-core = { path = "../unplayer-core" }
+unmapload-core = { path = "../unmapload-core" }
 
 bevy = { workspace = true }

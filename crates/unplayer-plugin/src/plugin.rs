@@ -13,6 +13,6 @@ impl Plugin for UnhaunterPlayerPlugin {
             LoadingState::new(AppState::Loading).load_collection::<PlayerAssets>(),
         );
         app.init_resource::<PlayerState>();
-        systems::app_setup(app);
+        systems::setup::app_setup(app);
     }
 }

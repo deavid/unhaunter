@@ -1,7 +1,9 @@
-pub(crate) mod factory;
+pub(crate) mod conveyor;
+pub(crate) mod hydration_generic;
 pub(crate) mod level_finalization;
 pub(crate) mod level_setup;
 pub(crate) mod module;
 pub mod plugin;
+pub(crate) mod resources;
 pub(crate) mod sprite_db;
 pub(crate) mod tile_spawning;

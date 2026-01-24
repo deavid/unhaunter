@@ -23,6 +23,10 @@ pub struct Stairs {
 #[derive(Component, Debug, Clone, PartialEq, Eq)]
 pub struct FloorItemCollidable;
 
+/// Marker component for movable objects.
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct Movable;
+
 /// Marker component that identifies entities that ghosts can interact with.
 ///
 /// This component is automatically added to entities during map loading if they have:

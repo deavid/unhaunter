@@ -22,6 +22,9 @@ use crate::level_setup;
 use bevy::prelude::App;
 
 pub(crate) fn app_setup(app: &mut App) {
+    app.init_resource::<crate::resources::LevelLoadingStatus>();
+    crate::conveyor::app_setup(app);
+    crate::hydration_generic::app_setup(app);
     level_finalization::app_setup(app);
     level_setup::app_setup(app);
 }

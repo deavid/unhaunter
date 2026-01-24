@@ -52,5 +52,5 @@ pub(crate) fn app_setup(app: &mut App) {
     );
 
     // Initialize GIS (Ghost Interaction System) module
-    crate::systems::gis::app_setup(app);
+    crate::systems::gis::setup::app_setup(app);
 }

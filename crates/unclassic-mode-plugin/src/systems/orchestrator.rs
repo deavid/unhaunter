@@ -4,8 +4,10 @@ use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
+use unbehavior::components::Movable;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
+use unboard_core::components::spawning::{HostileSpawnPoint, PlayerSpawnPoint, VanEntryPoint};
 use unboard_core::resources::board_topology::BoardTopology;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unevents_core::events::loadlevel::{LevelReadyEvent, MapEntitiesReadyEvent};
@@ -56,14 +58,19 @@ pub(crate) fn classic_mode_orchestrator(
     q_ghost_breach: Query<&Position, With<GhostBreach>>,
     q_player_sprite: Query<&Position, With<PlayerSprite>>,
     q_position: Query<&Position>,
+    q_player_spawns: Query<&Position, With<PlayerSpawnPoint>>,
+    q_ghost_spawns: Query<&Position, With<HostileSpawnPoint>>,
+    q_van_entry: Query<&Position, With<VanEntryPoint>>,
+    q_movable: Query<Entity, With<Movable>>,
 ) {
-    let Some(ev) = ev_entities_ready.read().next() else {
+    let Some(_) = ev_entities_ready.read().next() else {
         return;
     };
 
-    let player_spawn_points = &ev.player_spawn_points;
-    let ghost_spawn_points = &ev.hostile_spawn_points;
-    let van_entry_points = &ev.van_entry_points;
+    let player_spawn_points: Vec<Position> = q_player_spawns.iter().copied().collect();
+    let ghost_spawn_points: Vec<Position> = q_ghost_spawns.iter().copied().collect();
+    let van_entry_points: Vec<Position> = q_van_entry.iter().copied().collect();
+    let movable_objects: Vec<Entity> = q_movable.iter().collect();
 
     if player_spawn_points.is_empty() {
         error!("No player spawn points found!!");
@@ -281,7 +288,7 @@ pub(crate) fn classic_mode_orchestrator(
 
     crate::influence_system::assign_ghost_influence(
         &mut commands,
-        &ev.movable_objects,
+        &movable_objects,
         &q_ghost_breach,
         &q_player_sprite,
         &q_position,

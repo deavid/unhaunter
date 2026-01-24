@@ -6125,6 +6125,8 @@ version = "0.3.2-dev"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "bevy_platform",
+ "tiled",
 ]
 
 [[package]]
@@ -6240,6 +6242,7 @@ dependencies = [
  "unbehavior",
  "unevents-core",
  "unfoundation-core",
+ "unmapload-core",
  "unplayer-core",
  "unrender-std",
  "unspatial-core",

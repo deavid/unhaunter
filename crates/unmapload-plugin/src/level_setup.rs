@@ -13,16 +13,14 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
-use unevents_core::events::loadlevel::{
-    LevelLoadedEvent, MapEntitiesReadyEvent, MapGeometryInitializedEvent,
-};
+use unevents_core::events::loadlevel::{LevelLoadedEvent, MapGeometryInitializedEvent};
 use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::materials::CustomMaterial1;
-use unspatial_core::position::Position;
 use untiled_core::tiled::MapTileSetDb;
 use untiled_core::tiledmap::map::MapLayerType;
 
+use crate::resources::LevelLoadingStatus;
 use crate::sprite_db;
 use crate::tile_spawning;
 
@@ -46,6 +44,7 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub sdb: ResMut<'w, SpriteDB>,
     pub roomdb: ResMut<'w, RoomDB>,
     pub difficulty: Res<'w, CurrentDifficulty>,
+    pub loading_status: ResMut<'w, LevelLoadingStatus>,
 }
 
 /// Loads a new level based on the `LevelLoadedEvent`.
@@ -55,188 +54,131 @@ pub(crate) struct LoadLevelSystemParam<'w> {
 /// - Processes map data to determine size and floor levels
 /// - Initializes field data (temperature, collision, lighting, etc.)
 /// - Spawns all tile entities, special entities, and ambient sounds
-/// - Coordinates cross-entity systems like ghost influence
 ///
 /// # Arguments
 /// * `ev` - Event reader for LevelLoadedEvent
 /// * `commands` - Command buffer for entity operations
-/// * `qgs` - Query for existing game sprites to despawn
-/// * `qgs2` - Query for existing game sounds to despawn
+/// * `qgs` - Query for existing game sprites and sounds to despawn
 /// * `p` - Level system parameters containing all needed resources
-/// * `ev_level_ready` - Event writer to signal when level is ready
+/// * `ev_geometry_init` - Event writer to signal when level geometry is ready
 fn load_level_handler(
     mut ev: MessageReader<LevelLoadedEvent>,
     mut commands: Commands,
-    qgs: Query<Entity, With<GameSprite>>,
-    qgs2: Query<Entity, With<GameSound>>,
+    qgs: Query<Entity, Or<(With<GameSprite>, With<GameSound>)>>,
     mut p: LoadLevelSystemParam,
-    mut ev_entities_ready: MessageWriter<MapEntitiesReadyEvent>,
     mut ev_geometry_init: MessageWriter<MapGeometryInitializedEvent>,
     time: Res<Time>,
 ) {
     // Get the loaded event or return early if none
-    let mut ev_iter = ev.read();
-    let Some(loaded_event) = ev_iter.next() else {
+    let Some(loaded_event) = ev.read().next() else {
         return;
     };
-    let layers = &loaded_event.layers;
-    let floor_mapping = &loaded_event.floor_mapping;
 
+    info!("Starting level load: {}", loaded_event.map_filepath);
+    *p.loading_status = LevelLoadingStatus::JustStarted;
+
+    // --- 1. Cleanup & Reset ---
     // Despawn existing game entities
-    for gs in qgs.iter() {
-        commands.entity(gs).despawn();
+    for entity in &qgs {
+        commands.entity(entity).despawn();
     }
 
-    // Despawn existing ambient sounds
-    for gs in qgs2.iter() {
-        commands.entity(gs).despawn();
-    }
-
-    // Set temperature from difficulty
-    p.bf.ambient_temp = p.difficulty.0.ambient_temperature;
-    p.bf.map_path = loaded_event.map_filepath.clone();
-    p.bf.level_ready_time = time.elapsed_secs();
-
-    warn!("BoardTopology Map path: {:?}", &p.bf.map_path);
-
-    // Compute map boundaries by examining all tiles
-    let mut map_min_x = i32::MAX;
-    let mut map_min_y = i32::MAX;
-    let mut map_max_x = i32::MIN;
-    let mut map_max_y = i32::MIN;
-
-    // Filter for tile layers and find min/max coordinates
-    for (maptiles, _layer) in layers.iter().filter_map(|(_, layer)| {
-        if let MapLayerType::Tiles(tiles) = &layer.data {
-            Some((tiles, layer))
-        } else {
-            None
-        }
-    }) {
-        for tile in &maptiles.v {
-            map_min_x = tile.pos.x.min(map_min_x);
-            map_min_y = (-tile.pos.y).min(map_min_y);
-            map_max_x = tile.pos.x.max(map_max_x);
-            map_max_y = (-tile.pos.y).max(map_max_y);
-        }
-    }
-
-    // Add margin for neighbor checking
-    const MAP_MARGIN: i32 = 3;
-    map_min_x -= MAP_MARGIN;
-    map_min_y -= MAP_MARGIN;
-
-    // Use floor mapping from event
-    p.bf.floor_z_map = floor_mapping.floor_to_z.clone();
-    p.bf.z_floor_map = floor_mapping.z_to_floor.clone();
-
-    // Store the complete floor mapping in board data
-    p.bf.floor_mapping = floor_mapping.clone();
-
-    // Log floor mapping details
-    warn!(
-        "Floor mapping from event: {:?} floors found",
-        p.bf.floor_z_map.len()
-    );
-    warn!("Floor z-map: {:?}", p.bf.floor_z_map);
-    warn!("Z-floor map: {:?}", p.bf.z_floor_map);
-
-    // Calculate final map size with margins
-    let map_size = (
-        (map_max_x - map_min_x + 1 + MAP_MARGIN) as usize,
-        (map_max_y - map_min_y + 1 + MAP_MARGIN) as usize,
-        p.bf.floor_z_map.len(), // Use the number of floors for the z dimension
-    );
-
-    info!("Map size: ({map_min_x},{map_min_y}) - ({map_max_x},{map_max_y}) - {map_size:?}");
-
-    // Initialize board data fields
-    p.bf.map_size = map_size;
-    p.bf.origin = (map_min_x, map_min_y, 0);
-    p.bcf.0 = Array3::from_elem(map_size, CollisionFieldData::default());
-    p.bef.0 = Array3::default(map_size);
-
-    // Clear other field data
+    // Reset core data structures
     p.roomdb.room_state.clear();
     p.roomdb.room_tiles.clear();
-
-    // Broadcast map geometry initialization
-    ev_geometry_init.write(MapGeometryInitializedEvent {
-        map_size,
-        origin: p.bf.origin,
-    });
-
-    // Initialize board data resource
-    commands.init_resource::<BoardTopology>();
-    warn!("Level Loaded: {}", &loaded_event.map_filepath);
-
-    // ---------- NEW MAP LOAD ----------
-    // Create containers for different entity types
-    let mut player_spawn_points: Vec<Position> = vec![];
-    let mut hostile_spawn_points: Vec<Position> = vec![];
-    let mut van_entry_points: Vec<Position> = vec![];
-    let mut mesh_tileset = HashMap::<String, Handle<Mesh>>::new();
-
-    // Clear the sprite database
     p.sdb.clear();
 
-    // Populate sprite database with tile data
+    // --- 2. Map Geometry Calculation ---
+    // Calculate the bounding box of all tiles in the map to determine dimensions.
+    // Note: Tiled Y coordinates are negated to match our internal isometric coordinate system.
+    let tile_layers_iter = || {
+        loaded_event.layers.iter().filter_map(|(_, layer)| {
+            if let MapLayerType::Tiles(tiles) = &layer.data {
+                Some((tiles, layer))
+            } else {
+                None
+            }
+        })
+    };
+
+    let (min_x, min_y, max_x, max_y) = tile_layers_iter()
+        .flat_map(|(tiles, _)| tiles.v.iter())
+        .fold(
+            (i32::MAX, i32::MAX, i32::MIN, i32::MIN),
+            |(mix, miy, max, may), tile| {
+                (
+                    mix.min(tile.pos.x),
+                    miy.min(-tile.pos.y),
+                    max.max(tile.pos.x),
+                    may.max(-tile.pos.y),
+                )
+            },
+        );
+
+    // Add margin for neighbor checking and visual padding
+    const MARGIN: i32 = 3;
+    let origin = (min_x - MARGIN, min_y - MARGIN, 0);
+    let map_size = (
+        (max_x - min_x + 1 + 2 * MARGIN) as usize,
+        (max_y - min_y + 1 + 2 * MARGIN) as usize,
+        loaded_event.floor_mapping.floor_to_z.len(),
+    );
+
+    info!(
+        "Level geometry initialized: size {:?}, origin {:?}",
+        map_size, origin
+    );
+
+    // --- 3. Topology & Resource Setup ---
+    {
+        let bf = &mut p.bf;
+        bf.map_size = map_size;
+        bf.origin = origin;
+        bf.map_path = loaded_event.map_filepath.clone();
+        bf.ambient_temp = p.difficulty.0.ambient_temperature;
+        bf.level_ready_time = time.elapsed_secs();
+        bf.floor_z_map = loaded_event.floor_mapping.floor_to_z.clone();
+        bf.z_floor_map = loaded_event.floor_mapping.z_to_floor.clone();
+        bf.floor_mapping = loaded_event.floor_mapping.clone();
+
+        // Re-allocate board data fields with calculated dimensions
+        p.bcf.0 = Array3::from_elem(map_size, CollisionFieldData::default());
+        p.bef.0 = Array3::default(map_size);
+    }
+
+    // Broadcast geometry for other systems (minimaps, light grids, etc.)
+    ev_geometry_init.write(MapGeometryInitializedEvent { map_size, origin });
+
+    // --- 4. Asset Preparation ---
+    let mut mesh_tileset = HashMap::new();
     sprite_db::populate_sprite_db(&mut p, &mut mesh_tileset);
 
-    // Process map tiles and spawn entities
-    let mut c: f32 = 0.0;
-    let mut movable_objects: Vec<Entity> = Vec::new();
+    // --- 5. Entity Spawning ---
+    let mut depth_counter = 0.0;
+    for (maptiles, layer) in tile_layers_iter() {
+        // Get floor z-index from the layer's floor_mapping
+        let floor_z = layer
+            .floor_number
+            .and_then(|num| p.bf.floor_z_map.get(&num))
+            .copied()
+            .unwrap_or(0);
 
-    // Process each tile layer
-    for (maptiles, layer) in layers.iter().filter_map(|(_, layer)| {
-        if let MapLayerType::Tiles(tiles) = &layer.data {
-            Some((tiles, layer))
-        } else {
-            None
-        }
-    }) {
-        // Get floor z-index from the layer's floor_number
-        let floor_z = if let Some(floor_num) = layer.floor_number {
-            p.bf.floor_z_map.get(&floor_num).copied().unwrap_or(0)
-        } else {
-            0 // Default to ground floor if no floor number is set
-        };
-
-        // Process each tile in the layer
         for tile in &maptiles.v {
             tile_spawning::process_and_spawn_tile(
                 tile,
                 layer,
-                map_min_x,
-                map_min_y,
+                origin.0,
+                origin.1,
                 map_size,
                 floor_z,
                 &mut p,
                 &mut commands,
-                &mut player_spawn_points,
-                &mut hostile_spawn_points,
-                &mut van_entry_points,
-                &mut movable_objects,
-                &mut c,
+                &mut depth_counter,
             );
         }
     }
 
-    // Validate map for ghost influence system
-    if movable_objects.len() < 3 {
-        warn!(
-            "Map has less than 3 movable objects in rooms. Ghost influence system might not work as intended."
-        );
-    }
-
-    // Send entities ready event
-    ev_entities_ready.write(MapEntitiesReadyEvent {
-        movable_objects: movable_objects.clone(),
-        player_spawn_points: player_spawn_points.clone(),
-        hostile_spawn_points: hostile_spawn_points.clone(),
-        van_entry_points: van_entry_points.clone(),
-    });
-    warn!("Done: load_level_handler");
+    warn!("Map spawning complete: {}", loaded_event.map_filepath);
 }
 
 pub(crate) fn app_setup(app: &mut App) {
