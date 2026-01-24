@@ -28,7 +28,7 @@ unmapload-core = { path = "../unmapload-core" }
 unsettings-core = { path = "../unsettings-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 
-unlight-plugin = { path = "../unlight-plugin" }
+unlight-core = { path = "../unlight-core" }
 untypes-core = { path = "../untypes-core" }
 unui-core = { path = "../unui-core" }
 unpicking-core = { path = "../unpicking-core" }

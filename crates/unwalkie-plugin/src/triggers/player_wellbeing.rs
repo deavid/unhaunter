@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 use unbehavior::roomdb::RoomDB;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::Hiding;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::light::LightLevel;

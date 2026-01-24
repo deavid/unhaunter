@@ -1,6 +1,6 @@
-use crate::resources::light_grid::LightGrid;
-use crate::types::light::LightFieldData;
-use crate::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
+use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::types::light::LightFieldData;
+use unlight_core::types::prebaked_lighting_data::{WaveEdge, WaveEdgeData};
 use bevy::prelude::*;
 use bevy_platform::collections::HashSet;
 use ndarray::Array3;

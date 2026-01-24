@@ -14,7 +14,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
 use unlight_plugin::lighting_sim::systems::prebake_lighting_field;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 use unrender_std::board::tiledata::PreMesh;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;

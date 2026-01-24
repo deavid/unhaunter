@@ -7,7 +7,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;

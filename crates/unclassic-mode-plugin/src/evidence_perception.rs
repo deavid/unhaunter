@@ -10,7 +10,7 @@ use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 use unrender_std::components::light::LightEmitter;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;

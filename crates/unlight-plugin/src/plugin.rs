@@ -2,8 +2,10 @@ use bevy::prelude::*;
 use unboard_core::BoardUpdateSet;
 use untypes_core::states::AppState;
 
+use unlight_core::resources::light_grid::LightGrid;
+
 use crate::{
-    audio, lighting_sim, maplight, metrics, resources::light_grid::LightGrid,
+    audio, lighting_sim, maplight, metrics,
     systems::power_visuals,
 };
 

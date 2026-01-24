@@ -1,2 +1,2 @@
 pub(crate) mod ambient_mute;
-pub mod light_grid;
+pub use unlight_core::resources::light_grid;

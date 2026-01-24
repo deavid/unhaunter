@@ -1,0 +1,19 @@
+[package]
+name = "unlight-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+unfoundation-core = { path = "../unfoundation-core" }
+unspatial-core = { path = "../unspatial-core" }
+unbehavior = { path = "../unbehavior" }
+bevy = { workspace = true }
+bevy_platform = { workspace = true }
+ndarray = { workspace = true }

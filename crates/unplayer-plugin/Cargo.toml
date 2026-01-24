@@ -16,7 +16,7 @@ undifficulty-core = { path = "../undifficulty-core" }
 unbehavior = { path = "../unbehavior" }
 unfoundation-core = { path = "../unfoundation-core" }
 unboard-core = { path = "../unboard-core" }
-unlight-plugin = { path = "../unlight-plugin" }
+unlight-core = { path = "../unlight-core" }
 unevents-core = { path = "../unevents-core" }
 unplayer-core = { path = "../unplayer-core" }
 untypes-core = { path = "../untypes-core" }

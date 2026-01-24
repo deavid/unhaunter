@@ -1,7 +1,4 @@
 use super::utils::*;
-use crate::resources::light_grid::LightGrid;
-use crate::types::light::LightFieldData;
-use crate::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
 use bevy::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_platform::time::Instant;
@@ -11,6 +8,9 @@ use unbehavior::behavior::Behavior;
 use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology};
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::loadlevel::MapGeometryInitializedEvent;
+use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::types::light::LightFieldData;
+use unlight_core::types::prebaked_lighting_data::{LightInfo, PrebakedLightingData, WaveEdge};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 
@@ -22,6 +22,15 @@ pub fn init_light_grid(
         lg.light_field = Array3::from_elem(ev.map_size, LightFieldData::default());
         lg.current_exposure = 10.0;
         lg.current_exposure_accel = 0.0;
+        lg.exposure_history.clear();
+        lg.exposure_weights.clear();
+        const N: usize = 240;
+        for i in 0..N {
+            lg.exposure_history.push_back(10.0);
+            let weight =
+                0.5 * (1.0 - (2.0 * std::f32::consts::PI * i as f32 / (N as f32 - 1.0)).cos());
+            lg.exposure_weights.push(weight);
+        }
     }
 }
 

@@ -12,8 +12,6 @@
 //!
 //! * Systems for dynamically updating lighting and visibility as the player moves and
 //!   interacts with the environment.
-use crate::resources::light_grid::LightGrid;
-pub(crate) use crate::types::light::LightData;
 use bevy::ecs::system::SystemParam;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_platform::collections::HashMap;
@@ -31,6 +29,8 @@ use unboard_core::resources::board_topology::{
 };
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
+use unlight_core::resources::light_grid::LightGrid;
+pub(crate) use unlight_core::types::light::LightData;
 use unrender_std::utils::perspective;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::orientation::Orientation;
@@ -312,7 +312,6 @@ pub(crate) fn apply_lighting(
 
     // Lower values create an HDR effect, bringing blinding lights back to normal.
     let brightness_harsh: f32 = 3.0 * difficulty.0.darkness_intensity;
-    let eye_speed: f32 = 0.4 / difficulty.0.darkness_intensity.sqrt();
     let mut cursor_exp: f32 = 0.001 / difficulty.0.environment_gamma;
     let mut exp_count: f32 = 0.1;
     let mut flashlights: Vec<(&Position, Direction, f32, Color, LightType, Array3<f32>)> = vec![];
@@ -449,8 +448,21 @@ pub(crate) fn apply_lighting(
         })
         .sum();
     cursor_exp += fl_total_power.sqrt() * 0.9;
-    let f_e1 = 0.1;
-    lg.exposure_lux = lg.exposure_lux * (1.0 - f_e1) + cursor_exp * f_e1;
+
+    // FIR Filter with Hann Window (240 frames)
+    lg.exposure_history.push_back(cursor_exp);
+    while lg.exposure_history.len() > 240 {
+        lg.exposure_history.pop_front();
+    }
+    let mut sum_weights = 0.0;
+    let mut sum_values = 0.0;
+    for (i, &v) in lg.exposure_history.iter().enumerate() {
+        let weight = lg.exposure_weights.get(i).copied().unwrap_or(1.0);
+        sum_values += v * weight;
+        sum_weights += weight;
+    }
+    cursor_exp = sum_values / (sum_weights + 0.001);
+    lg.exposure_lux = cursor_exp;
 
     // Ensure the base is not negative before applying the power function
     let normalized_exp = (cursor_exp / center_exp.clamp(0.00001, 10000.0)).clamp(-10.0, 10.0);
@@ -466,18 +478,8 @@ pub(crate) fn apply_lighting(
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
         cursor_exp = lg.current_exposure;
     }
-    let exp_f = ((cursor_exp) / lg.current_exposure) / lg.current_exposure_accel.powi(30);
-    let max_acc: f32 = 1.05;
-    lg.current_exposure_accel =
-        (lg.current_exposure_accel * 1000.0 + exp_f * eye_speed) / (eye_speed + 1000.0);
-    if lg.current_exposure_accel > max_acc {
-        lg.current_exposure_accel = max_acc;
-    } else if lg.current_exposure_accel.recip() > max_acc {
-        lg.current_exposure_accel = max_acc.recip();
-    }
-    lg.current_exposure_accel = lg.current_exposure_accel.powf(0.99);
-    lg.current_exposure *= lg.current_exposure_accel;
 
+    lg.current_exposure = cursor_exp;
     let exposure = lg.current_exposure;
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 

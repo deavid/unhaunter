@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::time::Stopwatch;
 
 use unghost_core::components::GhostBreach;
-use unlight_plugin::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::PlayerSprite;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
