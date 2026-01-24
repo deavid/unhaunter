@@ -74,6 +74,7 @@ use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
+use untypes_core::difficulty::Difficulty;
 
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use unfoundation_core::random_seed;
@@ -300,19 +301,28 @@ pub(crate) fn apply_lighting(
     let measure = APPLY_LIGHTING.time_measure();
 
     let mut rng = random_seed::rng();
-    let _gamma_exp: f32 = difficulty.0.environment_gamma;
-    let dark_gamma: f32 = difficulty.0.darkness_intensity;
-    let light_gamma: f32 = difficulty.0.environment_gamma.recip();
+
+    let dark_gamma: f32 = 1.0;
+    let light_gamma: f32 = (0.97_f32).recip();
 
     // Higher values, less blinding light.
-    let center_exp: f32 = 6.0 - difficulty.0.environment_gamma;
+    let center_exp: f32 = 27.0;
 
     // Above 1.0, higher the less night vision.
-    let center_exp_gamma: f32 = 1.0 + difficulty.0.darkness_intensity;
+    let center_exp_gamma: f32 = 1.4;
 
-    // Lower values create an HDR effect, bringing blinding lights back to normal.
-    let brightness_harsh: f32 = 3.0 * difficulty.0.darkness_intensity;
-    let mut cursor_exp: f32 = 0.001 / difficulty.0.environment_gamma;
+    // Difficulty-based ambient light boost for tutorials.
+    // 1.0 for Tutorial 1, 0.0 for Standard+.
+    let tutorial_light_factor = match difficulty.0.difficulty {
+        Difficulty::TutorialChapter1 => 1.0,
+        Difficulty::TutorialChapter2 => 0.8,
+        Difficulty::TutorialChapter3 => 0.6,
+        Difficulty::TutorialChapter4 => 0.4,
+        Difficulty::TutorialChapter5 => 0.2,
+        _ => 0.0,
+    };
+
+    let mut cursor_exp: f32 = 0.001 / 0.8;
     let mut exp_count: f32 = 0.1;
     let mut flashlights: Vec<(&Position, Direction, f32, Color, LightType, Array3<f32>)> = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
@@ -323,6 +333,10 @@ pub(crate) fn apply_lighting(
         // If we don't have a valid map, skip this
         return;
     }
+
+    // Weight highlights more when calculating exposure (Power Average)
+    const HIGHLIGHT_PRIORITY_POWER: f32 = 3.4;
+
     // Check if visibility field is properly initialized
     if vf.visibility_field.is_empty() {
         return;
@@ -391,19 +405,19 @@ pub(crate) fn apply_lighting(
         }
 
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors(2, board_dim) {
+        for npos in cursor_pos.iter_xy_neighbors(3, board_dim) {
             let lf = &lg.light_field[npos.ndidx()];
             let vis = vf.visibility_field[npos.ndidx()]
+                .max(0.00001) // Fix: Visibility field is -0.001 for uncomputed tiles.
                 * if bcf.0[npos.ndidx()].player_free {
                     1.0
                 } else {
                     0.01
                 };
 
-            cursor_exp += lf.lux * vis;
+            // Power average to prioritize highlights in the field of view.
+            cursor_exp += lf.lux.powf(HIGHLIGHT_PRIORITY_POWER) * vis;
             exp_count += 1.0 * vis;
-            // cursor_exp += lf.lux.powf(gamma_exp);
-            // exp_count += lf.lux.powf(gamma_exp) / (lf.lux + 0.001);
         }
         player_pos = *pos;
     }
@@ -430,7 +444,7 @@ pub(crate) fn apply_lighting(
         }
     }
     let mut qt = sprite_set.p0();
-    cursor_exp /= exp_count;
+    cursor_exp = (cursor_exp / exp_count).powf(HIGHLIGHT_PRIORITY_POWER.recip());
     // Account for the eye seeing the flashlight on.
     // TODO: Account this from the player's perspective as the payer torch might
     // be off but someother player might have it on.
@@ -469,10 +483,10 @@ pub(crate) fn apply_lighting(
     cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
 
     // Minimum exp - controls how dark we can see
-    cursor_exp += 0.001 / difficulty.0.environment_gamma + difficulty.0.darkness_intensity;
+    cursor_exp += 0.001 / 0.8 + 1.4;
 
     // Compensate overall to make the scene brighter
-    cursor_exp /= 2.8 / difficulty.0.darkness_intensity;
+    cursor_exp /= 2.8 / 1.4;
 
     if !cursor_exp.is_normal() {
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
@@ -481,6 +495,8 @@ pub(crate) fn apply_lighting(
 
     lg.current_exposure = cursor_exp;
     let exposure = lg.current_exposure;
+    let raw_lux = lg.exposure_history.back().copied().unwrap_or(0.0);
+
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // Primes: 13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,173,281,409,541,659,809
@@ -613,12 +629,20 @@ pub(crate) fn apply_lighting(
                 }
                 const AMBIENT_LIGHT: f32 = 0.0001;
                 lf.get(bpos.ndidx()).map(|lf| {
+                    let r = (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure;
+                    let g = (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure;
+                    let b = (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure;
+
+                    // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
+                    // x^1.1 provides shadow contrast. The divisor creates a "shoulder" to prevent
+                    // highlights from washing out to white too aggressively.
+                    let tonemap = |x: f32| {
+                        let v = x.powf(1.1);
+                        v * 3.5 / (1.0 + v * 0.3)
+                    };
+
                     (
-                        (
-                            (lf.lux + lux_fl[0] + AMBIENT_LIGHT) / exposure,
-                            (lf.lux + lux_fl[1] + AMBIENT_LIGHT) / exposure,
-                            (lf.lux + lux_fl[2] + AMBIENT_LIGHT) / exposure,
-                        ),
+                        (tonemap(r), tonemap(g), tonemap(b)),
                         lightdata.add(&LightData::from_type(
                             LightType::Visible,
                             lf.lux + AMBIENT_LIGHT,
@@ -630,7 +654,8 @@ pub(crate) fn apply_lighting(
                 let gcolor = fpos_gamma_color(bpos);
                 gcolor
                     .map(|((r, g, b), _)| (r + g + b) / 3.0)
-                    .map(|l| (l / brightness_harsh).tanh() * brightness_harsh)
+                    // High dynamic range: remove aggressive highlight compression
+                    .map(|l| (l / 20.0).tanh() * 20.0)
             };
             let ((mut r, mut g, mut b), light_data) =
                 fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
@@ -654,7 +679,7 @@ pub(crate) fn apply_lighting(
             if behavior.p.movement.walkable {
                 lightdata_map.insert(bpos.clone(), light_data);
             }
-            let max_color = r.max(g).max(b).max(0.005);
+            let max_color = r.max(g).max(b).max(0.2);
             let src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
 
             let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
@@ -708,21 +733,24 @@ pub(crate) fn apply_lighting(
             const K_COLD: f32 = 0.6;
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
-            const DARK_COLOR2: Color = Color::srgba(0.03, 0.336, 0.444, 1.0);
-            let dark_color2 = lerp_color(
-                DARK_COLOR2,
-                Color::BLACK,
-                (dark_gamma / 4.0 + exposure * dark_gamma)
-                    .tanh()
-                    .clamp(0.0, 1.0),
-            );
+            const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
+            let dark_color2 = DARK_COLOR2;
             let exp_color =
                 ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
-            let dark = lerp_color(Color::BLACK, DARK_COLOR, exp_color / 16.0);
+
+            // Apply tutorial boost to the blue hue and ensure it never goes 100% dark.
+            // Darker missions (Standard+) will have 0.0 boost.
+            let exp_color_tint = (exp_color + tutorial_light_factor * 0.20).clamp(0.0, 1.0);
+            let dark = lerp_color(
+                Color::BLACK,
+                DARK_COLOR,
+                (exp_color_tint / 16.0 + tutorial_light_factor * 0.01).clamp(0.0, 1.0),
+            );
+
             let dark2 = lerp_color(
                 Color::WHITE,
                 dark_color2,
-                exp_color / f_gamma(lux_c).clamp(1.0, 300.0),
+                exp_color_tint / f_gamma(lux_c).clamp(1.0, 300.0),
             );
             new_mat.data.ambient_color = dark.with_alpha(0.0).into();
 
@@ -741,7 +769,7 @@ pub(crate) fn apply_lighting(
             new_mat.data.color = new_color;
             // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
 
-            const BRIGHTNESS: f32 = 1.01;
+            const BRIGHTNESS: f32 = 1.15;
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f: f32 = src_a + 0.0000001 + 0.3;
             let gamma_mean = |a: f32, b: f32| {
@@ -771,6 +799,28 @@ pub(crate) fn apply_lighting(
             new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
             new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
             new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
+
+            const DEBUG_LIGHTING: bool = false;
+            if DEBUG_LIGHTING
+                && bpos == player_bpos
+                && (time.elapsed_secs() % 1.0) < time.delta_secs()
+            {
+                let f_g = f_gamma(lux_c);
+                info!(
+                    "Adapt: rl:{:.4} al:{:.4} exp:{:.4} mc:{:.4} lc:{:.4} fg:{:.4} ec:{:.2} cf:{:.2} g:{:.2} c:{:?}",
+                    raw_lux,
+                    lg.exposure_lux,
+                    exposure,
+                    max_color,
+                    lux_c,
+                    f_g,
+                    exp_color,
+                    cold_f,
+                    new_mat.data.gamma,
+                    new_mat.data.color
+                );
+            }
+
             const DEBUG_SOUND: bool = false;
             if DEBUG_SOUND && let Some(sf) = sg.sound_field.get(&bpos) {
                 let l: f32 = sf.iter().map(|x: &Vec2| x.length() + 0.01).sum();
@@ -891,7 +941,13 @@ pub(crate) fn apply_lighting(
         );
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = ld_mag / exposure;
+            let mut rel_lux = {
+                let v = (ld_mag / exposure).powf(1.1);
+                v * 3.5 / (1.0 + v * 0.3)
+            };
+            // Tutorial boost for sprites to ensure visibility
+            rel_lux += tutorial_light_factor * 0.0001;
+
             rel_lux += ld.ultraviolet * uv_reactive * 5.0;
 
             if let Some(light_sens) = o_light_sens {
@@ -1063,9 +1119,6 @@ pub(crate) fn apply_lighting(
             opacity *= miasma_visibility.clamp(0.0, 0.45)
                 * miasma_sprite.visibility
                 * (1.0 - dst_color.luminance() * 0.5);
-            // if opacity < old_a {
-            //     smooth = 25.0;
-            // }
         }
         dst_color.set_alpha(
             ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
