@@ -100,19 +100,16 @@ fn quartz_shattered_feedback(
     }
 }
 
-// TODO (David): Add `times_hunted_this_mission: u32` to `GhostSprite` struct
-// in `uncore/src/components/ghost_sprite.rs` and ensure it's incremented
-// when a hunt truly begins in `unghost/src/ghost.rs`. Initialize to 0.
-
 fn trigger_quartz_unused_in_relevant_situation_system(
     time: Res<Time>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
+    roomdb: Res<RoomDB>,
     q_gear: Query<&GearKind>,
 ) {
     // 1. System Run Condition Checks
@@ -132,7 +129,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok(player_gear) = player_query.single() else {
+    let Ok((player_gear, player_pos)) = player_query.single() else {
         return;
     };
     let Ok(ghost_sprite) = ghost_query.single() else {
@@ -140,7 +137,6 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     };
 
     // 4. First Hunt Check
-    // Assuming `times_hunted_this_mission` is added to GhostSprite
     if ghost_sprite.times_hunted_this_mission == 0 {
         return; // Hint is for after experiencing at least one hunt
     }
@@ -168,16 +164,24 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     if player_has_quartz {
         return; // Player already has quartz, no need for this hint
     }
+
+    // 7. Check Truck Inventory for Quartz
+    // Only trigger truck hint if player is currently outside (near truck)
+    let player_bpos = player_pos.to_board_position();
+    let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+    if !is_outside {
+        return; // Don't nag about truck gear while inside
+    }
+
     let truck_gear = match truck_gear {
         Some(gear) => gear,
         None => return, // No truck gear available, exit early
     };
-    // 7. Check Truck Inventory for Quartz
     let truck_has_quartz = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
     if !truck_has_quartz {
         return; // Quartz isn't even available in the truck
     }
-    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+
     // 8. Trigger Event: All conditions met
     walkie_play.set(
         WalkieEvent::QuartzUnusedInRelevantSituation,
@@ -190,17 +194,14 @@ fn trigger_sage_unused_in_relevant_situation_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
+    roomdb: Res<RoomDB>,
     q_gear: Query<&GearKind>,
     q_sage: Query<&SageBundleData>,
 ) {
-    let truck_gear = match truck_gear {
-        Some(gear) => gear,
-        None => return, // No truck gear available, exit early
-    };
     // 1. System Run Condition Checks
     if *app_state.get() != AppState::InGame || *game_state.get() != GameState::None {
         return;
@@ -216,7 +217,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
         return;
     }
 
-    let Ok(player_gear) = player_query.single() else {
+    let Ok((player_gear, player_pos)) = player_query.single() else {
         return;
     };
     let Ok(ghost_sprite) = ghost_query.single() else {
@@ -235,38 +236,75 @@ fn trigger_sage_unused_in_relevant_situation_system(
         return;
     }
 
-    // 6. Check Player Inventory for Unconsumed Sage
-    let check_sage = |entity: Entity| -> bool {
+    // 6. Check Player Inventory for Sage
+    let mut player_has_unlit_sage = false;
+    let mut player_has_active_sage = false;
+
+    let mut check_gear_status = |entity: Entity| {
         if let Ok(kind) = q_gear.get(entity)
             && *kind == GearKind::SageBundle
             && let Ok(sage_data) = q_sage.get(entity)
+            && !sage_data.consumed
         {
-            return !sage_data.consumed;
+            if sage_data.is_active {
+                player_has_active_sage = true;
+            } else {
+                player_has_unlit_sage = true;
+            }
         }
-        false
     };
 
-    let player_has_unconsumed_sage = player_gear.left_hand.map(check_sage).unwrap_or(false)
-        || player_gear.right_hand.map(check_sage).unwrap_or(false)
-        || player_gear.inventory.iter().any(|&e| check_sage(e));
-
-    if player_has_unconsumed_sage {
-        return; // Player already has usable sage
+    if let Some(e) = player_gear.left_hand {
+        check_gear_status(e);
+    }
+    if let Some(e) = player_gear.right_hand {
+        check_gear_status(e);
+    }
+    for &e in &player_gear.inventory {
+        check_gear_status(e);
     }
 
-    // 7. Check Truck Inventory for Sage
-    let check_gear = |entity: Entity| -> bool {
+    if player_has_active_sage {
+        return; // Already protected
+    }
+
+    if player_has_unlit_sage {
+        // Trigger hint to light it up!
+        walkie_play.set(
+            WalkieEvent::SageUnusedInRelevantSituation,
+            time.elapsed_secs_f64(),
+        );
+        return;
+    }
+
+    // 7. Player has no usable sage in inventory.
+    // Check if player is outside (near truck) to suggest picking it up.
+    let player_bpos = player_pos.to_board_position();
+    let is_outside = roomdb.room_tiles.get(&player_bpos).is_none();
+    if !is_outside {
+        return; // Don't nag if they've already committed to being inside without it.
+    }
+
+    let truck_gear = match truck_gear {
+        Some(gear) => gear,
+        None => return, // No truck gear available, exit early
+    };
+
+    let check_gear_kind = |entity: Entity| -> bool {
         if let Ok(kind) = q_gear.get(entity) {
             *kind == GearKind::SageBundle
         } else {
             false
         }
     };
-    let truck_has_sage = truck_gear.inventory.iter().any(|&gear| check_gear(gear));
+    let truck_has_sage = truck_gear
+        .inventory
+        .iter()
+        .any(|&gear| check_gear_kind(gear));
     if !truck_has_sage {
         return; // Sage isn't even available in the truck
     }
-    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+
     // 8. Trigger Event: All conditions met
     walkie_play.set(
         WalkieEvent::SageUnusedInRelevantSituation,
