@@ -4,6 +4,8 @@ use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
 use unbehavior::components::Stairs;
 use unengine_core::GCameraArena;
+use unevents_core::events::npc_help::NpcHelpEvent;
+use unevents_core::events::roomchanged::RoomChangedEvent;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
@@ -67,7 +69,7 @@ pub(crate) fn waypoint_creation_system(
         }
 
         // Check if clicked on an interactive entity
-        if let Ok((interactive_entity, interactive_pos, _interactive, _behavior, _room_state)) =
+        if let Ok((interactive_entity, interactive_pos, interactive, behavior, _room_state)) =
             q_interactives.get(click_event.entity)
         {
             let interactive_floor = interactive_pos.z.round() as i32;
@@ -86,6 +88,15 @@ pub(crate) fn waypoint_creation_system(
                 interactive_entity, interactive_floor
             );
 
+            // Calculate the actual interaction point (e.g., door handle)
+            let cp_delta = interactive.control_point_delta(behavior);
+            let interaction_pos = Position {
+                x: interactive_pos.x + cp_delta.x,
+                y: interactive_pos.y + cp_delta.y,
+                z: interactive_pos.z + cp_delta.z,
+                visual_priority: interactive_pos.visual_priority,
+            };
+
             // Clear existing waypoints when creating new ones
             clear_player_waypoints(
                 &mut commands,
@@ -95,15 +106,15 @@ pub(crate) fn waypoint_creation_system(
             );
 
             // Check if we're close enough to interact directly
-            const INTERACTION_DISTANCE: f32 = 1.2;
-            let distance = player_pos.distance(interactive_pos);
+            const INTERACTION_DISTANCE: f32 = 1.4;
+            let distance = player_pos.distance(&interaction_pos);
 
             if distance <= INTERACTION_DISTANCE {
                 // Close enough - create direct interaction waypoint
                 create_interaction_waypoint(
                     &mut commands,
                     player_entity,
-                    *interactive_pos,
+                    interaction_pos,
                     interactive_entity,
                     &mut waypoint_queue,
                 );
@@ -114,7 +125,7 @@ pub(crate) fn waypoint_creation_system(
                     &q_existing_waypoints,
                     player_entity,
                     *player_pos,
-                    *interactive_pos,
+                    interaction_pos,
                     interactive_entity,
                     &mut waypoint_queue,
                     &pathfinder,
@@ -196,6 +207,8 @@ pub(crate) fn waypoint_following_system(
     )>,
     mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,
+    mut ev_room: MessageWriter<RoomChangedEvent>,
+    mut ev_npc: MessageWriter<NpcHelpEvent>,
 ) {
     for (player_entity, player_pos, waypoint_queue) in q_player.iter() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
@@ -205,7 +218,7 @@ pub(crate) fn waypoint_following_system(
                 let to_target = target - current;
 
                 const ARRIVAL_THRESHOLD: f32 = 0.1;
-                const INTERACTION_DISTANCE: f32 = 1.2;
+                const INTERACTION_DISTANCE: f32 = 1.4;
 
                 // Check if we should handle the waypoint action
                 let should_complete_waypoint = match &waypoint.waypoint_type {
@@ -218,17 +231,22 @@ pub(crate) fn waypoint_following_system(
                         if let Ok((_, interactive_pos, interactive, behavior, room_state)) =
                             q_interactives.get(*interaction_target)
                         {
-                            let distance = player_pos.distance(interactive_pos);
+                            let distance = player_pos.distance(waypoint_pos);
                             if distance <= INTERACTION_DISTANCE {
+                                if behavior.is_npc() {
+                                    ev_npc.write(NpcHelpEvent::new(*interaction_target));
+                                }
                                 // Execute the interaction
-                                interactive_stuff.execute_interaction(
+                                if interactive_stuff.execute_interaction(
                                     *interaction_target,
                                     interactive_pos,
                                     Some(interactive),
                                     behavior,
                                     room_state,
                                     unevents_core::events::roomchanged::InteractionExecutionType::ChangeState,
-                                );
+                                ) {
+                                    ev_room.write(RoomChangedEvent::default());
+                                }
                                 true // Complete the waypoint after interaction
                             } else {
                                 // Still too far, keep moving
