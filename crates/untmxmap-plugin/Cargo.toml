@@ -18,8 +18,10 @@ unevents-core = { path = "../unevents-core" }
 untypes-core = { path = "../untypes-core" }
 untiled-core = { path = "../untiled-core" }
 unrender-std = { path = "../unrender-std" }
+unsettings-core = { path = "../unsettings-core" }
 
 bevy = { workspace = true }
+bevy-persistent = { workspace = true }
 bevy_platform = { workspace = true }
 normalize-path = { workspace = true }
 tiled = { workspace = true }

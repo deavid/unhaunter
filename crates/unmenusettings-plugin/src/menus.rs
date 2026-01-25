@@ -4,6 +4,7 @@ use strum::IntoEnumIterator;
 use unsettings_core::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
     game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
+    video::{VideoSettings, VideoSettingsValue, UpscaleFactorChoice},
 };
 
 use crate::components::MenuEvent;
@@ -22,8 +23,7 @@ impl MenuSettingsLevel1 {
         match self {
             MenuSettingsLevel1::Gameplay => MenuEvent::SettingClassSelected(m::Gameplay),
             MenuSettingsLevel1::Audio => MenuEvent::SettingClassSelected(m::Audio),
-            // We disable Video and Profile for now
-            MenuSettingsLevel1::Video => MenuEvent::None,
+            MenuSettingsLevel1::Video => MenuEvent::SettingClassSelected(m::Video),
             MenuSettingsLevel1::Profile => MenuEvent::None,
         }
     }
@@ -168,6 +168,58 @@ impl AudioSettingsMenu {
             .map(|s| {
                 (
                     format!("{}: {}", s, s.setting_value(audio_settings)),
+                    s.menu_event(),
+                )
+            })
+            .collect::<Vec<_>>()
+    }
+}
+
+#[derive(strum::Display, strum::EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum VideoSettingsMenu {
+    #[strum(to_string = "Upscale Factor")]
+    UpscaleFactor,
+}
+
+impl VideoSettingsMenu {
+    pub(crate) fn menu_event(&self) -> MenuEvent {
+        MenuEvent::EditVideoSetting(*self)
+    }
+
+    pub(crate) fn setting_value(&self, video_settings: &Res<Persistent<VideoSettings>>) -> String {
+        match self {
+            VideoSettingsMenu::UpscaleFactor => video_settings.max_upscale_factor.to_string(),
+        }
+    }
+
+    pub(crate) fn iter_events_item(
+        &self,
+        video_settings: &Res<Persistent<VideoSettings>>,
+    ) -> Vec<(String, MenuEvent)> {
+        match self {
+            VideoSettingsMenu::UpscaleFactor => UpscaleFactorChoice::iter()
+                .map(|s| {
+                    (
+                        if s == video_settings.max_upscale_factor {
+                            format!("[{s}]")
+                        } else {
+                            s.to_string()
+                        },
+                        MenuEvent::SaveVideoSetting(VideoSettingsValue::max_upscale_factor(s)),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+
+    pub(crate) fn iter_events(
+        video_settings: &Res<Persistent<VideoSettings>>,
+    ) -> Vec<(String, MenuEvent)> {
+        use strum::IntoEnumIterator;
+        Self::iter()
+            .map(|s| {
+                (
+                    format!("{}: {}", s, s.setting_value(video_settings)),
                     s.menu_event(),
                 )
             })

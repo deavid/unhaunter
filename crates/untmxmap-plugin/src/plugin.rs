@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use unassets_core::assets::index::{AssetIdx, AssetIdxLoader};
 use unassets_core::assets::tmxmap::{TmxMap, TmxMapLoader};
 use unassets_core::assets::tsxsheet::{TsxSheet, TsxSheetLoader};
+use unassets_core::resources::upscale::UpscaleIndex;
 use untiled_core::tiled::MapTileSetDb;
 
 use crate::init_maps::MapAssetIndexHandle;
@@ -12,6 +13,7 @@ impl Plugin for UnhaunterTmxMapPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MapTileSetDb>()
             .init_resource::<MapAssetIndexHandle>()
+            .init_resource::<UpscaleIndex>()
             .init_asset::<TmxMap>()
             .init_asset::<TsxSheet>()
             .init_asset::<AssetIdx>()

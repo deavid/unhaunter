@@ -5,6 +5,15 @@ use std::path::PathBuf;
 pub fn find_assets_directory() -> Option<PathBuf> {
     // 1. Check for CARGO_MANIFEST_DIR (development mode)
     use std::{env, path::PathBuf};
+
+    // 0. Check current directory (common for Bevy/Tools run from project root)
+    if let Ok(cwd) = env::current_dir() {
+        let assets_path = cwd.join("assets");
+        if assets_path.is_dir() {
+            return Some(assets_path);
+        }
+    }
+
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let assets_path = PathBuf::from(manifest_dir).join("assets");
         if assets_path.is_dir() {

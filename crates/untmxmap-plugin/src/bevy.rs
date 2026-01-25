@@ -2,8 +2,10 @@
 use bevy::prelude::*;
 use bevy_platform::collections::HashMap;
 use std::path::{Path, PathBuf};
+use unassets_core::resources::upscale::UpscaleIndex;
 use unboard_core::types::floor::FloorLevelMapping;
 use unrender_std::materials::CustomMaterial1;
+use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::{AtlasData, MapTileSet, MapTileSetDb};
 use untiled_core::tiledmap::map::{MapLayer, MapLayerGroup, MapLayerType};
 
@@ -32,40 +34,57 @@ pub(crate) fn bevy_load_map(
     asset_server: &AssetServer,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
     tilesetdb: &mut ResMut<MapTileSetDb>,
+    upscale_idx: &UpscaleIndex,
+    video_settings: &VideoSettings,
 ) -> (Vec<(usize, MapLayer)>, FloorLevelMapping) {
     // Preload all tilesets referenced:
     for tileset in map.tilesets().iter() {
+        let mut factor = 1.0;
         // If an image is included, this is a tilemap. If no image is included this is a
         // sprite collection. Sprite collections are not supported right now.
         let data = if let Some(image) = &tileset.image {
             let img_src = resolve_tiled_image_path(&image.source);
+            let img_src_str = img_src.to_string_lossy();
+
+            let (loading_src, f) = if let Some(resolved) =
+                upscale_idx.resolve(&img_src_str, video_settings.max_upscale_factor.factor())
+            {
+                (PathBuf::from(resolved.path), resolved.factor)
+            } else {
+                (img_src, 1.0)
+            };
+            factor = f;
 
             // FIXME: When the images are loaded onto the GPU it seems that we need at least 1
             // pixel of empty space .. so that the GPU can sample surrounding pixels properly.
             // .. This contrasts with how Tiled works, as it assumes a perfect packing if
             // possible.
-            const MARGIN: u32 = 1;
+            const MARGIN: u32 = 0;
 
             // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and
             // add a 2px margin. Recreating .. the texture on the fly.
-            let texture: Handle<Image> = asset_server.load(img_src);
+            let texture: Handle<Image> = asset_server.load(loading_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlasLayout::from_grid(
                 UVec2::new(
-                    tileset.tile_width + tileset.spacing - MARGIN,
-                    tileset.tile_height + tileset.spacing - MARGIN,
+                    ((tileset.tile_width + tileset.spacing - MARGIN) as f32 * factor) as u32,
+                    ((tileset.tile_height + tileset.spacing - MARGIN) as f32 * factor) as u32,
                 ),
                 tileset.columns,
                 rows,
-                Some(UVec2::new(MARGIN, MARGIN)),
+                Some(UVec2::new(
+                    (MARGIN as f32 * factor) as u32,
+                    (MARGIN as f32 * factor) as u32,
+                )),
                 Some(UVec2::new(0, 0)),
             );
             let mut cmat = CustomMaterial1::from_texture(texture);
             cmat.data.sheet_rows = rows;
             cmat.data.sheet_cols = tileset.columns;
             cmat.data.sheet_idx = 0;
-            cmat.data.sprite_width = tileset.tile_width as f32 + tileset.spacing as f32;
-            cmat.data.sprite_height = tileset.tile_height as f32 + tileset.spacing as f32;
+            cmat.data.sprite_width = (image.width as f32 * factor) / tileset.columns as f32;
+            cmat.data.sprite_height = (image.height as f32 * factor) / rows as f32;
+            cmat.data.upscale_factor = factor;
             let atlas1_handle = texture_atlases.add(atlas1);
             AtlasData::Sheet((atlas1_handle.clone(), cmat))
         } else {
@@ -74,9 +93,21 @@ pub(crate) fn bevy_load_map(
                 // tile.collision
                 if let Some(image) = &tile.image {
                     let img_src = resolve_tiled_image_path(&image.source);
-                    dbg!(&img_src);
-                    let img_handle: Handle<Image> = asset_server.load(img_src);
-                    let cmat = CustomMaterial1::from_texture(img_handle.clone());
+                    let img_src_str = img_src.to_string_lossy();
+
+                    let (loading_src, f) = if let Some(resolved) = upscale_idx
+                        .resolve(&img_src_str, video_settings.max_upscale_factor.factor())
+                    {
+                        (PathBuf::from(resolved.path), resolved.factor)
+                    } else {
+                        (img_src, 1.0)
+                    };
+                    factor = f;
+                    let img_handle: Handle<Image> = asset_server.load(loading_src);
+                    let mut cmat = CustomMaterial1::from_texture(img_handle.clone());
+                    cmat.data.sprite_width = (image.width as f32) * factor;
+                    cmat.data.sprite_height = (image.height as f32) * factor;
+                    cmat.data.upscale_factor = factor;
                     images.push((img_handle, cmat));
                 }
             }
@@ -104,6 +135,7 @@ pub(crate) fn bevy_load_map(
             tileset: tileset.clone(),
             data,
             y_anchor,
+            factor,
         };
 
         // Store the tileset in memory in case we need to do anything with it later on.

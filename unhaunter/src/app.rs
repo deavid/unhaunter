@@ -66,6 +66,7 @@ pub fn app_run(cli_options: CliOptions) {
     app.add_plugins(CustomSpritePickingPlugin);
 
     app.add_plugins((
+        UnhaunterSettingsPlugin,
         UnhaunterRootPlugin,
         UnhaunterEnginePlugin,
         UnmetricsPlugin,
@@ -89,7 +90,6 @@ pub fn app_run(cli_options: CliOptions) {
     ));
     app.add_plugins((
         UnhaunterTmxMapPlugin,
-        UnhaunterSettingsPlugin,
         UnhaunterMenuSettingsPlugin,
         UnhaunterFogPlugin,
         UnhaunterWalkiePlugin,

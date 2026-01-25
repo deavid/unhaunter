@@ -26,6 +26,7 @@ unengine-core = { path = "../unengine-core" }
 untags-core = { path = "../untags-core" }
 unmapload-core = { path = "../unmapload-core" }
 unsettings-core = { path = "../unsettings-core" }
+unassets-core = { path = "../unassets-core" }
 unnavigation-core = { path = "../unnavigation-core" }
 
 unlight-core = { path = "../unlight-core" }

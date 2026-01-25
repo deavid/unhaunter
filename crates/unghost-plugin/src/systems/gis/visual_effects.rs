@@ -62,35 +62,53 @@ fn spawn_interaction_particles_system(
     }
 }
 
+use unrender_std::materials::CustomMaterial1;
+
 /// System that handles motion blur effects for fast-moving objects
 fn motion_blur_system(
     mut commands: Commands,
-    mut q_blur: Query<(Entity, &Position, &mut MotionBlur, &mut Sprite)>,
+    mut q_blur: Query<(
+        Entity,
+        &Position,
+        &mut MotionBlur,
+        Option<&mut Sprite>,
+        Option<&MeshMaterial2d<CustomMaterial1>>,
+    )>,
+    mut materials1: ResMut<Assets<CustomMaterial1>>,
     q_tweens: Query<&Tween>,
 ) {
-    for (entity, position, mut motion_blur, mut sprite) in q_blur.iter_mut() {
+    for (entity, position, mut motion_blur, mut sprite, mat) in q_blur.iter_mut() {
         // Calculate movement speed
         let movement_delta = position.distance(&motion_blur.previous_position);
 
-        // Apply blur effect based on movement speed
-        if movement_delta > 0.1 {
+        let new_alpha = if movement_delta > 0.1 {
             motion_blur.intensity = (movement_delta * 10.0).clamp(0.0, 1.0);
-
             // Create trail effect by adjusting alpha and scale
-            sprite.color.set_alpha(0.7 - motion_blur.intensity * 0.3);
+            0.7 - motion_blur.intensity * 0.3
         } else {
             // Gradually reduce blur when not moving
             motion_blur.intensity *= 0.9;
-            sprite.color.set_alpha(1.0 - motion_blur.intensity * 0.3);
-        }
+            1.0 - motion_blur.intensity * 0.3
+        };
 
-        motion_blur.previous_position = *position;
+        let mut final_alpha = new_alpha;
 
         // Remove motion blur component when tween animation is finished
         if q_tweens.get(entity).is_err() {
             commands.entity(entity).remove::<MotionBlur>();
-            sprite.color.set_alpha(1.0); // Restore normal alpha
+            final_alpha = 1.0; // Restore normal alpha
         }
+
+        if let Some(sprite) = sprite.as_mut() {
+            sprite.color.set_alpha(final_alpha);
+        }
+        if let Some(mat) = mat
+            && let Some(material) = materials1.get_mut(mat)
+        {
+            material.data.color.set_alpha(final_alpha);
+        }
+
+        motion_blur.previous_position = *position;
     }
 }
 

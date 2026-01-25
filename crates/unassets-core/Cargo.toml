@@ -15,3 +15,9 @@ untypes-core = { path = "../untypes-core" }
 bevy = { workspace = true }
 bevy_platform = { workspace = true }
 thiserror = { workspace = true }
+anyhow = { workspace = true }
+walkdir = { workspace = true }
+
+[[bin]]
+name = "assetidx_updater"
+path = "src/bin/assetidx_updater.rs"

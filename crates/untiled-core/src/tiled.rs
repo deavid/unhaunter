@@ -16,6 +16,7 @@ pub struct MapTileSet {
     pub tileset: Arc<tiled::Tileset>,
     pub data: AtlasData,
     pub y_anchor: f32,
+    pub factor: f32,
 }
 
 #[derive(Debug, Clone, Default, Resource)]

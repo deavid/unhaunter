@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 use bevy_platform::time::Instant;
-use unsettings_core::{audio::AudioSettingsValue, game::GameplaySettingsValue};
+use unsettings_core::{
+    audio::AudioSettingsValue, game::GameplaySettingsValue, video::VideoSettingsValue,
+};
 
-use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
+use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1, VideoSettingsMenu};
 
 // Marker component for the main settings menu UI
 #[derive(Component)]
@@ -41,10 +43,22 @@ impl MenuItem {
     }
 }
 
+#[derive(Message, Debug, Clone, Copy)]
+pub(crate) struct VideoSettingSelected {
+    pub setting: VideoSettingsMenu,
+}
+
+#[derive(Message, Debug, Clone, Copy)]
+pub(crate) struct SaveVideoSetting {
+    pub value: VideoSettingsValue,
+}
+
 #[derive(Message, Debug, Clone, Copy, Default)]
 pub(crate) enum MenuEvent {
     SaveAudioSetting(AudioSettingsValue),
     EditAudioSetting(AudioSettingsMenu),
+    SaveVideoSetting(VideoSettingsValue),
+    EditVideoSetting(VideoSettingsMenu),
     SaveGameplaySetting(GameplaySettingsValue),
     EditGameplaySetting(GameplaySettingsMenu),
     SettingClassSelected(MenuSettingsLevel1),

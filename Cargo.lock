@@ -5636,10 +5636,12 @@ checksum = "f8c1ae7cc0fdb8b842d65d127cb981574b0d2b249b74d1c7a2986863dc134f71"
 name = "unassets-core"
 version = "0.3.2-dev"
 dependencies = [
+ "anyhow",
  "bevy",
  "bevy_platform",
  "thiserror 2.0.17",
  "untypes-core",
+ "walkdir",
 ]
 
 [[package]]
@@ -5692,6 +5694,7 @@ dependencies = [
  "bevy_platform",
  "ordered-float 5.1.0",
  "rand 0.9.2",
+ "unassets-core",
  "unbehavior",
  "unboard-core",
  "undifficulty-core",
@@ -5932,6 +5935,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "clap",
+ "unassets-core",
  "uncampaign-plugin",
  "unclassic-mode-plugin",
  "unengine-plugin",
@@ -6534,6 +6538,7 @@ name = "untmxmap-plugin"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy-persistent",
  "bevy_platform",
  "normalize-path",
  "tiled",
@@ -6541,6 +6546,7 @@ dependencies = [
  "unboard-core",
  "unevents-core",
  "unrender-std",
+ "unsettings-core",
  "untiled-core",
  "untypes-core",
 ]

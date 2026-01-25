@@ -14,6 +14,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use unevents_core::events::loadlevel::LevelReadyEvent;
 use unevents_core::events::roomchanged::RoomChangedEvent;
 use unrender_std::board::tiledata::PreMesh;
+use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::collision::rebuild_collision_data;
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
@@ -130,11 +131,11 @@ fn after_level_ready(
 /// * `meshes` - Asset storage for mesh creation
 fn process_pre_meshes(
     mut commands: Commands,
-    query: Query<(Entity, &PreMesh)>,
+    query: Query<(Entity, &PreMesh, &ResolutionFactor)>,
     images: Res<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    for (entity, pre_mesh) in query.iter() {
+    for (entity, pre_mesh, rf) in query.iter() {
         match pre_mesh {
             // For mesh placeholders, simply apply the existing mesh
             PreMesh::Mesh(mesh2d) => {
@@ -150,7 +151,10 @@ fn process_pre_meshes(
             } => {
                 if let Some(image) = images.get(image_handle) {
                     let sz = image.texture_descriptor.size;
-                    println!("Physical image size: {} x {}", sz.width, sz.height);
+                    println!(
+                        "Physical image size: {} x {} (Resolution Factor: {})",
+                        sz.width, sz.height, rf.0
+                    );
                     let sprite_size = Vec2::new(sz.width as f32, sz.height as f32);
                     let sprite_anchor = Vec2::new(
                         sprite_size.x * sprite_anchor.x,

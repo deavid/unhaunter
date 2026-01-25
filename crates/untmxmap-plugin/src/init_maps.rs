@@ -3,6 +3,7 @@ use unassets_core::assets::index::AssetIdx;
 use unassets_core::assets::tmxmap::TmxMap;
 use unassets_core::assets::tsxsheet::TsxSheet;
 use unassets_core::resources::maps::Maps;
+use unassets_core::resources::upscale::UpscaleIndex;
 use unassets_core::types::mission_data::MissionData;
 use unassets_core::types::root::map::Map;
 use unassets_core::types::root::map::Sheet;
@@ -19,9 +20,11 @@ pub(crate) struct PreLoad<A: Asset> {
 pub(crate) struct MapAssetIndexHandle {
     tmxidx: Handle<AssetIdx>,
     tsxidx: Handle<AssetIdx>,
+    upscale_idx: Handle<AssetIdx>,
     idxprocessed: bool,
     maps: Vec<PreLoad<TmxMap>>,
     sheets: Vec<PreLoad<TsxSheet>>,
+    upscaled: Vec<PreLoad<Image>>,
 }
 
 pub(crate) fn app_setup(app: &mut App) {
@@ -32,12 +35,14 @@ pub(crate) fn app_setup(app: &mut App) {
 fn init_maps(asset_server: Res<AssetServer>, mut mapsidx: ResMut<MapAssetIndexHandle>) {
     mapsidx.tmxidx = asset_server.load("index/maps-tmx.assetidx");
     mapsidx.tsxidx = asset_server.load("index/maps-tsx.assetidx");
+    mapsidx.upscale_idx = asset_server.load("index/upscaled-png.assetidx");
 }
 
 fn map_index_preload(
     asset_server: Res<AssetServer>,
     idx_assets: Res<Assets<AssetIdx>>,
     mut mapsidx: ResMut<MapAssetIndexHandle>,
+    mut upscale_idx: ResMut<UpscaleIndex>,
 ) {
     if mapsidx.idxprocessed {
         return;
@@ -48,6 +53,40 @@ fn map_index_preload(
     let Some(sheets) = idx_assets.get(&mapsidx.tsxidx) else {
         return;
     };
+    let Some(upscale_list) = idx_assets.get(&mapsidx.upscale_idx) else {
+        return;
+    };
+
+    for path in &upscale_list.assets {
+        // Expected format: "upscaled/zoom0Nx_{original_path}"
+        if !path.starts_with("upscaled/zoom0") {
+            continue;
+        }
+        let rest = &path["upscaled/zoom0".len()..];
+        let Some(factor_char) = rest.chars().next() else {
+            continue;
+        };
+        let Some(factor) = factor_char.to_digit(10) else {
+            continue;
+        };
+        if !rest.get(1..3).map(|s| s == "x_").unwrap_or(false) {
+            continue;
+        }
+        let original_path = &rest[3..];
+        upscale_idx
+            .available
+            .entry(original_path.to_string())
+            .or_default()
+            .insert(factor, path.clone());
+
+        let handle: Handle<Image> = asset_server.load(path);
+        mapsidx.upscaled.push(PreLoad {
+            handle,
+            path: path.clone(),
+            processed: false,
+        });
+    }
+
     for path in &maps.assets {
         let handle: Handle<TmxMap> = asset_server.load(path);
         let path = path.to_string();

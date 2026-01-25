@@ -148,6 +148,7 @@ walkdir = { workspace = true }
 anyhow = { workspace = true }
 
 untypes-core = { path = "crates/untypes-core" }
+unassets-core = { path = "crates/unassets-core" }
 
 uncampaign-plugin = { path = "crates/uncampaign-plugin" }
 unclassic-mode-plugin = { path = "crates/unclassic-mode-plugin" }

@@ -258,8 +258,14 @@ fn pixel_perfect_hit_test(
         return false;
     };
 
-    // Extract sprite dimensions from material
-    let sprite_size = Vec2::new(material.data.sprite_width, material.data.sprite_height);
+    // Extract sprite dimensions from material (these are upscaled pixels)
+    let sprite_size_pixels = Vec2::new(material.data.sprite_width, material.data.sprite_height);
+
+    // Get the world-space scale from the transform to convert upscaled pixels to world units.
+    // Since Transform.scale is 1/N, multiplying upscaled pixels (dim * N) by scale (1/N)
+    // gives us the original logical dimensions in world units.
+    let (scale, _, _) = sprite_transform.to_scale_rotation_translation();
+    let sprite_size = sprite_size_pixels * scale.truncate().abs();
 
     // Calculate sprite anchor point using the y_anchor from the material
     let y_anchor = material.data.y_anchor;

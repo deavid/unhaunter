@@ -23,6 +23,11 @@ ensure-dist-dir:
 
 # == Build Recipes ==
 
+# Upscale assets for release
+upscale-assets:
+    echo "Ensuring upscaled assets are up to date..."
+    ./upscale_assets.sh auto
+
 # Build Linux Release Binary
 build-linux:
     echo "Building Linux release..."
@@ -45,7 +50,7 @@ build-wasm:
 
 # == Packaging Recipes ==
 
-package-common: ensure-dist-dir
+package-common: ensure-dist-dir upscale-assets
     echo "Packaging Common artifacts for {{_version}}..."
     rm -rf {{_dist_dir}}/common/*
     cp -r {{_assets_dir}} {{_dist_dir}}/common/assets

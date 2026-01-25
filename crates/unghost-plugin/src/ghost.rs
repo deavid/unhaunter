@@ -17,6 +17,7 @@ use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
+use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::utils::perspective;
 use unsound_core::emitter::SoundEmitter;
@@ -758,21 +759,26 @@ fn calculate_weighted_distance_squared(ghost_pos: &Position, player_pos: &Positi
 /// This creates a visual indication of ghost instability without affecting position or movement
 fn ghost_scale_glitch_system(
     time: Res<Time>,
-    mut q_ghost: Query<(&GhostSprite, &mut Transform), (With<GhostSprite>, Without<FadeOut>)>,
+    mut q_ghost: Query<
+        (&GhostSprite, &mut Transform, Option<&ResolutionFactor>),
+        (With<GhostSprite>, Without<FadeOut>),
+    >,
 ) {
     let mut rng = random_seed::rng();
     let dt = time.delta_secs();
 
-    for (ghost, mut transform) in q_ghost.iter_mut() {
+    for (ghost, mut transform, rf) in q_ghost.iter_mut() {
+        let base_scale = rf.map(|r| r.ratio()).unwrap_or(1.0);
+        let base_vec = Vec3::new(base_scale, base_scale, base_scale);
         if ghost.repellent_hits_delta > 0.0 {
             // Apply scale glitch based on repellent hits
             let glitch_intensity = ghost.repellent_hits_delta.clamp(0.0, 1.0);
 
             // Generate random scale variations
-            let scale_x = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8
+            let scale_x = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8
                 - glitch_intensity * 0.2;
-            let scale_y = 1.0 + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8;
-            let scale_z = 1.0; // Keep Z scale consistent
+            let scale_y = base_scale + rng.random_range(-glitch_intensity..glitch_intensity) * 0.8;
+            let scale_z = base_scale; // Keep Z scale consistent
 
             // Apply the glitch scale
             transform.scale = transform
@@ -781,9 +787,9 @@ fn ghost_scale_glitch_system(
         } else if ghost.repellent_misses_delta > 0.0 {
             let glitch_intensity = ghost.repellent_misses_delta.clamp(0.0, 1.0);
             // Generate random scale variations
-            let scale_x = 1.0 + glitch_intensity * 0.15;
-            let scale_y = 1.0 + glitch_intensity * 0.1;
-            let scale_z = 1.0; // Keep Z scale consistent
+            let scale_x = base_scale + glitch_intensity * 0.15;
+            let scale_y = base_scale + glitch_intensity * 0.1;
+            let scale_z = base_scale; // Keep Z scale consistent
 
             // Apply the glitch scale
             transform.scale = transform
@@ -791,13 +797,13 @@ fn ghost_scale_glitch_system(
                 .lerp(Vec3::new(scale_x, scale_y, scale_z), dt * 0.2);
         } else {
             // Restore normal scale when no glitch
-            if transform.scale != Vec3::ONE {
+            if transform.scale != base_vec {
                 // Smoothly interpolate back to normal scale
-                transform.scale = transform.scale.lerp(Vec3::ONE, dt * 0.5);
+                transform.scale = transform.scale.lerp(base_vec, dt * 0.5);
 
-                // Snap to exactly 1.0 when very close to avoid floating point drift
-                if (transform.scale - Vec3::ONE).length() < 0.01 {
-                    transform.scale = Vec3::ONE;
+                // Snap to exactly base scale when very close to avoid floating point drift
+                if (transform.scale - base_vec).length() < 0.01 {
+                    transform.scale = base_vec;
                 }
             }
         }

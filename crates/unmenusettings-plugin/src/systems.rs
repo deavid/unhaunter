@@ -1,10 +1,12 @@
 use crate::components::{
     AudioSettingSelected, GameplaySettingSelected, MenuEvBack, MenuEvent, MenuItem,
-    MenuSettingClassSelected, SaveAudioSetting, SaveGameplaySetting, SettingsMenu, SettingsState,
-    SettingsStateTimer,
+    MenuSettingClassSelected, SaveAudioSetting, SaveGameplaySetting, SaveVideoSetting,
+    SettingsMenu, SettingsState, SettingsStateTimer, VideoSettingSelected,
 };
 use crate::menu_ui::setup_ui_main_cat;
-use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1};
+use crate::menus::{
+    AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1, VideoSettingsMenu,
+};
 use bevy::prelude::*;
 use bevy_persistent::Persistent;
 use unfoundation_core::colors::{MENU_ITEM_COLOR_OFF, MENU_ITEM_COLOR_ON};
@@ -13,6 +15,7 @@ use unmenu_core::events::MenuItemClicked;
 use unmenu_core::templates;
 use unsettings_core::audio::AudioSettings;
 use unsettings_core::game::GameplaySettings;
+use unsettings_core::video::VideoSettings;
 use untypes_core::states::AppState;
 use unui_core::assets::UiAssets;
 
@@ -28,6 +31,8 @@ pub(crate) fn app_setup(app: &mut App) {
             menu_save_audio_setting,
             menu_gameplay_setting_selected,
             menu_save_gameplay_setting,
+            menu_video_setting_selected,
+            menu_save_video_setting,
             menu_integration_system,
             handle_escape,
         )
@@ -39,7 +44,9 @@ pub(crate) fn app_setup(app: &mut App) {
     .add_message::<AudioSettingSelected>()
     .add_message::<SaveAudioSetting>()
     .add_message::<GameplaySettingSelected>()
-    .add_message::<SaveGameplaySetting>();
+    .add_message::<SaveGameplaySetting>()
+    .add_message::<VideoSettingSelected>()
+    .add_message::<SaveVideoSetting>();
 }
 
 fn item_highlight_system(
@@ -66,6 +73,8 @@ fn menu_routing_system(
     mut ev_class: MessageWriter<MenuSettingClassSelected>,
     mut ev_audio_setting: MessageWriter<AudioSettingSelected>,
     mut ev_save_audio_setting: MessageWriter<SaveAudioSetting>,
+    mut ev_video_setting: MessageWriter<VideoSettingSelected>,
+    mut ev_save_video_setting: MessageWriter<SaveVideoSetting>,
     mut ev_game_setting: MessageWriter<GameplaySettingSelected>,
     mut ev_save_game_setting: MessageWriter<SaveGameplaySetting>,
 ) {
@@ -87,6 +96,16 @@ fn menu_routing_system(
             }
             MenuEvent::SaveAudioSetting(setting_value) => {
                 ev_save_audio_setting.write(SaveAudioSetting {
+                    value: *setting_value,
+                });
+            }
+            MenuEvent::EditVideoSetting(video_settings_menu) => {
+                ev_video_setting.write(VideoSettingSelected {
+                    setting: *video_settings_menu,
+                });
+            }
+            MenuEvent::SaveVideoSetting(setting_value) => {
+                ev_save_video_setting.write(SaveVideoSetting {
                     value: *setting_value,
                 });
             }
@@ -141,6 +160,7 @@ fn menu_settings_class_selected(
     qtui: Query<Entity, With<SettingsMenu>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     game_settings: Res<Persistent<GameplaySettings>>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     for ev in events.read() {
         warn!("Menu Setting Class Selected: {:?}", ev.menu);
@@ -167,9 +187,125 @@ fn menu_settings_class_selected(
                 );
                 next_state.set(SettingsState::Lv2List);
             }
-            MenuSettingsLevel1::Video => todo!(),
+            MenuSettingsLevel1::Video => {
+                let menu_items = VideoSettingsMenu::iter_events(&video_settings);
+                setup_ui_main_cat(
+                    &mut commands,
+                    &ui_assets,
+                    &qtui,
+                    "Video Settings",
+                    &menu_items,
+                );
+                next_state.set(SettingsState::Lv2List);
+            }
             MenuSettingsLevel1::Profile => todo!(),
         }
+    }
+}
+
+fn menu_video_setting_selected(
+    mut events: MessageReader<VideoSettingSelected>,
+    mut next_state: ResMut<NextState<SettingsState>>,
+    mut commands: Commands,
+    ui_assets: Res<UiAssets>,
+    qtui: Query<Entity, With<SettingsMenu>>,
+    video_settings: Res<Persistent<VideoSettings>>,
+) {
+    for ev in events.read() {
+        let menu_items = ev.setting.iter_events_item(&video_settings);
+
+        for e in qtui.iter() {
+            commands.entity(e).despawn();
+        }
+
+        commands
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                position_type: PositionType::Absolute,
+                ..default()
+            })
+            .insert(SettingsMenu {
+                selected_item_idx: 0,
+            })
+            .with_children(|parent| {
+                templates::create_background(parent, &ui_assets);
+                templates::create_logo(parent, &ui_assets);
+                templates::create_breadcrumb_navigation(parent, &ui_assets, "Video Settings", ev.setting.to_string());
+
+                let mut content_area = templates::create_selectable_content_area(parent, &ui_assets, 0);
+
+                content_area.insert(MenuMouseTracker::default());
+                content_area.insert(MenuRoot { selected_item: 0 });
+
+                content_area.with_children(|content| {
+                    content
+                        .spawn(Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::FlexStart,
+                            justify_content: JustifyContent::FlexStart,
+                            overflow: Overflow::scroll_y(),
+                            ..default()
+                        })
+                        .with_children(|menu_list| {
+                            let mut idx = 0;
+                            for (item_text, event) in menu_items.iter() {
+                                if !event.is_none() {
+                                    templates::create_content_item(
+                                        menu_list,
+                                        item_text,
+                                        idx,
+                                        idx == 0,
+                                        &ui_assets,
+                                    )
+                                    .insert(MenuItem::new(idx, *event));
+                                    idx += 1;
+                                }
+                            }
+                            templates::create_content_item(
+                                menu_list,
+                                "Go Back",
+                                idx,
+                                false,
+                                &ui_assets,
+                            )
+                            .insert(MenuItem::new(idx, MenuEvent::Back(MenuEvBack)));
+                        });
+                });
+
+                templates::create_help_text(
+                    parent,
+                    &ui_assets,
+                    Some("[Up]/[Down] arrows to navigate. Press [Enter] to select or [Escape] to go back".to_string())
+                );
+            });
+
+        next_state.set(SettingsState::Lv3ValueEdit(MenuSettingsLevel1::Video));
+    }
+}
+
+fn menu_save_video_setting(
+    mut events: MessageReader<SaveVideoSetting>,
+    mut ev_back: MessageWriter<MenuEvBack>,
+    mut video_settings: ResMut<Persistent<VideoSettings>>,
+) {
+    use unsettings_core::video::VideoSettingsValue as v;
+
+    for ev in events.read() {
+        warn!("Save Video Setting: {:?}", ev.value);
+        match ev.value {
+            v::window_size(s) => video_settings.window_size = s,
+            v::aspect_ratio(s) => video_settings.aspect_ratio = s,
+            v::ui_scale(s) => video_settings.ui_scale = s,
+            v::font_scale(s) => video_settings.font_scale = s,
+            v::max_upscale_factor(s) => video_settings.max_upscale_factor = s,
+        }
+        if let Err(e) = video_settings.persist() {
+            error!("Error persisting Video Settings: {e:?}");
+        }
+        ev_back.write(MenuEvBack);
     }
 }
 

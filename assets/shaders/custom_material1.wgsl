@@ -14,6 +14,7 @@ struct CustomMaterial {
     sprite_width: f32,
     sprite_height: f32,
     y_anchor: f32,
+    upscale_factor: f32,
 };
 
 @group(#{MATERIAL_BIND_GROUP}) @binding(0)
@@ -49,11 +50,11 @@ fn fragment(
 
     // Adding a margin to the sprite coordinates to prevent reading from neighboring sprite
     let margin = 0.5;
-    let mx = margin / material.sprite_width ;
-    let my = margin / material.sprite_height ;
+    let mx = margin / material.sprite_width;
+    let my = margin / material.sprite_height;
 
     // Margin protects the sprites from reading the neighboring sprite
-    let margin_uv = clamp(mesh.uv, vec2<f32>(0.0, my*2.0), vec2<f32>(1.0-mx, 1.0-my));
+    let margin_uv = clamp(mesh.uv, vec2<f32>(mx, my), vec2<f32>(1.0 - mx, 1.0 - my));
 
     // Correcting UV coordinates for the sprite
     var sprite_uv: vec2<f32> = vec2<f32>(
@@ -61,48 +62,55 @@ fn fragment(
         base_v + margin_uv.y * cell_height,
     );
 
-    // -->> (Pixel perfect): This uses a neares neighbor that attempts to mitigate moiré effect by antialiasing sub-pixel movements.
-    // Applying pixel-perfect sampling on the gamma corrected base color
-    let uv = sprite_uv; // Using the corrected UV for sprite sheets
-    let texel_per_px = abs(dpdx(mesh.uv.x) * material.sprite_width); // 0.1 at 10x zoom. Amount of texels that fit in one screen pixel.
+    var color: vec4<f32>;
 
-    // We need to account that the pixels are centered 0.5 texels to a side, so we need to apply a correction
-    let d_factor = 0.5;
-    let d_corr = vec2<f32>(d_factor * sign(dpdx(mesh.uv.x)), d_factor * sign(dpdy(mesh.uv.y)));
-    let src_pos = uv * tex_size - d_corr;
-    let uv_frac = fract(src_pos);
-    let uv_floor = (floor(src_pos) + d_corr) / tex_size;
-    let softness = 3.0; // 2.0 -> leave 1px of gradient between pixels ; 4.0 -> 2px of gradient
-    let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / softness + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
+    if (material.upscale_factor >= 2.0) {
+        // For upscaled textures, we use simple bilinear filtering
+        color = textureSample(base_color_texture, base_color_sampler, sprite_uv);
+    } else {
+        // -->> (Pixel perfect): This uses a neares neighbor that attempts to mitigate moiré effect by antialiasing sub-pixel movements.
+        // Applying pixel-perfect sampling on the gamma corrected base color
+        let uv = sprite_uv; // Using the corrected UV for sprite sheets
+        let texel_per_px = abs(dpdx(mesh.uv.x) * material.sprite_width); // 0.1 at 10x zoom. Amount of texels that fit in one screen pixel.
 
-    // Reading directly the texture mixes the color incorrectly because of differences in alpha
-    let uv_comp = uv_floor + (uv_frac2) / tex_size;
-    let color1: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
-    let color_s: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv);
+        // We need to account that the pixels are centered 0.5 texels to a side, so we need to apply a correction
+        let d_factor = 0.5;
+        let d_corr = vec2<f32>(d_factor * sign(dpdx(mesh.uv.x)), d_factor * sign(dpdy(mesh.uv.y)));
+        let src_pos = uv * tex_size - d_corr;
+        let uv_frac = fract(src_pos);
+        let uv_floor = (floor(src_pos) + d_corr) / tex_size;
+        let softness = 3.0; // 2.0 -> leave 1px of gradient between pixels ; 4.0 -> 2px of gradient
+        let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / softness + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
 
-    // Sample the four nearest texels for bilinear blending
-    // This is for attempting a better alpha color mixing - when one part is transparent
-    // and the other is not, it might darken the borders - this code should combat this.
-    let texel_tl = textureSample(base_color_texture, base_color_sampler, uv_floor);
-    let texel_tr = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 0.0));
-    let texel_bl = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(0.0, 1.0 / tex_height));
-    let texel_br = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 1.0 / tex_height));
+        // Reading directly the texture mixes the color incorrectly because of differences in alpha
+        let uv_comp = uv_floor + (uv_frac2) / tex_size;
+        let color1: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
+        let color_s: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv);
 
-    let texel_sum = texel_tl * texel_tl[3] + texel_tr  * texel_tr[3] + texel_bl  * texel_bl[3] + texel_br * texel_br[3];
-    let total_a = texel_tl[3] + texel_tr[3] + texel_bl[3] + texel_br[3];
-    let max_a1 = max(texel_tl[3], texel_tr[3]);
-    let max_a2 = max(texel_bl[3], texel_br[3]);
-    let max_a = max(max_a1, max_a2);
-    var texel_avg = clamp(texel_sum / (total_a + 0.1), zero4, one4);
-    let relight_factor = 1.6;
-    texel_avg[0] *= relight_factor;
-    texel_avg[1] *= relight_factor;
-    texel_avg[2] *= relight_factor;
-    texel_avg[3] = color_s[3];
-    let avg_k = (1.0 - color1[3]) * texel_avg[3];
+        // Sample the four nearest texels for bilinear blending
+        // This is for attempting a better alpha color mixing - when one part is transparent
+        // and the other is not, it might darken the borders - this code should combat this.
+        let texel_tl = textureSample(base_color_texture, base_color_sampler, uv_floor);
+        let texel_tr = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 0.0));
+        let texel_bl = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(0.0, 1.0 / tex_height));
+        let texel_br = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 1.0 / tex_height));
 
-    var color: vec4<f32> = (color1 * (1.0 - avg_k) + texel_avg * avg_k);
-    // <<--
+        let texel_sum = texel_tl * texel_tl[3] + texel_tr  * texel_tr[3] + texel_bl  * texel_bl[3] + texel_br * texel_br[3];
+        let total_a = texel_tl[3] + texel_tr[3] + texel_bl[3] + texel_br[3];
+        let max_a1 = max(texel_tl[3], texel_tr[3]);
+        let max_a2 = max(texel_bl[3], texel_br[3]);
+        let max_a = max(max_a1, max_a2);
+        var texel_avg = clamp(texel_sum / (total_a + 0.1), zero4, one4);
+        let relight_factor = 1.6;
+        texel_avg[0] *= relight_factor;
+        texel_avg[1] *= relight_factor;
+        texel_avg[2] *= relight_factor;
+        texel_avg[3] = color_s[3];
+        let avg_k = (1.0 - color1[3]) * texel_avg[3];
+
+        color = (color1 * (1.0 - avg_k) + texel_avg * avg_k);
+        // <<--
+    }
 
 
     // Gamma correction based on location within the sprite for gradient effect
@@ -162,7 +170,7 @@ fn fragment(
     // Apply gamma correction
     let gamma4a: vec4<f32> = vec4<f32>(gamma, gamma, gamma, 1.0);
     let gamma4b: vec4<f32> = vec4<f32>(1.0 / gamma, 1.0 / gamma, 1.0 / gamma, 1.0);
-    let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 1.0);
+    let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 2.0);
     let corrected_color_rgb = (pow(color + b4, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
 
     // Apply material color tint to the gamma-corrected color

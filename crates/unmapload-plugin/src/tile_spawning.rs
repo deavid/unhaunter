@@ -56,9 +56,12 @@ pub(crate) fn process_and_spawn_tile(
         let mut b = mt.bundle.clone();
         let mut beh = mt.behavior.clone();
 
+        let rf = b.resolution_factor.ratio();
+        b.transform.scale = Vec3::new(rf, rf, 1.0);
+
         // Handle sprite flipping
         if tile.flip_x {
-            b.transform.scale.x = -1.0;
+            b.transform.scale.x = -rf;
             // Adjust the light receiving offset for flipped sprites
             let (ox, oy) = beh.p.display.light_recv_offset;
             beh.p.display.light_recv_offset = (ox, -oy);
@@ -143,8 +146,10 @@ pub(crate) fn process_and_spawn_tile(
 
     // Add standard components to all tile entities
     let mut transform = Transform::from_xyz(t_x, t_y, pos.visual_priority);
+    let rf = mt.bundle.resolution_factor.ratio();
+    transform.scale = Vec3::new(rf, rf, 1.0);
     if tile.flip_x {
-        transform.scale.x = -1.0;
+        transform.scale.x = -rf;
     }
     entity
         .insert(beh)

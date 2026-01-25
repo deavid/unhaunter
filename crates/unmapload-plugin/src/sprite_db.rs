@@ -8,6 +8,7 @@ use bevy_platform::collections::HashMap;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::SpriteConfig;
 use unrender_std::board::tiledata::{MapTileComponents, PreMesh, TileSpriteBundle};
+use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::quadcc::QuadCC;
 use untiled_core::tiled::AtlasData;
 
@@ -48,14 +49,17 @@ pub(crate) fn populate_sprite_db(
                 AtlasData::Sheet((handle, cmat)) => {
                     let mut cmat = cmat.clone();
                     let tatlas = p.texture_atlases.get(handle).unwrap();
+                    cmat.data.sprite_width = tatlas.size.x as f32 / cmat.data.sheet_cols as f32;
+                    cmat.data.sprite_height = tatlas.size.y as f32 / cmat.data.sheet_rows as f32;
+                    cmat.data.upscale_factor = tileset.factor;
 
                     // Create or reuse mesh for this tileset
                     let mesh_handle = mesh_tileset
                         .entry(tset_name.to_string())
                         .or_insert_with(|| {
                             let sprite_size = Vec2::new(
-                                tatlas.size.x as f32 / cmat.data.sheet_cols as f32 * 1.005,
-                                tatlas.size.y as f32 / cmat.data.sheet_rows as f32 * 1.005,
+                                cmat.data.sprite_width * 1.005,
+                                cmat.data.sprite_height * 1.005,
                             );
                             let sprite_anchor = Vec2::new(
                                 sprite_size.x / 2.0,
@@ -83,6 +87,7 @@ pub(crate) fn populate_sprite_db(
                         material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
+                        resolution_factor: ResolutionFactor(tileset.factor),
                     }
                 }
                 AtlasData::Tiles(v_img) => {
@@ -90,6 +95,7 @@ pub(crate) fn populate_sprite_db(
                     cmat.data.sheet_cols = 1;
                     cmat.data.sheet_rows = 1;
                     cmat.data.sheet_idx = 0;
+
                     // Set the y_anchor from the tileset
                     cmat.data.y_anchor = tileset.y_anchor;
 
@@ -112,6 +118,7 @@ pub(crate) fn populate_sprite_db(
                         material: MeshMaterial2d(mat.clone()),
                         transform,
                         visibility,
+                        resolution_factor: ResolutionFactor(tileset.factor),
                     }
                 }
             };

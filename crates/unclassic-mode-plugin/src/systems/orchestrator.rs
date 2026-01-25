@@ -1,9 +1,9 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy::sprite::Anchor;
 use bevy_persistent::Persistent;
 use ordered_float::OrderedFloat;
 use rand::prelude::IndexedRandom;
+use unassets_core::resources::upscale::UpscaleIndex;
 use unbehavior::components::Movable;
 use unbehavior::roomdb::RoomDB;
 use unboard_core::components::physics::{FluidEmitter, SoundEmitter, ThermalEmitter};
@@ -23,14 +23,17 @@ use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::Stamina;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
-use unrender_std::components::game::GameSound;
-use unrender_std::components::game::GameSprite;
+use unrender_std::components::game::{GameSound, GameSprite, MapTileSprite};
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::{
-    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive, ShadowCaster,
-    SpectralClarity, UltravioletSensitive, Viewer,
+    AlphaModulator, EctoplasmVisuals, Ethereal, InfraredSensitive, LightSensitive,
+    ResolutionFactor, ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
 };
+use unrender_std::materials::CustomMaterial1;
 use unrender_std::utils::perspective;
+use unrender_std::utils::quadcc::QuadCC;
+use unsettings_core::video::VideoSettings;
+use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 use unsummary_core::summary::SummaryData;
@@ -44,9 +47,15 @@ pub(crate) struct ClassicModeSystemParam<'w> {
     pub ghost_assets: Res<'w, unghost_core::assets::GhostAssets>,
     pub difficulty: Res<'w, CurrentDifficulty>,
     pub gear_registry: Res<'w, GearSpawnerRegistry>,
+    pub upscale_idx: Res<'w, UpscaleIndex>,
+    pub video_settings: Res<'w, Persistent<VideoSettings>>,
+    pub materials1: ResMut<'w, Assets<unrender_std::materials::CustomMaterial1>>,
+    pub meshes: ResMut<'w, Assets<Mesh>>,
+    pub images: Res<'w, Assets<Image>>,
     pub audio_settings: Res<'w, Persistent<unsettings_core::audio::AudioSettings>>,
     pub control_settings: Res<'w, Persistent<unsettings_core::controls::ControlKeys>>,
     pub board_topology: Res<'w, BoardTopology>,
+    pub board_entity_field: ResMut<'w, unboard_core::resources::board_topology::BoardEntityField>,
     pub roomdb: Res<'w, RoomDB>,
 }
 
@@ -82,6 +91,17 @@ pub(crate) fn classic_mode_orchestrator(
     let player_position = player_spawn_points.choose(&mut rng).copied().unwrap();
     let player_scoord = perspective::to_screen_coord(player_position);
 
+    let mut player_image = p.player_assets.character.clone();
+    let mut player_rf = 1.0;
+
+    if let Some(resolved) = p.upscale_idx.resolve(
+        "img/characters-model1-demo.png",
+        p.video_settings.max_upscale_factor.factor(),
+    ) {
+        player_image = p.asset_server.load(resolved.path);
+        player_rf = resolved.factor;
+    }
+
     let mut player_gear = PlayerGear::default();
     if p.difficulty.0.player_gear.left_hand.is_some() {
         player_gear.left_hand = Some(
@@ -112,21 +132,36 @@ pub(crate) fn classic_mode_orchestrator(
 
     let open_van = dist_to_van < 8.0 && p.difficulty.0.van_auto_open;
 
-    commands
-        .spawn(Sprite {
-            image: p.player_assets.character.clone(),
-            texture_atlas: Some(TextureAtlas {
-                layout: p.player_assets.character_layout.clone(),
-                ..Default::default()
-            }),
-            ..default()
-        })
-        .insert(Anchor(unplayer_core::assets::PLAYER_ANCHOR))
+    let sprite_size = Vec2::new(32.0 * player_rf, 32.0 * player_rf);
+    let anchor = unplayer_core::assets::PLAYER_ANCHOR;
+    let sprite_anchor = Vec2::new(
+        sprite_size.x * (anchor.x + 0.5),
+        sprite_size.y * (0.5 - anchor.y),
+    );
+    let mesh_handle = p
+        .meshes
+        .add(Mesh::from(QuadCC::new(sprite_size, sprite_anchor)));
+
+    let mut material = CustomMaterial1::from_texture(player_image);
+    material.data.sheet_cols = 16;
+    material.data.sheet_rows = 4;
+    material.data.sprite_width = 32.0 * player_rf;
+    material.data.sprite_height = 32.0 * player_rf;
+    material.data.upscale_factor = player_rf;
+    material.data.y_anchor = anchor.y;
+
+    let material_handle = p.materials1.add(material);
+
+    let player_id = commands
+        .spawn(Mesh2d(mesh_handle))
+        .insert(MeshMaterial2d(material_handle))
         .insert(
             Transform::from_xyz(player_scoord[0], player_scoord[1], player_scoord[2])
-                .with_scale(Vec3::new(0.5, 0.5, 0.5)),
+                .with_scale(Vec3::new(1.0 / player_rf, 1.0 / player_rf, 1.0 / player_rf)),
         )
+        .insert(ResolutionFactor(player_rf))
         .insert(GameSprite)
+        .insert(MapTileSprite)
         .insert(SpriteLayer(0.00001))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
@@ -136,6 +171,8 @@ pub(crate) fn classic_mode_orchestrator(
             -p.audio_settings.sound_output.to_ear_offset(),
         ))
         .insert(player_position)
+        .insert(MapEntityFieldBPos(player_position.to_board_position()))
+        .insert(Movable)
         .insert(LightSensitive {
             exposure_factor: 1.1,
             bias: 0.1,
@@ -160,7 +197,10 @@ pub(crate) fn classic_mode_orchestrator(
                         .with_translation(Vec3::new(0.0, 0.1, 0.01)),
                 )
                 .insert(FocusRing::default());
-        });
+        })
+        .id();
+
+    p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_id);
 
     // --- Spawn Ghost ---
     p.haunt_state.evidences.clear();
@@ -181,69 +221,134 @@ pub(crate) fn classic_mode_orchestrator(
 
     commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 
-    let breach_id = commands
-        .spawn(Sprite {
-            image: p.ghost_assets.breach.clone(),
-            color: Color::srgba(0.0, 0.0, 0.0, 0.0),
-            ..default()
-        })
-        .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
-        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
-        .insert(GameSprite)
-        .insert(SpriteLayer(0.01))
-        .insert(GhostBreach)
-        .insert(ghost_spawn)
-        .insert(LightSensitive {
-            exposure_factor: 1.2,
-            bias: 0.2,
-        })
-        .insert(UltravioletSensitive {
-            intensity: 1.0,
-            color_shift: 1.0,
-        })
-        .insert(AlphaModulator {
-            frequency: 0.92,
-            amplitude: 0.5,
-        })
-        .insert(EctoplasmVisuals {
-            use_breach_curve: true,
-        })
-        .insert(ThermalEmitter {
-            room_restricted: true,
-            ..default()
-        })
-        .insert(FluidEmitter::default())
-        .insert(SoundEmitter::default())
-        .with_children(|parent| {
-            parent
-                .spawn(Sprite {
-                    image: p.ghost_assets.focus_ring_vignette.clone(),
-                    color: Color::srgba(1.0, 1.0, 1.0, 0.0),
-                    ..default()
-                })
-                .insert(
-                    Transform::from_scale(Vec3::splat(0.5))
-                        .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+    let breach_id = {
+        let breach_img_size = p
+            .images
+            .get(p.ghost_assets.breach.id())
+            .map(|img| {
+                Vec2::new(
+                    img.texture_descriptor.size.width as f32,
+                    img.texture_descriptor.size.height as f32,
                 )
-                .insert(FocusRing::default());
-        })
-        .id();
+            })
+            .unwrap_or(Vec2::new(128.0, 128.0));
 
-    commands
-        .spawn(Sprite {
-            image: p.ghost_assets.ghost.clone(),
-            color: Color::srgba(0.0, 0.0, 0.0, 0.0),
-            ..default()
+        let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
+        let sprite_anchor = Vec2::new(
+            breach_img_size.x * (anchor.x + 0.5),
+            breach_img_size.y * (0.5 - anchor.y),
+        );
+        let mesh_handle = p
+            .meshes
+            .add(Mesh::from(QuadCC::new(breach_img_size, sprite_anchor)));
+
+        let mut material = CustomMaterial1::from_texture(p.ghost_assets.breach.clone());
+        material.data.color = Color::NONE.into();
+        material.data.y_anchor = anchor.y;
+        let material_handle = p.materials1.add(material);
+
+        let breach_id = commands
+            .spawn(Mesh2d(mesh_handle))
+            .insert(MeshMaterial2d(material_handle))
+            .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+            .insert(GameSprite)
+            .insert(MapTileSprite)
+            .insert(SpriteLayer(0.01))
+            .insert(GhostBreach)
+            .insert(ghost_spawn)
+            .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
+            .insert(LightSensitive {
+                exposure_factor: 1.2,
+                bias: 0.2,
+            })
+            .insert(UltravioletSensitive {
+                intensity: 1.0,
+                color_shift: 1.0,
+            })
+            .insert(AlphaModulator {
+                frequency: 0.92,
+                amplitude: 0.5,
+            })
+            .insert(EctoplasmVisuals {
+                use_breach_curve: true,
+            })
+            .insert(ThermalEmitter {
+                room_restricted: true,
+                ..default()
+            })
+            .insert(FluidEmitter::default())
+            .insert(SoundEmitter::default())
+            .with_children(|parent| {
+                parent
+                    .spawn(Sprite {
+                        image: p.ghost_assets.focus_ring_vignette.clone(),
+                        color: Color::srgba(1.0, 1.0, 1.0, 0.0),
+                        ..default()
+                    })
+                    .insert(
+                        Transform::from_scale(Vec3::splat(0.5))
+                            .with_translation(Vec3::new(0.0, 0.0, 0.01)),
+                    )
+                    .insert(FocusRing::default());
+            })
+            .id();
+
+        p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(breach_id);
+        breach_id
+    };
+
+    let mut ghost_image = p.ghost_assets.ghost.clone();
+    let mut ghost_rf = 1.0;
+    if let Some(resolved) = p.upscale_idx.resolve(
+        "img/ghost.png",
+        p.video_settings.max_upscale_factor.factor(),
+    ) {
+        ghost_image = p.asset_server.load(resolved.path);
+        ghost_rf = resolved.factor;
+    }
+
+    let ghost_img_size = p
+        .images
+        .get(ghost_image.id())
+        .map(|img| {
+            Vec2::new(
+                img.texture_descriptor.size.width as f32,
+                img.texture_descriptor.size.height as f32,
+            )
         })
-        .insert(Anchor(unmapload_core::assets::GRID_1X1X4_ANCHOR))
-        .insert(Transform::from_xyz(-1000.0, -1000.0, -1000.0))
+        .unwrap_or(Vec2::new(128.0, 128.0));
+
+    let anchor = unmapload_core::assets::GRID_1X1X4_ANCHOR;
+    let sprite_anchor = Vec2::new(
+        ghost_img_size.x * (anchor.x + 0.5),
+        ghost_img_size.y * (0.5 - anchor.y),
+    );
+    let mesh_handle = p
+        .meshes
+        .add(Mesh::from(QuadCC::new(ghost_img_size, sprite_anchor)));
+
+    let mut material = CustomMaterial1::from_texture(ghost_image);
+    material.data.color = Color::NONE.into();
+    material.data.y_anchor = anchor.y;
+    let material_handle = p.materials1.add(material);
+
+    let ghost_id = commands
+        .spawn(Mesh2d(mesh_handle))
+        .insert(MeshMaterial2d(material_handle))
+        .insert(
+            Transform::from_xyz(-1000.0, -1000.0, -1000.0).with_scale(Vec3::splat(1.0 / ghost_rf)),
+        )
         .insert(GameSprite)
+        .insert(MapTileSprite)
+        .insert(ResolutionFactor(ghost_rf))
         .insert(SpriteLayer(10.0))
         .insert(ghost_sprite.with_breachid(breach_id))
         .insert(Ethereal::default())
         .insert(GhostBehaviorDynamics::default())
         .insert(GhostTag)
         .insert(ghost_spawn)
+        .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
+        .insert(Movable)
         .insert(SpectralClarity::default())
         .insert(LightSensitive {
             exposure_factor: 0.5,
@@ -282,7 +387,10 @@ pub(crate) fn classic_mode_orchestrator(
                         .with_translation(Vec3::new(0.0, 0.0, 0.01)),
                 )
                 .insert(FocusRing::default());
-        });
+        })
+        .id();
+
+    p.board_entity_field.0[ghost_spawn.to_board_position().ndidx()].push(ghost_id);
 
     spawn_ambient_sounds(&p, &mut commands);
 

@@ -1,8 +1,11 @@
 use crate::{bevy::bevy_load_map, map_loader::UnhaunterMapLoader};
 use bevy::prelude::*;
+use bevy_persistent::Persistent;
 use unassets_core::assets::{tmxmap::TmxMap, tsxsheet::TsxSheet};
 use unassets_core::resources::maps::Maps;
+use unassets_core::resources::upscale::UpscaleIndex;
 use unevents_core::events::loadlevel::{LevelLoadedEvent, LoadLevelEvent};
+use unsettings_core::video::VideoSettings;
 use untiled_core::tiled::MapTileSetDb;
 
 fn load_level_handler(
@@ -14,6 +17,8 @@ fn load_level_handler(
     maps: Res<Maps>,
     tmx_assets: Res<Assets<TmxMap>>,
     tsx_assets: Res<Assets<TsxSheet>>,
+    upscale_idx: Res<UpscaleIndex>,
+    video_settings: Res<Persistent<VideoSettings>>,
 ) {
     let mut ev_iter = ev.read();
     let Some(load_event) = ev_iter.next() else {
@@ -28,6 +33,8 @@ fn load_level_handler(
         &asset_server,
         &mut texture_atlases,
         &mut tilesetdb,
+        &upscale_idx,
+        &video_settings,
     );
 
     evw.write(LevelLoadedEvent {

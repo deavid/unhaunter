@@ -1,3 +1,4 @@
+use crate::components::visuals::ResolutionFactor;
 use crate::materials::CustomMaterial1;
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
@@ -17,6 +18,7 @@ pub struct TileSpriteBundle {
     pub material: MeshMaterial2d<CustomMaterial1>,
     pub transform: Transform,
     pub visibility: Visibility,
+    pub resolution_factor: ResolutionFactor,
 }
 
 #[derive(Clone)]
