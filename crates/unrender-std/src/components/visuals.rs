@@ -147,11 +147,21 @@ impl Default for Ethereal {
 }
 
 /// Component that identifies an entity as a light viewer (usually the player's eyes).
-#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
+#[derive(Component, Clone, Copy, Debug, Reflect)]
 pub struct Viewer {
     pub id: usize,
     pub health: f32,
     pub sanity: f32,
+}
+
+impl Default for Viewer {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            health: 100.0,
+            sanity: 100.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Default)]

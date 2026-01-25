@@ -39,15 +39,28 @@ pub(crate) fn app_setup(app: &mut App) {
             waypoint::waypoint_queue_cleanup_system,
             // Movement system runs after input and waypoints
             movement::player_movement_system,
-            // Update player state for cross-domain access
-            player_state::update_player_state,
-            // Sync viewer data for rendering
-            viewer_sync::viewer_visual_sync,
             // Stairs system runs last
             keyboard::stairs_player,
         )
             .chain()
             .run_if(in_state(GameState::None).and(in_state(AppState::InGame))),
+    );
+
+    app.add_systems(
+        Update,
+        (
+            // Update player state for cross-domain access
+            player_state::update_player_state,
+            // Sync viewer data for rendering
+            viewer_sync::viewer_visual_sync,
+        )
+            .run_if(
+                in_state(AppState::InGame).and(
+                    in_state(GameState::None)
+                        .or(in_state(GameState::Truck))
+                        .or(in_state(GameState::NpcHelp)),
+                ),
+            ),
     );
 
     mouse::app_setup(app);
