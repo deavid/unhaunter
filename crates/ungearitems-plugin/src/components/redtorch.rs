@@ -5,6 +5,7 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::redtorch::RedTorch;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::components::light::LightEmitter;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
@@ -12,6 +13,7 @@ use unspatial_core::position::Position;
 pub(crate) fn update_redtorch(
     mut q_redtorch: Query<(
         &mut RedTorch,
+        &mut LightEmitter,
         &mut StatusText,
         &mut GearSprite,
         &Toggleable,
@@ -22,8 +24,17 @@ pub(crate) fn update_redtorch(
     )>,
     mut ga: SoundEmitter,
 ) {
-    for (mut redtorch, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
-        q_redtorch.iter_mut()
+    for (
+        mut redtorch,
+        mut redtorch_render,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        name,
+    ) in q_redtorch.iter_mut()
     {
         // Sync internal enabled with Toggleable
         redtorch.enabled = toggle.is_on;
@@ -37,6 +48,30 @@ pub(crate) fn update_redtorch(
             && random_seed::rng().random_range(0.0..1.0) < 0.2
         {
             ga.play_audio("sounds/effects-chirp-short.ogg".into(), 0.3, pos);
+        }
+
+        // Update power
+        let mut new_power = if redtorch.enabled {
+            2.5 * (battery.level.sqrt() + 0.1)
+        } else {
+            0.0
+        };
+        if redtorch.enabled && electronic.glitch_timer > 0.0 {
+            new_power = electronic.glitch_timer * 0.3;
+        }
+        redtorch.output_power = (redtorch.output_power * 5.0 + new_power) / 6.0;
+
+        // Sync with Render Component
+        redtorch_render.power = redtorch.output_power;
+        if electronic.glitch_intensity > 0.01 {
+            let base_color = Color::srgb(1.0, 0.20, 0.07);
+            let mut color = base_color.to_srgba();
+            let k = electronic.glitch_intensity.min(1.0);
+            color.green += k * 0.6;
+            color.blue += k * 0.3;
+            redtorch_render.color = Color::Srgba(color);
+        } else {
+            redtorch_render.color = Color::srgb(1.0, 0.20, 0.07);
         }
 
         // Update Sprite

@@ -5,6 +5,7 @@ use ungear_core::components::core::{Battery, Electronic, GearSprite, ItemName, S
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::uvtorch::UVTorch;
 use uninteraction_core::interaction::Toggleable;
+use unrender_std::components::light::LightEmitter;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
@@ -35,6 +36,7 @@ impl UVTorchExt for UVTorch {
 pub(crate) fn update_uvtorch(
     mut q_uvtorch: Query<(
         &mut UVTorch,
+        &mut LightEmitter,
         &mut StatusText,
         &mut GearSprite,
         &Toggleable,
@@ -45,8 +47,17 @@ pub(crate) fn update_uvtorch(
     )>,
     mut ga: SoundEmitter,
 ) {
-    for (mut uvtorch, mut status, mut sprite, toggle, mut battery, electronic, pos, name) in
-        q_uvtorch.iter_mut()
+    for (
+        mut uvtorch,
+        mut uvtorch_render,
+        mut status,
+        mut sprite,
+        toggle,
+        mut battery,
+        electronic,
+        pos,
+        name,
+    ) in q_uvtorch.iter_mut()
     {
         // Sync internal enabled with Toggleable
         uvtorch.enabled = toggle.is_on;
@@ -63,6 +74,19 @@ pub(crate) fn update_uvtorch(
         }
 
         uvtorch.update_output_power(battery.level, electronic.glitch_timer);
+
+        // Sync with Render Component
+        uvtorch_render.power = uvtorch.output_power;
+        if electronic.glitch_intensity > 0.01 {
+            let base_color = Color::srgb(0.60, 0.25, 1.00);
+            let mut color = base_color.to_srgba();
+            let k = electronic.glitch_intensity.min(1.0);
+            color.red += k * 0.4;
+            color.green += k * 0.4;
+            uvtorch_render.color = Color::Srgba(color);
+        } else {
+            uvtorch_render.color = Color::srgb(0.60, 0.25, 1.00);
+        }
 
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {

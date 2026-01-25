@@ -75,18 +75,22 @@ pub(crate) fn update_flashlight(
                 flashlight.status = FlashlightStatus::Off;
                 ga.play_audio("sounds/effects-dingdingding.ogg".into(), 0.7, pos);
             }
-        } else if flashlight.status != FlashlightStatus::Off {
-            // If it was on and it's glitching, turn it off temporarily
-            flashlight.status = FlashlightStatus::Off;
-        } else if electronic.glitch_timer < 0.01 {
-            // If it was off due to glitching and glitch is ending, turn it back on
-            flashlight.status = FlashlightStatus::Low;
         }
 
         flashlight.update_output_power(battery.level, electronic.glitch_timer);
 
         // Sync with Render Component
         flashlight_render.power = flashlight.output_power;
+        if electronic.glitch_intensity > 0.01 {
+            let mut color = Color::WHITE.to_srgba();
+            let k = electronic.glitch_intensity.min(1.0);
+            color.red = 1.0;
+            color.green = 1.0 - k * 0.5;
+            color.blue = 1.0 - k * 0.7;
+            flashlight_render.color = Color::Srgba(color);
+        } else {
+            flashlight_render.color = Color::WHITE;
+        }
 
         // Update Sprite
         sprite.0 = if electronic.glitch_timer > 0.0 {
