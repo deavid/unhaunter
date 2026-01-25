@@ -341,7 +341,7 @@ pub(crate) fn apply_lighting(
     if vf.visibility_field.is_empty() {
         return;
     }
-
+    const FLASHLIGHT_POWER_FACTOR: f32 = 0.1;
     // Deployed gear
     for (pos, deployed_gear, fl, toggle) in q_deployed.iter() {
         if !toggle.is_on {
@@ -356,7 +356,7 @@ pub(crate) fn apply_lighting(
             flashlights.push((
                 pos,
                 deployed_gear.direction,
-                power,
+                power * FLASHLIGHT_POWER_FACTOR,
                 color,
                 light_type,
                 vis_field,
@@ -370,7 +370,12 @@ pub(crate) fn apply_lighting(
             if let Ok((fl, toggle)) = q_flashlight.get(entity)
                 && toggle.is_on
             {
-                player_flashlight.push((fl.power, fl.color, p, fl.light_type));
+                player_flashlight.push((
+                    fl.power * FLASHLIGHT_POWER_FACTOR,
+                    fl.color,
+                    p,
+                    fl.light_type,
+                ));
             }
         };
 
