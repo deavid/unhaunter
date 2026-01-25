@@ -6078,6 +6078,7 @@ dependencies = [
  "unspatial-core",
  "unthermal-core",
  "untypes-core",
+ "unui-core",
 ]
 
 [[package]]

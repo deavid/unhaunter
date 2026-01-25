@@ -35,6 +35,7 @@ use unrender_std::utils::perspective;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::orientation::Orientation;
 use unthermal_core::resources::ThermalGrid;
+use unui_core::resources::MouseVisibility;
 
 #[derive(SystemParam)]
 pub(crate) struct GridResources<'w> {
@@ -289,6 +290,7 @@ pub(crate) fn apply_lighting(
     )>,
     difficulty: Res<CurrentDifficulty>,
     mut visible: Local<HashSet<Entity>>,
+    mouse_visibility: Res<MouseVisibility>,
 ) {
     let bf = &grids.bf;
     let bef = &grids.bef;
@@ -562,7 +564,9 @@ pub(crate) fn apply_lighting(
         if let Ok((pos, mat, behavior, mut vis, o_spectral_influence, o_interactive)) =
             qt2.get_mut(*entity)
         {
-            let on_hover = o_interactive.map(|x| x.hovered).unwrap_or_default();
+            let on_hover = o_interactive
+                .map(|x| x.hovered && mouse_visibility.is_visible)
+                .unwrap_or_default();
             let mut opacity: f32 = 1.0;
             if behavior.p.display.auto_hide {
                 // Make big objects semitransparent when the player is behind them
