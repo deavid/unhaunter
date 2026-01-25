@@ -1083,8 +1083,8 @@ pub(crate) fn apply_lighting(
             let mut total_pressure = 0.0;
             let mut total_weight = 0.0;
 
-            for dx in -1..1 {
-                for dy in -1..1 {
+            for dx in -1..=1 {
+                for dy in -1..=1 {
                     let neighbor_pos = BoardPosition {
                         x: bpos.x + dx,
                         y: bpos.y + dy,
@@ -1114,16 +1114,15 @@ pub(crate) fn apply_lighting(
 
             let miasma_visibility = average_pressure.max(0.0).sqrt()
                 * miasma_config.miasma_visibility_factor
-                * miasma_sprite.time_alive.clamp(0.0, 1.0)
-                * (miasma_sprite.life / 2.0).clamp(0.0, 1.0)
-                * (ld.magnitude().atan() / 1.2 + 0.25);
+                * miasma_sprite.life.clamp(0.0, 1.0)
+                * (ld.magnitude().atan() / 1.1 + 0.4);
 
             dst_color = dst_color
-                .with_luminance((dst_color.luminance().sqrt() * 0.8 + 0.2).clamp(0.0, 1.0));
+                .with_luminance((dst_color.luminance().sqrt() * 0.9 + 0.01).clamp(0.0, 1.0));
             opacity = opacity.max(0.0);
-            opacity *= miasma_visibility.clamp(0.0, 0.45)
+            opacity *= miasma_visibility.clamp(0.0, 0.8)
                 * miasma_sprite.visibility
-                * (1.0 - dst_color.luminance() * 0.5);
+                * (dst_color.luminance().sqrt() * 0.8 + 0.2);
         }
         dst_color.set_alpha(
             ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),

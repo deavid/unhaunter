@@ -159,8 +159,8 @@ fn spawn_miasma(
             *pos_count += 1;
         }
     }
-    // Limit the number of cells to check to 8x8 around the player
-    const MAX_RADIUS: i64 = 8;
+    // Limit the number of cells to check to 15x15 around the player
+    const MAX_RADIUS: i64 = 15;
     let min_x = (player_bpos.x - MAX_RADIUS).max(0) as usize;
     let max_x = (player_bpos.x + MAX_RADIUS).min(board_data.map_size.0 as i64 - 1) as usize;
     let min_y = (player_bpos.y - MAX_RADIUS).max(0) as usize;
@@ -232,7 +232,7 @@ fn spawn_miasma(
                 })
                 .insert(pos)
                 .insert(GameSprite)
-                .insert(SpriteLayer(-0.1));
+                .insert(SpriteLayer(-0.0002 + rng.random_range(-0.0001..0.0004)));
             *pos_count += 1;
         }
     }

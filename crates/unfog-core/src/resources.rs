@@ -16,7 +16,7 @@ impl Default for MiasmaConfig {
         Self {
             initial_room_pressure: 100.0,
             initial_outside_pressure: 0.0,
-            miasma_visibility_factor: 0.14,
+            miasma_visibility_factor: 0.15,
             diffusion_rate: 0.1,
             velocity_scale: 1000.0,
             inertia_factor: 1000.0,
