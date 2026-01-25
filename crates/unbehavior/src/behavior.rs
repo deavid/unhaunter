@@ -379,7 +379,7 @@ impl SpriteConfig {
                 p.is_door = true;
             }
             Class::Switch | Class::RoomSwitch | Class::Breaker => {
-                p.display.visual_priority = (0.000040).try_into().unwrap();
+                p.display.visual_priority = (0.000002).try_into().unwrap();
                 p.is_breaker = self.class == Class::Breaker;
                 p.is_switch = self.class == Class::Switch || self.class == Class::RoomSwitch;
                 p.is_room_switch = self.class == Class::RoomSwitch;
@@ -461,7 +461,7 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.5).try_into().unwrap();
                 p.light.heat_coef = -2;
-                p.light.color = LinearRgba::new(1.0, 1.0, 1.0, 1.0);
+                p.light.color = LinearRgba::new(1.0, 0.96, 0.905, 1.0);
                 p.is_electrical = true;
                 p.is_house_powered = true;
                 p.is_light_source = true;

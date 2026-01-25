@@ -127,7 +127,7 @@ pub(crate) fn classic_mode_orchestrator(
                 .with_scale(Vec3::new(0.5, 0.5, 0.5)),
         )
         .insert(GameSprite)
-        .insert(SpriteLayer(0.1))
+        .insert(SpriteLayer(0.00001))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(PlayerTag { id: 1 })
         .insert(ShadowCaster::default())
