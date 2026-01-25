@@ -2,6 +2,7 @@ use crate::class::Class;
 use crate::state::TileState;
 use crate::traits::AutoSerialize;
 use anyhow::{Context, Ok};
+use bevy::color::{LinearRgba, Srgba};
 use bevy::ecs::component::Component;
 use bevy::log::warn;
 use bevy::math::Vec3;
@@ -11,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use unspatial_core::orientation::Orientation;
 
 /// The `Behavior` component defines the behavior of an object in the game world.
-#[derive(Component, Debug, Clone, PartialEq, Eq)]
+#[derive(Component, Debug, Clone, PartialEq)]
 pub struct Behavior {
     /// This `cfg` property is PRIVATE on purpose!
     cfg: SpriteConfig,
@@ -99,7 +100,7 @@ impl Behavior {
 }
 
 /// Stores a collection of properties that define the behavior of an object.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Properties {
     pub movement: Movement,
     pub light: Light,
@@ -182,7 +183,7 @@ pub struct Display {
     pub light_recv_offset: (i64, i64),
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Light {
     pub opaque: bool,
     pub see_through: bool,
@@ -191,6 +192,22 @@ pub struct Light {
     pub emission_power: NotNan<f32>,
     pub heat_coef: i32,
     pub flickering: bool,
+    pub color: LinearRgba,
+}
+
+impl Default for Light {
+    fn default() -> Self {
+        Self {
+            opaque: false,
+            see_through: false,
+            light_emission_enabled: false,
+            can_emit_light: false,
+            emission_power: NotNan::new(0.0).unwrap(),
+            heat_coef: 0,
+            flickering: false,
+            color: LinearRgba::WHITE,
+        }
+    }
 }
 
 impl Light {
@@ -211,7 +228,7 @@ impl Light {
     }
 
     pub fn color(&self) -> (f32, f32, f32) {
-        (1.0, 1.0, 1.0)
+        (self.color.red, self.color.green, self.color.blue)
     }
 }
 
@@ -414,6 +431,7 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.0).try_into().unwrap();
                 p.light.heat_coef = -1;
+                p.light.color = LinearRgba::new(1.0, 0.9, 0.75, 1.0);
                 p.is_electrical = true;
                 p.is_house_powered = true;
                 p.is_light_source = true;
@@ -427,6 +445,7 @@ impl SpriteConfig {
                     Class::FloorLamp => (2.0).try_into().unwrap(),
                     _ => (1.0).try_into().unwrap(),
                 };
+                p.light.color = LinearRgba::new(1.0, 0.8, 0.6, 1.0);
                 p.is_electrical = true;
                 p.is_house_powered = true;
                 p.is_light_source = true;
@@ -442,6 +461,7 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = self.state == TileState::On;
                 p.light.emission_power = (3.5).try_into().unwrap();
                 p.light.heat_coef = -2;
+                p.light.color = LinearRgba::new(1.0, 1.0, 1.0, 1.0);
                 p.is_electrical = true;
                 p.is_house_powered = true;
                 p.is_light_source = true;
@@ -453,6 +473,7 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = true;
                 p.light.emission_power = (5.0).try_into().unwrap();
                 p.light.heat_coef = -6;
+                p.light.color = LinearRgba::new(0.95, 0.98, 1.0, 1.0);
                 p.is_electrical = true;
                 p.is_house_powered = false;
                 p.is_street_powered = true;
@@ -465,6 +486,7 @@ impl SpriteConfig {
                 p.light.light_emission_enabled = true;
                 p.light.emission_power = (-0.5).try_into().unwrap();
                 p.light.heat_coef = 6;
+                p.light.color = LinearRgba::new(1.0, 0.75, 0.1, 1.0);
                 p.is_light_source = true;
                 p.is_candle_light = true;
             }
@@ -513,6 +535,10 @@ impl SpriteConfig {
         if self.properties.get_bool("light:can_emit_light") {
             p.light.can_emit_light = true;
         }
+
+        if let Some(color) = self.properties.get_color("light:color") {
+            p.light.color = color;
+        }
     }
 }
 
@@ -545,6 +571,15 @@ impl BehaviorProperties {
                 _ => 0.0,
             })
             .unwrap_or(0.0)
+    }
+
+    pub fn get_color(&self, key: &str) -> Option<LinearRgba> {
+        self.properties.get(key).and_then(|x| match x {
+            tiled::PropertyValue::ColorValue(c) => {
+                Some(Srgba::rgba_u8(c.red, c.green, c.blue, c.alpha).into())
+            }
+            _ => None,
+        })
     }
 
     pub fn get_string_opt(&self, key: &str) -> Option<String> {
