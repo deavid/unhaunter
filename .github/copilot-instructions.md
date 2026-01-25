@@ -13,8 +13,9 @@ The codebase follows a strict modular structure to minimize compile times and se
 [PROJECT_FILE_DESCRIPTIONS.md](PROJECT_FILE_DESCRIPTIONS.md) for a detailed map.
 
 - **`un*-core`**: Low-level data types, components, and resources. **Must contain zero game logic, systems, or
-  observers.**
-- **`un*-plugin`**: High-level game flow and mechanics. Logic is contained in Bevy `Plugin` implementations.
+  observers. It must NOT contain any Bevy `Plugin`.**
+- **`un*-plugin`**: High-level game flow and mechanics. Logic is contained in Bevy `Plugin` implementations. **The only
+  thing that can be exported out of these crates is the `Plugin` itself.**
 - **`unhaunter`**: The main entry point that assembles all plugins in [unhaunter/src/app.rs](unhaunter/src/app.rs).
 
 ### State Management
@@ -25,7 +26,8 @@ The codebase follows a strict modular structure to minimize compile times and se
 
 ## Key Patterns
 
-- **Plugin Decomposition**: Plugins typically follow this structure:
+- **Plugin Decomposition**: Bevy plugins must be declared in a `plugin.rs` file. This file must contain the `Plugin`
+  implementation and nothing else. They typically follow this structure:
   - `plugin.rs`: `impl Plugin` that calls `systems::app_setup(app)`.
   - `systems/mod.rs`: `app_setup` function that groups systems and adds them to the `App` with `run_if` and `.chain()`.
 - **Event-Driven Communication**: Use the custom event system in [crates/unevents-core](crates/unevents-core).
@@ -51,6 +53,8 @@ Avoid running commands where possible. Usage of commands to read, write or edit 
 ## Project Conventions
 
 - **Naming**: Crates use `un` prefix (e.g., `unplayer-plugin`).
+- **Module Files**: `lib.rs` and `mod.rs` must **never** contain actual code. Only `mod` statements are allowed.
+- **No Re-exports**: `pub use` is forbidden globally. Every symbol must have exactly one canonical path.
 - **Imports**: Prefer explicit imports over wildcards, except for `bevy::prelude::*`.
 - **Error Handling**: Use `anyhow` for top-level tools; use `thiserror` for library-level error definitions.
 - **Coordinate Systems**: We use a custom isometric projection. Logic often happens in "board" coordinates (see
