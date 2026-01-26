@@ -175,7 +175,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(Movable)
         .insert(LightSensitive {
             exposure_factor: 1.1,
-            bias: 0.1,
+            bias: 0.01,
         })
         .insert(Direction::new_right())
         .insert(AnimationTimer::from_range(
@@ -258,8 +258,8 @@ pub(crate) fn classic_mode_orchestrator(
             .insert(ghost_spawn)
             .insert(MapEntityFieldBPos(ghost_spawn.to_board_position()))
             .insert(LightSensitive {
-                exposure_factor: 1.2,
-                bias: 0.2,
+                exposure_factor: 1.1,
+                bias: 0.02,
             })
             .insert(UltravioletSensitive {
                 intensity: 1.0,
@@ -352,7 +352,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(SpectralClarity::default())
         .insert(LightSensitive {
             exposure_factor: 0.5,
-            bias: 0.0,
+            bias: 0.01,
         })
         .insert(UltravioletSensitive {
             intensity: 1.0,

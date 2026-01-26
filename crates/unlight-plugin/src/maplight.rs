@@ -528,6 +528,98 @@ pub(crate) fn apply_lighting(
     let mask: usize = rng.random_range(0..usize::MAX);
     let lf = &lg.light_field;
 
+    // --- Shared Lighting Sampling Logic ---
+
+    // minimum distance for flashlight
+    const FL_MIN_DST: f32 = 0.1;
+
+    let fpos_gamma_color = |target_pos: Position,
+                            is_light_sensitive: bool|
+     -> Option<((f32, f32, f32), LightData)> {
+        let rpos_raw = target_pos;
+        let bpos = target_pos.to_board_position();
+        let p = bpos.ndidx_checked(bf.map_size)?;
+        let mut lux_fl = [0_f32; 3];
+        let mut lightdata = LightData::default();
+        for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
+            let d2 = rpos_raw.distance2(flpos);
+            let fl = if is_light_sensitive && d2 < 4.0 {
+                // Smooth, distance-only lighting for players/ghosts near light sources
+                // Using a 1/r falloff for proximity boost as requested.
+                let dist = d2.sqrt();
+                // flpower is already adjusted. The 2.0 factor provides a damped proximity boost.
+                flpower / (dist + 5.0) * 2.0
+            } else {
+                let fldir = fldir.with_max_dist(200.0);
+                let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
+                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
+                let mut lpos = lpos.unrotate_by_dir(&fldir);
+                let mut rpos = rpos_raw.unrotate_by_dir(&fldir);
+                rpos.x -= lpos.x;
+                rpos.y -= lpos.y;
+                lpos.x = 0.0;
+                lpos.y = 0.0;
+                if rpos.x > 0.0 {
+                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
+                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                }
+                if rpos.x < 0.0 {
+                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
+                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                }
+
+                let dist = (lpos.distance(&rpos) + 0.1)
+                    .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
+                let flvis = flvismap[p];
+                flpower / (dist + FL_MIN_DST)
+                    * flvis.clamp(0.0001, 1.0)
+                    * (focus + 0.5).clamp(0.5, 8.0)
+            };
+            let flsrgba = flcolor.to_srgba();
+            lux_fl[0] += fl * flsrgba.red;
+            lux_fl[1] += fl * flsrgba.green;
+            lux_fl[2] += fl * flsrgba.blue;
+            let ld = LightData::from_type(*fltype, fl);
+            lightdata = lightdata.add(&ld);
+        }
+        let ambient_light = 0.0001 + tutorial_light_factor * 0.0001;
+        lf.get(bpos.ndidx()).map(|lf| {
+            let r = (lf.lux * lf.color.0 + lux_fl[0] + ambient_light) / exposure;
+            let g = (lf.lux * lf.color.1 + lux_fl[1] + ambient_light) / exposure;
+            let b = (lf.lux * lf.color.2 + lux_fl[2] + ambient_light) / exposure;
+
+            // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
+            let tonemap = |x: f32| {
+                let v = x.powf(1.1);
+                v * 3.5 / (1.0 + v * 0.3)
+            };
+
+            (
+                (tonemap(r), tonemap(g), tonemap(b)),
+                lightdata.add(&LightData::from_type(
+                    LightType::Visible,
+                    lf.lux + ambient_light,
+                )),
+            )
+        })
+    };
+
+    let fpos_gamma = |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> Option<f32> {
+        let is_light_sensitive = o_light_sens.is_some();
+        let gcolor = fpos_gamma_color(target_pos, is_light_sensitive);
+        gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0).map(|l| {
+            let mut res = l;
+            if let Some(ls) = o_light_sens {
+                res += ls.bias;
+                res = res.max(0.05);
+            }
+            // High dynamic range: remove aggressive highlight compression
+            (res / 20.0).tanh() * 20.0
+        })
+    };
+
+    // --- End of Shared Lighting Sampling Logic ---
+
     // let start = Instant::now();
     let materials1 = materials1.into_inner();
 
@@ -575,9 +667,7 @@ pub(crate) fn apply_lighting(
     }
 
     for e in visible.iter() {
-        if rng.random_range(0..100) < 15 {
-            entities.push(e.to_owned());
-        } else if let Ok((
+        if let Ok((
             _entity,
             _pos,
             _mat,
@@ -600,6 +690,7 @@ pub(crate) fn apply_lighting(
                 || o_ecto_vis.is_some()
                 || o_light_sens.is_some()
                 || o_alpha_mod.is_some()
+                || rng.random_range(0..100) < 15
             {
                 entities.push(*e);
             }
@@ -648,100 +739,60 @@ pub(crate) fn apply_lighting(
                     }
                 }
             } else {
-                opacity = (vf.visibility_field[bpos.ndidx()] * 1.5).clamp(0.0, 1.0);
+                let visibility: f32 = vf.visibility_field[bpos.ndidx()].clamp(0.0, 1.0);
+                opacity = (visibility * 1.5).clamp(0.0001, 1.0);
             }
 
             // Use a margin (that should be baked on the map) to avoid negative access.
             if bpos.x < 2 || bpos.y < 2 {
                 continue;
             }
-            let bpos_tr = bpos.bottom();
-            let bpos_bl = bpos.top();
-            let bpos_br = bpos.right();
-            let bpos_tl = bpos.left();
 
-            // minimum distance for flashlight
-            const FL_MIN_DST: f32 = 0.1;
+            let mut lux_c = fpos_gamma(*pos, o_light_sens).unwrap_or(0.0);
+            let mut lux_tr = fpos_gamma(
+                *pos + Direction {
+                    dx: 0.5,
+                    dy: 0.5,
+                    dz: 0.0,
+                },
+                o_light_sens,
+            )
+            .unwrap_or(lux_c);
+            let mut lux_tl = fpos_gamma(
+                *pos + Direction {
+                    dx: -0.5,
+                    dy: 0.5,
+                    dz: 0.0,
+                },
+                o_light_sens,
+            )
+            .unwrap_or(lux_c);
+            let mut lux_br = fpos_gamma(
+                *pos + Direction {
+                    dx: 0.5,
+                    dy: -0.5,
+                    dz: 0.0,
+                },
+                o_light_sens,
+            )
+            .unwrap_or(lux_c);
+            let mut lux_bl = fpos_gamma(
+                *pos + Direction {
+                    dx: -0.5,
+                    dy: -0.5,
+                    dz: 0.0,
+                },
+                o_light_sens,
+            )
+            .unwrap_or(lux_c);
 
-            // behavior.p.movement.walkable
-            let fpos_gamma_color = |bpos: &BoardPosition| -> Option<((f32, f32, f32), LightData)> {
-                let rpos = bpos.to_position();
-                let p = bpos.ndidx_checked(bf.map_size)?;
-                let mut lux_fl = [0_f32; 3];
-                let mut lightdata = LightData::default();
-                for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
-                    let fldir = fldir.with_max_dist(200.0);
-                    let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
-                    let lpos = *flpos + fldir / (100.0 / focus + 20.0);
-                    let mut lpos = lpos.unrotate_by_dir(&fldir);
-                    let mut rpos = rpos.unrotate_by_dir(&fldir);
-                    rpos.x -= lpos.x;
-                    rpos.y -= lpos.y;
-                    lpos.x = 0.0;
-                    lpos.y = 0.0;
-                    if rpos.x > 0.0 {
-                        rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
-                        rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                    }
-                    if rpos.x < 0.0 {
-                        rpos.x =
-                            -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
-                        rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                    }
-
-                    let dist = (lpos.distance(&rpos) + 0.1)
-                        .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
-                    let flvis = flvismap[p];
-                    let fl = flpower / (dist + FL_MIN_DST)
-                        * flvis.clamp(0.0001, 1.0)
-                        * (focus + 0.5).clamp(0.5, 8.0);
-                    let flsrgba = flcolor.to_srgba();
-                    lux_fl[0] += fl * flsrgba.red;
-                    lux_fl[1] += fl * flsrgba.green;
-                    lux_fl[2] += fl * flsrgba.blue;
-                    let ld = LightData::from_type(*fltype, fl);
-                    lightdata = lightdata.add(&ld);
-                }
-                const AMBIENT_LIGHT: f32 = 0.0001;
-                lf.get(bpos.ndidx()).map(|lf| {
-                    let r = (lf.lux * lf.color.0 + lux_fl[0] + AMBIENT_LIGHT) / exposure;
-                    let g = (lf.lux * lf.color.1 + lux_fl[1] + AMBIENT_LIGHT) / exposure;
-                    let b = (lf.lux * lf.color.2 + lux_fl[2] + AMBIENT_LIGHT) / exposure;
-
-                    // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
-                    // x^1.1 provides shadow contrast. The divisor creates a "shoulder" to prevent
-                    // highlights from washing out to white too aggressively.
-                    let tonemap = |x: f32| {
-                        let v = x.powf(1.1);
-                        v * 3.5 / (1.0 + v * 0.3)
-                    };
-
-                    (
-                        (tonemap(r), tonemap(g), tonemap(b)),
-                        lightdata.add(&LightData::from_type(
-                            LightType::Visible,
-                            lf.lux + AMBIENT_LIGHT,
-                        )),
-                    )
-                })
-            };
-            let fpos_gamma = |bpos: &BoardPosition| -> Option<f32> {
-                let gcolor = fpos_gamma_color(bpos);
-                gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0).map(|l| {
-                    let mut res = l;
-                    if let Some(ls) = o_light_sens {
-                        res += ls.bias;
-                    }
-                    // High dynamic range: remove aggressive highlight compression
-                    (res / 20.0).tanh() * 20.0
-                })
-            };
             let ((mut r, mut g, mut b), light_data) =
-                fpos_gamma_color(&bpos).unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+                fpos_gamma_color(*pos, o_light_sens.is_some())
+                    .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             if let Some(ls) = o_light_sens {
-                r += ls.bias;
-                g += ls.bias;
-                b += ls.bias;
+                r = (r + ls.bias).max(0.05);
+                g = (g + ls.bias).max(0.05);
+                b = (b + ls.bias).max(0.05);
             }
             let ld = light_data.normalize();
 
@@ -772,6 +823,11 @@ pub(crate) fn apply_lighting(
             let mut src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
             let mut smooth_f: f32 = 0.3;
             let mut smooth_a: f32 = 1.0;
+
+            if o_behavior.is_none() {
+                // Players and characters need smoother color transitions than tiles
+                smooth_f = 3.0;
+            }
             let map_color = o_map_color.map(|x| x.color).unwrap_or_default();
 
             if let Some(am) = o_alpha_mod {
@@ -809,12 +865,6 @@ pub(crate) fn apply_lighting(
                 smooth_f = 99.0;
                 smooth_a = 99.0;
             }
-
-            let mut lux_c = fpos_gamma(&bpos).unwrap_or(1.0);
-            let mut lux_tr = fpos_gamma(&bpos_tr).unwrap_or(lux_c);
-            let mut lux_tl = fpos_gamma(&bpos_tl).unwrap_or(lux_c);
-            let mut lux_br = fpos_gamma(&bpos_br).unwrap_or(lux_c);
-            let mut lux_bl = fpos_gamma(&bpos_bl).unwrap_or(lux_c);
 
             let occlusion = o_behavior
                 .map(|b| b.obsolete_occlusion_type())
@@ -1122,6 +1172,8 @@ pub(crate) fn apply_lighting(
                     visible.insert(entity.to_owned());
                 }
                 *vis = new_vis;
+            } else if !invisible && !visible.contains(entity) {
+                visible.insert(entity.to_owned());
             }
             let delta = orig_mat.data.delta(&new_mat.data);
             let thr = if IS_WASM { 0.2 } else { 0.02 };
@@ -1132,6 +1184,7 @@ pub(crate) fn apply_lighting(
                 || delta > thr + min_threshold
                 || o_ethereal.is_some()
                 || o_ecto_vis.is_some()
+                || o_behavior.is_none()
             {
                 let mat = materials1.get_mut(mat).unwrap();
                 mat.data = new_mat.data;
@@ -1176,31 +1229,13 @@ pub(crate) fn apply_lighting(
         let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
-        let mut light_v = vec![LightData {
-            visible: 0.000000001,
-            red: 0.0,
-            infrared: 0.0,
-            ultraviolet: 0.0,
-        }];
-        for nbpos in bpos.iter_xy_neighbors(1, bf.map_size) {
-            if let Some(ld_abs) = lightdata_map.get(&nbpos) {
-                light_v.push(*ld_abs);
-            }
-        }
-        let light_sz = light_v.len() as f32;
-        let ld_abs = LightData {
-            visible: light_v.iter().map(|x| x.visible).sum::<f32>() / light_sz,
-            red: light_v.iter().map(|x| x.red).sum::<f32>() / light_sz,
-            infrared: light_v.iter().map(|x| x.infrared).sum::<f32>() / light_sz,
-            ultraviolet: light_v.iter().map(|x| x.ultraviolet).sum::<f32>() / light_sz,
-        };
+        let (gcolor, ld_abs) = fpos_gamma_color(*pos, o_light_sens.is_some())
+            .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
 
-        let ld_mag = ld_abs.magnitude();
         let ld = ld_abs.normalize();
 
-        if light_sz < 3.0 && opacity > 0.0001 {
-            // Skip updating if it was not selected for update
-            continue;
+        if o_light_sens.is_none() && opacity > 0.0001 {
+            // Note: Previously checked light_sz < 3.0, but now we always have data.
         }
         let mut src_color = map_color.with_alpha(1.0);
         let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
@@ -1211,18 +1246,12 @@ pub(crate) fn apply_lighting(
         );
         let mut dst_color = {
             let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = {
-                let v = (ld_mag / exposure).powf(1.1);
-                v * 3.5 / (1.0 + v * 0.3)
-            };
-            // Tutorial boost for sprites to ensure visibility
-            rel_lux += tutorial_light_factor * 0.0001;
+            let mut rel_lux = (gcolor.0 + gcolor.1 + gcolor.2) / 3.0;
 
             rel_lux += ld.ultraviolet * uv_reactive * 5.0;
 
             if let Some(light_sens) = o_light_sens {
-                rel_lux *= light_sens.exposure_factor;
-                rel_lux += light_sens.bias;
+                rel_lux = (rel_lux + light_sens.bias).max(0.05);
             }
             compute_color_exposure(rel_lux, r, dark_gamma, src_color)
         };

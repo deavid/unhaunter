@@ -202,6 +202,19 @@ impl std::ops::Add<Direction> for &Position {
     }
 }
 
+impl std::ops::Add<Direction> for Position {
+    type Output = Position;
+
+    fn add(self, rhs: Direction) -> Self::Output {
+        Position {
+            x: self.x + rhs.dx,
+            y: self.y + rhs.dy,
+            z: self.z + rhs.dz,
+            visual_priority: self.visual_priority,
+        }
+    }
+}
+
 impl PartialEq for Position {
     fn eq(&self, other: &Self) -> bool {
         self.same_x(other) && self.same_y(other) && self.same_z(other)
