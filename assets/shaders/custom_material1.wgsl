@@ -139,47 +139,63 @@ fn fragment(
 
     // Estimate coordinates of an isometric floor to mix the gamma color
     var z: f32 = 0.5;
-    var dz: f32 = 2.0 * 35.0/128.0;
-    var dp: vec2<f32> = vec2(35.0/128.0/z, 18.0/128.0*2.0/z);
-    var dpx: vec2<f32> = vec2(-35.0/128.0/z, 18.0/128.0*2.0/z);
 
-    // center of UV -> Anchors::calc(63, 95, 128, 128),
-    var cnt: vec2<f32> = vec2(63.0/128.0, 95.0/128.0);
-    var pttl: vec2<f32> = cnt - dp;
-    var pttr: vec2<f32> = cnt - dpx;
-    var ptbr: vec2<f32> = cnt + dp;
-    var ptbl: vec2<f32> = cnt + dpx;
+    // Fixed floor diamond ratios (derived from a 128x128 pixel reference)
+    // 35px half-width, 18px half-height
+    let ref_size = 128.0;
+    let floor_half_w = 35.0 / ref_size;
+    let floor_half_h = 18.0 / ref_size;
 
-    var min_dst = 0.4 * 35.0/128.0;
-    var uv1_y: f32 = (mesh.uv[1] - cnt[1]) * 2.0 + cnt[1];
-    var uv_w: vec2<f32> = vec2(mesh.uv[0], uv1_y);
+    var dz: f32 = 2.0 * floor_half_w;
+    var dp: vec2<f32> = vec2(floor_half_w / z, floor_half_h * 2.0 / z);
+    var dpx: vec2<f32> = vec2(-floor_half_w / z, floor_half_h * 2.0 / z);
 
-    var wtl: f32 = 2.0 / (max(min_dst, distance(uv_w, pttl)-dz));
-    var wtr: f32 = 2.0 / (max(min_dst, distance(uv_w, pttr)-dz));
-    var wbl: f32 = 2.0 / (max(min_dst, distance(uv_w, ptbl)-dz));
-    var wbr: f32 = 2.0 / (max(min_dst, distance(uv_w, ptbr)-dz));
-    var wct: f32 = 1.0 / (max(min_dst, distance(uv_w, cnt)));
+    // center of UV derived from material anchor.
+    // Anchors::calc(63, 95, 128, 128) results in ~ (0.5, 0.742)
+    // 0.5 - (-0.25) = 0.75
+    var cnt: vec2<f32> = vec2(0.5, 0.5 - material.y_anchor);
+    // --- Improved Linear Gradient Blend ---
+    // floor_half_w/h already defined above
 
-    var wtt: f32 = (wct+wtl+wtr+wbl+wbr);
+    let u_rel = mesh.uv.x - cnt.x;
+    let v_rel = mesh.uv.y - cnt.y;
 
-    var wpf: f32 = 3.0;
+    // Logical axes mapped from UV space
+    // Lx and Ly will be in range [-0.5, 0.5] inside the floor diamond
+    let Lx = 0.5 * (u_rel / floor_half_w - v_rel / floor_half_h);
+    let Ly = 0.5 * (u_rel / floor_half_w + v_rel / floor_half_h);
 
-    wtl = pow(wtl / wtt, wpf);
-    wtr = pow(wtr / wtt, wpf);
-    wbl = pow(wbl / wtt, wpf);
-    wbr = pow(wbr / wtt, wpf);
-    wct = pow(wct / wtt, wpf);
+    // Locked vertices in logical space:
+    // Right: (0.5, 0.5)
+    // Left: (-0.5, -0.5)
+    // Top: (0.5, -0.5)
+    // Bottom: (-0.5, 0.5)
+    let d2_c = max(0.0001, Lx*Lx + Ly*Ly); // Center
+    let d2_tr = max(0.0001, (Lx-0.5)*(Lx-0.5) + (Ly-0.5)*(Ly-0.5)); // Right
+    let d2_tl = max(0.0001, (Lx-0.5)*(Lx-0.5) + (Ly+0.5)*(Ly+0.5)); // Top
+    let d2_br = max(0.0001, (Lx+0.5)*(Lx+0.5) + (Ly-0.5)*(Ly-0.5)); // Bottom
+    let d2_bl = max(0.0001, (Lx+0.5)*(Lx+0.5) + (Ly+0.5)*(Ly+0.5)); // Left
 
-    var gc: f32 = material.gamma;
-    var gtl: f32 = material.gtl;
-    var gtr: f32 = material.gtr;
-    var gbl: f32 = material.gbl;
-    var gbr: f32 = material.gbr;
+    // Inverse distance weighting (IDW) with power 2
+    let w_c = 1.0 / d2_c;
+    let w_tr = 1.0 / d2_tr;
+    let w_tl = 1.0 / d2_tl;
+    let w_br = 1.0 / d2_br;
+    let w_bl = 1.0 / d2_bl;
 
-    // Interpolate gamma values based on UV coordinates. Assume uv coordinates are normalized [0,1] within each sprite cell.
-    var gamma: f32 = (gc * wct + gtl * wtl + gtr * wtr + gbl * wbl + gbr * wbr) / (wct+wtl+wtr+wbl+wbr);
-    var wcf: f32 = 1.2; // <- softening effect. Higher increases the edge variability
-    gamma = (gamma + gc / wcf) / (1.0 + wcf);
+    let w_sum = w_c + w_tr + w_tl + w_br + w_bl;
+
+    // Weights are assigned to Rust variables:
+    // gtl -> Top
+    // gtr -> Right
+    // gbl -> Left
+    // gbr -> Bottom
+    var gamma: f32 = (material.gamma * w_c + material.gtr * w_tr + material.gtl * w_tl + material.gbr * w_br + material.gbl * w_bl) / w_sum;
+
+    // Softening effect (optional, kept for continuity)
+    var wcf: f32 = 1.0;
+    gamma = (gamma + material.gamma / wcf) / (1.0 + wcf);
+    // --- End of Blend ---
 
     // Black point:
     let black: f32 = 0.001 * gamma * gamma;

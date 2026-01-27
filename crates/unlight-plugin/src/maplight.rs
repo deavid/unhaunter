@@ -618,6 +618,37 @@ pub(crate) fn apply_lighting(
         })
     };
 
+    let fpos_gamma_corner =
+        |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> Option<f32> {
+            let x = target_pos.x;
+            let y = target_pos.y;
+            let z = target_pos.z.round() as i64;
+            let x0 = x.floor() as i64;
+            let y0 = y.floor() as i64;
+            let x1 = x.ceil() as i64;
+            let y1 = y.ceil() as i64;
+
+            let mut total = 0.0;
+            let mut count = 0.0;
+            for tx in [x0, x1] {
+                for ty in [y0, y1] {
+                    let bpos = BoardPosition { x: tx, y: ty, z };
+                    if let Some(p) = bpos.ndidx_checked(bf.map_size)
+                        && vf.visibility_field[p] > 0.00001
+                        && let Some(l) = fpos_gamma(bpos.to_position(), o_light_sens)
+                    {
+                        total += l;
+                        count += 1.0;
+                    }
+                }
+            }
+            if count > 0.0 {
+                Some(total / count)
+            } else {
+                fpos_gamma(target_pos, o_light_sens)
+            }
+        };
+
     // --- End of Shared Lighting Sampling Logic ---
 
     // let start = Instant::now();
@@ -749,7 +780,14 @@ pub(crate) fn apply_lighting(
             }
 
             let mut lux_c = fpos_gamma(*pos, o_light_sens).unwrap_or(0.0);
-            let mut lux_tr = fpos_gamma(
+
+            // Corner offsets correspond to tile intersections.
+            // In our isometric perspective (PERSPECTIVE_X/Y in perspective.rs):
+            // (+0.5, +0.5) -> Screen Right
+            // (-0.5, -0.5) -> Screen Left
+            // (-0.5, +0.5) -> Screen Top
+            // (+0.5, -0.5) -> Screen Bottom
+            let mut lux_right = fpos_gamma_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: 0.5,
@@ -758,27 +796,27 @@ pub(crate) fn apply_lighting(
                 o_light_sens,
             )
             .unwrap_or(lux_c);
-            let mut lux_tl = fpos_gamma(
+            let mut lux_left = fpos_gamma_corner(
                 *pos + Direction {
                     dx: -0.5,
-                    dy: 0.5,
-                    dz: 0.0,
-                },
-                o_light_sens,
-            )
-            .unwrap_or(lux_c);
-            let mut lux_br = fpos_gamma(
-                *pos + Direction {
-                    dx: 0.5,
                     dy: -0.5,
                     dz: 0.0,
                 },
                 o_light_sens,
             )
             .unwrap_or(lux_c);
-            let mut lux_bl = fpos_gamma(
+            let mut lux_top = fpos_gamma_corner(
                 *pos + Direction {
                     dx: -0.5,
+                    dy: 0.5,
+                    dz: 0.0,
+                },
+                o_light_sens,
+            )
+            .unwrap_or(lux_c);
+            let mut lux_bot = fpos_gamma_corner(
+                *pos + Direction {
+                    dx: 0.5,
                     dy: -0.5,
                     dz: 0.0,
                 },
@@ -872,18 +910,18 @@ pub(crate) fn apply_lighting(
             match occlusion {
                 Orientation::None => {}
                 Orientation::XAxis => {
-                    lux_tl = lux_c;
-                    lux_br = lux_c;
+                    lux_top = lux_c;
+                    lux_bot = lux_c;
                 }
                 Orientation::YAxis => {
-                    lux_tr = lux_c;
-                    lux_bl = lux_c;
+                    lux_right = lux_c;
+                    lux_left = lux_c;
                 }
                 Orientation::Both => {
-                    lux_tl = lux_c;
-                    lux_br = lux_c;
-                    lux_tr = lux_c;
-                    lux_bl = lux_c;
+                    lux_top = lux_c;
+                    lux_bot = lux_c;
+                    lux_right = lux_c;
+                    lux_left = lux_c;
                 }
             }
             opacity = opacity
@@ -1084,7 +1122,17 @@ pub(crate) fn apply_lighting(
                     / (1.0 + smooth_f)
             };
             // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
-            lux_c = (lux_c * 4.0 + lux_tl + lux_tr + lux_bl + lux_br) / 8.0;
+            // Mapping to vertices:
+            // gtl (Top): Logic (0.5, -0.5)
+            // gtr (Right): Logic (0.5, 0.5)
+            // gbl (Left): Logic (-0.5, -0.5)
+            // gbr (Bottom): Logic (-0.5, 0.5)
+            new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
+            new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_top);
+            new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_right);
+            new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left);
+            new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot);
+
             if on_hover {
                 lux_c += 1.0;
                 new_mat.data.ambient_color = Color::srgb(0.20, 0.20, 0.0).into();
@@ -1094,12 +1142,9 @@ pub(crate) fn apply_lighting(
                     new_color.blue * 0.3,
                 )
                 .into();
+                // We update gamma with the hover boost too
+                new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
             }
-            new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
-            new_mat.data.gtl = gamma_mean(new_mat.data.gtl, (lux_tl + lux_c) / 2.0);
-            new_mat.data.gtr = gamma_mean(new_mat.data.gtr, (lux_tr + lux_c) / 2.0);
-            new_mat.data.gbl = gamma_mean(new_mat.data.gbl, (lux_bl + lux_c) / 2.0);
-            new_mat.data.gbr = gamma_mean(new_mat.data.gbr, (lux_br + lux_c) / 2.0);
 
             const DEBUG_LIGHTING: bool = false;
             if DEBUG_LIGHTING
