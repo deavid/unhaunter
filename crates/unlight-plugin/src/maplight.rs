@@ -320,15 +320,6 @@ pub(crate) fn apply_lighting(
 
     let mut rng = random_seed::rng();
 
-    let dark_gamma: f32 = 1.0;
-    let light_gamma: f32 = (0.97_f32).recip();
-
-    // Higher values, less blinding light.
-    let center_exp: f32 = 27.0;
-
-    // Above 1.0, higher the less night vision.
-    let center_exp_gamma: f32 = 1.4;
-
     // Difficulty-based ambient light boost for tutorials.
     // 1.0 for Tutorial 1, 0.0 for Standard+.
     let tutorial_light_factor = match difficulty.0.difficulty {
@@ -340,8 +331,8 @@ pub(crate) fn apply_lighting(
         _ => 0.0,
     };
 
-    let mut cursor_exp: f32 = 0.001 / 0.8;
-    let mut exp_count: f32 = 0.1;
+    let mut cursor_exp: f32 = 0.0;
+    let mut exp_count: f32 = 0.0001;
     let mut flashlights: Vec<(&Position, Direction, f32, Color, LightType, Array3<f32>)> = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
@@ -353,7 +344,7 @@ pub(crate) fn apply_lighting(
     }
 
     // Weight highlights more when calculating exposure (Power Average)
-    const HIGHLIGHT_PRIORITY_POWER: f32 = 3.4;
+    const HIGHLIGHT_PRIORITY_POWER: f32 = 1.0;
 
     // Check if visibility field is properly initialized
     if vf.visibility_field.is_empty() {
@@ -428,19 +419,13 @@ pub(crate) fn apply_lighting(
         }
 
         let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors(3, board_dim) {
+        for npos in cursor_pos.iter_xy_neighbors(10, board_dim) {
             let lf = &lg.light_field[npos.ndidx()];
-            let vis = vf.visibility_field[npos.ndidx()]
-                .max(0.00001) // Fix: Visibility field is -0.001 for uncomputed tiles.
-                * if bcf.0[npos.ndidx()].player_free {
-                    1.0
-                } else {
-                    0.01
-                };
+            let vis = vf.visibility_field[npos.ndidx()].max(0.00001);
 
             // Power average to prioritize highlights in the field of view.
             cursor_exp += lf.lux.powf(HIGHLIGHT_PRIORITY_POWER) * vis;
-            exp_count += 1.0 * vis;
+            exp_count += vis;
         }
         player_pos = *pos;
     }
@@ -484,7 +469,7 @@ pub(crate) fn apply_lighting(
             power / (player_pos.distance2(x.0) + 1.0)
         })
         .sum();
-    cursor_exp += fl_total_power.sqrt() * 0.9;
+    cursor_exp += fl_total_power.sqrt();
 
     // FIR Filter with Hann Window (240 frames)
     lg.exposure_history.push_back(cursor_exp);
@@ -501,22 +486,22 @@ pub(crate) fn apply_lighting(
     cursor_exp = sum_values / (sum_weights + 0.001);
     lg.exposure_lux = cursor_exp;
 
-    // Ensure the base is not negative before applying the power function
-    let normalized_exp = (cursor_exp / center_exp.clamp(0.00001, 10000.0)).clamp(-10.0, 10.0);
-    cursor_exp = normalized_exp.powf(center_exp_gamma.recip()) * center_exp + 0.00001;
-
+    cursor_exp = cursor_exp.clamp(0.0, 100.0);
+    // Darken picture without touching night vision
+    cursor_exp += cursor_exp.sqrt() * 2.0;
     // Minimum exp - controls how dark we can see
-    cursor_exp += 0.001 / 0.8 + 1.4;
-
-    // Compensate overall to make the scene brighter
-    cursor_exp /= 2.8 / 1.4;
+    cursor_exp = cursor_exp.clamp(0.40, 100.0);
 
     if !cursor_exp.is_normal() {
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
         cursor_exp = lg.current_exposure;
     }
 
-    lg.current_exposure = cursor_exp;
+    // Additional IIR filter: 63.2% in 2 seconds (tau = 2s)
+    let dt = time.delta_secs();
+    let alpha = 1.0 - (-dt / 2.0).exp();
+    lg.current_exposure = lg.current_exposure * (1.0 - alpha) + cursor_exp * alpha;
+
     let exposure = lg.current_exposure;
     let raw_lux = lg.exposure_history.back().copied().unwrap_or(0.0);
 
@@ -590,8 +575,8 @@ pub(crate) fn apply_lighting(
 
             // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
             let tonemap = |x: f32| {
-                let v = x.powf(1.1);
-                v * 3.5 / (1.0 + v * 0.3)
+                let v = x.powf(1.3);
+                v * 1.8 / (1.0 + v * 0.45)
             };
 
             (
@@ -613,8 +598,8 @@ pub(crate) fn apply_lighting(
                 res += ls.bias;
                 res = res.max(0.05);
             }
-            // High dynamic range: remove aggressive highlight compression
-            (res / 20.0).tanh() * 20.0
+            // Reduced dynamic range: more aggressive highlight compression
+            (res / 10.0).tanh() * 10.0
         })
     };
 
@@ -1051,11 +1036,7 @@ pub(crate) fn apply_lighting(
             dst_color.set_alpha(new_a);
 
             // Sound field visualization:
-            let f_gamma = |lux: f32| {
-                (fastapprox::faster::pow(lux, light_gamma)
-                    + fastapprox::faster::pow(lux, 1.0 / dark_gamma))
-                    / 2.0
-            };
+            let f_gamma = |lux: f32| fastapprox::faster::pow(lux, 0.9);
             const K_COLD: f32 = 0.6;
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
@@ -1108,7 +1089,7 @@ pub(crate) fn apply_lighting(
             }
             // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
 
-            const BRIGHTNESS: f32 = 1.15;
+            const BRIGHTNESS: f32 = 1.0;
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
             let gamma_mean = |a: f32, b: f32| {
@@ -1298,7 +1279,7 @@ pub(crate) fn apply_lighting(
             if let Some(light_sens) = o_light_sens {
                 rel_lux = (rel_lux + light_sens.bias).max(0.05);
             }
-            compute_color_exposure(rel_lux, r, dark_gamma, src_color)
+            compute_color_exposure(rel_lux, r, 1.0, src_color)
         };
 
         // 20.0;
