@@ -13,6 +13,8 @@ struct CustomMaterial {
     sheet_idx: u32,
     sprite_width: f32,
     sprite_height: f32,
+    padding: f32,
+    margin: f32,
     y_anchor: f32,
     upscale_factor: f32,
 };
@@ -29,21 +31,25 @@ fn fragment(
     mesh: VertexOutput,
 ) -> @location(0) vec4<f32> {
     // Full texture size computation:
-    let tex_width = material.sprite_width * f32(material.sheet_cols);
-    let tex_height = material.sprite_height * f32(material.sheet_rows);
+    let tex_width = material.margin * 2.0 + material.sprite_width * f32(material.sheet_cols) + material.padding * f32(material.sheet_cols - 1u);
+    let tex_height = material.margin * 2.0 + material.sprite_height * f32(material.sheet_rows) + material.padding * f32(material.sheet_rows - 1u);
     let tex_size = vec2<f32>(tex_width, tex_height);
 
     // Calculate sprite UVs considering the sprite sheet layout
     let row: u32 = material.sheet_idx / material.sheet_cols;
     let col: u32 = material.sheet_idx % material.sheet_cols;
 
+    // Compute the start position of the sprite in pixel coordinates
+    let pixel_u: f32 = material.margin + f32(col) * (material.sprite_width + material.padding);
+    let pixel_v: f32 = material.margin + f32(row) * (material.sprite_height + material.padding);
+
     // Compute the size of each cell in the atlas (in UV space)
-    let cell_width: f32 = 1.0 / f32(material.sheet_cols);
-    let cell_height: f32 = 1.0 / f32(material.sheet_rows);
+    let cell_width: f32 = material.sprite_width / tex_width;
+    let cell_height: f32 = material.sprite_height / tex_height;
 
     // Compute the base UV coordinates for the sprite within the atlas
-    let base_u: f32 = f32(col) * cell_width;
-    let base_v: f32 = f32(row) * cell_height;
+    let base_u: f32 = pixel_u / tex_width;
+    let base_v: f32 = pixel_v / tex_height;
 
     let zero4 = vec4(0.0, 0.0, 0.0, 0.0);
     let one4 = vec4(1.0, 1.0, 1.0, 1.0);
@@ -82,33 +88,45 @@ fn fragment(
         let softness = 3.0; // 2.0 -> leave 1px of gradient between pixels ; 4.0 -> 2px of gradient
         let uv_frac2 = clamp( (uv_frac - 0.5) / texel_per_px / softness + 0.5, vec2<f32>(0.0,0.0) , vec2<f32>(1.0,1.0));
 
-        // Reading directly the texture mixes the color incorrectly because of differences in alpha
-        let uv_comp = uv_floor + (uv_frac2) / tex_size;
-        let color1: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv_comp);
-        let color_s: vec4<f32> = textureSample(base_color_texture, base_color_sampler, uv);
-
-        // Sample the four nearest texels for bilinear blending
-        // This is for attempting a better alpha color mixing - when one part is transparent
-        // and the other is not, it might darken the borders - this code should combat this.
+        // Manual alpha-weighted bilinear sampling to prevent "black bleed" from 0-alpha texels.
+        // We sample the four nearest texels at their centers.
         let texel_tl = textureSample(base_color_texture, base_color_sampler, uv_floor);
         let texel_tr = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 0.0));
         let texel_bl = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(0.0, 1.0 / tex_height));
         let texel_br = textureSample(base_color_texture, base_color_sampler, uv_floor + vec2<f32>(1.0 / tex_width, 1.0 / tex_height));
 
-        let texel_sum = texel_tl * texel_tl[3] + texel_tr  * texel_tr[3] + texel_bl  * texel_bl[3] + texel_br * texel_br[3];
-        let total_a = texel_tl[3] + texel_tr[3] + texel_bl[3] + texel_br[3];
-        let max_a1 = max(texel_tl[3], texel_tr[3]);
-        let max_a2 = max(texel_bl[3], texel_br[3]);
-        let max_a = max(max_a1, max_a2);
-        var texel_avg = clamp(texel_sum / (total_a + 0.1), zero4, one4);
-        let relight_factor = 1.6;
-        texel_avg[0] *= relight_factor;
-        texel_avg[1] *= relight_factor;
-        texel_avg[2] *= relight_factor;
-        texel_avg[3] = color_s[3];
-        let avg_k = (1.0 - color1[3]) * texel_avg[3];
+        // Extract alphas
+        let a_tl = texel_tl[3];
+        let a_tr = texel_tr[3];
+        let a_bl = texel_bl[3];
+        let a_br = texel_br[3];
 
-        color = (color1 * (1.0 - avg_k) + texel_avg * avg_k);
+        // Bilinear weights from the sharpened fractional part
+        let w_x = uv_frac2.x;
+        let w_y = uv_frac2.y;
+        let w_tl = (1.0 - w_x) * (1.0 - w_y);
+        let w_tr = w_x * (1.0 - w_y);
+        let w_bl = (1.0 - w_x) * w_y;
+        let w_br = w_x * w_y;
+
+        // Compute the accurately interpolated alpha
+        let final_alpha = a_tl * w_tl + a_tr * w_tr + a_bl * w_bl + a_br * w_br;
+
+        // Compute alpha-weighted color sums
+        let weighted_rgb = (texel_tl.rgb * a_tl * w_tl + texel_tr.rgb * a_tr * w_tr + texel_bl.rgb * a_bl * w_bl + texel_br.rgb * a_br * w_br);
+        let total_a = a_tl + a_tr + a_bl + a_br;
+        let neighbor_avg_rgb = (texel_tl.rgb * a_tl + texel_tr.rgb * a_tr + texel_bl.rgb * a_bl + texel_br.rgb * a_br) / max(total_a, 0.001);
+
+        // Calculate the base color by "un-premultiplying" the interpolated result.
+        // This ensures that even at 10% alpha, the color intensity is preserved and not pulled towards black.
+        var final_rgb = weighted_rgb / max(final_alpha, 0.001);
+
+        // Apply a "color bleed" (blur) effect that becomes stronger as the pixel becomes more transparent.
+        // This spreads the neighborhood's average color into the antialiased edges.
+        let blur_k = clamp(1.0 - final_alpha, 0.0, 1.0);
+        final_rgb = mix(final_rgb, neighbor_avg_rgb, blur_k * blur_k);
+
+        color = vec4<f32>(final_rgb, final_alpha);
         // <<--
     }
 

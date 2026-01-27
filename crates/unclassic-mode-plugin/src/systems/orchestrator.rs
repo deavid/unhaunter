@@ -193,7 +193,7 @@ pub(crate) fn classic_mode_orchestrator(
                     ..default()
                 })
                 .insert(
-                    Transform::from_scale(Vec3::splat(1.1))
+                    Transform::from_scale(Vec3::splat(1.1 * player_rf))
                         .with_translation(Vec3::new(0.0, 0.1, 0.01)),
                 )
                 .insert(FocusRing::default());
@@ -383,7 +383,7 @@ pub(crate) fn classic_mode_orchestrator(
                     ..default()
                 })
                 .insert(
-                    Transform::from_scale(Vec3::splat(0.5))
+                    Transform::from_scale(Vec3::splat(0.5 * ghost_rf))
                         .with_translation(Vec3::new(0.0, 0.0, 0.01)),
                 )
                 .insert(FocusRing::default());

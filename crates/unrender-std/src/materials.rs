@@ -26,6 +26,8 @@ pub struct CustomMaterial1Data {
     pub sheet_idx: u32,
     pub sprite_width: f32,
     pub sprite_height: f32,
+    pub padding: f32,
+    pub margin: f32,
     pub y_anchor: f32,
     pub upscale_factor: f32,
 }
@@ -54,6 +56,8 @@ impl CustomMaterial1Data {
         delta += (self.upscale_factor - other.upscale_factor).abs();
         delta += (self.sprite_width - other.sprite_width).abs();
         delta += (self.sprite_height - other.sprite_height).abs();
+        delta += (self.padding - other.padding).abs();
+        delta += (self.margin - other.margin).abs();
         delta += (self.y_anchor - other.y_anchor).abs();
         delta *= color1[3] + color2[3] + 0.1;
         delta += (color1[3] - color2[3]).abs() * 15.0;
@@ -76,6 +80,8 @@ impl Default for CustomMaterial1Data {
             sheet_idx: 0,
             sprite_width: 10000.0,
             sprite_height: 10000.0,
+            padding: 0.0,
+            margin: 0.0,
             y_anchor: -0.25,
             upscale_factor: 1.0,
         }

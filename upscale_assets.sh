@@ -85,27 +85,26 @@ if [ -n "$SINGLE_FILE" ]; then
         exit 0
     fi
 
+    # Pre-processing
+    PRE_FILE=$(mktemp --suffix=".png")
+    $IM_CONVERT "$FILE" \( +clone -blur 0x0.25 \) +swap -background none -layers Flatten "$PRE_FILE"
+
     echo "Scaling $REL_PATH -> ${PREFIX}${REL_PATH} ..."
     mkdir -p "$(dirname "$OUT_FILE")"
-    xbrzscale "$ZOOM" "$FILE" "$OUT_FILE" >/dev/null
+    xbrzscale "$ZOOM" "$PRE_FILE" "$OUT_FILE" >/dev/null
+    unlink "$PRE_FILE"
 
     # Post-processing
-    SIGMA=$(echo "scale=2; 0.25 * $ZOOM" | bc)
-    BLOOM_SIGMA=$(echo "scale=2; 0.50 * $ZOOM" | bc)
-    SHARP_SIGMA=$(echo "scale=2; 0.90 * $ZOOM" | bc)
-    GROW_RADIUS=$(echo "$ZOOM / 3" | bc)
-    [ "$GROW_RADIUS" -lt 1 ] && GROW_RADIUS=1
+    SIGMA=$(echo "scale=2; 0.20 * $ZOOM" | bc)
+    BLOOM_SIGMA=$(echo "scale=2; 0.80 * $ZOOM" | bc)
+    SHARP_SIGMA=$(echo "scale=2; 1.50 * $ZOOM" | bc)
 
     $IM_CONVERT "$OUT_FILE" \
-        \( +clone -alpha extract -blur 0x${SIGMA} -level 35,100% -write mpr:soft_alpha +delete \) \
-        -alpha off \
-        \( +clone -morphology Dilate Disk:${GROW_RADIUS} \) -compose DstOver -composite \
-        -unsharp 0x${SHARP_SIGMA}+0.5+0 \
         -blur 0x${SIGMA} \
-        -unsharp 0x${SIGMA}+0.5+0 \
-        \( mpr:soft_alpha -blur 0x${BLOOM_SIGMA} +level 95,100% \) -compose Multiply -composite \
-        \( +clone -blur 0x${BLOOM_SIGMA} -evaluate multiply 0.37 \) -compose Screen -composite \
-        mpr:soft_alpha -compose CopyOpacity -composite \
+        -blur 0x${SIGMA} \
+        -unsharp 0x${SIGMA}+0.7+0 \
+        -unsharp 0x${SHARP_SIGMA}+0.3+0 \
+        \( +clone -morphology Convolve Blur:${BLOOM_SIGMA},0 -channel A -evaluate multiply 0.6 +channel \) -compose Over -composite \
         "$OUT_FILE"
     exit 0
 fi

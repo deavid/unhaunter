@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.1" name="A6x6x10" tilewidth="48" tileheight="64" tilecount="64" columns="8" fillmode="preserve-aspect-fit">
+<tileset version="1.10" tiledversion="1.11.1" name="A6x6x10" tilewidth="48" tileheight="64" spacing="4" margin="2" tilecount="64" columns="8" fillmode="preserve-aspect-fit">
  <tileoffset x="-12" y="12"/>
  <grid orientation="isometric" width="48" height="24"/>
  <properties>
   <property name="Anchor::bottom_px" type="int" value="19"/>
  </properties>
- <image source="../img/spritesheetA_6x6x10.png" width="384" height="512"/>
+ <image source="../img/spritesheetA_6x6x10.png" width="416" height="544"/>
  <tile id="0" type="Switch">
   <properties>
    <property name="sprite:orientation" value="YAxis"/>

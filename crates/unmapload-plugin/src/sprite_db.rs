@@ -46,11 +46,8 @@ pub(crate) fn populate_sprite_db(
 
             // Create a sprite bundle based on the tileset type
             let bundle = match &tileset.data {
-                AtlasData::Sheet((handle, cmat)) => {
+                AtlasData::Sheet((_handle, cmat)) => {
                     let mut cmat = cmat.clone();
-                    let tatlas = p.texture_atlases.get(handle).unwrap();
-                    cmat.data.sprite_width = tatlas.size.x as f32 / cmat.data.sheet_cols as f32;
-                    cmat.data.sprite_height = tatlas.size.y as f32 / cmat.data.sheet_rows as f32;
                     cmat.data.upscale_factor = tileset.factor;
 
                     // Create or reuse mesh for this tileset

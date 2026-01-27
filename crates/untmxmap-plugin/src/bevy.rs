@@ -55,35 +55,32 @@ pub(crate) fn bevy_load_map(
             };
             factor = f;
 
-            // FIXME: When the images are loaded onto the GPU it seems that we need at least 1
-            // pixel of empty space .. so that the GPU can sample surrounding pixels properly.
-            // .. This contrasts with how Tiled works, as it assumes a perfect packing if
-            // possible.
-            const MARGIN: u32 = 0;
-
-            // TODO: Ideally we would prefer to preload, upscale by nearest to 2x or 4x, and
-            // add a 2px margin. Recreating .. the texture on the fly.
             let texture: Handle<Image> = asset_server.load(loading_src);
             let rows = tileset.tilecount / tileset.columns;
             let atlas1 = TextureAtlasLayout::from_grid(
                 UVec2::new(
-                    ((tileset.tile_width + tileset.spacing - MARGIN) as f32 * factor) as u32,
-                    ((tileset.tile_height + tileset.spacing - MARGIN) as f32 * factor) as u32,
+                    (tileset.tile_width as f32 * factor) as u32,
+                    (tileset.tile_height as f32 * factor) as u32,
                 ),
                 tileset.columns,
                 rows,
                 Some(UVec2::new(
-                    (MARGIN as f32 * factor) as u32,
-                    (MARGIN as f32 * factor) as u32,
+                    (tileset.spacing as f32 * factor) as u32,
+                    (tileset.spacing as f32 * factor) as u32,
                 )),
-                Some(UVec2::new(0, 0)),
+                Some(UVec2::new(
+                    (tileset.margin as f32 * factor) as u32,
+                    (tileset.margin as f32 * factor) as u32,
+                )),
             );
             let mut cmat = CustomMaterial1::from_texture(texture);
             cmat.data.sheet_rows = rows;
             cmat.data.sheet_cols = tileset.columns;
             cmat.data.sheet_idx = 0;
-            cmat.data.sprite_width = (image.width as f32 * factor) / tileset.columns as f32;
-            cmat.data.sprite_height = (image.height as f32 * factor) / rows as f32;
+            cmat.data.sprite_width = tileset.tile_width as f32 * factor;
+            cmat.data.sprite_height = tileset.tile_height as f32 * factor;
+            cmat.data.padding = tileset.spacing as f32 * factor;
+            cmat.data.margin = tileset.margin as f32 * factor;
             cmat.data.upscale_factor = factor;
             let atlas1_handle = texture_atlases.add(atlas1);
             AtlasData::Sheet((atlas1_handle.clone(), cmat))

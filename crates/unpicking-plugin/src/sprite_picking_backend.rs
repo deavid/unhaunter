@@ -304,29 +304,24 @@ fn pixel_perfect_hit_test(
     };
 
     // Calculate UV coordinates within the sprite sheet
-    let sheet_cols = material.data.sheet_cols as f32;
-    let sheet_rows = material.data.sheet_rows as f32;
-    let sheet_idx = material.data.sheet_idx as f32;
-
-    let col = sheet_idx % sheet_cols;
-    let row = (sheet_idx / sheet_cols).floor();
-
-    let cell_width = 1.0 / sheet_cols;
-    let cell_height = 1.0 / sheet_rows;
-
-    let base_u = col * cell_width;
-    let base_v = row * cell_height;
+    let col = (material.data.sheet_idx % material.data.sheet_cols) as f32;
+    let row = (material.data.sheet_idx / material.data.sheet_cols) as f32;
 
     // Apply margin protection like the shader does
     let margin = 0.5;
     let mx = margin / material.data.sprite_width;
     let my = margin / material.data.sprite_height;
 
-    let margin_u = u_local.clamp(0.0, 1.0 - mx);
-    let margin_v = v_local.clamp(my * 2.0, 1.0 - my);
+    let clamped_u = u_local.clamp(mx, 1.0 - mx);
+    let clamped_v = v_local.clamp(my, 1.0 - my);
 
-    let final_u = base_u + margin_u * cell_width;
-    let final_v = base_v + margin_v * cell_height;
+    // Compute pixel coordinates
+    let pixel_u = material.data.margin + col * (material.data.sprite_width + material.data.padding);
+    let pixel_v =
+        material.data.margin + row * (material.data.sprite_height + material.data.padding);
+
+    let final_u = (pixel_u + clamped_u * material.data.sprite_width) / image.width() as f32;
+    let final_v = (pixel_v + clamped_v * material.data.sprite_height) / image.height() as f32;
 
     // Sample the texture at the calculated UV coordinates
     let center_tex_x = (final_u * image.width() as f32) as i32;

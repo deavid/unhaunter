@@ -38,7 +38,6 @@ pub(crate) struct LoadLevelSystemParam<'w> {
     pub bef: ResMut<'w, BoardEntityField>,
     pub bcf: ResMut<'w, BoardCollisionField>,
     pub materials1: ResMut<'w, Assets<CustomMaterial1>>,
-    pub texture_atlases: Res<'w, Assets<TextureAtlasLayout>>,
     pub meshes: ResMut<'w, Assets<Mesh>>,
     pub tilesetdb: Res<'w, MapTileSetDb>,
     pub sdb: ResMut<'w, SpriteDB>,

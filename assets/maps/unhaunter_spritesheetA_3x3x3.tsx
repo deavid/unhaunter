@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.1" name="A3x3x3" tilewidth="30" tileheight="30" spacing="2" margin="1" tilecount="264" columns="12" objectalignment="bottom">
+<tileset version="1.10" tiledversion="1.11.1" name="A3x3x3" tilewidth="32" tileheight="32" spacing="4" margin="2" tilecount="264" columns="12" objectalignment="bottom">
  <tileoffset x="-3" y="0"/>
  <grid orientation="isometric" width="28" height="14"/>
  <transformations hflip="1" vflip="0" rotate="0" preferuntransformed="0"/>
  <properties>
   <property name="Anchor::bottom_px" type="int" value="7"/>
  </properties>
- <image source="../img/spritesheetA_3x3x3.png" width="384" height="704"/>
+ <image source="../img/spritesheetA_3x3x3.png" width="432" height="792"/>
  <tile id="0" type="Floor">
   <properties>
    <property name="sprite:orientation" value="None"/>

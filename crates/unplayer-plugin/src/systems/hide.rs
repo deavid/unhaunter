@@ -7,6 +7,7 @@ use unboard_core::components::mapcolor::MapColor;
 use ungear_core::components::playergear::PlayerGear;
 use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::AnimationTimer;
+use unrender_std::components::visuals::ResolutionFactor;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::position::Position;
 
@@ -23,7 +24,10 @@ fn hide_player(
         (Entity, &mut PlayerSprite, &mut Position, &PlayerGear),
         (Without<Hiding>, Without<Behavior>),
     >,
-    hiding_spots: Query<(Entity, &Position, &Behavior), Without<PlayerSprite>>,
+    hiding_spots: Query<
+        (Entity, &Position, &Behavior, Option<&ResolutionFactor>),
+        Without<PlayerSprite>,
+    >,
     mut ga: SoundEmitter,
     mut hold_timers: Local<HashMap<Entity, Timer>>,
 ) {
@@ -39,11 +43,11 @@ fn hide_player(
             }
 
             // Using 'activate' for hiding Find a hiding spot near the player
-            if let Some((hiding_spot_entity, hiding_spot_pos, _)) = hiding_spots
+            if let Some((hiding_spot_entity, hiding_spot_pos, _, rf)) = hiding_spots
                 .iter()
                 // Manually filter for hiding spots
-                .filter(|(_, _, behavior)| behavior.p.object.hidingspot)
-                .find(|(_, hiding_spot_pos, _)| player_pos.distance(hiding_spot_pos) < 1.3)
+                .filter(|(_, _, behavior, _)| behavior.p.object.hidingspot)
+                .find(|(_, hiding_spot_pos, _, _)| player_pos.distance(hiding_spot_pos) < 1.3)
             {
                 // Key is held down, tick the timer
                 timer.tick(ga.time.delta());
@@ -67,6 +71,8 @@ fn hide_player(
                 // Play "Hide" sound effect
                 ga.play_audio("sounds/hide-rustle.ogg".into(), 1.0, &player_pos);
 
+                let upscale_f = rf.map(|r| r.0).unwrap_or(1.0);
+
                 // Add Visual Overlay
                 commands.entity(hiding_spot_entity).with_children(|parent| {
                     parent
@@ -78,7 +84,7 @@ fn hide_player(
                         .insert(
                             // Position relative to parent
                             Transform::from_xyz(0.0, 0.0, 0.02)
-                                .with_scale(Vec3::new(0.20, 0.20, 0.20)),
+                                .with_scale(Vec3::splat(0.20 * upscale_f)),
                         );
                 });
             }
