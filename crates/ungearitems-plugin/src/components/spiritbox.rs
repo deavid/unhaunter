@@ -2,7 +2,6 @@ use unfoundation_core::random_seed;
 use ungear_core::components::core::{
     Battery, Electronic, GearSprite, ItemName, PerceivedClarity, StatusText,
 };
-use unghost_core::resources::haunt_state::HauntState;
 use unsound_core::emitter::SoundEmitter;
 use unsound_core::resources::SoundGrid;
 use unthermal_core::resources::ThermalGrid;
@@ -21,6 +20,7 @@ use rand::Rng;
 use unfoundation_core::utils::kelvin_to_celsius;
 use ungear_core::types::gear::utils::on_off;
 pub(crate) use ungearitems_core::components::spiritbox::SpiritBox;
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unghost_core::types::evidence::Evidence;
 use unlight_core::resources::light_grid::LightGrid;
 use unprofile_core::profile::PlayerProfileData;
@@ -44,7 +44,7 @@ pub(crate) fn update_spiritbox(
     mut gs_audio: SoundEmitter,
     tg: Res<ThermalGrid>,
     sg: Res<SoundGrid>,
-    haunt_state: Res<HauntState>,
+    q_ghost: Query<(&GhostSprite, &Position, &GhostBehaviorDynamics)>,
     lg: Res<LightGrid>,
     player_profile: Res<Persistent<PlayerProfileData>>,
     mut commands: Commands,
@@ -116,23 +116,29 @@ pub(crate) fn update_spiritbox(
                 .lux;
 
             let mut ghost_near = false;
-            if let Some(ghost_pos) = haunt_state.ghost_warning_position {
-                let dist2 = pos.distance2(&ghost_pos);
-                if dist2 < 3.0 * 3.0 {
+            let mut spiritbox_clarity = 0.0;
+            for (ghost, ghost_pos, dynamics) in q_ghost.iter() {
+                if ghost.hunting > 0.0 {
+                    continue;
+                }
+                let dist2 = pos.distance2(ghost_pos);
+                if dist2 < 3.0 * 3.0 && ghost.class.evidences().contains(&Evidence::SpiritBox) {
                     ghost_near = true;
+                    spiritbox_clarity = dynamics.spirit_box_clarity;
+                    break;
                 }
             }
 
             let delta = sec - spiritbox.last_change_secs;
 
             // Only charge up for a response if the ghost has the Spirit Box evidence.
-            if haunt_state.evidences.contains(&Evidence::SpiritBox) && ghost_near {
+            if ghost_near {
                 let sound = sg.sound_field.get(&bpos).cloned().unwrap_or_default();
                 let sound_reading = sound.iter().sum::<Vec2>().length() * 100.0;
                 let light_clamped = (light_lux * 5.0).clamp(0.3, 10.0);
                 let temp_clamped = (temp_c - 3.0).clamp(0.5, 10.0);
                 spiritbox.charge += sound_reading / temp_clamped.powi(2) / light_clamped / 15.0
-                    * haunt_state.ghost_dynamics.spirit_box_clarity.max(0.0);
+                    * spiritbox_clarity.max(0.0);
             }
 
             if spiritbox.ghost_answer {

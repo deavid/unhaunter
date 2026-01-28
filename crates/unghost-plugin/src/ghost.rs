@@ -691,21 +691,42 @@ fn ghost_fade_out_system(
 /// to the player when a ghost is nearby.
 fn update_ghost_warning_field(
     mut haunt_state: ResMut<HauntState>,
-    q_ghost: Query<(&GhostSprite, &Position)>,
+    q_ghost: Query<(&GhostSprite, &Position, &GhostBehaviorDynamics)>,
     time: Res<Time>,
 ) {
     // Reset warning field
     haunt_state.ghost_warning_intensity = 0.0;
     haunt_state.ghost_warning_position = None;
+    haunt_state.evidences.clear();
 
     let mut max_intensity = 0.0;
+    let mut main_ghost_dynamics = None;
 
     // Find the highest intensity warning from any ghost
-    for (ghost, position) in q_ghost.iter() {
+    for (ghost, position, dynamics) in q_ghost.iter() {
+        // Aggregate all evidences from all ghosts
+        for evidence in ghost.class.evidences() {
+            haunt_state.evidences.insert(evidence);
+        }
+
         if ghost.hunt_warning_intensity > max_intensity {
             max_intensity = ghost.hunt_warning_intensity;
             haunt_state.ghost_warning_position = Some(*position);
+            main_ghost_dynamics = Some(*dynamics);
+            haunt_state.breach_pos = ghost.spawn_point.to_position();
         }
+    }
+
+    // If no ghost has triggered a warning yet, pick the first one's data for the UI
+    if main_ghost_dynamics.is_none()
+        && let Some((ghost, _, dynamics)) = q_ghost.iter().next()
+    {
+        main_ghost_dynamics = Some(*dynamics);
+        haunt_state.breach_pos = ghost.spawn_point.to_position();
+    }
+
+    if let Some(dynamics) = main_ghost_dynamics {
+        haunt_state.ghost_dynamics = dynamics;
     }
 
     let cur_t = time.elapsed_secs_f64();

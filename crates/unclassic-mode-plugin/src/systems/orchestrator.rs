@@ -206,8 +206,6 @@ pub(crate) fn classic_mode_orchestrator(
     p.board_entity_field.0[player_position.to_board_position().ndidx()].push(player_id);
 
     // --- Spawn Ghost ---
-    p.haunt_state.evidences.clear();
-
     let ghost_spawn = ghost_spawn_points
         .choose(&mut rng)
         .copied()
@@ -216,11 +214,6 @@ pub(crate) fn classic_mode_orchestrator(
     let possible_ghost_types: Vec<_> = p.difficulty.0.ghost_set.as_vec();
     let ghost_sprite = GhostSprite::new(ghost_spawn.to_board_position(), &possible_ghost_types);
     let ghost_types = vec![ghost_sprite.class];
-
-    for evidence in ghost_sprite.class.evidences() {
-        p.haunt_state.evidences.insert(evidence);
-    }
-    p.haunt_state.breach_pos = ghost_spawn;
 
     commands.insert_resource(SummaryData::new(ghost_types, p.difficulty.clone()));
 

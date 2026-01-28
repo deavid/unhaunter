@@ -21,10 +21,8 @@ pub(crate) fn assign_ghost_influence(
 ) {
     let mut objects_by_floor_with_positions: HashMap<i64, Vec<(Entity, Position)>> = HashMap::new();
     let player_positions: Vec<Position> = player_spawn_query.iter().copied().collect();
-    let mut ghost_spawn_points = Vec::new();
-    if let Some(ghost_pos) = ghost_spawn_query.iter().next() {
-        ghost_spawn_points.push(*ghost_pos);
-    } else {
+    let mut ghost_spawn_points: Vec<Position> = ghost_spawn_query.iter().copied().collect();
+    if ghost_spawn_points.is_empty() {
         ghost_spawn_points.push(haunt_state.breach_pos);
     }
 

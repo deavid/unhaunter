@@ -37,7 +37,6 @@ fn update_ghost_behavior_dynamics_system(
     difficulty: Res<CurrentDifficulty>,
     noise_table: Res<PerlinNoise>,
     mut query: Query<(&GhostSprite, &mut GhostBehaviorDynamics)>,
-    mut haunt_state: ResMut<HauntState>,
     mut report_time: Local<f32>,
 ) {
     let elapsed_seconds = time.elapsed_secs();
@@ -95,7 +94,6 @@ fn update_ghost_behavior_dynamics_system(
             dynamics.noise_offsets.rage_tendency_multiplier_y,
             evidence_visibility_recip,
         );
-        haunt_state.ghost_dynamics = *dynamics;
         if *report_time > 10.0 {
             info!(
                 "Dynamics: Frz:{:.2}, Orbs:{:.2}, UV:{:.2}, EMF:{:.2}, EVP:{:.2}, SprtBx:{:.2}, RL:{:.2}, CPM500:{:.2}, Alpha:{:.2}, Rage:{:.2}",

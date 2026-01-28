@@ -7,7 +7,7 @@ use unboard_core::resources::board_topology::{BoardCollisionField, BoardTopology
 use unfoundation_core::random_seed;
 use unghost_core::components::ghost_breach::GhostBreach;
 use unghost_core::components::ghost_orb_particle::GhostOrbParticle;
-use unghost_core::resources::haunt_state::HauntState;
+use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite};
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::InfraredSensitive;
@@ -32,26 +32,37 @@ pub(crate) fn spawn_ghost_orb_particles(
     time: Res<Time>,
     mut spawn_timer: ResMut<OrbSpawnTimer>,
     breach_query: Query<(Entity, &Position), With<GhostBreach>>,
-    haunt_state: Res<HauntState>,
+    ghost_query: Query<(&GhostSprite, &GhostBehaviorDynamics)>,
 ) {
     let mut rng = random_seed::rng();
     spawn_timer.0.tick(time.delta());
 
-    // Only spawn orbs if the timer finished and FloatingOrbs is an active evidence type
-    if !spawn_timer.0.just_finished()
-        || !rng.random_bool(
-            haunt_state
-                .ghost_dynamics
-                .floating_orbs_clarity
-                .clamp(0.0, 1.0)
-                .cbrt() as f64,
-        )
-    {
+    // Only proceed if the timer finished
+    if !spawn_timer.0.just_finished() {
         return;
     }
 
     // For each ghost breach
-    for (_breach_entity, breach_pos) in breach_query.iter() {
+    for (breach_entity, breach_pos) in breach_query.iter() {
+        // Find the ghost associated with this breach
+        let Some((ghost, dynamics)) = ghost_query.iter().find(|(g, _)| g.breach_id == Some(breach_entity)) else {
+            continue;
+        };
+
+        // If the ghost doesn't have FloatingOrbs evidence, skip
+        if !ghost.class.evidences().contains(&unghost_core::types::evidence::Evidence::FloatingOrbs) {
+            continue;
+        }
+
+        // Random check based on clarity
+        if !rng.random_bool(
+            dynamics.floating_orbs_clarity
+                .clamp(0.0, 1.0)
+                .cbrt() as f64,
+        ) {
+            continue;
+        }
+
         // Convert to Vec3 for base position
         let mut base_position = breach_pos.to_vec3();
         base_position.z += 0.45;

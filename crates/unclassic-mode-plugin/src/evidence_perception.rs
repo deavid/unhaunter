@@ -7,7 +7,6 @@ use ungear_core::resources::looking_gear::LookingGear;
 use unghost_core::components::GhostOrbParticle;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
-use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
 use unlight_core::resources::light_grid::LightGrid;
@@ -30,7 +29,6 @@ fn update_current_evidence_readings_from_player_perception_system(
     q_orb: Query<&Position, With<GhostOrbParticle>>,
     q_light: Query<(&LightEmitter, &Toggleable, &Position)>,
     light_grid: Res<LightGrid>,
-    haunt_state: Res<HauntState>,
     time: Res<Time>,
 ) {
     let Some((player_gear, player_pos)) = player_query.iter().next() else {
@@ -147,6 +145,7 @@ fn update_current_evidence_readings_from_player_perception_system(
         if ghost_sprite.hunting > 0.0 {
             // ghost is hunting.
         }
+        let ghost_evidences = ghost_sprite.class.evidences();
         // Check lighting on ghost
         // Simple proximity check to active light sources
         for (light, toggle, light_pos) in q_light.iter() {
@@ -158,7 +157,7 @@ fn update_current_evidence_readings_from_player_perception_system(
                 match light.light_type {
                     LightType::UltraViolet => {
                         // UV Evidence
-                        if haunt_state.evidences.contains(&Evidence::UVEctoplasm) {
+                        if ghost_evidences.contains(&Evidence::UVEctoplasm) {
                             evidence_readings.report_clarity(
                                 Evidence::UVEctoplasm,
                                 1.0,
@@ -169,7 +168,7 @@ fn update_current_evidence_readings_from_player_perception_system(
                     }
                     LightType::Red => {
                         // RL Presence Evidence
-                        if haunt_state.evidences.contains(&Evidence::RLPresence) {
+                        if ghost_evidences.contains(&Evidence::RLPresence) {
                             evidence_readings.report_clarity(
                                 Evidence::RLPresence,
                                 1.0,
