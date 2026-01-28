@@ -455,8 +455,8 @@ pub(crate) fn apply_lighting(
             let mut power = x.2;
             power *= match x.4 {
                 LightType::Visible => 1.0,
-                LightType::Red => 0.003,
-                LightType::InfraRedNV => 0.5,
+                LightType::Red => 0.0,
+                LightType::InfraRedNV => 2.5,
                 LightType::UltraViolet => 0.5,
             };
             power / (player_pos.distance2(x.0) + 1.0)

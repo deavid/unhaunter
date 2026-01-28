@@ -350,7 +350,7 @@ pub(crate) fn register_all(app: &mut App) {
                 evidence: Evidence::RLPresence,
             });
             cmd.insert(LightEmitter {
-                power: 2.5,
+                power: 4.0,
                 color: Color::srgb(1.0, 0.20, 0.07),
                 light_type: LightType::Red,
             });
