@@ -840,7 +840,11 @@ pub(crate) fn apply_lighting(
             let mut smooth_f: f32 = 0.3;
             let mut smooth_a: f32 = 1.0;
 
-            if o_behavior.is_none() {
+            let is_tile = o_behavior.is_some();
+            if is_tile {
+                // Tiles need instant synchronization to avoid seams between neighbors
+                smooth_f = 0.0;
+            } else {
                 // Players and characters need smoother color transitions than tiles
                 smooth_f = 3.0;
             }
@@ -1028,9 +1032,20 @@ pub(crate) fn apply_lighting(
             new_a = (new_a * map_color.alpha()).clamp(0.0, 1.0);
             dst_color.set_alpha(new_a);
 
-            // Sound field visualization:
             let f_gamma = |lux: f32| fastapprox::faster::pow(lux, 0.9);
             const K_COLD: f32 = 0.6;
+            let calc_gamma = |lux: f32, tc: f32| {
+                let p_cold_f = (1.0 - (lux / K_COLD).tanh()) * 2.0;
+                let p_exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + p_cold_f).tanh() + 0.5)
+                    .clamp(0.0, 1.0);
+
+                f_gamma(
+                    lux * BRIGHTNESS * (1.0 + p_cold_f + (p_exp_color * 2.0).powi(2))
+                        + (tc + p_cold_f * 2.0 + (p_exp_color * 2.0).powi(2))
+                            / (10.0 + exposure + lux),
+                ) + p_exp_color / 40.0
+            };
+
             let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
             const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
             const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
@@ -1052,7 +1067,7 @@ pub(crate) fn apply_lighting(
                 dark_color2,
                 exp_color_tint / f_gamma(lux_c).clamp(1.0, 300.0),
             );
-            if o_behavior.is_some() {
+            if is_tile {
                 new_mat.data.ambient_color = dark.with_alpha(0.0).into();
             } else {
                 new_mat.data.ambient_color = Color::NONE.into();
@@ -1077,35 +1092,49 @@ pub(crate) fn apply_lighting(
                         .clamp(Vec4::ZERO, Vec4::ONE),
                 );
             } else {
-                // For regular tiles, color snaps to the new lighting
-                new_mat.data.color = new_color;
+                // For regular tiles and items, color snaps to the new lighting
+                if is_tile {
+                    // For tiles, we move the light intensity contribution more into the gamma
+                    // and keep the base color relatively uniform to prevent intensity seams.
+                    let lum = new_color.luminance();
+                    let target_lum = 0.8; // Target a stable luminance for the base color
+                    let intensity_factor = target_lum / lum.max(0.01);
+
+                    // CRITICAL: Only scale RGB, do NOT touch the alpha channel.
+                    // Scaling alpha causes faint transparency to become opaque.
+                    let mut final_color_vec = new_color.to_vec4();
+                    final_color_vec.x *= intensity_factor;
+                    final_color_vec.y *= intensity_factor;
+                    final_color_vec.z *= intensity_factor;
+                    // Alpha (final_color_vec.w) is left as-is.
+
+                    new_mat.data.color = LinearRgba::from_vec4(final_color_vec);
+                } else {
+                    new_mat.data.color = new_color;
+                }
             }
             // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
 
             const BRIGHTNESS: f32 = 1.0;
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
-            let gamma_mean = |a: f32, b: f32| {
-                (a * smooth_f
-                    + f_gamma(
-                        b * BRIGHTNESS * (1.0 + cold_f + (exp_color * 2.0).powi(2))
-                            + (tint_comp + cold_f * 2.0 + (exp_color * 2.0).powi(2))
-                                / (10.0 + exposure + b),
-                    )
-                    + exp_color / 40.0)
-                    / (1.0 + smooth_f)
-            };
+            let gamma_mean =
+                |a: f32, b: f32, tc: f32| (a * smooth_f + calc_gamma(b, tc)) / (1.0 + smooth_f);
             // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
             // Mapping to vertices:
             // gtl (Top): Logic (0.5, -0.5)
             // gtr (Right): Logic (0.5, 0.5)
             // gbl (Left): Logic (-0.5, -0.5)
             // gbr (Bottom): Logic (-0.5, 0.5)
-            new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
-            new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_top);
-            new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_right);
-            new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left);
-            new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot);
+
+            // For tiles, we use a neutral tint_comp for corners to ensure neighbors agree on the value.
+            let corner_tc = if is_tile { 0.5 } else { tint_comp };
+
+            new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c, tint_comp);
+            new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_top, corner_tc);
+            new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_right, corner_tc);
+            new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left, corner_tc);
+            new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot, corner_tc);
 
             if on_hover {
                 lux_c += 1.0;
@@ -1117,7 +1146,7 @@ pub(crate) fn apply_lighting(
                 )
                 .into();
                 // We update gamma with the hover boost too
-                new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c);
+                new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c, tint_comp);
             }
 
             const DEBUG_LIGHTING: bool = false;

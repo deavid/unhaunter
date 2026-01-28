@@ -176,25 +176,34 @@ fn fragment(
     let d2_br = max(0.0001, (Lx+0.5)*(Lx+0.5) + (Ly-0.5)*(Ly-0.5)); // Bottom
     let d2_bl = max(0.0001, (Lx+0.5)*(Lx+0.5) + (Ly+0.5)*(Ly+0.5)); // Left
 
-    // Inverse distance weighting (IDW) with power 2
-    let w_c = 1.0 / d2_c;
-    let w_tr = 1.0 / d2_tr;
-    let w_tl = 1.0 / d2_tl;
-    let w_br = 1.0 / d2_br;
-    let w_bl = 1.0 / d2_bl;
+    // --- Improved Smooth Bilinear + Center Bump ---
+    // Calculate weights for standard bilinear interpolation on the 4 corners.
+    // Lxc and Lyc are in range [-0.5, 0.5] inside the floor diamond.
+    let Lxc = clamp(Lx, -0.5, 0.5);
+    let Lyc = clamp(Ly, -0.5, 0.5);
 
-    let w_sum = w_c + w_tr + w_tl + w_br + w_bl;
+    // Standard bilinear weights for a square grid:
+    // Top (gtl): Lx=0.5, Ly=-0.5
+    // Right (gtr): Lx=0.5, Ly=0.5
+    // Left (gbl): Lx=-0.5, Ly=-0.5
+    // Bottom (gbr): Lx=-0.5, Ly=0.5
+    let w_tl = (0.5 + Lxc) * (0.5 - Lyc);
+    let w_tr = (0.5 + Lxc) * (0.5 + Lyc);
+    let w_bl = (0.5 - Lxc) * (0.5 - Lyc);
+    let w_br = (0.5 - Lxc) * (0.5 + Lyc);
 
-    // Weights are assigned to Rust variables:
-    // gtl -> Top
-    // gtr -> Right
-    // gbl -> Left
-    // gbr -> Bottom
-    var gamma: f32 = (material.gamma * w_c + material.gtr * w_tr + material.gtl * w_tl + material.gbr * w_br + material.gbl * w_bl) / w_sum;
+    let gamma_corners = material.gtl * w_tl + material.gtr * w_tr + material.gbl * w_bl + material.gbr * w_br;
 
-    // Softening effect (optional, kept for continuity)
-    var wcf: f32 = 1.0;
-    gamma = (gamma + material.gamma / wcf) / (1.0 + wcf);
+    // Center bump function: 1.0 at (0,0), exactly 0.0 at all four edges.
+    // Pow(L, 2.0) makes the center nuance more localized and reduces over-shading.
+    let w_center = pow(clamp((1.0 - 2.0 * abs(Lxc)) * (1.0 - 2.0 * abs(Lyc)), 0.0, 1.0), 2.0);
+
+    var gamma: f32 = mix(gamma_corners, material.gamma, w_center);
+
+    // Dithering to hide banding in smooth gradients
+    let noise = fract(sin(dot(mesh.uv, vec2<f32>(12.9898, 78.233))) * 43758.5453);
+    gamma += (noise - 0.5) / 255.0;
+
     // --- End of Blend ---
 
     // Black point:
