@@ -3,7 +3,7 @@ use bevy::time::Stopwatch;
 
 use unghost_core::components::GhostBreach;
 use unlight_core::resources::light_grid::LightGrid;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 
@@ -27,7 +27,7 @@ fn trigger_darkness_level_system(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut stopwatch: Local<Stopwatch>,
 ) {
     if app_state.get() != &AppState::InGame {
@@ -67,7 +67,7 @@ fn trigger_breach_showcase(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_breach: Query<&Position, With<GhostBreach>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
@@ -114,7 +114,7 @@ fn trigger_ghost_showcase(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    qp: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     q_ghost: Query<&Position, With<unghost_core::components::GhostSprite>>,
     truck_button_query: Query<&untruck_core::components::truck_ui_button::TruckUIButton>, // Added
 ) {
@@ -157,7 +157,7 @@ fn trigger_room_lights_on_gear_needs_dark(
     mut walkie_play: ResMut<WalkiePlay>,
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
-    qp: Query<(&Position, &PlayerSprite, &PlayerGear)>,
+    qp: Query<(&Position, &PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_gear: Query<(&Toggleable, &GearKind)>,
 ) {
     if app_state.get() != &AppState::InGame {

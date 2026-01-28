@@ -4,7 +4,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use uninteraction_core::interaction::Toggleable;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
@@ -31,7 +31,7 @@ pub(crate) fn app_setup(app: &mut App) {
 fn trigger_evidence_gear_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
     current_difficulty_res: Res<CurrentDifficulty>,
-    player_gear_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_gear_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     time: Res<Time>,
     q_gear: Query<&GearKind>,
     q_toggle: Query<&Toggleable>,
@@ -87,7 +87,7 @@ fn trigger_evidence_gear_explanations(
 fn trigger_support_item_explanations(
     mut walkie_play: ResMut<WalkiePlay>,
     current_difficulty_res: Res<CurrentDifficulty>,
-    player_gear_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_gear_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     time: Res<Time>,
     q_gear: Query<&GearKind>,
 ) {

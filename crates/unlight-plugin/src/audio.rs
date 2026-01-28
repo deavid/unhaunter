@@ -5,6 +5,7 @@ use ndarray::s;
 use unbehavior::roomdb::RoomDB;
 use unevents_core::events::ambient_sound_mute::AmbientSoundMuteEvent;
 use unfoundation_core::types::sound::SoundType;
+use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::GameSound;
 use unrender_std::components::visuals::Viewer;
 use unrender_std::resources::visibility_data::VisibilityData;
@@ -95,14 +96,14 @@ fn calculate_ambient_sound_volumes(
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
-    player_query: Query<(&Position, &Viewer)>,
+    player_query: Query<(&Position, &Viewer), With<MainPlayer>>,
     visibility_data: Res<VisibilityData>,
     roomdb: Res<RoomDB>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
 ) {
     // Get player position and viewer data
-    let Some((player_pos, viewer)) = player_query.iter().next() else {
+    let Ok((player_pos, viewer)) = player_query.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();

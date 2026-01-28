@@ -1,3 +1,4 @@
+use crate::components::interaction::Locked;
 use bevy::prelude::*;
 use rand::Rng;
 use unbehavior::behavior::Behavior;
@@ -10,9 +11,6 @@ use unfoundation_core::random_seed;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unrender_std::resources::visibility_data::VisibilityData;
 use unspatial_core::position::Position;
-use untags_core::tags::PlayerTag;
-
-use crate::components::interaction::Locked;
 
 // Simple debug toggle to make GIS interactions more frequent and verbose during development
 const GIS_DEBUG: bool = false;
@@ -32,7 +30,7 @@ fn ghost_interaction_selection_system(
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
     visibility_data: Res<VisibilityData>,
-    q_player: Query<&Position, With<PlayerTag>>,
+    q_player: Query<&Position>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     q_interactables: Query<(
         Entity,
@@ -150,7 +148,7 @@ fn find_interaction_target(
         Option<&Locked>,
         Option<&InteractableByGhost>,
     )>,
-    q_player: &Query<&Position, With<PlayerTag>>,
+    q_player: &Query<&Position>,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
     visibility_data: &VisibilityData,
@@ -394,9 +392,6 @@ fn find_interaction_target(
         return None;
     }
 
-    // Prioritize targets based on player visibility for dramatic effect
-    let _player_pos = q_player.single().ok()?;
-
     // Separate targets into visible and non-visible to player
     let mut visible_targets = Vec::new();
     let mut hidden_targets = Vec::new();
@@ -450,13 +445,17 @@ fn find_interaction_target(
 fn find_throw_destination(
     _entity: Entity,
     object_pos: &Position,
-    q_player: &Query<&Position, With<PlayerTag>>,
+    q_player: &Query<&Position>,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
     rng: &mut impl Rng,
 ) -> Option<Position> {
     // Get player position for dramatic effect preference
-    let player_pos = q_player.single().ok()?;
+    let players: Vec<&Position> = q_player.iter().collect();
+    if players.is_empty() {
+        return None;
+    }
+    let player_pos = players[rng.random_range(0..players.len())];
 
     // Try to find a valid destination near the player for maximum impact
     for _ in 0..10 {

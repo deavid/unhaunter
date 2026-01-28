@@ -6,7 +6,7 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use ungearitems_core::{components::quartz::QuartzStoneData, prelude::SageBundleData};
 use unghost_core::components::GhostSprite;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untruck_core::truckgear::TruckGear;
 use untypes_core::states::{AppState, GameState};
@@ -105,7 +105,7 @@ fn trigger_quartz_unused_in_relevant_situation_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
@@ -194,7 +194,7 @@ fn trigger_sage_unused_in_relevant_situation_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     truck_gear: Option<Res<TruckGear>>,
@@ -328,7 +328,7 @@ fn trigger_sage_activated_ineffectively_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(Entity, &PlayerGear), With<PlayerSprite>>, // Added Entity to ID player
+    player_query: Query<(Entity, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>, // Added Entity to ID player
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     mut tracker: Local<SageEffectivenessTracker>,
@@ -486,7 +486,7 @@ fn trigger_sage_unused_defensively_during_hunt_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
     difficulty: Res<CurrentDifficulty>,
     mut tracker: ResMut<HuntSageUsageTracker>, // Use ResMut for the tracker

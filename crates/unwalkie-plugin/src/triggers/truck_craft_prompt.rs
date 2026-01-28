@@ -6,11 +6,12 @@ use ungear_core::types::GearKind;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::types::evidence::Evidence;
+use unplayer_core::components::MainPlayer;
 use untypes_core::states::AppState;
 use unwalkie_core::{events::WalkieEvent, resources::WalkiePlay};
 
 fn trigger_almost_ready_to_craft_repellent_system(
-    player_query: Query<&PlayerGear>,
+    player_query: Query<&PlayerGear, With<MainPlayer>>,
     current_evidence_readings: Res<CurrentEvidenceReadings>,
     ghost_guess: Res<GhostGuess>,
     app_state: Res<State<AppState>>,

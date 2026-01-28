@@ -21,13 +21,9 @@ use unui_core::components::game_ui::DamageBackground;
 
 const DEBUG_PLAYER: bool = false;
 
-#[derive(Default)]
-struct MeanSound(f32);
-
 fn lose_sanity(
     time: Res<Time>,
     mut timer: Local<PrintingTimer>,
-    mut mean_sound: Local<MeanSound>,
     mut qp: Query<(&mut PlayerSprite, &Position)>,
     _bf: Res<BoardTopology>,
     _bcf: Res<BoardCollisionField>,
@@ -64,14 +60,14 @@ fn lose_sanity(
         }
         const MASS: f32 = 10.0;
         if roomdb.room_tiles.contains_key(&bpos) {
-            mean_sound.0 =
-                ((sound * dt + mean_sound.0 * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
+            ps.mean_sound =
+                ((sound * dt + ps.mean_sound * MASS) / (MASS + dt)).clamp(0.00000001, 100000.0);
         } else {
             // prevent sanity from being lost outside of the location.
-            mean_sound.0 /= 1.8_f32.powf(dt);
+            ps.mean_sound /= 1.8_f32.powf(dt);
         }
-        let crazy = lux.max(0.00001).recip() / f_temp * f_temp2 * mean_sound.0 * 10.0
-            + mean_sound.0 / f_temp * f_temp2;
+        let crazy = lux.max(0.00001).recip() / f_temp * f_temp2 * ps.mean_sound * 10.0
+            + ps.mean_sound / f_temp * f_temp2;
         let sanity_recover: f32 = if ps.sanity() < difficulty.0.max_recoverable_sanity {
             4.0 / 100.0 / difficulty.0.sanity_drain_rate
         } else {
@@ -79,12 +75,11 @@ fn lose_sanity(
         };
         ps.crazyness +=
             (crazy.clamp(0.000000001, 10000000.0).sqrt() * 0.2 * difficulty.0.sanity_drain_rate
-                - sanity_recover * ps.crazyness / (1.0 + mean_sound.0 * 10.0))
+                - sanity_recover * ps.crazyness / (1.0 + ps.mean_sound * 10.0))
                 * dt;
         if ps.crazyness < 0.0 {
             ps.crazyness = 0.0;
         }
-        ps.mean_sound = mean_sound.0;
         if ps.health < 100.0 && ps.health > 0.0 {
             ps.health += (0.1 * dt + (1.0 - ps.health / 100.0) * dt * 10.0)
                 * difficulty.0.health_recovery_rate;
@@ -93,7 +88,7 @@ fn lose_sanity(
             ps.health = 100.0;
         }
         if timer.just_finished() && DEBUG_PLAYER {
-            dbg!(ps.sanity(), mean_sound.0, ps.health);
+            dbg!(ps.sanity(), ps.mean_sound, ps.health);
         }
     }
 }

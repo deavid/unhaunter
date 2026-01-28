@@ -8,7 +8,7 @@ use ungear_core::components::playergear::PlayerGear;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untruck_core::uibutton::{TruckButtonState, TruckButtonType, TruckUIButton};
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
@@ -193,7 +193,7 @@ fn trigger_clear_evidence_no_action_ckey_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     evidence_readings: Res<CurrentEvidenceReadings>,
-    player_query: Query<(&PlayerSprite, &PlayerGear)>,
+    player_query: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     mut tracked_state: ResMut<ClearEvidenceTrackedState>,
     q_evidence_sensor: Query<&EvidenceSensor>,
 ) {

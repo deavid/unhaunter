@@ -7,8 +7,7 @@ use unbehavior::components::Door;
 use unbehavior::roomdb::RoomDB;
 use unbehavior::state::TileState;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::Hiding;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -28,7 +27,7 @@ fn check_player_stuck_at_start(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
-    player_query: Query<(&Position, &PlayerSprite)>,
+    player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut stuck_timer: Local<Stopwatch>,
     player_profile: Res<Persistent<PlayerProfileData>>,
@@ -93,7 +92,7 @@ fn check_erratic_movement_early(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
-    player_query: Query<(&Position, &PlayerSprite)>,
+    player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut not_entered_timer: Local<Stopwatch>,
     mut avg_position: Local<Option<Position>>,
@@ -161,7 +160,7 @@ fn check_door_interaction_hesitation(
     game_state: Res<State<GameState>>,
     app_state: Res<State<AppState>>,
     roomdb: Res<RoomDB>,
-    player_query: Query<(&Position, &PlayerSprite)>,
+    player_query: Query<(&Position, &PlayerSprite), With<MainPlayer>>,
     door_query: Query<(&Position, &Behavior), With<Door>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut hesitation_timer: Local<Stopwatch>,
@@ -228,7 +227,7 @@ fn trigger_struggling_with_grab_drop(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&PlayerGear, &PlayerSprite)>,
+    player_query: Query<(&PlayerGear, &PlayerSprite), With<MainPlayer>>,
     mut full_and_failed_grab_timer: Local<Option<Stopwatch>>,
 ) {
     // 1. System Run Condition
@@ -299,7 +298,7 @@ fn trigger_struggling_with_hide_unhide(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_query: Query<&PlayerSprite, Without<Hiding>>,
+    player_query: Query<&PlayerSprite, (With<MainPlayer>, Without<Hiding>)>,
     mut hide_key_timer: Local<Option<Stopwatch>>,
 ) {
     if app_state.get() != &AppState::InGame {

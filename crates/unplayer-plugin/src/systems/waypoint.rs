@@ -11,6 +11,7 @@ use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unnavigation_core::pathfinding::Pathfinder;
+use unplayer_core::components::MainPlayer;
 use unplayer_core::resources::PlayerInput;
 use unrender_std::components::game::GameSprite;
 use unrender_std::utils::perspective;
@@ -26,8 +27,8 @@ pub(crate) fn waypoint_creation_system(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
-    q_player: Query<(Entity, &Position), With<PlayerSprite>>,
-    mut q_player_queue: Query<&mut WaypointQueue, With<PlayerSprite>>,
+    q_player: Query<(Entity, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
+    mut q_player_queue: Query<&mut WaypointQueue, (With<PlayerSprite>, With<MainPlayer>)>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     q_interactives: Query<(
         Entity,
@@ -196,7 +197,7 @@ pub(crate) fn waypoint_creation_system(
 /// Replaces the old click-to-move update system.
 pub(crate) fn waypoint_following_system(
     mut commands: Commands,
-    q_player: Query<(Entity, &Position, &WaypointQueue), With<PlayerSprite>>,
+    q_player: Query<(Entity, &Position, &WaypointQueue), (With<PlayerSprite>, With<MainPlayer>)>,
     q_waypoints: Query<(&Position, &Waypoint), (With<WaypointOwner>, Without<PlayerSprite>)>,
     q_interactives: Query<(
         Entity,

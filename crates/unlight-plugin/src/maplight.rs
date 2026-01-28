@@ -61,6 +61,7 @@ use ungearitems_core::components::salt::UVReactive;
 // use unghost_core::resources::haunt_state::HauntState;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
+use unplayer_core::components::MainPlayer;
 use unplayer_core::resources::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
@@ -194,22 +195,16 @@ pub(crate) fn compute_visibility(
 pub(crate) fn player_visibility_system(
     mut vf: ResMut<VisibilityData>,
     bcf: Res<BoardCollisionField>,
-    gc: Res<GameConfig>,
-    qp: Query<(&Position, &Viewer)>,
+    qp: Query<&Position, With<MainPlayer>>,
     mut roomdb: ResMut<RoomDB>,
 ) {
     let measure = PLAYER_VISIBILITY.time_measure();
 
     // Find the active player's position
-    let Some(player_pos) = qp.iter().find_map(|(pos, viewer)| {
-        if viewer.id == gc.player_id {
-            Some(*pos)
-        } else {
-            None
-        }
-    }) else {
+    let Ok(player_pos) = qp.single() else {
         return;
     };
+
     if vf.visibility_field.dim() != bcf.0.dim() {
         vf.visibility_field = Array3::from_elem(bcf.0.dim(), -0.001_f32);
     } else {
@@ -219,7 +214,7 @@ pub(crate) fn player_visibility_system(
     compute_visibility(
         &mut vf.visibility_field,
         &bcf.0,
-        &player_pos,
+        player_pos,
         Some(&mut roomdb),
         false,
     );

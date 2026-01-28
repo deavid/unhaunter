@@ -4,8 +4,7 @@ use bevy::time::Stopwatch;
 use unbehavior::roomdb::RoomDB;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unlight_core::resources::light_grid::LightGrid;
-use unplayer_core::components::Hiding;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unrender_std::components::light::LightLevel;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -105,7 +104,10 @@ fn trigger_sanity_dropped_due_to_darkness_system(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
     // FIXME: WTF is "LightLevel"? this does not exist, this seems a hallucination from the original code.
-    player_query: Query<(&PlayerSprite, &Position, &LightLevel), Without<Hiding>>,
+    player_query: Query<
+        (&PlayerSprite, &Position, &LightLevel),
+        (With<MainPlayer>, Without<Hiding>),
+    >,
     roomdb: Res<RoomDB>,
     lg: Res<LightGrid>,
     app_state: Res<State<AppState>>,
@@ -186,7 +188,7 @@ fn trigger_sanity_dropped_due_to_darkness_system(
 fn trigger_sanity_dropped_due_to_ghost_system(
     time: Res<Time>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &Position, Option<&Hiding>)>,
+    player_query: Query<(&PlayerSprite, &Position, Option<&Hiding>), With<MainPlayer>>,
     ghost_query: Query<(Entity, &GhostSprite, &Position)>, // Query Entity to track specific ghost
     roomdb: Res<RoomDB>,
     app_state: Res<State<AppState>>,

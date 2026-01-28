@@ -36,7 +36,7 @@ pub(crate) fn mouse_right_click_gear_system(
 
 pub(crate) fn mouse_scroll_gear_system(
     mut scroll_events: MessageReader<MouseWheel>,
-    mut q_player: Query<&mut PlayerGear, With<PlayerSprite>>,
+    mut q_player: Query<&mut PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
 ) {
     for event in scroll_events.read() {
         if event.y != 0.0 {

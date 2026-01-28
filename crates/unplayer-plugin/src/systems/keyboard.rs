@@ -1,19 +1,15 @@
-use crate::components::player_sprite::PlayerSprite;
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::components::Stairs;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::orientation::Orientation;
 use unspatial_core::position::Position;
 
 pub(crate) fn stairs_player(
-    mut players: Query<(&mut Position, &PlayerSprite)>,
+    mut players: Query<(&mut Position, &PlayerSprite), With<MainPlayer>>,
     stairs: Query<(&Position, &Stairs, &Behavior), Without<PlayerSprite>>,
-    gc: Res<GameConfig>,
 ) {
-    let Some((mut player_pos, _player_sprite)) =
-        players.iter_mut().find(|(_, ps)| ps.id == gc.player_id)
-    else {
+    let Some((mut player_pos, _player_sprite)) = players.iter_mut().next() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();

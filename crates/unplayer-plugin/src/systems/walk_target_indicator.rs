@@ -1,7 +1,7 @@
 use crate::components::walk_target_indicator::WalkTargetIndicator;
 use bevy::prelude::*;
 use unnavigation_core::components::move_to::MoveToTarget;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 
 /// System that manages the walk target indicator.
@@ -9,9 +9,9 @@ use unspatial_core::position::Position;
 /// and despawns it when the MoveToTarget component is removed.
 pub(crate) fn manage_walk_target_indicator(
     mut commands: Commands,
-    player_query: Query<&MoveToTarget, (With<PlayerSprite>, Without<WalkTargetIndicator>)>,
+    player_query: Query<&MoveToTarget, (With<PlayerSprite>, With<MainPlayer>, Without<WalkTargetIndicator>)>,
     mut indicator_query: Query<(Entity, &mut Position), With<WalkTargetIndicator>>,
-    move_target_exists_query: Query<&MoveToTarget, With<PlayerSprite>>,
+    move_target_exists_query: Query<&MoveToTarget, (With<PlayerSprite>, With<MainPlayer>)>,
 ) {
     let has_move_target = move_target_exists_query.iter().next().is_some();
     let indicator_exists = indicator_query.iter().next().is_some();

@@ -11,7 +11,7 @@ use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::types::evidence::Evidence;
 use uninteraction_core::interaction::Toggleable;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
@@ -32,7 +32,7 @@ fn trigger_gear_selected_not_activated_system(
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
+    player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<Option<RightHandGearStateTracker>>,
     mut r_triggered: Local<i32>,
@@ -174,7 +174,7 @@ fn trigger_did_not_switch_starting_gear_in_hotspot_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
+    player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     ghost_query: Query<(&GhostSprite, &Position)>, // GhostSprite for breach_pos, Position for live pos
     haunt_state: Res<HauntState>, // For actual ghost evidences & fallback breach_pos
     roomdb: Res<RoomDB>,
@@ -379,7 +379,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerSprite, &PlayerGear, &Position)>,
+    player_query: Query<(&PlayerSprite, &PlayerGear, &Position), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,

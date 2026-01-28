@@ -8,7 +8,7 @@ use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::components::repellent_particle::RepellentParticle;
 use unghost_core::types::ghost::types::GhostType;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
@@ -23,7 +23,7 @@ fn trigger_ghost_expelled_player_lingers_system(
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     ghost_query: Query<Entity, With<GhostSprite>>,
-    player_query: Query<&Position, With<PlayerSprite>>, // Assuming only one player for now
+    player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>, // Assuming only one player for now
     roomdb: Res<RoomDB>,
     mut ghost_gone_and_player_in_location_timestamp: Local<Option<f64>>,
 ) {
@@ -84,7 +84,7 @@ fn trigger_has_repellent_enters_location_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     roomdb: Res<RoomDB>,
     q_gear: Query<&GearKind>,
     q_repellent: Query<&RepellentFlask>,
@@ -142,7 +142,7 @@ fn trigger_repellent_used_too_far_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<(&Position, &GhostSprite), Without<PlayerSprite>>,
     mut prev_repellent_state: Local<PrevRepellentState>,
     q_gear: Query<&GearKind>,
@@ -236,7 +236,7 @@ fn trigger_repellent_provokes_strong_reaction_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<(&PlayerGear, &Position), With<PlayerSprite>>,
+    player_query: Query<(&PlayerGear, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     mut ghost_query: Query<(&GhostSprite, &Position)>,
     repellent_particle_query: Query<&Position, With<RepellentParticle>>,
     mut tracker: Local<Option<RepellentReactionTracker>>,
@@ -348,7 +348,7 @@ fn trigger_repellent_exhausted_correct_type_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<&PlayerGear, With<PlayerSprite>>,
+    player_query: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     ghost_query: Query<&GhostSprite>,
     repellent_particle_query: Query<Entity, With<RepellentParticle>>,
     mut check_state: Local<RepellentExhaustedCheckState>,
@@ -477,7 +477,7 @@ fn trigger_ghost_expelled_player_missed_simplified_system(
     // mut game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
     mut removed_ghost_query: RemovedComponents<GhostSprite>, // Reacts to GhostSprite removal
-    player_query: Query<&Position, With<PlayerSprite>>,
+    player_query: Query<&Position, (With<PlayerSprite>, With<MainPlayer>)>,
     roomdb: Res<RoomDB>,
     mut processed_ghosts: ResMut<ProcessedMissedExpulsionGhosts>,
 ) {

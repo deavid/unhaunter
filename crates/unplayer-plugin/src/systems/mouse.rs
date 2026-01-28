@@ -1,6 +1,7 @@
 use crate::components::player_sprite::PlayerSprite;
 use bevy::{prelude::*, window::PrimaryWindow};
 use unengine_core::GCameraArena;
+use unplayer_core::components::MainPlayer;
 use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -12,7 +13,7 @@ const AIM_MAX_DISTANCE: f32 = 8.0;
 fn mouse_aim_system(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
-    mut q_player: Query<(&mut Direction, &Position), With<PlayerSprite>>,
+    mut q_player: Query<(&mut Direction, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
     mouse_visibility: Res<MouseVisibility>,
 ) {
     // Only aim when mouse is visible

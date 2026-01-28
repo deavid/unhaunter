@@ -3,8 +3,7 @@ use unbehavior::roomdb::RoomDB;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unplayer_core::components::Hiding;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{Hiding, MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
@@ -18,7 +17,7 @@ fn trigger_hunt_warning_no_player_evasion_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    q_player: Query<(&Position, Option<&Hiding>, &PlayerGear), With<PlayerSprite>>,
+    q_player: Query<(&Position, Option<&Hiding>, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>,
     q_ghost: Query<&GhostSprite>,
     roomdb: Res<RoomDB>,
     mut warning_timer: Local<Option<Stopwatch>>,

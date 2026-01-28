@@ -1,5 +1,5 @@
 use crate::components::player::{Hiding, Stamina};
-use crate::components::player_sprite::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
@@ -52,7 +52,7 @@ pub(crate) fn player_movement_system(
         &PlayerGear,
         Option<&Hiding>,
         &mut Stamina,
-    )>,
+    ), With<MainPlayer>>,
     colhand: CollisionHandler,
     interactables: Query<
         (
