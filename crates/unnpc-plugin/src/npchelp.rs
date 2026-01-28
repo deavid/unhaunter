@@ -4,8 +4,7 @@ use unbehavior::behavior::{Interactive, NpcHelpDialog};
 use unevents_core::events::npc_help::NpcHelpEvent;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::MainPlayer;
 use unrender_std::materials::UIPanelMaterial;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -181,8 +180,7 @@ pub(crate) fn npchelp_event(
 /// NPCs will call the player by distance & time if haven't spoken yet.
 pub(crate) fn auto_call_npchelp(
     time: Res<Time>,
-    gc: Res<GameConfig>,
-    q_player: Query<(&Position, &PlayerSprite, &Direction)>,
+    q_player: Query<(&Position, &Direction), With<MainPlayer>>,
     mut interactables: Query<(
         Entity,
         &Position,
@@ -192,10 +190,7 @@ pub(crate) fn auto_call_npchelp(
     )>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
 ) {
-    let Some((pos, _, dir)) = q_player
-        .iter()
-        .find(|(_, player, _)| player.id == gc.player_id)
-    else {
+    let Ok((pos, dir)) = q_player.single() else {
         return;
     };
     if dir.distance() > 79.5 {

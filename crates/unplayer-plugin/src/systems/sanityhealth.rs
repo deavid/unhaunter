@@ -9,7 +9,6 @@ use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
 use unlight_core::resources::light_grid::LightGrid;
 use unplayer_core::components::MainPlayer;
-use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
 use unsound_core::resources::SoundGrid;
@@ -96,32 +95,29 @@ fn lose_sanity(
 fn recover_sanity(
     time: Res<Time>,
     mut qp: Query<&mut PlayerSprite>,
-    gc: Res<GameConfig>,
     mut timer: Local<PrintingTimer>,
     // Access the difficulty settings
     difficulty: Res<CurrentDifficulty>,
 ) {
-    // Current player recovers sanity while in the truck.
+    // Players recover sanity while in the truck.
     let dt = time.delta_secs();
     timer.tick(time.delta());
     for mut ps in &mut qp {
-        if ps.id == gc.player_id {
-            // --- Gradual Health Recovery --- Health points recovered per second
-            const HEALTH_RECOVERY_RATE: f32 = 2.0;
-            if ps.health < 100.0 {
-                ps.health += HEALTH_RECOVERY_RATE * dt;
+        // --- Gradual Health Recovery --- Health points recovered per second
+        const HEALTH_RECOVERY_RATE: f32 = 2.0;
+        if ps.health < 100.0 {
+            ps.health += HEALTH_RECOVERY_RATE * dt;
 
-                // Clamp health to a maximum of 100%
-                ps.health = ps.health.min(100.0);
-            }
-            if ps.sanity() < difficulty.0.max_recoverable_sanity {
-                ps.crazyness /= 1.07_f32.powf(dt);
-            } else {
-                ps.crazyness /= 1.005_f32.powf(dt);
-            }
-            if timer.just_finished() {
-                dbg!(ps.sanity());
-            }
+            // Clamp health to a maximum of 100%
+            ps.health = ps.health.min(100.0);
+        }
+        if ps.sanity() < difficulty.0.max_recoverable_sanity {
+            ps.crazyness /= 1.07_f32.powf(dt);
+        } else {
+            ps.crazyness /= 1.005_f32.powf(dt);
+        }
+        if timer.just_finished() {
+            dbg!(ps.sanity());
         }
     }
 }

@@ -13,8 +13,7 @@ use unghost_core::resources::ghost_guess::GhostGuess;
 use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::states::{AppState, GameState};
@@ -80,8 +79,7 @@ fn button_system(
     mut potential_id_timer: ResMut<PotentialIDTimer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
-    gc: Res<GameConfig>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear), With<MainPlayer>>,
     mut commands: Commands,
     gear_registry: Res<GearSpawnerRegistry>,
     mut q_repellent: Query<&mut RepellentFlask>,
@@ -124,17 +122,15 @@ fn button_system(
                 }
                 TruckButtonType::CraftRepellent => {
                     if let Some(ghost_type) = gg.ghost_type {
-                        for (player, mut gear) in q_gear.iter_mut() {
-                            if player.id == gc.player_id {
-                                crate::craft_repellent::craft_repellent(
-                                    &mut commands,
-                                    &gear_registry,
-                                    &mut gear,
-                                    ghost_type,
-                                    &mut q_repellent,
-                                    &q_gearkind,
-                                );
-                            }
+                        for (_player, mut gear) in q_gear.iter_mut() {
+                            crate::craft_repellent::craft_repellent(
+                                &mut commands,
+                                &gear_registry,
+                                &mut gear,
+                                ghost_type,
+                                &mut q_repellent,
+                                &q_gearkind,
+                            );
                         }
                     }
                     if let Some(truckui_event) = tui_button.pressed() {

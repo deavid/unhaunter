@@ -1,16 +1,14 @@
 use bevy::prelude::*;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untypes_core::states::AppState;
 
 fn system_update_looking_gear(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut looking_gear: ResMut<LookingGear>,
-    gc: Res<GameConfig>,
-    players: Query<&PlayerSprite>,
+    players: Query<&PlayerSprite, With<MainPlayer>>,
 ) {
-    let Some(player_sprite) = players.iter().find(|player| player.id == gc.player_id) else {
+    let Ok(player_sprite) = players.single() else {
         return;
     };
     if keyboard_input.just_pressed(player_sprite.controls.left_hand_toggle) {

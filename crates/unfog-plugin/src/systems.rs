@@ -14,8 +14,7 @@ use unfog_core::resources::MiasmaConfig;
 use unfoundation_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
 use unnoise_core::perlin::PerlinNoise;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::MainPlayer;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::LightSensitive;
@@ -86,16 +85,19 @@ fn initialize_miasma(
 fn spawn_miasma(
     time: Res<Time>,
     miasma: Res<MiasmaGrid>,
-    vf: Res<VisibilityData>,
+    q_vf: Query<&VisibilityData, With<MainPlayer>>,
     mut q_miasma: Query<(Entity, &mut MiasmaSprite)>,
-    gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    q_player: Query<&Position, With<MainPlayer>>,
     ghost_assets: Res<unghost_core::assets::GhostAssets>,
     board_data: Res<BoardTopology>,
     bcf: Res<BoardCollisionField>,
     mut commands: Commands,
 ) {
     let measure = metrics::SPAWN_MIASMA.time_measure();
+
+    let Ok(vf) = q_vf.single() else {
+        return;
+    };
     const THRESHOLD: f32 = 0.000001;
     const DIST_FACTOR: f32 = 0.00001;
     const MIASMA_TARGET_SPRITE_COUNT: usize = 3;
@@ -106,13 +108,7 @@ fn spawn_miasma(
         return;
     }
     // Find the active player's position
-    let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
-        if player.id == gc.player_id {
-            Some(*pos)
-        } else {
-            None
-        }
-    }) else {
+    let Ok(player_pos) = q_player.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -321,8 +317,7 @@ fn update_miasma(
     miasma_config: Res<MiasmaConfig>,
     time: Res<Time>,
     roomdb: Res<RoomDB>,
-    gc: Res<GameConfig>,
-    qp: Query<(&Position, &PlayerSprite)>,
+    q_player: Query<&Position, With<MainPlayer>>,
     fluid_emitter_query: Query<&FluidEmitter>,
     mut room_present: Local<Array3<bool>>,
 ) {
@@ -353,13 +348,7 @@ fn update_miasma(
     }
 
     // Find the active player's position
-    let Some(player_pos) = qp.iter().find_map(|(pos, player)| {
-        if player.id == gc.player_id {
-            Some(*pos)
-        } else {
-            None
-        }
-    }) else {
+    let Ok(player_pos) = q_player.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();

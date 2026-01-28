@@ -29,6 +29,7 @@ use unrender_std::components::visuals::{
     ResolutionFactor, ShadowCaster, SpectralClarity, UltravioletSensitive, Viewer,
 };
 use unrender_std::materials::CustomMaterial1;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::perspective;
 use unrender_std::utils::quadcc::QuadCC;
 use unsettings_core::video::VideoSettings;
@@ -165,6 +166,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
         .insert(MainPlayer)
         .insert(PlayerInput::default())
+        .insert(VisibilityData::default())
         .insert(PlayerTag { id: 1 })
         .insert(ShadowCaster::default())
         .insert(Viewer { id: 1, ..default() })

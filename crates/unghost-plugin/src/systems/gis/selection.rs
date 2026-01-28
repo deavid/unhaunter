@@ -29,7 +29,7 @@ fn ghost_interaction_selection_system(
     difficulty: Res<CurrentDifficulty>,
     board_topology: Res<BoardTopology>,
     board_collision: Res<BoardCollisionField>,
-    visibility_data: Res<VisibilityData>,
+    q_visibility: Query<&VisibilityData>,
     q_player: Query<&Position>,
     q_ghost: Query<(&GhostSprite, &Position)>,
     q_interactables: Query<(
@@ -102,7 +102,7 @@ fn ghost_interaction_selection_system(
                 &q_player,
                 &board_topology,
                 &board_collision,
-                &visibility_data,
+                &q_visibility,
                 &mut rng,
             ) {
                 // Dispatch the interaction event
@@ -151,7 +151,7 @@ fn find_interaction_target(
     q_player: &Query<&Position>,
     board_topology: &BoardTopology,
     board_collision: &BoardCollisionField,
-    visibility_data: &VisibilityData,
+    q_visibility: &Query<&VisibilityData>,
     rng: &mut impl Rng,
 ) -> Option<(Entity, Option<Position>)> {
     // Respect production interaction radius at all times (do not increase in debug)
@@ -399,18 +399,14 @@ fn find_interaction_target(
     for (entity, pos, destination) in suitable_targets {
         let target_board_pos = pos.to_board_position();
 
-        // Check if the target is visible to the player using the visibility data
-        let is_visible_to_player =
+        // Check if the target is visible to ANY player using the visibility data
+        let is_visible_to_player = q_visibility.iter().any(|v| {
             if let Some(idx) = target_board_pos.ndidx_checked(board_topology.map_size) {
-                visibility_data
-                    .visibility_field
-                    .get(idx)
-                    .copied()
-                    .unwrap_or(0.0)
-                    > 0.1
+                v.visibility_field.get(idx).copied().unwrap_or(0.0) > 0.1
             } else {
                 false
-            };
+            }
+        });
 
         if is_visible_to_player {
             visible_targets.push((entity, destination));

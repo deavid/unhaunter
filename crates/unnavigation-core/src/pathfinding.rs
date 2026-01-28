@@ -13,39 +13,52 @@ use unspatial_core::position::Position;
 pub struct Pathfinder<'w> {
     pub board_topology: Res<'w, BoardTopology>,
     pub board_collision: Res<'w, BoardCollisionField>,
-    pub visibility_data: Res<'w, VisibilityData>,
 }
 
 impl Pathfinder<'_> {
     /// Performs A* pathfinding from start to goal position.
-    pub fn find_path(&self, start: Position, goal: Position) -> Vec<BoardPosition> {
+    pub fn find_path(
+        &self,
+        start: Position,
+        goal: Position,
+        visibility_data: &VisibilityData,
+    ) -> Vec<BoardPosition> {
         find_path(
             start,
             goal,
             &self.board_topology,
             &self.board_collision,
-            &self.visibility_data,
+            visibility_data,
         )
     }
 
     /// Performs A* pathfinding from start to an interactive object's position.
-    pub fn find_path_to_interactive(&self, start: Position, goal: Position) -> Vec<BoardPosition> {
+    pub fn find_path_to_interactive(
+        &self,
+        start: Position,
+        goal: Position,
+        visibility_data: &VisibilityData,
+    ) -> Vec<BoardPosition> {
         find_path_to_interactive(
             start,
             goal,
             &self.board_topology,
             &self.board_collision,
-            &self.visibility_data,
+            visibility_data,
         )
     }
 
     /// Smooths a path by removing unnecessary waypoints.
-    pub fn smooth_path(&self, path: Vec<BoardPosition>) -> Vec<BoardPosition> {
+    pub fn smooth_path(
+        &self,
+        path: Vec<BoardPosition>,
+        visibility_data: &VisibilityData,
+    ) -> Vec<BoardPosition> {
         smooth_path(
             path,
             &self.board_topology,
             &self.board_collision,
-            &self.visibility_data,
+            visibility_data,
         )
     }
 }

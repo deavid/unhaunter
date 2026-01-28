@@ -62,7 +62,6 @@ use ungearitems_core::components::salt::UVReactive;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
-use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::components::visuals::SpectralClarity;
@@ -193,31 +192,27 @@ pub(crate) fn compute_visibility(
 
 /// System to calculate the player's visibility field and update VisibilityData.
 pub(crate) fn player_visibility_system(
-    mut vf: ResMut<VisibilityData>,
+    mut q_vf: Query<(&Position, &mut VisibilityData), With<Viewer>>,
     bcf: Res<BoardCollisionField>,
-    qp: Query<&Position, With<MainPlayer>>,
     mut roomdb: ResMut<RoomDB>,
 ) {
     let measure = PLAYER_VISIBILITY.time_measure();
 
-    // Find the active player's position
-    let Ok(player_pos) = qp.single() else {
-        return;
-    };
-
-    if vf.visibility_field.dim() != bcf.0.dim() {
-        vf.visibility_field = Array3::from_elem(bcf.0.dim(), -0.001_f32);
-    } else {
-        vf.visibility_field.fill(-0.001_f32);
+    for (pos, mut vf) in q_vf.iter_mut() {
+        if vf.visibility_field.dim() != bcf.0.dim() {
+            vf.visibility_field = Array3::from_elem(bcf.0.dim(), -0.001_f32);
+        } else {
+            vf.visibility_field.fill(-0.001_f32);
+        }
+        // Calculate visibility
+        compute_visibility(
+            &mut vf.visibility_field,
+            &bcf.0,
+            pos,
+            Some(&mut roomdb),
+            false,
+        );
     }
-    // Calculate visibility
-    compute_visibility(
-        &mut vf.visibility_field,
-        &bcf.0,
-        player_pos,
-        Some(&mut roomdb),
-        false,
-    );
     measure.end_ms();
 }
 
@@ -260,14 +255,13 @@ pub(crate) fn apply_lighting(
         With<MapTileSprite>,
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
-    qp: Query<(&Position, &Viewer, &Direction, &PlayerGear)>,
+    qp: Query<(&Position, &Viewer, &Direction, &PlayerGear, Has<MainPlayer>)>,
     q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
     q_flashlight: Query<(&LightEmitter, &Toggleable)>,
     mut lg: ResMut<LightGrid>,
     grids: GridResources,
     // haunt_state: Res<HauntState>,
-    vf: Res<VisibilityData>,
-    gc: Res<GameConfig>,
+    q_vf: Query<&VisibilityData, With<MainPlayer>>,
     time: Res<Time>,
     mut sprite_set: ParamSet<(
         Query<
@@ -312,6 +306,10 @@ pub(crate) fn apply_lighting(
     let miasma_config = &grids.miasma_config;
 
     let measure = APPLY_LIGHTING.time_measure();
+
+    let Ok(vf) = q_vf.single() else {
+        return;
+    };
 
     let mut rng = random_seed::rng();
 
@@ -367,7 +365,7 @@ pub(crate) fn apply_lighting(
             ));
         }
     }
-    for (pos, viewer, direction, gear) in qp.iter() {
+    for (pos, _viewer, direction, gear, is_main_player) in qp.iter() {
         let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
 
         let mut check_gear = |entity: Entity, p: EquipmentPosition| {
@@ -409,7 +407,7 @@ pub(crate) fn apply_lighting(
                 flashlights.push((pos, fldir, power, color, light_type, vis_field));
             }
         }
-        if viewer.id != gc.player_id {
+        if !is_main_player {
             continue;
         }
 
@@ -432,8 +430,8 @@ pub(crate) fn apply_lighting(
     let mut tile_sprites = sprite_set.p1();
 
     // --- Highlight placement tiles ---
-    for (player_pos, _, _, player_gear) in qp.iter() {
-        if player_gear.held_item.is_some() {
+    for (player_pos, _, _, player_gear, is_main_player) in qp.iter() {
+        if is_main_player && player_gear.held_item.is_some() {
             // Only highlight if the player is holding an object
             let target_tile = player_pos.to_board_position();
             for (tile_pos, mut sprite) in tile_sprites.iter_mut() {

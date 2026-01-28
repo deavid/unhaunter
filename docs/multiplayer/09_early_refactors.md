@@ -31,11 +31,11 @@ Player 1 and Player 2 (or a remote player).
 
 1. **New Component**: Create `unplayer_core::components::PlayerInput`.
 2. **Source Systems**: Update the keyboard/mouse/waypoint systems in
-    [crates/unplayer-plugin/src/systems/input/](crates/unplayer-plugin/src/systems/input/) to write to the `PlayerInput`
-    component on an entity marked with `MainPlayer`.
+   [crates/unplayer-plugin/src/systems/input/](crates/unplayer-plugin/src/systems/input/) to write to the `PlayerInput`
+   component on an entity marked with `MainPlayer`.
 3. **Consumer Systems**: Update `player_movement_system` in
-    [crates/unplayer-plugin/src/systems/movement.rs](crates/unplayer-plugin/src/systems/movement.rs) to read the
-    component from the entity it is currently processing.
+   [crates/unplayer-plugin/src/systems/movement.rs](crates/unplayer-plugin/src/systems/movement.rs) to read the
+   component from the entity it is currently processing.
 
 **Benefit**: Enables local split-screen (if ever desired) and is the foundation for networking (where remote inputs
 populate the component).
@@ -53,6 +53,9 @@ populate the component).
 
 **Benefit**: Separates "Simulation" (Player is crazy) from "Presentation" (Advisor talks about it). In multiplayer, the
 Host can broadcast the event, and each client decides if their Advisor should speak.
+
+**Counter Argument**: Currently all dialogs are written with single player in mind, this would make very little sense at
+the moment if it was adapted to multiplayer. I would argue to not to do this until it's really needed.
 
 ## 4. Multi-Viewer Visibility
 
@@ -79,6 +82,10 @@ features.
 
 **Benefit**: Makes the ghost's behavior deterministic relative to its initial seed, which significantly reduces
 "teleporting" corrections in multiplayer snapshots.
+
+**Counter Argument**: This fixes nothing. There's no ordering guarantees, nor timing guarantees, nor platform
+guarantees. This might still return different numbers in different computers, running their own simulations. A better
+design is needed.
 
 ## 6. Shared Resource Refactor: `HauntState`
 

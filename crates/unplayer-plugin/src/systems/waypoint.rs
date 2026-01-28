@@ -13,6 +13,7 @@ use unnavigation_core::components::waypoint::{
 use unnavigation_core::pathfinding::Pathfinder;
 use unplayer_core::components::{MainPlayer, PlayerInput};
 use unrender_std::components::game::GameSprite;
+use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 use unui_core::resources::MouseVisibility;
@@ -26,7 +27,7 @@ pub(crate) fn waypoint_creation_system(
     mut commands: Commands,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GCameraArena>>,
-    q_player: Query<(Entity, &Position), (With<PlayerSprite>, With<MainPlayer>)>,
+    q_player: Query<(Entity, &Position, &VisibilityData), (With<PlayerSprite>, With<MainPlayer>)>,
     mut q_player_queue: Query<&mut WaypointQueue, (With<PlayerSprite>, With<MainPlayer>)>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     q_interactives: Query<(
@@ -47,7 +48,7 @@ pub(crate) fn waypoint_creation_system(
         return;
     }
 
-    let Ok((player_entity, player_pos)) = q_player.single() else {
+    let Ok((player_entity, player_pos, visibility_data)) = q_player.single() else {
         return;
     };
 
@@ -129,6 +130,7 @@ pub(crate) fn waypoint_creation_system(
                     interactive_entity,
                     &mut waypoint_queue,
                     &pathfinder,
+                    visibility_data,
                 );
             }
             interactive_clicked = true;
@@ -186,6 +188,7 @@ pub(crate) fn waypoint_creation_system(
                     target,
                     &mut waypoint_queue,
                     &pathfinder,
+                    visibility_data,
                 );
             }
         }
@@ -352,6 +355,7 @@ fn create_pathfinding_waypoints(
     target_pos: Position,
     waypoint_queue: &mut WaypointQueue,
     pathfinder: &Pathfinder,
+    visibility_data: &VisibilityData,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -362,7 +366,7 @@ fn create_pathfinding_waypoints(
     );
 
     // Use pathfinding to get a sequence of board positions
-    let path = pathfinder.find_path(start_pos, target_pos);
+    let path = pathfinder.find_path(start_pos, target_pos, visibility_data);
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);
@@ -404,6 +408,7 @@ fn create_pathfinding_waypoints_to_interaction(
     interaction_target: Entity,
     waypoint_queue: &mut WaypointQueue,
     pathfinder: &Pathfinder,
+    visibility_data: &VisibilityData,
 ) {
     // Clear existing waypoints first
     clear_player_waypoints(
@@ -414,7 +419,7 @@ fn create_pathfinding_waypoints_to_interaction(
     );
 
     // Use pathfinding to get a sequence of board positions (treating target as walkable)
-    let path = pathfinder.find_path_to_interactive(start_pos, target_pos);
+    let path = pathfinder.find_path_to_interactive(start_pos, target_pos, visibility_data);
 
     if path.is_empty() {
         debug!("No path found from {:?} to {:?}", start_pos, target_pos);

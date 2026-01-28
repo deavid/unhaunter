@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use unboard_core::resources::board_topology::{BoardEntityField, BoardTopology};
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::MainPlayer;
 use unspatial_core::boardposition::MapEntityFieldBPos;
 use unspatial_core::position::Position;
 use untags_core::tags::PlayerTag;
@@ -16,15 +16,11 @@ use untags_core::tags::PlayerTag;
 fn sync_map_entity_field(
     mut board_entity_field: ResMut<BoardEntityField>,
     board_topology: Res<BoardTopology>,
-    game_config: Res<GameConfig>,
-    player_query: Query<(&PlayerTag, &Position)>,
+    player_query: Query<&Position, (With<PlayerTag>, With<MainPlayer>)>,
     position_query: Query<&Position>,
     mut map_entity_bpos_query: Query<&mut MapEntityFieldBPos>,
 ) {
-    let Some((_player_tag, player_pos)) = player_query
-        .iter()
-        .find(|(player, _)| player.id == game_config.player_id)
-    else {
+    let Ok(player_pos) = player_query.single() else {
         return;
     };
 

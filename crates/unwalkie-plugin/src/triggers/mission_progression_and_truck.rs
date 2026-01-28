@@ -5,8 +5,8 @@ use ungear_core::types::GearKind;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::types::evidence::Evidence;
+use unplayer_core::components::MainPlayer;
 use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
 use unwalkie_core::resources::WalkiePlay;
@@ -65,8 +65,7 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
     mut prev_game_state: Local<GameState>,
     mut walkie_play: ResMut<WalkiePlay>,
     difficulty: Res<undifficulty_core::current_difficulty::CurrentDifficulty>,
-    player_gear_q: Query<(&PlayerSprite, &PlayerGear)>,
-    game_config: Res<GameConfig>,
+    player_gear_q: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     mut exited_truck_time: Local<Option<f64>>,
     mut empty_right_handed: Local<bool>,
     mut discoverable_evidences_with_current_gear: Local<HashSet<Evidence>>,
@@ -93,60 +92,56 @@ fn trigger_player_leaves_truck_without_changing_loadout_system(
         *exited_truck_time = Some(time.elapsed_secs_f64());
 
         // Check if the current player has empty right hand
-        for (player_sprite, player_gear) in player_gear_q.iter() {
-            if player_sprite.id == game_config.player_id {
-                // Calculate current set of discoverable evidences from player's gear
-                let mut new_discoverable_evidences = HashSet::new();
-                let mut new_has_repellent_flask = false;
+        if let Some((_player_sprite, player_gear)) = player_gear_q.iter().next() {
+            // Calculate current set of discoverable evidences from player's gear
+            let mut new_discoverable_evidences = HashSet::new();
+            let mut new_has_repellent_flask = false;
 
-                // Check left hand gear
-                if let Some(entity) = player_gear.left_hand
-                    && let Ok(kind) = q_gear.get(entity)
-                {
-                    if let Ok(evidence) = Evidence::try_from(kind) {
-                        new_discoverable_evidences.insert(evidence);
-                    }
-                    if *kind == GearKind::RepellentFlask {
-                        new_has_repellent_flask = true;
-                    }
+            // Check left hand gear
+            if let Some(entity) = player_gear.left_hand
+                && let Ok(kind) = q_gear.get(entity)
+            {
+                if let Ok(evidence) = Evidence::try_from(kind) {
+                    new_discoverable_evidences.insert(evidence);
                 }
-
-                // Check right hand gear
-                if let Some(entity) = player_gear.right_hand
-                    && let Ok(kind) = q_gear.get(entity)
-                {
-                    if let Ok(evidence) = Evidence::try_from(kind) {
-                        new_discoverable_evidences.insert(evidence);
-                    }
-                    if *kind == GearKind::RepellentFlask {
-                        new_has_repellent_flask = true;
-                    }
+                if *kind == GearKind::RepellentFlask {
+                    new_has_repellent_flask = true;
                 }
-
-                // Check inventory gear
-                for &entity in &player_gear.inventory {
-                    if let Ok(kind) = q_gear.get(entity) {
-                        if let Ok(evidence) = Evidence::try_from(kind) {
-                            new_discoverable_evidences.insert(evidence);
-                        }
-                        if *kind == GearKind::RepellentFlask {
-                            new_has_repellent_flask = true;
-                        }
-                    }
-                }
-
-                // Check if the set of discoverable evidences has changed OR repellent flask status changed
-                if *discoverable_evidences_with_current_gear != new_discoverable_evidences
-                    || *has_repellent_flask != new_has_repellent_flask
-                {
-                    *discoverable_evidences_with_current_gear = new_discoverable_evidences;
-                    *has_repellent_flask = new_has_repellent_flask;
-                    *last_gear_evidences_change_time = Some(time.elapsed_secs_f64());
-                }
-                *empty_right_handed = player_gear.right_hand.is_none();
-
-                break;
             }
+
+            // Check right hand gear
+            if let Some(entity) = player_gear.right_hand
+                && let Ok(kind) = q_gear.get(entity)
+            {
+                if let Ok(evidence) = Evidence::try_from(kind) {
+                    new_discoverable_evidences.insert(evidence);
+                }
+                if *kind == GearKind::RepellentFlask {
+                    new_has_repellent_flask = true;
+                }
+            }
+
+            // Check inventory gear
+            for &entity in &player_gear.inventory {
+                if let Ok(kind) = q_gear.get(entity) {
+                    if let Ok(evidence) = Evidence::try_from(kind) {
+                        new_discoverable_evidences.insert(evidence);
+                    }
+                    if *kind == GearKind::RepellentFlask {
+                        new_has_repellent_flask = true;
+                    }
+                }
+            }
+
+            // Check if the set of discoverable evidences has changed OR repellent flask status changed
+            if *discoverable_evidences_with_current_gear != new_discoverable_evidences
+                || *has_repellent_flask != new_has_repellent_flask
+            {
+                *discoverable_evidences_with_current_gear = new_discoverable_evidences;
+                *has_repellent_flask = new_has_repellent_flask;
+                *last_gear_evidences_change_time = Some(time.elapsed_secs_f64());
+            }
+            *empty_right_handed = player_gear.right_hand.is_none();
         }
     }
     if let Some(exited_time) = *exited_truck_time {

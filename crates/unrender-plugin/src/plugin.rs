@@ -10,7 +10,6 @@ use unboard_core::resources::board_topology::{
     BoardCollisionField, BoardEntityField, BoardTopology,
 };
 use unmetrics_core::metrics::SendMetric;
-use unrender_std::resources::visibility_data::VisibilityData;
 use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
 
@@ -64,7 +63,6 @@ impl Plugin for UnhaunterRenderPlugin {
         app.init_resource::<BoardTopology>()
             .init_resource::<BoardEntityField>()
             .init_resource::<BoardCollisionField>()
-            .init_resource::<VisibilityData>()
             .init_resource::<SpriteDB>()
             .init_resource::<RoomDB>()
             .add_systems(Update, apply_perspective);

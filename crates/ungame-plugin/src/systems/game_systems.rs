@@ -2,7 +2,7 @@ use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use unboard_core::resources::board_topology::BoardTopology;
 use unpicking_core::picking::CustomSpritePickingCamera;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::{GameSound, GameSprite};
 use unrender_std::utils::perspective;
@@ -59,8 +59,7 @@ fn keyboard(
     game_state: Res<State<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<(&mut Transform, &mut Direction), With<GCameraArena>>,
-    gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
+    pc: Query<(&PlayerSprite, &Transform, &Direction), (With<MainPlayer>, Without<GCameraArena>)>,
     time: Res<Time>,
     game_settings: Res<Persistent<GameplaySettings>>,
     control_settings: Res<Persistent<ControlKeys>>,
@@ -75,9 +74,6 @@ fn keyboard(
     let dt = time.delta_secs() * 60.0;
     for (mut transform, mut cam_dir) in camera.iter_mut() {
         for (player, p_transform, _p_dir) in pc.iter() {
-            if player.id != gc.player_id {
-                continue;
-            }
             // Camera movement
             let mut ref_point = p_transform.translation;
             // Move the reference point a bit up since we have the UI on the bottom, so the player is better centered on the remaining available space.
@@ -136,9 +132,8 @@ fn keyboard(
 /// This is a temporary debugging system for testing multi-floor maps
 fn keyboard_floor_switch(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut player_query: Query<(&PlayerSprite, &mut Position)>,
+    mut player_query: Query<(&PlayerSprite, &mut Position), With<MainPlayer>>,
     board_topology: Res<BoardTopology>,
-    game_config: Res<GameConfig>,
 ) {
     const DEBUG_FLOORS: bool = false;
     // Only act when Y or H key is just pressed
@@ -160,10 +155,8 @@ fn keyboard_floor_switch(
     // Find the player entity matching the active player ID
     let mut player_position = None;
     for (player, pos) in player_query.iter_mut() {
-        if player.id == game_config.player_id {
-            player_position = Some(pos);
-            break;
-        }
+        player_position = Some(pos);
+        break;
     }
 
     // If we didn't find the player or there's no floor mapping data, exit

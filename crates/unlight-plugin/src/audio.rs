@@ -96,21 +96,20 @@ fn calculate_ambient_sound_volumes(
 /// 7. Updates the actual AudioSink volumes for GameSound entities
 fn update_ambient_sound_volumes(
     mut game_sound_query: Query<(&GameSound, &mut AudioSink)>,
-    player_query: Query<(&Position, &Viewer), With<MainPlayer>>,
-    visibility_data: Res<VisibilityData>,
+    player_query: Query<(&Position, &Viewer, &VisibilityData), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
     audio_settings: Res<Persistent<AudioSettings>>,
     ambient_mute_controller: Res<AmbientMuteController>,
 ) {
     // Get player position and viewer data
-    let Ok((player_pos, viewer)) = player_query.single() else {
+    let Ok((player_pos, viewer, visibility_data)) = player_query.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
 
     // Calculate the base ambient volumes
     let (house_volume, street_volume) =
-        calculate_ambient_sound_volumes(&visibility_data, &roomdb, &player_bpos);
+        calculate_ambient_sound_volumes(visibility_data, &roomdb, &player_bpos);
 
     // Calculate HeartBeat volume based on health (analog/fuzzy logic)
     // HeartBeat should get louder as health gets lower

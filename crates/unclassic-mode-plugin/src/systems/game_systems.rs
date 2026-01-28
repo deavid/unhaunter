@@ -2,8 +2,7 @@ use bevy::{camera::ScalingMode, prelude::*};
 use bevy_persistent::Persistent;
 use unengine_core::GCameraArena;
 use unpicking_core::picking::CustomSpritePickingCamera;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::utils::perspective;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
@@ -34,8 +33,7 @@ fn camera_follow_system(
     game_state: Res<State<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut camera: Query<(&mut Transform, &mut Direction), With<GCameraArena>>,
-    gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform, &Direction), Without<GCameraArena>>,
+    pc: Query<(&PlayerSprite, &Transform, &Direction), (Without<GCameraArena>, With<MainPlayer>)>,
     time: Res<Time>,
     game_settings: Res<Persistent<GameplaySettings>>,
     control_settings: Res<Persistent<ControlKeys>>,
@@ -50,9 +48,6 @@ fn camera_follow_system(
     let dt = time.delta_secs() * 60.0;
     for (mut transform, mut cam_dir) in camera.iter_mut() {
         for (player, p_transform, _p_dir) in pc.iter() {
-            if player.id != gc.player_id {
-                continue;
-            }
             // Camera movement
             let mut ref_point = p_transform.translation;
             // Move the reference point a bit up since we have the UI on the bottom, so the player is better centered on the remaining available space.

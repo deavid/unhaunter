@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use ndarray::Array3;
 
-#[derive(Clone, Debug, Resource, Default)]
+#[derive(Clone, Debug, Component, Default)]
 pub struct VisibilityData {
     pub visibility_field: Array3<f32>,
 }

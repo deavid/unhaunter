@@ -5,58 +5,53 @@ use bevy_persistent::Persistent;
 use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;
 
 pub(crate) fn update_evidence_ui(
-    gc: Res<GameConfig>,
-    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gear: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     mut qs: Query<Entity, With<EvidenceUI>>,
     interaction_query: Query<&TruckUIButton, With<Button>>,
     mut writer: TextUiWriter,
     looking_gear: Res<LookingGear>,
 ) {
-    for (ps, playergear) in q_gear.iter() {
-        if gc.player_id == ps.id {
-            for txt_entity in qs.iter_mut() {
-                let hand_entity = match looking_gear.hand() {
-                    unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
-                    unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
-                };
-                let o_evidence = hand_entity
-                    .and_then(|e| q_sensor.get(e).ok())
-                    .map(|s| s.evidence);
+    for (_ps, playergear) in q_gear.iter() {
+        for txt_entity in qs.iter_mut() {
+            let hand_entity = match looking_gear.hand() {
+                unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
+                unfoundation_core::types::gear::Hand::Right => playergear.right_hand,
+            };
+            let o_evidence = hand_entity
+                .and_then(|e| q_sensor.get(e).ok())
+                .map(|s| s.evidence);
 
-                let ev_state = match o_evidence {
-                    Some(ev) => interaction_query
-                        .iter()
-                        .find(|t| t.class == TruckButtonType::Evidence(ev))
-                        .map(|t| t.status)
-                        .unwrap_or(TruckButtonState::Off),
-                    None => TruckButtonState::Off,
-                };
-                let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
-                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 1)
-                    && *text != status.title
-                {
-                    *text = status.title;
-                }
-                if let Some((_entity, _depth, mut text, _font, mut color)) =
-                    writer.get(txt_entity, 2)
-                    && *text != status.status_game
-                {
-                    *text = status.status_game;
-                    *color = TextColor(status.status_color);
-                }
-                if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 3)
-                    && *text != status.help_text
-                {
-                    *text = status.help_text;
-                }
+            let ev_state = match o_evidence {
+                Some(ev) => interaction_query
+                    .iter()
+                    .find(|t| t.class == TruckButtonType::Evidence(ev))
+                    .map(|t| t.status)
+                    .unwrap_or(TruckButtonState::Off),
+                None => TruckButtonState::Off,
+            };
+            let status = EvidenceStatus::from_gearkind(o_evidence, ev_state);
+            if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 1)
+                && *text != status.title
+            {
+                *text = status.title;
+            }
+            if let Some((_entity, _depth, mut text, _font, mut color)) = writer.get(txt_entity, 2)
+                && *text != status.status_game
+            {
+                *text = status.status_game;
+                *color = TextColor(status.status_color);
+            }
+            if let Some((_entity, _depth, mut text, _font, _color)) = writer.get(txt_entity, 3)
+                && *text != status.help_text
+            {
+                *text = status.help_text;
             }
         }
     }
@@ -64,17 +59,13 @@ pub(crate) fn update_evidence_ui(
 
 pub(crate) fn keyboard_evidence(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    gc: Res<GameConfig>,
-    players: Query<(&PlayerSprite, &PlayerGear)>,
+    players: Query<(&PlayerSprite, &PlayerGear), With<MainPlayer>>,
     q_sensor: Query<&EvidenceSensor>,
     mut interaction_query: Query<&mut TruckUIButton, With<Button>>,
     looking_gear: Res<LookingGear>,
     mut profile_data: ResMut<Persistent<PlayerProfileData>>,
 ) {
     for (player, playergear) in &players {
-        if gc.player_id != player.id {
-            continue;
-        }
         let hand_entity = match looking_gear.hand() {
             unfoundation_core::types::gear::Hand::Left => playergear.left_hand,
             unfoundation_core::types::gear::Hand::Right => playergear.right_hand,

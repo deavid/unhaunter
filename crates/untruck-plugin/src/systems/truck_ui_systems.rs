@@ -12,8 +12,7 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, GameState};
 
@@ -317,8 +316,7 @@ fn truckui_event_handle(
     mut ev_truckui: MessageReader<TruckUIEvent>,
     mut game_next_state: ResMut<NextState<GameState>>,
     gg: Res<GhostGuess>,
-    gc: Res<GameConfig>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear), With<MainPlayer>>,
     audio_settings: Res<Persistent<AudioSettings>>,
     mut craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
@@ -333,10 +331,8 @@ fn truckui_event_handle(
             }
             TruckUIEvent::ExitTruck => game_next_state.set(GameState::None),
             TruckUIEvent::CraftRepellent => {
-                for (player, mut gear) in q_gear.iter_mut() {
-                    if player.id == gc.player_id
-                        && let Some(ghost_type) = gg.ghost_type
-                    {
+                for (_player, mut gear) in q_gear.iter_mut() {
+                    if let Some(ghost_type) = gg.ghost_type {
                         let consumed_new_bottle = craft_repellent(
                             &mut commands,
                             &gear_registry,

@@ -4,8 +4,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::types::GearKind;
 use unghost_core::components::ghost_sprite::GhostSprite;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::MainPlayer;
 use unspatial_core::position::Position;
 use untypes_core::states::{AppState, GameState};
 use unwalkie_core::events::WalkieEvent;
@@ -16,9 +15,8 @@ use unwalkie_core::resources::WalkiePlay;
 /// Uses a stopwatch to avoid spamming the reminder and only warns within the first minute inside.
 fn player_forgot_equipment(
     mut walkie_play: ResMut<WalkiePlay>,
-    qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
+    qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
-    gc: Res<GameConfig>,
     mut stopwatch: Local<Stopwatch>,
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
@@ -40,13 +38,7 @@ fn player_forgot_equipment(
         return;
     }
     // Find the active player's position
-    let Some((player_pos, player_gear)) = qp.iter().find_map(|(player, pos, gear)| {
-        if player.id == gc.player_id {
-            Some((*pos, gear))
-        } else {
-            None
-        }
-    }) else {
+    let Ok((player_pos, player_gear)) = qp.single() else {
         return;
     };
     let player_bpos = player_pos.to_board_position();
@@ -77,10 +69,9 @@ fn player_forgot_equipment(
 /// Only triggers if the player is inside the location and the ghost's rage is high but not yet hunting.
 fn ghost_near_hunt(
     mut walkie_play: ResMut<WalkiePlay>,
-    qp: Query<(&PlayerSprite, &Position, &PlayerGear)>,
+    qp: Query<(&Position, &PlayerGear), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
     difficulty: Res<CurrentDifficulty>,
-    gc: Res<GameConfig>,
     q_ghost: Query<&GhostSprite>,
     q_gear: Query<&GearKind>,
     time: Res<Time>,
@@ -90,13 +81,7 @@ fn ghost_near_hunt(
         return;
     }
     // Find the active player's position and gear
-    let Some((player_pos, player_gear)) = qp.iter().find_map(|(player, pos, gear)| {
-        if player.id == gc.player_id {
-            Some((*pos, gear))
-        } else {
-            None
-        }
-    }) else {
+    let Ok((player_pos, player_gear)) = qp.single() else {
         return;
     };
 

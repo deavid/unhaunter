@@ -11,9 +11,8 @@ use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::{GearKind, VisualKey};
 use unghost_core::types::evidence::Evidence;
-use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unrender_std::materials::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untypes_core::states::GameState;
@@ -266,11 +265,10 @@ fn update_loadout_buttons(
         Changed<Interaction>,
     >,
     mut qh: Query<(&mut Text, Option<&GearHelp>, Option<&GearHelpTitle>)>,
-    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gear: Query<(&PlayerSprite, &PlayerGear, Has<MainPlayer>)>,
     q_gearkind: Query<&GearKind>,
     interaction_query_journal_buttons: Query<&TruckUIButton, With<Button>>,
     mut ev_clk: MessageWriter<EventButtonClicked>,
-    gc: Res<GameConfig>,
     gear_registry: Res<GearSpawnerRegistry>,
 ) {
     let mut changed = false;
@@ -304,7 +302,7 @@ fn update_loadout_buttons(
 
     let Some(_p_gear) = q_gear
         .iter()
-        .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
+        .find_map(|(_p, g, is_main)| if is_main { Some(g) } else { None })
     else {
         return;
     };
@@ -410,17 +408,16 @@ fn update_loadout_buttons(
 }
 
 fn update_loadout_icons(
-    q_gear: Query<(&PlayerSprite, &PlayerGear)>,
+    q_gear: Query<(&PlayerSprite, &PlayerGear, Has<MainPlayer>)>,
     q_gearkind: Query<&GearKind>,
     q_but: Query<(&LoadoutButton, &Children)>,
     mut q_image: Query<&mut ImageNode>,
-    gc: Res<GameConfig>,
     gear_registry: Res<GearSpawnerRegistry>,
     sprite_registry: Res<SpriteRegistry>,
 ) {
     let Some(p_gear) = q_gear
         .iter()
-        .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
+        .find_map(|(_p, g, is_main)| if is_main { Some(g) } else { None })
     else {
         return;
     };
@@ -463,8 +460,7 @@ fn update_loadout_icons(
 
 fn button_clicked(
     mut ev_clk: MessageReader<EventButtonClicked>,
-    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear)>,
-    gc: Res<GameConfig>,
+    mut q_gear: Query<(&PlayerSprite, &mut PlayerGear, Has<MainPlayer>)>,
     _craft_tracker: ResMut<RepellentCraftTracker>,
     gear_registry: Res<GearSpawnerRegistry>,
     mut commands: Commands,
@@ -474,7 +470,7 @@ fn button_clicked(
     };
     let Some(mut p_gear) = q_gear
         .iter_mut()
-        .find_map(|(p, g)| if p.id == gc.player_id { Some(g) } else { None })
+        .find_map(|(_p, g, is_main)| if is_main { Some(g) } else { None })
     else {
         return;
     };
