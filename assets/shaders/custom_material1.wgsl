@@ -2,6 +2,10 @@
 
 struct CustomMaterial {
     color: vec4<f32>,
+    ctl: vec4<f32>,
+    ctr: vec4<f32>,
+    cbl: vec4<f32>,
+    cbr: vec4<f32>,
     ambient_color: vec4<f32>,
     gamma: f32,
     gtl: f32,
@@ -192,13 +196,8 @@ fn fragment(
     let w_bl = (0.5 - Lxc) * (0.5 - Lyc);
     let w_br = (0.5 - Lxc) * (0.5 + Lyc);
 
-    let gamma_corners = material.gtl * w_tl + material.gtr * w_tr + material.gbl * w_bl + material.gbr * w_br;
-
-    // Center bump function: 1.0 at (0,0), exactly 0.0 at all four edges.
-    // Pow(L, 2.0) makes the center nuance more localized and reduces over-shading.
-    let w_center = pow(clamp((1.0 - 2.0 * abs(Lxc)) * (1.0 - 2.0 * abs(Lyc)), 0.0, 1.0), 2.0);
-
-    var gamma: f32 = mix(gamma_corners, material.gamma, w_center);
+    var gamma: f32 = material.gtl * w_tl + material.gtr * w_tr + material.gbl * w_bl + material.gbr * w_br;
+    var interp_color: vec4<f32> = material.ctl * w_tl + material.ctr * w_tr + material.cbl * w_bl + material.cbr * w_br;
 
     // Dithering to hide banding in smooth gradients
     let noise = fract(sin(dot(mesh.uv, vec2<f32>(12.9898, 78.233))) * 43758.5453);
@@ -216,8 +215,8 @@ fn fragment(
     let gamma4c: vec4<f32> = vec4<f32>(1.0 + gamma, 1.0 + gamma, 1.0 + gamma, 2.0);
     let corrected_color_rgb = (pow(color + b4, gamma4b) * gamma4a + gamma4a * color) / (gamma4c);
 
-    // Apply material color tint to the gamma-corrected color
-    let final_color = corrected_color_rgb * material.color;
+    // Apply material color tint (interpolated) to the gamma-corrected color
+    let final_color = corrected_color_rgb * interp_color;
 
     // Apply material ambient color
     var ambient = material.ambient_color;

@@ -479,11 +479,11 @@ pub(crate) fn apply_lighting(
     cursor_exp = sum_values / (sum_weights + 0.001);
     lg.exposure_lux = cursor_exp;
 
-    cursor_exp = cursor_exp.clamp(0.0, 100.0);
+    cursor_exp = cursor_exp.clamp(0.0, 100.0) * 4.0;
     // Darken picture without touching night vision
-    cursor_exp += cursor_exp.sqrt() * 2.0;
+    cursor_exp += cursor_exp.sqrt() * 4.0 + 1.0;
     // Minimum exp - controls how dark we can see
-    cursor_exp = cursor_exp.clamp(0.40, 100.0);
+    cursor_exp = cursor_exp.clamp(1.0, 100.0);
 
     if !cursor_exp.is_normal() {
         warn!("cursor_exp is not 'normal': {}", cursor_exp);
@@ -596,8 +596,10 @@ pub(crate) fn apply_lighting(
         })
     };
 
-    let fpos_gamma_corner =
-        |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> Option<f32> {
+    let f_vis = |v: f32| (v.clamp(0.0, 1.0) * 1.5).clamp(0.0001, 1.0);
+
+    let fpos_sampling_corner =
+        |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> (f32, f32, Color) {
             let x = target_pos.x;
             let y = target_pos.y;
             let z = target_pos.z.round() as i64;
@@ -606,24 +608,48 @@ pub(crate) fn apply_lighting(
             let x1 = x.ceil() as i64;
             let y1 = y.ceil() as i64;
 
-            let mut total = 0.0;
+            let mut total_l = 0.0;
+            let mut total_v = 0.0;
+            let mut total_r = 0.0;
+            let mut total_g = 0.0;
+            let mut total_b = 0.0;
             let mut count = 0.0;
+            let is_light_sensitive = o_light_sens.is_some();
             for tx in [x0, x1] {
                 for ty in [y0, y1] {
                     let bpos = BoardPosition { x: tx, y: ty, z };
-                    if let Some(p) = bpos.ndidx_checked(bf.map_size)
-                        && vf.visibility_field[p] > 0.00001
-                        && let Some(l) = fpos_gamma(bpos.to_position(), o_light_sens)
-                    {
-                        total += l;
-                        count += 1.0;
+                    if let Some(p) = bpos.ndidx_checked(bf.map_size) {
+                        let vis = f_vis(vf.visibility_field[p]);
+                        if vis > 0.0001
+                            && let Some(((r, g, b), _)) =
+                                fpos_gamma_color(bpos.to_position(), is_light_sensitive)
+                        {
+                            total_r += r;
+                            total_g += g;
+                            total_b += b;
+                            total_l += (r + g + b) / 3.0;
+                            total_v += vis;
+                            count += 1.0;
+                        }
                     }
                 }
             }
             if count > 0.0 {
-                Some(total / count)
+                (
+                    total_l / count,
+                    (total_v / count).clamp(0.0001, 1.0),
+                    Color::srgb(total_r / count, total_g / count, total_b / count),
+                )
             } else {
-                fpos_gamma(target_pos, o_light_sens)
+                let vis = f_vis(
+                    vf.visibility_field
+                        .get(target_pos.to_board_position().ndidx())
+                        .copied()
+                        .unwrap_or(0.0),
+                );
+                let ((r, g, b), _) = fpos_gamma_color(target_pos, is_light_sensitive)
+                    .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+                ((r + g + b) / 3.0, vis, Color::srgb(r, g, b))
             }
         };
 
@@ -758,6 +784,7 @@ pub(crate) fn apply_lighting(
             }
 
             let mut lux_c = fpos_gamma(*pos, o_light_sens).unwrap_or(0.0);
+            let vis_c = f_vis(vf.visibility_field[bpos.ndidx()]);
 
             // Corner offsets correspond to tile intersections.
             // In our isometric perspective (PERSPECTIVE_X/Y in perspective.rs):
@@ -765,42 +792,43 @@ pub(crate) fn apply_lighting(
             // (-0.5, -0.5) -> Screen Left
             // (-0.5, +0.5) -> Screen Top
             // (+0.5, -0.5) -> Screen Bottom
-            let mut lux_right = fpos_gamma_corner(
+            let (lux_right, vis_right, color_right) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: 0.5,
                     dz: 0.0,
                 },
                 o_light_sens,
-            )
-            .unwrap_or(lux_c);
-            let mut lux_left = fpos_gamma_corner(
+            );
+            let (lux_left, vis_left, color_left) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: -0.5,
                     dz: 0.0,
                 },
                 o_light_sens,
-            )
-            .unwrap_or(lux_c);
-            let mut lux_top = fpos_gamma_corner(
+            );
+            let (lux_top, vis_top, color_top) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: 0.5,
                     dz: 0.0,
                 },
                 o_light_sens,
-            )
-            .unwrap_or(lux_c);
-            let mut lux_bot = fpos_gamma_corner(
+            );
+            let (lux_bot, vis_bot, color_bot) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: -0.5,
                     dz: 0.0,
                 },
                 o_light_sens,
-            )
-            .unwrap_or(lux_c);
+            );
+
+            let mut lux_right = lux_right;
+            let mut lux_left = lux_left;
+            let mut lux_top = lux_top;
+            let mut lux_bot = lux_bot;
 
             let ((mut r, mut g, mut b), light_data) =
                 fpos_gamma_color(*pos, o_light_sens.is_some())
@@ -837,13 +865,13 @@ pub(crate) fn apply_lighting(
             }
             let max_color = r.max(g).max(b).max(0.2);
             let mut src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
-            let mut smooth_f: f32 = 0.3;
+            let mut smooth_f: f32;
             let mut smooth_a: f32 = 1.0;
 
             let is_tile = o_behavior.is_some();
             if is_tile {
-                // Tiles need instant synchronization to avoid seams between neighbors
-                smooth_f = 0.0;
+                // Tiles DO NOT need instant synchronization to avoid seams between neighbors. It is fine.
+                smooth_f = 0.5;
             } else {
                 // Players and characters need smoother color transitions than tiles
                 smooth_f = 3.0;
@@ -1034,93 +1062,96 @@ pub(crate) fn apply_lighting(
 
             let f_gamma = |lux: f32| fastapprox::faster::pow(lux, 0.9);
             const K_COLD: f32 = 0.6;
+            const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
+            let dark_color2 = DARK_COLOR2;
+
             let calc_gamma = |lux: f32, tc: f32| {
                 let p_cold_f = (1.0 - (lux / K_COLD).tanh()) * 2.0;
                 let p_exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + p_cold_f).tanh() + 0.5)
                     .clamp(0.0, 1.0);
 
+                // Ensure lux has a tiny floor to prevent precision divergence in pitch black
+                let lux_f = lux.max(0.0001);
+
                 f_gamma(
-                    lux * BRIGHTNESS * (1.0 + p_cold_f + (p_exp_color * 2.0).powi(2))
+                    lux_f * BRIGHTNESS * (1.0 + p_cold_f + (p_exp_color * 2.0).powi(2))
                         + (tc + p_cold_f * 2.0 + (p_exp_color * 2.0).powi(2))
-                            / (10.0 + exposure + lux),
+                            / (10.0 + exposure + lux_f),
                 ) + p_exp_color / 40.0
             };
 
-            let cold_f = (1.0 - (lux_c / K_COLD).tanh()) * 2.0;
-            const DARK_COLOR: Color = Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
-            const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
-            let dark_color2 = DARK_COLOR2;
-            let exp_color =
-                ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + cold_f).tanh() + 0.5).clamp(0.0, 1.0);
+            let calc_rgba = |lux: f32, visibility: f32, bcolor: Option<Color>| -> LinearRgba {
+                let p_cold_f = (1.0 - (lux / K_COLD).tanh()) * 2.0;
+                let p_exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + p_cold_f).tanh() + 0.5)
+                    .clamp(0.0, 1.0);
+                let p_exp_color_tint = (p_exp_color + tutorial_light_factor * 0.20).clamp(0.0, 1.0);
 
-            // Apply tutorial boost to the blue hue and ensure it never goes 100% dark.
-            // Darker missions (Standard+) will have 0.0 boost.
-            let exp_color_tint = (exp_color + tutorial_light_factor * 0.20).clamp(0.0, 1.0);
-            let dark = lerp_color(
-                Color::BLACK,
-                DARK_COLOR,
-                (exp_color_tint / 16.0 + tutorial_light_factor * 0.01).clamp(0.0, 1.0),
-            );
-
-            let dark2 = lerp_color(
-                Color::WHITE,
-                dark_color2,
-                exp_color_tint / f_gamma(lux_c).clamp(1.0, 300.0),
-            );
-            if is_tile {
-                new_mat.data.ambient_color = dark.with_alpha(0.0).into();
-            } else {
-                new_mat.data.ambient_color = Color::NONE.into();
-            }
-
-            // Convert both colors to LinearRgba for multiplication
-            let linear_dst_color = LinearRgba::from(dst_color);
-            let linear_dark2_color = LinearRgba::from(dark2);
-
-            // Perform the multiplication in the LinearRgba space
-            let new_color = linear_dst_color.to_vec4() * linear_dark2_color.to_vec4();
-
-            // Convert back to Color
-            let new_color = LinearRgba::from_vec4(new_color);
-
-            let src_color_old = new_mat.data.color;
-            if o_behavior.is_none() {
-                // For special entities, use the exponential decay lerp for color/alpha
-                let f_c = 1.0 / (1.0 + smooth_f);
-                new_mat.data.color = LinearRgba::from_vec4(
-                    (src_color_old.to_vec4() * (1.0 - f_c) + new_color.to_vec4() * f_c)
-                        .clamp(Vec4::ZERO, Vec4::ONE),
+                // Use a clamped lux for the dark color lerp to ensure consistency in pitch black
+                let color_lux = lux.max(0.001);
+                let p_dark2 = lerp_color(
+                    Color::WHITE,
+                    dark_color2,
+                    p_exp_color_tint / f_gamma(color_lux).clamp(1.0, 300.0),
                 );
-            } else {
-                // For regular tiles and items, color snaps to the new lighting
-                if is_tile {
-                    // For tiles, we move the light intensity contribution more into the gamma
-                    // and keep the base color relatively uniform to prevent intensity seams.
-                    let lum = new_color.luminance();
-                    let target_lum = 0.8; // Target a stable luminance for the base color
-                    let intensity_factor = target_lum / lum.max(0.01);
 
-                    // CRITICAL: Only scale RGB, do NOT touch the alpha channel.
-                    // Scaling alpha causes faint transparency to become opaque.
-                    let mut final_color_vec = new_color.to_vec4();
-                    final_color_vec.x *= intensity_factor;
-                    final_color_vec.y *= intensity_factor;
-                    final_color_vec.z *= intensity_factor;
-                    // Alpha (final_color_vec.w) is left as-is.
-
-                    new_mat.data.color = LinearRgba::from_vec4(final_color_vec);
-                } else {
-                    new_mat.data.color = new_color;
+                let mut base = dst_color;
+                if is_tile && let Some(bc) = bcolor {
+                    let bc_srgba = bc.to_srgba();
+                    let max_c = bc_srgba.red.max(bc_srgba.green).max(bc_srgba.blue).max(0.2);
+                    base = Color::srgb(
+                        bc_srgba.red / max_c,
+                        bc_srgba.green / max_c,
+                        bc_srgba.blue / max_c,
+                    );
                 }
-            }
-            // new_mat.data.color = Srgba::rgb(1.0, 1.0, 1.0).into(); // --- debug for no color but gamma
+
+                let mut rgba =
+                    LinearRgba::from(base).to_vec4() * LinearRgba::from(p_dark2).to_vec4();
+
+                // Scale RGB if it's a tile
+                if is_tile {
+                    let tmp_val = LinearRgba::from_vec4(rgba);
+                    let lum = tmp_val.luminance();
+                    let target_lum = 0.8;
+                    let intensity_factor = target_lum / lum.max(0.01);
+                    rgba.x *= intensity_factor;
+                    rgba.y *= intensity_factor;
+                    rgba.z *= intensity_factor;
+
+                    // Apply anti-pitch-black ambient logic per-corner to ensure smoothness
+                    const DARK_COLOR_CORNER: Color =
+                        Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
+                    let dark_f =
+                        (p_exp_color_tint / 16.0 + tutorial_light_factor * 0.01).clamp(0.0, 1.0);
+                    let dark_spike = LinearRgba::from(DARK_COLOR_CORNER).to_vec4() * dark_f;
+
+                    rgba.x += dark_spike.x;
+                    rgba.y += dark_spike.y;
+                    rgba.z += dark_spike.z;
+
+                    // Alpha from visibility (smooth for tiles)
+                    rgba.w = (visibility * map_color.alpha()).clamp(0.0, 1.0);
+                }
+                // For non-tile, rgba.w already comes from dst_color which includes spectral/manual alpha
+
+                LinearRgba::from_vec4(rgba)
+            };
+
+            new_mat.data.ambient_color = Color::NONE.into();
 
             const BRIGHTNESS: f32 = 1.0;
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
+
             let gamma_mean =
                 |a: f32, b: f32, tc: f32| (a * smooth_f + calc_gamma(b, tc)) / (1.0 + smooth_f);
-            // let gamma_mean = |_a: f32, _b: f32| 1.0; // --- debug for color but no gamma.
+
+            let color_mean = |a: LinearRgba, b: LinearRgba| -> LinearRgba {
+                let a_v = a.to_vec4();
+                let b_v = b.to_vec4();
+                LinearRgba::from_vec4((a_v * smooth_f + b_v) / (1.0 + smooth_f))
+            };
+
             // Mapping to vertices:
             // gtl (Top): Logic (0.5, -0.5)
             // gtr (Right): Logic (0.5, 0.5)
@@ -1131,22 +1162,63 @@ pub(crate) fn apply_lighting(
             let corner_tc = if is_tile { 0.5 } else { tint_comp };
 
             new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c, tint_comp);
-            new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_top, corner_tc);
-            new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_right, corner_tc);
-            new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left, corner_tc);
-            new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot, corner_tc);
+            if is_tile {
+                new_mat.data.gtl = gamma_mean(new_mat.data.gtl, lux_top, corner_tc);
+                new_mat.data.gtr = gamma_mean(new_mat.data.gtr, lux_right, corner_tc);
+                new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left, corner_tc);
+                new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot, corner_tc);
+
+                let new_c_c = calc_rgba(lux_c, vis_c, None);
+                let new_c_tl = calc_rgba(lux_top, vis_top, Some(color_top));
+                let new_c_tr = calc_rgba(lux_right, vis_right, Some(color_right));
+                let new_c_bl = calc_rgba(lux_left, vis_left, Some(color_left));
+                let new_c_br = calc_rgba(lux_bot, vis_bot, Some(color_bot));
+
+                new_mat.data.color = color_mean(new_mat.data.color, new_c_c);
+                new_mat.data.ctl = color_mean(new_mat.data.ctl, new_c_tl);
+                new_mat.data.ctr = color_mean(new_mat.data.ctr, new_c_tr);
+                new_mat.data.cbl = color_mean(new_mat.data.cbl, new_c_bl);
+                new_mat.data.cbr = color_mean(new_mat.data.cbr, new_c_br);
+            } else {
+                new_mat.data.gtl = new_mat.data.gamma;
+                new_mat.data.gtr = new_mat.data.gamma;
+                new_mat.data.gbl = new_mat.data.gamma;
+                new_mat.data.gbr = new_mat.data.gamma;
+
+                let new_c = calc_rgba(lux_c, vis_c, None);
+
+                new_mat.data.color = color_mean(new_mat.data.color, new_c);
+                new_mat.data.color.alpha = new_c.alpha;
+                new_mat.data.ctl = new_mat.data.color;
+                new_mat.data.ctr = new_mat.data.color;
+                new_mat.data.cbl = new_mat.data.color;
+                new_mat.data.cbr = new_mat.data.color;
+            }
 
             if on_hover {
                 lux_c += 1.0;
                 new_mat.data.ambient_color = Color::srgb(0.20, 0.20, 0.0).into();
-                new_mat.data.color = Color::srgb(
-                    (new_color.red + 0.5).min(1.0),
-                    (new_color.green + 0.5).min(1.0),
-                    new_color.blue * 0.3,
-                )
-                .into();
+
+                let mut h_color = new_mat.data.color.to_vec4();
+                h_color.x = (h_color.x + 0.5).min(1.0);
+                h_color.y = (h_color.y + 0.5).min(1.0);
+                h_color.z *= 0.3;
+                new_mat.data.color = LinearRgba::from_vec4(h_color);
+                if !is_tile {
+                    new_mat.data.ctl = new_mat.data.color;
+                    new_mat.data.ctr = new_mat.data.color;
+                    new_mat.data.cbl = new_mat.data.color;
+                    new_mat.data.cbr = new_mat.data.color;
+                }
+
                 // We update gamma with the hover boost too
                 new_mat.data.gamma = gamma_mean(new_mat.data.gamma, lux_c, tint_comp);
+                if !is_tile {
+                    new_mat.data.gtl = new_mat.data.gamma;
+                    new_mat.data.gtr = new_mat.data.gamma;
+                    new_mat.data.gbl = new_mat.data.gamma;
+                    new_mat.data.gbr = new_mat.data.gamma;
+                }
             }
 
             const DEBUG_LIGHTING: bool = false;
@@ -1156,15 +1228,13 @@ pub(crate) fn apply_lighting(
             {
                 let f_g = f_gamma(lux_c);
                 info!(
-                    "Adapt: rl:{:.4} al:{:.4} exp:{:.4} mc:{:.4} lc:{:.4} fg:{:.4} ec:{:.2} cf:{:.2} g:{:.2} c:{:?}",
+                    "Adapt: rl:{:.4} al:{:.4} exp:{:.4} mc:{:.4} lc:{:.4} fg:{:.4} g:{:.2} c:{:?}",
                     raw_lux,
                     lg.exposure_lux,
                     exposure,
                     max_color,
                     lux_c,
                     f_g,
-                    exp_color,
-                    cold_f,
                     new_mat.data.gamma,
                     new_mat.data.color
                 );
@@ -1384,10 +1454,6 @@ pub(crate) fn apply_lighting(
         );
         if let Some(sprite) = o_sprite.as_mut() {
             sprite.color = smooth_color.into();
-        } else if let Some(mat_handle) = o_mat
-            && let Some(mat) = materials1.get_mut(mat_handle)
-        {
-            mat.data.color = smooth_color;
         }
     }
     for (bpos, ld) in lightdata_map.into_iter() {

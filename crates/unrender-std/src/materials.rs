@@ -15,6 +15,10 @@ use bevy::{
 #[derive(AsBindGroup, ShaderType, Debug, Clone)]
 pub struct CustomMaterial1Data {
     pub color: LinearRgba,
+    pub ctl: LinearRgba,
+    pub ctr: LinearRgba,
+    pub cbl: LinearRgba,
+    pub cbr: LinearRgba,
     pub ambient_color: LinearRgba,
     pub gamma: f32,
     pub gtl: f32,
@@ -40,6 +44,30 @@ impl CustomMaterial1Data {
         delta += (color1[0] - color2[0]).abs();
         delta += (color1[1] - color2[1]).abs();
         delta += (color1[2] - color2[2]).abs();
+        let ctl1 = self.ctl.to_f32_array();
+        let ctl2 = other.ctl.to_f32_array();
+        delta += (ctl1[0] - ctl2[0]).abs();
+        delta += (ctl1[1] - ctl2[1]).abs();
+        delta += (ctl1[2] - ctl2[2]).abs();
+        delta += (ctl1[3] - ctl2[3]).abs();
+        let ctr1 = self.ctr.to_f32_array();
+        let ctr2 = other.ctr.to_f32_array();
+        delta += (ctr1[0] - ctr2[0]).abs();
+        delta += (ctr1[1] - ctr2[1]).abs();
+        delta += (ctr1[2] - ctr2[2]).abs();
+        delta += (ctr1[3] - ctr2[3]).abs();
+        let cbl1 = self.cbl.to_f32_array();
+        let cbl2 = other.cbl.to_f32_array();
+        delta += (cbl1[0] - cbl2[0]).abs();
+        delta += (cbl1[1] - cbl2[1]).abs();
+        delta += (cbl1[2] - cbl2[2]).abs();
+        delta += (cbl1[3] - cbl2[3]).abs();
+        let cbr1 = self.cbr.to_f32_array();
+        let cbr2 = other.cbr.to_f32_array();
+        delta += (cbr1[0] - cbr2[0]).abs();
+        delta += (cbr1[1] - cbr2[1]).abs();
+        delta += (cbr1[2] - cbr2[2]).abs();
+        delta += (cbr1[3] - cbr2[3]).abs();
         let acolor1 = self.ambient_color.to_f32_array();
         let acolor2 = other.ambient_color.to_f32_array();
         delta += (acolor1[0] - acolor2[0]).abs();
@@ -68,13 +96,17 @@ impl CustomMaterial1Data {
 impl Default for CustomMaterial1Data {
     fn default() -> Self {
         Self {
-            color: Color::WHITE.into(),
+            color: Color::NONE.into(),
+            ctl: Color::NONE.into(),
+            ctr: Color::NONE.into(),
+            cbl: Color::NONE.into(),
+            cbr: Color::NONE.into(),
             ambient_color: Color::BLACK.with_alpha(0.0).into(),
             gamma: 1.0,
-            gtl: 2.0,
+            gtl: 1.0,
             gtr: 1.0,
-            gbl: 0.1,
-            gbr: 5.0,
+            gbl: 1.0,
+            gbr: 1.0,
             sheet_rows: 1,
             sheet_cols: 1,
             sheet_idx: 0,
