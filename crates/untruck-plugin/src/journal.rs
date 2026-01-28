@@ -14,7 +14,7 @@ use unghost_core::resources::potential_id_timer::PotentialIDTimer;
 use unghost_core::types::evidence::Evidence;
 use unghost_core::types::ghost::types::GhostType;
 use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use untruck_core::journal::ForceDiscardEvidenceEvent;
 use untypes_core::states::{AppState, GameState};

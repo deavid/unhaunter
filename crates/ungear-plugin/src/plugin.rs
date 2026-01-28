@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use unevents_core::events::sound::SoundEvent;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use untypes_core::states::AppState;
 
 use super::systems;

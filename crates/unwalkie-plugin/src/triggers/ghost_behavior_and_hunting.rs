@@ -17,7 +17,10 @@ fn trigger_hunt_warning_no_player_evasion_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    q_player: Query<(&Position, Option<&Hiding>, &PlayerGear), (With<PlayerSprite>, With<MainPlayer>)>,
+    q_player: Query<
+        (&Position, Option<&Hiding>, &PlayerGear),
+        (With<PlayerSprite>, With<MainPlayer>),
+    >,
     q_ghost: Query<&GhostSprite>,
     roomdb: Res<RoomDB>,
     mut warning_timer: Local<Option<Stopwatch>>,

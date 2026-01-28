@@ -4,7 +4,9 @@ use unsettings_core::{
     audio::AudioSettingsValue, game::GameplaySettingsValue, video::VideoSettingsValue,
 };
 
-use crate::menus::{AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1, VideoSettingsMenu};
+use crate::menus::{
+    AudioSettingsMenu, GameplaySettingsMenu, MenuSettingsLevel1, VideoSettingsMenu,
+};
 
 // Marker component for the main settings menu UI
 #[derive(Component)]

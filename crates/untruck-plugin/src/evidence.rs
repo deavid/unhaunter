@@ -6,7 +6,7 @@ use ungear_core::components::core::EvidenceSensor;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::looking_gear::LookingGear;
 use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use untypes_core::states::{AppState, GameState};
 use unui_core::components::game_ui::EvidenceUI;

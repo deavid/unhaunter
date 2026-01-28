@@ -13,7 +13,7 @@ use ungear_core::types::GearKind;
 use ungearitems_core::components::repellentflask::RepellentFlask;
 use unghost_core::resources::ghost_guess::GhostGuess;
 use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unsettings_core::audio::AudioSettings;
 use untypes_core::states::{AppState, GameState};
 

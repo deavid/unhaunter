@@ -4,25 +4,23 @@ use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
-use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unplayer_core::resources::PlayerInput;
+use unplayer_core::components::{MainPlayer, PlayerInput, PlayerSprite};
 use unsettings_core::game::{GameplaySettings, MovementStyle};
 
 /// System that handles keyboard input for player movement.
 ///
-/// This system reads keyboard input and converts it to movement vectors in the PlayerInput resource.
+/// This system reads keyboard input and converts it to movement vectors in the PlayerInput component.
 /// It also handles movement style transformations (e.g., screen-space orthogonal movement) and
 /// clears any active click-to-move targets and waypoint queues when keyboard movement is detected.
 pub(crate) fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
-    mut player_input: ResMut<PlayerInput>,
-    players: Query<(Entity, &PlayerSprite), With<MainPlayer>>,
+    mut players: Query<(Entity, &PlayerSprite, &mut PlayerInput), With<MainPlayer>>,
     mut waypoint_queues: Query<&mut WaypointQueue>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,
 ) {
-    for (entity, player) in players.iter() {
+    for (entity, player, mut player_input) in players.iter_mut() {
         let mut movement = Vec2::ZERO;
 
         if keyboard_input.pressed(player.controls.up) {
@@ -37,6 +35,9 @@ pub(crate) fn keyboard_input_system(
         if keyboard_input.pressed(player.controls.right) {
             movement.x += 1.0;
         }
+
+        player_input.run = keyboard_input.pressed(player.controls.run);
+        player_input.interact = keyboard_input.just_pressed(player.controls.activate);
 
         // Apply MovementStyle transformation (from original keyboard_player)
         if matches!(

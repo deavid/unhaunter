@@ -5,7 +5,6 @@ use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
 use unevents_core::events::hint::OnScreenHintEvent;
 use unghost_core::resources::current_evidence_readings::CurrentEvidenceReadings;
 use unmenu_core::mission_select::CurrentMissionSelectMode;
-use unplayer_core::resources::PlayerInput;
 use untypes_core::states::{AppState, GameState};
 use unui_plugin::plugin::UnhaunterUiPlugin;
 
@@ -26,7 +25,6 @@ impl Plugin for UnhaunterRootPlugin {
         app.init_resource::<CurrentMissionSelectMode>();
         app.init_resource::<unnoise_core::perlin::PerlinNoise>();
         app.init_resource::<unplayer_core::resources::game_config::GameConfig>();
-        app.init_resource::<PlayerInput>();
         app.add_message::<OnScreenHintEvent>();
 
         arch_setup::app_setup(app);

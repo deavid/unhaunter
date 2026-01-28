@@ -13,7 +13,7 @@ use ungear_core::types::gear::{GearKind, VisualKey};
 use unghost_core::types::evidence::Evidence;
 use unplayer_core::components::PlayerSprite;
 use unplayer_core::components::{Inventory, InventoryNext};
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::materials::UIPanelMaterial;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
 use untypes_core::states::GameState;

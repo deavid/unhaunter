@@ -1,5 +1,4 @@
 use crate::components::player::{Hiding, Stamina};
-use unplayer_core::components::{MainPlayer, PlayerSprite};
 use bevy::prelude::*;
 use unbehavior::behavior::Behavior;
 use unbehavior::behavior::Interactive;
@@ -12,7 +11,8 @@ use unfog_core::miasma::MiasmaGrid;
 use ungear_core::components::playergear::PlayerGear;
 use uninteraction_core::interactivestuff::InteractiveStuff;
 use unnavigation_core::collision_handler::CollisionHandler;
-use unplayer_core::resources::PlayerInput;
+use unplayer_core::components::PlayerInput;
+use unplayer_core::components::PlayerSprite;
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::utils::perspective;
 use unspatial_core::direction::Direction;
@@ -28,10 +28,10 @@ const DIR_MAG2: f32 = DIR_MAX / DIR_STEPS;
 const DIR_MAG3: f32 = DIR_MAG2 * 40.0;
 const DIR_RED: f32 = 1.001;
 
-/// System responsible for applying movement to the player based on the PlayerInput resource.
+/// System responsible for applying movement to the player based on the PlayerInput component.
 ///
 /// This system handles all player movement logic including:
-/// - Reading movement input from the PlayerInput resource (populated by input systems)
+/// - Reading movement input from the PlayerInput component (populated by input systems)
 /// - Applying movement speed, running, and stamina calculations
 /// - Collision detection and handling
 /// - Direction updates and animation
@@ -42,17 +42,16 @@ const DIR_RED: f32 = 1.001;
 /// and click-to-move input to use the same movement implementation.
 pub(crate) fn player_movement_system(
     time: Res<Time>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    player_input: Res<PlayerInput>,
     mut players: Query<(
         &mut Position,
         &mut Direction,
         &mut PlayerSprite,
         &mut AnimationTimer,
         &PlayerGear,
+        &PlayerInput,
         Option<&Hiding>,
         &mut Stamina,
-    ), With<MainPlayer>>,
+    )>,
     colhand: CollisionHandler,
     interactables: Query<
         (
@@ -76,7 +75,7 @@ pub(crate) fn player_movement_system(
 ) {
     let dt = time.delta_secs() * 60.0;
 
-    for (mut pos, mut dir, mut player, mut anim, player_gear, hiding, mut stamina) in
+    for (mut pos, mut dir, mut player, mut anim, player_gear, player_input, hiding, mut stamina) in
         players.iter_mut()
     {
         if !dir.is_finite() {
@@ -104,7 +103,7 @@ pub(crate) fn player_movement_system(
             col_delta = Vec3::ZERO;
         }
 
-        // Get movement direction from PlayerInput resource
+        // Get movement direction from PlayerInput component
         let input_vec = player_input.movement;
         let mut d = Direction {
             dx: input_vec.x,
@@ -127,7 +126,7 @@ pub(crate) fn player_movement_system(
         };
 
         // Check for Running with Stamina System
-        let wants_to_run = keyboard_input.pressed(player.controls.run);
+        let wants_to_run = player_input.run;
 
         // Miasma Logic
         let bpos = pos.to_board_position();
@@ -186,8 +185,8 @@ pub(crate) fn player_movement_system(
             .to_vec(),
         );
 
-        // Handle Interaction (E key)
-        if keyboard_input.just_pressed(player.controls.activate) {
+        // Handle Interaction
+        if player_input.interact {
             let mut max_dist = 1.4;
             let mut selected_entity = None;
             for (entity, item_pos, interactive, behavior, _) in interactables.iter() {

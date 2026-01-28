@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 use unsettings_core::{
     audio::{AudioLevel, AudioSettings, AudioSettingsValue},
     game::{CameraControls, GameplaySettings, GameplaySettingsValue, MovementStyle},
-    video::{VideoSettings, VideoSettingsValue, UpscaleFactorChoice},
+    video::{UpscaleFactorChoice, VideoSettings, VideoSettingsValue},
 };
 
 use crate::components::MenuEvent;

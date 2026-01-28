@@ -15,7 +15,7 @@ use unfoundation_core::random_seed;
 use unmetrics_core::metrics::SendMetric;
 use unnoise_core::perlin::PerlinNoise;
 use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::components::visuals::LightSensitive;

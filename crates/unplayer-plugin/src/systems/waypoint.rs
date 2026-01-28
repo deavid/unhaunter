@@ -11,8 +11,7 @@ use unnavigation_core::components::waypoint::{
     Waypoint, WaypointOwner, WaypointQueue, WaypointType,
 };
 use unnavigation_core::pathfinding::Pathfinder;
-use unplayer_core::components::MainPlayer;
-use unplayer_core::resources::PlayerInput;
+use unplayer_core::components::{MainPlayer, PlayerInput};
 use unrender_std::components::game::GameSprite;
 use unrender_std::utils::perspective;
 use unspatial_core::position::Position;
@@ -197,7 +196,10 @@ pub(crate) fn waypoint_creation_system(
 /// Replaces the old click-to-move update system.
 pub(crate) fn waypoint_following_system(
     mut commands: Commands,
-    q_player: Query<(Entity, &Position, &WaypointQueue), (With<PlayerSprite>, With<MainPlayer>)>,
+    mut q_player: Query<
+        (Entity, &Position, &WaypointQueue, &mut PlayerInput),
+        (With<PlayerSprite>, With<MainPlayer>),
+    >,
     q_waypoints: Query<(&Position, &Waypoint), (With<WaypointOwner>, Without<PlayerSprite>)>,
     q_interactives: Query<(
         Entity,
@@ -206,12 +208,11 @@ pub(crate) fn waypoint_following_system(
         &Behavior,
         Option<&unbehavior::components::RoomState>,
     )>,
-    mut player_input: ResMut<PlayerInput>,
     mut interactive_stuff: InteractiveStuff,
     mut ev_room: MessageWriter<RoomChangedEvent>,
     mut ev_npc: MessageWriter<NpcHelpEvent>,
 ) {
-    for (player_entity, player_pos, waypoint_queue) in q_player.iter() {
+    for (player_entity, player_pos, waypoint_queue, mut player_input) in q_player.iter_mut() {
         if let Some(current_waypoint_entity) = waypoint_queue.next() {
             if let Ok((waypoint_pos, waypoint)) = q_waypoints.get(current_waypoint_entity) {
                 let current = Vec2::new(player_pos.x, player_pos.y);

@@ -9,7 +9,14 @@ use unspatial_core::position::Position;
 /// and despawns it when the MoveToTarget component is removed.
 pub(crate) fn manage_walk_target_indicator(
     mut commands: Commands,
-    player_query: Query<&MoveToTarget, (With<PlayerSprite>, With<MainPlayer>, Without<WalkTargetIndicator>)>,
+    player_query: Query<
+        &MoveToTarget,
+        (
+            With<PlayerSprite>,
+            With<MainPlayer>,
+            Without<WalkTargetIndicator>,
+        ),
+    >,
     mut indicator_query: Query<(Entity, &mut Position), With<WalkTargetIndicator>>,
     move_target_exists_query: Query<&MoveToTarget, (With<PlayerSprite>, With<MainPlayer>)>,
 ) {

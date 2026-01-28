@@ -62,7 +62,7 @@ use ungearitems_core::components::salt::UVReactive;
 use uninteraction_core::interaction::Toggleable;
 use unmetrics_core::metrics::SendMetric;
 use unplayer_core::components::MainPlayer;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::resources::game_config::GameConfig;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::components::light::LightEmitter;
 use unrender_std::components::visuals::SpectralClarity;
