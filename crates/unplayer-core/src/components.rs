@@ -4,6 +4,9 @@ use unsettings_core::controls::ControlKeys;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
 
+#[derive(Component, Debug, Clone, Default)]
+pub struct MainPlayer;
+
 #[derive(Component, Debug, Clone)]
 pub struct InventoryNext {
     pub idx: Option<usize>,

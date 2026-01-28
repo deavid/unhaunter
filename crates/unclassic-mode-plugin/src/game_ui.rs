@@ -6,7 +6,7 @@ use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use ungear_core::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unsettings_core::game::GameplaySettings;
 use untypes_core::states::{AppState, GameState};
 use unui_core::assets::UiAssets;
@@ -377,7 +377,7 @@ fn toggle_held_object_ui(
     //     (With<RightSideGearUI>, Without<HeldObjectUI>),
     // >,
     mut text_query: Query<(&mut Text, &mut TextColor, &ElementObjectUI)>,
-    players: Query<&PlayerGear, With<PlayerSprite>>,
+    players: Query<&PlayerGear, (With<PlayerSprite>, With<MainPlayer>)>,
     objects: Query<&Behavior>,
 ) {
     // let is_holding_object = players

@@ -4,7 +4,7 @@ use unnavigation_core::components::{
     move_to::MoveToTarget,
     waypoint::{Waypoint, WaypointOwner, WaypointQueue},
 };
-use unplayer_core::components::PlayerSprite;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unplayer_core::resources::PlayerInput;
 use unsettings_core::game::{GameplaySettings, MovementStyle};
 
@@ -17,7 +17,7 @@ pub(crate) fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
     mut player_input: ResMut<PlayerInput>,
-    players: Query<(Entity, &PlayerSprite)>,
+    players: Query<(Entity, &PlayerSprite), With<MainPlayer>>,
     mut waypoint_queues: Query<&mut WaypointQueue>,
     q_existing_waypoints: Query<Entity, (With<Waypoint>, With<WaypointOwner>)>,
     game_settings: Res<Persistent<GameplaySettings>>,

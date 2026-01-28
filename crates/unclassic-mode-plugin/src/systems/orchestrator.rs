@@ -19,8 +19,7 @@ use unghost_core::components::GhostBehaviorDynamics;
 use unghost_core::components::GhostBreach;
 use unghost_core::components::ghost_sprite::GhostSprite;
 use unghost_core::resources::haunt_state::HauntState;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::components::Stamina;
+use unplayer_core::components::{MainPlayer, PlayerSprite, Stamina};
 use unrender_std::components::animation::{AnimationTimer, CharacterAnimation};
 use unrender_std::components::focus_ring::FocusRing;
 use unrender_std::components::game::{GameSound, GameSprite, MapTileSprite};
@@ -164,6 +163,7 @@ pub(crate) fn classic_mode_orchestrator(
         .insert(MapTileSprite)
         .insert(SpriteLayer(0.00001))
         .insert(PlayerSprite::new(1, player_position).with_controls(**p.control_settings))
+        .insert(MainPlayer)
         .insert(PlayerTag { id: 1 })
         .insert(ShadowCaster::default())
         .insert(Viewer { id: 1, ..default() })

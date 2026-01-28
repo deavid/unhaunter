@@ -8,6 +8,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::types::grade::Grade;
 use unfoundation_core::utils::time::PrintingTimer;
 use unlight_core::resources::light_grid::LightGrid;
+use unplayer_core::components::MainPlayer;
 use unplayer_core::resources::game_config::GameConfig;
 use unprofile_core::profile::PlayerProfileData;
 use unrender_std::utils::light::lerp_color;
@@ -131,8 +132,7 @@ fn recover_sanity(
 }
 
 fn visual_health(
-    qp: Query<&PlayerSprite>,
-    gc: Res<GameConfig>,
+    qp: Query<&PlayerSprite, With<MainPlayer>>,
     mut qb: Query<(
         Option<&mut ImageNode>,
         &mut BackgroundColor,
@@ -140,9 +140,6 @@ fn visual_health(
     )>,
 ) {
     for player in &qp {
-        if player.id != gc.player_id {
-            continue;
-        }
         let health = (player.health.clamp(0.0, 100.0) / 100.0).clamp(0.0, 1.0);
         let crazyness = (1.0 - player.sanity() / 100.0).clamp(0.0, 1.0);
         for (mut o_uiimage, mut bgcolor, dmg) in &mut qb {

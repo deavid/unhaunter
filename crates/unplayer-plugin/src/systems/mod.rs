@@ -6,7 +6,6 @@ pub(crate) mod keyboard;
 pub(crate) mod mouse;
 pub(crate) mod movement;
 pub(crate) mod pathfinding;
-pub(crate) mod player_state;
 pub(crate) mod sanityhealth;
 pub(crate) mod setup;
 pub(crate) mod viewer_sync;

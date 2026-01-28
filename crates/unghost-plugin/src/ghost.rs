@@ -15,10 +15,10 @@ use unghost_core::components::ghost_sprite::{GhostBehaviorDynamics, GhostSprite}
 use unghost_core::resources::haunt_state::HauntState;
 use unghost_core::resources::object_interaction::ObjectInteractionConfig;
 use unmetrics_core::metrics::SendMetric;
-use unplayer_core::resources::PlayerState;
+use unplayer_core::components::{Hiding, PlayerSprite};
 use unrender_std::components::game::GameSprite;
-use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::components::sprite_layer::SpriteLayer;
+use unrender_std::components::visuals::ResolutionFactor;
 use unrender_std::utils::perspective;
 use unsound_core::emitter::SoundEmitter;
 use unspatial_core::boardposition::BoardPosition;
@@ -95,8 +95,7 @@ fn ghost_movement(
             Without<FadeOut>,
         ),
     >,
-    qp: Query<&Position, With<PlayerTag>>,
-    player_state: Res<PlayerState>,
+    qp: Query<(&Position, &PlayerSprite, Option<&Hiding>), With<PlayerTag>>,
     roomdb: Res<RoomDB>,
     mut summary: ResMut<SummaryData>,
     bf: Res<BoardTopology>,
@@ -201,13 +200,11 @@ fn ghost_movement(
                     .random_range(0.0..(ghost.hunting * 10.0 + ghbonus).sqrt().max(0.000001) * 10.0)
                     > 10.0
             {
-                let player_pos_l: Vec<(&Position, bool)> = if player_state.health > 0.0 {
-                    qp.iter()
-                        .map(|pos| (pos, player_state.hiding_spot.is_some()))
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let player_pos_l: Vec<(&Position, bool)> = qp
+                    .iter()
+                    .filter(|(_, p, _)| p.health > 0.0)
+                    .map(|(pos, _, hiding)| (pos, hiding.is_some()))
+                    .collect();
                 if !player_pos_l.is_empty() {
                     let idx = rng.random_range(0..player_pos_l.len());
                     let (ppos, hiding) = player_pos_l[idx];
@@ -408,7 +405,7 @@ fn ghost_enrage(
     mut timer: Local<PrintingTimer>,
     mut avg_angry: Local<MeanValue>,
     mut qg: Query<(&mut GhostSprite, &Position, &GhostBehaviorDynamics), Without<FadeOut>>,
-    mut player_state: ResMut<PlayerState>,
+    mut q_player: Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
     mut gs_audio: SoundEmitter,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
@@ -437,7 +434,7 @@ fn ghost_enrage(
         );
 
         // 3. Calculate minimum player distance for this ghost
-        let min_player_dist = calculate_min_player_distance(ghost_position, &player_state);
+        let min_player_dist = calculate_min_player_distance(ghost_position, &q_player);
 
         // 4. Apply distance-based effects
         apply_distance_based_effects(&mut ghost, min_player_dist, dt);
@@ -447,7 +444,7 @@ fn ghost_enrage(
             let hunt_result = handle_hunting_phase(
                 &mut ghost,
                 ghost_position,
-                &mut player_state,
+                &mut q_player,
                 &gs_audio.time,
                 &difficulty,
                 dt,
@@ -479,7 +476,7 @@ fn ghost_enrage(
         let rage_result = calculate_rage_update(
             &mut ghost,
             ghost_position,
-            &player_state,
+            &q_player,
             dynamics,
             &mut avg_angry,
             &difficulty,
@@ -877,8 +874,18 @@ fn handle_salty_trace_spawning_simple(
 }
 
 /// Calculate minimum player distance to ghost
-fn calculate_min_player_distance(ghost_position: &Position, player_state: &PlayerState) -> f32 {
-    calculate_weighted_distance(ghost_position, &player_state.position).clamp(1.0, 1000.0)
+/// Calculate minimum distance to any alive player
+fn calculate_min_player_distance(
+    ghost_position: &Position,
+    q_player: &Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
+) -> f32 {
+    q_player
+        .iter()
+        .filter(|(p, _, _)| p.health > 0.0)
+        .map(|(_, pos, _)| calculate_weighted_distance(ghost_position, pos))
+        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+        .unwrap_or(1000.0)
+        .clamp(1.0, 1000.0)
 }
 
 /// Apply distance-based effects on ghost behavior
@@ -902,7 +909,7 @@ struct HuntingResult {
 fn handle_hunting_phase(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    player_state: &mut PlayerState,
+    q_player: &mut Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
     time: &Res<Time>,
     difficulty: &Res<CurrentDifficulty>,
     dt: f32,
@@ -915,10 +922,13 @@ fn handle_hunting_phase(
     let ghost_strength = (time.elapsed_secs() - ghost.hunt_time_secs).clamp(0.0, 2.0);
 
     // Apply player damage during hunt
-    // For now, assume single player, damage based on distance to ghost
-    let dist2 = calculate_weighted_distance_squared(ghost_position, &player_state.position) + 2.0;
-    let dmg = dist2.recip() * difficulty.0.health_drain_rate;
-    player_state.health -= dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
+    // Damage all players based on distance to ghost
+    for (mut player, player_pos, _) in q_player.iter_mut() {
+        let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos) + 2.0;
+        let dmg = dist2.recip() * difficulty.0.health_drain_rate;
+        let damage_to_apply = dmg * dt * 30.0 * ghost_strength / (1.0 + ghost.calm_time_secs / 5.0);
+        player.health -= damage_to_apply;
+    }
 
     // Determine roar during hunting
     let roar_type = if ghost.hunting > 4.0 {
@@ -1006,7 +1016,7 @@ fn handle_warning_phases(
 fn calculate_rage_update(
     ghost: &mut GhostSprite,
     ghost_position: &Position,
-    player_state: &PlayerState,
+    q_player: &Query<(&mut PlayerSprite, &Position, Option<&Hiding>)>,
     dynamics: &GhostBehaviorDynamics,
     avg_angry: &mut MeanValue,
     difficulty: &Res<CurrentDifficulty>,
@@ -1018,25 +1028,28 @@ fn calculate_rage_update(
     let mut player_in_room = false;
     let mut total_inv_sanity = 0.0;
 
-    let sanity = player_state.sanity;
-    let inv_sanity = (120.0 - sanity) / 100.0;
+    for (player_sprite, player_pos, _) in q_player.iter() {
+        let sanity = player_sprite.sanity();
+        let inv_sanity = (120.0 - sanity) / 100.0;
 
-    let dist2 = calculate_weighted_distance_squared(ghost_position, &player_state.position)
-        / difficulty.0.hunt_provocation_radius
-        * (0.01 + sanity)
-        + 0.1
-        + sanity / 100.0;
+        let dist2 = calculate_weighted_distance_squared(ghost_position, player_pos)
+            / difficulty.0.hunt_provocation_radius
+            * (0.01 + sanity)
+            + 0.1
+            + sanity / 100.0;
 
-    let angry2 = dist2.recip() * 1000000.0 / sanity
-        * player_state.mean_sound
-        * (player_state.health / 100.0).clamp(0.0, 1.0);
+        let angry2 = dist2.recip() * 1000000.0 / sanity
+            * player_sprite.mean_sound
+            * (player_sprite.health / 100.0).clamp(0.0, 1.0);
 
-    total_angry2 += angry2 * inv_sanity + player_state.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
+        total_angry2 +=
+            angry2 * inv_sanity + player_sprite.mean_sound.sqrt() * inv_sanity * dt * 3000.1;
 
-    let player_board_position = player_state.position.to_board_position();
-    if roomdb.room_tiles.contains_key(&player_board_position) {
-        player_in_room = true;
-        total_inv_sanity += inv_sanity;
+        let player_board_position = player_pos.to_board_position();
+        if roomdb.room_tiles.contains_key(&player_board_position) {
+            player_in_room = true;
+            total_inv_sanity += inv_sanity;
+        }
     }
 
     let angry = total_angry2.sqrt();

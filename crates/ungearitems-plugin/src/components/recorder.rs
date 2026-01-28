@@ -58,11 +58,13 @@ pub(crate) fn update_recorder(
             }
             s *= f;
 
-            if s < 5.0 {
+            let s_db = (s / 92.0).tanh() * 92.0 - 93.0;
+
+            if s_db < -50.0 {
                 GearSpriteID::Recorder1.to_visual_key()
-            } else if s < 15.0 {
+            } else if s_db < -30.0 {
                 GearSpriteID::Recorder2.to_visual_key()
-            } else if s < 45.0 {
+            } else if s_db < -10.0 {
                 GearSpriteID::Recorder3.to_visual_key()
             } else {
                 GearSpriteID::Recorder4.to_visual_key()
@@ -192,11 +194,8 @@ pub(crate) fn update_recorder(
                     "- EVP RECORDED -".to_string()
                 }
             } else {
-                format!(
-                    "Volume: {:>4.0}dB ({})",
-                    recorder.sound - 93.0,
-                    recorder.evp_recorded_count
-                )
+                let vol = (recorder.sound / 92.0).tanh() * 92.0 - 93.0;
+                format!("Volume: {:4.0}dB ({})", vol, recorder.evp_recorded_count)
             }
         } else {
             "".to_string()

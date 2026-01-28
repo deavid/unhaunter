@@ -14,7 +14,6 @@ use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::GearKind;
 use uninteraction_core::interaction::Triggered;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
-use unplayer_core::resources::PlayerState;
 use unrender_std::components::game::GameSprite;
 use unrender_std::components::sprite_layer::SpriteLayer;
 use unrender_std::resources::sprite_registry::SpriteRegistry;
@@ -108,7 +107,6 @@ fn sound_playback_system(
 fn keyboard_gear(
     _keyboard_input: Res<ButtonInput<KeyCode>>,
     mut _q_gear: Query<&mut PlayerGear, With<PlayerTag>>,
-    _player_state: Res<PlayerState>,
     _looking_gear: Res<LookingGear>,
 ) {
     // TODO: Implement using Entity-based gear

@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use untypes_core::states::GameState;
 use unui_core::assets::UiAssets;
 
@@ -59,14 +58,10 @@ pub(crate) fn setup_sanity_ui(p: &mut ChildSpawnerCommands, handles: &UiAssets) 
 }
 
 fn update_sanity(
-    gc: Res<GameConfig>,
-    qp: Query<&PlayerSprite>,
+    qp: Query<&PlayerSprite, With<MainPlayer>>,
     mut qst: Query<&mut Text, With<SanityText>>,
 ) {
     for player in &qp {
-        if player.id != gc.player_id {
-            continue;
-        }
         for mut text in &mut qst {
             let new_sanity_text = format!("Player 1:\n  {:.0}% Sanity", player.sanity());
             if new_sanity_text != text.0 {

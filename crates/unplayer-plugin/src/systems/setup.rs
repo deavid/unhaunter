@@ -9,7 +9,6 @@ use crate::systems::input;
 use crate::systems::keyboard;
 use crate::systems::mouse;
 use crate::systems::movement;
-use crate::systems::player_state;
 use crate::systems::sanityhealth;
 use crate::systems::viewer_sync;
 use crate::systems::walk_target_indicator;
@@ -20,6 +19,11 @@ pub(crate) fn app_setup(app: &mut App) {
     grabdrop::app_setup(app);
     hide::app_setup(app);
 
+    app.add_systems(
+        PreUpdate,
+        input::mouse_interaction::mouse_right_click_gear_system,
+    );
+
     // Set up input and movement systems with proper ordering
     app.add_systems(
         Update,
@@ -29,7 +33,6 @@ pub(crate) fn app_setup(app: &mut App) {
             // Walk target indicator system (kept for compatibility)
             walk_target_indicator::manage_walk_target_indicator,
             // Mouse interaction systems (gear only, clicks handled by waypoint system)
-            input::mouse_interaction::mouse_right_click_gear_system,
             input::mouse_interaction::mouse_scroll_gear_system,
             input::mouse_interaction::mouse_over_interactive_system,
             input::mouse_interaction::mouse_out_interactive_system,
@@ -48,19 +51,14 @@ pub(crate) fn app_setup(app: &mut App) {
 
     app.add_systems(
         Update,
-        (
-            // Update player state for cross-domain access
-            player_state::update_player_state,
-            // Sync viewer data for rendering
-            viewer_sync::viewer_visual_sync,
-        )
-            .run_if(
-                in_state(AppState::InGame).and(
-                    in_state(GameState::None)
-                        .or(in_state(GameState::Truck))
-                        .or(in_state(GameState::NpcHelp)),
-                ),
+        // Sync viewer data for rendering
+        viewer_sync::viewer_visual_sync.run_if(
+            in_state(AppState::InGame).and(
+                in_state(GameState::None)
+                    .or(in_state(GameState::Truck))
+                    .or(in_state(GameState::NpcHelp)),
             ),
+        ),
     );
 
     mouse::app_setup(app);

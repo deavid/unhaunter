@@ -5,8 +5,7 @@ use unengine_core::GCameraArena;
 use unevents_core::events::board_topology_rebuild::BoardTopologyToRebuild;
 use unevents_core::events::roomchanged::{InteractionExecutionType, RoomChangedEvent};
 use uninteraction_core::interactivestuff::InteractiveStuff;
-use unplayer_core::components::PlayerSprite;
-use unplayer_core::resources::game_config::GameConfig;
+use unplayer_core::components::{MainPlayer, PlayerSprite};
 use unspatial_core::position::Position;
 use untypes_core::states::GameState;
 
@@ -26,8 +25,7 @@ fn roomchanged_event(
     mut ev_room: MessageReader<RoomChangedEvent>,
     mut interactive_stuff: InteractiveStuff,
     interactables: Query<(Entity, &Position, &Behavior, &RoomState), Without<PlayerSprite>>,
-    gc: Res<GameConfig>,
-    pc: Query<(&PlayerSprite, &Transform), Without<GCameraArena>>,
+    pc: Query<(&PlayerSprite, &Transform), (Without<GCameraArena>, With<MainPlayer>)>,
     mut camera: Query<&mut Transform, With<GCameraArena>>,
 ) {
     let Some(ev) = ev_room.read().next() else {
@@ -54,10 +52,7 @@ fn roomchanged_event(
         interactive_stuff.game_next_state.set(GameState::Truck);
     }
     if ev.initialize {
-        for (player, p_transform) in pc.iter() {
-            if player.id != gc.player_id {
-                continue;
-            }
+        for (_player, p_transform) in pc.iter() {
             for mut cam_trans in camera.iter_mut() {
                 cam_trans.translation = p_transform.translation;
             }
