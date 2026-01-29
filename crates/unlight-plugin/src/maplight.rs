@@ -3,15 +3,11 @@
 //! This module handles lighting, visibility, and color calculations for the game
 //! world. It includes:
 //!
-//! * Functions for calculating the player's visibility field based on line-of-sight
-//!   and potentially sanity levels.
+//! * Functions for calculating the player's visibility field based on line-of-sight and potentially sanity levels.
 //!
-//! * Functions for applying lighting effects to map tiles and sprites, simulating
-//!   various light sources (ambient, flashlight, ghost effects) and adjusting colors
-//!   based on visibility and exposure.
+//! * Functions for applying lighting effects to map tiles and sprites, simulating various light sources (ambient, flashlight, ghost effects) and adjusting colors based on visibility and exposure.
 //!
-//! * Systems for dynamically updating lighting and visibility as the player moves and
-//!   interacts with the environment.
+//! * Systems for dynamically updating lighting and visibility as the player moves and interacts with the environment.
 use bevy::ecs::system::SystemParam;
 use bevy::{color::palettes::css, prelude::*};
 use bevy_platform::collections::HashMap;
@@ -31,6 +27,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping;
 pub(crate) use unlight_core::types::light::LightData;
+pub(crate) use unlight_core::types::light::LightFieldData;
 use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unrender_std::utils::perspective;
 use unsound_core::resources::SoundGrid;
@@ -234,24 +231,209 @@ pub(crate) fn player_visibility_system(
 ///
 /// ### Core Intentions:
 ///
-/// * **Atmospheric focus (Eye Adaptation):** Instead of static lighting, this system calculates a global
-///   exposure level based on what the player is currently looking at. This creates a "glare" effect
-///   near bright sources and a "slow fade-in" when entering pitch-black rooms, simulating retinal adaptation.
+/// * **Atmospheric focus (Eye Adaptation):** Instead of static lighting, this system calculates a global exposure level based on what the player is currently looking at. This creates a "glare" effect near bright sources and a "slow fade-in" when entering pitch-black rooms, simulating retinal adaptation.
 ///
-/// * **Perceptual Continuity:** To prevent a "tiled" look, light is sampled at the intersections (corners)
-///   of tiles. This ensures that colors and brightness flow seamlessly across tile boundaries, making
-///   the map feel like a single cohesive space rather than a grid of sprites.
+/// * **Perceptual Continuity:** To prevent a "tiled" look, light is sampled at the intersections (corners) of tiles. This ensures that colors and brightness flow seamlessly across tile boundaries, making the map feel like a single cohesive space rather than a grid of sprites.
 ///
-/// * **The Spectral Dimension:** The system distinguishes between Visible, Red, Infrared, and Ultraviolet
-///   wavelengths. This is the primary mechanic for supernatural investigation, where specific equipment
-///   reveals hidden spectral colors (charges) on haunted objects that are otherwise invisible.
+/// * **The Spectral Dimension:** The system distinguishes between Visible, Red, Infrared, and Ultraviolet wavelengths. This is the primary mechanic for supernatural investigation, where specific equipment reveals hidden spectral colors (charges) on haunted objects that are otherwise invisible.
 ///
-/// * **Tonemapping for Dread:** We use a Sigmoid-like curve (shoulder/toe) to prevent pure-white
-///   oversaturation while ensuring that shadows retain a deep, oppressive feel without losing all detail.
+/// * **Tonemapping for Dread:** We use a Sigmoid-like curve (shoulder/toe) to prevent pure-white oversaturation while ensuring that shadows retain a deep, oppressive feel without losing all detail.
 ///
-/// * **Performance vs. Atmosphere:** Since per-vertex lighting is expensive, the system uses a
-///   stochastic update strategy. It prioritizes entities currently interacting with the player or
-///   spectral lights, while updating background tiles over multiple frames to maintain high framerates.
+/// * **Performance vs. Atmosphere:** Since per-vertex lighting is expensive, the system uses a stochastic update strategy. It prioritizes entities currently interacting with the player or spectral lights, while updating background tiles over multiple frames to maintain high framerates.
+///
+/// Context for sampling light and visibility at specific coordinates.
+///
+/// This struct replaces deep closures in `apply_lighting` and allows for
+/// reusable, testable sampling logic.
+pub(crate) struct LightingSampler<'a> {
+    pub(crate) flashlights: &'a [(&'a Position, Direction, f32, Color, LightType, Array3<f32>)],
+    pub(crate) bf: &'a BoardTopology,
+    pub(crate) lf: &'a Array3<LightFieldData>,
+    pub(crate) vf: &'a VisibilityData,
+    pub(crate) exposure: f32,
+    pub(crate) tutorial_light_factor: f32,
+}
+
+impl<'a> LightingSampler<'a> {
+    pub(crate) fn fpos_gamma_color(
+        &self,
+        target_pos: Position,
+        is_light_sensitive: bool,
+    ) -> Option<((f32, f32, f32), LightData)> {
+        const FL_MIN_DST: f32 = 0.1;
+        let rpos_raw = target_pos;
+        let bpos = target_pos.to_board_position();
+        let p = bpos.ndidx_checked(self.bf.map_size)?;
+        let mut lux_fl = [0_f32; 3];
+        let mut lightdata = LightData::default();
+        for (flpos, fldir, flpower, flcolor, fltype, flvismap) in self.flashlights.iter() {
+            let d2 = rpos_raw.distance2(flpos);
+            let fl = if is_light_sensitive && d2 < 4.0 {
+                // Smooth, distance-only lighting for players/ghosts near light sources
+                // Using a 1/r falloff for proximity boost as requested.
+                let dist = d2.sqrt();
+                // flpower is already adjusted. The 2.0 factor provides a damped proximity boost.
+                flpower / (dist + 5.0) * 2.0
+            } else {
+                let fldir = fldir.with_max_dist(200.0);
+                let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
+                let lpos = **flpos + fldir / (100.0 / focus + 20.0);
+                let mut lpos = lpos.unrotate_by_dir(&fldir);
+                let mut rpos = rpos_raw.unrotate_by_dir(&fldir);
+                rpos.x -= lpos.x;
+                rpos.y -= lpos.y;
+                lpos.x = 0.0;
+                lpos.y = 0.0;
+                if rpos.x > 0.0 {
+                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
+                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                }
+                if rpos.x < 0.0 {
+                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
+                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
+                }
+
+                let dist = (lpos.distance(&rpos) + 0.1)
+                    .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
+                let flvis = flvismap[p];
+                flpower / (dist + FL_MIN_DST)
+                    * flvis.clamp(0.0001, 1.0)
+                    * (focus + 0.5).clamp(0.5, 8.0)
+            };
+            let flsrgba = flcolor.to_srgba();
+            lux_fl[0] += fl * flsrgba.red;
+            lux_fl[1] += fl * flsrgba.green;
+            lux_fl[2] += fl * flsrgba.blue;
+            let ld = LightData::from_type(*fltype, fl);
+            lightdata = lightdata.add(&ld);
+        }
+        let ambient_light = 0.0001 + self.tutorial_light_factor * 0.0001;
+        self.lf.get(bpos.ndidx()).map(|lf| {
+            let r = (lf.lux * lf.color.0 + lux_fl[0] + ambient_light) / self.exposure;
+            let g = (lf.lux * lf.color.1 + lux_fl[1] + ambient_light) / self.exposure;
+            let b = (lf.lux * lf.color.2 + lux_fl[2] + ambient_light) / self.exposure;
+
+            (
+                (
+                    tonemapping::artistic_tonemap(r),
+                    tonemapping::artistic_tonemap(g),
+                    tonemapping::artistic_tonemap(b),
+                ),
+                lightdata.add(&LightData::from_type(
+                    LightType::Visible,
+                    lf.lux + ambient_light,
+                )),
+            )
+        })
+    }
+
+    pub(crate) fn f_vis(&self, v: f32) -> f32 {
+        (v.clamp(0.0, 1.0) * 1.5).clamp(0.0001, 1.0)
+    }
+
+    pub(crate) fn fpos_sampling_corner(
+        &self,
+        target_pos: Position,
+        o_light_sens: Option<&LightSensitive>,
+    ) -> (f32, f32, Color, LightData) {
+        let x = target_pos.x;
+        let y = target_pos.y;
+        let z = target_pos.z.round() as i64;
+        let x0 = x.floor() as i64;
+        let y0 = y.floor() as i64;
+        let x1 = x.ceil() as i64;
+        let y1 = y.ceil() as i64;
+
+        let mut total_l = 0.0;
+        let mut total_v = 0.0;
+        let mut total_r = 0.0;
+        let mut total_g = 0.0;
+        let mut total_b = 0.0;
+        let mut total_ld = LightData::default();
+        let mut count = 0.0;
+        let is_light_sensitive = o_light_sens.is_some();
+        for tx in [x0, x1] {
+            for ty in [y0, y1] {
+                let bpos = BoardPosition { x: tx, y: ty, z };
+                if let Some(p) = bpos.ndidx_checked(self.bf.map_size) {
+                    let vis = self.f_vis(self.vf.visibility_field[p]);
+                    if vis > 0.0001
+                        && let Some(((r, g, b), ld)) =
+                            self.fpos_gamma_color(bpos.to_position(), is_light_sensitive)
+                    {
+                        total_r += r;
+                        total_g += g;
+                        total_b += b;
+                        total_l += (r + g + b) / 3.0;
+                        total_v += vis;
+                        total_ld = total_ld.add(&ld);
+                        count += 1.0;
+                    }
+                }
+            }
+        }
+        if count > 0.0 {
+            (
+                total_l / count,
+                (total_v / count).clamp(0.0001, 1.0),
+                Color::srgb(total_r / count, total_g / count, total_b / count),
+                LightData {
+                    visible: total_ld.visible / count,
+                    red: total_ld.red / count,
+                    infrared: total_ld.infrared / count,
+                    ultraviolet: total_ld.ultraviolet / count,
+                },
+            )
+        } else {
+            let vis = self.f_vis(
+                self.vf
+                    .visibility_field
+                    .get(target_pos.to_board_position().ndidx())
+                    .copied()
+                    .unwrap_or(0.0),
+            );
+            let ((r, g, b), ld) = self
+                .fpos_gamma_color(target_pos, is_light_sensitive)
+                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+            ((r + g + b) / 3.0, vis, Color::srgb(r, g, b), ld)
+        }
+    }
+
+    pub(crate) fn calc_gamma(&self, lux: f32, tc: f32) -> f32 {
+        tonemapping::calc_gamma(
+            lux,
+            tc,
+            self.exposure,
+            tonemapping::K_COLD,
+            tonemapping::BRIGHTNESS,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn calc_rgba(
+        &self,
+        lux: f32,
+        visibility: f32,
+        bcolor: Option<Color>,
+        dst_color: Color,
+        is_tile: bool,
+        map_color_alpha: f32,
+    ) -> LinearRgba {
+        tonemapping::calc_rgba(
+            lux,
+            visibility,
+            bcolor,
+            self.exposure,
+            tonemapping::K_COLD,
+            self.tutorial_light_factor,
+            tonemapping::DARK_COLOR2,
+            dst_color,
+            is_tile,
+            map_color_alpha,
+        )
+    }
+}
+
 #[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting(
     mut qt2: Query<
@@ -508,142 +690,13 @@ pub(crate) fn apply_lighting(
 
     // --- Shared Lighting Sampling Logic ---
 
-    // minimum distance for flashlight
-    const FL_MIN_DST: f32 = 0.1;
-
-    let fpos_gamma_color = |target_pos: Position,
-                            is_light_sensitive: bool|
-     -> Option<((f32, f32, f32), LightData)> {
-        let rpos_raw = target_pos;
-        let bpos = target_pos.to_board_position();
-        let p = bpos.ndidx_checked(bf.map_size)?;
-        let mut lux_fl = [0_f32; 3];
-        let mut lightdata = LightData::default();
-        for (flpos, fldir, flpower, flcolor, fltype, flvismap) in flashlights.iter() {
-            let d2 = rpos_raw.distance2(flpos);
-            let fl = if is_light_sensitive && d2 < 4.0 {
-                // Smooth, distance-only lighting for players/ghosts near light sources
-                // Using a 1/r falloff for proximity boost as requested.
-                let dist = d2.sqrt();
-                // flpower is already adjusted. The 2.0 factor provides a damped proximity boost.
-                flpower / (dist + 5.0) * 2.0
-            } else {
-                let fldir = fldir.with_max_dist(200.0);
-                let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
-                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
-                let mut lpos = lpos.unrotate_by_dir(&fldir);
-                let mut rpos = rpos_raw.unrotate_by_dir(&fldir);
-                rpos.x -= lpos.x;
-                rpos.y -= lpos.y;
-                lpos.x = 0.0;
-                lpos.y = 0.0;
-                if rpos.x > 0.0 {
-                    rpos.x = fastapprox::faster::pow(rpos.x, 1.0 / focus.clamp(1.0, 1.3));
-                    rpos.y /= rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                }
-                if rpos.x < 0.0 {
-                    rpos.x = -fastapprox::faster::pow(-rpos.x, (focus / 5.0 + 1.0).clamp(1.0, 4.0));
-                    rpos.y *= -rpos.x * (focus - 1.0).clamp(0.0, 10.0) / 30.0 + 1.0;
-                }
-
-                let dist = (lpos.distance(&rpos) + 0.1)
-                    .powf((fldir.distance() / 200.0).clamp(0.2, 1.0).recip());
-                let flvis = flvismap[p];
-                flpower / (dist + FL_MIN_DST)
-                    * flvis.clamp(0.0001, 1.0)
-                    * (focus + 0.5).clamp(0.5, 8.0)
-            };
-            let flsrgba = flcolor.to_srgba();
-            lux_fl[0] += fl * flsrgba.red;
-            lux_fl[1] += fl * flsrgba.green;
-            lux_fl[2] += fl * flsrgba.blue;
-            let ld = LightData::from_type(*fltype, fl);
-            lightdata = lightdata.add(&ld);
-        }
-        let ambient_light = 0.0001 + tutorial_light_factor * 0.0001;
-        lf.get(bpos.ndidx()).map(|lf| {
-            let r = (lf.lux * lf.color.0 + lux_fl[0] + ambient_light) / exposure;
-            let g = (lf.lux * lf.color.1 + lux_fl[1] + ambient_light) / exposure;
-            let b = (lf.lux * lf.color.2 + lux_fl[2] + ambient_light) / exposure;
-
-            (
-                (
-                    tonemapping::artistic_tonemap(r),
-                    tonemapping::artistic_tonemap(g),
-                    tonemapping::artistic_tonemap(b),
-                ),
-                lightdata.add(&LightData::from_type(
-                    LightType::Visible,
-                    lf.lux + ambient_light,
-                )),
-            )
-        })
-    };
-
-    let f_vis = |v: f32| (v.clamp(0.0, 1.0) * 1.5).clamp(0.0001, 1.0);
-
-    let fpos_sampling_corner = |target_pos: Position,
-                                o_light_sens: Option<&LightSensitive>|
-     -> (f32, f32, Color, LightData) {
-        let x = target_pos.x;
-        let y = target_pos.y;
-        let z = target_pos.z.round() as i64;
-        let x0 = x.floor() as i64;
-        let y0 = y.floor() as i64;
-        let x1 = x.ceil() as i64;
-        let y1 = y.ceil() as i64;
-
-        let mut total_l = 0.0;
-        let mut total_v = 0.0;
-        let mut total_r = 0.0;
-        let mut total_g = 0.0;
-        let mut total_b = 0.0;
-        let mut total_ld = LightData::default();
-        let mut count = 0.0;
-        let is_light_sensitive = o_light_sens.is_some();
-        for tx in [x0, x1] {
-            for ty in [y0, y1] {
-                let bpos = BoardPosition { x: tx, y: ty, z };
-                if let Some(p) = bpos.ndidx_checked(bf.map_size) {
-                    let vis = f_vis(vf.visibility_field[p]);
-                    if vis > 0.0001
-                        && let Some(((r, g, b), ld)) =
-                            fpos_gamma_color(bpos.to_position(), is_light_sensitive)
-                    {
-                        total_r += r;
-                        total_g += g;
-                        total_b += b;
-                        total_l += (r + g + b) / 3.0;
-                        total_v += vis;
-                        total_ld = total_ld.add(&ld);
-                        count += 1.0;
-                    }
-                }
-            }
-        }
-        if count > 0.0 {
-            (
-                total_l / count,
-                (total_v / count).clamp(0.0001, 1.0),
-                Color::srgb(total_r / count, total_g / count, total_b / count),
-                LightData {
-                    visible: total_ld.visible / count,
-                    red: total_ld.red / count,
-                    infrared: total_ld.infrared / count,
-                    ultraviolet: total_ld.ultraviolet / count,
-                },
-            )
-        } else {
-            let vis = f_vis(
-                vf.visibility_field
-                    .get(target_pos.to_board_position().ndidx())
-                    .copied()
-                    .unwrap_or(0.0),
-            );
-            let ((r, g, b), ld) = fpos_gamma_color(target_pos, is_light_sensitive)
-                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
-            ((r + g + b) / 3.0, vis, Color::srgb(r, g, b), ld)
-        }
+    let sampler = LightingSampler {
+        flashlights: &flashlights,
+        bf,
+        lf,
+        vf,
+        exposure,
+        tutorial_light_factor,
     };
 
     // --- End of Shared Lighting Sampling Logic ---
@@ -781,7 +834,7 @@ pub(crate) fn apply_lighting(
             }
 
             let mut lux_c;
-            let vis_c = f_vis(vf.visibility_field[bpos.ndidx()]);
+            let vis_c = sampler.f_vis(vf.visibility_field[bpos.ndidx()]);
 
             // Corner offsets correspond to tile intersections.
             // In our isometric perspective (PERSPECTIVE_X/Y in perspective.rs):
@@ -789,15 +842,16 @@ pub(crate) fn apply_lighting(
             // (-0.5, -0.5) -> Screen Left
             // (-0.5, +0.5) -> Screen Top
             // (+0.5, -0.5) -> Screen Bottom
-            let (mut lux_right, vis_right, mut color_right, ld_right) = fpos_sampling_corner(
-                *pos + Direction {
-                    dx: 0.5,
-                    dy: 0.5,
-                    dz: 0.0,
-                },
-                o_light_sens,
-            );
-            let (mut lux_left, vis_left, mut color_left, ld_left) = fpos_sampling_corner(
+            let (mut lux_right, vis_right, mut color_right, ld_right) = sampler
+                .fpos_sampling_corner(
+                    *pos + Direction {
+                        dx: 0.5,
+                        dy: 0.5,
+                        dz: 0.0,
+                    },
+                    o_light_sens,
+                );
+            let (mut lux_left, vis_left, mut color_left, ld_left) = sampler.fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: -0.5,
@@ -805,7 +859,7 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-            let (mut lux_top, vis_top, mut color_top, ld_top) = fpos_sampling_corner(
+            let (mut lux_top, vis_top, mut color_top, ld_top) = sampler.fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: 0.5,
@@ -813,7 +867,7 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-            let (mut lux_bot, vis_bot, mut color_bot, ld_bot) = fpos_sampling_corner(
+            let (mut lux_bot, vis_bot, mut color_bot, ld_bot) = sampler.fpos_sampling_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: -0.5,
@@ -822,9 +876,9 @@ pub(crate) fn apply_lighting(
                 o_light_sens,
             );
 
-            let ((mut r, mut g, mut b), light_data) =
-                fpos_gamma_color(*pos, o_light_sens.is_some())
-                    .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+            let ((mut r, mut g, mut b), light_data) = sampler
+                .fpos_gamma_color(*pos, o_light_sens.is_some())
+                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
             if let Some(ls) = o_light_sens {
                 r = (r + ls.bias).max(0.05);
                 g = (g + ls.bias).max(0.05);
@@ -1099,38 +1153,14 @@ pub(crate) fn apply_lighting(
             new_a = (new_a * map_color.alpha()).clamp(0.0, 1.0);
             dst_color.set_alpha(new_a);
 
-            let calc_gamma = |lux: f32, tc: f32| {
-                tonemapping::calc_gamma(
-                    lux,
-                    tc,
-                    exposure,
-                    tonemapping::K_COLD,
-                    tonemapping::BRIGHTNESS,
-                )
-            };
-
-            let calc_rgba = |lux: f32, visibility: f32, bcolor: Option<Color>| -> LinearRgba {
-                tonemapping::calc_rgba(
-                    lux,
-                    visibility,
-                    bcolor,
-                    exposure,
-                    tonemapping::K_COLD,
-                    tutorial_light_factor,
-                    tonemapping::DARK_COLOR2,
-                    dst_color,
-                    is_tile,
-                    map_color.alpha(),
-                )
-            };
-
             new_mat.data.ambient_color = Color::NONE.into();
 
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
 
-            let gamma_mean =
-                |a: f32, b: f32, tc: f32| (a * smooth_f + calc_gamma(b, tc)) / (1.0 + smooth_f);
+            let gamma_mean = |a: f32, b: f32, tc: f32| {
+                (a * smooth_f + sampler.calc_gamma(b, tc)) / (1.0 + smooth_f)
+            };
 
             let color_mean = |a: LinearRgba, b: LinearRgba| -> LinearRgba {
                 let a_v = a.to_vec4();
@@ -1154,11 +1184,40 @@ pub(crate) fn apply_lighting(
                 new_mat.data.gbl = gamma_mean(new_mat.data.gbl, lux_left, corner_tc);
                 new_mat.data.gbr = gamma_mean(new_mat.data.gbr, lux_bot, corner_tc);
 
-                let new_c_c = calc_rgba(lux_c, vis_c, None);
-                let new_c_tl = calc_rgba(lux_top, vis_top, Some(color_top));
-                let new_c_tr = calc_rgba(lux_right, vis_right, Some(color_right));
-                let new_c_bl = calc_rgba(lux_left, vis_left, Some(color_left));
-                let new_c_br = calc_rgba(lux_bot, vis_bot, Some(color_bot));
+                let new_c_c =
+                    sampler.calc_rgba(lux_c, vis_c, None, dst_color, is_tile, map_color.alpha());
+                let new_c_tl = sampler.calc_rgba(
+                    lux_top,
+                    vis_top,
+                    Some(color_top),
+                    dst_color,
+                    is_tile,
+                    map_color.alpha(),
+                );
+                let new_c_tr = sampler.calc_rgba(
+                    lux_right,
+                    vis_right,
+                    Some(color_right),
+                    dst_color,
+                    is_tile,
+                    map_color.alpha(),
+                );
+                let new_c_bl = sampler.calc_rgba(
+                    lux_left,
+                    vis_left,
+                    Some(color_left),
+                    dst_color,
+                    is_tile,
+                    map_color.alpha(),
+                );
+                let new_c_br = sampler.calc_rgba(
+                    lux_bot,
+                    vis_bot,
+                    Some(color_bot),
+                    dst_color,
+                    is_tile,
+                    map_color.alpha(),
+                );
 
                 new_mat.data.color = color_mean(new_mat.data.color, new_c_c);
                 new_mat.data.ctl = color_mean(new_mat.data.ctl, new_c_tl);
@@ -1171,7 +1230,8 @@ pub(crate) fn apply_lighting(
                 new_mat.data.gbl = new_mat.data.gamma;
                 new_mat.data.gbr = new_mat.data.gamma;
 
-                let new_c = calc_rgba(lux_c, vis_c, None);
+                let new_c =
+                    sampler.calc_rgba(lux_c, vis_c, None, dst_color, is_tile, map_color.alpha());
 
                 new_mat.data.color = color_mean(new_mat.data.color, new_c);
                 new_mat.data.color.alpha = new_c.alpha;
@@ -1333,7 +1393,8 @@ pub(crate) fn apply_lighting(
         let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
-        let (gcolor, ld_abs) = fpos_gamma_color(*pos, o_light_sens.is_some())
+        let (gcolor, ld_abs) = sampler
+            .fpos_gamma_color(*pos, o_light_sens.is_some())
             .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
 
         let ld = ld_abs.normalize();

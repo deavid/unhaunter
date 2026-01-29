@@ -224,18 +224,20 @@ The refactor is in the **early stages**. While some structural foundations have 
 
 ### Phase 1: Pure Logic Extraction
 
-- **Partial**: `compute_color_exposure` has been moved to
+- **Done**: `compute_color_exposure` has been moved to
   [crates/unrender-std/src/utils/light.rs](../../crates/unrender-std/src/utils/light.rs).
-- **Partial**: Hann Window weight initialization has been moved to `init_light_grid` in
+- **Done**: Hann Window weight initialization has been moved to `init_light_grid` in
   [crates/unlight-plugin/src/lighting_sim/systems.rs](../../crates/unlight-plugin/src/lighting_sim/systems.rs).
-- **Pending**: Artistic tonemapping (`tonemap`), gamma calculations, and the per-frame exposure update logic remain
-  inline within `apply_lighting`.
-- **Pending**: No `unlight-core::tonemapping` or `ExposureModel` struct yet.
+- **Done**: Artistic tonemapping (`tonemap`), gamma calculations, and the per-frame exposure update logic have been
+  moved to `unlight-core::tonemapping` and `unlight-core::exposure`.
+- **Done**: `unlight-core::tonemapping` and `ExposureModel` struct are implemented and used.
 
 ### Phase 2: Context Struct & Closure Elimination
 
-- **Not Started**: `apply_lighting` still relies heavily on deep closures (`fpos_gamma_color`, `fpos_sampling_corner`)
-  that capture numerous local variables.
+- **Done**: `fpos_gamma_color`, `fpos_sampling_corner`, `f_vis`, `calc_gamma`, and `calc_rgba` have been refactored into
+  a `LightingSampler` struct.
+- **Done**: Capture of local variables in `apply_lighting` has been significantly reduced.
+- **Outcome**: `apply_lighting` is more readable and logic is more encapsulated.
 
 ### Phase 3: System Migration
 
