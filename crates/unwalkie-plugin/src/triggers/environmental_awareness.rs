@@ -17,7 +17,7 @@ use unwalkie_core::resources::WalkiePlay;
 
 /// System that monitors the player's exposure to darkness.
 ///
-/// If the player is in-game, not in the truck, and the environment is very dark (exposure_lux < 0.1),
+/// If the player is in-game, not in the truck, and the environment is very dark (exposure.lux < 0.1),
 /// it accumulates time spent in darkness. If the player remains in darkness for more than 10 seconds,
 /// a walkie-talkie warning event is triggered. The timer resets if the player leaves the dark or the game state changes.
 fn trigger_darkness_level_system(
@@ -50,7 +50,7 @@ fn trigger_darkness_level_system(
         return;
     }
 
-    if light_grid.exposure_lux < 0.4 {
+    if light_grid.exposure.lux < 0.4 {
         stopwatch.tick(time.delta()); // Changed from *seconds_dark += time.delta_secs();
         if stopwatch.elapsed_secs() > 2.0 {
             walkie_play.set(WalkieEvent::DarkRoomNoLightUsed, time.elapsed_secs_f64());

@@ -29,6 +29,7 @@ use unboard_core::resources::board_topology::{
 use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unlight_core::resources::light_grid::LightGrid;
+use unlight_core::tonemapping;
 pub(crate) use unlight_core::types::light::LightData;
 use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unrender_std::utils::perspective;
@@ -491,38 +492,11 @@ pub(crate) fn apply_lighting(
     cursor_exp += fl_total_power.sqrt();
 
     // FIR Filter with Hann Window (240 frames)
-    lg.exposure_history.push_back(cursor_exp);
-    while lg.exposure_history.len() > 240 {
-        lg.exposure_history.pop_front();
-    }
-    let mut sum_weights = 0.0;
-    let mut sum_values = 0.0;
-    for (i, &v) in lg.exposure_history.iter().enumerate() {
-        let weight = lg.exposure_weights.get(i).copied().unwrap_or(1.0);
-        sum_values += v * weight;
-        sum_weights += weight;
-    }
-    cursor_exp = sum_values / (sum_weights + 0.001);
-    lg.exposure_lux = cursor_exp;
+    lg.exposure.add_sample(cursor_exp);
+    lg.exposure.update(time.delta_secs());
 
-    cursor_exp = cursor_exp.clamp(0.0, 100.0) * 4.0;
-    // Darken picture without touching night vision
-    cursor_exp += cursor_exp.sqrt() * 4.0 + 1.0;
-    // Minimum exp - controls how dark we can see
-    cursor_exp = cursor_exp.clamp(1.0, 100.0);
-
-    if !cursor_exp.is_normal() {
-        warn!("cursor_exp is not 'normal': {}", cursor_exp);
-        cursor_exp = lg.current_exposure;
-    }
-
-    // Additional IIR filter: 63.2% in 2 seconds (tau = 2s)
-    let dt = time.delta_secs();
-    let alpha = 1.0 - (-dt / 2.0).exp();
-    lg.current_exposure = lg.current_exposure * (1.0 - alpha) + cursor_exp * alpha;
-
-    let exposure = lg.current_exposure;
-    let raw_lux = lg.exposure_history.back().copied().unwrap_or(0.0);
+    let exposure = lg.exposure.current;
+    let raw_lux = lg.exposure.history.back().copied().unwrap_or(0.0);
 
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
@@ -592,14 +566,12 @@ pub(crate) fn apply_lighting(
             let g = (lf.lux * lf.color.1 + lux_fl[1] + ambient_light) / exposure;
             let b = (lf.lux * lf.color.2 + lux_fl[2] + ambient_light) / exposure;
 
-            // Artistic tonemapping: Sigmoid-ish curve with highlight protection (shoulder).
-            let tonemap = |x: f32| {
-                let v = x.powf(1.3);
-                v * 1.8 / (1.0 + v * 0.45)
-            };
-
             (
-                (tonemap(r), tonemap(g), tonemap(b)),
+                (
+                    tonemapping::artistic_tonemap(r),
+                    tonemapping::artistic_tonemap(g),
+                    tonemapping::artistic_tonemap(b),
+                ),
                 lightdata.add(&LightData::from_type(
                     LightType::Visible,
                     lf.lux + ambient_light,
@@ -624,60 +596,69 @@ pub(crate) fn apply_lighting(
 
     let f_vis = |v: f32| (v.clamp(0.0, 1.0) * 1.5).clamp(0.0001, 1.0);
 
-    let fpos_sampling_corner =
-        |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> (f32, f32, Color) {
-            let x = target_pos.x;
-            let y = target_pos.y;
-            let z = target_pos.z.round() as i64;
-            let x0 = x.floor() as i64;
-            let y0 = y.floor() as i64;
-            let x1 = x.ceil() as i64;
-            let y1 = y.ceil() as i64;
+    let fpos_sampling_corner = |target_pos: Position,
+                                o_light_sens: Option<&LightSensitive>|
+     -> (f32, f32, Color, LightData) {
+        let x = target_pos.x;
+        let y = target_pos.y;
+        let z = target_pos.z.round() as i64;
+        let x0 = x.floor() as i64;
+        let y0 = y.floor() as i64;
+        let x1 = x.ceil() as i64;
+        let y1 = y.ceil() as i64;
 
-            let mut total_l = 0.0;
-            let mut total_v = 0.0;
-            let mut total_r = 0.0;
-            let mut total_g = 0.0;
-            let mut total_b = 0.0;
-            let mut count = 0.0;
-            let is_light_sensitive = o_light_sens.is_some();
-            for tx in [x0, x1] {
-                for ty in [y0, y1] {
-                    let bpos = BoardPosition { x: tx, y: ty, z };
-                    if let Some(p) = bpos.ndidx_checked(bf.map_size) {
-                        let vis = f_vis(vf.visibility_field[p]);
-                        if vis > 0.0001
-                            && let Some(((r, g, b), _)) =
-                                fpos_gamma_color(bpos.to_position(), is_light_sensitive)
-                        {
-                            total_r += r;
-                            total_g += g;
-                            total_b += b;
-                            total_l += (r + g + b) / 3.0;
-                            total_v += vis;
-                            count += 1.0;
-                        }
+        let mut total_l = 0.0;
+        let mut total_v = 0.0;
+        let mut total_r = 0.0;
+        let mut total_g = 0.0;
+        let mut total_b = 0.0;
+        let mut total_ld = LightData::default();
+        let mut count = 0.0;
+        let is_light_sensitive = o_light_sens.is_some();
+        for tx in [x0, x1] {
+            for ty in [y0, y1] {
+                let bpos = BoardPosition { x: tx, y: ty, z };
+                if let Some(p) = bpos.ndidx_checked(bf.map_size) {
+                    let vis = f_vis(vf.visibility_field[p]);
+                    if vis > 0.0001
+                        && let Some(((r, g, b), ld)) =
+                            fpos_gamma_color(bpos.to_position(), is_light_sensitive)
+                    {
+                        total_r += r;
+                        total_g += g;
+                        total_b += b;
+                        total_l += (r + g + b) / 3.0;
+                        total_v += vis;
+                        total_ld = total_ld.add(&ld);
+                        count += 1.0;
                     }
                 }
             }
-            if count > 0.0 {
-                (
-                    total_l / count,
-                    (total_v / count).clamp(0.0001, 1.0),
-                    Color::srgb(total_r / count, total_g / count, total_b / count),
-                )
-            } else {
-                let vis = f_vis(
-                    vf.visibility_field
-                        .get(target_pos.to_board_position().ndidx())
-                        .copied()
-                        .unwrap_or(0.0),
-                );
-                let ((r, g, b), _) = fpos_gamma_color(target_pos, is_light_sensitive)
-                    .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
-                ((r + g + b) / 3.0, vis, Color::srgb(r, g, b))
-            }
-        };
+        }
+        if count > 0.0 {
+            (
+                total_l / count,
+                (total_v / count).clamp(0.0001, 1.0),
+                Color::srgb(total_r / count, total_g / count, total_b / count),
+                LightData {
+                    visible: total_ld.visible / count,
+                    red: total_ld.red / count,
+                    infrared: total_ld.infrared / count,
+                    ultraviolet: total_ld.ultraviolet / count,
+                },
+            )
+        } else {
+            let vis = f_vis(
+                vf.visibility_field
+                    .get(target_pos.to_board_position().ndidx())
+                    .copied()
+                    .unwrap_or(0.0),
+            );
+            let ((r, g, b), ld) = fpos_gamma_color(target_pos, is_light_sensitive)
+                .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
+            ((r + g + b) / 3.0, vis, Color::srgb(r, g, b), ld)
+        }
+    };
 
     // --- End of Shared Lighting Sampling Logic ---
 
@@ -822,7 +803,7 @@ pub(crate) fn apply_lighting(
             // (-0.5, -0.5) -> Screen Left
             // (-0.5, +0.5) -> Screen Top
             // (+0.5, -0.5) -> Screen Bottom
-            let (lux_right, vis_right, color_right) = fpos_sampling_corner(
+            let (mut lux_right, vis_right, mut color_right, ld_right) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: 0.5,
@@ -830,7 +811,7 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-            let (lux_left, vis_left, color_left) = fpos_sampling_corner(
+            let (mut lux_left, vis_left, mut color_left, ld_left) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: -0.5,
@@ -838,7 +819,7 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-            let (lux_top, vis_top, color_top) = fpos_sampling_corner(
+            let (mut lux_top, vis_top, mut color_top, ld_top) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: -0.5,
                     dy: 0.5,
@@ -846,7 +827,7 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-            let (lux_bot, vis_bot, color_bot) = fpos_sampling_corner(
+            let (mut lux_bot, vis_bot, mut color_bot, ld_bot) = fpos_sampling_corner(
                 *pos + Direction {
                     dx: 0.5,
                     dy: -0.5,
@@ -854,11 +835,6 @@ pub(crate) fn apply_lighting(
                 },
                 o_light_sens,
             );
-
-            let mut lux_right = lux_right;
-            let mut lux_left = lux_left;
-            let mut lux_top = lux_top;
-            let mut lux_bot = lux_bot;
 
             let ((mut r, mut g, mut b), light_data) =
                 fpos_gamma_color(*pos, o_light_sens.is_some())
@@ -868,7 +844,6 @@ pub(crate) fn apply_lighting(
                 g = (g + ls.bias).max(0.05);
                 b = (b + ls.bias).max(0.05);
             }
-            let ld = light_data.normalize();
 
             let (att_charge, rep_charge) = o_spectral_influence
                 .map(|x| match x.influence_type {
@@ -876,17 +851,38 @@ pub(crate) fn apply_lighting(
                     SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
                 })
                 .unwrap_or_default();
-            let rgbl = (r + g + b) / 3.0 + 1.0;
-            g += light_data.ultraviolet * att_charge * 2.5 * rgbl;
-            b += light_data.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
-            b += light_data.red * rep_charge * 0.01 * rgbl;
-            r /= 1.0
-                + light_data.red * rep_charge * 50.0 * rgbl
-                + light_data.ultraviolet * att_charge * 12.0 * rgbl;
-            g /= 1.0 + light_data.red * rep_charge * 10.0 * rgbl;
-            b /= 1.0
-                + light_data.infrared * (att_charge + rep_charge) * 10.0 * rgbl
-                + light_data.ultraviolet * att_charge * 12.0 * rgbl;
+
+            let process_spectral = |r: &mut f32, g: &mut f32, b: &mut f32, ld: &LightData| {
+                let rgbl = (*r + *g + *b) / 3.0 + 1.0;
+                *g += ld.ultraviolet * att_charge * 2.5 * rgbl;
+                *b += ld.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
+                *b += ld.red * rep_charge * 0.01 * rgbl;
+                *r /= 1.0
+                    + ld.red * rep_charge * 50.0 * rgbl
+                    + ld.ultraviolet * att_charge * 12.0 * rgbl;
+                *g /= 1.0 + ld.red * rep_charge * 10.0 * rgbl;
+                *b /= 1.0
+                    + ld.infrared * (att_charge + rep_charge) * 10.0 * rgbl
+                    + ld.ultraviolet * att_charge * 12.0 * rgbl;
+                (*r + *g + *b) / 3.0
+            };
+
+            let res = process_spectral(&mut r, &mut g, &mut b, &light_data);
+            lux_c = (res / 10.0).tanh() * 10.0;
+
+            let process_corner = |lux: &mut f32, color: &mut Color, ld: &LightData| {
+                let srgba = color.to_srgba();
+                let (mut cr, mut cg, mut cb) = (srgba.red, srgba.green, srgba.blue);
+                *lux = process_spectral(&mut cr, &mut cg, &mut cb, ld);
+                *color = Color::srgb(cr, cg, cb);
+            };
+
+            process_corner(&mut lux_right, &mut color_right, &ld_right);
+            process_corner(&mut lux_left, &mut color_left, &ld_left);
+            process_corner(&mut lux_top, &mut color_top, &ld_top);
+            process_corner(&mut lux_bot, &mut color_bot, &ld_bot);
+
+            let ld = light_data.normalize();
 
             if let Some(behavior) = o_behavior
                 && behavior.p.movement.walkable
@@ -1090,86 +1086,33 @@ pub(crate) fn apply_lighting(
             new_a = (new_a * map_color.alpha()).clamp(0.0, 1.0);
             dst_color.set_alpha(new_a);
 
-            let f_gamma = |lux: f32| fastapprox::faster::pow(lux, 0.9);
-            const K_COLD: f32 = 0.6;
-            const DARK_COLOR2: Color = Color::srgba(0.2, 0.6, 1.0, 1.0);
-            let dark_color2 = DARK_COLOR2;
-
             let calc_gamma = |lux: f32, tc: f32| {
-                let p_cold_f = (1.0 - (lux / K_COLD).tanh()) * 2.0;
-                let p_exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + p_cold_f).tanh() + 0.5)
-                    .clamp(0.0, 1.0);
-
-                // Ensure lux has a tiny floor to prevent precision divergence in pitch black
-                let lux_f = lux.max(0.0001);
-
-                f_gamma(
-                    lux_f * BRIGHTNESS * (1.0 + p_cold_f + (p_exp_color * 2.0).powi(2))
-                        + (tc + p_cold_f * 2.0 + (p_exp_color * 2.0).powi(2))
-                            / (10.0 + exposure + lux_f),
-                ) + p_exp_color / 40.0
+                tonemapping::calc_gamma(
+                    lux,
+                    tc,
+                    exposure,
+                    tonemapping::K_COLD,
+                    tonemapping::BRIGHTNESS,
+                )
             };
 
             let calc_rgba = |lux: f32, visibility: f32, bcolor: Option<Color>| -> LinearRgba {
-                let p_cold_f = (1.0 - (lux / K_COLD).tanh()) * 2.0;
-                let p_exp_color = ((-(exposure + 0.0001).ln() / 2.0 - 1.5 + p_cold_f).tanh() + 0.5)
-                    .clamp(0.0, 1.0);
-                let p_exp_color_tint = (p_exp_color + tutorial_light_factor * 0.20).clamp(0.0, 1.0);
-
-                // Use a clamped lux for the dark color lerp to ensure consistency in pitch black
-                let color_lux = lux.max(0.001);
-                let p_dark2 = lerp_color(
-                    Color::WHITE,
-                    dark_color2,
-                    p_exp_color_tint / f_gamma(color_lux).clamp(1.0, 300.0),
-                );
-
-                let mut base = dst_color;
-                if is_tile && let Some(bc) = bcolor {
-                    let bc_srgba = bc.to_srgba();
-                    let max_c = bc_srgba.red.max(bc_srgba.green).max(bc_srgba.blue).max(0.2);
-                    base = Color::srgb(
-                        bc_srgba.red / max_c,
-                        bc_srgba.green / max_c,
-                        bc_srgba.blue / max_c,
-                    );
-                }
-
-                let mut rgba =
-                    LinearRgba::from(base).to_vec4() * LinearRgba::from(p_dark2).to_vec4();
-
-                // Scale RGB if it's a tile
-                if is_tile {
-                    let tmp_val = LinearRgba::from_vec4(rgba);
-                    let lum = tmp_val.luminance();
-                    let target_lum = 0.8;
-                    let intensity_factor = target_lum / lum.max(0.01);
-                    rgba.x *= intensity_factor;
-                    rgba.y *= intensity_factor;
-                    rgba.z *= intensity_factor;
-
-                    // Apply anti-pitch-black ambient logic per-corner to ensure smoothness
-                    const DARK_COLOR_CORNER: Color =
-                        Color::srgba(0.247 / 1.5, 0.714 / 1.5, 0.878, 1.0);
-                    let dark_f =
-                        (p_exp_color_tint / 16.0 + tutorial_light_factor * 0.01).clamp(0.0, 1.0);
-                    let dark_spike = LinearRgba::from(DARK_COLOR_CORNER).to_vec4() * dark_f;
-
-                    rgba.x += dark_spike.x;
-                    rgba.y += dark_spike.y;
-                    rgba.z += dark_spike.z;
-
-                    // Alpha from visibility (smooth for tiles)
-                    rgba.w = (visibility * map_color.alpha()).clamp(0.0, 1.0);
-                }
-                // For non-tile, rgba.w already comes from dst_color which includes spectral/manual alpha
-
-                LinearRgba::from_vec4(rgba)
+                tonemapping::calc_rgba(
+                    lux,
+                    visibility,
+                    bcolor,
+                    exposure,
+                    tonemapping::K_COLD,
+                    tutorial_light_factor,
+                    tonemapping::DARK_COLOR2,
+                    dst_color,
+                    is_tile,
+                    map_color.alpha(),
+                )
             };
 
             new_mat.data.ambient_color = Color::NONE.into();
 
-            const BRIGHTNESS: f32 = 1.0;
             let tint_comp = (1.0 - src_color_base.luminance()).clamp(0.0, 1.0);
             let smooth_f = prev_a + 0.3 + smooth_f;
 
@@ -1256,11 +1199,11 @@ pub(crate) fn apply_lighting(
                 && bpos == player_bpos
                 && (time.elapsed_secs() % 1.0) < time.delta_secs()
             {
-                let f_g = f_gamma(lux_c);
+                let f_g = tonemapping::f_gamma(lux_c);
                 info!(
                     "Adapt: rl:{:.4} al:{:.4} exp:{:.4} mc:{:.4} lc:{:.4} fg:{:.4} g:{:.2} c:{:?}",
                     raw_lux,
-                    lg.exposure_lux,
+                    lg.exposure.lux,
                     exposure,
                     max_color,
                     lux_c,

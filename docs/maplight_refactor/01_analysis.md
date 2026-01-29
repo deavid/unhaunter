@@ -212,3 +212,43 @@ tiles.
   Shader.
 - **Architecture Goal**: The "Context" struct from Phase 2 should effectively mirror what a future Uniform Buffer would
   look like. By cleaning up the CPU logic now, we define the "Interface" for a future GPU implementation.
+
+---
+
+## 8. Current Implementation Status (January 2026)
+
+### Summary of Progress
+
+The refactor is in the **early stages**. While some structural foundations have been laid, the "Tangle" in
+`apply_lighting` remains largely intact. The function has actually grown to **~1500 lines**.
+
+### Phase 1: Pure Logic Extraction
+
+- **Partial**: `compute_color_exposure` has been moved to
+  [crates/unrender-std/src/utils/light.rs](../../crates/unrender-std/src/utils/light.rs).
+- **Partial**: Hann Window weight initialization has been moved to `init_light_grid` in
+  [crates/unlight-plugin/src/lighting_sim/systems.rs](../../crates/unlight-plugin/src/lighting_sim/systems.rs).
+- **Pending**: Artistic tonemapping (`tonemap`), gamma calculations, and the per-frame exposure update logic remain
+  inline within `apply_lighting`.
+- **Pending**: No `unlight-core::tonemapping` or `ExposureModel` struct yet.
+
+### Phase 2: Context Struct & Closure Elimination
+
+- **Not Started**: `apply_lighting` still relies heavily on deep closures (`fpos_gamma_color`, `fpos_sampling_corner`)
+  that capture numerous local variables.
+
+### Phase 3: System Migration
+
+- **Not Started**: Flashlight collection, exposure updates, and material application are all still handled within the
+  single `apply_lighting` system.
+- **Note**: A significant new module
+  [crates/unlight-plugin/src/lighting_sim/](../../crates/unlight-plugin/src/lighting_sim/) has been added. It handles
+  prebaked lighting propagation and populates the `LightGrid`, which is a prerequisite for the refactor but doesn't yet
+  break up the main system.
+
+### Structural Observations
+
+- **`unlight-core`**: Now contains the `LightGrid` and `LightData` definitions, establishing a "canonical path" for
+  lighting data, though some duplication/re-exports still exist in `unlight-plugin`.
+- **`unspatial-core`**: `Position` now includes `unrotate_by_dir`, partially addressing coordinate projection needs, but
+  no dedicated `projection` module exists.

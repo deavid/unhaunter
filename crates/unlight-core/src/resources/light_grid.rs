@@ -1,18 +1,14 @@
+use crate::exposure::ExposureModel;
 use crate::types::light::LightFieldData;
 use crate::types::prebaked_lighting_data::{PrebakedLightingData, PrebakedMetadata, WaveEdgeData};
 use bevy::prelude::*;
 use ndarray::Array3;
-use std::collections::VecDeque;
 use unbehavior::behavior::Behavior;
 
 #[derive(Resource, Debug, Clone)]
 pub struct LightGrid {
     pub light_field: Array3<LightFieldData>,
-    pub exposure_lux: f32,
-    pub current_exposure: f32,
-    pub current_exposure_accel: f32,
-    pub exposure_history: VecDeque<f32>,
-    pub exposure_weights: Vec<f32>,
+    pub exposure: ExposureModel,
 
     pub prebaked_lighting: Array3<PrebakedLightingData>,
     pub prebaked_metadata: PrebakedMetadata,
@@ -49,11 +45,7 @@ impl Default for LightGrid {
     fn default() -> Self {
         Self {
             light_field: Array3::from_elem((1, 1, 1), LightFieldData::default()),
-            exposure_lux: 1.0,
-            current_exposure: 1.0,
-            current_exposure_accel: 0.0,
-            exposure_history: VecDeque::new(),
-            exposure_weights: Vec::new(),
+            exposure: ExposureModel::default(),
             prebaked_lighting: Array3::from_elem((1, 1, 1), PrebakedLightingData::default()),
             prebaked_metadata: PrebakedMetadata::default(),
             prebaked_wave_edges: Vec::new(),

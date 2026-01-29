@@ -5,7 +5,7 @@ use unrender_std::board::spritedb::SpriteDB;
 use unrender_std::components::game::MapTileSprite;
 use unrender_std::materials::CustomMaterial1;
 
-use crate::resources::light_grid::LightGrid;
+use unlight_core::resources::light_grid::LightGrid;
 
 fn update_single_visual(
     behavior: &Behavior,

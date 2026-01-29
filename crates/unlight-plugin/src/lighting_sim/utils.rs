@@ -225,7 +225,7 @@ pub fn update_exposure_and_stats(
     let avg_lux = total_lux / count;
     let exposure_lux = (avg_lux + 2.0) / 2.0;
 
-    lg.exposure_lux = exposure_lux;
+    lg.exposure.lux = exposure_lux;
     lg.light_field = lfs.clone();
 }
 
