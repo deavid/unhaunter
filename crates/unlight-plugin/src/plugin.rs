@@ -25,6 +25,8 @@ impl Plugin for UnhaunterLightPlugin {
                     (
                         maplight::player_visibility_system,
                         power_visuals::update_power_visuals,
+                        maplight::gather_flashlights_system,
+                        maplight::update_exposure_system,
                         maplight::apply_lighting,
                     )
                         .chain()

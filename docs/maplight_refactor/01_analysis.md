@@ -241,8 +241,12 @@ The refactor is in the **early stages**. While some structural foundations have 
 
 ### Phase 3: System Migration
 
-- **Not Started**: Flashlight collection, exposure updates, and material application are all still handled within the
-  single `apply_lighting` system.
+- **In Progress**: Flashlight collection and exposure updates have been moved to independent systems
+  (`gather_flashlights_system` and `update_exposure_system`).
+- **Outcome**: `apply_lighting` now only handles scene reconstruction (material updates). It communicates with other
+  lighting systems via the `ActiveFlashlights` resource.
+- **Next Steps**: Further decompose `apply_lighting` to separate tile updates from sprite updates to improve performance
+  and readability.
 - **Note**: A significant new module
   [crates/unlight-plugin/src/lighting_sim/](../../crates/unlight-plugin/src/lighting_sim/) has been added. It handles
   prebaked lighting propagation and populates the `LightGrid`, which is a prerequisite for the refactor but doesn't yet

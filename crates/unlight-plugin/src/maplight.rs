@@ -35,6 +35,21 @@ use unspatial_core::orientation::Orientation;
 use unthermal_core::resources::ThermalGrid;
 use unui_core::resources::MouseVisibility;
 
+#[derive(Debug, Clone)]
+pub(crate) struct FlashlightData {
+    pub pos: Position,
+    pub dir: Direction,
+    pub power: f32,
+    pub color: Color,
+    pub light_type: LightType,
+    pub vis_field: Array3<f32>,
+}
+
+#[derive(Resource, Default, Debug, Clone)]
+pub(crate) struct ActiveFlashlights {
+    pub list: Vec<FlashlightData>,
+}
+
 #[derive(SystemParam)]
 pub(crate) struct GridResources<'w> {
     bf: Res<'w, BoardTopology>,
@@ -246,7 +261,7 @@ pub(crate) fn player_visibility_system(
 /// This struct replaces deep closures in `apply_lighting` and allows for
 /// reusable, testable sampling logic.
 pub(crate) struct LightingSampler<'a> {
-    pub(crate) flashlights: &'a [(&'a Position, Direction, f32, Color, LightType, Array3<f32>)],
+    pub(crate) flashlights: &'a [FlashlightData],
     pub(crate) bf: &'a BoardTopology,
     pub(crate) lf: &'a Array3<LightFieldData>,
     pub(crate) vf: &'a VisibilityData,
@@ -266,7 +281,14 @@ impl<'a> LightingSampler<'a> {
         let p = bpos.ndidx_checked(self.bf.map_size)?;
         let mut lux_fl = [0_f32; 3];
         let mut lightdata = LightData::default();
-        for (flpos, fldir, flpower, flcolor, fltype, flvismap) in self.flashlights.iter() {
+        for flash in self.flashlights.iter() {
+            let flpos = &flash.pos;
+            let fldir = &flash.dir;
+            let flpower = flash.power;
+            let flcolor = &flash.color;
+            let fltype = &flash.light_type;
+            let flvismap = &flash.vis_field;
+
             let d2 = rpos_raw.distance2(flpos);
             let fl = if is_light_sensitive && d2 < 4.0 {
                 // Smooth, distance-only lighting for players/ghosts near light sources
@@ -277,7 +299,7 @@ impl<'a> LightingSampler<'a> {
             } else {
                 let fldir = fldir.with_max_dist(200.0);
                 let focus = (fldir.distance() + 0.1).max(6.0) / 20.0;
-                let lpos = **flpos + fldir / (100.0 / focus + 20.0);
+                let lpos = *flpos + fldir / (100.0 / focus + 20.0);
                 let mut lpos = lpos.unrotate_by_dir(&fldir);
                 let mut rpos = rpos_raw.unrotate_by_dir(&fldir);
                 rpos.x -= lpos.x;
@@ -434,6 +456,64 @@ impl<'a> LightingSampler<'a> {
     }
 }
 
+pub(crate) fn update_exposure_system(
+    qp: Query<(&Position, Has<MainPlayer>)>,
+    q_vf: Query<&VisibilityData, With<MainPlayer>>,
+    active_flashlights: Res<ActiveFlashlights>,
+    mut lg: ResMut<LightGrid>,
+    time: Res<Time>,
+) {
+    let Ok(vf) = q_vf.single() else {
+        return;
+    };
+    if vf.visibility_field.is_empty() {
+        return;
+    }
+
+    let Some((pos, _)) = qp.iter().find(|x| x.1) else {
+        return;
+    };
+
+    let board_dim = lg.light_field.dim();
+    let mut cursor_exp: f32 = 0.0;
+    let mut exp_count: f32 = 0.0001;
+
+    // Weight highlights more when calculating exposure (Power Average)
+    const HIGHLIGHT_PRIORITY_POWER: f32 = 1.0;
+
+    let cursor_pos = pos.to_board_position();
+    for npos in cursor_pos.iter_xy_neighbors(10, board_dim) {
+        let lf = &lg.light_field[npos.ndidx()];
+        let vis = vf.visibility_field[npos.ndidx()].max(0.00001);
+
+        // Power average to prioritize highlights in the field of view.
+        cursor_exp += lf.lux.powf(HIGHLIGHT_PRIORITY_POWER) * vis;
+        exp_count += vis;
+    }
+
+    cursor_exp = (cursor_exp / exp_count).powf(HIGHLIGHT_PRIORITY_POWER.recip());
+
+    let fl_total_power: f32 = active_flashlights
+        .list
+        .iter()
+        .map(|x| {
+            let mut power = x.power;
+            power *= match x.light_type {
+                LightType::Visible => 1.0,
+                LightType::Red => 0.0,
+                LightType::InfraRedNV => 2.5,
+                LightType::UltraViolet => 0.5,
+            };
+            power / (pos.distance2(&x.pos) + 1.0)
+        })
+        .sum();
+    cursor_exp += fl_total_power.sqrt();
+
+    // FIR Filter with Hann Window (240 frames)
+    lg.exposure.add_sample(cursor_exp);
+    lg.exposure.update(time.delta_secs());
+}
+
 #[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting(
     mut qt2: Query<
@@ -461,8 +541,7 @@ pub(crate) fn apply_lighting(
     >,
     materials1: ResMut<Assets<CustomMaterial1>>,
     qp: Query<(&Position, &Viewer, &Direction, &PlayerGear, Has<MainPlayer>)>,
-    q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
-    q_flashlight: Query<(&LightEmitter, &Toggleable)>,
+    active_flashlights: Res<ActiveFlashlights>,
     mut lg: ResMut<LightGrid>,
     grids: GridResources,
     // haunt_state: Res<HauntState>,
@@ -504,7 +583,6 @@ pub(crate) fn apply_lighting(
 ) {
     let bf = &grids.bf;
     let bef = &grids.bef;
-    let bcf = &grids.bcf;
     let tg = &grids.tg;
     let sg = &grids.sg;
     let miasma = &grids.miasma;
@@ -533,149 +611,42 @@ pub(crate) fn apply_lighting(
         _ => 0.0,
     };
 
-    let mut cursor_exp: f32 = 0.0;
-    let mut exp_count: f32 = 0.0001;
-    let mut flashlights: Vec<(&Position, Direction, f32, Color, LightType, Array3<f32>)> = vec![];
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
-    let board_dim = bcf.0.dim();
     if bf.map_size.0 == 0 {
         // If we don't have a valid map, skip this
         return;
     }
 
-    // Weight highlights more when calculating exposure (Power Average)
-    const HIGHLIGHT_PRIORITY_POWER: f32 = 1.0;
-
     // Check if visibility field is properly initialized
     if vf.visibility_field.is_empty() {
         return;
     }
-    const FLASHLIGHT_POWER_FACTOR: f32 = 0.1;
-    // Deployed gear
-    for (pos, deployed_gear, fl, toggle) in q_deployed.iter() {
-        if !toggle.is_on {
-            continue;
-        }
-        let power = fl.power;
-        let color = fl.color;
-        let light_type = fl.light_type;
 
-        if power > 0.0 {
-            let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
-            flashlights.push((
-                pos,
-                deployed_gear.direction,
-                power * FLASHLIGHT_POWER_FACTOR,
-                color,
-                light_type,
-                vis_field,
-            ));
-        }
-    }
-    for (pos, _viewer, direction, gear, is_main_player) in qp.iter() {
-        let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
-
-        let mut check_gear = |entity: Entity, p: EquipmentPosition| {
-            if let Ok((fl, toggle)) = q_flashlight.get(entity)
-                && toggle.is_on
-            {
-                player_flashlight.push((
-                    fl.power * FLASHLIGHT_POWER_FACTOR,
-                    fl.color,
-                    p,
-                    fl.light_type,
-                ));
-            }
-        };
-
-        if let Some(e) = gear.left_hand {
-            check_gear(e, EquipmentPosition::Hand(Hand::Left));
-        }
-        if let Some(e) = gear.right_hand {
-            check_gear(e, EquipmentPosition::Hand(Hand::Right));
-        }
-        for e in &gear.inventory {
-            check_gear(*e, EquipmentPosition::Stowed);
-        }
-
-        for (power, color, p, light_type) in player_flashlight {
-            if power > 0.0 {
-                use EquipmentPosition::*;
-
-                let mut fldir = *direction;
-                if p == Stowed {
-                    fldir = Direction {
-                        dx: fldir.dx / 1000.0,
-                        dy: fldir.dy / 1000.0,
-                        dz: fldir.dz / 1000.0,
-                    };
-                }
-                let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
-                flashlights.push((pos, fldir, power, color, light_type, vis_field));
-            }
-        }
-        if !is_main_player {
-            continue;
-        }
-
-        let cursor_pos = pos.to_board_position();
-        for npos in cursor_pos.iter_xy_neighbors(10, board_dim) {
-            let lf = &lg.light_field[npos.ndidx()];
-            let vis = vf.visibility_field[npos.ndidx()].max(0.00001);
-
-            // Power average to prioritize highlights in the field of view.
-            cursor_exp += lf.lux.powf(HIGHLIGHT_PRIORITY_POWER) * vis;
-            exp_count += vis;
-        }
+    if let Some((pos, _viewer, _direction, _gear, _)) = qp.iter().find(|x| x.4) {
         player_pos = *pos;
-    }
-    for (pos, _fldir, _power, _color, _light_type, vis_field) in flashlights.iter_mut() {
-        compute_visibility(vis_field, &bcf.0, pos, None, false);
     }
 
     // --- Access queries from the ParamSet ---
     let mut tile_sprites = sprite_set.p1();
 
     // --- Highlight placement tiles ---
-    for (p_pos, _, _, player_gear, is_main_player) in qp.iter() {
-        if is_main_player && player_gear.held_item.is_some() {
-            // Only highlight if the player is holding an object
-            let target_tile = p_pos.to_board_position();
-            for (tile_pos, mut sprite) in tile_sprites.iter_mut() {
-                // Removed 'behavior' from the loop
-                if tile_pos.to_board_position() == target_tile {
-                    // Removed walkable check Adjust highlight color and intensity as needed
-                    let highlight_color = Color::srgba(0.0, 1.0, 0.0, 0.3);
-                    sprite.color = lerp_color(sprite.color, highlight_color, 0.5);
-                }
+    if let Some((p_pos, _, _, player_gear, _)) = qp.iter().find(|x| x.4)
+        && player_gear.held_item.is_some()
+    {
+        // Only highlight if the player is holding an object
+        let target_tile = p_pos.to_board_position();
+        for (tile_pos, mut sprite) in tile_sprites.iter_mut() {
+            // Removed 'behavior' from the loop
+            if tile_pos.to_board_position() == target_tile {
+                // Removed walkable check Adjust highlight color and intensity as needed
+                let highlight_color = Color::srgba(0.0, 1.0, 0.0, 0.3);
+                sprite.color = lerp_color(sprite.color, highlight_color, 0.5);
             }
         }
     }
     let mut qt = sprite_set.p0();
-    cursor_exp = (cursor_exp / exp_count).powf(HIGHLIGHT_PRIORITY_POWER.recip());
-    // Account for the eye seeing the flashlight on.
-    // TODO: Account this from the player's perspective as the payer torch might
-    // be off but someother player might have it on.
-    let fl_total_power: f32 = flashlights
-        .iter()
-        .map(|x| {
-            let mut power = x.2;
-            power *= match x.4 {
-                LightType::Visible => 1.0,
-                LightType::Red => 0.0,
-                LightType::InfraRedNV => 2.5,
-                LightType::UltraViolet => 0.5,
-            };
-            power / (player_pos.distance2(x.0) + 1.0)
-        })
-        .sum();
-    cursor_exp += fl_total_power.sqrt();
-
-    // FIR Filter with Hann Window (240 frames)
-    lg.exposure.add_sample(cursor_exp);
-    lg.exposure.update(time.delta_secs());
 
     let exposure = lg.exposure.current;
     let raw_lux = lg.exposure.history.back().copied().unwrap_or(0.0);
@@ -691,7 +662,7 @@ pub(crate) fn apply_lighting(
     // --- Shared Lighting Sampling Logic ---
 
     let sampler = LightingSampler {
-        flashlights: &flashlights,
+        flashlights: &active_flashlights.list,
         bf,
         lf,
         vf,
@@ -1510,4 +1481,103 @@ pub(crate) fn apply_lighting(
     measure.end_ms();
 }
 
-pub(crate) fn app_setup(_app: &mut App) {}
+pub(crate) fn app_setup(app: &mut App) {
+    app.init_resource::<ActiveFlashlights>();
+}
+
+pub(crate) fn gather_flashlights_system(
+    q_deployed: Query<(&Position, &DeployedGear, &LightEmitter, &Toggleable)>,
+    qp: Query<(&Position, &Direction, &PlayerGear)>,
+    q_flashlight: Query<(&LightEmitter, &Toggleable)>,
+    grids: GridResources,
+    mut active_flashlights: ResMut<ActiveFlashlights>,
+) {
+    let bf = &grids.bf;
+    let bcf = &grids.bcf;
+    let board_dim = bcf.0.dim();
+    if bf.map_size.0 == 0 {
+        return;
+    }
+
+    let mut flashlights = vec![];
+    const FLASHLIGHT_POWER_FACTOR: f32 = 0.1;
+
+    // Deployed gear
+    for (pos, deployed_gear, fl, toggle) in q_deployed.iter() {
+        if !toggle.is_on {
+            continue;
+        }
+        let power = fl.power;
+        let color = fl.color;
+        let light_type = fl.light_type;
+
+        if power > 0.0 {
+            let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
+            flashlights.push(FlashlightData {
+                pos: *pos,
+                dir: deployed_gear.direction,
+                power: power * FLASHLIGHT_POWER_FACTOR,
+                color,
+                light_type,
+                vis_field,
+            });
+        }
+    }
+
+    for (pos, direction, gear) in qp.iter() {
+        let mut player_flashlight: Vec<(f32, Color, EquipmentPosition, LightType)> = vec![];
+
+        let mut check_gear = |entity: Entity, p: EquipmentPosition| {
+            if let Ok((fl, toggle)) = q_flashlight.get(entity)
+                && toggle.is_on
+            {
+                player_flashlight.push((
+                    fl.power * FLASHLIGHT_POWER_FACTOR,
+                    fl.color,
+                    p,
+                    fl.light_type,
+                ));
+            }
+        };
+
+        if let Some(e) = gear.left_hand {
+            check_gear(e, EquipmentPosition::Hand(Hand::Left));
+        }
+        if let Some(e) = gear.right_hand {
+            check_gear(e, EquipmentPosition::Hand(Hand::Right));
+        }
+        for e in &gear.inventory {
+            check_gear(*e, EquipmentPosition::Stowed);
+        }
+
+        for (power, color, p, light_type) in player_flashlight {
+            if power > 0.0 {
+                use EquipmentPosition::*;
+
+                let mut fldir = *direction;
+                if p == Stowed {
+                    fldir = Direction {
+                        dx: fldir.dx / 1000.0,
+                        dy: fldir.dy / 1000.0,
+                        dz: fldir.dz / 1000.0,
+                    };
+                }
+                let vis_field: Array3<f32> = Array3::from_elem(board_dim, -0.001_f32);
+                flashlights.push(FlashlightData {
+                    pos: *pos,
+                    dir: fldir,
+                    power,
+                    color,
+                    light_type,
+                    vis_field,
+                });
+            }
+        }
+    }
+
+    for flash in flashlights.iter_mut() {
+        compute_visibility(&mut flash.vis_field, &bcf.0, &flash.pos, None, false);
+    }
+
+    active_flashlights.list = flashlights;
+}
