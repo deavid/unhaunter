@@ -580,20 +580,6 @@ pub(crate) fn apply_lighting(
         })
     };
 
-    let fpos_gamma = |target_pos: Position, o_light_sens: Option<&LightSensitive>| -> Option<f32> {
-        let is_light_sensitive = o_light_sens.is_some();
-        let gcolor = fpos_gamma_color(target_pos, is_light_sensitive);
-        gcolor.map(|((r, g, b), _)| (r + g + b) / 3.0).map(|l| {
-            let mut res = l;
-            if let Some(ls) = o_light_sens {
-                res += ls.bias;
-                res = res.max(0.05);
-            }
-            // Reduced dynamic range: more aggressive highlight compression
-            (res / 10.0).tanh() * 10.0
-        })
-    };
-
     let f_vis = |v: f32| (v.clamp(0.0, 1.0) * 1.5).clamp(0.0001, 1.0);
 
     let fpos_sampling_corner = |target_pos: Position,
@@ -747,7 +733,7 @@ pub(crate) fn apply_lighting(
             mat,
             mut vis,
             o_behavior,
-            o_spectral_influence,
+            mut o_spectral_influence,
             o_interactive,
             o_ethereal,
             o_ecto_vis,
@@ -794,7 +780,7 @@ pub(crate) fn apply_lighting(
                 continue;
             }
 
-            let mut lux_c = fpos_gamma(*pos, o_light_sens).unwrap_or(0.0);
+            let mut lux_c;
             let vis_c = f_vis(vf.visibility_field[bpos.ndidx()]);
 
             // Corner offsets correspond to tile intersections.
@@ -845,25 +831,52 @@ pub(crate) fn apply_lighting(
                 b = (b + ls.bias).max(0.05);
             }
 
-            let (att_charge, rep_charge) = o_spectral_influence
-                .map(|x| match x.influence_type {
-                    SpectralInfluenceType::Attractive => (x.charge_value.abs().sqrt() + 0.01, 0.0),
-                    SpectralInfluenceType::Repulsive => (0.0, x.charge_value.abs().sqrt() + 0.01),
+            let dt = time.delta_secs();
+
+            // Update spectral charges if the entity has SpectralInfluence
+            if let Some(ref mut si) = o_spectral_influence {
+                let update_charge = |target: f32, current: &mut f32| {
+                    let delta = target - *current;
+                    let tau = if delta > 0.0 { 0.4 } else { 1.0 };
+                    let alpha = 1.0 - (-dt / tau).exp();
+                    *current += delta * alpha;
+                };
+                update_charge(light_data.ultraviolet, &mut si.uv_charge);
+                update_charge(light_data.red, &mut si.red_charge);
+                update_charge(light_data.infrared, &mut si.ir_charge);
+            }
+
+            let (att_charge, rep_charge, uv_charge, red_charge, ir_charge) = o_spectral_influence
+                .as_ref()
+                .map(|x| {
+                    let (att, rep) = match x.influence_type {
+                        SpectralInfluenceType::Attractive => {
+                            (x.charge_value.abs().sqrt() + 0.01, 0.0)
+                        }
+                        SpectralInfluenceType::Repulsive => {
+                            (0.0, x.charge_value.abs().sqrt() + 0.01)
+                        }
+                    };
+                    (att, rep, x.uv_charge, x.red_charge, x.ir_charge)
                 })
-                .unwrap_or_default();
+                .unwrap_or((0.0, 0.0, 0.0, 0.0, 0.0));
 
             let process_spectral = |r: &mut f32, g: &mut f32, b: &mut f32, ld: &LightData| {
                 let rgbl = (*r + *g + *b) / 3.0 + 1.0;
-                *g += ld.ultraviolet * att_charge * 2.5 * rgbl;
-                *b += ld.infrared * (att_charge + rep_charge) * 2.5 * rgbl;
-                *b += ld.red * rep_charge * 0.01 * rgbl;
-                *r /= 1.0
-                    + ld.red * rep_charge * 50.0 * rgbl
-                    + ld.ultraviolet * att_charge * 12.0 * rgbl;
-                *g /= 1.0 + ld.red * rep_charge * 10.0 * rgbl;
+
+                // Combine instant light with persistent charge
+                let u = ld.ultraviolet.max(uv_charge);
+                let i = ld.infrared.max(ir_charge);
+                let rd = ld.red.max(red_charge);
+
+                *g += u * att_charge * 2.5 * rgbl;
+                *b += i * (att_charge + rep_charge) * 2.5 * rgbl;
+                *b += rd * rep_charge * 0.01 * rgbl;
+                *r /= 1.0 + rd * rep_charge * 50.0 * rgbl + u * att_charge * 12.0 * rgbl;
+                *g /= 1.0 + rd * rep_charge * 10.0 * rgbl;
                 *b /= 1.0
-                    + ld.infrared * (att_charge + rep_charge) * 10.0 * rgbl
-                    + ld.ultraviolet * att_charge * 12.0 * rgbl;
+                    + i * (att_charge + rep_charge) * 10.0 * rgbl
+                    + u * att_charge * 12.0 * rgbl;
                 (*r + *g + *b) / 3.0
             };
 
