@@ -62,6 +62,15 @@ impl LightData {
         sq_m.sqrt()
     }
 
+    pub fn max(&self, other: &Self) -> Self {
+        Self {
+            visible: self.visible.max(other.visible),
+            red: self.red.max(other.red),
+            infrared: self.infrared.max(other.infrared),
+            ultraviolet: self.ultraviolet.max(other.ultraviolet),
+        }
+    }
+
     pub fn normalize(&self) -> Self {
         let mag = self.magnitude() + 1.0;
         Self {

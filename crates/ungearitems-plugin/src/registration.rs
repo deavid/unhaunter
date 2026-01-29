@@ -222,7 +222,7 @@ pub(crate) fn register_all(app: &mut App) {
             });
             cmd.insert(PerceivedClarity::default());
             cmd.insert(LightEmitter {
-                power: 5.0,
+                power: 10.0,
                 color: Color::srgb(0.60, 0.25, 1.00),
                 light_type: LightType::UltraViolet,
             });

@@ -193,6 +193,12 @@ pub enum SpectralInfluenceType {
 pub struct SpectralInfluence {
     pub influence_type: SpectralInfluenceType,
     pub charge_value: f32,
+    /// Persistence of UV light exposure (0.0 to 1.0+)
+    pub uv_charge: f32,
+    /// Persistence of Red light exposure (0.0 to 1.0+)
+    pub red_charge: f32,
+    /// Persistence of Infrared light exposure (0.0 to 1.0+)
+    pub ir_charge: f32,
 }
 
 /// Component for solid entities that should cast shadows or have standard responsive lighting.

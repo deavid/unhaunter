@@ -134,3 +134,23 @@ impl std::ops::Add<Direction> for Direction {
         }
     }
 }
+
+impl From<Vec3> for Direction {
+    fn from(v: Vec3) -> Self {
+        Self {
+            dx: v.x,
+            dy: v.y,
+            dz: v.z,
+        }
+    }
+}
+
+impl From<Vec2> for Direction {
+    fn from(v: Vec2) -> Self {
+        Self {
+            dx: v.x,
+            dy: v.y,
+            dz: 0.0,
+        }
+    }
+}

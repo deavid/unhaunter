@@ -49,8 +49,8 @@ impl Default for LightGrid {
     fn default() -> Self {
         Self {
             light_field: Array3::from_elem((1, 1, 1), LightFieldData::default()),
-            exposure_lux: 10.0,
-            current_exposure: 10.0,
+            exposure_lux: 1.0,
+            current_exposure: 1.0,
             current_exposure_accel: 0.0,
             exposure_history: VecDeque::new(),
             exposure_weights: Vec::new(),

@@ -22,13 +22,13 @@ pub fn init_light_grid(
 ) {
     for ev in ev.read() {
         lg.light_field = Array3::from_elem(ev.map_size, LightFieldData::default());
-        lg.current_exposure = 10.0;
+        lg.current_exposure = 1.0;
         lg.current_exposure_accel = 0.0;
         lg.exposure_history.clear();
         lg.exposure_weights.clear();
         const N: usize = 240;
         for i in 0..N {
-            lg.exposure_history.push_back(10.0);
+            lg.exposure_history.push_back(1.0);
             let weight =
                 0.5 * (1.0 - (2.0 * std::f32::consts::PI * i as f32 / (N as f32 - 1.0)).cos());
             lg.exposure_weights.push(weight);

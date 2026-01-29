@@ -20,8 +20,7 @@ use core::f32;
 use ndarray::Array3;
 use rand::Rng;
 use std::collections::VecDeque;
-use unbehavior::behavior::Behavior;
-use unbehavior::behavior::Interactive;
+use unbehavior::behavior::{Behavior, Interactive};
 use unbehavior::roomdb::RoomDB;
 pub(crate) use unboard_core::components::mapcolor::MapColor;
 use unboard_core::resources::board_topology::{
@@ -31,6 +30,7 @@ use unboard_core::types::fielddata::CollisionFieldData;
 use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unlight_core::resources::light_grid::LightGrid;
 pub(crate) use unlight_core::types::light::LightData;
+use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unrender_std::utils::perspective;
 use unsound_core::resources::SoundGrid;
 use unspatial_core::orientation::Orientation;
@@ -71,7 +71,6 @@ use unrender_std::components::visuals::{
 };
 use unrender_std::materials::CustomMaterial1;
 use unrender_std::resources::visibility_data::VisibilityData;
-use unrender_std::utils::light::{compute_color_exposure, lerp_color};
 use unspatial_core::boardposition::BoardPosition;
 use unspatial_core::direction::Direction;
 use unspatial_core::position::Position;
@@ -80,13 +79,23 @@ use untypes_core::difficulty::Difficulty;
 use crate::metrics::{APPLY_LIGHTING, COMPUTE_VISIBILITY, PLAYER_VISIBILITY};
 use unfoundation_core::random_seed;
 
-/// Computes the player's visibility field, determining which areas of the map are
-/// visible.
+/// Calculates the "known world" from the perspective of a specific position.
 ///
-/// This function uses a line-of-sight algorithm to calculate visibility, taking
-/// into account walls, obstacles, and potentially the player's sanity level. The
-/// visibility field is stored in a `HashMap`, where the keys are `BoardPosition`s
-/// and the values are visibility factors (0.0 to 1.0).
+/// This is not just a geometric Line-Of-Sight (LOS) check, but a perceptual field that
+/// defines what the character (or camera) "understands" about their surroundings.
+///
+/// ### Notable Behaviors:
+///
+/// * **Soft Shadowing:** Instead of a binary of "visible or not", it uses a decay factor
+///   to simulate how it becomes harder to judge distant details.
+///
+/// * **Structural Occlusion:** Walls and closed doors act as hard stops, but certain
+///   objects (like glass or fences) are marked as `see_through`, allowing the
+///   visibility field to propagate while still blocking movement.
+///
+/// * **Room-based Context:** The algorithm interacts with the `RoomDB` to potentially
+///   adjust visibility based on room boundaries, helping to implement "Fog of War"
+///   mechanics that respect layout logic.
 pub(crate) fn compute_visibility(
     vis_field: &mut Array3<f32>,
     collision_field: &Array3<CollisionFieldData>,
@@ -216,19 +225,32 @@ pub(crate) fn player_visibility_system(
     measure.end_ms();
 }
 
-/// Applies lighting effects to map tiles and sprites, adjusting colors based on
-/// visibility and exposure.
+/// The core visual engine for atmospheric rendering in Unhaunter.
 ///
-/// This function:
+/// This system transforms raw light data (from flashlights, ambient sources, and ghost activity)
+/// into a final perceptual image. Its primary goal is to simulate a "handheld camera" or "human eye"
+/// experience, emphasizing contrast, adaptation, and the discovery of the supernatural.
 ///
-/// * Simulates lighting from various sources (ambient light, flashlights, ghost
-///   effects).
+/// ### Core Intentions:
 ///
-/// * Calculates the relative exposure based on light levels and the player's current
-///   exposure adaptation.
+/// * **Atmospheric focus (Eye Adaptation):** Instead of static lighting, this system calculates a global
+///   exposure level based on what the player is currently looking at. This creates a "glare" effect
+///   near bright sources and a "slow fade-in" when entering pitch-black rooms, simulating retinal adaptation.
 ///
-/// * Adjusts tile and sprite colors based on lighting, visibility, and exposure,
-///   creating a realistic and atmospheric visual experience.
+/// * **Perceptual Continuity:** To prevent a "tiled" look, light is sampled at the intersections (corners)
+///   of tiles. This ensures that colors and brightness flow seamlessly across tile boundaries, making
+///   the map feel like a single cohesive space rather than a grid of sprites.
+///
+/// * **The Spectral Dimension:** The system distinguishes between Visible, Red, Infrared, and Ultraviolet
+///   wavelengths. This is the primary mechanic for supernatural investigation, where specific equipment
+///   reveals hidden spectral colors (charges) on haunted objects that are otherwise invisible.
+///
+/// * **Tonemapping for Dread:** We use a Sigmoid-like curve (shoulder/toe) to prevent pure-white
+///   oversaturation while ensuring that shadows retain a deep, oppressive feel without losing all detail.
+///
+/// * **Performance vs. Atmosphere:** Since per-vertex lighting is expensive, the system uses a
+///   stochastic update strategy. It prioritizes entities currently interacting with the player or
+///   spectral lights, while updating background tiles over multiple frames to maintain high framerates.
 #[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting(
     mut qt2: Query<
@@ -238,7 +260,7 @@ pub(crate) fn apply_lighting(
             &MeshMaterial2d<CustomMaterial1>,
             &mut Visibility,
             Option<&Behavior>,
-            Option<&SpectralInfluence>,
+            Option<&mut SpectralInfluence>,
             Option<&Interactive>,
             Option<&Ethereal>,
             Option<&EctoplasmVisuals>,
@@ -312,6 +334,10 @@ pub(crate) fn apply_lighting(
     };
 
     let mut rng = random_seed::rng();
+
+    // --- High-Level Intent: Perceptual Scene Reconstruction ---
+    // The goal of this function is to transform a mathematical simulation of photons
+    // into an atmospheric, readable visual scene that reacts to the player's presence.
 
     // Difficulty-based ambient light boost for tutorials.
     // 1.0 for Tutorial 1, 0.0 for Standard+.
@@ -430,10 +456,10 @@ pub(crate) fn apply_lighting(
     let mut tile_sprites = sprite_set.p1();
 
     // --- Highlight placement tiles ---
-    for (player_pos, _, _, player_gear, is_main_player) in qp.iter() {
+    for (p_pos, _, _, player_gear, is_main_player) in qp.iter() {
         if is_main_player && player_gear.held_item.is_some() {
             // Only highlight if the player is holding an object
-            let target_tile = player_pos.to_board_position();
+            let target_tile = p_pos.to_board_position();
             for (tile_pos, mut sprite) in tile_sprites.iter_mut() {
                 // Removed 'behavior' from the loop
                 if tile_pos.to_board_position() == target_tile {
@@ -748,6 +774,10 @@ pub(crate) fn apply_lighting(
             (o_light_sens, o_ir_sens, o_uv_sens, o_map_color, o_miasma, o_alpha_mod),
         )) = qt2.get_mut(*entity)
         {
+            // --- Per-Entity Spectral & Visual Processing ---
+            // This is the core 'flavor' of the investigation mechanics.
+            // Objects react differently to UV, Red, and IR light, sometimes 'charging'
+            // or glowing based on their paranormal properties.
             let on_hover = o_interactive
                 .map(|x| x.hovered && mouse_visibility.is_visible)
                 .unwrap_or_default();
