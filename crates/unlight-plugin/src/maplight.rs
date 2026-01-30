@@ -28,7 +28,7 @@ use unlight_core::resources::light_grid::LightGrid;
 use unlight_core::tonemapping;
 pub(crate) use unlight_core::types::light::LightData;
 pub(crate) use unlight_core::types::light::LightFieldData;
-use unrender_std::utils::light::{compute_color_exposure, lerp_color};
+use unrender_std::utils::light::lerp_color;
 use unrender_std::utils::perspective;
 use unspatial_core::orientation::Orientation;
 use unui_core::resources::MouseVisibility;
@@ -627,27 +627,38 @@ pub(crate) fn highlight_placement_tiles_system(
     }
 }
 
+#[expect(clippy::type_complexity)]
 pub(crate) fn apply_lighting_to_sprites_system(
     mut qt: Query<
         (
+            Entity,
             &Position,
             Option<&mut Sprite>,
             Option<&MeshMaterial2d<CustomMaterial1>>,
-            Option<&LightSensitive>,
-            Option<&InfraredSensitive>,
-            Option<&ShadowCaster>,
-            Option<&MapColor>,
-            Option<&UVReactive>,
-            Option<&MiasmaSprite>,
+            Option<&mut SpectralInfluence>,
+            Option<&Ethereal>,
+            Option<&EctoplasmVisuals>,
+            Option<&SpectralClarity>,
+            (
+                Option<&LightSensitive>,
+                Option<&InfraredSensitive>,
+                Option<&UltravioletSensitive>,
+                Option<&ShadowCaster>,
+                Option<&MapColor>,
+                Option<&UVReactive>,
+                Option<&MiasmaSprite>,
+                Option<&AlphaModulator>,
+            ),
         ),
         Without<MapTileSprite>,
     >,
-    materials1: ResMut<Assets<CustomMaterial1>>,
+    mut materials1: ResMut<Assets<CustomMaterial1>>,
     active_flashlights: Res<ActiveFlashlights>,
     lg: Res<LightGrid>,
     grids: GridResources,
     q_vf: Query<&VisibilityData, With<MainPlayer>>,
     difficulty: Res<CurrentDifficulty>,
+    time: Res<Time>,
 ) {
     let Ok(vf) = q_vf.single() else {
         return;
@@ -655,6 +666,8 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let bf = &grids.bf;
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
+    let elapsed = time.elapsed_secs();
+    let dt = time.delta_secs();
 
     let sampler = LightingSampler::new(
         &active_flashlights.list,
@@ -664,16 +677,27 @@ pub(crate) fn apply_lighting_to_sprites_system(
         &difficulty.0.difficulty,
     );
 
+    let mut rng = random_seed::rng();
+
     for (
+        _entity,
         pos,
         mut o_sprite,
         o_mat,
-        o_light_sens,
-        o_ir_sens,
-        o_shadow_caster,
-        o_color,
-        uv_reactive,
-        o_miasma,
+        mut o_spectral_influence,
+        o_ethereal,
+        o_ecto_vis,
+        o_spectral_clarity,
+        (
+            o_light_sens,
+            o_ir_sens,
+            o_uv_sens,
+            o_shadow_caster,
+            o_color,
+            uv_reactive,
+            o_miasma,
+            o_alpha_mod,
+        ),
     ) in qt.iter_mut()
     {
         let sprite_color = if let Some(sprite) = o_sprite.as_ref() {
@@ -692,93 +716,118 @@ pub(crate) fn apply_lighting_to_sprites_system(
         let mut opacity: f32 = map_color.alpha() * visibility;
         opacity = (opacity.powf(0.5) * 2.0 - 0.1).clamp(0.0001, 1.0);
 
-        let (gcolor, ld_abs) = sampler
+        let ((mut r, mut g, mut b), ld_abs) = sampler
             .fpos_gamma_color(*pos, o_light_sens.is_some())
             .unwrap_or(((1.0, 1.0, 1.0), LightData::UNIT_VISIBLE));
 
+        if let Some(light_sens) = o_light_sens {
+            r = (r + light_sens.bias).max(0.05);
+            g = (g + light_sens.bias).max(0.05);
+            b = (b + light_sens.bias).max(0.05);
+        }
+
+        // Update spectral charges if the entity has SpectralInfluence
+        if let Some(ref mut si) = o_spectral_influence {
+            update_spectral_influence(si, &ld_abs, dt);
+        }
+        let sp = SpectralParams::from(o_spectral_influence.as_deref());
+
+        sampler.apply_spectral_modulation(&mut r, &mut g, &mut b, &ld_abs, &sp);
+
         let ld = ld_abs.normalize();
 
-        let mut src_color = map_color.with_alpha(1.0);
-        let uv_reactive = uv_reactive.map(|x| x.0).unwrap_or_default();
-        src_color = lerp_color(
-            src_color,
-            css::GREEN.into(),
-            (ld.ultraviolet * uv_reactive).sqrt(),
-        );
-        let mut dst_color = {
-            let r: f32 = (bpos.mini_hash() - 0.4) / 50.0;
-            let mut rel_lux = (gcolor.0 + gcolor.1 + gcolor.2) / 3.0;
+        let mut dst_color = Color::srgb(r, g, b);
+        let mut smooth_a: f32 = 1.0;
 
-            rel_lux += ld.ultraviolet * uv_reactive * 5.0;
+        if let Some(uv_sens) = o_uv_sens {
+            apply_uv_visuals(uv_sens, &ld, &mut dst_color, &mut opacity);
+        }
 
-            if let Some(light_sens) = o_light_sens {
-                rel_lux = (rel_lux + light_sens.bias).max(0.05);
-            }
-            compute_color_exposure(rel_lux, r, 1.0, src_color)
-        };
+        if let Some(uv_react) = uv_reactive {
+            let uv_react = uv_react.0;
+            dst_color = lerp_color(
+                dst_color,
+                css::GREEN.into(),
+                (ld.ultraviolet * uv_react).sqrt(),
+            );
+            // Multiplier for fluorescence
+            let mut srgba = dst_color.to_srgba();
+            let l = (srgba.red + srgba.green + srgba.blue) / 3.0;
+            let boost = ld.ultraviolet * uv_react * 5.0;
+            srgba.red += boost * l;
+            srgba.green += boost * l;
+            srgba.blue += boost * l;
+            dst_color = srgba.into();
+        }
 
-        let mut smooth: f32 = 1.0;
-        if let Some(threshold) = o_ir_sens.and_then(|ir| ir.thresholds) {
-            let ir_sens = o_ir_sens.unwrap();
-            smooth = 10.0;
-            let total_light =
-                ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
-            let ir_ratio = ld_abs.infrared / total_light;
-            if ir_ratio > threshold && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
-                opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
-                opacity = (opacity * ir_sens.intensity).clamp(0.0, 1.0);
+        if let Some(ir_sens) = o_ir_sens {
+            apply_ir_visuals(ir_sens, &ld_abs, visibility, &mut opacity, &mut smooth_a);
+        }
+
+        if let Some(am) = o_alpha_mod {
+            apply_alpha_modulator_visuals(am, elapsed, &mut opacity);
+        }
+
+        let difficulty_val = &difficulty.0;
+
+        if let Some(ethereal) = o_ethereal {
+            if !ethereal.warning_active && !ethereal.hunt_target {
+                apply_ethereal_visuals(
+                    ethereal,
+                    o_spectral_clarity,
+                    &ld,
+                    difficulty_val,
+                    elapsed,
+                    &mut opacity,
+                    &mut dst_color,
+                );
             } else {
-                opacity = 0.0;
+                // Handle warning/hunt colors (copied from tile logic for now)
+                dst_color = if ethereal.warning_active {
+                    lerp_color(
+                        css::RED.into(),
+                        css::ALICE_BLUE.into(),
+                        ethereal.warning_intensity.clamp(0.0, 1.0),
+                    )
+                } else {
+                    lerp_color(
+                        css::RED.into(),
+                        css::ALICE_BLUE.into(),
+                        (ethereal.calm_time_secs / 10.0).clamp(0.0, 1.0),
+                    )
+                };
             }
+        }
+
+        if let Some(_ecto) = o_ecto_vis.filter(|e| e.use_breach_curve) {
+            apply_ecto_visuals(
+                &ld,
+                difficulty_val,
+                elapsed,
+                &mut opacity,
+                &mut dst_color,
+                vf.visibility_field[bpos.ndidx()],
+                &mut rng,
+            );
+        }
+
+        if let Some(miasma_sprite) = o_miasma {
+            apply_miasma_cloud_visuals(
+                miasma_sprite,
+                pos,
+                &ld,
+                miasma,
+                miasma_config,
+                &mut dst_color,
+                &mut opacity,
+            );
         }
 
         let old_a = (sprite_color.alpha()).clamp(0.0001, 1.0);
-        if let Some(miasma_sprite) = o_miasma {
-            let bpos = pos.to_board_position();
-            let mut total_pressure = 0.0;
-            let mut total_weight = 0.0;
-
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    let neighbor_pos = BoardPosition {
-                        x: bpos.x + dx,
-                        y: bpos.y + dy,
-                        z: bpos.z,
-                    };
-
-                    if let Some(neighbor_pressure) = miasma.pressure_field.get(neighbor_pos.ndidx())
-                    {
-                        let neighbor_center = neighbor_pos.to_position_center();
-                        let distance = pos.distance(&neighbor_center);
-                        let weight = (distance + 0.1).recip();
-
-                        total_pressure += neighbor_pressure * weight;
-                        total_weight += weight;
-                    }
-                }
-            }
-
-            let average_pressure = if total_weight > 0.0 {
-                total_pressure / total_weight
-            } else {
-                0.0
-            };
-
-            let miasma_visibility = average_pressure.max(0.0).sqrt()
-                * miasma_config.miasma_visibility_factor
-                * miasma_sprite.life.clamp(0.0, 1.0)
-                * (ld.magnitude().atan() / 1.1 + 0.4);
-
-            dst_color = dst_color
-                .with_luminance((dst_color.luminance().sqrt() * 0.9 + 0.01).clamp(0.0, 1.0));
-            opacity = opacity.max(0.0);
-            opacity *= miasma_visibility.clamp(0.0, 0.8)
-                * miasma_sprite.visibility
-                * (dst_color.luminance().sqrt() * 0.8 + 0.2);
-        }
         dst_color.set_alpha(
-            ((opacity + old_a * smooth) / (smooth + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
+            ((opacity + old_a * smooth_a) / (smooth_a + 1.0)).clamp(0.0, 1.0) * map_color.alpha(),
         );
+
         let src_linear = sprite_color.to_linear();
         let dst_linear = dst_color.to_linear();
         let f = if o_shadow_caster.is_some() {
@@ -792,6 +841,9 @@ pub(crate) fn apply_lighting_to_sprites_system(
         );
         if let Some(sprite) = o_sprite.as_mut() {
             sprite.color = smooth_color.into();
+        } else if let Some(mat_handle) = o_mat {
+            let mat = materials1.get_mut(&mat_handle.0).unwrap();
+            mat.data.color = smooth_color;
         }
     }
 }
@@ -821,6 +873,43 @@ fn apply_miasma_pressure(
     }
     total_pressure /= 10.0;
     *opacity *= (1.0_f32 - total_pressure).clamp(0.0_f32, 1.0_f32);
+}
+
+fn apply_uv_visuals(
+    uv_sens: &UltravioletSensitive,
+    ld: &LightData,
+    dst_color: &mut Color,
+    opacity: &mut f32,
+) {
+    *opacity = (*opacity + ld.ultraviolet * uv_sens.intensity).clamp(0.0, 1.3);
+    let f = (ld.ultraviolet * uv_sens.color_shift).clamp(0.0, 1.0);
+    *dst_color = lerp_color(*dst_color, css::MEDIUM_SLATE_BLUE.into(), f);
+}
+
+fn apply_ir_visuals(
+    ir_sens: &InfraredSensitive,
+    ld_abs: &LightData,
+    visibility: f32,
+    opacity: &mut f32,
+    smooth: &mut f32,
+) {
+    if let Some(threshold) = ir_sens.thresholds {
+        *smooth = 10.0;
+        let total_light = ld_abs.visible + ld_abs.red + ld_abs.ultraviolet + ld_abs.infrared + 0.1;
+        let ir_ratio = ld_abs.infrared / total_light;
+        if ir_ratio > threshold && ld_abs.infrared > 0.1 && ld_abs.visible < 0.5 {
+            *opacity = (ir_ratio * 2.0 - 1.0).powi(2) * ld_abs.infrared.sqrt() * visibility;
+            *opacity = (*opacity * ir_sens.intensity).clamp(0.0, 1.0);
+        } else {
+            *opacity = 0.0;
+        }
+    } else {
+        *opacity = (*opacity + ld_abs.infrared * ir_sens.intensity).clamp(0.0, 1.3);
+    }
+}
+
+fn apply_alpha_modulator_visuals(am: &AlphaModulator, elapsed: f32, opacity: &mut f32) {
+    *opacity *= (am.frequency * elapsed).sin() * am.amplitude + (1.0 - am.amplitude);
 }
 
 fn apply_ethereal_visuals(
@@ -911,6 +1000,57 @@ fn apply_ecto_visuals(
                     * (1.4 - osc1 + rnd_f / 24.0),
         )
         .into();
+}
+
+fn apply_miasma_cloud_visuals(
+    miasma_sprite: &MiasmaSprite,
+    pos: &Position,
+    ld: &LightData,
+    miasma: &MiasmaGrid,
+    miasma_config: &MiasmaConfig,
+    dst_color: &mut Color,
+    opacity: &mut f32,
+) {
+    let bpos = pos.to_board_position();
+    let mut total_pressure = 0.0;
+    let mut total_weight = 0.0;
+
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            let neighbor_pos = BoardPosition {
+                x: bpos.x + dx,
+                y: bpos.y + dy,
+                z: bpos.z,
+            };
+
+            if let Some(neighbor_pressure) = miasma.pressure_field.get(neighbor_pos.ndidx()) {
+                let neighbor_center = neighbor_pos.to_position_center();
+                let distance = pos.distance(&neighbor_center);
+                let weight = (distance + 0.1).recip();
+
+                total_pressure += neighbor_pressure * weight;
+                total_weight += weight;
+            }
+        }
+    }
+
+    let average_pressure = if total_weight > 0.0 {
+        total_pressure / total_weight
+    } else {
+        0.0
+    };
+
+    let miasma_visibility = average_pressure.max(0.0).sqrt()
+        * miasma_config.miasma_visibility_factor
+        * miasma_sprite.life.clamp(0.0, 1.0)
+        * (ld.magnitude().atan() / 1.1 + 0.4);
+
+    *dst_color =
+        dst_color.with_luminance((dst_color.luminance().sqrt() * 0.9 + 0.01).clamp(0.0, 1.0));
+    *opacity = opacity.max(0.0);
+    *opacity *= miasma_visibility.clamp(0.0, 0.8)
+        * miasma_sprite.visibility
+        * (dst_color.luminance().sqrt() * 0.8 + 0.2);
 }
 
 fn step_alpha_clamped(
@@ -1251,19 +1391,6 @@ pub(crate) fn apply_lighting_to_tiles_system(
             }
             let map_color = o_map_color.map(|x| x.color).unwrap_or_default();
 
-            if let Some(am) = o_alpha_mod {
-                opacity *= (am.frequency * elapsed).sin() * am.amplitude + (1.0 - am.amplitude);
-            }
-
-            if let Some(uv_sens) = o_uv_sens {
-                opacity = (opacity + ld.ultraviolet * uv_sens.intensity).clamp(0.0, 1.3);
-                let f = (ld.ultraviolet * uv_sens.color_shift).clamp(0.0, 1.0);
-                src_color_base = lerp_color(src_color_base, css::MEDIUM_SLATE_BLUE.into(), f);
-            }
-            if let Some(ir_sens) = o_ir_sens {
-                opacity = (opacity + ld.infrared * ir_sens.intensity).clamp(0.0, 1.3);
-            }
-
             if let Some(ethereal) = o_ethereal {
                 smooth_f = 299.0;
                 smooth_a = 199.0;
@@ -1316,6 +1443,24 @@ pub(crate) fn apply_lighting_to_tiles_system(
             // remove brightness calculation for main tile:
             let mut dst_color = src_color_base;
             let difficulty_val = &difficulty.0;
+
+            if let Some(am) = o_alpha_mod {
+                apply_alpha_modulator_visuals(am, elapsed, &mut opacity);
+            }
+
+            if let Some(uv_sens) = o_uv_sens {
+                apply_uv_visuals(uv_sens, &ld, &mut dst_color, &mut opacity);
+            }
+
+            if let Some(ir_sens) = o_ir_sens {
+                apply_ir_visuals(
+                    ir_sens,
+                    &light_data,
+                    vf.visibility_field[bpos.ndidx()],
+                    &mut opacity,
+                    &mut smooth_a,
+                );
+            }
 
             if let Some(ethereal) = o_ethereal.filter(|e| !e.warning_active && !e.hunt_target) {
                 apply_ethereal_visuals(

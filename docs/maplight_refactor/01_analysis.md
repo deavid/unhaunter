@@ -237,20 +237,18 @@ The refactor is in the **early stages**. While some structural foundations have 
 - **Done**: `fpos_gamma_color`, `fpos_sampling_corner`, `f_vis`, `calc_gamma`, and `calc_rgba` have been refactored into
   a `LightingSampler` struct.
 - **Done**: Capture of local variables in `apply_lighting` has been significantly reduced.
-- **Outcome**: `apply_lighting` is more readable and logic is more encapsulated.
+- **Done**: `apply_lighting` is more readable and logic is more encapsulated.
 
 ### Phase 3: System Migration
 
-- **In Progress**: Flashlight collection and exposure updates have been moved to independent systems
+- **Done**: Flashlight collection and exposure updates have been moved to independent systems
   (`gather_flashlights_system` and `update_exposure_system`).
-- **Outcome**: `apply_lighting` now only handles scene reconstruction (material updates). It communicates with other
-  lighting systems via the `ActiveFlashlights` resource.
-- **Next Steps**: Further decompose `apply_lighting` to separate tile updates from sprite updates to improve performance
-  and readability.
-- **Note**: A significant new module
-  [crates/unlight-plugin/src/lighting_sim/](../../crates/unlight-plugin/src/lighting_sim/) has been added. It handles
-  prebaked lighting propagation and populates the `LightGrid`, which is a prerequisite for the refactor but doesn't yet
-  break up the main system.
+- **Done**: `apply_lighting` has been entirely split into `apply_lighting_to_tiles_system` and
+  `apply_lighting_to_sprites_system`.
+- **Done**: Visual logic (Ghosts, Miasma, UV/IR) has been extracted into shared helper functions
+  (`apply_ethereal_visuals`, `apply_ecto_visuals`, `apply_uv_visuals`, etc.) used by both systems.
+- **Outcome**: The monolithic `apply_lighting` system is gone. The rendering pipeline is now modular, with dedicated
+  systems for data gathering, auto-exposure, and distinct rendering paths for tiles (background) and sprites (entities).
 
 ### Structural Observations
 
