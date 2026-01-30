@@ -207,6 +207,17 @@ pub(crate) fn compute_visibility(
     measure.end_ms();
 }
 
+pub(crate) fn calculate_tutorial_light_factor(difficulty: &Difficulty) -> f32 {
+    match difficulty {
+        Difficulty::TutorialChapter1 => 1.0,
+        Difficulty::TutorialChapter2 => 0.8,
+        Difficulty::TutorialChapter3 => 0.6,
+        Difficulty::TutorialChapter4 => 0.4,
+        Difficulty::TutorialChapter5 => 0.2,
+        _ => 0.0,
+    }
+}
+
 /// System to calculate the player's visibility field and update VisibilityData.
 pub(crate) fn player_visibility_system(
     mut q_vf: Query<(&Position, &mut VisibilityData), With<Viewer>>,
@@ -265,6 +276,24 @@ pub(crate) struct LightingSampler<'a> {
 }
 
 impl<'a> LightingSampler<'a> {
+    pub(crate) fn new(
+        flashlights: &'a [FlashlightData],
+        bf: &'a BoardTopology,
+        lg: &'a LightGrid,
+        vf: &'a VisibilityData,
+        difficulty: &Difficulty,
+    ) -> Self {
+        let tutorial_light_factor = calculate_tutorial_light_factor(difficulty);
+        Self {
+            flashlights,
+            bf,
+            lf: &lg.light_field,
+            vf,
+            exposure: lg.exposure.current,
+            tutorial_light_factor,
+        }
+    }
+
     pub(crate) fn fpos_gamma_color(
         &self,
         target_pos: Position,
@@ -566,26 +595,14 @@ pub(crate) fn apply_lighting_to_sprites_system(
     let bf = &grids.bf;
     let miasma = &grids.miasma;
     let miasma_config = &grids.miasma_config;
-    let lf = &lg.light_field;
-    let exposure = lg.exposure.current;
 
-    let tutorial_light_factor = match difficulty.0.difficulty {
-        Difficulty::TutorialChapter1 => 1.0,
-        Difficulty::TutorialChapter2 => 0.8,
-        Difficulty::TutorialChapter3 => 0.6,
-        Difficulty::TutorialChapter4 => 0.4,
-        Difficulty::TutorialChapter5 => 0.2,
-        _ => 0.0,
-    };
-
-    let sampler = LightingSampler {
-        flashlights: &active_flashlights.list,
+    let sampler = LightingSampler::new(
+        &active_flashlights.list,
         bf,
-        lf,
+        &lg,
         vf,
-        exposure,
-        tutorial_light_factor,
-    };
+        &difficulty.0.difficulty,
+    );
 
     for (
         pos,
@@ -772,17 +789,6 @@ pub(crate) fn apply_lighting_to_tiles_system(
     // The goal of this function is to transform a mathematical simulation of photons
     // into an atmospheric, readable visual scene that reacts to the player's presence.
 
-    // Difficulty-based ambient light boost for tutorials.
-    // 1.0 for Tutorial 1, 0.0 for Standard+.
-    let tutorial_light_factor = match difficulty.0.difficulty {
-        Difficulty::TutorialChapter1 => 1.0,
-        Difficulty::TutorialChapter2 => 0.8,
-        Difficulty::TutorialChapter3 => 0.6,
-        Difficulty::TutorialChapter4 => 0.4,
-        Difficulty::TutorialChapter5 => 0.2,
-        _ => 0.0,
-    };
-
     let mut player_pos = Position::new_i64(0, 0, 0);
     let elapsed = time.elapsed_secs();
 
@@ -800,26 +806,22 @@ pub(crate) fn apply_lighting_to_tiles_system(
         player_pos = *pos;
     }
 
-    let exposure = lg.exposure.current;
-
     let mut lightdata_map: HashMap<BoardPosition, LightData> = HashMap::new();
 
     // Primes: 13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,173,281,409,541,659,809
     const VSMALL_PRIME: usize = 59;
     const BIG_PRIME: usize = 95629;
     let mask: usize = rng.random_range(0..usize::MAX);
-    let lf = &lg.light_field;
 
     // --- Shared Lighting Sampling Logic ---
 
-    let sampler = LightingSampler {
-        flashlights: &active_flashlights.list,
+    let sampler = LightingSampler::new(
+        &active_flashlights.list,
         bf,
-        lf,
+        &lg,
         vf,
-        exposure,
-        tutorial_light_factor,
-    };
+        &difficulty.0.difficulty,
+    );
 
     // --- End of Shared Lighting Sampling Logic ---
 
@@ -1069,10 +1071,10 @@ pub(crate) fn apply_lighting_to_tiles_system(
 
             let ld = light_data.normalize();
 
-            if let Some(behavior) = o_behavior {
-                if behavior.p.movement.walkable {
-                    lightdata_map.insert(bpos.clone(), light_data);
-                }
+            if let Some(behavior) = o_behavior
+                && behavior.p.movement.walkable
+            {
+                lightdata_map.insert(bpos.clone(), light_data);
             }
             let max_color = r.max(g).max(b).max(0.2);
             let mut src_color_base = Color::srgb(r / max_color, g / max_color, b / max_color);
