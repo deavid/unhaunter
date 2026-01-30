@@ -45,6 +45,34 @@ impl ProgressionData {
     pub fn get_level_progress(&self) -> f32 {
         (Self::calculate_player_level(self.player_xp).fract()) as f32
     }
+
+    /// Updates the player insurance deposit and bank balance.
+    /// Returns an error message if the bank balance is insufficient.
+    pub fn update_deposit(&mut self, required_deposit: i64) -> Result<(), String> {
+        let additional_needed = required_deposit - self.insurance_deposit;
+
+        match additional_needed.cmp(&0) {
+            std::cmp::Ordering::Greater => {
+                if self.bank >= additional_needed {
+                    self.bank -= additional_needed;
+                    self.insurance_deposit += additional_needed;
+                } else {
+                    return Err(format!(
+                        "Insufficient Money in Bank for deposit. Required: ${}, Available: ${}",
+                        required_deposit, self.bank
+                    ));
+                }
+            }
+            std::cmp::Ordering::Less => {
+                let refund = -additional_needed;
+                self.bank += refund;
+                self.insurance_deposit -= refund;
+            }
+            std::cmp::Ordering::Equal => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -112,4 +140,16 @@ pub struct PlayerProfileData {
     pub times_evidence_acknowledged_on_gear: HashMap<Evidence, u32>,
     #[serde(default)]
     pub times_evidence_acknowledged_in_journal: HashMap<Evidence, u32>,
+}
+
+impl PlayerProfileData {
+    /// Gets the best grade achieved for a specific map and difficulty.
+    pub fn get_map_grade(&self, map_path: &str, difficulty: &Difficulty) -> Grade {
+        self.map_statistics
+            .get(map_path)
+            .and_then(|stats| stats.get(difficulty))
+            .filter(|s| s.total_missions_completed > 0)
+            .map(|s| s.best_grade)
+            .unwrap_or(Grade::NA)
+    }
 }
