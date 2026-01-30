@@ -249,11 +249,8 @@ fn trigger_sanity_dropped_due_to_ghost_system(
                 }
                 _ => {
                     // New interaction or different ghost
-                    *interaction_sanity_tracker = Some((
-                        player_sprite.sanity,
-                        Stopwatch::new(),
-                        interacting_ghost_e,
-                    ));
+                    *interaction_sanity_tracker =
+                        Some((player_sprite.sanity, Stopwatch::new(), interacting_ghost_e));
                     *hint_triggered_this_episode = false; // Reset hint flag for new interaction episode
                 }
             }
@@ -264,7 +261,8 @@ fn trigger_sanity_dropped_due_to_ghost_system(
         }
 
         // 3.e. Trigger Conditions
-        if let Some((initial_sanity, timer, _tracked_ghost_e)) = interaction_sanity_tracker.as_ref() {
+        if let Some((initial_sanity, timer, _tracked_ghost_e)) = interaction_sanity_tracker.as_ref()
+        {
             if *hint_triggered_this_episode {
                 // If hint already fired for this specific interaction episode
                 continue;

@@ -32,10 +32,7 @@ fn trigger_gear_selected_not_activated_system(
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<
-        (&PlayerInputMapping, &PlayerGear, &Position),
-        With<MainPlayer>,
-    >,
+    player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     q_gear: Query<(&GearKind, &Toggleable, Option<&Battery>)>,
     mut tracker: Local<Option<RightHandGearStateTracker>>,
     mut r_triggered: Local<i32>,
@@ -373,10 +370,7 @@ fn trigger_did_not_cycle_to_other_gear_system(
     app_state: Res<State<AppState>>,
     game_state: Res<State<GameState>>,
     mut walkie_play: ResMut<WalkiePlay>,
-    player_query: Query<
-        (&PlayerInputMapping, &PlayerGear, &Position),
-        With<MainPlayer>,
-    >,
+    player_query: Query<(&PlayerInputMapping, &PlayerGear, &Position), With<MainPlayer>>,
     roomdb: Res<RoomDB>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     difficulty: Res<CurrentDifficulty>,

@@ -391,50 +391,55 @@ fn trigger_sage_activated_ineffectively_system(
 
             // 4. Manage Tracker State
             if sage_data.is_active && !sage_data.consumed {
-        // Sage is currently burning
-        if !tracker.is_tracking_this_sage_burn || tracker.player_entity_id != Some(player_entity) {
-            // Start tracking this new burn, or re-track if player changed
-            *tracker = SageEffectivenessTracker {
-                player_entity_id: Some(player_entity),
-                sage_activated_game_time: time.elapsed_secs(),
-                initial_ghost_calm_time_secs: ghost_sprite.calm_time_secs,
-                is_tracking_this_sage_burn: true,
-            };
-        }
-        // else, already tracking this burn, just let it continue
-    } else {
-        // Sage is NOT currently active (either consumed or not lit)
-        if tracker.is_tracking_this_sage_burn && tracker.player_entity_id == Some(player_entity) {
-            // Sage was being tracked for this player, and now it's no longer active.
-            // This means it was either consumed or deactivated (e.g. player dropped/stowed it).
-            // If it was consumed, this is when we check effectiveness.
-            if sage_data.consumed {
-                // Check the consumed flag
-                let calm_increase =
-                    ghost_sprite.calm_time_secs - tracker.initial_ghost_calm_time_secs;
-                if calm_increase < MIN_EFFECTIVE_SAGE_CALM_INCREASE {
-                    // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
-                    walkie_play.set(
-                        WalkieEvent::SageActivatedIneffectively,
-                        time.elapsed_secs_f64(),
-                    );
+                // Sage is currently burning
+                if !tracker.is_tracking_this_sage_burn
+                    || tracker.player_entity_id != Some(player_entity)
+                {
+                    // Start tracking this new burn, or re-track if player changed
+                    *tracker = SageEffectivenessTracker {
+                        player_entity_id: Some(player_entity),
+                        sage_activated_game_time: time.elapsed_secs(),
+                        initial_ghost_calm_time_secs: ghost_sprite.calm_time_secs,
+                        is_tracking_this_sage_burn: true,
+                    };
                 }
+                // else, already tracking this burn, just let it continue
+            } else {
+                // Sage is NOT currently active (either consumed or not lit)
+                if tracker.is_tracking_this_sage_burn
+                    && tracker.player_entity_id == Some(player_entity)
+                {
+                    // Sage was being tracked for this player, and now it's no longer active.
+                    // This means it was either consumed or deactivated (e.g. player dropped/stowed it).
+                    // If it was consumed, this is when we check effectiveness.
+                    if sage_data.consumed {
+                        // Check the consumed flag
+                        let calm_increase =
+                            ghost_sprite.calm_time_secs - tracker.initial_ghost_calm_time_secs;
+                        if calm_increase < MIN_EFFECTIVE_SAGE_CALM_INCREASE {
+                            // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
+                            walkie_play.set(
+                                WalkieEvent::SageActivatedIneffectively,
+                                time.elapsed_secs_f64(),
+                            );
+                        }
+                    }
+                    // Whether consumed or just deactivated, stop tracking this specific burn.
+                    *tracker = SageEffectivenessTracker::default();
+                }
+                // else, wasn't tracking or tracking for a different player, do nothing.
             }
-            // Whether consumed or just deactivated, stop tracking this specific burn.
-            *tracker = SageEffectivenessTracker::default();
-        }
-        // else, wasn't tracking or tracking for a different player, do nothing.
-    }
 
-    // Timeout for safety: if sage has been "active" for too long in tracker, reset.
-    if tracker.is_tracking_this_sage_burn
-        && time.elapsed_secs() - tracker.sage_activated_game_time > SAGE_TRACKING_TIMEOUT_SECONDS
-    {
-        // info!("Sage tracking timed out for player {:?}. Resetting.", tracker.player_entity_id);
-        *tracker = SageEffectivenessTracker::default();
+            // Timeout for safety: if sage has been "active" for too long in tracker, reset.
+            if tracker.is_tracking_this_sage_burn
+                && time.elapsed_secs() - tracker.sage_activated_game_time
+                    > SAGE_TRACKING_TIMEOUT_SECONDS
+            {
+                // info!("Sage tracking timed out for player {:?}. Resetting.", tracker.player_entity_id);
+                *tracker = SageEffectivenessTracker::default();
+            }
+        }
     }
-}
-}
 }
 
 #[derive(Default, Clone, Debug)]

@@ -1,18 +1,24 @@
-use bevy::prelude::*;
 use bevy::color::palettes::css;
+use bevy::prelude::*;
 use rand::Rng;
-use unlight_core::types::light::LightData;
-use unrender_std::utils::light::lerp_color;
-use unrender_std::components::visuals::{Ethereal, SpectralClarity, UltravioletSensitive, InfraredSensitive, AlphaModulator};
 use unboard_core::resources::board_topology::BoardTopology;
+use undifficulty_core::difficulty_settings::DifficultyStruct;
+use unfog_core::components::MiasmaSprite;
 use unfog_core::miasma::MiasmaGrid;
 use unfog_core::resources::MiasmaConfig;
-use unfog_core::components::MiasmaSprite;
-use unspatial_core::position::Position;
+use unlight_core::types::light::LightData;
+use unrender_std::components::visuals::{
+    AlphaModulator, Ethereal, InfraredSensitive, SpectralClarity, UltravioletSensitive,
+};
+use unrender_std::utils::light::lerp_color;
 use unspatial_core::boardposition::BoardPosition;
-use undifficulty_core::difficulty_settings::DifficultyStruct;
+use unspatial_core::position::Position;
 
-pub(crate) fn update_spectral_influence(si: &mut unrender_std::components::visuals::SpectralInfluence, light_data: &LightData, dt: f32) {
+pub(crate) fn update_spectral_influence(
+    si: &mut unrender_std::components::visuals::SpectralInfluence,
+    light_data: &LightData,
+    dt: f32,
+) {
     let update_charge = |target: f32, current: &mut f32| {
         let delta = target - *current;
         let tau = if delta > 0.0 { 1.0 } else { 0.25 };

@@ -4,6 +4,7 @@ use bevy::window::WindowResolution;
 use std::time::Duration;
 use uncampaign_plugin::plugin::UnhaunterCampaignPlugin;
 use unclassic_mode_plugin::plugin::ClassicModePlugin;
+use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
 use unengine_plugin::plugin::UnhaunterEnginePlugin;
 use unfog_plugin::plugin::UnhaunterFogPlugin;
 use unfps_plugin::plugin::UnhaunterFpsPlugin;
@@ -34,7 +35,6 @@ use untypes_core::cli::CliOptions;
 use untypes_core::platform::plt;
 use unui_plugin::plugin::UnhaunterUiPlugin;
 use unwalkie_plugin::plugin::UnhaunterWalkiePlugin;
-use undifficulty_core::plugin::UnhaunterDifficultyPlugin;
 
 pub fn app_run(cli_options: CliOptions) {
     let mut app = App::new();

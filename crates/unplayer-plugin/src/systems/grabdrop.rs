@@ -124,7 +124,12 @@ fn grab_object(
 
 fn drop_object(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<(&mut PlayerGear, &Position, &PlayerInputMapping, &PlayerSprite)>,
+    mut players: Query<(
+        &mut PlayerGear,
+        &Position,
+        &PlayerInputMapping,
+        &PlayerSprite,
+    )>,
     mut commands: Commands,
     board_collision: Res<BoardCollisionField>,
     pickables: Query<&Position, (With<FloorItemCollidable>, Without<PlayerSprite>)>,

@@ -3,10 +3,10 @@ use bevy_persistent::Persistent;
 use unengine_core::GCameraArena;
 use unpicking_core::picking::CustomSpritePickingCamera;
 use unplayer_core::components::{MainPlayer, PlayerSprite};
-use unspatial_core::perspective;
 use unsettings_core::controls::ControlKeys;
 use unsettings_core::game::GameplaySettings;
 use unspatial_core::direction::Direction;
+use unspatial_core::perspective;
 use untypes_core::states::{AppState, GameState};
 
 fn setup(mut commands: Commands, qc: Query<Entity, With<GCameraArena>>) {

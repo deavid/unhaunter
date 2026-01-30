@@ -254,7 +254,6 @@ fn trigger_struggling_with_grab_drop(
             *full_and_failed_grab_timer = None;
         }
 
-
         // Re-check player_is_completely_full because they might have dropped/used an item
         // through a means other than the grab key (e.g., using a consumable from inventory directly)
         // which would not have reset the timer in the block above.
@@ -268,7 +267,8 @@ fn trigger_struggling_with_grab_drop(
                 if stopwatch.elapsed_secs() > 5.0 {
                     // Duration player struggles
                     // FIXME: Additional verification and tuning is needed for this trigger. It worked before, but it was too much.
-                    if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64()) {
+                    if walkie_play.set(WalkieEvent::StrugglingWithGrabDrop, time.elapsed_secs_f64())
+                    {
                         *full_and_failed_grab_timer = None; // Reset timer after successful trigger
                     }
                 }
@@ -326,7 +326,7 @@ fn trigger_struggling_with_hide_unhide(
                     // FIXME: Additional verification and tuning is needed for this trigger.
                     // Reset timer after successful trigger to avoid spam
                     *hide_key_timer = None;
-                    break;  // First responder wins - exit after first player triggers
+                    break; // First responder wins - exit after first player triggers
                 }
             }
         } else {
@@ -435,7 +435,7 @@ fn trigger_hunt_active_near_hiding_spot_no_hide(
                     );
                     // Only trigger once per hunt
                     *near_hiding_timer = None;
-                    break;  // First responder wins - exit after first player triggers
+                    break; // First responder wins - exit after first player triggers
                 }
             } else {
                 *near_hiding_timer = Some(now);

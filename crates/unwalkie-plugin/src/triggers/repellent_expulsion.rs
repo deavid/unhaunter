@@ -117,7 +117,7 @@ fn trigger_has_repellent_enters_location_system(
                 WalkieEvent::HasRepellentEntersLocation,
                 time.elapsed_secs_f64(),
             );
-            return;  // First responder wins
+            return; // First responder wins
         }
     }
 }
@@ -276,19 +276,20 @@ fn trigger_repellent_provokes_strong_reaction_system(
 
             // 3. Monitor Ghost Reaction (if tracker is active)
             if let Some(tracker_data) = tracker.as_ref() {
-                let time_since_activation = time.elapsed_secs() - tracker_data.repellent_activated_time;
+                let time_since_activation =
+                    time.elapsed_secs() - tracker_data.repellent_activated_time;
 
                 if time_since_activation <= REACTION_WINDOW_SECONDS {
-                    let hunt_just_started =
-                        ghost_sprite.hunting > 0.0 && tracker_data.initial_ghost_hunting_state == 0.0;
+                    let hunt_just_started = ghost_sprite.hunting > 0.0
+                        && tracker_data.initial_ghost_hunting_state == 0.0;
                     // Also consider if hunt_warning_active just became true, if initial_ghost_hunting_state was low and warning was false
                     let warning_just_started = ghost_sprite.hunt_warning_active
                         && ghost_sprite.hunting < 1.0
                         && tracker_data.initial_ghost_hunting_state < 1.0;
 
-                    let particles_nearby = repellent_particle_query
-                        .iter()
-                        .any(|particle_pos| ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD);
+                    let particles_nearby = repellent_particle_query.iter().any(|particle_pos| {
+                        ghost_pos.distance(particle_pos) < PARTICLE_NEARBY_THRESHOLD
+                    });
                     if (hunt_just_started || warning_just_started)
                         && particles_nearby
                         && walkie_play.set(
@@ -378,7 +379,8 @@ fn trigger_repellent_exhausted_correct_type_system(
                                     && ghost_sprite.repellent_hits > 0
                                 {
                                     // This flask, of the correct type, is now empty, and the ghost was affected.
-                                    check_state.pending_check_for_ghost_type = Some(ghost_sprite.class);
+                                    check_state.pending_check_for_ghost_type =
+                                        Some(ghost_sprite.class);
                                     check_state.time_exhaustion_confirmed = time.elapsed_secs();
                                     // `liquid_content` is intentionally not cleared in RepellentFlaskData as per new design.
                                     break; // Found a relevant exhausted flask
@@ -397,7 +399,8 @@ fn trigger_repellent_exhausted_correct_type_system(
                     continue;
                 }
                 let particles_are_few = repellent_particle_query.iter().count() < 10; // Threshold for "few" particles
-                let time_since_exhaustion = time.elapsed_secs() - check_state.time_exhaustion_confirmed;
+                let time_since_exhaustion =
+                    time.elapsed_secs() - check_state.time_exhaustion_confirmed;
                 // FIXME: Verification needed: Not sure if this trigger actually fires. Don't recall it having fired in testing.
                 if particles_are_few || time_since_exhaustion > MAX_PARTICLE_CLEAR_WAIT_SECONDS {
                     walkie_play.set(
