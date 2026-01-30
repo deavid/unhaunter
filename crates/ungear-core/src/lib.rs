@@ -12,7 +12,6 @@
 //!
 //! The gear system allows players to equip and use various tools to investigate
 //! paranormal activity, gather evidence, and ultimately banish ghosts.
-pub mod assets;
 pub mod components;
 pub mod resources;
 pub mod types;

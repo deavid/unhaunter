@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod board;
 pub mod components;
 pub mod materials;

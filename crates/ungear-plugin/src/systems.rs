@@ -4,7 +4,7 @@ use bevy_persistent::Persistent;
 use unboard_core::components::mapcolor::MapColor;
 use unevents_core::events::sound::SoundEvent;
 use unfoundation_core::types::gear::{Hand, VisualKey};
-use ungear_core::assets::GearAssets;
+use unrender_std::assets::GearAssets;
 use ungear_core::components::core::GearSprite;
 use ungear_core::components::core::StatusText;
 use ungear_core::components::deployedgear::DeployedGear;

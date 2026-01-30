@@ -5814,7 +5814,6 @@ name = "ungear-core"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
- "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
  "serde",
@@ -6371,6 +6370,7 @@ name = "unrender-std"
 version = "0.3.2-dev"
 dependencies = [
  "bevy",
+ "bevy_asset_loader",
  "bevy_platform",
  "enum-iterator",
  "ndarray",

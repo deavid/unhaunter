@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
-use ungear_core::assets::GearAssets;
 use unplayer_core::components::{Inventory, InventoryNext, InventoryStats};
+use unrender_std::assets::GearAssets;
 use unrender_std::resources::sprite_registry::GearSpriteID;
 use unui_core::assets::UiAssets;
 

@@ -6,7 +6,7 @@ use undifficulty_core::current_difficulty::CurrentDifficulty;
 use unfoundation_core::colors;
 use unfoundation_core::platform::plt::{FONT_SCALE, UI_SCALE};
 use unfoundation_core::types::gear::Hand;
-use ungear_core::assets::GearAssets;
+use unrender_std::assets::GearAssets;
 use ungear_core::components::playergear::PlayerGear;
 use ungear_core::resources::spawner::GearSpawnerRegistry;
 use ungear_core::types::gear::{GearKind, VisualKey};
